@@ -11,15 +11,27 @@ class ViewportTokens {
   static const double breakpoint = 600;
 }
 
-/// 三档主题不变的语义色
+/// 语义色（Apple Design Language 2026）
 class BrandColors {
-  static const Color brand = Color(0xFFFF9500);     // 品牌橙
-  static const Color badgeRed = Color(0xFFFF3B30);  // 通知红点
-  static const Color vipGold = Color(0xFFC9A227);   // VIP 金
-  static const Color iconTeal = Color(0xFF4ECDC4);  // 个人中心图标
-  static const Color iconPurple = Color(0xFFA78BFA);
-  static const Color iconBlue = Color(0xFF60A5FA);
-  static const Color iconGold = Color(0xFFF5A623);  // 词书页工具栏
+  static const Color primary = Color(0xFF0066CC);     // Action Blue
+  static const Color primaryFocus = Color(0xFF0071E3); // Focus Blue
+  static const Color primaryOnDark = Color(0xFF2997FF);
+  static const Color ink = Color(0xFF1D1D1F);          // 正文黑
+  static const Color inkMuted80 = Color(0xFF333333);
+  static const Color inkMuted48 = Color(0xFF7A7A7A);
+  static const Color dividerSoft = Color(0xFFF0F0F0);
+  static const Color hairline = Color(0xFFE0E0E0);
+  static const Color canvas = Color(0xFFFFFFFF);
+  static const Color canvasParchment = Color(0xFFF5F5F7); // Apple 羊皮纸色
+  static const Color surfacePearl = Color(0xFFFAFAFC);
+  static const Color surfaceTile1 = Color(0xFF272729);
+  static const Color surfaceTile2 = Color(0xFF2A2A2C);
+  static const Color surfaceBlack = Color(0xFF000000);
+  static const Color badgeRed = Color(0xFFFF3B30);    // 通知红点
+  static const Color vipGold = Color(0xFFC9A227);     // VIP 金
+  static const Color success = Color(0xFF30D158);     // 成功绿
+  static const Color danger = Color(0xFFFF453A);      // 危险红
+  static const Color accent = Color(0xFFFF9F0A);      // 强调橙
 }
 
 /// 字阶（原版 typography）
@@ -58,26 +70,32 @@ class AppTypography {
   );
 }
 
-/// 间距（原版 spacing）
+/// 间距（Apple Design Language）
 class AppSpacing {
-  static const double xs = 4;
-  static const double s = 8;
-  static const double m = 12;
-  static const double l = 16;
-  static const double xl = 20;
-  static const double xxl = 24;
+  static const double xxs = 4;
+  static const double xs = 8;
+  static const double sm = 12;
+  static const double md = 17;
+  static const double lg = 24;
+  static const double xl = 32;
+  static const double xxl = 48;
+  static const double section = 80;
   static const double page = 16;
   static const double rowH = 52;
   static const double navH = 44;
 }
 
-/// 圆角（原版 radius）
+/// 圆角（Apple Design Language）
 class AppRadius {
+  static const double xs = 5;
+  static const double sm = 8;
+  static const double md = 11;
+  static const double lg = 18;
   static const double card = 14;
   static const double control = 8;
   static const double glass = 20;
   static const double sheet = 24;
-  static const double pill = 999;
+  static const double pill = 9999;
 }
 
 /// 玻璃层物理参数

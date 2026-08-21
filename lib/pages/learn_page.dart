@@ -11,6 +11,7 @@ import '../data/wordbook_database.dart';
 import '../engine/srs_engine.dart';
 import '../state/learning_state.dart';
 import '../theme/app_theme.dart';
+import '../tokens/design_tokens.dart';
 
 class LearnPage extends StatefulWidget {
   const LearnPage({super.key});
@@ -188,17 +189,26 @@ class _WordArea extends StatelessWidget {
 
 /// 下半：释义区（原版 rl_learnHalfBottom + ReviewMode_ENtoZH + learn_select_meaning）
 /// 核心逻辑：必须先完成4选1选择，才显示释义
-class _InterpretArea extends StatelessWidget {
+class _InterpretArea extends StatefulWidget {
   final Word word;
   final LearningState state;
   const _InterpretArea({required this.word, required this.state});
 
   @override
+  State<_InterpretArea> createState() => _InterpretAreaState();
+}
+
+class _InterpretAreaState extends State<_InterpretArea> {
+  int _selectedIndex = -1; // -1 = 未选择，0-3 = 选中的索引
+  static const _labels = ['A', 'B', 'C', 'D'];
+
+  @override
   Widget build(BuildContext context) {
+    final word = widget.word;
+    final state = widget.state;
     final lines = word.interpretLines;
     final examples = ExampleParser.parse(word.example);
-    // 核心修复：只有 showAnswer 为 true 时才显示释义，否则强制显示4选1
-    final showQuiz = !state.showAnswer;
+    final showAnswer = _selectedIndex >= 0;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -206,7 +216,7 @@ class _InterpretArea extends StatelessWidget {
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      child: showQuiz
+      child: !showAnswer
           // ===== 4 选 1 选择题模式（必须选择才跳转）=====
           ? Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
@@ -222,24 +232,33 @@ class _InterpretArea extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // 4 个选项（原版 WordChoiceSelView：64dp 高，16dp 边距）
-                  ...state.choices.map(
-                    (c) => _ChoiceOption(
-                      pair: c,
-                      isAnswer: c.word == word.word,
-                      onTap: () => _onChoice(context, c),
+                  // 4 个选项（带 A/B/C/D 标签）
+                  for (int i = 0; i < state.choices.length && i < 4; i++)
+                    _ChoiceOption(
+                      label: _labels[i],
+                      interpret: state.choices[i].interpret.toString(),
+                      isAnswer: state.choices[i].word == word.word,
+                      selected: false,
+                      onTap: () {
+                        setState(() => _selectedIndex = i);
+                        // 评分：答对→good，答错→again
+                        final correct = state.choices[i].word == word.word;
+                        state.rate(correct ? RecallRating.good : RecallRating.again);
+                      },
                     ),
-                  ),
                 ],
               ),
             )
-          // ===== 选择后才显示：释义 + 例句 + 形近词 =====
+          // ===== 选择后：显示释义 + 正误反馈 + 例句 + 形近词 =====
           : SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 释义（原版 tv_interpret）
+                  // 正误反馈条
+                  _buildFeedback(word, state),
+                  const SizedBox(height: 16),
+                  // 释义
                   if (lines.isNotEmpty)
                     ...lines.map(
                       (line) => Padding(
@@ -254,44 +273,36 @@ class _InterpretArea extends StatelessWidget {
                         ),
                       ),
                     ),
-                  // 例句（原版详细卡片）
+                  // 例句
                   if (examples.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    const Text(
-                      '例句',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black87,
-                      ),
-                    ),
+                    const Text('例句',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.black87)),
                     const SizedBox(height: 8),
                     ...examples.take(3).map((ex) => _ExampleTile(example: ex)),
                   ],
-                  // 形近词（原版 confuse）
+                  // 形近词
                   if (_confuseList.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    const Text(
-                      '形近词',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black87,
-                      ),
-                    ),
+                    const Text('形近词',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.black87)),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: _confuseList
-                          .map(
-                            (c) => Chip(
-                              label: Text(c),
-                              visualDensity: VisualDensity.compact,
-                              backgroundColor: Colors.orange.shade50,
-                              side: BorderSide.none,
-                            ),
-                          )
+                          .map((c) => Chip(
+                                label: Text(c),
+                                visualDensity: VisualDensity.compact,
+                                backgroundColor: Colors.orange.shade50,
+                                side: BorderSide.none,
+                              ))
                           .toList(),
                     ),
                   ],
@@ -301,69 +312,120 @@ class _InterpretArea extends StatelessWidget {
     );
   }
 
-  /// 点击选项：答对 → 认识(good)，答错 → 不认识(again)，然后翻答案
-  void _onChoice(BuildContext context, dynamic pair) {
-    final isAnswer = pair.word == word.word;
-    state.rate(isAnswer ? RecallRating.good : RecallRating.again);
+  /// 正误反馈条
+  Widget _buildFeedback(Word word, LearningState state) {
+    final isCorrect = state.choices[_selectedIndex].word == word.word;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isCorrect
+            ? AppColors.successGreen.withValues(alpha: 0.1)
+            : AppColors.errorRed.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isCorrect ? Icons.check_circle : Icons.cancel,
+            color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
+            size: 24,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              isCorrect
+                  ? '✓ 正确！'
+                  : '✗ 正确答案：${word.interpret.split('\n').first}',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   List<String> get _confuseList {
-    final t = word.confuse.trim();
+    final t = widget.word.confuse.trim();
     if (t.isEmpty) return const [];
     if (t.startsWith('[')) {
       final inner = t.substring(1, t.length - 1);
-      return inner
-          .split(',')
-          .map((e) => e.trim().replaceAll('"', ''))
-          .where((e) => e.isNotEmpty)
-          .toList();
+      return inner.split(',').map((e) => e.trim().replaceAll('"', '')).where((e) => e.isNotEmpty).toList();
     }
     return [t];
   }
 }
 
-/// 4 选 1 选项（复刻原版 WordChoiceSelView：64dp 高，圆角，点击反馈）
+/// 4 选 1 选项（A/B/C/D 标签 + 正误反馈）
 class _ChoiceOption extends StatelessWidget {
-  final dynamic pair;
+  final String label; // A/B/C/D
+  final String interpret;
   final bool isAnswer;
-  final VoidCallback onTap;
+  final bool selected;
+  final VoidCallback? onTap;
 
   const _ChoiceOption({
-    required this.pair,
+    required this.label,
+    required this.interpret,
     required this.isAnswer,
-    required this.onTap,
+    this.selected = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = !selected
+        ? Colors.grey.shade50
+        : isAnswer
+            ? AppColors.successGreen.withValues(alpha: 0.1)
+            : AppColors.errorRed.withValues(alpha: 0.1);
+    final borderColor = !selected
+        ? AppColors.dividerGrey
+        : isAnswer
+            ? AppColors.successGreen
+            : AppColors.errorRed;
+    final textColor = !selected
+        ? AppColors.black87
+        : isAnswer
+            ? AppColors.successGreen
+            : AppColors.errorRed;
+
     return GestureDetector(
-      onTap: onTap,
+      onTap: selected ? null : onTap,
       child: Container(
         height: 64,
-        margin: const EdgeInsets.only(
-          bottom: AppDimens.selectItemBottomMargins,
-        ),
+        margin: const EdgeInsets.only(bottom: AppDimens.selectItemBottomMargins),
         padding: const EdgeInsets.symmetric(horizontal: AppDimens.selectItemLrMargins),
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
+          color: bgColor,
           borderRadius: BorderRadius.circular(AppDimens.radiusNormal),
-          border: Border.all(color: AppColors.dividerGrey),
+          border: Border.all(color: borderColor),
         ),
         child: Row(
           children: [
-            // 选项字母（原版 A/B/C/D 风格）
+            // A/B/C/D 标签
             Container(
-              width: 24,
-              height: 24,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
-                color: isAnswer ? AppColors.successGreen : Colors.grey.shade300,
+                color: !selected
+                    ? BrandColors.primary
+                    : isAnswer
+                        ? AppColors.successGreen
+                        : AppColors.errorRed,
                 shape: BoxShape.circle,
               ),
               child: Center(
                 child: Text(
-                  isAnswer ? '✓' : 'A',
+                  label,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -371,14 +433,10 @@ class _ChoiceOption extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            // 选项文本（释义）
             Expanded(
               child: Text(
-                pair.interpret.toString(),
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.black87,
-                ),
+                interpret,
+                style: TextStyle(fontSize: 15, color: textColor),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
