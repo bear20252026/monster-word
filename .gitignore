@@ -1,0 +1,36 @@
+# Flutter
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/
+
+# Android
+android/.gradle/
+android/app/build/
+android/local.properties
+
+# iOS
+ios/Pods/
+ios/Runner.xcworkspace/xcuserdata/
+ios/.symlinks/
+
+# Windows
+windows/flutter/ephemeral/
+
+# macOS
+macos/Pods/
+macos/Flutter/ephemeral/
+
+# Linux
+linux/flutter/ephemeral/
+
+# Data (too large)
+assets/db/wordbook.db.gz
+
+# OS
+.DS_Store
+Thumbs.db
