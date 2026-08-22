@@ -9,6 +9,7 @@ import 'pages/learn_page.dart';
 import 'pages/lib_select_page.dart';
 import 'pages/my_space_page.dart';
 import 'pages/review_page.dart';
+import 'pages/search_page.dart';
 import 'pages/settings_page.dart';
 import 'screens/home_screen.dart';
 import 'screens/learn_session.dart';
@@ -87,6 +88,7 @@ class WordApp extends StatelessWidget {
               MySpacePage.routeName: (context) => const MySpacePage(),
               DashboardPage.routeName: (context) => const DashboardPage(),
               SettingsPage.routeName: (context) => const SettingsPage(),
+              SearchPage.routeName: (context) => const SearchPage(),
             },
           );
         },

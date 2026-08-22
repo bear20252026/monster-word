@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../hooks/responsive.dart';
 import '../pages/lib_select_page.dart';
+import '../pages/search_page.dart';
 import '../screens/review_session.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -28,11 +29,29 @@ class HomeScreen extends StatelessWidget {
       child: SafeArea(
         child: Stack(
           children: [
-            // 头像（左上角）
+            // 左上角：头像 + 查词按钮
             Positioned(
               left: resp.pageMargin,
               top: 12,
-              child: _Avatar(skin: skin),
+              child: Row(
+                children: [
+                  _Avatar(skin: skin),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () => Navigator.pushNamed(context, SearchPage.routeName),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.25),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                      ),
+                      child: const Icon(Icons.search, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ],
+              ),
             ),
             // HeroWord（居中，原版 40dp 粗体）
             Center(
