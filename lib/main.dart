@@ -1,5 +1,5 @@
 // 由账号4生成
-// 不背单词 App 入口：接入新设计系统（SkinProvider + MainShell + 三主题）
+// Monster Word App 入口：接入新设计系统（SkinProvider + MainShell + 三主题）
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -40,7 +40,7 @@ class WordApp extends StatelessWidget {
       child: Consumer<SkinSystem>(
         builder: (context, skin, _) {
           return MaterialApp(
-            title: '不背单词',
+            title: 'Monster Word',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               brightness: skin.currentTheme.statusBarBrightness,

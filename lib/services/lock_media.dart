@@ -16,7 +16,7 @@ class LockScreenManager {
 
   bool _isEnabled = false;
   bool _isLockScreenActive = false;
-  static const _channel = MethodChannel('com.langeasy/lock_screen');
+  static const _channel = MethodChannel('com.monsterword/lock_screen');
 
   bool get isEnabled => _isEnabled;
   bool get isLockScreenActive => _isLockScreenActive;
@@ -63,7 +63,7 @@ class MediaButtonHandler {
   factory MediaButtonHandler() => _instance;
   MediaButtonHandler._();
 
-  static const _channel = MethodChannel('com.langeasy/media_button');
+  static const _channel = MethodChannel('com.monsterword/media_button');
   bool _isRegistered = false;
 
   /// 注册媒体按钮监听（原版 registerMediaButtonReceiver）

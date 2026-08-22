@@ -271,7 +271,7 @@ class _LibItem extends StatelessWidget {
   }
 
   String _coverText() {
-    final name = book.name.replaceAll(RegExp(r'LangEasyLexisV3_'), '');
+    final name = book.name.replaceAll(RegExp(r'MonsterWord_'), '');
     return name.length > 4 ? name.substring(0, 4) : name;
   }
 }

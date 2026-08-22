@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.langeasy" "\0"
+            VALUE "CompanyName", "com.monsterword" "\0"
             VALUE "FileDescription", "word_app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "word_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.langeasy. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.monsterword. All rights reserved." "\0"
             VALUE "OriginalFilename", "word_app.exe" "\0"
             VALUE "ProductName", "word_app" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

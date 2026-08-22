@@ -21,7 +21,7 @@ class HomeScreen extends StatelessWidget {
     final resp = context.responsive;
     final state = context.watch<LearningState>();
 
-    final heroWord = state.currentWord?.word ?? 'BubeiWord';
+    final heroWord = state.currentWord?.word ?? 'Monster Word';
 
     return AppleBg(
       child: SafeArea(

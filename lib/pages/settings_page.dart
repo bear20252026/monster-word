@@ -175,7 +175,7 @@ class _SwitchCell extends StatelessWidget {
   }
 }
 
-/// 底部 App 信息（原版 langeasy_container）
+/// 底部 App 信息（原版 monsterword_container）
 class _AppInfo extends StatelessWidget {
   const _AppInfo();
 
@@ -192,7 +192,7 @@ class _AppInfo extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  '不背单词',
+                  'Monster Word',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
