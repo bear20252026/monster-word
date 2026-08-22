@@ -1,77 +1,59 @@
 // 由账号4生成
-// L2 玻璃组件：GlassSurface / GlassCard / GlassPill / WallpaperBg / ModalSheet
-// 翻译自 Figma Primitives.js，玻璃拟态核心实现
-
-import 'dart:ui';
-
+// Apple Design Language 组件库
+// 去掉玻璃拟态/BackdropFilter，全部改为苹果纯色卡片+清晰布局
 import 'package:flutter/material.dart';
 
 import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
-/// 玻璃材质基座（原版 GlassSurface）
-/// ClipRRect + BackdropFilter + 半透明渐变 + 白描边
-class GlassSurface extends StatelessWidget {
+/// 苹果风格卡片容器（替代 GlassSurface）
+class AppleCard extends StatelessWidget {
   final Widget child;
-  final bool strong; // true = glassBgStrong，签到卡等更实的玻璃
-  final double radius;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final double? width;
   final double? height;
+  final Color? color;
+  final double radius;
 
-  const GlassSurface({
+  const AppleCard({
     super.key,
     required this.child,
-    this.strong = false,
-    this.radius = AppRadius.glass,
     this.padding,
     this.margin,
     this.width,
     this.height,
+    this.color,
+    this.radius = AppleRadius.md,
   });
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    final bg = strong ? skin.colors.glassBgStrong : skin.colors.glassBg;
-    final border = skin.colors.glassBorder;
-
     return Container(
       width: width,
       height: height,
       margin: margin,
-      child: ClipRRect(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: color ?? skin.colors.cardBg,
         borderRadius: BorderRadius.circular(radius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: strong ? AppGlass.blurStrong : AppGlass.blur,
-            sigmaY: strong ? AppGlass.blurStrong : AppGlass.blur,
-          ),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(radius),
-              border: Border.all(color: border, width: 1),
-            ),
-            child: child,
-          ),
-        ),
+        border: Border.all(color: skin.colors.divider, width: 0.5),
       ),
+      child: child,
     );
   }
 }
 
-/// 首页玻璃入口卡（原版 GlassEntryCard：Learn/Review）
-class GlassCard extends StatelessWidget {
-  final String title; // 'Learn' 或 'Review'
-  final int count;    // 待学/待复习数
+/// 苹果风格入口卡（替代 GlassCard：Learn/Review）
+class AppleEntryCard extends StatelessWidget {
+  final String title;
+  final int count;
   final VoidCallback? onTap;
   final double? width;
 
-  const GlassCard({
+  const AppleEntryCard({
     super.key,
     required this.title,
     required this.count,
@@ -83,32 +65,32 @@ class GlassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final w = width ?? context.responsive.glassCardWidth;
-    final countColor = count > 0 ? skin.colors.onGlassAccent : skin.colors.onGlassText2;
 
     return GestureDetector(
       onTap: onTap,
-      child: GlassSurface(
+      child: Container(
         width: w,
         height: 88,
         padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: skin.colors.cardBg,
+          borderRadius: BorderRadius.circular(AppleRadius.md),
+          border: Border.all(color: skin.colors.divider, width: 0.5),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               title,
-              style: AppTypography.body.copyWith(
-                color: skin.colors.onGlassText2,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
+              style: AppleTypography.captionStrong.copyWith(color: skin.colors.text3),
             ),
             const SizedBox(height: 8),
             Text(
               '$count',
-              style: AppTypography.metricLg.copyWith(
-                color: countColor,
-                height: 1,
+              style: AppleTypography.displayLg.copyWith(
+                color: count > 0 ? skin.colors.accent : skin.colors.text3,
+                fontSize: 32,
               ),
             ),
           ],
@@ -118,83 +100,55 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-/// 玻璃胶囊按钮（原版 GlassPill）
-class GlassPill extends StatelessWidget {
+/// 苹果风格胶囊按钮（替代 GlassPill）
+class ApplePill extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
-  final bool strong;
   final EdgeInsetsGeometry? padding;
 
-  const GlassPill({
-    super.key,
-    required this.child,
-    this.onTap,
-    this.strong = false,
-    this.padding,
-  });
+  const ApplePill({super.key, required this.child, this.onTap, this.padding});
 
   @override
   Widget build(BuildContext context) {
+    final skin = context.skin;
     return GestureDetector(
       onTap: onTap,
-      child: GlassSurface(
-        strong: strong,
-        radius: AppRadius.pill,
+      child: Container(
         padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: skin.colors.cardBg,
+          borderRadius: BorderRadius.circular(AppleRadius.pill),
+          border: Border.all(color: skin.colors.divider, width: 0.5),
+        ),
         child: child,
       ),
     );
   }
 }
 
-/// 壁纸背景（原版 WallpaperBg：Z0 壁纸 + Z1 遮罩 + Z2 内容）
-class WallpaperBg extends StatelessWidget {
+/// 苹果风格纯色背景（替代 WallpaperBg：去掉壁纸，用纯色背景）
+class AppleBg extends StatelessWidget {
   final Widget child;
-
-  const WallpaperBg({super.key, required this.child});
+  const AppleBg({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    final gradient = skin.wallpaperGradient;
-    final scrim = skin.scrimColor;
-    final wallpaper = skin.wallpaper;
-
-    return Stack(
-      children: [
-        // Z0: 壁纸照片（或兜底渐变）
-        Positioned.fill(
-          child: wallpaper?.uri != null
-              ? Image.network(wallpaper!.uri!, fit: BoxFit.cover)
-              : Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: gradient,
-                    ),
-                  ),
-                ),
-        ),
-        // Z1: 主题遮罩（明亮≈无 / 深邃=黑55% / 极夜=黑72%）
-        Positioned.fill(
-          child: Container(color: scrim),
-        ),
-        // Z2: 内容
-        child,
-      ],
+    return Container(
+      color: skin.colors.pageBg,
+      child: child,
     );
   }
 }
 
-/// 模态底部弹窗（原版 ModalSheet：Z4 层级）
-class ModalSheet extends StatelessWidget {
+/// 苹果风格模态弹窗（替代 ModalSheet）
+class AppleModal extends StatelessWidget {
   final bool visible;
   final VoidCallback onClose;
   final Widget child;
   final double? width;
 
-  const ModalSheet({
+  const AppleModal({
     super.key,
     required this.visible,
     required this.onClose,
@@ -205,23 +159,22 @@ class ModalSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!visible) return const SizedBox.shrink();
-
     final skin = context.skin;
 
     return GestureDetector(
       onTap: onClose,
       child: Container(
-        color: Colors.black54, // 遮罩
+        color: Colors.black38,
         child: Center(
           child: GestureDetector(
-            onTap: () {}, // 防止穿透
+            onTap: () {},
             child: Container(
               width: width ?? 320,
               constraints: const BoxConstraints(maxHeight: 500),
               decoration: BoxDecoration(
-                color: skin.colors.modalGlassBg,
-                borderRadius: BorderRadius.circular(AppRadius.sheet),
-                border: Border.all(color: skin.colors.glassBorder, width: 1),
+                color: skin.colors.cardBg,
+                borderRadius: BorderRadius.circular(AppleRadius.lg),
+                border: Border.all(color: skin.colors.divider, width: 0.5),
               ),
               padding: const EdgeInsets.all(20),
               child: child,
@@ -231,35 +184,4 @@ class ModalSheet extends StatelessWidget {
       ),
     );
   }
-}
-
-/// 皮肤系统快捷访问
-extension SkinExt on BuildContext {
-  SkinSystem get skin {
-    final widget = dependOnInheritedWidgetOfExactType<_SkinProvider>();
-    return widget?.skin ?? SkinSystem();
-  }
-}
-
-/// 皮肤注入 Widget（包裹在 MaterialApp 外层）
-class SkinProvider extends InheritedWidget {
-  final SkinSystem skin;
-  const SkinProvider({super.key, required this.skin, required super.child});
-
-  static SkinSystem of(BuildContext context) {
-    final provider = context.dependOnInheritedWidgetOfExactType<SkinProvider>();
-    return provider?.skin ?? SkinSystem();
-  }
-
-  @override
-  bool updateShouldNotify(SkinProvider oldWidget) => skin.themeId != oldWidget.skin.themeId;
-}
-
-/// 内部使用的皮肤 Provider
-class _SkinProvider extends InheritedWidget {
-  final SkinSystem skin;
-  const _SkinProvider({required this.skin, required super.child});
-
-  @override
-  bool updateShouldNotify(_SkinProvider old) => skin.themeId != old.skin.themeId;
 }

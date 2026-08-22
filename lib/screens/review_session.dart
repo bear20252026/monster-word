@@ -93,7 +93,7 @@ class _ReviewSessionState extends State<ReviewSession> {
     final resp = context.responsive;
 
     return Scaffold(
-      body: WallpaperBg(
+      body: AppleBg(
         child: SafeArea(
           child: Column(
             children: [
@@ -279,7 +279,7 @@ class _ReviewSessionState extends State<ReviewSession> {
   }
 
   Widget _buildDone() {
-    return WallpaperBg(
+    return AppleBg(
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

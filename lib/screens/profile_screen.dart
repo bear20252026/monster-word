@@ -7,7 +7,6 @@ import '../hooks/responsive.dart';
 import '../pages/settings_page.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
-import '../widgets/glass_widgets.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -130,7 +129,7 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  Icon(Icons.monetization_on_outlined, color: BrandColors.accent, size: 24),
+                  Icon(Icons.monetization_on_outlined, color: AppleColors.primary, size: 24),
                   const SizedBox(width: 10),
                   Text('酷币  0', style: AppTypography.body.copyWith(color: skin.colors.text1)),
                   const Spacer(),
@@ -151,7 +150,7 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  Icon(Icons.card_giftcard, color: BrandColors.accent, size: 24),
+                  Icon(Icons.card_giftcard, color: AppleColors.primary, size: 24),
                   const SizedBox(width: 10),
                   Text('装备', style: AppTypography.body.copyWith(color: skin.colors.text1)),
                   const Spacer(),
@@ -177,11 +176,11 @@ class ProfileScreen extends StatelessWidget {
         ),
         child: Column(
           children: [
-            _menuRow(Icons.palette_outlined, BrandColors.primary, '外观 & 沉浸场景', skin),
+            _menuRow(Icons.palette_outlined, AppleColors.primary, '外观 & 沉浸场景', skin),
             Divider(height: 1, color: skin.colors.divider),
-            _menuRow(Icons.tune, BrandColors.primary, '学习偏好', skin),
+            _menuRow(Icons.tune, AppleColors.primary, '学习偏好', skin),
             Divider(height: 1, color: skin.colors.divider),
-            _menuRow(Icons.settings_outlined, BrandColors.primary, '更多设置', skin,
+            _menuRow(Icons.settings_outlined, AppleColors.primary, '更多设置', skin,
                 onTap: () => Navigator.pushNamed(context, SettingsPage.routeName)),
           ],
         ),

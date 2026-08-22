@@ -6,7 +6,7 @@
 import 'package:flutter/material.dart';
 
 import '../hooks/responsive.dart';
-import '../widgets/glass_widgets.dart';
+import '../theme/skin_system.dart';
 
 /// Tab 定义（原版 TABS）
 class TabDef {

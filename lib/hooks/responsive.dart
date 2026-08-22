@@ -12,10 +12,12 @@ class AppResponsive {
   final BuildContext context;
   AppResponsive(this.context);
 
+  static const double breakpoint = 600;
+
   double get _width => MediaQuery.sizeOf(context).width;
 
   /// 是否平板（≥600dp）
-  bool get isTablet => _width >= ViewportTokens.breakpoint;
+  bool get isTablet => _width >= breakpoint;
 
   /// 内容列宽（设置类页面）
   double get contentWidth => isTablet ? 600 : double.infinity;

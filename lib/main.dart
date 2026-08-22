@@ -19,7 +19,6 @@ import 'shell/main_shell.dart';
 import 'state/learning_state.dart';
 import 'theme/skin_system.dart';
 import 'widgets/adaptive_scale.dart';
-import 'widgets/glass_widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,6 +1,5 @@
 // 由账号4生成
-// L3 首页：壁纸背景 + HeroWord + Learn/Review 玻璃入口卡 + 透明底 Tab
-// 翻译自 Figma 03a-screens-learning.json home
+// 首页：Apple Design Language — 纯色背景 + HeroWord + 入口卡 + 查词按钮
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -22,17 +21,15 @@ class HomeScreen extends StatelessWidget {
     final resp = context.responsive;
     final state = context.watch<LearningState>();
 
-    // HeroWord：优先显示当前词，否则显示示例词
-    final heroWord = state.currentWord?.word ?? 'Fragrance';
+    final heroWord = state.currentWord?.word ?? 'BubeiWord';
 
-    return WallpaperBg(
+    return AppleBg(
       child: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            // 左上角：头像 + 查词按钮
-            Positioned(
-              left: resp.pageMargin,
-              top: 12,
+            // 顶部栏：头像 + 查词按钮
+            Padding(
+              padding: EdgeInsets.fromLTRB(resp.pageMargin, 12, resp.pageMargin, 0),
               child: Row(
                 children: [
                   _Avatar(skin: skin),
@@ -43,20 +40,19 @@ class HomeScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.25),
+                        color: skin.colors.cardBgAlt,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                        border: Border.all(color: skin.colors.divider),
                       ),
-                      child: const Icon(Icons.search, color: Colors.white, size: 20),
+                      child: Icon(Icons.search, color: skin.colors.text3, size: 20),
                     ),
                   ),
                 ],
               ),
             ),
-            // HeroWord（居中，原版 40dp 粗体）
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 120),
+            // HeroWord（居中）
+            Expanded(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -64,47 +60,43 @@ class HomeScreen extends StatelessWidget {
                       heroWord,
                       style: AppTypography.heroWord.copyWith(
                         fontSize: resp.heroFontSize,
-                        color: skin.colors.onGlassText1,
+                        color: skin.colors.text1,
                       ),
                     ),
-                    if (state.currentWord != null) ...[
+                    if (state.currentWord != null &&
+                        state.currentWord!.usPron.isNotEmpty) ...[
                       const SizedBox(height: 8),
-                      if (state.currentWord!.usPron.isNotEmpty)
-                        Text(
-                          '/${state.currentWord!.usPron}/',
-                          style: AppTypography.caption.copyWith(
-                            color: skin.colors.onGlassText2,
-                          ),
+                      Text(
+                        '/${state.currentWord!.usPron}/',
+                        style: AppTypography.caption.copyWith(
+                          color: skin.colors.text3,
                         ),
+                      ),
                     ],
                   ],
                 ),
               ),
             ),
-            // Learn/Review 玻璃入口卡（底部上方）
-            Positioned(
-              left: resp.pageMargin,
-              right: resp.pageMargin,
-              bottom: resp.tabBarHeight + 32,
+            // Learn/Review 入口卡
+            Padding(
+              padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GlassCard(
+                  AppleEntryCard(
                     title: 'Learn',
                     count: state.total > 0 ? state.total : 0,
                     width: resp.glassCardWidth,
-                    onTap: () {
-                      Navigator.pushNamed(context, LibSelectPage.routeName);
-                    },
+                    onTap: () =>
+                        Navigator.pushNamed(context, LibSelectPage.routeName),
                   ),
                   const SizedBox(width: 12),
-                  GlassCard(
+                  AppleEntryCard(
                     title: 'Review',
                     count: state.dueCount,
                     width: resp.glassCardWidth,
-                    onTap: () {
-                      Navigator.pushNamed(context, ReviewSession.routeName);
-                    },
+                    onTap: () =>
+                        Navigator.pushNamed(context, ReviewSession.routeName),
                   ),
                 ],
               ),
@@ -116,7 +108,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// 头像组件（原版品牌 Logo 位置）
+/// 头像（Apple 风格：纯色圆形 + 人物图标）
 class _Avatar extends StatelessWidget {
   final SkinSystem skin;
   const _Avatar({required this.skin});
@@ -128,10 +120,10 @@ class _Avatar extends StatelessWidget {
       height: 40,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: 0.35),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+        color: skin.colors.cardBgAlt,
+        border: Border.all(color: skin.colors.divider),
       ),
-      child: const Icon(Icons.person, color: Colors.white, size: 22),
+      child: Icon(Icons.person, color: skin.colors.text3, size: 22),
     );
   }
 }

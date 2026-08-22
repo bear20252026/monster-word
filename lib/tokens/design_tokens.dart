@@ -1,76 +1,158 @@
 // 由账号4生成
-// L1 设计令牌：全局唯一样式源（语义色/字阶/间距/圆角/玻璃/zIndex）
-// 翻译自 Figma designTokens.js，校准依据：2026-08-19 手机+平板截图
+// Apple Design Language 2026 全局设计令牌
+// 来源：getdesign Apple DESIGN.md
+// 规则：所有页面禁止直写十六进制，只用这些常量
 
 import 'package:flutter/material.dart';
 
-/// 视口基准
-class ViewportTokens {
-  static const double phoneWidthDp = 390;
-  static const double tabletWidthDp = 1024;
-  static const double breakpoint = 600;
+/// Apple 色板（DESIGN.md colors）
+class AppleColors {
+  // 主色
+  static const Color primary = Color(0xFF0066CC);       // Action Blue
+  static const Color primaryFocus = Color(0xFF0071E3);   // Focus Blue
+  static const Color primaryOnDark = Color(0xFF2997FF);  // 深色底蓝
+
+  // 文字
+  static const Color ink = Color(0xFF1D1D1F);            // 主文字黑
+  static const Color inkMuted80 = Color(0xFF333333);     // 80% 灰
+  static const Color inkMuted48 = Color(0xFF7A7A7A);     // 48% 灰
+  static const Color body = Color(0xFF1D1D1F);           // 正文
+  static const Color bodyOnDark = Color(0xFFFFFFFF);     // 深色底文字
+  static const Color bodyMuted = Color(0xFFCCCCCC);      // 浅灰
+
+  // 分隔
+  static const Color dividerSoft = Color(0xFFF0F0F0);    // 柔和分隔
+  static const Color hairline = Color(0xFFE0E0E0);       // 细线
+
+  // 画布
+  static const Color canvas = Color(0xFFFFFFFF);         // 白底
+  static const Color canvasParchment = Color(0xFFF5F5F7); // 羊皮纸
+  static const Color surfacePearl = Color(0xFFFAFAFC);   // 珍珠白
+
+  // 深色
+  static const Color surfaceTile1 = Color(0xFF272729);   // 深色瓦片1
+  static const Color surfaceTile2 = Color(0xFF2A2A2C);   // 深色瓦片2
+  static const Color surfaceTile3 = Color(0xFF252527);   // 深色瓦片3
+  static const Color surfaceBlack = Color(0xFF000000);    // 纯黑
+
+  // 半透明
+  static const Color chipTranslucent = Color(0xFFD2D2D7); // 半透明芯片
+  static const Color onPrimary = Color(0xFFFFFFFF);       // 主色上文字
+  static const Color onDark = Color(0xFFFFFFFF);          // 深色上文字
+
+  // 功能色
+  static const Color success = Color(0xFF30D158);         // 成功绿
+  static const Color danger = Color(0xFFFF453A);          // 危险红
+  static const Color warning = Color(0xFFFF9F0A);         // 警告橙
+  static const Color badgeRed = Color(0xFFFF3B30);        // 红点
 }
 
-/// 语义色（Apple Design Language 2026）
-class BrandColors {
-  static const Color primary = Color(0xFF0066CC);     // Action Blue
-  static const Color primaryFocus = Color(0xFF0071E3); // Focus Blue
-  static const Color primaryOnDark = Color(0xFF2997FF);
-  static const Color ink = Color(0xFF1D1D1F);          // 正文黑
-  static const Color inkMuted80 = Color(0xFF333333);
-  static const Color inkMuted48 = Color(0xFF7A7A7A);
-  static const Color dividerSoft = Color(0xFFF0F0F0);
-  static const Color hairline = Color(0xFFE0E0E0);
-  static const Color canvas = Color(0xFFFFFFFF);
-  static const Color canvasParchment = Color(0xFFF5F5F7); // Apple 羊皮纸色
-  static const Color surfacePearl = Color(0xFFFAFAFC);
-  static const Color surfaceTile1 = Color(0xFF272729);
-  static const Color surfaceTile2 = Color(0xFF2A2A2C);
-  static const Color surfaceBlack = Color(0xFF000000);
-  static const Color badgeRed = Color(0xFFFF3B30);    // 通知红点
-  static const Color vipGold = Color(0xFFC9A227);     // VIP 金
-  static const Color success = Color(0xFF30D158);     // 成功绿
-  static const Color danger = Color(0xFFFF453A);      // 危险红
-  static const Color accent = Color(0xFFFF9F0A);      // 强调橙
-}
-
-/// 字阶（原版 typography）
-class AppTypography {
-  // heroWord: 首页每日单词 40dp
-  static const TextStyle heroWord = TextStyle(
-    fontSize: 40, fontWeight: FontWeight.w700, height: 48 / 40,
+/// Apple 字阶（DESIGN.md typography）
+class AppleTypography {
+  // hero-display: 56px/600/-0.28
+  static const TextStyle heroDisplay = TextStyle(
+    fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif',
+    fontSize: 56, fontWeight: FontWeight.w600, height: 1.07,
+    letterSpacing: -0.28,
   );
-  // metricLg: 大数字统计 32dp
-  static const TextStyle metricLg = TextStyle(
-    fontSize: 32, fontWeight: FontWeight.w700, height: 38 / 32,
+  // display-lg: 40px/600/1.1
+  static const TextStyle displayLg = TextStyle(
+    fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif',
+    fontSize: 40, fontWeight: FontWeight.w600, height: 1.1,
   );
-  // metric: 数字统计 24dp
-  static const TextStyle metric = TextStyle(
-    fontSize: 24, fontWeight: FontWeight.w700, height: 30 / 24,
+  // display-md: 34px/600/1.47
+  static const TextStyle displayMd = TextStyle(
+    fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif',
+    fontSize: 34, fontWeight: FontWeight.w600, height: 1.47,
+    letterSpacing: -0.374,
   );
-  // titlePage: 页面标题 17dp
-  static const TextStyle titlePage = TextStyle(
-    fontSize: 17, fontWeight: FontWeight.w600, height: 24 / 17,
+  // tagline: 21px/600
+  static const TextStyle tagline = TextStyle(
+    fontFamily: 'SF Pro Display, system-ui, -apple-system, sans-serif',
+    fontSize: 21, fontWeight: FontWeight.w600, height: 1.19,
+    letterSpacing: 0.231,
   );
-  // titleCard: 卡片标题 16dp
-  static const TextStyle titleCard = TextStyle(
-    fontSize: 16, fontWeight: FontWeight.w600, height: 22 / 16,
+  // body-strong: 17px/600
+  static const TextStyle bodyStrong = TextStyle(
+    fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif',
+    fontSize: 17, fontWeight: FontWeight.w600, height: 1.24,
+    letterSpacing: -0.374,
   );
-  // body: 正文 15dp
+  // body: 17px/400
   static const TextStyle body = TextStyle(
-    fontSize: 15, fontWeight: FontWeight.w400, height: 21 / 15,
+    fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif',
+    fontSize: 17, fontWeight: FontWeight.w400, height: 1.47,
+    letterSpacing: -0.374,
   );
-  // caption: 辅助文字 13dp
+  // caption: 14px/400
   static const TextStyle caption = TextStyle(
-    fontSize: 13, fontWeight: FontWeight.w400, height: 18 / 13,
+    fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif',
+    fontSize: 14, fontWeight: FontWeight.w400, height: 1.43,
+    letterSpacing: -0.224,
   );
-  // footnote: 脚注 12dp
-  static const TextStyle footnote = TextStyle(
-    fontSize: 12, fontWeight: FontWeight.w400, height: 16 / 12,
+  // caption-strong: 14px/600
+  static const TextStyle captionStrong = TextStyle(
+    fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif',
+    fontSize: 14, fontWeight: FontWeight.w600, height: 1.29,
+    letterSpacing: -0.224,
+  );
+  // button-large: 18px/300
+  static const TextStyle buttonLarge = TextStyle(
+    fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif',
+    fontSize: 18, fontWeight: FontWeight.w300, height: 1.0,
+  );
+  // button-utility: 14px/400
+  static const TextStyle buttonUtility = TextStyle(
+    fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif',
+    fontSize: 14, fontWeight: FontWeight.w400, height: 1.29,
+    letterSpacing: -0.224,
+  );
+  // fine-print: 12px/400
+  static const TextStyle finePrint = TextStyle(
+    fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif',
+    fontSize: 12, fontWeight: FontWeight.w400, height: 1.0,
+    letterSpacing: -0.12,
+  );
+  // nav-link: 12px/400
+  static const TextStyle navLink = TextStyle(
+    fontFamily: 'SF Pro Text, system-ui, -apple-system, sans-serif',
+    fontSize: 12, fontWeight: FontWeight.w400, height: 1.0,
+    letterSpacing: -0.12,
   );
 }
 
-/// 间距（Apple Design Language）
+/// Apple 圆角（DESIGN.md rounded）
+class AppleRadius {
+  static const double none = 0;
+  static const double xs = 5;
+  static const double sm = 8;
+  static const double md = 11;
+  static const double lg = 18;
+  static const double pill = 9999;
+  static const double radiusNormal = 11;
+  static const double full = 9999;
+}
+
+/// Apple 间距（DESIGN.md spacing）
+class AppleSpacing {
+  static const double xxs = 4;
+  static const double xs = 8;
+  static const double sm = 12;
+  static const double md = 17;
+  static const double lg = 24;
+  static const double xl = 32;
+  static const double xxl = 48;
+  static const double section = 80;
+}
+
+/// 全局尺寸常量
+class AppTabBar {
+  static const double height = 56;
+  static const double iconSize = 26;
+  static const double tabletHeight = 64;
+  static const double tabletIconSize = 30;
+}
+
 class AppSpacing {
   static const double xxs = 4;
   static const double xs = 8;
@@ -85,48 +167,87 @@ class AppSpacing {
   static const double navH = 44;
 }
 
-/// 圆角（Apple Design Language）
 class AppRadius {
   static const double xs = 5;
   static const double sm = 8;
   static const double md = 11;
   static const double lg = 18;
-  static const double card = 14;
+  static const double card = 11;
   static const double control = 8;
   static const double glass = 20;
   static const double sheet = 24;
   static const double pill = 9999;
 }
 
-/// 玻璃层物理参数
+class AppTypography {
+  static const TextStyle heroWord = TextStyle(
+    fontSize: 56, fontWeight: FontWeight.w600, height: 1.07, letterSpacing: -0.28,
+  );
+  static const TextStyle metricLg = TextStyle(
+    fontSize: 40, fontWeight: FontWeight.w600, height: 1.1,
+  );
+  static const TextStyle metric = TextStyle(
+    fontSize: 24, fontWeight: FontWeight.w700, height: 1.25,
+  );
+  static const TextStyle titlePage = TextStyle(
+    fontSize: 17, fontWeight: FontWeight.w600, height: 1.24, letterSpacing: -0.374,
+  );
+  static const TextStyle titleCard = TextStyle(
+    fontSize: 16, fontWeight: FontWeight.w600, height: 1.375,
+  );
+  static const TextStyle body = TextStyle(
+    fontSize: 17, fontWeight: FontWeight.w400, height: 1.47, letterSpacing: -0.374,
+  );
+  static const TextStyle caption = TextStyle(
+    fontSize: 14, fontWeight: FontWeight.w400, height: 1.43, letterSpacing: -0.224,
+  );
+  static const TextStyle footnote = TextStyle(
+    fontSize: 12, fontWeight: FontWeight.w400, height: 1.0, letterSpacing: -0.12,
+  );
+}
+
+class AppDimens {
+  static const double learnBtnTextSize = 17;
+  static const double learnMainWord = 56;
+  static const double learnMainWordNew = 40;
+  static const double bottomBarBtnMargin = 8;
+  static const double selectItemHeight = 64;
+  static const double selectItemLrMargins = 16;
+  static const double selectItemBottomMargins = 8;
+  static const double bottomBarHeight = 56;
+  static const double pageCommonMargin = 16;
+  static const double radiusNormal = 11;
+}
+
 class AppGlass {
   static const double blur = 28;
   static const double blurStrong = 36;
 }
 
-/// 底部 Tab 栏（Z3）
-class AppTabBar {
-  static const double height = 56;
-  static const double iconSize = 26;
-  static const double tabletHeight = 64;
-  static const double tabletIconSize = 30;
-  static const int tabCount = 3;
-}
-
-/// 下划线文字钮描线粗细
 class AppUnderline {
   static const double thickness = 2;
 }
 
-/// Z 轴层级（全局唯一权威）
-enum ZIndex {
-  wallpaper(0),   // Z0 壁纸照片
-  scrim(1),       // Z1 主题遮罩
-  content(2),     // Z2 页面内容
-  tabBar(3),      // Z3 底部 Tab 栏
-  modal(4),       // Z4 模态弹窗
-  guide(5);       // Z5 全屏新手教学
+class AppColors {
+  static const Color successGreen = Color(0xFF30D158);
+  static const Color highlightOrange = Color(0xFFFF9F0A);
+  static const Color errorRed = Color(0xFFFF453A);
+  static const Color black87 = Color(0xDE000000);
+  static const Color black54 = Color(0x8A000000);
+  static const Color black12 = Color(0x1F000000);
+  static const Color white100 = Color(0xFFFFFFFF);
+  static const Color mainBgTop = Color(0xFFF5F5F7);
+  static const Color mainBgBottom = Color(0xFFE8E8ED);
+  static const Color cardBg = Color(0xFFFFFFFF);
+  static const Color dividerGrey = Color(0xFFE5E5EA);
+  static const Color textTertiary = Color(0xFF8E8E93);
+  static const Color checkInBg = Color(0x33FFFFFF);
+  static const Color checkInAccent = Color(0xFFFFF8E1);
+  static const Color primary = Color(0xFF0066CC);
+}
 
+enum ZIndex {
+  wallpaper(0), scrim(1), content(2), tabBar(3), modal(4), guide(5);
   const ZIndex(this.value);
   final int value;
 }

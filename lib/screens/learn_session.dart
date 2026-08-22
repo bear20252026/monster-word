@@ -39,7 +39,7 @@ class _LearnSessionState extends State<LearnSession> {
     final examples = ExampleParser.parse(word.example);
 
     return Scaffold(
-      body: WallpaperBg(
+      body: AppleBg(
         child: SafeArea(
           child: Column(
             children: [

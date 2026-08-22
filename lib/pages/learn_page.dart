@@ -415,7 +415,7 @@ class _ChoiceOption extends StatelessWidget {
               height: 28,
               decoration: BoxDecoration(
                 color: !selected
-                    ? BrandColors.primary
+                    ? AppleColors.primary
                     : isAnswer
                         ? AppColors.successGreen
                         : AppColors.errorRed,
