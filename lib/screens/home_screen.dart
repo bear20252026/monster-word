@@ -50,36 +50,36 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // HeroWord（居中）
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+            const Spacer(flex: 2),
+            // HeroWord（居中偏上）
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  Text(
+                    heroWord,
+                    style: AppTypography.heroWord.copyWith(
+                      fontSize: resp.heroFontSize,
+                      color: skin.colors.text1,
+                    ),
+                  ),
+                  if (state.currentWord != null &&
+                      state.currentWord!.usPron.isNotEmpty) ...[
+                    const SizedBox(height: 8),
                     Text(
-                      heroWord,
-                      style: AppTypography.heroWord.copyWith(
-                        fontSize: resp.heroFontSize,
-                        color: skin.colors.text1,
+                      '/${state.currentWord!.usPron}/',
+                      style: AppTypography.caption.copyWith(
+                        color: skin.colors.text3,
                       ),
                     ),
-                    if (state.currentWord != null &&
-                        state.currentWord!.usPron.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        '/${state.currentWord!.usPron}/',
-                        style: AppTypography.caption.copyWith(
-                          color: skin.colors.text3,
-                        ),
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
             ),
-            // Learn/Review 入口卡
+            const Spacer(flex: 1),
+            // Learn/Review 入口卡（上移）
             Padding(
-              padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 24),
+              padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 40),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
