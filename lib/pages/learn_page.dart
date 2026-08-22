@@ -1,6 +1,6 @@
 // 由账号4生成
-// 学习页：Apple Design Language + 1:1 原版流程
-// 核心流程：单词 → 4选1 → 原地变色判断 → 例句/形近词 → 下一词
+// 学习页：Mistral AI 设计风格
+// 奶油黄卡片 + 橙色 CTA + Charter 衬线单词 + Inter 无衬线正文
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -44,7 +44,7 @@ class _LearnPageState extends State<LearnPage> {
   }
 }
 
-/// 顶部导航栏（Apple 风格：简洁白底 + 进度）
+/// 顶部导航栏
 class _TopBar extends StatelessWidget {
   final SkinSystem skin;
   final LearningState state;
@@ -67,10 +67,8 @@ class _TopBar extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text(
-            '${state.currentIndex + 1}/${state.total}',
-            style: AppleTypography.captionStrong.copyWith(color: skin.colors.accent),
-          ),
+          Text('${state.currentIndex + 1}/${state.total}',
+            style: MistralTypography.captionBold.copyWith(color: skin.colors.accent)),
           const SizedBox(width: 8),
           Expanded(
             child: ClipRRect(
@@ -112,12 +110,8 @@ class _WordArea extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  word.word,
-                  style: AppleTypography.displayLg.copyWith(
-                    color: skin.colors.text1,
-                    fontSize: 44,
-                  ),
+                Text(word.word,
+                  style: MistralTypography.heading1.copyWith(color: skin.colors.text1, fontSize: 44),
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
@@ -128,10 +122,8 @@ class _WordArea extends StatelessWidget {
             ),
             if (word.usPron.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(
-                '/${word.usPron}/',
-                style: AppleTypography.caption.copyWith(color: skin.colors.text3),
-              ),
+              Text('/${word.usPron}/',
+                style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
             ],
           ],
         ),
@@ -142,14 +134,12 @@ class _WordArea extends StatelessWidget {
   Future<void> _playAudio(String w) async {
     try {
       final player = AudioPlayer();
-      await player.play(UrlSource(
-        'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(w)}&type=2',
-      ));
+      await player.play(UrlSource('http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(w)}&type=2'));
     } catch (_) {}
   }
 }
 
-/// 下半：4选1 → 原地变色 → 例句/形近词 → 下一词
+/// 下半：4选1 → 原地变色 → 例句 → 下一词
 class _InterpretArea extends StatefulWidget {
   final dynamic word;
   final LearningState state;
@@ -166,10 +156,7 @@ class _InterpretAreaState extends State<_InterpretArea> {
   @override
   void didUpdateWidget(covariant _InterpretArea oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 词切换时重置选择状态
-    if (oldWidget.word.word != widget.word.word) {
-      _selectedIndex = -1;
-    }
+    if (oldWidget.word.word != widget.word.word) _selectedIndex = -1;
   }
 
   @override
@@ -185,27 +172,26 @@ class _InterpretAreaState extends State<_InterpretArea> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: skin.colors.cardBg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        // 奶油黄卡片（Mistral card-cream）
+        color: skin.colors.cardBgAlt,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: skin.colors.divider, width: 0.5),
       ),
       child: !answered
-          // ===== 未答题：4选1 =====
           ? Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('请选择正确释义',
-                      style: AppleTypography.captionStrong.copyWith(color: skin.colors.text3)),
+                    style: MistralTypography.captionBold.copyWith(color: skin.colors.text3)),
                   const SizedBox(height: 12),
                   for (int i = 0; i < state.choices.length && i < 4; i++)
                     _ChoiceOption(
                       label: _labels[i],
                       interpret: state.choices[i].interpret.toString(),
                       isAnswer: state.choices[i].word == word.word,
-                      selected: false,
-                      skin: skin,
+                      selected: false, skin: skin,
                       onTap: () {
                         setState(() => _selectedIndex = i);
                         final isCorrect = state.choices[i].word == word.word;
@@ -215,20 +201,17 @@ class _InterpretAreaState extends State<_InterpretArea> {
                 ],
               ),
             )
-          // ===== 已答题：原地变色 + 例句 + 下一词 =====
           : SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 选项区域（已选变色）
                   for (int i = 0; i < state.choices.length && i < 4; i++)
                     _ChoiceOption(
                       label: _labels[i],
                       interpret: state.choices[i].interpret.toString(),
                       isAnswer: state.choices[i].word == word.word,
-                      selected: i == _selectedIndex,
-                      skin: skin,
+                      selected: i == _selectedIndex, skin: skin,
                     ),
                   const SizedBox(height: 16),
                   // 正误反馈
@@ -239,55 +222,43 @@ class _InterpretAreaState extends State<_InterpretArea> {
                           ? skin.colors.success.withValues(alpha: 0.1)
                           : skin.colors.danger.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppRadius.sm),
-                      border: Border.all(
-                        color: correct ? skin.colors.success : skin.colors.danger,
-                      ),
+                      border: Border.all(color: correct ? skin.colors.success : skin.colors.danger),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(correct ? Icons.check_circle : Icons.cancel,
-                            color: correct ? skin.colors.success : skin.colors.danger, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            correct ? '✓ 正确！' : '✗ 正确答案：${word.interpret.split('\n').first}',
-                            style: AppleTypography.body.copyWith(
-                              color: correct ? skin.colors.success : skin.colors.danger,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: Row(children: [
+                      Icon(correct ? Icons.check_circle : Icons.cancel,
+                        color: correct ? skin.colors.success : skin.colors.danger, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(
+                        correct ? '✓ 正确！' : '✗ 正确答案：${word.interpret.split('\n').first}',
+                        style: MistralTypography.bodyMd.copyWith(
+                          color: correct ? skin.colors.success : skin.colors.danger),
+                      )),
+                    ]),
                   ),
                   const SizedBox(height: 16),
-                  // 释义
                   ...lines.map((line) => Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Text(line,
-                            style: AppleTypography.body.copyWith(color: skin.colors.text1)),
-                      )),
-                  // 例句
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(line, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1)),
+                  )),
                   if (examples.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    Text('例句',
-                        style: AppleTypography.captionStrong.copyWith(color: skin.colors.text2)),
+                    Text('例句', style: MistralTypography.captionBold.copyWith(color: skin.colors.text2)),
                     const SizedBox(height: 8),
                     ...examples.take(2).map((ex) => _ExampleTile(ex, skin)),
                   ],
                   const SizedBox(height: 16),
-                  // 下一词按钮
+                  // 橙色 CTA 按钮（Mistral button-primary）
                   SizedBox(
-                    width: double.infinity,
-                    height: 48,
+                    width: double.infinity, height: 48,
                     child: FilledButton(
                       onPressed: () => state.next(),
                       style: FilledButton.styleFrom(
                         backgroundColor: skin.colors.accent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                        ),
+                          borderRadius: BorderRadius.circular(AppRadius.md)),
                       ),
-                      child: Text('下一词', style: AppleTypography.bodyStrong.copyWith(color: Colors.white)),
+                      child: Text('下一词',
+                        style: MistralTypography.buttonMd.copyWith(color: Colors.white)),
                     ),
                   ),
                 ],
@@ -297,7 +268,7 @@ class _InterpretAreaState extends State<_InterpretArea> {
   }
 }
 
-/// 4选1选项（Apple 风格：圆形字母 + 释义文本）
+/// 4选1选项（Mistral pill-tab 风格）
 class _ChoiceOption extends StatelessWidget {
   final String label;
   final String interpret;
@@ -307,32 +278,20 @@ class _ChoiceOption extends StatelessWidget {
   final VoidCallback? onTap;
 
   const _ChoiceOption({
-    required this.label,
-    required this.interpret,
-    required this.isAnswer,
-    this.selected = false,
-    required this.skin,
-    this.onTap,
+    required this.label, required this.interpret, required this.isAnswer,
+    this.selected = false, required this.skin, this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final answered = selected || onTap == null;
-    final circleColor = !answered
-        ? skin.colors.accent
-        : isAnswer
-            ? skin.colors.success
-            : skin.colors.danger;
-    final bgColor = !answered
-        ? skin.colors.cardBgAlt
-        : isAnswer
-            ? skin.colors.success.withValues(alpha: 0.08)
-            : skin.colors.danger.withValues(alpha: 0.08);
-    final borderColor = !answered
-        ? skin.colors.divider
-        : isAnswer
-            ? skin.colors.success
-            : skin.colors.danger;
+    final circleColor = !answered ? skin.colors.accent
+        : isAnswer ? skin.colors.success : skin.colors.danger;
+    final bgColor = !answered ? skin.colors.cardBg
+        : isAnswer ? skin.colors.success.withValues(alpha: 0.08)
+        : skin.colors.danger.withValues(alpha: 0.08);
+    final borderColor = !answered ? skin.colors.divider
+        : isAnswer ? skin.colors.success : skin.colors.danger;
 
     return GestureDetector(
       onTap: answered ? null : onTap,
@@ -345,27 +304,18 @@ class _ChoiceOption extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.sm),
           border: Border.all(color: borderColor, width: answered ? 1.5 : 0.5),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(color: circleColor, shape: BoxShape.circle),
-              child: Center(
-                child: Text(label,
-                    style: const TextStyle(
-                        fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(interpret,
-                  style: AppleTypography.body.copyWith(color: skin.colors.text1),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis),
-            ),
-          ],
-        ),
+        child: Row(children: [
+          Container(
+            width: 28, height: 28,
+            decoration: BoxDecoration(color: circleColor, shape: BoxShape.circle),
+            child: Center(child: Text(label,
+              style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold))),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(interpret,
+            style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1),
+            maxLines: 2, overflow: TextOverflow.ellipsis)),
+        ]),
       ),
     );
   }
@@ -383,29 +333,25 @@ class _ExampleTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: skin.colors.cardBgAlt,
+        color: skin.colors.cardBg,
         borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: skin.colors.divider),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RichText(
-            text: TextSpan(
-              style: AppleTypography.caption.copyWith(color: skin.colors.text1, height: 1.4),
-              children: example.highlightedParts.map((p) => TextSpan(
-                text: p.text,
-                style: p.highlight
-                    ? TextStyle(fontWeight: FontWeight.bold, color: skin.colors.accent)
-                    : null,
-              )).toList(),
-            ),
-          ),
-          if (example.cn.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(example.cn, style: AppleTypography.finePrint.copyWith(color: skin.colors.text3)),
-          ],
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        RichText(text: TextSpan(
+          style: MistralTypography.bodySm.copyWith(color: skin.colors.text1, height: 1.4),
+          children: example.highlightedParts.map((p) => TextSpan(
+            text: p.text,
+            style: p.highlight
+                ? TextStyle(fontWeight: FontWeight.bold, color: skin.colors.accent)
+                : null,
+          )).toList(),
+        )),
+        if (example.cn.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(example.cn, style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
         ],
-      ),
+      ]),
     );
   }
 }

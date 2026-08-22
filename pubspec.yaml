@@ -75,6 +75,28 @@ flutter:
     - assets/db/wordbook.db.gz
     - assets/icons/
 
+  # 字体（Mistral AI：Inter 无衬线 + Charter 衬线）
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.otf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.otf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.otf
+          weight: 700
+    - family: Charter
+      fonts:
+        - asset: assets/fonts/Charter-Roman.ttf
+          weight: 400
+        - asset: assets/fonts/Charter-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Charter-BoldItalic.ttf
+          weight: 700
+          style: italic
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

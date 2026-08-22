@@ -83,12 +83,12 @@ class AppleEntryCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: AppleTypography.captionStrong.copyWith(color: skin.colors.text3),
+              style: MistralTypography.captionBold.copyWith(color: skin.colors.text3),
             ),
             const SizedBox(height: 8),
             Text(
               '$count',
-              style: AppleTypography.displayLg.copyWith(
+              style: MistralTypography.heading2.copyWith(
                 color: count > 0 ? skin.colors.accent : skin.colors.text3,
                 fontSize: 32,
               ),

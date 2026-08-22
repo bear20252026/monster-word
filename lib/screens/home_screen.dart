@@ -1,5 +1,5 @@
 // 由账号4生成
-// 首页：Apple Design Language — 纯色背景 + HeroWord + 入口卡 + 查词按钮
+// 首页：Mistral AI 设计风格 — 奶油黄背景 + 日落渐变条 + Charter 衬线 HeroWord
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -20,14 +20,13 @@ class HomeScreen extends StatelessWidget {
     final skin = context.skin;
     final resp = context.responsive;
     final state = context.watch<LearningState>();
-
     final heroWord = state.currentWord?.word ?? 'Monster Word';
 
     return AppleBg(
       child: SafeArea(
         child: Column(
           children: [
-            // 顶部栏：头像 + 查词按钮
+            // 顶部栏：头像 + 查词
             Padding(
               padding: EdgeInsets.fromLTRB(resp.pageMargin, 12, resp.pageMargin, 0),
               child: Row(
@@ -37,8 +36,7 @@ class HomeScreen extends StatelessWidget {
                   GestureDetector(
                     onTap: () => Navigator.pushNamed(context, SearchPage.routeName),
                     child: Container(
-                      width: 36,
-                      height: 36,
+                      width: 36, height: 36,
                       decoration: BoxDecoration(
                         color: skin.colors.cardBgAlt,
                         shape: BoxShape.circle,
@@ -50,36 +48,30 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
+            // HeroWord（Mistral 衬线大字）
             const Spacer(flex: 2),
-            // HeroWord（居中偏上）
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  Text(
-                    heroWord,
-                    style: AppTypography.heroWord.copyWith(
-                      fontSize: resp.heroFontSize,
+                  Text(heroWord,
+                    style: MistralTypography.heading1.copyWith(
                       color: skin.colors.text1,
+                      fontSize: resp.heroFontSize.clamp(36, 64),
                     ),
                   ),
-                  if (state.currentWord != null &&
-                      state.currentWord!.usPron.isNotEmpty) ...[
+                  if (state.currentWord != null && state.currentWord!.usPron.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    Text(
-                      '/${state.currentWord!.usPron}/',
-                      style: AppTypography.caption.copyWith(
-                        color: skin.colors.text3,
-                      ),
-                    ),
+                    Text('/${state.currentWord!.usPron}/',
+                      style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
                   ],
                 ],
               ),
             ),
             const Spacer(flex: 1),
-            // Learn/Review 入口卡（上移）
+            // Learn / Review 入口卡
             Padding(
-              padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 40),
+              padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -87,18 +79,25 @@ class HomeScreen extends StatelessWidget {
                     title: 'Learn',
                     count: state.total > 0 ? state.total : 0,
                     width: resp.glassCardWidth,
-                    onTap: () =>
-                        Navigator.pushNamed(context, LibSelectPage.routeName),
+                    onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
                   ),
                   const SizedBox(width: 12),
                   AppleEntryCard(
                     title: 'Review',
                     count: state.dueCount,
                     width: resp.glassCardWidth,
-                    onTap: () =>
-                        Navigator.pushNamed(context, ReviewSession.routeName),
+                    onTap: () => Navigator.pushNamed(context, ReviewSession.routeName),
                   ),
                 ],
+              ),
+            ),
+            // 日落渐变条（Mistral 签名元素）
+            Container(
+              height: 8,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [MistralColors.primary, MistralColors.sunshine700, MistralColors.sunshine300],
+                ),
               ),
             ),
           ],
@@ -108,7 +107,6 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// 头像（Apple 风格：纯色圆形 + 人物图标）
 class _Avatar extends StatelessWidget {
   final SkinSystem skin;
   const _Avatar({required this.skin});
@@ -116,8 +114,7 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 40,
-      height: 40,
+      width: 40, height: 40,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: skin.colors.cardBgAlt,
