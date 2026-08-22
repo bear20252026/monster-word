@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart';
-import '../engine/distractor_engine.dart';
 import '../engine/leitner_engine.dart';
 import '../engine/srs_engine.dart';
 import '../models/bb_word_process.dart';
@@ -101,31 +100,52 @@ class LearningState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 重新生成 4 选 1 选项（使用 DistractorEngine：编辑距离+首字母+尾字母+词长+LCS）
-  /// 保证始终有 4 个选项：1 正确 + 3 干扰
+  /// 重新生成 4 选 1 选项（保证始终 4 个：1 正确 + 3 干扰）
   void _regenerateChoices() {
     final current = _leitnerEngine.currentWord();
     if (current == null) { _choices = []; return; }
 
     final correctInterpret = current.interpret;
-    // 构建候选池
+    final correctWord = current.word;
+
+    // 构建候选池（去重释义）
+    final seenInterprets = <String>{correctInterpret};
     final pool = <Map<String, String>>[];
     for (final w in _queue) {
-      if (w.word != current.word && w.interpret.isNotEmpty) {
+      if (w.word != correctWord && w.interpret.isNotEmpty && !seenInterprets.contains(w.interpret)) {
+        seenInterprets.add(w.interpret);
         pool.add({'word': w.word, 'interpret': w.interpret});
       }
     }
-    // 用 DistractorEngine 生成 3 个干扰项
-    final distractors = DistractorEngine().quickGenerate(
-      targetWord: current.word,
-      targetInterpret: correctInterpret,
-      pool: pool,
-      count: 3,
-    );
+
+    // 打乱候选池，取前 3 个不同释义
+    pool.shuffle();
+    final distractors = <Map<String, String>>[];
+    for (final w in pool) {
+      if (distractors.length >= 3) break;
+      distractors.add(w);
+    }
+
+    // 如果不够 3 个，用占位释义补齐
+    final fallbacks = [
+      {'word': '', 'interpret': '非标准用法'},
+      {'word': '', 'interpret': '罕用释义'},
+      {'word': '', 'interpret': '非正式表达'},
+    ];
+    int fb = 0;
+    while (distractors.length < 3 && fb < fallbacks.length) {
+      final fbInterpret = fallbacks[fb]['interpret']!;
+      if (!seenInterprets.contains(fbInterpret)) {
+        distractors.add(fallbacks[fb]);
+        seenInterprets.add(fbInterpret);
+      }
+      fb++;
+    }
+
     // 组装 4 个选项并打乱
     final choices = <WordChoicePair>[
-      WordChoicePair(current.word, correctInterpret),
-      ...distractors.map((d) => WordChoicePair(d['word']!, d['interpret']!)),
+      WordChoicePair(correctWord, correctInterpret),
+      ...distractors.map((d) => WordChoicePair(d['word'] ?? '', d['interpret'] ?? '')),
     ];
     _choices = choices.toList()..shuffle();
   }
