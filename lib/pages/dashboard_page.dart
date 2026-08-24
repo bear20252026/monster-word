@@ -45,7 +45,7 @@ class DashboardPage extends StatelessWidget {
                         const SizedBox(height: 12),
                         _buildCurrentBookCard(context, state, book, learned, skin),
                         const SizedBox(height: 24),
-                        _buildMyDataSection(state, book, learned, skin),
+                        _buildMyDataSection(context, state, book, learned, skin),
                       ],
                     ),
                   ),
@@ -174,7 +174,8 @@ class DashboardPage extends StatelessWidget {
   }
 
   /// 我的数据统计卡片
-  Widget _buildMyDataSection(LearningState state, Book? book, int learned, ThemeVars skin) {
+  Widget _buildMyDataSection(BuildContext context, LearningState state, Book? book, int learned, ThemeVars skin) {
+    final resp = context.responsive;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -190,14 +191,24 @@ class DashboardPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.lg),
             border: Border.all(color: skin.divider),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _DataItem(label: '今日学习', value: '$learned'),
-              _DataItem(label: '待复习', value: '${state.dueCount}'),
-              _DataItem(label: '词书', value: '${book == null ? 0 : 1}'),
-            ],
-          ),
+          child: resp.isDesktop
+              ? Row(
+                  children: [
+                    Expanded(child: _DataItem(label: '今日学习', value: '$learned')),
+                    Container(width: 1, height: 40, color: skin.divider),
+                    Expanded(child: _DataItem(label: '待复习', value: '${state.dueCount}')),
+                    Container(width: 1, height: 40, color: skin.divider),
+                    Expanded(child: _DataItem(label: '词书', value: '${book == null ? 0 : 1}')),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _DataItem(label: '今日学习', value: '$learned'),
+                    _DataItem(label: '待复习', value: '${state.dueCount}'),
+                    _DataItem(label: '词书', value: '${book == null ? 0 : 1}'),
+                  ],
+                ),
         ),
       ],
     );

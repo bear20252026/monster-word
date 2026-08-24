@@ -223,6 +223,8 @@ class _CourseCardGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final resp = context.responsive;
+    final crossAxisCount = resp.isDesktop ? 3 : 2;
     final courses = [
       _CourseData(
         title: '备考速刷',
@@ -278,8 +280,8 @@ class _CourseCardGrid extends StatelessWidget {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         mainAxisSpacing: AppSpacing.sm,
         crossAxisSpacing: AppSpacing.sm,
         childAspectRatio: 1.2,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
+import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/func_colors.dart';
@@ -28,7 +29,7 @@ class MyContentPage extends StatelessWidget {
             // 内容区
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: context.responsive.isWide ? 24 : 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

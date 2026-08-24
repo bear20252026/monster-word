@@ -27,37 +27,42 @@ class _AppearancePageState extends State<AppearancePage> {
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
       body: SafeArea(
-        child: Column(
-          children: [
-            // 顶部导航
-            _buildNav(skin),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: AppleSpacing.lg),
-                    // 两个大预览卡片（壁纸 + 阅读模式）
-                    _buildPreviewCards(skin),
-                    const SizedBox(height: AppleSpacing.xl),
-                    // 主题选择圆圈（明亮/深邃/极夜）
-                    _buildThemeCircles(skin),
-                    const SizedBox(height: AppleSpacing.md),
-                    // 跟随系统开关
-                    _buildFollowSystemRow(skin),
-                    const SizedBox(height: AppleSpacing.md),
-                    // 风格字体（可切换，全局生效）
-                    _buildFontRow(skin),
-                    const SizedBox(height: AppleSpacing.md),
-                    // 沉浸场景（点击查看使用方法并前往体验）
-                    _buildImmersiveRow(skin),
-                    const SizedBox(height: AppleSpacing.xxl),
-                  ],
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: resp.contentWidth),
+            child: Column(
+              children: [
+                // 顶部导航
+                _buildNav(skin),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: AppleSpacing.lg),
+                        // 两个大预览卡片（壁纸 + 阅读模式）
+                        _buildPreviewCards(skin),
+                        const SizedBox(height: AppleSpacing.xl),
+                        // 主题选择圆圈（明亮/深邃/极夜）
+                        _buildThemeCircles(skin),
+                        const SizedBox(height: AppleSpacing.md),
+                        // 跟随系统开关
+                        _buildFollowSystemRow(skin),
+                        const SizedBox(height: AppleSpacing.md),
+                        // 风格字体（可切换，全局生效）
+                        _buildFontRow(skin),
+                        const SizedBox(height: AppleSpacing.md),
+                        // 沉浸场景（点击查看使用方法并前往体验）
+                        _buildImmersiveRow(skin),
+                        const SizedBox(height: AppleSpacing.xxl),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

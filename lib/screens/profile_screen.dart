@@ -56,7 +56,7 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     // 金色渐变头部区
-                    _buildProfileHeader(skin),
+                    _buildProfileHeader(context, skin),
                     const SizedBox(height: 20),
                     // 尖叫币 + 装备卡片
                     Padding(
@@ -82,57 +82,91 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader(SkinSystem skin) {
+  Widget _buildProfileHeader(BuildContext context, SkinSystem skin) {
+    final resp = context.responsive;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.only(top: 8, bottom: 24),
       color: MistralColors.cream, // 奶油画布纯色（token：#F2F0EB）
-      child: Column(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: resp.contentWidth),
+          child: resp.isDesktop
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // 头像 + VIP 徽章
+                    _buildAvatar(skin),
+                    const SizedBox(width: 20),
+                    // 用户信息
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppPreferences().getUserInfoSync().nickname,
+                          style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'VIP 会员',
+                          style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
+                        ),
+                      ],
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    // 头像 + VIP 徽章
+                    _buildAvatar(skin),
+                    const SizedBox(height: 12),
+                    // 用户 ID（用户可自定义）
+                    Text(
+                      AppPreferences().getUserInfoSync().nickname,
+                      style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(SkinSystem skin) {
+    return SizedBox(
+      width: 88,
+      height: 88,
+      child: Stack(
         children: [
-          // 头像 + VIP 徽章（白框 + 绿色 VIP）
-          SizedBox(
+          Container(
             width: 88,
             height: 88,
-            child: Stack(
-              children: [
-                Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.white100, // 纯白底（移除金色渐变）
-                    border: Border.all(color: AppColors.white100, width: 3),
-                  ),
-                  child: Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 40), // 品牌绿图标
-                ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: skin.colors.accent, // 绿色 VIP 徽章（原 #4A6741 → accent）
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.white100, width: 2),
-                    ),
-                    child: const Center(
-                      child: Text('VIP', style: TextStyle(
-                        color: AppColors.white100,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                      )),
-                    ),
-                  ),
-                ),
-              ],
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.white100,
+              border: Border.all(color: AppColors.white100, width: 3),
             ),
+            child: Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 40),
           ),
-          const SizedBox(height: 12),
-          // 用户 ID（用户可自定义）
-          Text(
-            AppPreferences().getUserInfoSync().nickname,
-            style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: skin.colors.accent,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.white100, width: 2),
+              ),
+              child: const Center(
+                child: Text('VIP', style: TextStyle(
+                  color: AppColors.white100,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                )),
+              ),
+            ),
           ),
         ],
       ),

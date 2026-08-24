@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/app_preferences.dart';
+import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import 'message_page.dart';
@@ -84,7 +85,7 @@ class MySpacePage extends StatelessWidget {
                     ),
                   ),
                   // 头像 + VIP 徽章 + 用户 ID + 会员状态
-                  _buildProfileHeader(skin),
+                  _buildProfileHeader(context, skin),
                   const SizedBox(height: 16),
                   // 尖叫币 + 装备卡片
                   Padding(
@@ -103,69 +104,129 @@ class MySpacePage extends StatelessWidget {
             ),
           ),
           // 菜单列表（普通背景）
-          Expanded(child: _buildMenuList(skin)),
+          Expanded(child: _buildMenuList(context, skin)),
         ],
       ),
     );
   }
 
   /// 头像 + VIP 徽章 + 用户 ID + 会员状态条
-  Widget _buildProfileHeader(ThemeVars skin) {
-    return Column(
-      children: [
-        SizedBox(
-          width: 80, height: 80,
-          child: Stack(
+  Widget _buildProfileHeader(BuildContext context, ThemeVars skin) {
+    final resp = context.responsive;
+    return resp.isDesktop
+        ? Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
+              // 头像
+              SizedBox(
                 width: 80, height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [MistralColors.sunshine300, MistralColors.sunshine500],
-                  ),
-                  border: Border.all(color: skin.cardBg, width: 3),
-                  boxShadow: [BoxShadow(
-                    color: MistralColors.sunshine500.withValues(alpha: 0.3),
-                    blurRadius: 12, offset: const Offset(0, 4),
-                  )],
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 80, height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [MistralColors.sunshine300, MistralColors.sunshine500],
+                        ),
+                        border: Border.all(color: skin.cardBg, width: 3),
+                        boxShadow: [BoxShadow(
+                          color: MistralColors.sunshine500.withValues(alpha: 0.3),
+                          blurRadius: 12, offset: const Offset(0, 4),
+                        )],
+                      ),
+                      child: Icon(Icons.person, color: skin.cardBg, size: 40),
+                    ),
+                    Positioned(
+                      right: 0, bottom: 0,
+                      child: Container(
+                        width: 26, height: 26,
+                        decoration: BoxDecoration(
+                          color: MistralColors.sunshine500,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: skin.cardBg, width: 2),
+                        ),
+                        child: Center(
+                          child: Text('V', style: TextStyle(
+                            color: skin.cardBg, fontSize: 13, fontWeight: FontWeight.bold,
+                          )),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Icon(Icons.person, color: skin.cardBg, size: 40),
               ),
-              Positioned(
-                right: 0, bottom: 0,
-                child: Container(
-                  width: 26, height: 26,
-                  decoration: BoxDecoration(
-                    color: MistralColors.sunshine500,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: skin.cardBg, width: 2),
+              const SizedBox(width: 16),
+              // 用户信息
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppPreferences().getUserInfoSync().nickname,
+                    style: MistralTypography.bodyMd.copyWith(color: skin.text2),
                   ),
-                  child: Center(
-                    child: Text('V', style: TextStyle(
-                      color: skin.cardBg, fontSize: 13, fontWeight: FontWeight.bold,
-                    )),
-                  ),
-                ),
+                ],
               ),
             ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          AppPreferences().getUserInfoSync().nickname,
-          style: MistralTypography.bodyMd.copyWith(color: skin.text2),
-        ),
-      ],
-    );
+          )
+        : Column(
+            children: [
+              SizedBox(
+                width: 80, height: 80,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 80, height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [MistralColors.sunshine300, MistralColors.sunshine500],
+                        ),
+                        border: Border.all(color: skin.cardBg, width: 3),
+                        boxShadow: [BoxShadow(
+                          color: MistralColors.sunshine500.withValues(alpha: 0.3),
+                          blurRadius: 12, offset: const Offset(0, 4),
+                        )],
+                      ),
+                      child: Icon(Icons.person, color: skin.cardBg, size: 40),
+                    ),
+                    Positioned(
+                      right: 0, bottom: 0,
+                      child: Container(
+                        width: 26, height: 26,
+                        decoration: BoxDecoration(
+                          color: MistralColors.sunshine500,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: skin.cardBg, width: 2),
+                        ),
+                        child: Center(
+                          child: Text('V', style: TextStyle(
+                            color: skin.cardBg, fontSize: 13, fontWeight: FontWeight.bold,
+                          )),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                AppPreferences().getUserInfoSync().nickname,
+                style: MistralTypography.bodyMd.copyWith(color: skin.text2),
+              ),
+            ],
+          );
   }
 
   /// 菜单列表
-  Widget _buildMenuList(dynamic skin) {
+  Widget _buildMenuList(BuildContext context, dynamic skin) {
+    final resp = context.responsive;
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: resp.isWide ? 24 : 20),
       children: [
         _MenuItem(icon: Icons.palette_outlined, title: '外观 & 沉浸场景', subtitle: '主题、壁纸、字体', skin: skin),
         _MenuItem(icon: Icons.school_outlined, title: '学习偏好', subtitle: '发音、节奏、题型', skin: skin),

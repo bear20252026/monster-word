@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -56,48 +57,57 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       backgroundColor: skin.pageBg,
       body: SafeArea(
-        child: Column(
-          children: [
-            // 顶部导航栏
-            Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                    color: skin.text1,
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        '学习偏好',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: skin.text1,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: context.responsive.contentWidth),
+            child: Column(
+              children: [
+                // 顶部导航栏
+                Container(
+                  height: 48,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                        color: skin.text1,
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            '学习偏好',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: skin.text1,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 48),
+                    ],
                   ),
-                  const SizedBox(width: 48),
-                ],
-              ),
+                ),
+                // 内容区
+                Expanded(
+                  child: _buildPreferences(context),
+                ),
+              ],
             ),
-            // 内容区
-            Expanded(
-              child: _buildPreferences(context),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildPreferences(BuildContext context) {
+    final resp = context.responsive;
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: resp.isWide ? 24 : 16,
+        vertical: 16,
+      ),
       children: [
         // --- 第一组：学习提醒 ---
         _SettingGroup([
