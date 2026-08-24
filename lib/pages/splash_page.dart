@@ -106,7 +106,7 @@ class _SplashPageState extends State<SplashPage>
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
+      backgroundColor: skin.colors.pageBg,
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnim,
@@ -165,21 +165,21 @@ class _SplashPageState extends State<SplashPage>
                 ),
                 const SizedBox(height: 8),
                 // "单" "词" — 黑色竖排
-                const Text(
+                Text(
                   '单',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1F1F1F),
+                    color: skin.colors.text1,
                     height: 1.2,
                   ),
                 ),
-                const Text(
+                Text(
                   '词',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1F1F1F),
+                    color: skin.colors.text1,
                     height: 1.2,
                   ),
                 ),

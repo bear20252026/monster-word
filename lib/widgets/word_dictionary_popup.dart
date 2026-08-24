@@ -155,7 +155,7 @@ class WordDictionaryPopup extends StatelessWidget {
                 margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8F8F8),
+                  color: skin.colors.cardBgAlt,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
@@ -202,9 +202,9 @@ class WordDictionaryPopup extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   border: Border(
-                    top: BorderSide(color: Color(0xFFEEEEEE), width: 0.5),
+                    top: BorderSide(color: skin.colors.divider, width: 0.5),
                   ),
                 ),
                 child: Row(
@@ -242,15 +242,16 @@ class _PopupPhoneticPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skin = context.skin;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F0F0),
+        color: skin.colors.cardBgAlt,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 11, color: Color(0xFF888888)),
+        style: TextStyle(fontSize: 11, color: skin.colors.text3),
       ),
     );
   }
