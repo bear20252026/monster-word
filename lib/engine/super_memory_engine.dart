@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // SuperMemory 复习引擎：翻译自 coreengine/SuperMemoryInMemoryImp.java（v3.2 源码 1:1）
 // 复习调度：到期词 + 测试模式（英译中/四选一/拼写/完成）+ 评分等级 0-6

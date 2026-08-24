@@ -1,9 +1,13 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 主界面：1:1 复刻原版 activity_main.xml
 // 结构：全屏背景 + 顶部头像 + 签到组件 + Learn/Review 双按钮 + 底部 4 图标栏
 import 'package:flutter/material.dart';
 
+import '../hooks/responsive.dart';
 import '../theme/app_theme.dart';
+import '../theme/skin_system.dart';
 import 'dashboard_page.dart';
 import 'lib_select_page.dart';
 import 'my_space_page.dart';
@@ -19,17 +23,19 @@ class BooksPage extends StatefulWidget {
 class _BooksPageState extends State<BooksPage> {
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
+    final resp = context.responsive;
     return Scaffold(
       body: Stack(
         children: [
           // ===== 全屏背景（原版 iv_background 渐变绿）=====
           Positioned.fill(
             child: DecoratedBox(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [AppColors.mainBgTop, AppColors.mainBgBottom],
+                  colors: [colors.pageBg, colors.cardBg],
                 ),
               ),
             ),
@@ -40,7 +46,7 @@ class _BooksPageState extends State<BooksPage> {
               children: [
                 // 顶部头像栏（原版 myInfo_head，44dp）
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
                   child: Row(
                     children: [
                       Container(
@@ -53,7 +59,7 @@ class _BooksPageState extends State<BooksPage> {
                             color: Colors.white.withValues(alpha: 0.5),
                           ),
                         ),
-                        child: const Icon(Icons.person, color: Colors.white, size: 26),
+                        child: Icon(Icons.person, color: Colors.white, size: 26),
                       ),
                       const SizedBox(width: 16),
                       Text(
@@ -65,7 +71,7 @@ class _BooksPageState extends State<BooksPage> {
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.more_horiz, color: Colors.white),
+                        icon: Icon(Icons.more_horiz, color: Colors.white),
                         onPressed: () {},
                       ),
                     ],
@@ -77,7 +83,7 @@ class _BooksPageState extends State<BooksPage> {
                 const Spacer(),
                 // Learn/Review 双按钮（原版 ll_btn_view，70dp）
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppDimens.pageCommonMargin),
+                  padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
                   child: Row(
                     children: [
                       Expanded(
@@ -88,7 +94,7 @@ class _BooksPageState extends State<BooksPage> {
                           onTap: _openLearn,
                         ),
                       ),
-                      const SizedBox(width: AppDimens.pageCommonMargin),
+                      SizedBox(width: resp.pageMargin),
                       Expanded(
                         child: _LearnReviewBand(
                           title: 'Review',
@@ -152,6 +158,7 @@ class _BooksPageState extends State<BooksPage> {
 class _CheckInBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
     return Container(
       width: 139,
       height: 135,
@@ -166,8 +173,8 @@ class _CheckInBadge extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.event_available, color: Colors.white, size: 36),
-          const SizedBox(height: 6),
+          Icon(Icons.event_available, color: Colors.white, size: 36),
+          SizedBox(height: 6),
           Text(
             '今日打卡',
             style: TextStyle(
@@ -198,6 +205,7 @@ class _LearnReviewBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -211,14 +219,14 @@ class _LearnReviewBand extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: Colors.white, size: 30),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -251,13 +259,14 @@ class _HomeIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
     return GestureDetector(
       onTap: onTap,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: Colors.white, size: 26),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(
             label,
             style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.85)),

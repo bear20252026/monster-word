@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 数据层：词库数据库初始化与查询
 // 跨平台支持：Windows (sqflite_common_ffi) / Android / iOS (sqflite)
@@ -42,6 +44,9 @@ class Word {
   final String phrase;
   final String example;
   final String confuse;
+  final String audioUrls;
+  final String imageUrls;
+  final String wordRoot;
 
   Word({
     required this.id,
@@ -53,6 +58,9 @@ class Word {
     required this.phrase,
     required this.example,
     required this.confuse,
+    this.audioUrls = '',
+    this.imageUrls = '',
+    this.wordRoot = '',
   });
 
   factory Word.fromMap(Map<String, dynamic> map) => Word(
@@ -65,6 +73,9 @@ class Word {
         phrase: (map['phrase'] as String?) ?? '',
         example: (map['example'] as String?) ?? '',
         confuse: (map['confuse'] as String?) ?? '',
+        audioUrls: (map['audio_urls'] as String?) ?? '',
+        imageUrls: (map['image_urls'] as String?) ?? '',
+        wordRoot: (map['word_root'] as String?) ?? '',
       );
 
   /// 解释按行拆分（每个词性一行）
@@ -139,6 +150,24 @@ class WordBookDatabase {
     final rows = await db.query('words', where: 'word = ?', whereArgs: [word], limit: 1);
     if (rows.isEmpty) return null;
     return Word.fromMap(rows.first);
+  }
+
+  /// 按单词列表批量查询（用于收藏单词本等场景）
+  Future<List<Word>> getWordsByNames(Set<String> words) async {
+    if (words.isEmpty) return [];
+    final result = <Word>[];
+    // 分批查询，每批最多 500 个（SQLite 参数限制）
+    final wordList = words.toList();
+    for (var i = 0; i < wordList.length; i += 500) {
+      final batch = wordList.sublist(i, (i + 500).clamp(0, wordList.length));
+      final placeholders = batch.map((_) => '?').join(',');
+      final rows = await db.rawQuery(
+        'SELECT * FROM words WHERE word IN ($placeholders)',
+        batch,
+      );
+      result.addAll(rows.map(Word.fromMap));
+    }
+    return result;
   }
 
   /// 模糊搜索（前缀匹配）

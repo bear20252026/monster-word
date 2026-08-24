@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // L3 复习页：壁纸沉浸 + 四选一 + 认识/模糊/忘记了 下划线三键
 // 翻译自 Figma 03a-screens-learning.json review_session
@@ -77,8 +79,9 @@ class _ReviewSessionState extends State<ReviewSession> {
     }
     _done++;
     _showAnswer = false;
+    _selectedChoice = null;
     _regenerateChoices();
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   @override
@@ -93,7 +96,7 @@ class _ReviewSessionState extends State<ReviewSession> {
     final resp = context.responsive;
 
     return Scaffold(
-      body: AppleBg(
+      body: GlassBg(
         child: SafeArea(
           child: Column(
             children: [
@@ -122,7 +125,7 @@ class _ReviewSessionState extends State<ReviewSession> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+            icon: Icon(Icons.arrow_back_ios_new, size: 20, color: skin.colors.onGlassText1),
             onPressed: () => Navigator.pop(context),
           ),
           Text(
@@ -179,10 +182,6 @@ class _ReviewSessionState extends State<ReviewSession> {
 
             return GestureDetector(
               onTap: () {
-                setState(() {
-                  _selectedChoice = i;
-                  _showAnswer = true;
-                });
                 _rate(isAnswer ? RecallRating.good : RecallRating.again);
               },
               child: Container(
@@ -279,21 +278,23 @@ class _ReviewSessionState extends State<ReviewSession> {
   }
 
   Widget _buildDone() {
-    return AppleBg(
+    final skin = context.skin.colors;
+    return GlassBg(
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white, size: 72),
+            Icon(Icons.check_circle_outline, color: skin.onGlassText1, size: 72),
             const SizedBox(height: 16),
-            const Text('今日复习完成！',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+            Text('今日复习完成！',
+                style: MistralTypography.heading3.copyWith(fontWeight: FontWeight.bold, color: skin.onGlassText1)),
             const SizedBox(height: 8),
             Text('共复习 $_done 个单词',
-                style: AppTypography.body.copyWith(color: Colors.white70)),
+                style: MistralTypography.bodySm.copyWith(color: skin.onGlassText2)),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => Navigator.pop(context),
+              style: FilledButton.styleFrom(backgroundColor: skin.accent),
               child: const Text('返回'),
             ),
           ],
@@ -315,7 +316,7 @@ class _ExampleTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xEBFFFBF0),
+        color: skin.colors.cardBgAlt,
         borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
@@ -328,7 +329,7 @@ class _ExampleTile extends StatelessWidget {
                 (p) => TextSpan(
                   text: p.text,
                   style: p.highlight
-                      ? const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2FA89F))
+                      ? TextStyle(fontWeight: FontWeight.bold, color: skin.colors.accent)
                       : null,
                 ),
               ).toList(),

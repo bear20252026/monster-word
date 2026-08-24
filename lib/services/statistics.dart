@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 统计/事件层：翻译自 statistics/（v3.2 源码 1:1）
 // BBStatistician（统计核心）+ BBUMEvent（事件定义）+ StatisticUtils

@@ -4,26 +4,68 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'data/wordbook_database.dart';
+import 'data/user_database.dart';
+import 'utils/screen_utils.dart';
+import 'pages/base_web_page.dart';
+import 'pages/book_words_page.dart';
+import 'pages/collins_detail_intro_page.dart';
 import 'pages/dashboard_page.dart';
+import 'pages/extensive_model_select_page.dart';
+import 'pages/foot_mark_page.dart';
+import 'pages/help_page.dart';
 import 'pages/learn_page.dart';
 import 'pages/lib_select_page.dart';
+import 'pages/linked_me_middle_page.dart';
+import 'pages/list_word_listen_page.dart';
+import 'pages/login_page.dart';
+import 'pages/mastered_words_page.dart';
+import 'pages/message_page.dart';
+import 'pages/my_equip_page.dart';
+import 'pages/my_fav_page.dart';
+import 'pages/my_fav_sentence_page.dart';
 import 'pages/my_space_page.dart';
+import 'pages/my_words_page.dart';
+import 'pages/net_diagnosis_page.dart';
+import 'pages/new_words_page.dart';
+import 'pages/not_learned_words_page.dart';
+import 'pages/personal_stereo_page.dart';
+import 'pages/play_order_page.dart';
 import 'pages/review_page.dart';
+import 'pages/reviewing_words_page.dart';
 import 'pages/search_page.dart';
+import 'pages/sentence_detail_page.dart';
+import 'pages/sentence_quiz_page.dart';
+import 'pages/immersive_swipe_page.dart';
+import 'pages/appearance_page.dart';
+import 'pages/more_settings_page.dart';
+import 'pages/word_machine_page.dart';
+import 'pages/my_content_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/sms_page.dart';
+import 'pages/spell_check_page.dart';
+import 'pages/spell_session_page.dart';
+import 'pages/splash_page.dart';
+import 'pages/ui_theme_select_page.dart';
+import 'pages/uri_scheme_page.dart';
+import 'pages/user_info_manage_page.dart';
+import 'pages/word_detail_page.dart';
+import 'pages/user_item_modify_page.dart';
 import 'screens/home_screen.dart';
 import 'screens/learn_session.dart';
 import 'screens/profile_screen.dart';
 import 'screens/review_session.dart';
 import 'shell/main_shell.dart';
 import 'state/learning_state.dart';
+import 'state/wallpaper_state.dart';
 import 'theme/skin_system.dart';
 import 'widgets/adaptive_scale.dart';
+import 'widgets/transition_widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await WordBookDatabase.ensurePlatform();
   await WordBookDatabase.instance.initialize();
+  await UserDatabase.instance.initialize();
   runApp(const WordApp());
 }
 
@@ -36,6 +78,7 @@ class WordApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => LearningState()),
         ChangeNotifierProvider(create: (_) => SkinSystem()),
+        ChangeNotifierProvider(create: (_) => WallpaperState()),
       ],
       child: Consumer<SkinSystem>(
         builder: (context, skin, _) {
@@ -51,47 +94,136 @@ class WordApp extends StatelessWidget {
               ),
               useMaterial3: true,
             ),
+            builder: (context, child) {
+              ScreenUtils.init(context);
+              return child!;
+            },
             home: SkinProvider(
               skin: skin,
               child: AdaptiveScale(
                 child: MainShell(
                   tabs: [
                     TabDef(
-                      id: 'home',
-                      label: '首页',
-                      icon: Icons.home_outlined,
+                      id: 'learn',
+                      label: '学习',
+                      icon: Icons.auto_stories_outlined,
                       builder: (_) => const HomeScreen(),
                     ),
                     TabDef(
-                      id: 'lexicon',
-                      label: '词库',
-                      icon: Icons.menu_book_outlined,
+                      id: 'course',
+                      label: '课程',
+                      icon: Icons.school_outlined,
                       builder: (_) => const LibSelectPage(),
                     ),
                     TabDef(
-                      id: 'mine',
-                      label: '我的',
-                      icon: Icons.person_outline,
+                      id: 'settings',
+                      label: '设置',
+                      icon: Icons.settings_outlined,
                       builder: (_) => const ProfileScreen(),
                     ),
                   ],
                 ),
               ),
             ),
-            routes: {
-              LearnPage.routeName: (context) => const LearnPage(),
-              LibSelectPage.routeName: (context) => const LibSelectPage(),
-              ReviewPage.routeName: (context) => const ReviewPage(),
-              ReviewSession.routeName: (context) => const ReviewSession(),
-              LearnSession.routeName: (context) => const LearnSession(),
-              MySpacePage.routeName: (context) => const MySpacePage(),
-              DashboardPage.routeName: (context) => const DashboardPage(),
-              SettingsPage.routeName: (context) => const SettingsPage(),
-              SearchPage.routeName: (context) => const SearchPage(),
+            onGenerateRoute: (settings) {
+              final page = _buildPage(settings);
+              if (page == null) return null;
+              return _buildPageRoute(settings.name, page);
             },
           );
         },
       ),
     );
+  }
+
+  /// 根据路由名称构建页面
+  static Widget? _buildPage(RouteSettings settings) {
+    final name = settings.name;
+    final args = settings.arguments;
+    switch (name) {
+      case '/learn': return const LearnPage();
+      case '/lib_select': return const LibSelectPage();
+      case '/review': return const ReviewPage();
+      case '/review_session': return const ReviewSession();
+      case '/learn_session': return const LearnSession();
+      case '/my_space': return const MySpacePage();
+      case '/dashboard': return const DashboardPage();
+      case '/settings': return const SettingsPage();
+      case '/search': return const SearchPage();
+      case '/splash': return const SplashPage();
+      case '/login': return const LoginPage();
+      case '/my_words': return const MyWordsPage();
+      case '/new_words': return const NewWordsPage();
+      case '/mastered_words': return const MasteredWordsPage();
+      case '/not_learned_words': return const NotLearnedWordsPage();
+      case '/reviewing_words': return const ReviewingWordsPage();
+      case '/sentence_detail':
+        final a = args as Map<String, dynamic>?;
+        return SentenceDetailPage(
+          word: a?['word'] ?? '', sentence: a?['sentence'] ?? '',
+          translation: a?['translation'], source: a?['source'],
+        );
+      case '/my_fav': return const MyFavPage();
+      case '/my_fav_sentence': return const MyFavSentencePage();
+      case '/messages': return const MessagePage();
+      case '/foot_mark': return const FootMarkPage();
+      case '/my_equip': return const MyEquipPage();
+      case '/help': return const HelpPage();
+      case '/net_diagnosis': return const NetDiagnosisPage();
+      case '/user_info_manage': return const UserInfoManagePage();
+      case '/theme_select': return const UIThemeSelectPage();
+      case '/personal_stereo': return const PersonalStereoPage();
+      case '/play_order': return const PlayOrderPage();
+      case '/word_listen': return const ListWordListenPage();
+      case '/listen_mode_select': return const ExtensiveModelSelectPage();
+      case '/sentence_quiz': return const SentenceQuizPage();
+      case '/appearance': return const AppearancePage();
+      case '/more_settings': return const MoreSettingsPage();
+      case '/word_machine': return const WordMachinePage();
+      case '/my_content': return const MyContentPage();
+      case '/immersive_swipe': return const ImmersiveSwipePage();
+      case '/spell_check':
+        final a = args as Map<String, dynamic>?;
+        return SpellCheckPage(word: a?['word'] ?? '', phonetic: a?['phonetic']);
+      case '/spell_session': return const SpellSessionPage();
+      case '/linked_me':
+        final a = args as Map<String, dynamic>?;
+        return LinkedMeMiddlePage(word: a?['word'] ?? '', association: a?['association']);
+      case '/word_detail': return const WordDetailPage();
+      default: return null;
+    }
+  }
+
+  /// 根据路由名称选择转场动画
+  static Route<dynamic> _buildPageRoute(String? name, Widget page) {
+    switch (name) {
+      // 上滑进入：设置/个人中心/仪表盘/外观
+      case '/settings':
+      case '/my_space':
+      case '/dashboard':
+      case '/appearance':
+      case '/more_settings':
+      case '/word_machine':
+      case '/theme_select':
+      case '/user_info_manage':
+      case '/help':
+      case '/net_diagnosis':
+        return SlideUpRoute(page: page) as Route<dynamic>;
+
+      // 渐变进入：学习会话/复习会话
+      case '/learn_session':
+      case '/review_session':
+      case '/learn':
+      case '/review':
+        return FadeRoute(page: page) as Route<dynamic>;
+
+      // 缩放进入：搜索/弹窗类
+      case '/search':
+        return ScaleRoute(page: page) as Route<dynamic>;
+
+      // 默认水平滑动（标准 Android 转场）
+      default:
+        return MaterialPageRoute(builder: (_) => page);
+    }
   }
 }

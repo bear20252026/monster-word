@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 锁屏/后台播放层：翻译自 lock/（v3.2 源码 1:1）
 // LockScreenManager（锁屏学习控制）+ MediaButtonHandler（媒体按钮控制）

@@ -1,11 +1,12 @@
-// 由账号4生成
-// 仪表盘页：1:1 复刻原版 activity_dashboard.xml
-// 结构：顶部导航 + 正在学习(词书卡片+进度条) + 我的数据(学习时长/单词量)
+// 仪表盘页：顶部导航 + 正在学习(词书卡片+进度条) + 我的数据(学习时长/单词量)
+// 已接入 SkinSystem 主题
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
-import '../theme/app_theme.dart';
+import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -17,13 +18,17 @@ class DashboardPage extends StatelessWidget {
     final state = context.watch<LearningState>();
     final book = state.currentBook;
     final learned = state.learnedNum;
+    final skin = context.skin.colors;
 
     return Scaffold(
-      backgroundColor: AppColors.cardBg,
+      backgroundColor: skin.pageBg,
       body: SafeArea(
-        child: Column(
-          children: [
-            // ===== 顶部导航栏（原版 CustomHeadView："仪表盘"）=====
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: context.responsive.contentWidth),
+            child: Column(
+              children: [
+            // 顶部导航栏
             Container(
               height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -31,77 +36,65 @@ class DashboardPage extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                    color: AppColors.black87,
+                    color: skin.text1,
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 4),
-                  const Text(
+                  Text(
                     '仪表盘',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.black87,
-                    ),
+                    style: MistralTypography.heading5.copyWith(color: skin.text1),
                   ),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.share, size: 20),
-                    color: AppColors.black87,
+                    color: skin.text1,
                     onPressed: () {},
                   ),
                 ],
               ),
             ),
-            Container(height: 1, color: AppColors.dividerGrey),
+            Container(height: 1, color: skin.divider),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppDimens.pageCommonMargin),
+                padding: EdgeInsets.all(context.responsive.pageMargin),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ===== 正在学习（原版 Section 标题）=====
-                    const Text(
+                    // 正在学习
+                    Text(
                       '正在学习',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black87,
-                      ),
+                      style: MistralTypography.heading4.copyWith(color: skin.text1),
                     ),
                     const SizedBox(height: 12),
-                    // ===== 当前词书卡片（原版 lib_container + card_common_bg）=====
+                    // 当前词书卡片
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.dividerGrey),
+                        color: skin.cardBg,
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        border: Border.all(color: skin.divider),
                       ),
                       child: Column(
                         children: [
                           Row(
                             children: [
-                              // 词书封面（原版 lib_icons_view）
+                              // 词书封面
                               Container(
                                 width: 56,
                                 height: 72,
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
+                                  gradient: LinearGradient(
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
-                                    colors: [
-                                      AppColors.mainBgTop,
-                                      AppColors.mainBgBottom,
-                                    ],
+                                    colors: [skin.pageBg, skin.cardBgAlt],
                                   ),
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(AppRadius.sm),
                                 ),
                                 child: Center(
                                   child: Text(
                                     _shortName(book?.name ?? '未选择'),
-                                    style: const TextStyle(
+                                    style: MistralTypography.micro.copyWith(
                                       color: Colors.white,
-                                      fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -114,18 +107,15 @@ class DashboardPage extends StatelessWidget {
                                   children: [
                                     Text(
                                       book?.name ?? '请先选择词书',
-                                      style: const TextStyle(
-                                        fontSize: 16,
+                                      style: MistralTypography.bodyMd.copyWith(
+                                        color: skin.text1,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
                                       '${book?.wordCount ?? 0} 词',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textTertiary,
-                                      ),
+                                      style: MistralTypography.bodySm.copyWith(color: skin.text3),
                                     ),
                                   ],
                                 ),
@@ -133,38 +123,29 @@ class DashboardPage extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 20),
-                          // ===== 学习进度条（原版 word_learn_progress）=====
+                          // 学习进度条
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
                             child: LinearProgressIndicator(
                               value: book == null || book.wordCount == 0
                                   ? 0
                                   : learned / book.wordCount,
                               minHeight: 8,
-                              backgroundColor: Colors.grey.shade200,
-                              valueColor: const AlwaysStoppedAnimation(
-                                AppColors.successGreen,
-                              ),
+                              backgroundColor: skin.divider,
+                              valueColor: AlwaysStoppedAnimation(skin.success),
                             ),
                           ),
                           const SizedBox(height: 8),
-                          // ===== 已学习/总词数（原版 tv_learned_num/tv_total_word_num）=====
                           Row(
                             children: [
                               Text(
                                 '已学习 $learned',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.textTertiary,
-                                ),
+                                style: MistralTypography.bodySm.copyWith(color: skin.text3),
                               ),
                               const Spacer(),
                               Text(
                                 '总词数 ${book?.wordCount ?? 0}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.textTertiary,
-                                ),
+                                style: MistralTypography.bodySm.copyWith(color: skin.text3),
                               ),
                             ],
                           ),
@@ -172,23 +153,18 @@ class DashboardPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // ===== 我的数据（原版 Section 标题）=====
-                    const Text(
+                    // 我的数据
+                    Text(
                       '我的数据',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black87,
-                      ),
+                      style: MistralTypography.heading4.copyWith(color: skin.text1),
                     ),
                     const SizedBox(height: 12),
-                    // 数据卡片
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.dividerGrey),
+                        color: skin.cardBg,
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        border: Border.all(color: skin.divider),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -205,6 +181,8 @@ class DashboardPage extends StatelessWidget {
             ),
           ],
         ),
+        ),
+        ),
       ),
     );
   }
@@ -214,7 +192,6 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
-/// 数据项（原版 dashboard 数据展示）
 class _DataItem extends StatelessWidget {
   final String label;
   final String value;
@@ -222,20 +199,20 @@ class _DataItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skin = context.skin.colors;
     return Column(
       children: [
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 24,
+          style: MistralTypography.heading3.copyWith(
+            color: skin.success,
             fontWeight: FontWeight.bold,
-            color: AppColors.successGreen,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
+          style: MistralTypography.bodySm.copyWith(color: skin.text3),
         ),
       ],
     );

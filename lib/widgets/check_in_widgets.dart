@@ -1,10 +1,15 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 核心控件层：翻译自 widget/（v3.2 源码 1:1）
 // 文件：BBCheckIn（签到组件）+ LearnButton（学习按钮带圆点）
 
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'widget_utils.dart';
 
 /// 签到状态（原版常量）
 enum CheckInState {
@@ -16,7 +21,9 @@ enum CheckInState {
   final int value;
 }
 
-/// 签到组件（翻译自 BBCheckIn.java：图标 + 标题 + 描述）
+/// 签到组件（翻译自 BBCheckIn.java：半透明玻璃卡片 + 日历图标 + 日期）
+///
+/// 原版样式：半透明玻璃效果，居中日历图标 + 签到文字 + 日期（08/19 Wed.）
 class BBCheckIn extends StatelessWidget {
   final CheckInState state;
   final String title;
@@ -31,48 +38,62 @@ class BBCheckIn extends StatelessWidget {
     this.onTap,
   });
 
+  /// 格式化日期为 "08/19 Wed." 格式
+  static String formatDate() {
+    final now = DateTime.now();
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    const weekdays = ['Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.', 'Sun.'];
+    final weekday = weekdays[now.weekday - 1];
+    return '$month/$day $weekday';
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return ScaleDownOnPress(
       onTap: onTap,
-      child: Container(
-        width: 139,
-        height: 135,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.25),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.5),
-            width: 1.5,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 图标（原版 ivIcon）
-            Icon(_iconForState, color: Colors.white, size: 36),
-            const SizedBox(height: 8),
-            // 标题（原版 tv_signin_title）
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            width: 139,
+            height: 135,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.5),
+                width: 1.5,
               ),
             ),
-            // 描述（原版 tv_signin_des）
-            if (description.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.9),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 日历图标（原版 ivIcon）
+                Icon(_iconForState, color: const Color(0xFFE8913A), size: 36),
+                const SizedBox(height: 8),
+                // 标题（原版 tv_signin_title）
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF1A1A1A),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
-          ],
+                // 日期（原版 tv_signin_des：08/19 Wed.）
+                const SizedBox(height: 4),
+                Text(
+                  description.isNotEmpty ? description : formatDate(),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF666666),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -85,7 +106,7 @@ class BBCheckIn extends StatelessWidget {
       case CheckInState.ing:
         return Icons.event_note; // 签到中
       case CheckInState.yes:
-        return Icons.emoji_events; // 已签到：花朵/奖杯
+        return Icons.emoji_events; // 已签到：奖杯
     }
   }
 }
@@ -109,7 +130,7 @@ class LearnButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return ScaleDownOnPress(
       onTap: onTap,
       child: Container(
         height: 64,

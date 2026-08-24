@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // Leitner 学习引擎：翻译自 coreengine/LeitnerCardInMemoryImp.java（v3.2 源码 1:1）
 // 学习分组：按等级 0-4 分层（listLevel0..4），每组 GROUP_SIZE 个单词

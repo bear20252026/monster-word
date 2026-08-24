@@ -1,9 +1,10 @@
-// 由账号4生成
-// 我的空间页：1:1 复刻原版 activity_my_space.xml
-// 结构：顶部导航 + 头像区(88dp) + 昵称 + 会员入口 + 消息中心/装备/酷币/Coolab 卡片
+// 我的空间页：顶部导航 + 头像区 + 昵称 + 会员入口 + 卡片
+// 已接入 SkinSystem 主题
 import 'package:flutter/material.dart';
 
-import '../theme/app_theme.dart';
+import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
+import 'message_page.dart';
 import 'settings_page.dart';
 
 class MySpacePage extends StatelessWidget {
@@ -13,105 +14,264 @@ class MySpacePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skin = context.skin.colors;
+
     return Scaffold(
-      backgroundColor: AppColors.cardBg,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ===== 顶部导航栏（原版 CustomHeadView：左箭头 + 设置按钮）=====
-            Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                    color: AppColors.black87,
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.settings, size: 22),
-                    color: AppColors.black87,
-                    onPressed: () =>
-                        Navigator.pushNamed(context, SettingsPage.routeName),
-                  ),
+      body: Column(
+        children: [
+          // 金色渐变头部区域（头像 + 卡片）
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  MistralColors.sunshine300.withValues(alpha: 0.35),
+                  MistralColors.sunshine500.withValues(alpha: 0.08),
+                  skin.pageBg,
                 ],
+                stops: const [0.0, 0.6, 1.0],
               ),
             ),
-            // ===== 头像区（原版 user_info_container：88dp 头像 + 昵称）=====
-            Center(
+            child: SafeArea(
+              bottom: false,
               child: Column(
                 children: [
-                  Container(
-                    width: 88,
-                    height: 88,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [AppColors.mainBgTop, AppColors.mainBgBottom],
+                  // 顶部导航栏
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: SizedBox(
+                      height: 48,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                            color: skin.text1,
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          const Spacer(),
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.mail_outline, size: 22),
+                                color: skin.text1,
+                                onPressed: () => Navigator.pushNamed(context, MessagePage.routeName),
+                              ),
+                              Positioned(
+                                right: 8,
+                                top: 8,
+                                child: Container(
+                                  width: 8, height: 8,
+                                  decoration: BoxDecoration(
+                                    color: skin.danger,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: skin.pageBg, width: 1.5),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.settings, size: 22),
+                            color: skin.text1,
+                            onPressed: () => Navigator.pushNamed(context, SettingsPage.routeName),
+                          ),
+                        ],
                       ),
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 3,
-                      ),
-                    ),
-                    child: const Icon(Icons.person, color: Colors.white, size: 44),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '未登录',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.black87,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  // 会员入口（原版 super_member_container）
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
+                  // 头像 + VIP 徽章 + 用户 ID + 会员状态
+                  _buildProfileHeader(skin),
+                  const SizedBox(height: 16),
+                  // 酷币 + 装备卡片
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
                       children: [
-                        Icon(Icons.workspace_premium, size: 18, color: Color(0xFFF9A825)),
-                        SizedBox(width: 4),
-                        Text(
-                          '开通终身大会员',
-                          style: TextStyle(fontSize: 12, color: Color(0xFFF9A825)),
-                        ),
+                        Expanded(child: _CoinCard(skin: skin)),
+                        const SizedBox(width: 12),
+                        Expanded(child: _EquipCard(skin: skin)),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
-            // ===== 卡片区（原版 top_cell_container：消息中心/装备/酷币/Coolab）=====
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppDimens.pageCommonMargin),
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: AppDimens.pageCommonMargin,
-                  crossAxisSpacing: AppDimens.pageCommonMargin,
-                  childAspectRatio: 2.4,
-                  children: const [
-                    _LableCard(icon: Icons.mail_outline, title: '消息中心'),
-                    _LableCard(icon: Icons.card_giftcard, title: '装备'),
-                    _LableCard(icon: Icons.monetization_on_outlined, title: '酷币'),
-                    _LableCard(icon: Icons.science_outlined, title: 'Coolab'),
-                  ],
+          ),
+          // 菜单列表（普通背景）
+          Expanded(child: _buildMenuList(skin)),
+        ],
+      ),
+    );
+  }
+
+  /// 头像 + VIP 徽章 + 用户 ID + 会员状态条
+  Widget _buildProfileHeader(ThemeVars skin) {
+    return Column(
+      children: [
+        SizedBox(
+          width: 80, height: 80,
+          child: Stack(
+            children: [
+              Container(
+                width: 80, height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [MistralColors.sunshine300, MistralColors.sunshine500],
+                  ),
+                  border: Border.all(color: skin.cardBg, width: 3),
+                  boxShadow: [BoxShadow(
+                    color: MistralColors.sunshine500.withValues(alpha: 0.3),
+                    blurRadius: 12, offset: const Offset(0, 4),
+                  )],
+                ),
+                child: Icon(Icons.person, color: skin.cardBg, size: 40),
+              ),
+              Positioned(
+                right: 0, bottom: 0,
+                child: Container(
+                  width: 26, height: 26,
+                  decoration: BoxDecoration(
+                    color: MistralColors.sunshine500,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: skin.cardBg, width: 2),
+                  ),
+                  child: Center(
+                    child: Text('V', style: TextStyle(
+                      color: skin.cardBg, fontSize: 13, fontWeight: FontWeight.bold,
+                    )),
+                  ),
                 ),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text('44459754', style: MistralTypography.bodyMd.copyWith(color: skin.text2)),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [
+              MistralColors.sunshine500.withValues(alpha: 0.15),
+              MistralColors.sunshine300.withValues(alpha: 0.1),
+            ]),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: MistralColors.sunshine500.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.workspace_premium, size: 16, color: MistralColors.sunshine700),
+              const SizedBox(width: 6),
+              Text('成为终身大会员 1379 天',
+                style: MistralTypography.caption.copyWith(
+                  color: MistralColors.sunshine700, fontWeight: FontWeight.w500,
+                )),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 菜单列表
+  Widget _buildMenuList(dynamic skin) {
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      children: [
+        _MenuItem(icon: Icons.palette_outlined, title: '外观 & 沉浸场景', subtitle: '主题、壁纸、字体', skin: skin),
+        _MenuItem(icon: Icons.school_outlined, title: '学习偏好', subtitle: '发音、节奏、题型', skin: skin),
+        _MenuItem(icon: Icons.tune, title: '更多设置', subtitle: '账号、通知、关于', skin: skin),
+      ],
+    );
+  }
+}
+
+/// 菜单项
+class _MenuItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final ThemeVars skin;
+  const _MenuItem({required this.icon, required this.title, required this.subtitle, required this.skin});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: skin.cardBg,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: skin.text1.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Container(
+          width: 38, height: 38,
+          decoration: BoxDecoration(
+            color: MistralColors.sunshine300.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: skin.accent, size: 20),
+        ),
+        title: Text(title, style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w500, color: skin.text1)),
+        subtitle: Text(subtitle, style: MistralTypography.caption.copyWith(color: skin.text3)),
+        trailing: Icon(Icons.chevron_right, color: skin.text3, size: 20),
+      ),
+    );
+  }
+}
+
+/// 酷币卡片：图标 + 数字 + 箭头
+class _CoinCard extends StatelessWidget {
+  final ThemeVars skin;
+  const _CoinCard({required this.skin});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: skin.cardBg,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: skin.text1.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2))],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: MistralColors.sunshine300.withValues(alpha: 0.3),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.monetization_on, color: MistralColors.sunshine700, size: 22),
             ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('酷币', style: MistralTypography.micro.copyWith(color: skin.text3)),
+                  const SizedBox(height: 2),
+                  Text('6,821',
+                    style: MistralTypography.heading4.copyWith(
+                      color: skin.text1,
+                      fontWeight: FontWeight.w700,
+                    )),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
           ],
         ),
       ),
@@ -119,35 +279,68 @@ class MySpacePage extends StatelessWidget {
   }
 }
 
-/// 卡片（复刻原版 LableCardStyle1View）
-class _LableCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  const _LableCard({required this.icon, required this.title});
+/// 装备卡片：标题 + 4个装备图标 + 箭头
+class _EquipCard extends StatelessWidget {
+  final ThemeVars skin;
+  const _EquipCard({required this.skin});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(AppDimens.radiusNormal),
-        border: Border.all(color: AppColors.dividerGrey),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: AppColors.successGreen, size: 28),
-          const SizedBox(width: 10),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: AppColors.black87,
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: skin.cardBg,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: skin.text1.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2))],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    children: [
+                      Text('装备', style: MistralTypography.micro.copyWith(color: skin.text3)),
+                      const SizedBox(width: 4),
+                      Text('9/9', style: MistralTypography.micro.copyWith(
+                        color: skin.accent, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _equipIcon(Icons.auto_awesome, skin),
+                      const SizedBox(width: 6),
+                      _equipIcon(Icons.menu_book, skin),
+                      const SizedBox(width: 6),
+                      _equipIcon(Icons.headphones, skin),
+                      const SizedBox(width: 6),
+                      _equipIcon(Icons.translate, skin),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _equipIcon(IconData icon, ThemeVars skin) {
+    return Container(
+      width: 26,
+      height: 26,
+      decoration: BoxDecoration(
+        color: skin.accent.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Icon(icon, color: skin.accent, size: 15),
     );
   }
 }

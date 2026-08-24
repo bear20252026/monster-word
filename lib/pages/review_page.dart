@@ -1,18 +1,18 @@
-// 由账号4生成
-// 复习页：1:1 复刻原版 activity_review.xml
-// 结构：全屏背景 + 顶部栏(返回/进度) + 上半单词区 + 下半释义/4选1 + 底部操作栏
-// 调度逻辑：SuperMemoryEngine（到期词 + 测试模式，v3.2 源码 1:1）
-
+// 复习页：壁纸沉浸 + 四选一 + 眭底操作栏
+// 已接入 SkinSystem 主题
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../data/example_parser.dart';
 import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart';
 import '../engine/srs_engine.dart';
 import '../engine/super_memory_engine.dart';
 import '../models/bb_word_process.dart';
-import '../theme/app_theme.dart';
+import '../data/wallpaper_data.dart';
+import '../state/wallpaper_state.dart';
+import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
 
 class ReviewPage extends StatefulWidget {
   const ReviewPage({super.key});
@@ -30,6 +30,7 @@ class _ReviewPageState extends State<ReviewPage> {
   List<WordChoicePair> _choices = [];
   int _total = 0;
   int _done = 0;
+  int _wrongChoiceIndex = -1;
 
   @override
   void initState() {
@@ -39,8 +40,6 @@ class _ReviewPageState extends State<ReviewPage> {
 
   /// 初始化复习（到期调度：从词库拉取今日到期词）
   Future<void> _initReview() async {
-    // 到期调度：取用户 SRS 卡片中到期词
-    // 简化：从当前学习过的词中取待复习词（这里用词库搜索接口占位）
     final dueWords = <BBWordProcess>[];
     // 从词库取一批词作为复习池（真实实现：从 user_process 表按 reviewdate 筛选）
     final sample = await WordBookDatabase.instance.searchWords('a', limit: 20);
@@ -89,8 +88,10 @@ class _ReviewPageState extends State<ReviewPage> {
         _engine.tooEasy();
     }
     _done++;
+    _showAnswer = false;
+    _wrongChoiceIndex = -1;
     _regenerateChoices();
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   @override
@@ -99,41 +100,39 @@ class _ReviewPageState extends State<ReviewPage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final word = _engine.currentWord();
+    final skin = context.skin.colors;
+    final wallpaper = context.watch<WallpaperState>().current;
 
     return Scaffold(
       body: word == null
           ? _buildReviewDone()
           : Stack(
               children: [
-                // 全屏背景（原版 iv_background）
+                // 全屏壁纸背景
                 Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [AppColors.mainBgTop, AppColors.mainBgBottom],
-                      ),
-                    ),
-                  ),
+                  child: _buildWallpaperBg(wallpaper, skin),
+                ),
+                // 半透明遮罩
+                Positioned.fill(
+                  child: Container(color: skin.wallpaperScrim.withOpacity(0.15)),
                 ),
                 SafeArea(
                   child: Column(
                     children: [
-                      // 顶部栏（原版 top_bar_container）
-                      _buildTopBar(),
+                      // 顶部栏
+                      _buildTopBar(skin),
                       // 上半：单词区
                       Expanded(
-                        flex: 5,
-                        child: _buildWordArea(word),
+                        flex: 4,
+                        child: _buildWordArea(word, skin),
                       ),
-                      // 下半：释义/4选1（原版 rl_learnHalfBottom）
+                      // 下半：4选1
                       Expanded(
-                        flex: 5,
-                        child: _buildBottomArea(word),
+                        flex: 6,
+                        child: _buildChoiceArea(word, skin),
                       ),
-                      // 底部操作栏（原版 learn_review_bottom_bar）
-                      _buildBottomBar(word),
+                      // 底部操作栏
+                      _buildBottomBar(skin),
                     ],
                   ),
                 ),
@@ -142,41 +141,79 @@ class _ReviewPageState extends State<ReviewPage> {
     );
   }
 
-  /// 顶部栏（原版 top_bar_container）
-  Widget _buildTopBar() {
+  Widget _buildWallpaperBg(dynamic wallpaper, ThemeVars skin) {
+    if (wallpaper.type == WallpaperType.image && wallpaper.assetPath != null) {
+      return Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(wallpaper.assetPath!),
+            fit: BoxFit.cover,
+            onError: (_, __) {},
+          ),
+        ),
+      );
+    }
+    if (wallpaper.type == WallpaperType.gradient && wallpaper.colors != null) {
+      return Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: wallpaper.colors!,
+            begin: wallpaper.begin ?? Alignment.topCenter,
+            end: wallpaper.end ?? Alignment.bottomCenter,
+          ),
+        ),
+      );
+    }
     return Container(
-      height: 40,
-      margin: const EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [skin.pageBg, skin.cardBg],
+        ),
+      ),
+    );
+  }
+
+  /// 顶部栏（原版 top_bar_container）
+  Widget _buildTopBar(ThemeVars skin) {
+    return Container(
+      height: 44,
+      margin: const EdgeInsets.only(top: 4),
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+            icon: Icon(Icons.arrow_back_ios_new, size: 20, color: skin.onGlassText1),
             onPressed: () => Navigator.pop(context),
           ),
           Text(
-            '$_done',
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: LinearProgressIndicator(
-                value: _total == 0 ? 0 : _done / _total,
-                minHeight: 3,
-                backgroundColor: Colors.white.withValues(alpha: 0.25),
-                valueColor: const AlwaysStoppedAnimation(Colors.white),
-              ),
-            ),
+            '$_done/$_total',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.onGlassText1),
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.more_horiz, color: Colors.white),
+            icon: Icon(Icons.undo, size: 22, color: skin.onGlassText2),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: Icon(Icons.star_border, size: 22, color: skin.onGlassText1),
+            onPressed: () {},
+          ),
+          // abc button
+          GestureDetector(
+            onTap: () {},
+            child: Text('abc', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: skin.onGlassText1)),
+          ),
+          const SizedBox(width: 12),
+          // 熟 button
+          GestureDetector(
+            onTap: () {},
+            child: Text('熟', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: skin.onGlassText1)),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: Icon(Icons.more_horiz, size: 22, color: skin.onGlassText1),
             onPressed: () {},
           ),
         ],
@@ -184,179 +221,157 @@ class _ReviewPageState extends State<ReviewPage> {
     );
   }
 
-  /// 上半：单词 + 音标 + 发音（原版 word_container + PhoneticView）
-  Widget _buildWordArea(BBWordProcess word) {
+  /// 上半：单词 + 音标 + 发音
+  Widget _buildWordArea(BBWordProcess word, ThemeVars skin) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                word.word,
-                style: const TextStyle(
-                  fontSize: AppDimens.learnMainWord,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: () => _playWordAudio(word),
-                icon: const Icon(Icons.volume_up, color: Colors.white, size: 26),
-              ),
-            ],
-          ),
-          if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                [
-                  if (word.usPron.isNotEmpty) '美 /${word.usPron}/',
-                  if (word.ukPron.isNotEmpty) '英 /${word.ukPron}/',
-                ].join('   '),
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.white.withValues(alpha: 0.85),
-                ),
-              ),
+          // 单词（大号粗体）
+          Text(
+            word.word,
+            style: TextStyle(
+              fontSize: 42,
+              fontWeight: FontWeight.w800,
+              color: skin.onGlassText1,
+              height: 1.1,
             ),
+          ),
+          if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            // 音标行：美 🏷 /pronunciation/
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // "美" 标签
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: skin.glassBg.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text('美', style: TextStyle(fontSize: 12, color: skin.onGlassText1, fontWeight: FontWeight.w500)),
+                ),
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () => _playWordAudio(word),
+                  child: Icon(Icons.volume_up_outlined, color: skin.onGlassText2, size: 20),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '/${word.usPron.isNotEmpty ? word.usPron : word.ukPron}/',
+                  style: TextStyle(fontSize: 15, color: skin.onGlassText2),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 16),
+          // 提示文字
+          Text(
+            '先回想词义再选择，想不起来「看答案」',
+            style: TextStyle(fontSize: 14, color: skin.onGlassText2.withOpacity(0.7)),
+          ),
         ],
       ),
     );
   }
 
-  /// 下半：未看答案 → 4选1；已看答案 → 释义+例句
-  Widget _buildBottomArea(BBWordProcess word) {
-    final examples = ExampleParser.parse(word.example);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      child: !_showAnswer && _choices.isNotEmpty
-          ? Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '请选择正确释义',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ..._choices.map(
-                    (c) => _ChoiceOption(
-                      pair: c,
-                      isAnswer: c.word == word.word,
-                      onTap: () {
-                        _rate(c.word == word.word
-                            ? RecallRating.good
-                            : RecallRating.again);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (word.interpret.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        word.interpret,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          height: 1.4,
-                          color: AppColors.black87,
-                        ),
-                      ),
-                    ),
-                  if (examples.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    const Text(
-                      '例句',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ...examples.take(3).map((ex) => _ExampleTile(example: ex)),
-                  ],
-                ],
-              ),
-            ),
-    );
-  }
-
-  /// 底部操作栏（原版 learn_review_bottom_bar）
-  Widget _buildBottomBar(BBWordProcess word) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
-      child: Row(
+  /// 下半：4选1 选项区
+  Widget _buildChoiceArea(BBWordProcess word, ThemeVars skin) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
         children: [
-          _ReviewButton(
-            label: '不认识',
-            color: AppColors.errorRed,
-            onTap: () => _rate(RecallRating.again),
-          ),
-          _ReviewButton(
-            label: '模糊',
-            color: AppColors.highlightOrange,
-            onTap: () => _rate(RecallRating.hard),
-          ),
-          _ReviewButton(
-            label: _showAnswer ? '认识' : '看答案',
-            color: AppColors.successGreen,
-            onTap: () {
-              if (_showAnswer) {
-                _rate(RecallRating.good);
-              } else {
-                setState(() => _showAnswer = true);
-              }
-            },
-          ),
+          const SizedBox(height: 8),
+          if (_choices.isNotEmpty)
+            ..._choices.map(
+              (c) => _FrostedChoiceCard(
+                pair: c,
+                isCorrect: c.word == word.word,
+                isSelectedWrong: _wrongChoiceIndex == _choices.indexOf(c),
+                showAnswer: _showAnswer,
+                skin: skin,
+                onTap: () {
+                  if (c.word == word.word) {
+                    _rate(RecallRating.good);
+                  } else {
+                    setState(() => _wrongChoiceIndex = _choices.indexOf(c));
+                    Future.delayed(const Duration(milliseconds: 300), () {
+                      if (mounted) setState(() => _wrongChoiceIndex = -1);
+                    });
+                  }
+                },
+              ),
+            ),
         ],
+      ),
+    );
+  }
+
+  /// 底部操作栏（单按钮：看答案 / 继续）
+  Widget _buildBottomBar(ThemeVars skin) {
+    return Container(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: GestureDetector(
+        onTap: () {
+          if (!_showAnswer) {
+            setState(() => _showAnswer = true);
+          } else {
+            _rate(RecallRating.good);
+          }
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _showAnswer ? '继续' : '看答案',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: skin.onGlassText1,
+              ),
+            ),
+            const SizedBox(height: 6),
+            // 底部彩色指示条
+            Container(
+              width: 24,
+              height: 3,
+              decoration: BoxDecoration(
+                color: _showAnswer ? skin.quizCorrectText : skin.quizWrongText,
+                borderRadius: BorderRadius.circular(1.5),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   /// 复习完成页
   Widget _buildReviewDone() {
+    final skin = context.skin.colors;
     return Scaffold(
+      backgroundColor: skin.pageBg,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.check_circle_outline,
-                color: AppColors.successGreen, size: 72),
+            Icon(Icons.check_circle_outline, color: skin.success, size: 72),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               '今日复习完成！',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: MistralTypography.heading3.copyWith(fontWeight: FontWeight.bold, color: skin.text1),
             ),
             const SizedBox(height: 8),
             Text(
               '共复习 $_done 个单词',
-              style: const TextStyle(fontSize: 14, color: AppColors.textTertiary),
+              style: MistralTypography.bodySm.copyWith(color: skin.text3),
             ),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => Navigator.pop(context),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.successGreen,
+                backgroundColor: skin.success,
               ),
               child: const Text('返回'),
             ),
@@ -376,181 +391,62 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 }
 
-/// 复习按钮（复刻原版 LearnButton）
-class _ReviewButton extends StatelessWidget {
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ReviewButton({
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: 48,
-          margin: const EdgeInsets.symmetric(horizontal: AppDimens.bottomBarBtnMargin),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(AppDimens.radiusNormal),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: AppDimens.learnBtnTextSize,
-                color: AppColors.white100,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// 4 选 1 选项（复刻原版 WordChoiceSelView）
-class _ChoiceOption extends StatelessWidget {
+/// 毛玻璃选项卡片（还原原版选择卡片）
+class _FrostedChoiceCard extends StatelessWidget {
   final dynamic pair;
-  final bool isAnswer;
+  final bool isCorrect;
+  final bool isSelectedWrong;
+  final bool showAnswer;
+  final ThemeVars skin;
   final VoidCallback onTap;
 
-  const _ChoiceOption({
+  const _FrostedChoiceCard({
     required this.pair,
-    required this.isAnswer,
+    required this.isCorrect,
+    required this.isSelectedWrong,
+    required this.showAnswer,
+    required this.skin,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    Color bgColor;
+    Color borderColor;
+    if (isSelectedWrong) {
+      bgColor = skin.quizWrongBg.withOpacity(0.6);
+      borderColor = skin.quizWrongBg;
+    } else if (isCorrect && showAnswer) {
+      bgColor = skin.quizCorrectBg.withOpacity(0.6);
+      borderColor = skin.quizCorrectBg;
+    } else {
+      bgColor = skin.glassBg.withOpacity(0.25);
+      borderColor = skin.glassBorder.withOpacity(0.3);
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 64,
-        margin: const EdgeInsets.only(bottom: AppDimens.selectItemBottomMargins),
-        padding: const EdgeInsets.symmetric(horizontal: AppDimens.selectItemLrMargins),
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(AppDimens.radiusNormal),
-          border: Border.all(color: AppColors.dividerGrey),
+          color: bgColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor, width: 0.5),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: isAnswer ? AppColors.successGreen : Colors.grey.shade300,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  isAnswer ? '✓' : 'A',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                pair.interpret.toString(),
-                style: const TextStyle(fontSize: 15, color: AppColors.black87),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 例句条目（复刻原版例句卡片）
-class _ExampleTile extends StatelessWidget {
-  final ExampleSentence example;
-  const _ExampleTile({required this.example});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.dividerGrey),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: RichText(
-                  text: TextSpan(
-                    style: const TextStyle(fontSize: 14, color: AppColors.black87, height: 1.35),
-                    children: example.highlightedParts
-                        .map(
-                          (p) => TextSpan(
-                            text: p.text,
-                            style: p.highlight
-                                ? const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.successGreen,
-                                  )
-                                : null,
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: _playExample,
-                icon: const Icon(Icons.play_circle_outline),
-                color: AppColors.successGreen,
-                iconSize: 22,
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
+        child: Text(
+          pair.interpret.toString(),
+          style: TextStyle(
+            fontSize: 16,
+            color: skin.onGlassText1,
+            fontWeight: FontWeight.w500,
+            height: 1.4,
           ),
-          if (example.cn.isNotEmpty)
-            Text(
-              example.cn,
-              style: const TextStyle(fontSize: 13, color: AppColors.textTertiary),
-            ),
-          if (example.source.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                example.source,
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
-              ),
-            ),
-        ],
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     );
-  }
-
-  Future<void> _playExample() async {
-    try {
-      final player = AudioPlayer();
-      await player.play(UrlSource(
-        'http://audio.beingfine.cn/sentence/audio/${example.source.isNotEmpty ? example.source : ''}',
-      ));
-    } catch (_) {}
   }
 }

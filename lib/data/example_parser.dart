@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 例句解析器：从词库 example JSON 中提取中英文例句
 // 词库格式：
@@ -10,8 +12,14 @@ class ExampleSentence {
   final String en; // 英文例句（可能含 <b> 标签）
   final String cn; // 中文翻译
   final String source; // 来源（剧集/考试）
+  final String? audioUrl; // 音频 URL
 
-  ExampleSentence({required this.en, required this.cn, this.source = ''});
+  ExampleSentence({
+    required this.en,
+    required this.cn,
+    this.source = '',
+    this.audioUrl,
+  });
 
   /// 去掉 <b> 高亮标签
   String get cleanEn => en.replaceAll('<b>', '').replaceAll('</b>', '');
@@ -69,9 +77,15 @@ class ExampleParser {
             final en = (s['e'] as String?) ?? '';
             final cn = (s['c'] as String?) ?? '';
             final source = (s['b'] as String?) ?? '';
+            final audioUrl = (s['audio'] as String?) ?? (s['audioUrl'] as String?);
             if (en.isNotEmpty) {
               sentences.add(
-                ExampleSentence(en: en, cn: cn, source: source),
+                ExampleSentence(
+                  en: en,
+                  cn: cn,
+                  source: source,
+                  audioUrl: audioUrl,
+                ),
               );
             }
           }

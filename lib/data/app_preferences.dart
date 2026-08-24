@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 本地存储层：翻译自 sharepreference/（v3.2 源码 1:1）
 // AppPreferences（应用配置）+ UserPreferences（用户配置）+ GuidePreference（引导）
@@ -65,6 +67,7 @@ class AppPreferences extends BaseSharedPreferences {
   static const String extensiveMode = 'extensive_mode';
   static const String studyRemindText = 'study_remind_text';
   static const String netLineType = 'key_net_line_type';
+  static const String searchHistory = 'key_search_history';
   static const String lastLoginInfo = 'key_last_login_info';
   static const String historyQuery = 'history_query';
   static const String appUserRulesAgree = 'app_user_rules_agree';
@@ -98,6 +101,21 @@ class AppPreferences extends BaseSharedPreferences {
   /// 用户规则同意
   bool isUserRulesAgreed() => getBool(appUserRulesAgree);
   Future<bool> setUserRulesAgreed(bool v) => setBool(appUserRulesAgree, v);
+
+  /// 搜索历史（最近 50 条）
+  List<String> getSearchHistory() => getStringList(searchHistory);
+
+  Future<void> addSearchHistory(String word) async {
+    final history = getSearchHistory();
+    history.remove(word); // 去重
+    history.insert(0, word); // 最新的在前
+    if (history.length > 50) history.removeLast(); // 最多 50 条
+    await setStringList(searchHistory, history);
+  }
+
+  Future<void> clearSearchHistory() async {
+    await setStringList(searchHistory, []);
+  }
 }
 
 /// 用户配置（翻译自 UserPreferences.java，key = "userData"）

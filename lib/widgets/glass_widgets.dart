@@ -1,59 +1,78 @@
-// 由账号4生成
-// Apple Design Language 组件库
-// 去掉玻璃拟态/BackdropFilter，全部改为苹果纯色卡片+清晰布局
+// 由 Claude 团队生成 | Monster Word App
+// 玻璃拟态组件库 - 实现毛玻璃效果
+
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
-/// 苹果风格卡片容器（替代 GlassSurface）
-class AppleCard extends StatelessWidget {
+/// 玻璃拟态卡片容器 - 实现毛玻璃效果
+class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final double? width;
   final double? height;
-  final Color? color;
+  final double blur;
+  final double opacity;
   final double radius;
 
-  const AppleCard({
+  const GlassCard({
     super.key,
     required this.child,
     this.padding,
     this.margin,
     this.width,
     this.height,
-    this.color,
-    this.radius = AppleRadius.md,
+    this.blur = 10.0,
+    this.opacity = 0.8,
+    this.radius = 16.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    final skin = context.skin;
-    return Container(
-      width: width,
-      height: height,
-      margin: margin,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: color ?? skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: skin.colors.divider, width: 0.5),
+    final skin = context.skin.colors;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: Container(
+          width: width,
+          height: height,
+          margin: margin,
+          padding: padding,
+          decoration: BoxDecoration(
+            color: skin.glassBg.withOpacity(opacity),
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(
+              color: skin.glassBorder.withOpacity(0.2),
+              width: 0.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: skin.text1.withOpacity(0.1),
+                blurRadius: 10.0,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: child,
+        ),
       ),
-      child: child,
     );
   }
 }
 
-/// 苹果风格入口卡（替代 GlassCard：Learn/Review）
-class AppleEntryCard extends StatelessWidget {
+/// 玻璃拟态入口卡（Learn/Review 按钮）
+class GlassEntryCard extends StatelessWidget {
   final String title;
   final int count;
   final VoidCallback? onTap;
   final double? width;
 
-  const AppleEntryCard({
+  const GlassEntryCard({
     super.key,
     required this.title,
     required this.count,
@@ -63,92 +82,126 @@ class AppleEntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final skin = context.skin;
+    final skin = context.skin.colors;
     final w = width ?? context.responsive.glassCardWidth;
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: w,
-        height: 88,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: skin.colors.cardBg,
-          borderRadius: BorderRadius.circular(AppleRadius.md),
-          border: Border.all(color: skin.colors.divider, width: 0.5),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              title,
-              style: MistralTypography.captionBold.copyWith(color: skin.colors.text3),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '$count',
-              style: MistralTypography.heading2.copyWith(
-                color: count > 0 ? skin.colors.accent : skin.colors.text3,
-                fontSize: 32,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16.0),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+          child: Container(
+            width: w,
+            height: 88,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: skin.glassBg.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(16.0),
+              border: Border.all(
+                color: skin.glassBorder.withOpacity(0.2),
+                width: 0.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: skin.text1.withOpacity(0.1),
+                  blurRadius: 10.0,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: MistralTypography.captionBold.copyWith(
+                    color: skin.text1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$count',
+                  style: MistralTypography.heading2.copyWith(
+                    color: count > 0 ? skin.accent : skin.text3,
+                    fontSize: 32,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-/// 苹果风格胶囊按钮（替代 GlassPill）
-class ApplePill extends StatelessWidget {
+/// 玻璃拟态胶囊按钮
+class GlassPill extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
   final EdgeInsetsGeometry? padding;
 
-  const ApplePill({super.key, required this.child, this.onTap, this.padding});
+  const GlassPill({super.key, required this.child, this.onTap, this.padding});
 
   @override
   Widget build(BuildContext context) {
-    final skin = context.skin;
+    final skin = context.skin.colors;
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: skin.colors.cardBg,
-          borderRadius: BorderRadius.circular(AppleRadius.pill),
-          border: Border.all(color: skin.colors.divider, width: 0.5),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20.0),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+          child: Container(
+            padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: skin.glassBg.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(20.0),
+              border: Border.all(
+                color: skin.glassBorder.withOpacity(0.2),
+                width: 0.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: skin.text1.withOpacity(0.1),
+                  blurRadius: 10.0,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: child,
+          ),
         ),
-        child: child,
       ),
     );
   }
 }
 
-/// 苹果风格纯色背景（替代 WallpaperBg：去掉壁纸，用纯色背景）
-class AppleBg extends StatelessWidget {
+/// 玻璃拟态背景容器
+class GlassBg extends StatelessWidget {
   final Widget child;
-  const AppleBg({super.key, required this.child});
+  const GlassBg({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    final skin = context.skin;
+    final skin = context.skin.colors;
     return Container(
-      color: skin.colors.pageBg,
+      color: skin.pageBg,
       child: child,
     );
   }
 }
 
-/// 苹果风格模态弹窗（替代 ModalSheet）
-class AppleModal extends StatelessWidget {
+/// 玻璃拟态模态弹窗
+class GlassModal extends StatelessWidget {
   final bool visible;
   final VoidCallback onClose;
   final Widget child;
   final double? width;
 
-  const AppleModal({
+  const GlassModal({
     super.key,
     required this.visible,
     required this.onClose,
@@ -159,25 +212,41 @@ class AppleModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!visible) return const SizedBox.shrink();
-    final skin = context.skin;
+    final skin = context.skin.colors;
 
     return GestureDetector(
       onTap: onClose,
       child: Container(
-        color: Colors.black38,
+        color: skin.text1.withOpacity(0.38),
         child: Center(
           child: GestureDetector(
             onTap: () {},
-            child: Container(
-              width: width ?? 320,
-              constraints: const BoxConstraints(maxHeight: 500),
-              decoration: BoxDecoration(
-                color: skin.colors.cardBg,
-                borderRadius: BorderRadius.circular(AppleRadius.lg),
-                border: Border.all(color: skin.colors.divider, width: 0.5),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.0),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                child: Container(
+                  width: width ?? 320,
+                  constraints: const BoxConstraints(maxHeight: 500),
+                  decoration: BoxDecoration(
+                    color: skin.glassBg.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(16.0),
+                    border: Border.all(
+                      color: skin.glassBorder.withOpacity(0.2),
+                      width: 0.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: skin.text1.withOpacity(0.1),
+                        blurRadius: 10.0,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: child,
+                ),
               ),
-              padding: const EdgeInsets.all(20),
-              child: child,
             ),
           ),
         ),

@@ -1,5 +1,4 @@
-// 由账号4生成
-// Monster Word 皮肤系统 — Mistral AI 暖色风格
+// Monster Word 皮肤系统 — 还原 v3.2 原版配色
 import 'package:flutter/material.dart';
 import '../tokens/design_tokens.dart';
 
@@ -76,10 +75,10 @@ class ThemeVars {
         modalText1 = modalText1 ?? text1,
         modalText2 = modalText2 ?? text2,
         quizCorrectBg = quizCorrectBg ?? const Color(0xFFD1FAE5),
-        quizCorrectText = quizCorrectText ?? const Color(0xFF16A34A),
+        quizCorrectText = quizCorrectText ?? const Color(0xFF4CAF50),
         quizWrongBg = quizWrongBg ?? const Color(0xFFFEE2E2),
-        quizWrongText = quizWrongText ?? const Color(0xFFDC2626),
-        profileDecor = profileDecor ?? const [Color(0xFFFFF8E0), Color(0xFFFFFAEB)];
+        quizWrongText = quizWrongText ?? const Color(0xFFE3303B),
+        profileDecor = profileDecor ?? const [Color(0xFFF5F5F5), Color(0xFFE8E8E8)];
 }
 
 class ThemePreset {
@@ -90,57 +89,81 @@ class ThemePreset {
   const ThemePreset({required this.id, required this.name, required this.statusBarBrightness, required this.vars});
 }
 
-/// 三档主题：明亮（奶油暖调）、深邃、极夜
+/// 三档主题：还原 v3.2 原版配色
+/// - 明亮（AppLightTheme）：浅灰背景 + 橙色强调
+/// - 深邃（AppDarkTheme）：深蓝灰背景 + 金色强调
+/// - 极夜（AppBlackTheme）：纯黑背景 + 蓝色强调
 final themes = <String, ThemePreset>{
   'bright': ThemePreset(
     id: 'bright', name: '明亮', statusBarBrightness: Brightness.dark,
     vars: ThemeVars(
-      pageBg: MistralColors.cream,
-      cardBg: MistralColors.canvas,
-      cardBgAlt: MistralColors.creamLight,
-      text1: MistralColors.ink,
-      text2: MistralColors.slate,
-      text3: MistralColors.stone,
-      divider: MistralColors.hairline,
-      accent: MistralColors.primary,
-      success: MistralColors.success,
-      danger: MistralColors.danger,
-      teal: MistralColors.primary,
-      tabBarIcon: MistralColors.ink,
+      pageBg: const Color(0xFFF5F5F5),          // 原版亮色背景
+      cardBg: const Color(0xFFFFFFFF),           // 原版白色卡片
+      cardBgAlt: const Color(0xFFF5F5F5),
+      text1: const Color(0xDE000000),            // 87% 黑（原版主文字）
+      text2: const Color(0x8A000000),            // 54% 黑（原版次文字）
+      text3: const Color(0x61000000),            // 38% 黑（原版三级文字）
+      divider: const Color(0x14000000),          // 8% 黑（原版分割线）
+      accent: const Color(0xFFE8913A),           // 原版亮色强调（橙色）
+      success: const Color(0xFF4CAF50),          // 原版亮色成功（绿色）
+      danger: const Color(0xFFE3303B),           // 原版亮色错误（红）
+      teal: const Color(0xFF4A90E2),             // 原版系统文字色（蓝）
+      tabBarIcon: const Color(0xDE000000),
+      quizCorrectBg: const Color(0xFFD1FAE5),
+      quizCorrectText: const Color(0xFF4CAF50),
+      quizWrongBg: const Color(0xFFFEE2E2),
+      quizWrongText: const Color(0xFFE3303B),
+      profileDecor: const [Color(0xFFF5F5F5), Color(0xFFE8E8E8)],
     ),
   ),
   'dark': ThemePreset(
     id: 'dark', name: '深邃', statusBarBrightness: Brightness.light,
     vars: ThemeVars(
-      pageBg: MistralColors.charcoal,
-      cardBg: const Color(0xFF3A3A3A),
-      cardBgAlt: const Color(0xFF333333),
-      text1: MistralColors.canvas,
-      text2: MistralColors.muted,
-      text3: MistralColors.stone,
-      divider: const Color(0xFF4A4A4A),
-      accent: MistralColors.sunshine500,
-      success: const Color(0xFF4ADE80),
-      danger: const Color(0xFFF87171),
-      teal: MistralColors.sunshine500,
-      tabBarIcon: MistralColors.canvas,
+      pageBg: const Color(0xFF212532),           // 原版深色背景（深蓝灰）
+      cardBg: const Color(0xFF2E344A),           // 原版深色卡片（蓝灰）
+      cardBgAlt: const Color(0xFF292F44),        // 原版前景色
+      text1: const Color(0xDEFFFFFF),            // 87% 白（原版主文字）
+      text2: const Color(0x8AFFFFFF),            // 54% 白（原版次文字）
+      text3: const Color(0x61FFFFFF),            // 38% 白（原版三级文字）
+      divider: const Color(0x33FFFFFF),          // 20% 白（原版分割线）
+      accent: const Color(0xFFF4A100),           // 原版深色高亮（金色）
+      success: const Color(0xFF22A18B),          // 原版深色成功（青绿）
+      danger: const Color(0xFFC64354),           // 原版深色错误（玫红）
+      teal: const Color(0xFF4A90E2),             // 原版系统文字色（蓝）
+      tabBarIcon: const Color(0xDEFFFFFF),
+      onGlassText1: const Color(0xDEFFFFFF),
+      onGlassText2: const Color(0x8AFFFFFF),
+      onGlassAccent: const Color(0xFFF4A100),
+      quizCorrectBg: const Color(0xFF1A3D2E),
+      quizCorrectText: const Color(0xFF22A18B),
+      quizWrongBg: const Color(0xFF3D1A2E),
+      quizWrongText: const Color(0xFFC64354),
+      profileDecor: const [Color(0xFF212532), Color(0xFF292F44)],
     ),
   ),
   'pure_black': ThemePreset(
     id: 'pure_black', name: '极夜', statusBarBrightness: Brightness.light,
     vars: ThemeVars(
-      pageBg: MistralColors.surfaceCode,
-      cardBg: const Color(0xFF2C2C2E),
-      cardBgAlt: const Color(0xFF242426),
-      text1: MistralColors.canvas,
-      text2: MistralColors.muted,
-      text3: MistralColors.stone,
-      divider: const Color(0xFF3A3A3C),
-      accent: MistralColors.sunshine700,
-      success: const Color(0xFF4ADE80),
-      danger: const Color(0xFFF87171),
-      teal: MistralColors.sunshine700,
-      tabBarIcon: MistralColors.canvas,
+      pageBg: const Color(0xFF040404),           // 原版极夜背景
+      cardBg: const Color(0xFF1A1B1C),           // 原版极夜卡片
+      cardBgAlt: const Color(0xFF141415),
+      text1: const Color(0xDEFFFFFF),            // 87% 白
+      text2: const Color(0x8AFFFFFF),            // 54% 白
+      text3: const Color(0x61FFFFFF),            // 38% 白
+      divider: const Color(0x33FFFFFF),          // 20% 白
+      accent: const Color(0xFF005F87),           // 原版极夜强调（蓝色）
+      success: const Color(0xFF22A18B),
+      danger: const Color(0xFFC64354),
+      teal: const Color(0xFF005F87),
+      tabBarIcon: const Color(0xDEFFFFFF),
+      onGlassText1: const Color(0xDEFFFFFF),
+      onGlassText2: const Color(0x8AFFFFFF),
+      onGlassAccent: const Color(0xFF005F87),
+      quizCorrectBg: const Color(0xFF0D2B22),
+      quizCorrectText: const Color(0xFF22A18B),
+      quizWrongBg: const Color(0xFF2B0D1A),
+      quizWrongText: const Color(0xFFC64354),
+      profileDecor: const [Color(0xFF040404), Color(0xFF1A1B1C)],
     ),
   ),
 };

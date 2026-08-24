@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 词书选择页：1:1 复刻原版 activity_lib_select.xml + lv_item_select_library.xml
 // 结构：顶部导航栏 + 分类选项卡(TabPageIndicator) + 词书列表(封面+名称+描述+单词量, 120dp/项)
@@ -7,7 +9,9 @@ import 'package:provider/provider.dart';
 import '../data/wordbook_database.dart';
 import '../state/learning_state.dart';
 import '../theme/app_theme.dart';
+import '../theme/skin_system.dart';
 import 'learn_page.dart';
+import 'search_page.dart';
 
 class LibSelectPage extends StatefulWidget {
   const LibSelectPage({super.key});
@@ -22,6 +26,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   late Future<List<Book>> _booksFuture;
   List<Book> _allBooks = [];
   int _tabIndex = 0;
+  bool _showDescription = true; // 眼睛图标：显示/隐藏词书描述
 
   static const _tabs = ['全部', 'CET4', 'CET6', '高考', '考研', '雅思', '托福', '专业出国', '其他'];
 
@@ -59,36 +64,68 @@ class _LibSelectPageState extends State<LibSelectPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
     return Scaffold(
-      backgroundColor: AppColors.cardBg,
+      backgroundColor: colors.cardBg,
       body: SafeArea(
         child: Column(
           children: [
-            // ===== 顶部导航栏（原版 CustomHeadView：左箭头 + "选择词书"）=====
+            // ===== 顶部导航栏（原版 CustomHeadView：左箭头 + 标题 + 搜索/眼睛）=====
             Container(
               height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              color: AppColors.cardBg,
+              color: colors.cardBg,
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                    color: AppColors.black87,
+                    color: colors.text1,
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 4),
-                  const Text(
-                    '选择词书',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.black87,
+                  Expanded(
+                    child: Text(
+                      '选择词书',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: colors.text1,
+                      ),
                     ),
+                  ),
+                  // 搜索图标
+                  IconButton(
+                    icon: const Icon(Icons.search, size: 22),
+                    color: colors.text1,
+                    onPressed: () {
+                      Navigator.pushNamed(context, SearchPage.routeName);
+                    },
+                  ),
+                  // 眼睛图标（显示/隐藏词书描述）
+                  IconButton(
+                    icon: Icon(
+                      _showDescription
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      size: 22,
+                    ),
+                    color: colors.text1,
+                    onPressed: () {
+                      setState(() => _showDescription = !_showDescription);
+                    },
+                  ),
+                  // 更多选项菜单
+                  IconButton(
+                    icon: const Icon(Icons.more_horiz, size: 22),
+                    color: colors.text1,
+                    onPressed: () {
+                      _showMoreMenu(context, colors);
+                    },
                   ),
                 ],
               ),
             ),
-            Container(height: 1, color: AppColors.dividerGrey),
+            Container(height: 1, color: colors.divider),
             // ===== 分类选项卡（原版 TabPageIndicator）=====
             SizedBox(
               height: 40,
@@ -105,14 +142,14 @@ class _LibSelectPageState extends State<LibSelectPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: selected ? AppColors.successGreen : Colors.transparent,
+                        color: selected ? colors.success : Colors.transparent,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
                         _tabs[i],
                         style: TextStyle(
-                          fontSize: 13,
-                          color: selected ? Colors.white : AppColors.textTertiary,
+                          fontSize: 12,
+                          color: selected ? Colors.white : colors.text3,
                           fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                         ),
                       ),
@@ -121,7 +158,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                 },
               ),
             ),
-            Container(height: 1, color: AppColors.dividerGrey),
+            Container(height: 1, color: colors.divider),
             // ===== 词书列表（原版 ListView，每项 120dp）=====
             Expanded(
               child: FutureBuilder<List<Book>>(
@@ -141,11 +178,98 @@ class _LibSelectPageState extends State<LibSelectPage> {
                     itemCount: books.length,
                     itemBuilder: (context, index) {
                       final book = books[index];
-                      return _LibItem(book: book);
+                      return _LibItem(book: book, showDescription: _showDescription);
                     },
                   );
                 },
               ),
+            ),
+            // ===== 底部工具栏（原版底部操作栏）=====
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: colors.divider)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _BottomToolItem(
+                      icon: Icons.style,
+                      label: '沉浸刷词',
+                      onTap: () => _onToolTap(context, 'immersive'),
+                    ),
+                    _BottomToolItem(
+                      icon: Icons.headphones,
+                      label: '随身听',
+                      onTap: () => _onToolTap(context, 'listen'),
+                    ),
+                    _BottomToolItem(
+                      icon: Icons.edit_note,
+                      label: '听写',
+                      onTap: () => _onToolTap(context, 'dictation'),
+                    ),
+                    _BottomToolItem(
+                      icon: Icons.spellcheck,
+                      label: '随手拼',
+                      onTap: () => _onToolTap(context, 'spell'),
+                    ),
+                    _BottomToolItem(
+                      icon: Icons.file_download_outlined,
+                      label: '导出',
+                      onTap: () => _onToolTap(context, 'export'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onToolTap(BuildContext context, String tool) {
+    switch (tool) {
+      case 'immersive':
+        Navigator.pushNamed(context, '/immersive_swipe');
+        break;
+      default:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$tool 功能开发中...')),
+        );
+    }
+  }
+
+  void _showMoreMenu(BuildContext context, dynamic colors) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.cardBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.sort, color: colors.text1),
+              title: Text('排序', style: TextStyle(color: colors.text1)),
+              onTap: () => Navigator.pop(ctx),
+            ),
+            ListTile(
+              leading: Icon(Icons.filter_list, color: colors.text1),
+              title: Text('筛选', style: TextStyle(color: colors.text1)),
+              onTap: () => Navigator.pop(ctx),
+            ),
+            ListTile(
+              leading: Icon(Icons.refresh, color: colors.text1),
+              title: Text('刷新词书', style: TextStyle(color: colors.text1)),
+              onTap: () {
+                Navigator.pop(ctx);
+                setState(() => _booksFuture = _load());
+              },
             ),
           ],
         ),
@@ -157,7 +281,8 @@ class _LibSelectPageState extends State<LibSelectPage> {
 /// 词书列表项（复刻原版 lv_item_select_library：120dp 高）
 class _LibItem extends StatelessWidget {
   final Book book;
-  const _LibItem({required this.book});
+  final bool showDescription;
+  const _LibItem({required this.book, this.showDescription = true});
 
   @override
   Widget build(BuildContext context) {
@@ -216,7 +341,7 @@ class _LibItem extends StatelessWidget {
                           book.name,
                           style: const TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.black87,
                           ),
                           maxLines: 1,
@@ -236,12 +361,13 @@ class _LibItem extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    '考研核心高频 | 2026',
-                    style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  if (showDescription)
+                    Text(
+                      '考研核心高频 | 2026',
+                      style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   const Spacer(),
                   // 底部行：单词量（原版底部对齐）
                   Row(
@@ -273,5 +399,43 @@ class _LibItem extends StatelessWidget {
   String _coverText() {
     final name = book.name.replaceAll(RegExp(r'MonsterWord_'), '');
     return name.length > 4 ? name.substring(0, 4) : name;
+  }
+}
+
+/// 底部工具栏项（图标 + 文字）
+class _BottomToolItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _BottomToolItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.skin.colors;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 22, color: colors.text1),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: colors.text1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

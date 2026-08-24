@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 核心学习引擎：翻译自 coreengine/BBCoreEngine.java（v3.2 源码 1:1）
 // 抽象引擎：定义学习/复习流程的核心方法 + 4选1干扰项生成

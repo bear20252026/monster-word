@@ -1,0 +1,770 @@
+// 由 Claude 团队生成 | Monster Word App
+
+// 不背单词机 BBDC-Dot-One：Game Boy 风格复古学习界面
+// 像素风屏幕 + 单词展示 + 4选1测验 + D-pad 交互
+import 'dart:async';
+import 'dart:math';
+
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../data/example_parser.dart';
+import '../engine/srs_engine.dart';
+import '../hooks/responsive.dart';
+import '../state/learning_state.dart';
+import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
+
+/// 复古像素色彩
+class _PixelColors {
+  static const screenBg = Color(0xFF9BBC0F);      // Game Boy 绿
+  static const screenDark = Color(0xFF0F380F);     // 深绿
+  static const screenMid = Color(0xFF306230);      // 中绿
+  static const screenLight = Color(0xFF8BAC0F);    // 浅绿
+  static const bodyGray = Color(0xFFB0B0B0);       // 机身灰
+  static const bodyDark = Color(0xFF505050);       // 深灰
+  static const buttonRed = Color(0xFFCC3333);      // B 键红
+  static const buttonPurple = Color(0xFF8844CC);   // A 键紫
+  static const dpadGray = Color(0xFF404040);       // 方向键灰
+}
+
+/// 不背单词机页面
+class WordMachinePage extends StatefulWidget {
+  const WordMachinePage({super.key});
+  static const routeName = '/word_machine';
+
+  @override
+  State<WordMachinePage> createState() => _WordMachinePageState();
+}
+
+class _WordMachinePageState extends State<WordMachinePage>
+    with TickerProviderStateMixin {
+  int _selectedChoice = -1;
+  bool _showResult = false;
+  bool _isCorrect = false;
+  int _score = 0;
+  int _streak = 0;
+  String _statusText = 'PRESS START';
+  bool _started = false;
+
+  late AnimationController _blinkController;
+  late AnimationController _shakeController;
+  late Animation<double> _shakeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _blinkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..repeat(reverse: true);
+
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _shakeAnimation = Tween<double>(begin: -4, end: 4).animate(
+      CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
+    );
+  }
+
+  @override
+  void dispose() {
+    _blinkController.dispose();
+    _shakeController.dispose();
+    super.dispose();
+  }
+
+  void _startGame() {
+    setState(() {
+      _started = true;
+      _score = 0;
+      _streak = 0;
+      _selectedChoice = -1;
+      _showResult = false;
+      _statusText = 'GO!';
+    });
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) setState(() => _statusText = '');
+    });
+  }
+
+  void _onChoice(int index) {
+    if (_showResult) return;
+
+    final state = context.read<LearningState>();
+    final word = state.currentWord;
+    if (word == null) return;
+
+    final choices = state.choices;
+    final isCorrect = choices[index].word == word.word;
+
+    setState(() {
+      _selectedChoice = index;
+      _showResult = true;
+      _isCorrect = isCorrect;
+    });
+
+    if (isCorrect) {
+      setState(() {
+        _score += 100 + _streak * 10;
+        _streak++;
+        _statusText = 'CORRECT! +${100 + (_streak - 1) * 10}';
+      });
+      state.rate(RecallRating.good);
+
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          _nextWord();
+        }
+      });
+    } else {
+      setState(() {
+        _streak = 0;
+        _statusText = 'WRONG!';
+      });
+      _shakeController.forward().then((_) => _shakeController.reset());
+      state.rate(RecallRating.again);
+
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) {
+          setState(() {
+            _selectedChoice = -1;
+            _showResult = false;
+            _statusText = '';
+          });
+        }
+      });
+    }
+  }
+
+  void _nextWord() {
+    final state = context.read<LearningState>();
+    setState(() {
+      _selectedChoice = -1;
+      _showResult = false;
+      _statusText = '';
+    });
+    state.next();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final resp = context.responsive;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF2C2C2C),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: min(400, resp.contentWidth),
+            ),
+            child: _buildConsole(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 构建单词机外壳
+  Widget _buildConsole() {
+    return Container(
+      decoration: BoxDecoration(
+        color: _PixelColors.bodyGray,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 顶部品牌栏
+          _buildBrandBar(),
+          // 屏幕区域
+          _buildScreen(),
+          // 中间装饰线
+          Container(
+            height: 3,
+            margin: const EdgeInsets.symmetric(horizontal: 32),
+            color: _PixelColors.bodyDark,
+          ),
+          const SizedBox(height: 16),
+          // 按钮区域
+          _buildControls(),
+          const SizedBox(height: 20),
+          // 底部扬声器格栅
+          _buildSpeakerGrill(),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  /// 品牌栏
+  Widget _buildBrandBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      child: Row(
+        children: [
+          // 电源指示灯
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: _started ? const Color(0xFF4CAF50) : Colors.red,
+              shape: BoxShape.circle,
+              boxShadow: _started
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFF4CAF50).withValues(alpha: 0.6),
+                        blurRadius: 6,
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
+          const SizedBox(width: 12),
+          // 品牌名
+          const Text(
+            'BBDC',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              color: _PixelColors.bodyDark,
+              letterSpacing: 3,
+            ),
+          ),
+          const Spacer(),
+          // Dot-One 标识
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: _PixelColors.bodyDark,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Text(
+              'Dot-One',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: _PixelColors.bodyGray,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 屏幕区域
+  Widget _buildScreen() {
+    return AnimatedBuilder(
+      animation: _shakeAnimation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(_shakeAnimation.value, 0),
+          child: child,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        decoration: BoxDecoration(
+          color: _PixelColors.screenBg,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: _PixelColors.bodyDark, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(5),
+          child: SizedBox(
+            height: 320,
+            child: _started ? _buildGameScreen() : _buildStartScreen(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 开始画面
+  Widget _buildStartScreen() {
+    return Container(
+      color: _PixelColors.screenBg,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 像素 Logo
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: _PixelColors.screenDark,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Center(
+              child: Text(
+                'BB',
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 36,
+                  fontWeight: FontWeight.w900,
+                  color: _PixelColors.screenLight,
+                  letterSpacing: -2,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            '不背单词机',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: _PixelColors.screenDark,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'BBDC-Dot-One',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 12,
+              color: _PixelColors.screenMid,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 24),
+          // 闪烁 PRESS START
+          FadeTransition(
+            opacity: _blinkController.drive(
+              Tween<double>(begin: 1.0, end: 0.0),
+            ),
+            child: const Text(
+              'PRESS START',
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: _PixelColors.screenDark,
+                letterSpacing: 3,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // 版本号
+          const Text(
+            'v1.0.0',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 10,
+              color: _PixelColors.screenMid,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 游戏画面
+  Widget _buildGameScreen() {
+    final state = context.watch<LearningState>();
+    final word = state.currentWord;
+
+    if (word == null) {
+      return Container(
+        color: _PixelColors.screenBg,
+        child: const Center(
+          child: Text(
+            'NO DATA',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 16,
+              color: _PixelColors.screenDark,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      color: _PixelColors.screenBg,
+      child: Column(
+        children: [
+          // 状态栏（分数 + 连击）
+          _buildStatusBar(),
+          // 单词展示
+          _buildWordDisplay(word),
+          // 释义区域
+          _buildMeaningArea(word),
+          // 4 个选项
+          Expanded(child: _buildChoiceGrid(state)),
+          // 底部状态文字
+          if (_statusText.isNotEmpty) _buildStatusText(),
+        ],
+      ),
+    );
+  }
+
+  /// 状态栏
+  Widget _buildStatusBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: const BoxDecoration(
+        color: _PixelColors.screenDark,
+      ),
+      child: Row(
+        children: [
+          Text(
+            'SCORE: $_score',
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: _PixelColors.screenLight,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            'STREAK: $_streak',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: _streak > 0
+                  ? _PixelColors.screenLight
+                  : _PixelColors.screenMid,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 单词展示
+  Widget _buildWordDisplay(dynamic word) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      child: Column(
+        children: [
+          Text(
+            word.word,
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: _PixelColors.screenDark,
+              letterSpacing: 2,
+            ),
+          ),
+          if (word.usPron.isNotEmpty)
+            Text(
+              '/${word.usPron}/',
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: _PixelColors.screenMid,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 释义区域
+  Widget _buildMeaningArea(dynamic word) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: const Text(
+        'Choose the correct meaning:',
+        style: TextStyle(
+          fontFamily: 'monospace',
+          fontSize: 11,
+          color: _PixelColors.screenMid,
+        ),
+      ),
+    );
+  }
+
+  /// 4 个选项
+  Widget _buildChoiceGrid(LearningState state) {
+    final choices = state.choices;
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 6,
+          crossAxisSpacing: 6,
+          childAspectRatio: 2.2,
+        ),
+        itemCount: choices.length.clamp(0, 4),
+        itemBuilder: (context, i) => _buildChoiceButton(i, choices[i], state),
+      ),
+    );
+  }
+
+  /// 单个选项按钮
+  Widget _buildChoiceButton(int index, dynamic choice, LearningState state) {
+    final word = state.currentWord;
+    final isCorrectChoice = choice.word == word?.word;
+    final isSelected = _selectedChoice == index;
+
+    Color bgColor;
+    Color textColor;
+    if (_showResult && isCorrectChoice) {
+      bgColor = _PixelColors.screenDark;
+      textColor = _PixelColors.screenLight;
+    } else if (_showResult && isSelected && !isCorrectChoice) {
+      bgColor = const Color(0xFF5A1010);
+      textColor = const Color(0xFFFF6666);
+    } else {
+      bgColor = _PixelColors.screenMid;
+      textColor = _PixelColors.screenLight;
+    }
+
+    return GestureDetector(
+      onTap: () => _onChoice(index),
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: isSelected ? _PixelColors.screenDark : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            choice.interpret.toString().split('；').first,
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 底部状态文字
+  Widget _buildStatusText() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      color: _PixelColors.screenDark,
+      child: Center(
+        child: Text(
+          _statusText,
+          style: TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: _isCorrect
+                ? _PixelColors.screenLight
+                : const Color(0xFFFF6666),
+            letterSpacing: 2,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 按钮区域
+  Widget _buildControls() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // D-pad（装饰用）
+          _buildDpad(),
+          // A / B 键
+          Row(
+            children: [
+              // B 键（返回）
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _PixelColors.buttonRed,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'B',
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // A 键（确认/开始）
+              GestureDetector(
+                onTap: () {
+                  if (!_started) {
+                    _startGame();
+                  } else if (_showResult) {
+                    _nextWord();
+                  }
+                },
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _PixelColors.buttonPurple,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'A',
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// D-pad 方向键（装饰）
+  Widget _buildDpad() {
+    return SizedBox(
+      width: 100,
+      height: 100,
+      child: Stack(
+        children: [
+          // 水平条
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 35,
+            child: Container(
+              height: 30,
+              decoration: BoxDecoration(
+                color: _PixelColors.dpadGray,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+          // 垂直条
+          Positioned(
+            top: 0,
+            bottom: 0,
+            left: 35,
+            child: Container(
+              width: 30,
+              decoration: BoxDecoration(
+                color: _PixelColors.dpadGray,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+          // 中心圆
+          const Positioned(
+            left: 35,
+            top: 35,
+            child: SizedBox(
+              width: 30,
+              height: 30,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 扬声器格栅
+  Widget _buildSpeakerGrill() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 24),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Column(
+          children: List.generate(
+            4,
+            (i) => Container(
+              width: 40,
+              height: 3,
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                color: _PixelColors.bodyDark,
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// AnimatedBuilder 的简化版
+class AnimatedBuilder extends AnimatedWidget {
+  final Widget Function(BuildContext, Widget?) builder;
+  final Widget? child;
+
+  const AnimatedBuilder({
+    super.key,
+    required super.listenable,
+    required this.builder,
+    this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return builder(context, child);
+  }
+
+  // ignore: annotate_overrides
+  Animation get animation => listenable as Animation;
+}

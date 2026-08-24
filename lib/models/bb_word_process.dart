@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 数据模型层：翻译自 bean/BBWordProcess.java（v3.2 源码 1:1）
 // 单词学习进度（SRS 核心数据模型，对应 SQLite 用户表字段）

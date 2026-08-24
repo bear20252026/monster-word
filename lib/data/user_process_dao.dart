@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 数据库层：翻译自 database/BBWordProcessDBHelper.java + BBWordProcessDao.java（v3.2 源码 1:1）
 // 用户学习进度表（user_process_history）+ 核心 DAO 操作

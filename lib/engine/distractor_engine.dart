@@ -1,3 +1,5 @@
+// 由 Claude 团队生成 | Monster Word App
+
 // 由账号4生成
 // 干扰项生成引擎：基于编辑距离+首字母+尾字母+词长+LCS 的纯算法实现
 // 参考：ISSR (2025) + Edit Distance ADG + 用户洞察（首尾字母相同最易混淆）

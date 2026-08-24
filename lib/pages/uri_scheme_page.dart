@@ -1,0 +1,67 @@
+// 由 Claude 团队生成 | Monster Word App
+
+// 移植自 v3.2 UriSchemeProcessActivity
+// URI Scheme 处理：处理 deep link 跳转
+import 'package:flutter/material.dart';
+
+import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
+import 'base_web_page.dart';
+
+class UriSchemePage extends StatelessWidget {
+  final String uri;
+
+  const UriSchemePage({super.key, required this.uri});
+
+  static const routeName = '/uri_scheme';
+
+  @override
+  Widget build(BuildContext context) {
+    // 解析 URI 并跳转到对应页面
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _processUri(context);
+    });
+
+    return Scaffold(
+      backgroundColor: context.skin.colors.pageBg,
+      body: Center(
+        child: CircularProgressIndicator(color: MistralColors.primary),
+      ),
+    );
+  }
+
+  void _processUri(BuildContext context) {
+    final uriObj = Uri.tryParse(uri);
+    if (uriObj == null) {
+      Navigator.pop(context);
+      return;
+    }
+
+    // 处理不同 scheme
+    if (uriObj.scheme == 'http' || uriObj.scheme == 'https') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => BaseWebPage(url: uri)),
+      );
+    } else if (uriObj.scheme == 'monsterword') {
+      // 自定义 scheme 处理
+      final host = uriObj.host;
+      switch (host) {
+        case 'word':
+          final word = uriObj.pathSegments.isNotEmpty ? uriObj.pathSegments[0] : '';
+          Navigator.pushReplacementNamed(context, '/word_detail', arguments: word);
+          break;
+        case 'learn':
+          Navigator.pushReplacementNamed(context, '/learn');
+          break;
+        case 'review':
+          Navigator.pushReplacementNamed(context, '/review');
+          break;
+        default:
+          Navigator.pop(context);
+      }
+    } else {
+      Navigator.pop(context);
+    }
+  }
+}

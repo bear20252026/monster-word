@@ -47,6 +47,10 @@ dependencies:
   flutter_svg: ^2.0.17     # 原版 vector 图标渲染
   crypto: ^3.0.6           # MD5/SHA 加密（原版 SecurityUtils）
   http: ^1.2.2             # 网络请求（原版 CoolHttpClientV3）
+  http_parser: ^4.1.2      # HTTP MediaType（上传请求 Content-Type）
+  encrypt: ^5.0.3          # AES 加密（原版签名机制 sign = md5(AES(...))）
+  just_audio: ^0.9.42      # 锁屏音频播放（lock/lock_media.dart）
+  webview_flutter: ^4.10.0 # WebView 页面（帮助页/网页活动/锁屏缓存）
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +78,7 @@ flutter:
   assets:
     - assets/db/wordbook.db.gz
     - assets/icons/
+    - assets/wallpapers/
 
   # 字体（Mistral AI：Inter 无衬线 + Charter 衬线）
   fonts:
