@@ -78,7 +78,7 @@ class _ReviewDialog extends StatelessWidget {
                     value: '${state.todayReviewCount}',
                     unit: '词',
                     icon: Icons.replay_outlined,
-                    color: skin.colors.success,
+                    color: skin.success,
                     skin: skin,
                   )),
                 ],

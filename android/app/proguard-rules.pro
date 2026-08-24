@@ -19,3 +19,8 @@
 -keepclassmembers class * {
     @io.flutter.embedding.engine.plugins.FlutterPlugin <methods>;
 }
+
+# Google Play Core (R8 missing classes)
+-dontwarn com.google.android.play.core.splitcompat.SplitCompatApplication
+-dontwarn com.google.android.play.core.splitinstall.**
+-dontwarn com.google.android.play.core.tasks.**

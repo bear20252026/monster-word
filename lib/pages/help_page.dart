@@ -41,7 +41,7 @@ class _HelpPageState extends State<HelpPage> {
           _isLoading = false;
         }),
         // 安全加固：仅允许 beingfine.cn 域名导航，阻止跳转到外部恶意站点
-        navigationRequest: (request) {
+        onNavigationRequest: (request) {
           final uri = Uri.tryParse(request.url);
           if (uri != null && uri.host.endsWith('beingfine.cn')) {
             return NavigationDecision.navigate;
