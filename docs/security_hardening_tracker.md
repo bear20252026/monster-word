@@ -11,14 +11,14 @@
 | # | 问题 | 发现者 | 文件位置 | 修复状态 | 负责人 | 提交/备注 |
 |---|------|--------|----------|----------|--------|-----------|
 | 1 | AES 密钥 `"iscooler"` 硬编码 | DevOps, DocReviewer, DataEngineer | api_services.dart:94 | ⏳ 待修复 | 待分配 | 需服务端配合更换密钥 |
-| 2 | Release 包 print() 泄露 token/参数 | DevOps, DataEngineer | http_client.dart, api_services.dart | 🔄 进行中 | DevOps | — |
-| 3 | 15+ 处 HTTP 明文 URL | DocReviewer | 多文件 | 🔄 进行中 | ContrastGuard | — |
+| 2 | Release 包 print() 泄露 token/参数 | DevOps, DataEngineer | http_client.dart, api_services.dart | ✅ 已完成 | DevOps | — |
+| 3 | 15+ 处 HTTP 明文 URL | DocReviewer | 多文件 | ✅ 已完成 | ContrastGuard | `4cc1dd2` |
 | 4 | Release 使用 debug 签名 | DocReviewer | build.gradle.kts:36 | ✅ 已完成 | MotionEngineer | `6552dd3` |
 | 5 | 无 R8 代码混淆 | DocReviewer | build.gradle.kts | ✅ 已完成 | MotionEngineer | `6552dd3` |
-| 6 | 密码明文存储 `userPwd` | DataEngineer, LicenseReviewer | app_preferences_ext.dart:770 | 📨 待派发 | 待分配 | — |
-| 7 | Token/Secret 明文存储 | DevOps, MotionEngineer, DataEngineer | SharedPreferences | 🔄 进行中 | PhoneticsEngineer | 迁移至 flutter_secure_storage |
+| 6 | 密码明文存储 `userPwd` | DataEngineer, LicenseReviewer | app_preferences_ext.dart:770 | ✅ 已完成 | DataEngineer | `0dcbd86` |
+| 7 | Token/Secret 明文存储 | DevOps, MotionEngineer, DataEngineer | SharedPreferences | ✅ 已完成 | PhoneticsEngineer | `cea98b9` |
 
-**P0 完成率：2/7（29%）** — #4 Release 签名 + #5 R8 混淆
+**P0 完成率：7/7（100%）** — #2 print() + #3 HTTP + #4 Release 签名 + #5 R8 混淆 + #6 密码 + #7 Token
 
 ---
 
@@ -34,6 +34,8 @@
 | 13 | `encrypt` 包已 archived | TokenEngineer | ✅ 方案完成 | TokenEngineer | 迁移方案已产出，见 encrypt_migration_plan.md |
 | 14 | MD5 签名不安全 | DataEngineer | ⏳ 待修复 | 待分配 | 升级 HMAC-SHA256 |
 | 15 | Token 通过 URL 参数传递 | MotionEngineer | ⏳ 待修复 | 待分配 | 改用 Header 传递 |
+| 16 | debugPrint 清理 | Batch1Engineer | ✅ 已完成 | Batch1Engineer | `426b5ac` |
+| 17 | help_page WebView 安全 | Batch1Engineer | ✅ 已完成 | Batch1Engineer | `84d42af` |
 
 **P1 完成率：3/8（37.5%）** — #12 allowBackup + #11 WebView 审计 + #13 encrypt 方案
 
