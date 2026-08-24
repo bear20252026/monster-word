@@ -36,22 +36,22 @@ class _AppearancePageState extends State<AppearancePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppleSpacing.lg),
                     // 两个大预览卡片（壁纸 + 阅读模式）
                     _buildPreviewCards(skin),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppleSpacing.xl),
                     // 主题选择圆圈（明亮/深邃/极夜）
                     _buildThemeCircles(skin),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppleSpacing.md),
                     // 跟随系统开关
                     _buildFollowSystemRow(skin),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppleSpacing.md),
                     // 风格字体
                     _buildSettingRow(skin, '风格字体', '现代简约'),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppleSpacing.md),
                     // 沉浸场景
                     _buildSettingRow(skin, '沉浸场景', '未开启'),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: AppleSpacing.xxl),
                   ],
                 ),
               ),
@@ -95,7 +95,7 @@ class _AppearancePageState extends State<AppearancePage> {
           child: Container(
             height: 220,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
               gradient: const LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -110,7 +110,7 @@ class _AppearancePageState extends State<AppearancePage> {
                   child: Container(
                     height: 30, decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                   ),
                 ),
@@ -121,14 +121,14 @@ class _AppearancePageState extends State<AppearancePage> {
                       Expanded(child: Container(
                         height: 24, decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
                       )),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppleSpacing.xs),
                       Expanded(child: Container(
                         height: 24, decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
                       )),
                     ],
@@ -144,7 +144,7 @@ class _AppearancePageState extends State<AppearancePage> {
                         color: Colors.white.withValues(alpha: 0.6),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.lock, size: 18, color: Colors.black54),
+                      child: Icon(Icons.lock, size: 18, color: skin.colors.text3),
                     ),
                   ),
                 ),
@@ -152,14 +152,14 @@ class _AppearancePageState extends State<AppearancePage> {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppleSpacing.sm),
         // 阅读模式预览卡
         Expanded(
           child: Container(
             height: 220,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: const Color(0xFFD6E6F2),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              color: skin.colors.cardBgAlt,
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -167,9 +167,9 @@ class _AppearancePageState extends State<AppearancePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(width: 60, height: 10, decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(4),
+                    color: Colors.white.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(AppRadius.xs),
                   )),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppleSpacing.sm),
                   ...List.generate(4, (i) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Container(
@@ -177,7 +177,7 @@ class _AppearancePageState extends State<AppearancePage> {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(AppRadius.xs),
                       ),
                     ),
                   )),
@@ -196,7 +196,7 @@ class _AppearancePageState extends State<AppearancePage> {
       padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
         color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -223,7 +223,7 @@ class _AppearancePageState extends State<AppearancePage> {
                         )
                       : null,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppleSpacing.xs),
                 Text(preset.name,
                   style: TextStyle(
                     fontSize: 13,
@@ -244,7 +244,7 @@ class _AppearancePageState extends State<AppearancePage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Row(
         children: [
@@ -270,7 +270,7 @@ class _AppearancePageState extends State<AppearancePage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Row(
         children: [
@@ -278,7 +278,7 @@ class _AppearancePageState extends State<AppearancePage> {
             child: Text(title, style: TextStyle(fontSize: 16, color: skin.colors.text1)),
           ),
           Text(value, style: TextStyle(fontSize: 14, color: skin.colors.text3)),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppleSpacing.xxs),
           Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
         ],
       ),
