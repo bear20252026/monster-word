@@ -1,52 +1,52 @@
-// Monster Word 设计令牌 — 还原 v3.2 原版配色
+// Monster Word 设计令牌 — 星巴克过渡期（Batch 2 别名策略）
+// 旧类名保留，内部实现指向星巴克 token
 import 'package:flutter/material.dart';
+import 'starbucks_tokens.dart';
 
-/// 原版 v3.2 配色（AppDarkTheme / AppLightTheme / AppBlackTheme）
+/// 过渡期颜色（旧名新值）
 class MistralColors {
-  // 品牌色
-  static const Color primary = Color(0xFFE8913A);       // 强调色（原版橙色）
-  static const Color primaryDeep = Color(0xFFCC7A2E);   // 深强调色
+  // 品牌色 → 品牌绿
+  static const Color primary = StarbucksCreamColors.greenBrand;      // 0xFF00754A
+  static const Color primaryDeep = StarbucksCreamColors.greenHouse;  // 0xFF006241
   static const Color onPrimary = Color(0xFFFFFFFF);
 
-  // 亮色主题品牌色（原版 #E8913A）
-  static const Color primaryLight = Color(0xFFE8913A);
-  // 深色主题品牌色（原版 #F4A100）
-  static const Color primaryDark = Color(0xFFF4A100);
+  static const Color primaryLight = StarbucksCreamColors.greenBrand; // 0xFF00754A
+  static const Color primaryDark = StarbucksDarkColors.accent;       // 0xFF00A862 薄荷绿
 
-  // sunshine 金色系列（原版高亮色）
-  static const Color sunshine300 = Color(0xFFFFD06A);
-  static const Color sunshine500 = Color(0xFFF4A100);   // 原版深色高亮
-  static const Color sunshine700 = Color(0xFFCC960C);   // 原版深色高亮文字
-  static const Color sunshine900 = Color(0xFFFF8A00);
+  // sunshine 系列 → 品牌绿/金
+  static const Color sunshine300 = StarbucksCreamColors.vipGoldBg;   // 0xFFCBA258 品牌金
+  static const Color sunshine500 = StarbucksDarkColors.accent;       // 0xFF00A862 薄荷绿
+  static const Color sunshine700 = StarbucksCreamColors.greenHouse;  // 0xFF006241 深绿
+  static const Color sunshine900 = StarbucksCreamColors.greenBrand;  // 0xFF00754A 品牌绿
 
-  // 奶油色（仅保留兼容，亮色主题改用 #F4F4F4）
-  static const Color cream = Color(0xFFF5F5F5);         // 原版亮色背景
-  static const Color creamLight = Color(0xFFF5F5F5);
-  static const Color creamDeeper = Color(0xFFE8E8E8);
-  static const Color beigeDeep = Color(0xFFE6D5A8);
+  // 奶油色 → 奶油画布
+  static const Color cream = StarbucksCreamColors.pageBg;            // 0xFFF2F0EB
+  static const Color creamLight = StarbucksCreamColors.pageBg;
+  static const Color creamDeeper = StarbucksCreamColors.cardBgAlt;   // 0xFFEDEBE9 陶瓷
+  static const Color beigeDeep = StarbucksCreamColors.profileDecor1; // 0xFFD4E9E2 浅绿
 
-  // 深色系（原版蓝灰色调）
-  static const Color ink = Color(0xFF1F1F1F);
-  static const Color inkTint = Color(0xFF3D3D3D);
-  static const Color charcoal = Color(0xFF212532);      // 原版深色背景（蓝灰）
-  static const Color slate = Color(0xFF4A4A4A);
-  static const Color steel = Color(0xFF6A6A6A);
-  static const Color stone = Color(0xFF8A8A8A);
-  static const Color muted = Color(0xFFA8A8A8);
+  // 深色系 → 深绿体系
+  static const Color ink = Color(0xFF212121);                        // 正文黑
+  static const Color inkTint = StarbucksCreamColors.greenBanner;     // 0xFF1E3932
+  static const Color charcoal = StarbucksDarkColors.pageBg;          // 0xFF101B17 墨绿
+  static const Color slate = StarbucksDarkColors.cardBgAlt;          // 0xFF274A40 浮层绿
+  static const Color steel = StarbucksDarkColors.text2;              // 0xFFA9BCB5 雾绿
+  static const Color stone = StarbucksDarkColors.text2;
+  static const Color muted = StarbucksCreamColors.profileDecor1;     // 0xFFD4E9E2 浅绿
 
   // 分割线 / 表面色
-  static const Color hairline = Color(0xFFE5E5E5);
-  static const Color hairlineSoft = Color(0xFFEDEDED);
-  static const Color canvas = Color(0xFFFFFFFF);
-  static const Color surfaceCode = Color(0xFF040404);   // 原版极夜背景
+  static const Color hairline = StarbucksCreamColors.divider;        // 0x14000000
+  static const Color hairlineSoft = StarbucksCreamColors.divider;
+  static const Color canvas = StarbucksCreamColors.pageBg;           // 0xFFF2F0EB 奶油
+  static const Color surfaceCode = StarbucksDarkColors.pageBg;       // 0xFF101B17 墨绿
 
-  // 语义色（原版 v3.2）
-  static const Color success = Color(0xFF4CAF50);       // 原版亮色成功（绿色）
-  static const Color successDark = Color(0xFF22A18B);   // 原版深色成功（青绿）
-  static const Color danger = Color(0xFFE3303B);        // 原版亮色错误（红）
-  static const Color dangerDark = Color(0xFFC64354);    // 原版深色错误（玫红）
+  // 语义色
+  static const Color success = StarbucksCreamColors.success;
+  static const Color successDark = StarbucksDarkColors.success;
+  static const Color danger = StarbucksCreamColors.danger;
+  static const Color dangerDark = StarbucksDarkColors.danger;
   static const Color warning = Color(0xFFF59E0B);
-  static const Color link = Color(0xFF4A90E2);          // 原版系统文字色（蓝）
+  static const Color link = StarbucksCreamColors.greenBrand;         // 0xFF00754A 品牌绿
 }
 
 /// 圆角
@@ -72,102 +72,134 @@ class AppleSpacing {
   static const double section = 64;
 }
 
-/// 字体
+/// 字体（过渡期：指向 StarbucksTypography 的回退链）
 class MistralTypography {
-  static const TextStyle heroDisplay = TextStyle(
-    fontFamily: 'Charter', fontSize: 64, fontWeight: FontWeight.w400,
+  // 中西文混排回退链（font_strategy.md）
+  static const List<String> _fallback = [
+    'Inter',
+    'PingFang SC',
+    'Microsoft YaHei',
+    'Noto Sans SC',
+  ];
+
+  static TextStyle heroDisplay = TextStyle(
+    fontFamily: 'Charter', fontFamilyFallback: _fallback,
+    fontSize: 64, fontWeight: FontWeight.w400,
     height: 1.10, letterSpacing: -1.0,
+    color: StarbucksCreamColors.greenHouse,  // 标题绿
   );
-  static const TextStyle heading1 = TextStyle(
-    fontFamily: 'Charter', fontSize: 52, fontWeight: FontWeight.w400,
+  static TextStyle heading1 = TextStyle(
+    fontFamily: 'Charter', fontFamilyFallback: _fallback,
+    fontSize: 52, fontWeight: FontWeight.w400,
     height: 1.15, letterSpacing: -0.5,
+    color: StarbucksCreamColors.greenHouse,
   );
-  static const TextStyle heading2 = TextStyle(
-    fontFamily: 'Inter', fontSize: 36, fontWeight: FontWeight.w500,
+  static TextStyle heading2 = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 36, fontWeight: FontWeight.w500,
     height: 1.20, letterSpacing: -0.5,
+    color: StarbucksCreamColors.greenHouse,
   );
-  static const TextStyle heading3 = TextStyle(
-    fontFamily: 'Inter', fontSize: 28, fontWeight: FontWeight.w500,
+  static TextStyle heading3 = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 28, fontWeight: FontWeight.w500,
     height: 1.25,
+    color: StarbucksCreamColors.greenHouse,
   );
-  static const TextStyle heading4 = TextStyle(
-    fontFamily: 'Inter', fontSize: 22, fontWeight: FontWeight.w500,
+  static TextStyle heading4 = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 22, fontWeight: FontWeight.w500,
     height: 1.30,
+    color: StarbucksCreamColors.greenHouse,
   );
-  static const TextStyle heading5 = TextStyle(
-    fontFamily: 'Inter', fontSize: 18, fontWeight: FontWeight.w500,
+  static TextStyle heading5 = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 18, fontWeight: FontWeight.w500,
     height: 1.40,
+    color: StarbucksCreamColors.greenHouse,
   );
-  static const TextStyle bodyMd = TextStyle(
-    fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w400,
-    height: 1.55,
+  static TextStyle bodyMd = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 16, fontWeight: FontWeight.w400,
+    height: 1.55, color: StarbucksCreamColors.text1,
   );
-  static const TextStyle bodySm = TextStyle(
-    fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w400,
-    height: 1.50,
+  static TextStyle bodySm = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 14, fontWeight: FontWeight.w400,
+    height: 1.50, color: StarbucksCreamColors.text1,
   );
-  static const TextStyle caption = TextStyle(
-    fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w400,
-    height: 1.40,
+  static TextStyle caption = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 13, fontWeight: FontWeight.w400,
+    height: 1.40, color: StarbucksCreamColors.text2,
   );
-  static const TextStyle captionBold = TextStyle(
-    fontFamily: 'Inter', fontSize: 13, fontWeight: FontWeight.w600,
-    height: 1.40,
+  static TextStyle captionBold = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 13, fontWeight: FontWeight.w600,
+    height: 1.40, color: StarbucksCreamColors.text1,
   );
-  static const TextStyle body = TextStyle(
-    fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w400,
-    height: 1.55,
+  static TextStyle body = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 16, fontWeight: FontWeight.w400,
+    height: 1.55, color: StarbucksCreamColors.text1,
   );
-  static const TextStyle bodyBold = TextStyle(
-    fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600,
-    height: 1.55,
+  static TextStyle bodyBold = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 16, fontWeight: FontWeight.w600,
+    height: 1.55, color: StarbucksCreamColors.text1,
   );
-  static const TextStyle micro = TextStyle(
-    fontFamily: 'Inter', fontSize: 12, fontWeight: FontWeight.w500,
-    height: 1.40,
+  static TextStyle micro = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 12, fontWeight: FontWeight.w500,
+    height: 1.40, color: StarbucksCreamColors.text2,
   );
-  static const TextStyle buttonMd = TextStyle(
-    fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w500,
-    height: 1.30,
+  static TextStyle buttonMd = TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: _fallback,
+    fontSize: 14, fontWeight: FontWeight.w500,
+    height: 1.30, color: StarbucksCreamColors.cardBg,  // 白字
   );
 }
 
-/// 兼容旧代码别名
+/// 兼容旧代码别名（过渡期指向星巴克 token）
 class AppColors {
   static const Color successGreen = MistralColors.success;
-  static const Color highlightOrange = MistralColors.primary;
+  static const Color highlightOrange = StarbucksCreamColors.greenBrand;  // 品牌绿
   static const Color errorRed = MistralColors.danger;
-  static const Color black87 = MistralColors.ink;
-  static const Color black54 = Color(0x8A1F1F1F);
-  static const Color black12 = Color(0x1F000000);
+  static const Color black87 = Color(0xFF212121);                        // 正文黑
+  static const Color black54 = StarbucksCreamColors.text2;               // α=0.58
+  static const Color black12 = StarbucksCreamColors.divider;             // 0x14000000
   static const Color white100 = Color(0xFFFFFFFF);
-  static const Color mainBgTop = MistralColors.cream;
-  static const Color mainBgBottom = MistralColors.creamLight;
-  static const Color cardBg = MistralColors.canvas;
-  static const Color dividerGrey = MistralColors.hairline;
-  static const Color textTertiary = MistralColors.stone;
-  static const Color checkInBg = Color(0x33FFF8E0);
-  static const Color checkInAccent = MistralColors.sunshine500;
-  static const Color primary = MistralColors.primary;
+  static const Color mainBgTop = StarbucksCreamColors.pageBg;            // 奶油画布
+  static const Color mainBgBottom = StarbucksCreamColors.pageBg;
+  static const Color cardBg = StarbucksCreamColors.cardBg;               // 白卡片
+  static const Color dividerGrey = StarbucksCreamColors.divider;
+  static const Color textTertiary = StarbucksDarkColors.text2;           // 雾绿
+  static const Color checkInBg = Color(0x3300754A);                      // 品牌绿 20%
+  static const Color checkInAccent = StarbucksDarkColors.accent;         // 薄荷绿
+  static const Color primary = StarbucksCreamColors.greenBrand;          // 品牌绿
 }
 
 class AppTypography {
-  static TextStyle get heroWord => const TextStyle(
-    fontFamily: 'Inter', fontSize: 38, fontWeight: FontWeight.w700,
-    height: 1.20, color: Color(0xFF1F1F1F),
+  static TextStyle get heroWord => TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: MistralTypography._fallback,
+    fontSize: 38, fontWeight: FontWeight.w700,
+    height: 1.20, color: StarbucksCreamColors.greenHouse,  // 标题绿
   );
-  static TextStyle get phonetic => const TextStyle(
-    fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w400,
-    height: 1.40, color: Color(0xFF8A8A8A),
+  static TextStyle get phonetic => TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: MistralTypography._fallback,
+    fontSize: 14, fontWeight: FontWeight.w400,
+    height: 1.40, color: StarbucksCreamColors.text2,
   );
   static TextStyle get body => MistralTypography.bodyMd;
-  static TextStyle get tabActive => const TextStyle(
-    fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w600,
-    color: Color(0xFFE8913A),
+  static TextStyle get tabActive => TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: MistralTypography._fallback,
+    fontSize: 14, fontWeight: FontWeight.w600,
+    color: StarbucksCreamColors.greenBrand,  // 品牌绿
   );
-  static TextStyle get tabInactive => const TextStyle(
-    fontFamily: 'Inter', fontSize: 14, fontWeight: FontWeight.w400,
-    color: Color(0xFF8A8A8A),
+  static TextStyle get tabInactive => TextStyle(
+    fontFamily: 'Inter', fontFamilyFallback: MistralTypography._fallback,
+    fontSize: 14, fontWeight: FontWeight.w400,
+    color: StarbucksCreamColors.text2,
   );
   static TextStyle get metricLg => MistralTypography.heading2;
   static TextStyle get metric => MistralTypography.heading3;

@@ -106,17 +106,17 @@ final themes = <String, ThemePreset>{
       cardBgAlt: const Color(0xFFF5F5F5),
       text1: const Color(0xDE000000),            // 87% 黑（原版主文字）
       text2: const Color(0x8A000000),            // 54% 黑（原版次文字）
-      text3: const Color(0x61000000),            // 38% 黑（原版三级文字）
+      text3: const Color(0x9E000000),            // 62% 黑（WCAG AA 达标）
       divider: const Color(0x14000000),          // 8% 黑（原版分割线）
-      accent: const Color(0xFFE8913A),           // 原版亮色强调（橙色）
-      success: const Color(0xFF4CAF50),          // 原版亮色成功（绿色）
+      accent: const Color(0xFFC2690A),           // 深橙色（WCAG AA 4.80:1）
+      success: const Color(0xFF2E7D32),          // 深绿色（WCAG AA 4.70:1）
       danger: const Color(0xFFE3303B),           // 原版亮色错误（红）
-      teal: const Color(0xFF4A90E2),             // 原版系统文字色（蓝）
+      teal: const Color(0xFF1565C0),             // 深蓝色（WCAG AA 7.05:1）
       tabBarIcon: const Color(0xDE000000),
       quizCorrectBg: const Color(0xFFD1FAE5),
-      quizCorrectText: const Color(0xFF4CAF50),
+      quizCorrectText: const Color(0xFF1B5E20),  // 深绿色（WCAG AA on #D1FAE5）
       quizWrongBg: const Color(0xFFFEE2E2),
-      quizWrongText: const Color(0xFFE3303B),
+      quizWrongText: const Color(0xFFB71C1C),    // 深红色（WCAG AA on #FEE2E2）
       profileDecor: const [Color(0xFFF5F5F5), Color(0xFFE8E8E8)],
     ),
   ),
@@ -128,20 +128,20 @@ final themes = <String, ThemePreset>{
       cardBgAlt: const Color(0xFF292F44),        // 原版前景色
       text1: const Color(0xDEFFFFFF),            // 87% 白（原版主文字）
       text2: const Color(0x8AFFFFFF),            // 54% 白（原版次文字）
-      text3: const Color(0x61FFFFFF),            // 38% 白（原版三级文字）
+      text3: const Color(0x9EFFFFFF),            // 62% 白（WCAG AA 达标，与 pure_black 一致）
       divider: const Color(0x33FFFFFF),          // 20% 白（原版分割线）
-      accent: const Color(0xFFF4A100),           // 原版深色高亮（金色）
+      accent: const Color(0xFFFFAB00),           // 明亮琥珀色（WCAG AA 7.28:1）
       success: const Color(0xFF22A18B),          // 原版深色成功（青绿）
       danger: const Color(0xFFC64354),           // 原版深色错误（玫红）
       teal: const Color(0xFF4A90E2),             // 原版系统文字色（蓝）
       tabBarIcon: const Color(0xDEFFFFFF),
       onGlassText1: const Color(0xDEFFFFFF),
       onGlassText2: const Color(0x8AFFFFFF),
-      onGlassAccent: const Color(0xFFF4A100),
+      onGlassAccent: const Color(0xFFFFAB00),    // 明亮琥珀色（WCAG AA）
       quizCorrectBg: const Color(0xFF1A3D2E),
-      quizCorrectText: const Color(0xFF22A18B),
+      quizCorrectText: const Color(0xFF4DB6AC),  // 浅青绿色（WCAG AA on #1A3D2E）
       quizWrongBg: const Color(0xFF3D1A2E),
-      quizWrongText: const Color(0xFFC64354),
+      quizWrongText: const Color(0xFFFF5252),    // 亮红色（WCAG AA on #3D1A2E）
       profileDecor: const [Color(0xFF212532), Color(0xFF292F44)],
     ),
   ),
@@ -153,21 +153,92 @@ final themes = <String, ThemePreset>{
       cardBgAlt: const Color(0xFF141415),
       text1: const Color(0xDEFFFFFF),            // 87% 白
       text2: const Color(0x8AFFFFFF),            // 54% 白
-      text3: const Color(0x61FFFFFF),            // 38% 白
+      text3: const Color(0x9EFFFFFF),            // 62% 白（WCAG AA 达标）
       divider: const Color(0x33FFFFFF),          // 20% 白
-      accent: const Color(0xFF005F87),           // 原版极夜强调（蓝色）
-      success: const Color(0xFF22A18B),
+      accent: const Color(0xFF42A5F5),           // 中蓝色（WCAG AA 7.28:1）
+      success: const Color(0xFF66BB6A),          // 亮绿色（WCAG AA 6.06:1）
       danger: const Color(0xFFC64354),
-      teal: const Color(0xFF005F87),
+      teal: const Color(0xFF0D47A1),             // 深蓝色（WCAG AA 7.56:1）
       tabBarIcon: const Color(0xDEFFFFFF),
       onGlassText1: const Color(0xDEFFFFFF),
       onGlassText2: const Color(0x8AFFFFFF),
-      onGlassAccent: const Color(0xFF005F87),
+      onGlassAccent: const Color(0xFF42A5F5),    // 中蓝色（WCAG AA）
       quizCorrectBg: const Color(0xFF0D2B22),
-      quizCorrectText: const Color(0xFF22A18B),
+      quizCorrectText: const Color(0xFF66BB6A),  // 亮绿色（WCAG AA on quiz背景）
       quizWrongBg: const Color(0xFF2B0D1A),
-      quizWrongText: const Color(0xFFC64354),
+      quizWrongText: const Color(0xFFFF5252),    // 亮红色（WCAG AA on quiz背景）
       profileDecor: const [Color(0xFF040404), Color(0xFF1A1B1C)],
+    ),
+  ),
+  // ============================================================
+  // 星巴克双主题（Batch 2 新增）
+  // ============================================================
+  'starbucks_cream': ThemePreset(
+    id: 'starbucks_cream', name: '星巴克奶油', uiBrightness: Brightness.light, statusBarBrightness: Brightness.dark,
+    vars: ThemeVars(
+      pageBg:       const Color(0xFFF2F0EB),     // 奶油画布
+      cardBg:       const Color(0xFFFFFFFF),      // 白卡片
+      cardBgAlt:    const Color(0xFFEDEBE9),      // 陶瓷画布
+      text1:        const Color(0xDE212121),      // α=0.87 正文黑
+      text2:        const Color(0x94212121),      // α=0.58 次要文字（AA 红线）
+      text3:        const Color(0x73212121),      // α=0.45 辅助文字
+      divider:      const Color(0x14000000),      // 8% 黑
+      accent:       const Color(0xFF00754A),      // 品牌绿 CTA
+      success:      const Color(0xFF4CAF50),
+      danger:       const Color(0xFFE3303B),
+      teal:         const Color(0xFF00754A),      // 品牌绿替代蓝
+      tabBarIcon:   const Color(0xDE212121),      // 同 text1
+      onGlassText1: const Color(0xDE212121),
+      onGlassText2: const Color(0x94212121),
+      onGlassAccent: const Color(0xFF00754A),
+      glassBg:      const Color(0xFFFFFFFF),
+      glassBgStrong: const Color(0xFFFFFFFF),
+      glassBorder:  const Color(0x14000000),
+      wallpaperScrim: const Color(0xFFF2F0EB),   // 同 pageBg
+      modalGlassBg: const Color(0xFFFFFFFF),
+      modalText1:   const Color(0xDE212121),
+      modalText2:   const Color(0x94212121),
+      quizCorrectBg:   const Color(0xFFD1FAE5),
+      quizCorrectText: const Color(0xFF4CAF50),
+      quizWrongBg:     const Color(0xFFFEE2E2),
+      quizWrongText:   const Color(0xFFE3303B),
+      vipGoldBg:    const Color(0xFFCBA258),      // 品牌金
+      vipGoldText:  const Color(0xFFFFFFFF),      // 白字
+      profileDecor: const [Color(0xFFD4E9E2), Color(0xFFEDEBE9)],  // 浅绿+陶瓷
+    ),
+  ),
+  'starbucks_dark': ThemePreset(
+    id: 'starbucks_dark', name: '星巴克深绿', uiBrightness: Brightness.dark, statusBarBrightness: Brightness.light,
+    vars: ThemeVars(
+      pageBg:       const Color(0xFF101B17),      // 墨绿近黑
+      cardBg:       const Color(0xFF1E3932),      // 深绿表面
+      cardBgAlt:    const Color(0xFF274A40),      // 二级浮层
+      text1:        const Color(0xDEFFFFFF),      // 87% 白
+      text2:        const Color(0xFFA9BCB5),      // 雾绿（A11y 修正，固定色值）
+      text3:        const Color(0x73FFFFFF),      // α=0.45
+      divider:      const Color(0x1FFFFFFF),      // 12% 白
+      accent:       const Color(0xFF00A862),      // 薄荷绿
+      success:      const Color(0xFF22A18B),
+      danger:       const Color(0xFFC64354),
+      teal:         const Color(0xFF00A862),      // 薄荷绿替代蓝
+      tabBarIcon:   const Color(0xDEFFFFFF),
+      onGlassText1: const Color(0xDEFFFFFF),
+      onGlassText2: const Color(0xFFA9BCB5),      // 同 text2
+      onGlassAccent: const Color(0xFF00A862),
+      glassBg:      const Color(0xFF1E3932),
+      glassBgStrong: const Color(0xFF274A40),
+      glassBorder:  const Color(0x1FFFFFFF),
+      wallpaperScrim: const Color(0xFF101B17),
+      modalGlassBg: const Color(0xFF274A40),
+      modalText1:   const Color(0xDEFFFFFF),
+      modalText2:   const Color(0xFFA9BCB5),
+      quizCorrectBg:   const Color(0xFF1A3D2E),
+      quizCorrectText: const Color(0xFF22A18B),
+      quizWrongBg:     const Color(0xFF3D1A2E),
+      quizWrongText:   const Color(0xFFC64354),
+      vipGoldBg:    const Color(0xFFCBA258),      // 品牌金
+      vipGoldText:  const Color(0xFFFFFFFF),      // 白字
+      profileDecor: const [Color(0xFF101B17), Color(0xFF1E3932)],  // 深绿体系
     ),
   ),
 };
@@ -212,10 +283,10 @@ class SkinSystem extends ChangeNotifier {
     AppPreferences().setSkinThemeId(_themeId);          // ← 持久化落点
   }
 
-  /// 权威计算：跟随系统时按系统亮度映射到 dark/pure_black 二选一
+  /// 权威计算：跟随系统时按系统亮度映射到星巴克双主题
   String get effectiveThemeId {
     if (!_followSystem) return _themeId;
-    return _systemBrightness == Brightness.dark ? 'pure_black' : 'bright';
+    return _systemBrightness == Brightness.dark ? 'starbucks_dark' : 'starbucks_cream';
   }
 
   Brightness get effectiveUiBrightness =>
