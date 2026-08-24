@@ -125,14 +125,14 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF667EEA),
-            Color(0xFF764BA2),
+            Color(0xFF667EEA), // 装饰渐变 - 保留
+            Color(0xFF764BA2), // 装饰渐变 - 保留
           ],
         ),
         borderRadius: BorderRadius.circular(AppRadius.xl),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF667EEA).withValues(alpha: 0.3),
+            color: const Color(0xFF667EEA).withValues(alpha: 0.3), // 装饰阴影 - 保留
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -281,7 +281,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 icon: Icons.calendar_today,
                 title: '每日打卡',
                 description: '记录学习天数',
-                color: const Color(0xFF4CAF50),
+                color: skin.success,
                 skin: skin,
               ),
             ),
@@ -291,7 +291,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 icon: Icons.leaderboard,
                 title: '班级排行',
                 description: '比拼学习进度',
-                color: const Color(0xFF2196F3),
+                color: const Color(0xFF2196F3), // FuncColors.info - 待 token 化
                 skin: skin,
               ),
             ),
@@ -305,7 +305,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 icon: Icons.bar_chart,
                 title: '学习统计',
                 description: '查看学习数据',
-                color: const Color(0xFFFF9800),
+                color: const Color(0xFFFF9800), // FuncColors.warning - 待 token 化
                 skin: skin,
               ),
             ),
@@ -315,7 +315,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 icon: Icons.emoji_events,
                 title: '挑战任务',
                 description: '赢取专属徽章',
-                color: const Color(0xFF9C27B0),
+                color: const Color(0xFF9C27B0), // FuncColors.purple - 待 token 化
                 skin: skin,
               ),
             ),
@@ -893,9 +893,9 @@ class _RankTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isTop3 = rank <= 3;
     final rankColors = [
-      const Color(0xFFFFD700), // 金
-      const Color(0xFFC0C0C0), // 银
-      const Color(0xFFCD7F32), // 铜
+      const Color(0xFFFFD700), // StarGold.gold - 待 token 化
+      const Color(0xFFC0C0C0), // StarGold.silver - 待 token 化
+      const Color(0xFFCD7F32), // StarGold.bronze - 待 token 化
     ];
 
     return Padding(
@@ -1260,7 +1260,7 @@ class _CommentCard extends StatelessWidget {
                   return Icon(
                     index < comment.rating ? Icons.star : Icons.star_border,
                     size: 14,
-                    color: const Color(0xFFFFD700),
+                    color: const Color(0xFFFFD700), // StarGold.gold - 待 token 化
                   );
                 }),
               ),
