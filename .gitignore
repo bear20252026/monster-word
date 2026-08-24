@@ -21,6 +21,9 @@ ios/.symlinks/
 # Windows
 windows/flutter/ephemeral/
 
+# Release builds (never track binaries)
+release/
+
 # macOS
 macos/Pods/
 macos/Flutter/ephemeral/
