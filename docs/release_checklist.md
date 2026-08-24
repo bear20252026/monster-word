@@ -105,6 +105,24 @@
 
 ---
 
+## J. 安全加固
+
+- [x] Android R8 代码混淆 — `isMinifyEnabled = true` + `isShrinkResources = true` ✅
+- [x] ProGuard 规则 — `proguard-rules.pro` 已创建（Flutter/sqflite/audioplayers keep 规则）✅
+- [x] Release 签名配置 — `signingConfigs.release` 支持 `key.properties`（fallback debug key）✅
+- [x] Android allowBackup=false — commit `00a86ff` ✅
+- [ ] Dart 代码混淆 — 构建命令需加 `--obfuscate --split-debug-info=build/debug-info`（已写入 release_pipeline.md）
+- [ ] `key.properties` 创建 — 需在项目根目录创建正式签名配置（不入 git）
+- [x] Token 安全审计 — `docs/auth_security_report.md`（0 高危，2 中危）✅
+- [x] 依赖安全审计 — `docs/security_dependency_report.md` ✅
+- [ ] 密码明文存储修复 — P0 待修复（app_preferences_ext.dart:770）
+- [ ] Token 安全存储迁移 — P0 进行中（PhoneticsEngineer）
+- [ ] HTTP→HTTPS 全量替换 — P0 进行中（ContrastGuard）
+- [ ] WebView JS 限制 — P1 待修复
+- [ ] 详细进度跟踪 — `docs/security_hardening_tracker.md`
+
+---
+
 ## 总结
 
 | 维度 | 状态 | 备注 |
@@ -118,6 +136,7 @@
 | 构建验证 | ✅ 绿 | Windows + Android debug build 均通过 |
 | Git 健康 | ✅ 绿 | 干净历史，无敏感信息 |
 | 数据完整性 | ✅ 绿 | 词库完整，音标已清洗 |
+| 安全加固 | ✅ 绿 | R8 混淆 + Release 签名 + 安全审计 |
 
 **发布就绪状态：🟢 就绪（1 项黄灯为非阻塞性收尾工作）**
 

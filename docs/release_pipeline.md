@@ -102,7 +102,7 @@ CI 场景：四个值注入为 GitHub Actions **Secrets**（MW_STORE_PASSWORD �
 | 4 | `flutter analyze`（建议去掉 `--no-fatal-warnings`） | 当前 CI 配置 warning 不拦截 ⚠️ |
 | 5 | `flutter test` | 单测全绿 |
 | 6 | 确认 `assets/db/wordbook.db.gz` 是真词库 | ⚠️ CI 里是 placeholder 占位文件，本地发布必须核实 |
-| 7 | `flutter build windows --release` | 产物在 `build/windows/x64/runner/Release/` |
+| 7 | `flutter build windows --release --obfuscate --split-debug-info=build/debug-info` | 产物在 `build/windows/x64/runner/Release/`；`--obfuscate` 启用 Dart 代码混淆，`--split-debug-info` 分离调试符号（保留用于 crash 日志还原） |
 | 8 | 核对产物四要素 | ① exe 名 = `MonsterWord.exe` ② 右键属性版本号 = X.Y.Z ③ 图标为新 logo ④ `data/flutter_assets/fonts/` 下有 Inter/Charter（旧产物曾缺字体） |
 | 9 | 冒烟测试：双击运行 | 启动屏→主页→查词发音→复习打卡走一遍 |
 | 10 | 打包 zip | 结构：zip 解压后直接是 `MonsterWord/` 文件夹（exe+data+dll），命名 `MonsterWord_vX.Y.Z_Windows_x64.zip` |
