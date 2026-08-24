@@ -113,9 +113,9 @@ class _CourseBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            MistralColors.primary.withValues(alpha: 0.85),
-            const Color(0xFF9EC5E8).withValues(alpha: 0.8),
-            const Color(0xFFE8C5B8).withValues(alpha: 0.7),
+            skin.accent.withValues(alpha: 0.85),
+            skin.cardBgAlt.withValues(alpha: 0.8),
+            skin.pageBg.withValues(alpha: 0.7),
           ],
         ),
       ),
@@ -249,14 +249,14 @@ class _CourseCardGrid extends StatelessWidget {
         title: '四级听力 阶梯训练',
         subtitle: '轻松练真题',
         tag: '',
-        color: const Color(0xFFA5D6A7),
+        color: skin.success,
         icon: Icons.headphones,
       ),
       _CourseData(
         title: '考研写作炼句',
         subtitle: '快速炼制高分金句',
         tag: '',
-        color: const Color(0xFFFFCC80),
+        color: MistralColors.warning,
         icon: Icons.edit,
       ),
       _CourseData(
@@ -379,7 +379,7 @@ class _QuickReviewEntry extends StatelessWidget {
     return _EntryTile(
       skin: skin,
       icon: Icons.speed,
-      iconColor: const Color(0xFFE53935),
+      iconColor: skin.danger,
       title: '备考速刷',
       subtitle: '考前突击，快速过词',
       onTap: () {
@@ -398,7 +398,7 @@ class _ClassCheckInEntry extends StatelessWidget {
     return _EntryTile(
       skin: skin,
       icon: Icons.groups,
-      iconColor: const Color(0xFF43A047),
+      iconColor: skin.success,
       title: '班级打卡',
       subtitle: '加入班级，一起学习',
       onTap: () {
@@ -417,7 +417,7 @@ class _ClassActivityEntry extends StatelessWidget {
     return _EntryTile(
       skin: skin,
       icon: Icons.event,
-      iconColor: const Color(0xFFFF9800),
+      iconColor: skin.accent,
       title: '班级活动',
       subtitle: '全班一起学，刷词不掉队',
       onTap: () {
