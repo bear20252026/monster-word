@@ -175,7 +175,7 @@ class BadgeView extends StatelessWidget {
               minHeight: size,
             ),
             decoration: BoxDecoration(
-              color: badgeColor ?? Colors.red,
+              color: badgeColor ?? context.skin.colors.danger,
               borderRadius: BorderRadius.circular(size / 2),
             ),
             child: count > 0

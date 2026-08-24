@@ -210,7 +210,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                   child: Text(
                     '立即参与',
                     style: MistralTypography.bodySm.copyWith(
-                      color: skin.colors.accent,
+                      color: skin.accent,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

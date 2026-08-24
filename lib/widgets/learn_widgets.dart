@@ -5,6 +5,7 @@
 // 文件：LearnView, LearnReviewHelper, LoadInfoHelper
 
 import 'package:flutter/material.dart';
+import '../theme/skin_system.dart';
 import 'animations.dart';
 
 /// 学习视图状态
@@ -150,12 +151,12 @@ class LoadInfoWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (emoji != null) ...[
-            Icon(emoji, size: 48, color: Colors.grey),
+            Icon(emoji, size: 48, color: context.skin.colors.text3),
             const SizedBox(height: 12),
           ],
           Text(
             message,
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(fontSize: 14, color: context.skin.colors.text3),
             textAlign: TextAlign.center,
           ),
           if (actionText != null) ...[

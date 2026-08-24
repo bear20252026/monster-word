@@ -156,7 +156,7 @@ class WordRootTab extends StatelessWidget {
 
           // 前缀
           if (wordRoot.prefix.isNotEmpty) ...[
-            _buildDetailItem('前缀', wordRoot.prefix, const Color(0xFF4CAF50), skin),
+            _buildDetailItem('前缀', wordRoot.prefix, skin.colors.success, skin),
             const SizedBox(height: 8),
           ],
 
@@ -164,13 +164,13 @@ class WordRootTab extends StatelessWidget {
           ...wordRoot.roots.map((root) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: _buildDetailItem('词根', root, const Color(0xFF2196F3), skin),
+              child: _buildDetailItem('词根', root, skin.colors.teal, skin),
             );
           }),
 
           // 后缀
           if (wordRoot.suffix.isNotEmpty) ...[
-            _buildDetailItem('后缀', wordRoot.suffix, const Color(0xFFFF9800), skin),
+            _buildDetailItem('后缀', wordRoot.suffix, skin.colors.accent, skin),
           ],
         ],
       ),

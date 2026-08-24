@@ -57,7 +57,7 @@ class WordDictionaryPopup extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 380),
         margin: const EdgeInsets.symmetric(horizontal: 24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: skin.colors.cardBg,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -83,7 +83,7 @@ class WordDictionaryPopup extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A1A),
+                        color: skin.colors.text1,
                       ),
                     ),
                   ),
@@ -91,7 +91,7 @@ class WordDictionaryPopup extends StatelessWidget {
                   IconButton(
                     icon: Icon(
                       isFav ? Icons.star : Icons.star_border,
-                      color: isFav ? Colors.amber : const Color(0xFF999999),
+                      color: isFav ? Colors.amber : skin.colors.text3,
                       size: 22,
                     ),
                     tooltip: isFav ? '取消收藏' : '收藏',
@@ -115,7 +115,7 @@ class WordDictionaryPopup extends StatelessWidget {
                         '/${word.usPron}/',
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF8A8A8A),
+                          color: skin.colors.text3,
                         ),
                       ),
                     ],
@@ -127,7 +127,7 @@ class WordDictionaryPopup extends StatelessWidget {
                         '/${word.ukPron}/',
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF8A8A8A),
+                          color: skin.colors.text3,
                         ),
                       ),
                     ],
@@ -142,7 +142,7 @@ class WordDictionaryPopup extends StatelessWidget {
                   word.interpret,
                   style: const TextStyle(
                     fontSize: 15,
-                    color: Color(0xFF333333),
+                    color: skin.colors.text1,
                     height: 1.5,
                   ),
                   maxLines: 3,
@@ -165,7 +165,7 @@ class WordDictionaryPopup extends StatelessWidget {
                       text: TextSpan(
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF333333),
+                          color: skin.colors.text1,
                           height: 1.5,
                         ),
                         children: examples.first.highlightedParts
@@ -186,7 +186,7 @@ class WordDictionaryPopup extends StatelessWidget {
                         examples.first.cn,
                         style: const TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF888888),
+                          color: skin.colors.text3,
                         ),
                       ),
                     ],

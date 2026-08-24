@@ -82,9 +82,10 @@ class _FakeSwitchState extends State<FakeSwitch>
 
   @override
   Widget build(BuildContext context) {
-    final active = widget.activeColor ?? kSwitchActiveColor;
-    final inactive = widget.inactiveColor ?? kSwitchInactiveColor;
-    final thumb = widget.thumbColor ?? kSwitchThumbColor;
+    final skin = context.skin.colors;
+    final active = widget.activeColor ?? skin.accent;
+    final inactive = widget.inactiveColor ?? skin.divider;
+    final thumb = widget.thumbColor ?? Colors.white;
 
     return GestureDetector(
       onTap: widget.enabled
