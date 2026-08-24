@@ -117,8 +117,8 @@ class _ActivityBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            MistralColors.primary,
-            MistralColors.primaryDeep,
+            skin.accent,
+            skin.accent,
           ],
         ),
       ),
@@ -248,7 +248,7 @@ class _ActivityGuide extends StatelessWidget {
                 number: '1',
                 title: '创建活动',
                 desc: '设定学习目标',
-                color: const Color(0xFF4CAF50),
+                color: skin.accent,
                 skin: skin,
               ),
               _GuideArrow(skin: skin),
@@ -256,7 +256,7 @@ class _ActivityGuide extends StatelessWidget {
                 number: '2',
                 title: '邀请同学',
                 desc: '一起加入',
-                color: const Color(0xFF2196F3),
+                color: skin.teal,
                 skin: skin,
               ),
               _GuideArrow(skin: skin),
@@ -264,7 +264,7 @@ class _ActivityGuide extends StatelessWidget {
                 number: '3',
                 title: '打卡学习',
                 desc: '互相监督',
-                color: MistralColors.primary,
+                color: skin.accent,
                 skin: skin,
               ),
             ],
@@ -358,25 +358,25 @@ class _FunctionCards extends StatelessWidget {
         icon: Icons.task_alt,
         title: '设定任务',
         desc: '制定学习计划',
-        color: const Color(0xFF4CAF50),
+        color: skin.accent,
       ),
       _FunctionCardData(
         icon: Icons.leaderboard,
         title: '班级排名',
         desc: '查看学习排名',
-        color: const Color(0xFF2196F3),
+        color: skin.teal,
       ),
       _FunctionCardData(
         icon: Icons.notifications_active,
         title: '互相提醒',
         desc: '督促学习',
-        color: const Color(0xFFFF9800),
+        color: skin.accent,
       ),
       _FunctionCardData(
         icon: Icons.campaign,
         title: '公告通知',
         desc: '班级动态',
-        color: const Color(0xFF9C27B0),
+        color: skin.danger,
       ),
     ];
 
@@ -470,8 +470,8 @@ class _CreateActivityButton extends StatelessWidget {
           // TODO: 创建班级活动
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: MistralColors.primary,
-          foregroundColor: Colors.white,
+          backgroundColor: skin.accent,
+          foregroundColor: skin.cardBg,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.xl),
           ),
@@ -485,7 +485,7 @@ class _CreateActivityButton extends StatelessWidget {
             Text(
               '创建班级活动',
               style: MistralTypography.bodyMd.copyWith(
-                color: Colors.white,
+                color: skin.cardBg,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -524,13 +524,13 @@ class _UpgradeSection extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: MistralColors.primary.withValues(alpha: 0.12),
+                  color: skin.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Text(
                   'NEW',
                   style: MistralTypography.micro.copyWith(
-                    color: MistralColors.primary,
+                    color: skin.accent,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -586,7 +586,7 @@ class _UpgradeItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: MistralColors.primary),
+          Icon(icon, size: 18, color: skin.accent),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -650,7 +650,7 @@ class _AnnouncementSection extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
-                Icon(Icons.campaign, size: 18, color: MistralColors.primary),
+                Icon(Icons.campaign, size: 18, color: skin.accent),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   '班级公告',
@@ -686,13 +686,13 @@ class _AnnouncementTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: MistralColors.primary.withValues(alpha: 0.12),
+                    color: skin.accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.xs),
                   ),
                   child: Text(
                     '置顶',
                     style: MistralTypography.micro.copyWith(
-                      color: MistralColors.primary,
+                      color: skin.accent,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -795,7 +795,7 @@ class _CommentSection extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
               children: [
-                Icon(Icons.comment, size: 18, color: MistralColors.primary),
+                Icon(Icons.comment, size: 18, color: skin.accent),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   '用户评论',
@@ -833,11 +833,11 @@ class _CommentTile extends StatelessWidget {
           // 头像
           CircleAvatar(
             radius: 18,
-            backgroundColor: MistralColors.primary.withValues(alpha: 0.12),
+            backgroundColor: skin.accent.withValues(alpha: 0.12),
             child: Text(
               data.avatar,
               style: MistralTypography.bodySm.copyWith(
-                color: MistralColors.primary,
+                color: skin.accent,
                 fontWeight: FontWeight.bold,
               ),
             ),

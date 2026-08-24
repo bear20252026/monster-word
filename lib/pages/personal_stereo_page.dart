@@ -17,7 +17,6 @@ class PersonalStereoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    final state = context.watch<LearningState>();
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,

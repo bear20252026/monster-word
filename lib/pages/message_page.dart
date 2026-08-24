@@ -36,7 +36,6 @@ class _MessagePageState extends State<MessagePage> {
   List<MessageItem> _messages = [];
   bool _isLoading = true;
   bool _hasMore = true;
-  int _page = 1;
 
   @override
   void initState() {
@@ -46,7 +45,6 @@ class _MessagePageState extends State<MessagePage> {
 
   Future<void> _loadMessages({bool refresh = false}) async {
     if (refresh) {
-      _page = 1;
       _hasMore = true;
     }
     setState(() => _isLoading = true);

@@ -12,7 +12,6 @@ class FavSentenceDao {
   static final FavSentenceDao instance = FavSentenceDao._();
   FavSentenceDao._();
 
-  static const String _keyPrefix = 'fav_sentence_';
   static const String _keyList = 'fav_sentence_list';
 
   List<FavSentenceData> _cache = [];

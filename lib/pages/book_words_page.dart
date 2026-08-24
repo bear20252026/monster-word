@@ -109,7 +109,6 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    final base = super.build(context);
 
     // 在 base 的 Column 中插入真题词组卡片
     // 由于 base 是 Scaffold，我们需要重新构建

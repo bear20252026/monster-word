@@ -37,12 +37,8 @@ class _LockScreenPageState extends State<LockScreenPage>
   // === Presenter ===
   late LockPresenter _presenter;
 
-  // === 布局尺寸 ===
-  late ViewDimens _viewDimens;
-
   // === UI 状态 ===
   String _time = '';
-  String _dateCn = '';
   String _dateEn = '';
   String _word = '';
   String _phonetic = '';
@@ -77,7 +73,6 @@ class _LockScreenPageState extends State<LockScreenPage>
   final bool _cancelAnimation = false;
   Timer? _longPressTimer;
   bool _hasSlidUp = false;
-  bool _hasLongPress = false;
   double _dragStartY = 0;
   bool _isDragging = false;
 
@@ -86,7 +81,6 @@ class _LockScreenPageState extends State<LockScreenPage>
 
   // === 导航页面 ===
   final PageController _navPageController = PageController();
-  final int _navPageIndex = 0;
 
   @override
   void initState() {
@@ -152,10 +146,6 @@ class _LockScreenPageState extends State<LockScreenPage>
   void didChangeDependencies() {
     super.didChangeDependencies();
     final size = MediaQuery.of(context).size;
-    _viewDimens = ViewDimens(
-      size.width.toInt(),
-      size.height.toInt(),
-    );
     _initElementAnimator(size.height);
   }
 
@@ -255,7 +245,6 @@ class _LockScreenPageState extends State<LockScreenPage>
     if (!mounted) return;
     setState(() {
       _time = time;
-      _dateCn = dateCn;
       _dateEn = dateEn;
     });
   }

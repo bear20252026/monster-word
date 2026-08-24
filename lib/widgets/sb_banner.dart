@@ -4,7 +4,8 @@
 // 用于首页「连续打卡 N 天」等特性横幅场景
 
 import 'package:flutter/material.dart';
-
+import '../theme/skin_system.dart';
+import '../tokens/starbucks_tokens.dart';
 import 'scale_down_on_press.dart';
 
 /// 星巴克深绿特性横幅
@@ -65,12 +66,17 @@ class SbBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
+    // 深色模式下提亮横幅背景，避免与画布混淆
+    final isDark = colors.pageBg == StarbucksDarkColors.pageBg;
+    final resolvedBg = backgroundColor ??
+        (isDark ? StarbucksCreamColors.greenSoft : _houseGreenDark);
     // 内容区域：图标 + 文字 + 操作按钮
     Widget content = Container(
       width: double.infinity,
       padding: padding,
       decoration: BoxDecoration(
-        color: backgroundColor ?? _houseGreenDark,
+        color: resolvedBg,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: _buildContent(context),
@@ -96,10 +102,10 @@ class SbBanner extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: colors.onGlassText1, // 主题感知文字色
             height: 1.3,
           ),
         ),
@@ -110,7 +116,7 @@ class SbBanner extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: Colors.white.withValues(alpha: 0.70),
+              color: colors.onGlassText2, // 主题感知次要文字色
               height: 1.5,
             ),
           ),

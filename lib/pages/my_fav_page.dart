@@ -244,7 +244,7 @@ class _MyFavPageState extends State<MyFavPage> {
               final isSelected = _selectedIndices.contains(index);
 
               return Dismissible(
-                key: ValueKey(word.id ?? word.word),
+                key: ValueKey(word.id),
                 direction: _isBatchEditMode
                     ? DismissDirection.none
                     : DismissDirection.endToStart,

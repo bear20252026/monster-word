@@ -3,6 +3,7 @@
 // 12px 圆角、白底、双层低透明度阴影、奶油画布浮起效果
 
 import 'package:flutter/material.dart';
+import '../theme/skin_system.dart';
 import 'scale_down_on_press.dart';
 
 /// 星巴克标准卡片组件
@@ -69,10 +70,11 @@ class SbCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
     Widget card = Container(
       margin: margin,
       decoration: BoxDecoration(
-        color: color ?? Colors.white,
+        color: color ?? colors.cardBg,
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: shadow ? _shadows : null,
       ),

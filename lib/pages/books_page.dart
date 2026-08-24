@@ -158,7 +158,6 @@ class _BooksPageState extends State<BooksPage> {
 class _CheckInBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final colors = context.skin.colors;
     return Container(
       width: 139,
       height: 135,
@@ -205,7 +204,6 @@ class _LearnReviewBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.skin.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -259,7 +257,6 @@ class _HomeIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.skin.colors;
     return GestureDetector(
       onTap: onTap,
       child: Column(

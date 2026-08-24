@@ -22,7 +22,6 @@ class LockPresenterImp implements LockPresenter {
   dynamic _wordProcess; // BBWordProcess
   final Map<String, int> _wordSentenceIndex = {};
   bool _canPlay = false;
-  final bool _isExtensiveListeningPlaying = false;
 
   // 计数器
   int _count = -1;
@@ -30,9 +29,6 @@ class LockPresenterImp implements LockPresenter {
   // 定时器
   Timer? _timeTickTimer;
   Timer? _batteryTimer;
-
-  // 示例处理器
-  final int _exampleProcessorMode = 1;
 
   LockPresenterImp(this.context, this.lockView);
 
@@ -196,16 +192,6 @@ class LockPresenterImp implements LockPresenter {
     // if (unFinishedWords.isEmpty) return;
     // final wordProcess = unFinishedWords[_count % unFinishedWords.length];
     // _displayWord(wordProcess);
-  }
-
-  void _displayWord(dynamic wordProcess) {
-    _wordProcess = wordProcess;
-    _initExample(_getExample(_wordProcess), _getWord(_wordProcess));
-    try {
-      (lockView as dynamic).initWord(_wordProcess);
-    } catch (e) {
-      debugPrint('$_tag: displayWord error: $e');
-    }
   }
 
   void _playExample(String mp3Path) {

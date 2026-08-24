@@ -3,6 +3,8 @@
 // 50px 高度，全胶囊圆角，四变体，包装 ScaleDownOnPress 按压反馈
 
 import 'package:flutter/material.dart';
+import '../theme/skin_system.dart';
+import '../tokens/starbucks_tokens.dart';
 import 'scale_down_on_press.dart';
 
 /// 星巴克胶囊按钮变体
@@ -168,12 +170,44 @@ class SbButton extends StatelessWidget {
     }
   }
 
+  /// 深色模式感知的填充色解析
+  Color _resolveFillColor(ThemeVars colors) {
+    switch (variant) {
+      case SbButtonVariant.primary:
+        return _houseGreen;
+      case SbButtonVariant.outlined:
+        return Colors.transparent;
+      case SbButtonVariant.dark:
+        // 深色画布上 #1E3932 对比度不足，深色模式下提亮至 greenSoft
+        final isDark = colors.pageBg == StarbucksDarkColors.pageBg;
+        return isDark ? StarbucksCreamColors.greenSoft : _darkGreen;
+      case SbButtonVariant.inverse:
+        return colors.cardBg; // 适配深色模式
+    }
+  }
+
+  /// 深色模式感知的文字色解析
+  Color _resolveTextColor(ThemeVars colors) {
+    switch (variant) {
+      case SbButtonVariant.primary:
+        return Colors.white;
+      case SbButtonVariant.outlined:
+        return colors.accent; // 品牌绿适配主题
+      case SbButtonVariant.dark:
+        return Colors.white;
+      case SbButtonVariant.inverse:
+        return colors.accent;
+    }
+  }
+
   bool get _isInteractive => enabled && onTap != null;
 
   @override
   Widget build(BuildContext context) {
-    final fill = fillColor ?? _defaultFillColor;
-    final color = textColor ?? _defaultTextColor;
+    final colors = context.skin.colors;
+    // 深色模式下动态适配变体默认色
+    final resolvedFill = fillColor ?? _resolveFillColor(colors);
+    final resolvedColor = textColor ?? _resolveTextColor(colors);
     final side = borderSide ?? _defaultBorderSide;
 
     return ScaleDownOnPress(
@@ -187,7 +221,7 @@ class SbButton extends StatelessWidget {
               ? BoxConstraints(minWidth: minWidth!)
               : null,
           decoration: ShapeDecoration(
-            color: fill,
+            color: resolvedFill,
             shape: StadiumBorder(side: side),
           ),
           child: Padding(
@@ -199,7 +233,7 @@ class SbButton extends StatelessWidget {
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.16, // -0.01em ≈ -0.16px @16px
-                color: color,
+                color: resolvedColor,
               ),
             ),
           ),
