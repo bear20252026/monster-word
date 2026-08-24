@@ -181,8 +181,8 @@ class _WordDetailPageState extends State<WordDetailPage> {
                         children: confuseList.map((c) => Chip(
                           label: Text(c,
                             style: MistralTypography.bodySm.copyWith(color: skin.colors.text1)),
-                          backgroundColor: MistralColors.cream,
-                          side: BorderSide(color: MistralColors.beigeDeep),
+                          backgroundColor: skin.colors.pageBg,
+                          side: BorderSide(color: skin.colors.divider),
                         )).toList(),
                       ),
                     ],
@@ -194,9 +194,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: MistralColors.creamLight,
+                        color: skin.colors.pageBg,
                         borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(color: MistralColors.beigeDeep),
+                        border: Border.all(color: skin.colors.divider),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,10 +338,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [MistralColors.cream, MistralColors.creamLight]),
+        color: skin.colors.pageBg,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: MistralColors.beigeDeep),
+        border: Border.all(color: skin.colors.divider),
       ),
       child: Column(
         children: [
@@ -584,9 +583,9 @@ class _ExampleTileState extends State<_ExampleTile> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: MistralColors.creamLight,
+        color: widget.skin.colors.pageBg,
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(color: MistralColors.beigeDeep),
+        border: Border.all(color: widget.skin.colors.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
