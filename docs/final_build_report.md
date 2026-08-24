@@ -62,11 +62,17 @@ All from inspira-ui.com, adapted to Starbucks design system:
 
 | Item | Priority | Status |
 |------|----------|--------|
-| Launcher icon AI generation | Medium | In progress (assigned) |
-| Launcher icon review | Medium | In progress (assigned) |
+| Launcher icon AI generation | Medium | ⏸️ 阻塞：image_generation 工具未配置模型 |
+| Launcher icon review | Medium | ⏸️ 阻塞：等待图标生成 |
 | Android signing configuration | Low | Pre-release task |
 | 44 info-level lints | Low | Test file deprecations, non-blocking |
+
+### Blocker Details: Launcher Icon Generation
+- 设计规格已完成：`docs/launcher_icon_brief.md`（4个方案，提示词就绪）
+- 需要用户在 **Settings > Tools** 中配置图像生成模型
+- 配置后可立即按 brief 中的 prompts 生成 4 个候选方案
 
 ## 5. Verdict
 
 ✅ **RELEASE READY** — Zero errors, zero warnings, all tests passing, both platform builds successful.
+唯一阻塞项：Launcher 图标 AI 生图（工具配置依赖，不影响 App 功能与构建）。
