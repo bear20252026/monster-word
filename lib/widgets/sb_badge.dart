@@ -3,7 +3,6 @@
 // 使用纪律：金色仅限成就/星标/奖励场景，禁止作通用强调色
 
 import 'package:flutter/material.dart';
-import '../theme/skin_system.dart';
 import 'scale_down_on_press.dart';
 
 /// 星巴克金色胶囊徽章

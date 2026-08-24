@@ -269,11 +269,7 @@ class LibraryModel {
   static const int errorCanceled = 3;
   static const int errorUnzip = 4;
 
-  static const int _unzipTagChangeLib = 10001;
-  static const int _unzipTagUpdateLib = 10002;
-
   final LibraryDealListener? listener;
-  bool _isFirstDownload = true;
 
   LibraryModel({this.listener});
 

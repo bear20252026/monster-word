@@ -95,6 +95,7 @@ class SbBanner extends StatelessWidget {
 
   /// 构建横幅内部布局
   Widget _buildContent(BuildContext context) {
+    final colors = context.skin.colors;
     // 文字区域
     final textColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,

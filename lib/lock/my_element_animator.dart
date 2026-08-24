@@ -17,7 +17,6 @@ class MyElementAnimator {
   final TickerProvider vsync;
 
   int _scrollDelta = 0;
-  int _minDistance = 100;
 
   AnimationController? _animController;
 

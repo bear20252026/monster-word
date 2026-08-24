@@ -305,18 +305,6 @@ class _LockScreenPageState extends State<LockScreenPage>
     _presenter.unlockToLearn();
   }
 
-  /// 上滑显示例句区域
-  void _onSlideUpToShowExamples() {
-    if (!_hasSlidUp) {
-      _hasSlidUp = true;
-    }
-    _presenter.setCanPlayExample(true);
-    if (_examples.isNotEmpty) {
-      final index = _currentExampleIndex % _examples.length;
-      _presenter.autoPlayExample(index, false, _mp3Paths[index]);
-    }
-  }
-
   /// 下滑隐藏例句区域
   void _onSlideDownToHideExamples() {
     _presenter.setCanPlayExample(false);
@@ -761,7 +749,6 @@ class _LockScreenPageState extends State<LockScreenPage>
 
   void _onLongPressStart() {
     _longPressTimer = Timer(const Duration(milliseconds: 500), () {
-      _hasLongPress = true;
       _playWordAudio();
     });
   }
