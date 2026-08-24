@@ -1,12 +1,19 @@
-// 个人中心页：还原原版个人中心 — 金色渐变头部 + 头像 + 酷币/装备 + 菜单
+// 个人中心页：星巴克风格 — 奶油画布 + 头像 + 酷币/装备 + 菜单
+// batch4a 改造：金色渐变→奶油纯色，硬编码→token，卡片→SbCard
 import 'package:flutter/material.dart';
 
 import '../hooks/responsive.dart';
 import '../pages/appearance_page.dart';
 import '../pages/more_settings_page.dart';
-import '../pages/settings_page.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/sb_badge.dart';
+import '../widgets/sb_card.dart';
+
+// 金色系 token（待提取为全局 StarGold 组，docs/starbucks_tokens_draft.md §4）
+const Color _goldCream = Color(0xFFF2F0EB);   // 奶油画布（头部底色）
+const Color _goldAccent = Color(0xFFCBA258);   // 品牌金（仅成就）
+const Color _goldCoin = Color(0xFFCC8800);     // 酷币图标金
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -68,21 +75,10 @@ class ProfileScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.only(top: 8, bottom: 24),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFFFF3CD),
-            Color(0xFFFFF8E1),
-            Color(0xFFF5F5F5),
-          ],
-          stops: [0.0, 0.5, 1.0],
-        ),
-      ),
+      color: _goldCream, // 奶油画布纯色（移除金色渐变）
       child: Column(
         children: [
-          // 头像 + VIP 徽章
+          // 头像 + VIP 徽章（白框 + 绿色 VIP）
           SizedBox(
             width: 88,
             height: 88,
@@ -93,21 +89,10 @@ class ProfileScreen extends StatelessWidget {
                   height: 88,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFFFFF3CD), Color(0xFFFFE0B2)],
-                    ),
+                    color: Colors.white, // 纯白底（移除金色渐变）
                     border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFFFCC80).withValues(alpha: 0.3),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
                   ),
-                  child: const Icon(Icons.menu_book_rounded, color: Color(0xFF8B6914), size: 40),
+                  child: Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 40), // 品牌绿图标
                 ),
                 Positioned(
                   right: 0,
@@ -116,7 +101,7 @@ class ProfileScreen extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF4A6741),
+                      color: skin.colors.accent, // 绿色 VIP 徽章（原 #4A6741 → accent）
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                     ),
@@ -137,25 +122,10 @@ class ProfileScreen extends StatelessWidget {
           Text('44459754',
             style: MistralTypography.heading4.copyWith(color: skin.colors.text1)),
           const SizedBox(height: 10),
-          // 会员状态
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFE8CC).withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('成为终身大会员 1379 天',
-                  style: MistralTypography.caption.copyWith(
-                    color: const Color(0xFFCC8800),
-                    fontWeight: FontWeight.w500,
-                  )),
-                const SizedBox(width: 4),
-                const Icon(Icons.chevron_right, size: 16, color: Color(0xFFCC8800)),
-              ],
-            ),
+          // 会员状态（SbBadge 金色胶囊）
+          SbBadge(
+            text: '成为终身大会员 1379 天',
+            icon: Icons.chevron_right,
           ),
         ],
       ),
@@ -165,23 +135,19 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildMenu(SkinSystem skin, AppResponsive resp, BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
-      child: Container(
-        decoration: BoxDecoration(
-          color: skin.colors.cardBg,
-          borderRadius: BorderRadius.circular(16),
-        ),
+      child: SbCard(
         child: Column(children: [
           _menuRow(
             Icons.palette_outlined,
-            const Color(0xFF4CAF50),
+            MistralColors.success, // #4CAF50 → token
             '外观 & 沉浸场景',
             skin,
             onTap: () => Navigator.pushNamed(context, AppearancePage.routeName),
           ),
           Divider(height: 1, color: skin.colors.divider),
-          _menuRow(Icons.tune, const Color(0xFF9C27B0), '学习偏好', skin),
+          _menuRow(Icons.tune, const Color(0xFF9C27B0), '学习偏好', skin), // 紫色保留（功能色）
           Divider(height: 1, color: skin.colors.divider),
-          _menuRow(Icons.settings_outlined, const Color(0xFF2196F3), '更多设置', skin,
+          _menuRow(Icons.settings_outlined, const Color(0xFF2196F3), '更多设置', skin, // 蓝色保留（功能色）
             onTap: () => Navigator.pushNamed(context, MoreSettingsPage.routeName)),
         ]),
       ),
@@ -221,12 +187,8 @@ class _CoinCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SbCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      decoration: BoxDecoration(
-        color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -245,10 +207,10 @@ class _CoinCard extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFFFCC80),
+                  color: _goldAccent, // 品牌金 #CBA258（仅成就场景）
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.monetization_on, color: Color(0xFFCC8800), size: 18),
+                child: const Icon(Icons.monetization_on, color: _goldCoin, size: 18), // 酷币图标金
               ),
               const SizedBox(width: 8),
               Text('6,821', style: MistralTypography.heading4.copyWith(
@@ -268,12 +230,8 @@ class _EquipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SbCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      decoration: BoxDecoration(
-        color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -291,13 +249,14 @@ class _EquipCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              _equipIcon(const Color(0xFFFFE0B2), const Color(0xFFCC8800), Icons.auto_stories),
+              // 装备徽章（4组功能色，docs/live_pages_hardcode_map.md §4 装备图标）
+              _equipIcon(const Color(0xFFFFE0B2), _goldCoin, Icons.auto_stories),   // 金系
               const SizedBox(width: 6),
-              _equipIcon(const Color(0xFFBBDEFB), const Color(0xFF1976D2), Icons.menu_book),
+              _equipIcon(const Color(0xFFBBDEFB), const Color(0xFF1976D2), Icons.menu_book), // 蓝系
               const SizedBox(width: 6),
-              _equipIcon(const Color(0xFFE8F5E9), const Color(0xFF388E3C), Icons.headphones),
+              _equipIcon(const Color(0xFFE8F5E9), const Color(0xFF388E3C), Icons.headphones), // 绿系
               const SizedBox(width: 6),
-              _equipIcon(const Color(0xFFF3E5F5), const Color(0xFF7B1FA2), Icons.edit),
+              _equipIcon(const Color(0xFFF3E5F5), const Color(0xFF7B1FA2), Icons.edit), // 紫系
             ],
           ),
         ],
