@@ -3,6 +3,7 @@
 // scale(0.95) + 200ms easeOut；回调在恢复完成后触发（防误触）
 
 import 'package:flutter/material.dart';
+import '../tokens/motion_tokens.dart';
 
 /// 星巴克标准按压反馈包装器
 ///
@@ -60,9 +61,9 @@ class ScaleDownOnPress extends StatefulWidget {
     this.onLongPress,
     this.enabled = true,
     this.enableScale = true,
-    this.scale = 0.95,
-    this.duration = const Duration(milliseconds: 200),
-    this.curve = Curves.easeOut,
+    this.scale = MotionPress.scale,       // 0.95（星巴克 --buttonActiveScale）
+    this.duration = MotionPress.duration, // 200ms（base 档）
+    this.curve = MotionPress.curve,       // Curves.easeOut
     this.behavior,
     this.triggerAfterRestore = true,
   });
