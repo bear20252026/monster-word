@@ -83,11 +83,15 @@ class LearningState extends ChangeNotifier {
   }
 
   Future<void> _loadDailyNewWords() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getInt(_dailyNewWordsPrefKey);
-    if (saved != null) {
-      _dailyNewWords = saved;
-      notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getInt(_dailyNewWordsPrefKey);
+      if (saved != null) {
+        _dailyNewWords = saved;
+        notifyListeners();
+      }
+    } catch (_) {
+      // 数据损坏时使用默认值 10
     }
   }
 
