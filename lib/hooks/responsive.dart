@@ -19,7 +19,6 @@ class AppResponsive {
 
   double get _width => MediaQuery.sizeOf(context).width;
   double get _height => MediaQuery.sizeOf(context).height;
-  double get _shortestSide => MediaQuery.sizeOf(context).shortestSide;
 
   /// 屏幕类型
   ScreenType get screenType {
