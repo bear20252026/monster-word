@@ -15,19 +15,7 @@ import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
-
-/// 复古像素色彩
-class _PixelColors {
-  static const screenBg = Color(0xFF9BBC0F);      // Game Boy 绿
-  static const screenDark = Color(0xFF0F380F);     // 深绿
-  static const screenMid = Color(0xFF306230);      // 中绿
-  static const screenLight = Color(0xFF8BAC0F);    // 浅绿
-  static const bodyGray = Color(0xFFB0B0B0);       // 机身灰
-  static const bodyDark = Color(0xFF505050);       // 深灰
-  static const buttonRed = Color(0xFFCC3333);      // B 键红
-  static const buttonPurple = Color(0xFF8844CC);   // A 键紫
-  static const dpadGray = Color(0xFF404040);       // 方向键灰
-}
+import '../tokens/gameboy.dart';
 
 /// 不背单词机页面
 class WordMachinePage extends StatefulWidget {
@@ -154,7 +142,7 @@ class _WordMachinePageState extends State<WordMachinePage>
     final resp = context.responsive;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF2C2C2C),
+      backgroundColor: GameBoyPalette.pageBackdrop,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -172,11 +160,11 @@ class _WordMachinePageState extends State<WordMachinePage>
   Widget _buildConsole() {
     return Container(
       decoration: BoxDecoration(
-        color: _PixelColors.bodyGray,
+        color: GameBoyPalette.bodyGray,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
+            color: GameBoyPalette.shadowBlack.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -193,7 +181,7 @@ class _WordMachinePageState extends State<WordMachinePage>
           Container(
             height: 3,
             margin: const EdgeInsets.symmetric(horizontal: 32),
-            color: _PixelColors.bodyDark,
+            color: GameBoyPalette.bodyDark,
           ),
           const SizedBox(height: 16),
           // 按钮区域
@@ -218,12 +206,12 @@ class _WordMachinePageState extends State<WordMachinePage>
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: _started ? const Color(0xFF4CAF50) : Colors.red,
+              color: _started ? GameBoyPalette.powerOn : GameBoyPalette.powerOff,
               shape: BoxShape.circle,
               boxShadow: _started
                   ? [
                       BoxShadow(
-                        color: const Color(0xFF4CAF50).withValues(alpha: 0.6),
+                        color: GameBoyPalette.powerOnGlow,
                         blurRadius: 6,
                       ),
                     ]
@@ -238,7 +226,7 @@ class _WordMachinePageState extends State<WordMachinePage>
               fontFamily: 'monospace',
               fontSize: 14,
               fontWeight: FontWeight.w900,
-              color: _PixelColors.bodyDark,
+              color: GameBoyPalette.bodyDark,
               letterSpacing: 3,
             ),
           ),
@@ -247,7 +235,7 @@ class _WordMachinePageState extends State<WordMachinePage>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: _PixelColors.bodyDark,
+              color: GameBoyPalette.bodyDark,
               borderRadius: BorderRadius.circular(4),
             ),
             child: const Text(
@@ -256,7 +244,7 @@ class _WordMachinePageState extends State<WordMachinePage>
                 fontFamily: 'monospace',
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: _PixelColors.bodyGray,
+                color: GameBoyPalette.bodyGray,
                 letterSpacing: 1,
               ),
             ),
@@ -279,12 +267,12 @@ class _WordMachinePageState extends State<WordMachinePage>
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: _PixelColors.screenBg,
+          color: GameBoyPalette.screenBg,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: _PixelColors.bodyDark, width: 3),
+          border: Border.all(color: GameBoyPalette.bodyDark, width: 3),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
+              color: GameBoyPalette.shadowBlack.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -304,7 +292,7 @@ class _WordMachinePageState extends State<WordMachinePage>
   /// 开始画面
   Widget _buildStartScreen() {
     return Container(
-      color: _PixelColors.screenBg,
+      color: GameBoyPalette.screenBg,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -313,7 +301,7 @@ class _WordMachinePageState extends State<WordMachinePage>
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: _PixelColors.screenDark,
+              color: GameBoyPalette.screenDark,
               borderRadius: BorderRadius.circular(4),
             ),
             child: const Center(
@@ -323,7 +311,7 @@ class _WordMachinePageState extends State<WordMachinePage>
                   fontFamily: 'monospace',
                   fontSize: 36,
                   fontWeight: FontWeight.w900,
-                  color: _PixelColors.screenLight,
+                  color: GameBoyPalette.screenLight,
                   letterSpacing: -2,
                 ),
               ),
@@ -336,7 +324,7 @@ class _WordMachinePageState extends State<WordMachinePage>
               fontFamily: 'monospace',
               fontSize: 18,
               fontWeight: FontWeight.w900,
-              color: _PixelColors.screenDark,
+              color: GameBoyPalette.screenDark,
               letterSpacing: 2,
             ),
           ),
@@ -346,7 +334,7 @@ class _WordMachinePageState extends State<WordMachinePage>
             style: TextStyle(
               fontFamily: 'monospace',
               fontSize: 12,
-              color: _PixelColors.screenMid,
+              color: GameBoyPalette.screenMid,
               letterSpacing: 1,
             ),
           ),
@@ -362,7 +350,7 @@ class _WordMachinePageState extends State<WordMachinePage>
                 fontFamily: 'monospace',
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: _PixelColors.screenDark,
+                color: GameBoyPalette.screenDark,
                 letterSpacing: 3,
               ),
             ),
@@ -374,7 +362,7 @@ class _WordMachinePageState extends State<WordMachinePage>
             style: TextStyle(
               fontFamily: 'monospace',
               fontSize: 10,
-              color: _PixelColors.screenMid,
+              color: GameBoyPalette.screenMid,
             ),
           ),
         ],
@@ -389,14 +377,14 @@ class _WordMachinePageState extends State<WordMachinePage>
 
     if (word == null) {
       return Container(
-        color: _PixelColors.screenBg,
+        color: GameBoyPalette.screenBg,
         child: const Center(
           child: Text(
             'NO DATA',
             style: TextStyle(
               fontFamily: 'monospace',
               fontSize: 16,
-              color: _PixelColors.screenDark,
+              color: GameBoyPalette.screenDark,
             ),
           ),
         ),
@@ -404,7 +392,7 @@ class _WordMachinePageState extends State<WordMachinePage>
     }
 
     return Container(
-      color: _PixelColors.screenBg,
+      color: GameBoyPalette.screenBg,
       child: Column(
         children: [
           // 状态栏（分数 + 连击）
@@ -427,7 +415,7 @@ class _WordMachinePageState extends State<WordMachinePage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: const BoxDecoration(
-        color: _PixelColors.screenDark,
+        color: GameBoyPalette.screenDark,
       ),
       child: Row(
         children: [
@@ -437,7 +425,7 @@ class _WordMachinePageState extends State<WordMachinePage>
               fontFamily: 'monospace',
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: _PixelColors.screenLight,
+              color: GameBoyPalette.screenLight,
             ),
           ),
           const Spacer(),
@@ -448,8 +436,8 @@ class _WordMachinePageState extends State<WordMachinePage>
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: _streak > 0
-                  ? _PixelColors.screenLight
-                  : _PixelColors.screenMid,
+                  ? GameBoyPalette.screenLight
+                  : GameBoyPalette.screenMid,
             ),
           ),
         ],
@@ -469,7 +457,7 @@ class _WordMachinePageState extends State<WordMachinePage>
               fontFamily: 'monospace',
               fontSize: 28,
               fontWeight: FontWeight.w900,
-              color: _PixelColors.screenDark,
+              color: GameBoyPalette.screenDark,
               letterSpacing: 2,
             ),
           ),
@@ -479,7 +467,7 @@ class _WordMachinePageState extends State<WordMachinePage>
               style: const TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 12,
-                color: _PixelColors.screenMid,
+                color: GameBoyPalette.screenMid,
               ),
             ),
         ],
@@ -496,7 +484,7 @@ class _WordMachinePageState extends State<WordMachinePage>
         style: TextStyle(
           fontFamily: 'monospace',
           fontSize: 11,
-          color: _PixelColors.screenMid,
+          color: GameBoyPalette.screenMid,
         ),
       ),
     );
@@ -529,14 +517,14 @@ class _WordMachinePageState extends State<WordMachinePage>
     Color bgColor;
     Color textColor;
     if (_showResult && isCorrectChoice) {
-      bgColor = _PixelColors.screenDark;
-      textColor = _PixelColors.screenLight;
+      bgColor = GameBoyPalette.screenDark;
+      textColor = GameBoyPalette.screenLight;
     } else if (_showResult && isSelected && !isCorrectChoice) {
-      bgColor = const Color(0xFF5A1010);
-      textColor = const Color(0xFFFF6666);
+      bgColor = GameBoyPalette.errorBg;
+      textColor = GameBoyPalette.errorFg;
     } else {
-      bgColor = _PixelColors.screenMid;
-      textColor = _PixelColors.screenLight;
+      bgColor = GameBoyPalette.screenMid;
+      textColor = GameBoyPalette.screenLight;
     }
 
     return GestureDetector(
@@ -546,7 +534,7 @@ class _WordMachinePageState extends State<WordMachinePage>
           color: bgColor,
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: isSelected ? _PixelColors.screenDark : Colors.transparent,
+            color: isSelected ? GameBoyPalette.screenDark : GameBoyPalette.borderTransparent,
             width: 2,
           ),
         ),
@@ -572,7 +560,7 @@ class _WordMachinePageState extends State<WordMachinePage>
   Widget _buildStatusText() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      color: _PixelColors.screenDark,
+      color: GameBoyPalette.screenDark,
       child: Center(
         child: Text(
           _statusText,
@@ -581,8 +569,8 @@ class _WordMachinePageState extends State<WordMachinePage>
             fontSize: 14,
             fontWeight: FontWeight.w900,
             color: _isCorrect
-                ? _PixelColors.screenLight
-                : const Color(0xFFFF6666),
+                ? GameBoyPalette.screenLight
+                : GameBoyPalette.errorFg,
             letterSpacing: 2,
           ),
         ),
@@ -609,11 +597,11 @@ class _WordMachinePageState extends State<WordMachinePage>
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _PixelColors.buttonRed,
+                    color: GameBoyPalette.buttonRed,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
+                        color: GameBoyPalette.shadowBlack.withValues(alpha: 0.3),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -626,7 +614,7 @@ class _WordMachinePageState extends State<WordMachinePage>
                         fontFamily: 'monospace',
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        color: GameBoyPalette.textWhite,
                       ),
                     ),
                   ),
@@ -646,11 +634,11 @@ class _WordMachinePageState extends State<WordMachinePage>
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _PixelColors.buttonPurple,
+                    color: GameBoyPalette.buttonPurple,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
+                        color: GameBoyPalette.shadowBlack.withValues(alpha: 0.3),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -663,7 +651,7 @@ class _WordMachinePageState extends State<WordMachinePage>
                         fontFamily: 'monospace',
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
+                        color: GameBoyPalette.textWhite,
                       ),
                     ),
                   ),
@@ -691,7 +679,7 @@ class _WordMachinePageState extends State<WordMachinePage>
             child: Container(
               height: 30,
               decoration: BoxDecoration(
-                color: _PixelColors.dpadGray,
+                color: GameBoyPalette.dpadGray,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -704,7 +692,7 @@ class _WordMachinePageState extends State<WordMachinePage>
             child: Container(
               width: 30,
               decoration: BoxDecoration(
-                color: _PixelColors.dpadGray,
+                color: GameBoyPalette.dpadGray,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -737,7 +725,7 @@ class _WordMachinePageState extends State<WordMachinePage>
               height: 3,
               margin: const EdgeInsets.only(bottom: 4),
               decoration: BoxDecoration(
-                color: _PixelColors.bodyDark,
+                color: GameBoyPalette.bodyDark,
                 borderRadius: BorderRadius.circular(1),
               ),
             ),
