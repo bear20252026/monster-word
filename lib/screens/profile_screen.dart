@@ -7,22 +7,23 @@ import '../pages/appearance_page.dart';
 import '../pages/more_settings_page.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../tokens/func_colors.dart';
 import '../widgets/sb_badge.dart';
 import '../widgets/sb_card.dart';
 
-// 功能图标色（无全局 token，保留在页面级）
-const Color _iconPurple = Color(0xFF9C27B0);   // 学习偏好图标
-const Color _iconBlue = Color(0xFF2196F3);     // 更多设置图标
+// 功能图标色（使用 FuncColors token）
+// _iconPurple → FuncColors.purple
+// _iconBlue → FuncColors.info
 
-// 装备徽章色（无全局 token，保留在页面级）
-const Color _equipGoldBg = Color(0xFFFFE0B2);  // 金系装备底
-const Color _equipGoldFg = Color(0xFFCC8800);  // 金系装备前景
-const Color _equipBlueBg = Color(0xFFBBDEFB);  // 蓝系装备底
-const Color _equipBlueFg = Color(0xFF1976D2);  // 蓝系装备前景
-const Color _equipGreenBg = Color(0xFFE8F5E9); // 绿系装备底
-const Color _equipGreenFg = Color(0xFF388E3C); // 绿系装备前景
-const Color _equipPurpleBg = Color(0xFFF3E5F5); // 紫系装备底
-const Color _equipPurpleFg = Color(0xFF7B1FA2); // 紫系装备前景
+// 装备徽章色（使用 FuncColors token）
+// _equipGoldBg → FuncColors.warningLight
+// _equipGoldFg → FuncColors.warning (深色)
+// _equipBlueBg → FuncColors.infoLight
+// _equipBlueFg → FuncColors.info
+// _equipGreenBg → FuncColors.successLight (新增)
+// _equipGreenFg → skin.colors.success
+// _equipPurpleBg → FuncColors.purpleLight
+// _equipPurpleFg → FuncColors.purple
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -148,15 +149,15 @@ class ProfileScreen extends StatelessWidget {
         child: Column(children: [
           _menuRow(
             Icons.palette_outlined,
-            MistralColors.success, // #4CAF50 → token
+            FuncColors.success, // #4CAF50 → token
             '外观 & 沉浸场景',
             skin,
             onTap: () => Navigator.pushNamed(context, AppearancePage.routeName),
           ),
           Divider(height: 1, color: skin.colors.divider),
-          _menuRow(Icons.tune, _iconPurple, '学习偏好', skin),
+          _menuRow(Icons.tune, FuncColors.purple, '学习偏好', skin),
           Divider(height: 1, color: skin.colors.divider),
-          _menuRow(Icons.settings_outlined, _iconBlue, '更多设置', skin,
+          _menuRow(Icons.settings_outlined, FuncColors.info, '更多设置', skin,
             onTap: () => Navigator.pushNamed(context, MoreSettingsPage.routeName)),
         ]),
       ),
@@ -219,7 +220,7 @@ class _CoinCard extends StatelessWidget {
                   color: MistralColors.sunshine300, // 品牌金 #CBA258（token）
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.monetization_on, color: _equipGoldFg, size: 18), // 酷币图标金
+                child: Icon(Icons.monetization_on, color: FuncColors.warning, size: 18), // 酷币图标金
               ),
               const SizedBox(width: 8),
               Text('6,821', style: MistralTypography.heading4.copyWith(
@@ -258,14 +259,14 @@ class _EquipCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              // 装备徽章（4组功能色，页面级常量）
-              _equipIcon(_equipGoldBg, _equipGoldFg, Icons.auto_stories),
+              // 装备徽章（4组功能色，使用 FuncColors token）
+              _equipIcon(FuncColors.warningLight, FuncColors.warning, Icons.auto_stories),
               const SizedBox(width: 6),
-              _equipIcon(_equipBlueBg, _equipBlueFg, Icons.menu_book),
+              _equipIcon(FuncColors.infoLight, FuncColors.info, Icons.menu_book),
               const SizedBox(width: 6),
-              _equipIcon(_equipGreenBg, _equipGreenFg, Icons.headphones),
+              _equipIcon(FuncColors.successLight, skin.colors.success, Icons.headphones),
               const SizedBox(width: 6),
-              _equipIcon(_equipPurpleBg, _equipPurpleFg, Icons.edit),
+              _equipIcon(FuncColors.purpleLight, FuncColors.purple, Icons.edit),
             ],
           ),
         ],
