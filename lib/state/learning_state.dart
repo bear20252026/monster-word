@@ -7,8 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart';
+import '../engine/fsrs5_engine.dart';
 import '../engine/leitner_engine.dart';
-import '../engine/srs_engine.dart';
 import '../models/bb_word_process.dart';
 
 /// 学习状态（ChangeNotifier，供 UI 监听）
@@ -18,10 +18,10 @@ class LearningState extends ChangeNotifier {
   int _currentIndex = 0;
   bool _showAnswer = false;
 
-  // SRS 相关
-  final SrsEngine _srsEngine = SrsEngine();
-  Map<String, SrsCard> _cards = {};
-  static const _cardsPrefKey = 'srs_cards_v1';
+  // FSRS-5 SRS 相关
+  final Fsrs5Engine _fsrsEngine = Fsrs5Engine();
+  Map<String, FsrsCard> _cards = {};
+  static const _cardsPrefKey = 'fsrs5_cards_v1';
 
   // 收藏 & 标记已掌握
   final Set<String> _favoriteWords = {};
@@ -68,7 +68,7 @@ class LearningState extends ChangeNotifier {
   List<WordChoicePair> get choices => _choices;
 
   /// 今日待复习数量
-  int get dueCount => _srsEngine.getDueCards(_cards.values.toList()).length;
+  int get dueCount => _fsrsEngine.getDueCards(_cards.values.toList()).length;
 
   Word? get currentWord =>
       _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
@@ -95,7 +95,7 @@ class LearningState extends ChangeNotifier {
     }
   }
 
-  /// 从 shared_preferences 加载 SRS 卡片
+  /// 从 shared_preferences 加载 FSRS-5 卡片
   Future<void> _loadCards() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -103,16 +103,16 @@ class LearningState extends ChangeNotifier {
       if (raw != null && raw.isNotEmpty) {
         final map = jsonDecode(raw) as Map<String, dynamic>;
         _cards = map.map(
-          (k, v) => MapEntry(k, SrsCard.fromJson(v as Map<String, dynamic>)),
+          (k, v) => MapEntry(k, FsrsCard.fromJson(v as Map<String, dynamic>)),
         );
       }
     } catch (e) {
-      debugPrint('SRS cards loading error: $e');
+      debugPrint('FSRS-5 cards loading error: $e');
       _cards = {};
     }
   }
 
-  /// 保存 SRS 卡片到 shared_preferences
+  /// 保存 FSRS-5 卡片到 shared_preferences
   Future<void> _saveCards() async {
     final prefs = await SharedPreferences.getInstance();
     final map = _cards.map((k, v) => MapEntry(k, v.toJson()));
@@ -409,19 +409,19 @@ class LearningState extends ChangeNotifier {
   }
 
   /// 用户评分（SRS）：不认识/模糊/认识/熟练
-  Future<void> rate(RecallRating rating) async {
+  Future<void> rate(FsrsRating rating) async {
     final word = currentWord;
     if (word == null) return;
 
     // Leitner 引擎联动（原版 iDontKnow/iMayKnow/iReallyKnow）
     switch (rating) {
-      case RecallRating.again:
+      case FsrsRating.again:
         _leitnerEngine.iDontKnow();
-      case RecallRating.hard:
+      case FsrsRating.hard:
         _leitnerEngine.iMayKnow();
-      case RecallRating.good:
+      case FsrsRating.good:
         _leitnerEngine.iReallyKnow();
-      case RecallRating.easy:
+      case FsrsRating.easy:
         _leitnerEngine.tooEasy();
     }
 
@@ -429,8 +429,8 @@ class LearningState extends ChangeNotifier {
     final existing = _cards[word.word];
     final isLearn = existing == null; // 新词=learn，已有卡片=review
     final updated = isLearn
-        ? _srsEngine.learn(word.word, rating)
-        : _srsEngine.review(existing, rating);
+        ? _fsrsEngine.learn(word.word, rating)
+        : _fsrsEngine.review(existing, rating);
     _cards[word.word] = updated;
     await _saveCards();
 
@@ -539,7 +539,7 @@ class LearningState extends ChangeNotifier {
   int get newWordNum => _queue.where((w) => !_cards.containsKey(w.word)).length;
   int get masteredNum => _masteredWords.length;
   int get notLearnedNum => _queue.length - learnedNum;
-  int get reviewingNum => _srsEngine.getDueCards(_cards.values.toList()).length;
+  int get reviewingNum => _fsrsEngine.getDueCards(_cards.values.toList()).length;
   int get totalLearnedDays => _activeDates.length;
 
   Future<List<Word>> getLearnedWords() async {
@@ -555,7 +555,7 @@ class LearningState extends ChangeNotifier {
   Future<List<Word>> getMasteredWordsBySrs() async {
     return _queue.where((w) {
       final card = _cards[w.word];
-      return card != null && card.easeFactor > 2.5;
+      return card != null && card.difficulty > 5.0;
     }).toList();
   }
 
@@ -568,7 +568,7 @@ class LearningState extends ChangeNotifier {
     // TODO: 从数据库查询复习中单词
     return _queue.where((w) {
       final card = _cards[w.word];
-      return card != null && card.easeFactor <= 2.5;
+      return card != null && card.difficulty <= 5.0;
     }).toList();
   }
 
