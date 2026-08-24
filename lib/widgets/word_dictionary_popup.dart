@@ -80,7 +80,7 @@ class WordDictionaryPopup extends StatelessWidget {
                   Expanded(
                     child: Text(
                       word.word,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
                         color: skin.colors.text1,
@@ -113,7 +113,7 @@ class WordDictionaryPopup extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '/${word.usPron}/',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           color: skin.colors.text3,
                         ),
@@ -125,7 +125,7 @@ class WordDictionaryPopup extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '/${word.ukPron}/',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           color: skin.colors.text3,
                         ),
@@ -140,7 +140,7 @@ class WordDictionaryPopup extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
                 child: Text(
                   word.interpret,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     color: skin.colors.text1,
                     height: 1.5,
@@ -163,7 +163,7 @@ class WordDictionaryPopup extends StatelessWidget {
                   children: [
                     RichText(
                       text: TextSpan(
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           color: skin.colors.text1,
                           height: 1.5,
@@ -184,7 +184,7 @@ class WordDictionaryPopup extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         examples.first.cn,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           color: skin.colors.text3,
                         ),

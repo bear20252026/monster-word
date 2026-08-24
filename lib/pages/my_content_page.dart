@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
+import '../tokens/func_colors.dart';
 import 'my_fav_page.dart';
 
 class MyContentPage extends StatelessWidget {
@@ -39,21 +40,21 @@ class MyContentPage extends StatelessWidget {
                       children: [
                         _ListItem(
                           icon: Icons.menu_book,
-                          iconColor: const Color(0xFF4CAF50),
+                          iconColor: skin.success,
                           title: '在学词书',
                           value: '6135 词',
                           skin: skin,
                         ),
                         _ListItem(
                           icon: Icons.check_circle_outline,
-                          iconColor: const Color(0xFFFF9800),
+                          iconColor: FuncColors.warning,
                           title: '近日已学',
                           value: '今天 4 词',
                           skin: skin,
                         ),
                         _ListItem(
                           icon: Icons.check_circle,
-                          iconColor: const Color(0xFFFF9800),
+                          iconColor: FuncColors.warning,
                           title: '全部已学',
                           value: '250 词',
                           skin: skin,
@@ -66,7 +67,7 @@ class MyContentPage extends StatelessWidget {
                       children: [
                         _ListItem(
                           icon: Icons.book_outlined,
-                          iconColor: const Color(0xFF2196F3),
+                          iconColor: FuncColors.info,
                           title: '单词本',
                           value: '${context.watch<LearningState>().favoriteCount} 词',
                           skin: skin,
@@ -74,14 +75,14 @@ class MyContentPage extends StatelessWidget {
                         ),
                         _ListItem(
                           icon: Icons.format_quote,
-                          iconColor: const Color(0xFF2196F3),
+                          iconColor: FuncColors.info,
                           title: '句库',
                           value: '0 句',
                           skin: skin,
                         ),
                         _ListItem(
                           icon: Icons.edit_outlined,
-                          iconColor: const Color(0xFF2196F3),
+                          iconColor: FuncColors.info,
                           title: '笔记',
                           value: '19 条',
                           skin: skin,
@@ -147,18 +148,19 @@ class _HorizontalCards extends StatelessWidget {
           // 随身听卡片（橙色渐变）
           Expanded(
             child: _FeatureCard(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFFFE0CC), Color(0xFFFFD0B0)],
+                colors: [FuncColors.warningLight, FuncColors.warningLight.withValues(alpha: 0.8)],
               ),
               icon: Icons.headphones,
-              iconBg: const Color(0xFFFF6800),
+              iconBg: skin.accent,
               title: '随身听',
+              skin: skin,
               children: [
-                _MiniCard(title: '回顾', count: '4 词', accent: const Color(0xFFFF6800)),
+                _MiniCard(title: '回顾', count: '4 词', accent: skin.accent, skin: skin),
                 const SizedBox(width: 8),
-                _MiniCard(title: '预习', count: '20 词', accent: const Color(0xFFFF6800)),
+                _MiniCard(title: '预习', count: '20 词', accent: skin.accent, skin: skin),
               ],
             ),
           ),
@@ -166,16 +168,17 @@ class _HorizontalCards extends StatelessWidget {
           // 听写卡片（蓝色渐变）
           Expanded(
             child: _FeatureCard(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFCCF0FF), Color(0xFFB0E0F0)],
+                colors: [FuncColors.infoLight, FuncColors.infoLight.withValues(alpha: 0.8)],
               ),
               icon: Icons.edit,
-              iconBg: const Color(0xFF2196F3),
+              iconBg: FuncColors.info,
               title: '听写',
+              skin: skin,
               children: [
-                _MiniCard(title: '单元测', count: '', accent: const Color(0xFF2196F3)),
+                _MiniCard(title: '单元测', count: '', accent: FuncColors.info, skin: skin),
               ],
             ),
           ),
@@ -191,6 +194,7 @@ class _FeatureCard extends StatelessWidget {
   final IconData icon;
   final Color iconBg;
   final String title;
+  final ThemeVars skin;
   final List<Widget> children;
 
   const _FeatureCard({
@@ -198,6 +202,7 @@ class _FeatureCard extends StatelessWidget {
     required this.icon,
     required this.iconBg,
     required this.title,
+    required this.skin,
     required this.children,
   });
 
@@ -233,7 +238,7 @@ class _FeatureCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(title,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1F1F1F))),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: skin.text1)),
               ],
             ),
             const SizedBox(height: 12),
@@ -253,8 +258,9 @@ class _MiniCard extends StatelessWidget {
   final String title;
   final String count;
   final Color accent;
+  final ThemeVars skin;
 
-  const _MiniCard({required this.title, required this.count, required this.accent});
+  const _MiniCard({required this.title, required this.count, required this.accent, required this.skin});
 
   @override
   Widget build(BuildContext context) {
@@ -269,11 +275,11 @@ class _MiniCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(title,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1F1F1F))),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: skin.text1)),
             if (count.isNotEmpty) ...[
               const SizedBox(height: 2),
               Text(count,
-                style: const TextStyle(fontSize: 12, color: Color(0xFF999999))),
+                style: TextStyle(fontSize: 12, color: skin.text3)),
             ],
             const Spacer(),
             Align(
