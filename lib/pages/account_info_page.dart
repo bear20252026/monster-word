@@ -1,5 +1,5 @@
 // 账号信息页：还原 v3.2 原版账号信息页布局
-// 包含：头像 + 相机图标、账号、昵称、手机号、绑定平台
+// 包含：头像 + 相机图标、ID账号、账号、昵称、手机号、绑定平台
 import 'package:flutter/material.dart';
 
 import '../theme/skin_system.dart';
@@ -18,6 +18,7 @@ class AccountInfoPage extends StatefulWidget {
 class _AccountInfoPageState extends State<AccountInfoPage> {
   String _nickname = '';
   String _wechatName = '';
+  String _userId = '';
 
   @override
   void initState() {
@@ -30,6 +31,10 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     if (mounted) {
       setState(() {
         _nickname = userInfo.nickname;
+        _userId = userInfo.displayId.isEmpty
+            ? 'U${DateTime.now().millisecondsSinceEpoch % 100000}'
+            : userInfo.displayId;
+        _wechatName = userInfo.wechatName;
       });
     }
   }
@@ -75,7 +80,34 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       ),
     );
     if (result != null) {
+      final userInfo = await AppPreferences().getUserInfo();
+      userInfo.wechatName = result;
+      await AppPreferences().setUserInfo(userInfo);
       if (mounted) setState(() => _wechatName = result);
+    }
+  }
+
+  Future<void> _editUserId() async {
+    final controller = TextEditingController(text: _userId);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('修改个人ID'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: '输入你的个人ID'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('保存')),
+        ],
+      ),
+    );
+    if (result != null && result.isNotEmpty) {
+      final userInfo = await AppPreferences().getUserInfo();
+      userInfo.displayId = result;
+      await AppPreferences().setUserInfo(userInfo);
+      if (mounted) setState(() => _userId = result);
     }
   }
 
@@ -176,6 +208,13 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       ),
       child: Column(
         children: [
+          _buildInfoRow(
+            skin,
+            label: 'ID账号',
+            value: _userId.isEmpty ? '点击设置' : _userId,
+            onTap: _editUserId,
+          ),
+          _buildDivider(skin),
           _buildInfoRow(
             skin,
             label: '账号',

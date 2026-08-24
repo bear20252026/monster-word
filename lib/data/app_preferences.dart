@@ -306,6 +306,8 @@ class UserInfoBean {
   String phone;
   String token;
   String secret;
+  String displayId;   // 用户自定义 ID（可自由设定）
+  String wechatName;  // 微信名
 
   UserInfoBean({
     this.userId = 0,
@@ -314,6 +316,8 @@ class UserInfoBean {
     this.phone = '',
     this.token = '',
     this.secret = '',
+    this.displayId = '',
+    this.wechatName = '',
   });
 
   factory UserInfoBean.fromJson(Map<String, dynamic> json) => UserInfoBean(
@@ -323,6 +327,8 @@ class UserInfoBean {
         phone: json['phone'] ?? '',
         token: json['token'] ?? '',
         secret: json['secret'] ?? '',
+        displayId: json['displayId'] ?? '',
+        wechatName: json['wechatName'] ?? '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -332,6 +338,8 @@ class UserInfoBean {
         'phone': phone,
         'token': token,
         'secret': secret,
+        'displayId': displayId,
+        'wechatName': wechatName,
       };
 }
 
