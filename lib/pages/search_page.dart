@@ -11,6 +11,7 @@ import '../data/wordbook_database.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/scale_down_on_press.dart';
 import 'dictionary_page.dart';
 
 class SearchPage extends StatefulWidget {
@@ -105,12 +106,12 @@ class _SearchPageState extends State<SearchPage> {
               height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF0F0F0),
+                color: skin.cardBgAlt,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.search, size: 20, color: Color(0xFF999999)),
+                  Icon(Icons.search, size: 20, color: skin.text3),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
@@ -119,7 +120,7 @@ class _SearchPageState extends State<SearchPage> {
                       decoration: InputDecoration(
                         hintText: '输入要查询的英文或中文',
                         hintStyle: MistralTypography.bodyMd.copyWith(
-                          color: const Color(0xFFBBBBBB),
+                          color: MistralColors.muted,
                           fontSize: 15,
                         ),
                         border: InputBorder.none,
@@ -136,19 +137,19 @@ class _SearchPageState extends State<SearchPage> {
                         _controller.clear();
                         _search('');
                       },
-                      child: const Icon(Icons.clear, size: 18, color: Color(0xFF999999)),
+                      child: Icon(Icons.clear, size: 18, color: skin.text3),
                     )
                   else
-                    const Icon(Icons.qr_code_scanner, size: 20, color: Color(0xFF666666)),
+                    Icon(Icons.qr_code_scanner, size: 20, color: MistralColors.slate),
                 ],
               ),
             ),
           ),
           const SizedBox(width: 12),
-          GestureDetector(
+          ScaleDownOnPress(
             onTap: () => Navigator.pop(context),
-            child: const Text('取消',
-              style: TextStyle(fontSize: 16, color: Color(0xFF1F1F1F))),
+            child: Text('取消',
+              style: TextStyle(fontSize: 16, color: skin.text1)),
           ),
         ],
       ),
@@ -160,20 +161,7 @@ class _SearchPageState extends State<SearchPage> {
       itemCount: _results.length,
       itemBuilder: (context, i) {
         final w = _results[i];
-        return ListTile(
-          title: Text(w.word,
-            style: MistralTypography.bodyMd.copyWith(
-              fontWeight: FontWeight.w600,
-              color: skin.text1,
-            )),
-          subtitle: Text(
-            w.interpret.split('\n').first,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: MistralTypography.caption.copyWith(color: skin.text3),
-          ),
-          selected: _selectedWord?.word == w.word,
-          selectedTileColor: skin.cardBgAlt,
+        return ScaleDownOnPress(
           onTap: () {
             _saveToHistory(w.word);
             Navigator.push(
@@ -183,6 +171,21 @@ class _SearchPageState extends State<SearchPage> {
               ),
             );
           },
+          child: ListTile(
+            title: Text(w.word,
+              style: MistralTypography.bodyMd.copyWith(
+                fontWeight: FontWeight.w600,
+                color: skin.text1,
+              )),
+            subtitle: Text(
+              w.interpret.split('\n').first,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: MistralTypography.caption.copyWith(color: skin.text3),
+            ),
+            selected: _selectedWord?.word == w.word,
+            selectedTileColor: skin.cardBgAlt,
+          ),
         );
       },
     );
@@ -209,7 +212,7 @@ class _SearchPageState extends State<SearchPage> {
               IconButton(
                 icon: Icon(
                   isFav ? Icons.star : Icons.star_border,
-                  color: isFav ? Colors.amber : skin.text3,
+                  color: isFav ? MistralColors.warning : skin.text3,
                   size: 24,
                 ),
                 onPressed: () => state.toggleFavorite(word.word),
@@ -325,7 +328,7 @@ class _SearchPageState extends State<SearchPage> {
                   color: skin.text1,
                 )),
               const Spacer(),
-              GestureDetector(
+              ScaleDownOnPress(
                 onTap: _clearHistory,
                 child: Text('清除',
                   style: MistralTypography.bodySm.copyWith(color: skin.text3)),
@@ -338,14 +341,16 @@ class _SearchPageState extends State<SearchPage> {
             itemCount: _searchHistory.length,
             itemBuilder: (context, i) {
               final word = _searchHistory[i];
-              return ListTile(
-                leading: Icon(Icons.history, color: skin.text3, size: 20),
-                title: Text(word,
-                  style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
+              return ScaleDownOnPress(
                 onTap: () {
                   _controller.text = word;
                   _search(word);
                 },
+                child: ListTile(
+                  leading: Icon(Icons.history, color: skin.text3, size: 20),
+                  title: Text(word,
+                    style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
+                ),
               );
             },
           ),
