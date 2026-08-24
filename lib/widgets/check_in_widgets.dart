@@ -9,7 +9,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
-import 'widget_utils.dart';
+import 'scale_down_on_press.dart';
 
 /// 签到状态（原版常量）
 enum CheckInState {
