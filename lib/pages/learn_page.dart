@@ -43,7 +43,7 @@ class _LearnPageState extends State<LearnPage> {
           : SafeArea(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: resp.contentWidth),
+                  constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
                   child: Column(
                     children: [
                       _TopBar(skin: skin, state: state),
@@ -142,9 +142,10 @@ class _WordArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = skin.colors;
+    final resp = context.responsive;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.only(left: 60, right: 24),
+        padding: EdgeInsets.symmetric(horizontal: resp.horizontalPadding),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -155,7 +156,7 @@ class _WordArea extends StatelessWidget {
                   word: word.word,
                   child: Text(word.word,
                     style: TextStyle(
-                      fontSize: 40,
+                      fontSize: 40 * resp.fontScale,
                       fontWeight: FontWeight.w800,
                       color: colors.text1,
                       height: 1.1,
@@ -179,7 +180,10 @@ class _WordArea extends StatelessWidget {
             if (word.usPron.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text('/${word.usPron}/',
-                style: TextStyle(fontSize: 14, color: colors.text3)),
+                style: TextStyle(
+                  fontSize: 14 * resp.fontScale,
+                  color: colors.text3,
+                )),
             ],
             // 刮刮揭示：刮开查看词义提示（scratch-to-reveal 微交互）
             const SizedBox(height: 18),
@@ -291,6 +295,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final state = widget.state;
     final colors = widget.skin.colors;
+    final resp = context.responsive;
 
     return ConfettiOverlay(
       controller: _confettiController,
@@ -305,15 +310,20 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
         Color(0xFF6BCB77),
       ],
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: context.responsive.pageMargin),
+        margin: EdgeInsets.symmetric(horizontal: resp.pageMargin),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+          padding: EdgeInsets.fromLTRB(
+            resp.horizontalPadding * 0.5,
+            20,
+            resp.horizontalPadding * 0.5,
+            20,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(_wrongIndex >= 0 ? '请再选出正确答案' : '请选择正确释义',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 13 * resp.fontScale,
                   fontWeight: FontWeight.w600,
                   color: colors.text2,
                 )),
@@ -339,6 +349,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     final isCorrect = i == _correctIndex;
     final interpret = choice.interpret.toString();
     final colors = widget.skin.colors;
+    final resp = context.responsive;
 
     // batch4c: 三态颜色使用 ThemeVars token
     Color bgColor;
@@ -365,9 +376,9 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            height: 56,
+            height: 56 * resp.scale,
             margin: const EdgeInsets.only(bottom: 16), // P5: 触控审计 P0 间距
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            padding: EdgeInsets.symmetric(horizontal: 14 * resp.scale),
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(12), // batch4c: 12px 圆角（ContentCard 规格）
@@ -383,7 +394,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
             child: Center(
               child: Text(interpret,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16 * resp.fontScale,
                   color: textColor,
                   fontWeight: FontWeight.w500,
                 ),

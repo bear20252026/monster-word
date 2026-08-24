@@ -115,19 +115,24 @@ class _ReviewSessionState extends State<ReviewSession> {
       child: Scaffold(
       backgroundColor: skin.colors.pageBg,
       body: SafeArea(
-        child: Column(
-          children: [
-            // 透明导航栏
-            _buildNav(skin, resp),
-            // 四选一区（未答）或释义区（已答）
-            Expanded(
-              child: _showAnswer
-                  ? _buildAnswer(word, skin, resp)
-                  : _buildQuiz(word, skin, resp),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
+            child: Column(
+              children: [
+                // 透明导航栏
+                _buildNav(skin, resp),
+                // 四选一区（未答）或释义区（已答）
+                Expanded(
+                  child: _showAnswer
+                      ? _buildAnswer(word, skin, resp)
+                      : _buildQuiz(word, skin, resp),
+                ),
+                // 底部下划线三键
+                _buildVerdictRow(skin),
+              ],
             ),
-            // 底部下划线三键
-            _buildVerdictRow(skin),
-          ],
+          ),
         ),
       ),
       ),
@@ -264,8 +269,14 @@ class _ReviewSessionState extends State<ReviewSession> {
 
   /// 认识(青) / 模糊(橙) / 忘记了(红) 下划线三键
   Widget _buildVerdictRow(SkinSystem skin) {
+    final resp = context.responsive;
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+      padding: EdgeInsets.fromLTRB(
+        resp.horizontalPadding,
+        12,
+        resp.horizontalPadding,
+        16,
+      ),
       child: Row(
         children: [
           Expanded(child: _verdictBtn('认识', skin.colors.teal, () => _rate(RecallRating.good), skin)),

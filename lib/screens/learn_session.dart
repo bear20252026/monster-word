@@ -81,150 +81,155 @@ class _LearnSessionState extends State<LearnSession>
       child: Scaffold(
       body: GlassBg(
         child: SafeArea(
-          child: Column(
-            children: [
-              // 透明导航栏（原版 nav：返回 + 进度 + 操作）
-              _buildNav(skin, state),
-              // 内容区 — PageView with spring scroll physics for card swiping
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
-                  onPageChanged: (page) {
-                    if (page != state.currentIndex) {
-                      state.jumpTo(page);
-                      if (mounted) setState(() {});
-                    }
-                  },
-                  itemCount: state.total,
-                  itemBuilder: (context, index) {
-                    final w = state.queue[index];
-                    final exs = ExampleParser.parse(w.example);
-                    return SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 24),
-                          // HeroWord (with syllable separators, green dot, like count) — 点击弹出字典
-                          GestureDetector(
-                            onTap: () {
-                              WordDictionaryPopup.show(
-                                context,
-                                w,
-                                onViewDetail: () {
-                                  Navigator.pushNamed(context, '/word_detail');
-                                },
-                              );
-                            },
-                            child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
+              child: Column(
+                children: [
+                  // 透明导航栏（原版 nav：返回 + 进度 + 操作）
+                  _buildNav(skin, state),
+                  // 内容区 — PageView with spring scroll physics for card swiping
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics(),
+                      ),
+                      onPageChanged: (page) {
+                        if (page != state.currentIndex) {
+                          state.jumpTo(page);
+                          if (mounted) setState(() {});
+                        }
+                      },
+                      itemCount: state.total,
+                      itemBuilder: (context, index) {
+                        final w = state.queue[index];
+                        final exs = ExampleParser.parse(w.example);
+                        return SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                _addSyllableSeparators(w.word),
-                                style: AppTypography.heroWord.copyWith(
-                                  fontSize: resp.heroFontSize,
-                                  color: skin.colors.onGlassText1,
+                              const SizedBox(height: 24),
+                              // HeroWord (with syllable separators, green dot, like count) — 点击弹出字典
+                              GestureDetector(
+                                onTap: () {
+                                  WordDictionaryPopup.show(
+                                    context,
+                                    w,
+                                    onViewDetail: () {
+                                      Navigator.pushNamed(context, '/word_detail');
+                                    },
+                                  );
+                                },
+                                child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    _addSyllableSeparators(w.word),
+                                    style: AppTypography.heroWord.copyWith(
+                                      fontSize: resp.heroFontSize,
+                                      color: skin.colors.onGlassText1,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // Green dot (mastered indicator)
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: skin.colors.success,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  // Like count
+                                  Icon(Icons.thumb_up_alt_outlined,
+                                    size: 14, color: skin.colors.onGlassText2),
+                                  const SizedBox(width: 2),
+                                  Text('1',
+                                    style: AppTypography.footnote.copyWith(
+                                      color: skin.colors.onGlassText2)),
+                                ],
+                              ),
+                              ),
+                              const SizedBox(height: 8),
+                              // 音标
+                              if (w.usPron.isNotEmpty || w.ukPron.isNotEmpty)
+                                Row(
+                                  children: [
+                                    if (w.usPron.isNotEmpty) ...[
+                                      _PhoneticPill(label: '美', skin: skin),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '/${w.usPron}/',
+                                        style: AppTypography.phonetic,
+                                      ),
+                                    ],
+                                    if (w.ukPron.isNotEmpty) ...[
+                                      const SizedBox(width: 12),
+                                      _PhoneticPill(label: '英', skin: skin),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '/${w.ukPron}/',
+                                        style: AppTypography.phonetic,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              const SizedBox(height: 20),
+                              // 释义
+                              ...w.interpretLines.map(
+                                (line) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Text(
+                                    line,
+                                    style: AppTypography.body.copyWith(
+                                      color: skin.colors.onGlassText1,
+                                      height: 1.5,
+                                    ),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              // Green dot (mastered indicator)
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: skin.colors.success,
-                                  shape: BoxShape.circle,
+                              const SizedBox(height: 16),
+                              // 例句卡
+                              if (exs.isNotEmpty)
+                                ...exs.take(2).map(
+                                  (ex) => _ExampleCard(example: ex, skin: skin),
                                 ),
-                              ),
-                              const SizedBox(width: 6),
-                              // Like count
-                              Icon(Icons.thumb_up_alt_outlined,
-                                size: 14, color: skin.colors.onGlassText2),
-                              const SizedBox(width: 2),
-                              Text('1',
-                                style: AppTypography.footnote.copyWith(
-                                  color: skin.colors.onGlassText2)),
+                              const SizedBox(height: 16),
+                              // 派生词卡片（原版橙色三角标记 + 派生词列表）
+                              _DerivedWordsCard(word: w.word, skin: skin),
+                              const SizedBox(height: 16),
                             ],
                           ),
-                          ),
-                          const SizedBox(height: 8),
-                          // 音标
-                          if (w.usPron.isNotEmpty || w.ukPron.isNotEmpty)
-                            Row(
-                              children: [
-                                if (w.usPron.isNotEmpty) ...[
-                                  _PhoneticPill(label: '美', skin: skin),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '/${w.usPron}/',
-                                    style: AppTypography.phonetic,
-                                  ),
-                                ],
-                                if (w.ukPron.isNotEmpty) ...[
-                                  const SizedBox(width: 12),
-                                  _PhoneticPill(label: '英', skin: skin),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '/${w.ukPron}/',
-                                    style: AppTypography.phonetic,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          const SizedBox(height: 20),
-                          // 释义
-                          ...w.interpretLines.map(
-                            (line) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Text(
-                                line,
-                                style: AppTypography.body.copyWith(
-                                  color: skin.colors.onGlassText1,
-                                  height: 1.5,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          // 例句卡
-                          if (exs.isNotEmpty)
-                            ...exs.take(2).map(
-                              (ex) => _ExampleCard(example: ex, skin: skin),
-                            ),
-                          const SizedBox(height: 16),
-                          // 派生词卡片（原版橙色三角标记 + 派生词列表）
-                          _DerivedWordsCard(word: w.word, skin: skin),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                        );
+                      },
+                    ),
+                  ),
+                  // 1/3 page indicator
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: AnimatedBuilder(
+                      animation: _pageController,
+                      builder: (context, _) {
+                        final page = _pageController.hasClients
+                            ? (_pageController.page ?? state.currentIndex.toDouble())
+                            : state.currentIndex.toDouble();
+                        return _buildPageIndicator(skin, page, state.total);
+                      },
+                    ),
+                  ),
+                  // SegmentTabs（原版 派生/词组搭配/词根/近义）
+                  _buildSegmentTabs(skin),
+                  // 底部按钮（原版 下一词 + 记错了 + 重学）— 弹性滑入动画
+                  SlideTransition(
+                    position: _bottomBarAnim,
+                    child: _buildBottomActions(skin, state),
+                  ),
+                ],
               ),
-              // 1/3 page indicator
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: AnimatedBuilder(
-                  animation: _pageController,
-                  builder: (context, _) {
-                    final page = _pageController.hasClients
-                        ? (_pageController.page ?? state.currentIndex.toDouble())
-                        : state.currentIndex.toDouble();
-                    return _buildPageIndicator(skin, page, state.total);
-                  },
-                ),
-              ),
-              // SegmentTabs（原版 派生/词组搭配/词根/近义）
-              _buildSegmentTabs(skin),
-              // 底部按钮（原版 下一词 + 记错了 + 重学）— 弹性滑入动画
-              SlideTransition(
-                position: _bottomBarAnim,
-                child: _buildBottomActions(skin, state),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -399,10 +404,16 @@ class _LearnSessionState extends State<LearnSession>
 
   /// 底部单按钮「下一词」+ 绿色下划线（原版样式）
   Widget _buildBottomActions(SkinSystem skin, LearningState state) {
+    final resp = context.responsive;
     return SlideTransition(
       position: _bottomBarAnim,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+        padding: EdgeInsets.fromLTRB(
+          resp.horizontalPadding,
+          12,
+          resp.horizontalPadding,
+          16,
+        ),
         child: Center(
           child: GestureDetector(
             onTap: () {
@@ -423,7 +434,7 @@ class _LearnSessionState extends State<LearnSession>
                   '下一词',
                   style: AppTypography.body.copyWith(
                     color: skin.colors.onGlassText1,
-                    fontSize: 18,
+                    fontSize: 18 * resp.fontScale,
                   ),
                 ),
                 const SizedBox(height: 4),

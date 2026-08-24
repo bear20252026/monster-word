@@ -1,4 +1,4 @@
-// 复习页：壁纸沉浸 + 四选一 + 眭底操作栏
+// 复习页：壁纸沉浸 + 四选一 + 睭底操作栏
 // 已接入 SkinSystem 主题
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
@@ -9,6 +9,7 @@ import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart';
 import '../engine/srs_engine.dart';
 import '../engine/super_memory_engine.dart';
+import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
 import '../data/wallpaper_data.dart';
 import '../state/wallpaper_state.dart';
@@ -102,6 +103,7 @@ class _ReviewPageState extends State<ReviewPage> {
     }
     final word = _engine.currentWord();
     final skin = context.skin.colors;
+    final resp = context.responsive;
     final wallpaper = context.watch<WallpaperState>().current;
 
     return Scaffold(
@@ -118,23 +120,28 @@ class _ReviewPageState extends State<ReviewPage> {
                   child: Container(color: skin.wallpaperScrim.withValues(alpha: 0.15)),
                 ),
                 SafeArea(
-                  child: Column(
-                    children: [
-                      // 顶部栏
-                      _buildTopBar(skin),
-                      // 上半：单词区
-                      Expanded(
-                        flex: 4,
-                        child: _buildWordArea(word, skin),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
+                      child: Column(
+                        children: [
+                          // 顶部栏
+                          _buildTopBar(skin),
+                          // 上半：单词区
+                          Expanded(
+                            flex: 4,
+                            child: _buildWordArea(word, skin),
+                          ),
+                          // 下半：4选1
+                          Expanded(
+                            flex: 6,
+                            child: _buildChoiceArea(word, skin),
+                          ),
+                          // 底部操作栏
+                          _buildBottomBar(skin),
+                        ],
                       ),
-                      // 下半：4选1
-                      Expanded(
-                        flex: 6,
-                        child: _buildChoiceArea(word, skin),
-                      ),
-                      // 底部操作栏
-                      _buildBottomBar(skin),
-                    ],
+                    ),
                   ),
                 ),
               ],
@@ -178,10 +185,11 @@ class _ReviewPageState extends State<ReviewPage> {
 
   /// 顶部栏（原版 top_bar_container）
   Widget _buildTopBar(ThemeVars skin) {
+    final resp = context.responsive;
     return Container(
-      height: 44,
+      height: AppSpacing.navH,
       margin: const EdgeInsets.only(top: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(horizontal: resp.horizontalPadding * 0.5),
       child: Row(
         children: [
           IconButton(
@@ -190,7 +198,11 @@ class _ReviewPageState extends State<ReviewPage> {
           ),
           Text(
             '$_done/$_total',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.onGlassText1),
+            style: TextStyle(
+              fontSize: 16 * resp.fontScale,
+              fontWeight: FontWeight.w600,
+              color: skin.onGlassText1,
+            ),
           ),
           const SizedBox(width: 8),
           IconButton(
@@ -204,13 +216,21 @@ class _ReviewPageState extends State<ReviewPage> {
           // abc button
           GestureDetector(
             onTap: () {},
-            child: Text('abc', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: skin.onGlassText1)),
+            child: Text('abc', style: TextStyle(
+              fontSize: 16 * resp.fontScale,
+              fontWeight: FontWeight.w700,
+              color: skin.onGlassText1,
+            )),
           ),
           const SizedBox(width: 12),
           // 熟 button
           GestureDetector(
             onTap: () {},
-            child: Text('熟', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: skin.onGlassText1)),
+            child: Text('熟', style: TextStyle(
+              fontSize: 16 * resp.fontScale,
+              fontWeight: FontWeight.w700,
+              color: skin.onGlassText1,
+            )),
           ),
           const SizedBox(width: 8),
           IconButton(
@@ -224,6 +244,7 @@ class _ReviewPageState extends State<ReviewPage> {
 
   /// 上半：单词 + 音标 + 发音
   Widget _buildWordArea(BBWordProcess word, ThemeVars skin) {
+    final resp = context.responsive;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -232,7 +253,7 @@ class _ReviewPageState extends State<ReviewPage> {
           Text(
             word.word,
             style: TextStyle(
-              fontSize: 42,
+              fontSize: 42 * resp.fontScale,
               fontWeight: FontWeight.w800,
               color: skin.onGlassText1,
               height: 1.1,
@@ -251,7 +272,11 @@ class _ReviewPageState extends State<ReviewPage> {
                     color: skin.glassBg.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text('美', style: TextStyle(fontSize: 12, color: skin.onGlassText1, fontWeight: FontWeight.w500)),
+                  child: Text('美', style: TextStyle(
+                    fontSize: 12 * resp.fontScale,
+                    color: skin.onGlassText1,
+                    fontWeight: FontWeight.w500,
+                  )),
                 ),
                 const SizedBox(width: 6),
                 GestureDetector(
@@ -261,7 +286,10 @@ class _ReviewPageState extends State<ReviewPage> {
                 const SizedBox(width: 6),
                 Text(
                   '/${word.usPron.isNotEmpty ? word.usPron : word.ukPron}/',
-                  style: TextStyle(fontSize: 15, color: skin.onGlassText2),
+                  style: TextStyle(
+                    fontSize: 15 * resp.fontScale,
+                    color: skin.onGlassText2,
+                  ),
                 ),
               ],
             ),
@@ -270,7 +298,10 @@ class _ReviewPageState extends State<ReviewPage> {
           // 提示文字
           Text(
             '先回想词义再选择，想不起来「看答案」',
-            style: TextStyle(fontSize: 14, color: skin.onGlassText2.withValues(alpha: 0.7)),
+            style: TextStyle(
+              fontSize: 14 * resp.fontScale,
+              color: skin.onGlassText2.withValues(alpha: 0.7),
+            ),
           ),
         ],
       ),
@@ -279,8 +310,9 @@ class _ReviewPageState extends State<ReviewPage> {
 
   /// 下半：4选1 选项区
   Widget _buildChoiceArea(BBWordProcess word, ThemeVars skin) {
+    final resp = context.responsive;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: resp.horizontalPadding),
       child: Column(
         children: [
           const SizedBox(height: 8),
@@ -292,6 +324,7 @@ class _ReviewPageState extends State<ReviewPage> {
                 isSelectedWrong: _wrongChoiceIndex == _choices.indexOf(c),
                 showAnswer: _showAnswer,
                 skin: skin,
+                resp: resp,
                 onTap: () {
                   if (c.word == word.word) {
                     _rate(RecallRating.good);
@@ -401,6 +434,7 @@ class _FrostedChoiceCard extends StatelessWidget {
   final bool isSelectedWrong;
   final bool showAnswer;
   final ThemeVars skin;
+  final AppResponsive resp;
   final VoidCallback onTap;
 
   const _FrostedChoiceCard({
@@ -409,6 +443,7 @@ class _FrostedChoiceCard extends StatelessWidget {
     required this.isSelectedWrong,
     required this.showAnswer,
     required this.skin,
+    required this.resp,
     required this.onTap,
   });
 
@@ -432,7 +467,10 @@ class _FrostedChoiceCard extends StatelessWidget {
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        padding: EdgeInsets.symmetric(
+          horizontal: 20 * resp.scale,
+          vertical: 18 * resp.scale,
+        ),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(14),
@@ -441,7 +479,7 @@ class _FrostedChoiceCard extends StatelessWidget {
         child: Text(
           pair.interpret.toString(),
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 16 * resp.fontScale,
             color: skin.onGlassText1,
             fontWeight: FontWeight.w500,
             height: 1.4,

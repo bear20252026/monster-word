@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../data/app_preferences.dart';
 import '../data/example_parser.dart';
+import '../hooks/responsive.dart';
 import 'package:provider/provider.dart';
 
 import '../data/wordbook_database.dart';
@@ -72,25 +73,31 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
+    final resp = context.responsive;
 
     return Scaffold(
       backgroundColor: skin.pageBg,
       body: HaloSearchBackground(
         color: skin.accent,
         child: SafeArea(
-          child: Column(
-            children: [
-              _buildSearchBar(skin),
-              Expanded(
-                child: _selectedWord != null
-                    ? _buildWordDetail(_selectedWord!, skin)
-                    : _results.isNotEmpty
-                        ? _buildResultList(skin)
-                        : _searchHistory.isNotEmpty
-                            ? _buildHistory(skin)
-                            : _buildEmpty(skin),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
+              child: Column(
+                children: [
+                  _buildSearchBar(skin),
+                  Expanded(
+                    child: _selectedWord != null
+                        ? _buildWordDetail(_selectedWord!, skin)
+                        : _results.isNotEmpty
+                            ? _buildResultList(skin)
+                            : _searchHistory.isNotEmpty
+                                ? _buildHistory(skin)
+                                : _buildEmpty(skin),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -98,8 +105,14 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildSearchBar(ThemeVars skin) {
+    final resp = context.responsive;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: EdgeInsets.fromLTRB(
+        resp.horizontalPadding,
+        12,
+        resp.horizontalPadding,
+        8,
+      ),
       decoration: BoxDecoration(
         color: skin.cardBg,
         border: Border(bottom: BorderSide(color: skin.divider)),
@@ -115,7 +128,7 @@ class _SearchPageState extends State<SearchPage> {
               textStyle: MistralTypography.bodyMd.copyWith(color: skin.text1),
               hintStyle: MistralTypography.bodyMd.copyWith(
                 color: MistralColors.muted,
-                fontSize: 15,
+                fontSize: 15 * resp.fontScale,
               ),
               onChanged: _search,
               onSubmitted: _search,
@@ -135,7 +148,10 @@ class _SearchPageState extends State<SearchPage> {
           ScaleDownOnPress(
             onTap: () => Navigator.pop(context),
             child: Text('取消',
-              style: TextStyle(fontSize: 16, color: skin.text1)),
+              style: TextStyle(
+                fontSize: 16 * resp.fontScale,
+                color: skin.text1,
+              )),
           ),
         ],
       ),
@@ -183,8 +199,9 @@ class _SearchPageState extends State<SearchPage> {
     final examples = ExampleParser.parse(word.example);
     final state = context.watch<LearningState>();
     final isFav = state.isFavorite(word.word);
+    final resp = context.responsive;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(resp.horizontalPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -303,11 +320,17 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildHistory(ThemeVars skin) {
+    final resp = context.responsive;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: EdgeInsets.fromLTRB(
+            resp.horizontalPadding,
+            16,
+            resp.horizontalPadding,
+            8,
+          ),
           child: Row(
             children: [
               Text('最近搜索',

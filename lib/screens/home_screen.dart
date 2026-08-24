@@ -44,61 +44,66 @@ class HomeScreen extends StatelessWidget {
       child: Stack(
         children: [
           SafeArea(
-            child: Column(
-              children: [
-                const Spacer(flex: 2),
-                // 签到卡片（SbCard 白卡，替代毛玻璃）
-                _EntranceIn(
-                  delayMs: 120,
-                  child: _buildCheckInCard(context, skin),
-                ),
-                const Spacer(flex: 2),
-                // Learn / Review 入口卡（SbCard 替代 GlassEntryCard）
-                _EntranceIn(
-                  delayMs: 260,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
-                    // Selector 只订阅 total/dueCount，避免 LearningState
-                    // 其他字段变化导致整页 rebuild
-                    child: Selector<LearningState, ({int total, int dueCount})>(
-                      selector: (_, s) => (total: s.total, dueCount: s.dueCount),
-                      builder: (context, state, _) => Row(
-                        children: [
-                          Expanded(
-                            child: _EntryCard(
-                              title: 'Learn',
-                              count: state.total > 0 ? state.total : 0,
-                              onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
-                            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
+                child: Column(
+                  children: [
+                    const Spacer(flex: 2),
+                    // 签到卡片（SbCard 白卡，替代毛玻璃）
+                    _EntranceIn(
+                      delayMs: 120,
+                      child: _buildCheckInCard(context, skin),
+                    ),
+                    const Spacer(flex: 2),
+                    // Learn / Review 入口卡（SbCard 替代 GlassEntryCard）
+                    _EntranceIn(
+                      delayMs: 260,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
+                        // Selector 只订阅 total/dueCount，避免 LearningState
+                        // 其他字段变化导致整页 rebuild
+                        child: Selector<LearningState, ({int total, int dueCount})>(
+                          selector: (_, s) => (total: s.total, dueCount: s.dueCount),
+                          builder: (context, state, _) => Row(
+                            children: [
+                              Expanded(
+                                child: _EntryCard(
+                                  title: 'Learn',
+                                  count: state.total > 0 ? state.total : 0,
+                                  onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _EntryCard(
+                                  title: 'Review',
+                                  count: state.dueCount,
+                                  onTap: () => showReviewDialog(context),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _EntryCard(
-                              title: 'Review',
-                              count: state.dueCount,
-                              onTap: () => showReviewDialog(context),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                // 每日一句励志语轮播（testimonial-slider，自动轮播+弹性滑动）
-                _EntranceIn(
-                  delayMs: 380,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
-                    child: TestimonialSlider(
-                      items: TestimonialData.defaults,
-                      height: 120,
-                      activeColor: skin.colors.accent,
-                      inactiveColor: skin.colors.divider,
-                      borderRadius: BorderRadius.circular(20),
+                    // 每日一句励志语轮播（testimonial-slider，自动轮播+弹性滑动）
+                    _EntranceIn(
+                      delayMs: 380,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
+                        child: TestimonialSlider(
+                          items: TestimonialData.defaults,
+                          height: 120,
+                          activeColor: skin.colors.accent,
+                          inactiveColor: skin.colors.divider,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
           // 右上角：单词机入口（GameBoy 风格保留，word_machine 豁免）
@@ -364,22 +369,37 @@ class _EntryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
+    final resp = context.responsive;
     // 微交互：按压缩放反馈（星巴克 --buttonActiveScale）
     return ScaleDownOnPress(
       onTap: onTap,
       child: SbCard(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        padding: EdgeInsets.symmetric(
+          vertical: 20 * resp.scale,
+          horizontal: 16 * resp.scale,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: skin.colors.text1)),
+              style: TextStyle(
+                fontSize: 18 * resp.fontScale,
+                fontWeight: FontWeight.w700,
+                color: skin.colors.text1,
+              )),
             const SizedBox(height: 8),
             Text('$count',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w300, color: skin.colors.accent)),
+              style: TextStyle(
+                fontSize: 28 * resp.fontScale,
+                fontWeight: FontWeight.w300,
+                color: skin.colors.accent,
+              )),
             const SizedBox(height: 4),
             Text(title == 'Learn' ? '待学' : '待复习',
-              style: TextStyle(fontSize: 12, color: skin.colors.text3)),
+              style: TextStyle(
+                fontSize: 12 * resp.fontScale,
+                color: skin.colors.text3,
+              )),
           ],
         ),
       ),
