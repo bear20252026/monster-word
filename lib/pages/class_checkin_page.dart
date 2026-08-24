@@ -402,22 +402,22 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
   Widget _buildUserComments(ThemeVars skin) {
     final comments = [
       _CommentData(
-        userName: '小明',
-        avatar: '明',
+        userName: '用户A',
+        avatar: 'A',
         content: '班级打卡功能让我更有动力学习了，每天和同学一起比拼，进步很快！',
         rating: 5,
         time: '3天前',
       ),
       _CommentData(
-        userName: '小红',
-        avatar: '红',
+        userName: '用户B',
+        avatar: 'B',
         content: '排行榜功能很棒，可以看到自己的学习进度，激励我继续努力。',
         rating: 5,
         time: '1周前',
       ),
       _CommentData(
-        userName: '小李',
-        avatar: '李',
+        userName: '用户C',
+        avatar: 'C',
         content: '和同学们一起学习的感觉真好，互相监督，共同进步！',
         rating: 4,
         time: '2周前',

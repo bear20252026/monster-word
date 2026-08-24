@@ -4,11 +4,80 @@ import 'package:flutter/material.dart';
 
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../data/app_preferences.dart';
 
-class AccountInfoPage extends StatelessWidget {
+class AccountInfoPage extends StatefulWidget {
   const AccountInfoPage({super.key});
 
   static const routeName = '/account_info';
+
+  @override
+  State<AccountInfoPage> createState() => _AccountInfoPageState();
+}
+
+class _AccountInfoPageState extends State<AccountInfoPage> {
+  String _nickname = '';
+  String _wechatName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final userInfo = await AppPreferences().getUserInfo();
+    if (mounted) {
+      setState(() {
+        _nickname = userInfo.nickname;
+      });
+    }
+  }
+
+  Future<void> _editNickname() async {
+    final controller = TextEditingController(text: _nickname);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('修改昵称'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: '输入昵称'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('保存')),
+        ],
+      ),
+    );
+    if (result != null && result.isNotEmpty) {
+      final userInfo = await AppPreferences().getUserInfo();
+      userInfo.nickname = result;
+      await AppPreferences().setUserInfo(userInfo);
+      if (mounted) setState(() => _nickname = result);
+    }
+  }
+
+  Future<void> _editWechatName() async {
+    final controller = TextEditingController(text: _wechatName);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('修改微信名'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: '输入微信名'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('保存')),
+        ],
+      ),
+    );
+    if (result != null) {
+      if (mounted) setState(() => _wechatName = result);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,22 +88,17 @@ class AccountInfoPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // 顶部导航栏
             _buildNavBar(context, skin),
-            // 内容区
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
                 child: Column(
                   children: [
                     const SizedBox(height: 24),
-                    // 头像区
                     _buildAvatarSection(skin),
                     const SizedBox(height: 32),
-                    // 信息卡片
                     _buildInfoCard(context, skin),
                     const SizedBox(height: 16),
-                    // 绑定平台卡片
                     _buildBindCard(context, skin),
                     const SizedBox(height: 32),
                   ],
@@ -47,7 +111,6 @@ class AccountInfoPage extends StatelessWidget {
     );
   }
 
-  /// 顶部导航栏
   Widget _buildNavBar(BuildContext context, ThemeVars skin) {
     return Container(
       height: AppSpacing.navH,
@@ -60,23 +123,18 @@ class AccountInfoPage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           const Spacer(),
-          Text(
-            '账号信息',
-            style: MistralTypography.heading5.copyWith(color: skin.text1),
-          ),
+          Text('账号信息', style: MistralTypography.heading5.copyWith(color: skin.text1)),
           const Spacer(),
-          const SizedBox(width: 48), // 占位，保持标题居中
+          const SizedBox(width: 48),
         ],
       ),
     );
   }
 
-  /// 头像区（圆形头像 + 相机图标）
   Widget _buildAvatarSection(ThemeVars skin) {
     return Center(
       child: Stack(
         children: [
-          // 头像
           Container(
             width: 88,
             height: 88,
@@ -91,7 +149,6 @@ class AccountInfoPage extends StatelessWidget {
             ),
             child: Icon(Icons.person, color: skin.text3, size: 44),
           ),
-          // 相机图标（右下角）
           Positioned(
             right: 0,
             bottom: 0,
@@ -103,7 +160,7 @@ class AccountInfoPage extends StatelessWidget {
                 color: skin.accent,
                 border: Border.all(color: skin.cardBg, width: 2),
               ),
-              child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
+              child: const Icon(Icons.camera_alt, color: Color(0xFFFFFFFF), size: 14),
             ),
           ),
         ],
@@ -111,7 +168,6 @@ class AccountInfoPage extends StatelessWidget {
     );
   }
 
-  /// 信息卡片（账号、昵称、手机号）
   Widget _buildInfoCard(BuildContext context, ThemeVars skin) {
     return Container(
       decoration: BoxDecoration(
@@ -123,33 +179,23 @@ class AccountInfoPage extends StatelessWidget {
           _buildInfoRow(
             skin,
             label: '账号',
-            value: '微信：幸福',
-            onTap: () {},
+            value: _wechatName.isEmpty ? '点击设置' : '微信：$_wechatName',
+            onTap: _editWechatName,
           ),
           _buildDivider(skin),
           _buildInfoRow(
             skin,
             label: '昵称',
-            value: '幸福',
-            onTap: () {
-              // TODO: 跳转修改昵称页
-            },
+            value: _nickname.isEmpty ? '点击设置' : _nickname,
+            onTap: _editNickname,
           ),
           _buildDivider(skin),
-          _buildInfoRow(
-            skin,
-            label: '手机号',
-            value: '136****0067',
-            onTap: () {
-              // TODO: 跳转绑定/修改手机号页
-            },
-          ),
+          _buildInfoRow(skin, label: '手机号', value: '点击设置', onTap: () {}),
         ],
       ),
     );
   }
 
-  /// 绑定平台卡片（QQ / 微博 / Apple ID）
   Widget _buildBindCard(BuildContext context, ThemeVars skin) {
     return Container(
       decoration: BoxDecoration(
@@ -161,69 +207,30 @@ class AccountInfoPage extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              '绑定平台',
-              style: MistralTypography.body.copyWith(
-                color: skin.text2,
-                fontSize: 13,
-              ),
-            ),
+            child: Text('绑定平台', style: MistralTypography.body.copyWith(color: skin.text2, fontSize: 13)),
           ),
           _buildBindRow(
             skin,
             icon: Icons.chat_bubble,
-            iconColor: const Color(0xFF07C160), // 微信绿
+            iconColor: const Color(0xFF07C160),
             platform: '微信',
-            isBound: true,
-            boundName: '幸福',
-            onTap: () {},
+            isBound: _wechatName.isNotEmpty,
+            boundName: _wechatName.isEmpty ? '' : _wechatName,
+            onTap: _editWechatName,
           ),
           _buildDivider(skin),
-          _buildBindRow(
-            skin,
-            icon: Icons.circle,
-            iconColor: const Color(0xFF12B7F5), // QQ蓝
-            platform: 'QQ',
-            isBound: false,
-            onTap: () {
-              // TODO: 绑定 QQ
-            },
-          ),
+          _buildBindRow(skin, icon: Icons.circle, iconColor: const Color(0xFF12B7F5), platform: 'QQ', isBound: false, onTap: () {}),
           _buildDivider(skin),
-          _buildBindRow(
-            skin,
-            icon: Icons.language,
-            iconColor: const Color(0xFFE6162D), // 微博红
-            platform: '微博',
-            isBound: false,
-            onTap: () {
-              // TODO: 绑定微博
-            },
-          ),
+          _buildBindRow(skin, icon: Icons.language, iconColor: const Color(0xFFE6162D), platform: '微博', isBound: false, onTap: () {}),
           _buildDivider(skin),
-          _buildBindRow(
-            skin,
-            icon: Icons.apple,
-            iconColor: skin.text1, // Apple 黑
-            platform: 'Apple ID',
-            isBound: false,
-            onTap: () {
-              // TODO: 绑定 Apple ID
-            },
-          ),
+          _buildBindRow(skin, icon: Icons.apple, iconColor: skin.text1, platform: 'Apple ID', isBound: false, onTap: () {}),
           const SizedBox(height: 4),
         ],
       ),
     );
   }
 
-  /// 信息行（左侧标签 + 右侧值 + 箭头）
-  Widget _buildInfoRow(
-    ThemeVars skin, {
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildInfoRow(ThemeVars skin, {required String label, required String value, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -232,15 +239,9 @@ class AccountInfoPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
-            Text(
-              label,
-              style: MistralTypography.body.copyWith(color: skin.text1),
-            ),
+            Text(label, style: MistralTypography.body.copyWith(color: skin.text1)),
             const Spacer(),
-            Text(
-              value,
-              style: MistralTypography.body.copyWith(color: skin.text2),
-            ),
+            Text(value, style: MistralTypography.body.copyWith(color: skin.text2)),
             const SizedBox(width: 4),
             Icon(Icons.chevron_right, size: 18, color: skin.text3),
           ],
@@ -249,16 +250,7 @@ class AccountInfoPage extends StatelessWidget {
     );
   }
 
-  /// 绑定平台行
-  Widget _buildBindRow(
-    ThemeVars skin, {
-    required IconData icon,
-    required Color iconColor,
-    required String platform,
-    required bool isBound,
-    String? boundName,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildBindRow(ThemeVars skin, {required IconData icon, required Color iconColor, required String platform, required bool isBound, String? boundName, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -267,34 +259,19 @@ class AccountInfoPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
-            // 平台图标
             Container(
               width: 28,
               height: 28,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
+              decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
               child: Icon(icon, size: 16, color: iconColor),
             ),
             const SizedBox(width: 12),
-            // 平台名
-            Text(
-              platform,
-              style: MistralTypography.body.copyWith(color: skin.text1),
-            ),
+            Text(platform, style: MistralTypography.body.copyWith(color: skin.text1)),
             const Spacer(),
-            // 绑定状态
             if (isBound && boundName != null)
-              Text(
-                boundName,
-                style: MistralTypography.body.copyWith(color: skin.text2),
-              )
+              Text(boundName, style: MistralTypography.body.copyWith(color: skin.text2))
             else
-              Text(
-                '未绑定',
-                style: MistralTypography.body.copyWith(color: skin.text3),
-              ),
+              Text('未绑定', style: MistralTypography.body.copyWith(color: skin.text3)),
             const SizedBox(width: 4),
             Icon(Icons.chevron_right, size: 18, color: skin.text3),
           ],
@@ -303,14 +280,7 @@ class AccountInfoPage extends StatelessWidget {
     );
   }
 
-  /// 分割线
   Widget _buildDivider(ThemeVars skin) {
-    return Divider(
-      height: 0.5,
-      thickness: 0.5,
-      indent: 16,
-      endIndent: 16,
-      color: skin.divider,
-    );
+    return Divider(height: 0.5, thickness: 0.5, indent: 16, endIndent: 16, color: skin.divider);
   }
 }

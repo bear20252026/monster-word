@@ -45,7 +45,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       icon: Icons.person_outline,
                       iconColor: skin.colors.accent,
                       title: '账号信息',
-                      subtitle: '微信：幸福',
+                      subtitle: '点击设置',
                       onTap: () {},
                     ),
                   ]),

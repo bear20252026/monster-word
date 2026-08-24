@@ -4,6 +4,8 @@
 // 本地存储层：翻译自 sharepreference/（v3.2 源码 1:1）
 // AppPreferences（应用配置）+ UserPreferences（用户配置）+ GuidePreference（引导）
 
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -332,3 +334,25 @@ class UserInfoBean {
         'secret': secret,
       };
 }
+
+// ── 用户信息存取 ──
+
+extension UserInfoPrefs on AppPreferences {
+  /// 获取用户信息
+  Future<UserInfoBean> getUserInfo() async {
+    final jsonStr = getString(_userInfoKey);
+    if (jsonStr.isEmpty) return UserInfoBean();
+    try {
+      return UserInfoBean.fromJson(
+          jsonDecode(jsonStr) as Map<String, dynamic>);
+    } catch (_) {
+      return UserInfoBean();
+    }
+  }
+
+  /// 保存用户信息
+  Future<bool> setUserInfo(UserInfoBean bean) =>
+      setString(_userInfoKey, jsonEncode(bean.toJson()));
+}
+
+const String _userInfoKey = 'monster_word_user_info';

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../data/app_preferences.dart';
 
 class UserInfoManagePage extends StatefulWidget {
   const UserInfoManagePage({super.key});
@@ -17,8 +18,36 @@ class UserInfoManagePage extends StatefulWidget {
 }
 
 class _UserInfoManagePageState extends State<UserInfoManagePage> {
-  String _nickname = 'Monster Word';
+  String _nickname = '';
   String _signature = '';
+  String _wechatName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final userInfo = await AppPreferences().getUserInfo();
+    if (mounted) {
+      setState(() {
+        _nickname = userInfo.nickname.isEmpty ? '用户${DateTime.now().millisecondsSinceEpoch % 10000}' : userInfo.nickname;
+        _wechatName = _wechatName;
+      });
+    }
+  }
+
+  Future<void> _saveNickname(String value) async {
+    final userInfo = await AppPreferences().getUserInfo();
+    userInfo.nickname = value;
+    await AppPreferences().setUserInfo(userInfo);
+    if (mounted) setState(() => _nickname = value);
+  }
+
+  Future<void> _saveWechatName(String value) async {
+    if (mounted) setState(() => _wechatName = value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +84,8 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                     const SizedBox(height: 8),
                     Text('点击更换头像', style: MistralTypography.micro.copyWith(color: MistralColors.link)),
                     const SizedBox(height: 24),
-                    _buildInfoTile(skin, '昵称', _nickname, () => _editField('昵称', _nickname, (v) => setState(() => _nickname = v))),
+                    _buildInfoTile(skin, '昵称', _nickname.isEmpty ? '点击设置' : _nickname, () => _editField('昵称', _nickname, _saveNickname)),
+                    _buildInfoTile(skin, '微信名', _wechatName.isEmpty ? '点击设置' : _wechatName, () => _editField('微信名', _wechatName, _saveWechatName)),
                     _buildInfoTile(skin, '签名', _signature.isEmpty ? '未设置' : _signature, () => _editField('签名', _signature, (v) => setState(() => _signature = v))),
                     _buildInfoTile(skin, '手机号', '***', null),
                     _buildInfoTile(skin, '注册时间', '—', null),
