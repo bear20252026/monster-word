@@ -138,6 +138,22 @@ abstract class BBCoreEngine {
       usedInterprets.add(interpret);
       result.add(Interpret.fromJson({'p': '', 'i': interpret}));
     }
+
+    // 确保始终返回3个干扰项（不足时用通用释义填充）
+    final fallbackInterprets = [
+      '通用释义1',
+      '通用释义2',
+      '通用释义3',
+      '常见词义A',
+      '常见词义B',
+    ];
+    var fallbackIdx = 0;
+    while (result.length < 3) {
+      final fallbackInterpret = fallbackInterprets[fallbackIdx % fallbackInterprets.length];
+      result.add(Interpret.fromJson({'p': '', 'i': fallbackInterpret}));
+      fallbackIdx++;
+    }
+
     return result;
   }
 

@@ -65,6 +65,20 @@ class _ReviewSessionState extends State<ReviewSession> {
     for (final c in confuses) {
       choices.add(WordChoicePair(c.i, c.i));
     }
+    // 确保始终有4个选项，不够则填充通用释义
+    final fallbackOptions = [
+      WordChoicePair('option_1', '通用释义1'),
+      WordChoicePair('option_2', '通用释义2'),
+      WordChoicePair('option_3', '通用释义3'),
+      WordChoicePair('option_4', '通用释义4'),
+      WordChoicePair('option_5', '通用释义5'),
+    ];
+    var fallbackIdx = 0;
+    while (choices.length < 4) {
+      choices.add(fallbackOptions[fallbackIdx % fallbackOptions.length]);
+      fallbackIdx++;
+    }
+    // 确保选项已打乱顺序
     _choices = _engine.shuffleList(choices);
     _selectedChoice = null;
   }
