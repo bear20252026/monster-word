@@ -130,8 +130,8 @@ class _LearnSessionState extends State<LearnSession>
                               Container(
                                 width: 8,
                                 height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF4CAF50),
+                                decoration: BoxDecoration(
+                                  color: skin.colors.success,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -239,7 +239,7 @@ class _LearnSessionState extends State<LearnSession>
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white),
+            icon: Icon(Icons.arrow_back_ios_new, size: 20, color: skin.colors.onGlassText1),
             onPressed: () => Navigator.pop(context),
           ),
           Text(
@@ -256,7 +256,7 @@ class _LearnSessionState extends State<LearnSession>
           IconButton(
             icon: Icon(
               isFav ? Icons.star : Icons.star_border,
-              color: isFav ? Colors.amber : skin.colors.onGlassText2,
+              color: isFav ? skin.colors.vipGoldBg : skin.colors.onGlassText2,
               size: 20,
             ),
             tooltip: isFav ? '取消收藏' : '收藏',
@@ -427,7 +427,7 @@ class _LearnSessionState extends State<LearnSession>
                   width: 32,
                   height: 3,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50),
+                    color: skin.colors.success,
                     borderRadius: BorderRadius.circular(1.5),
                   ),
                 ),
@@ -472,7 +472,7 @@ class _PhoneticPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.06),
+        color: skin.colors.divider,
         borderRadius: BorderRadius.circular(AppRadius.control),
       ),
       child: Text(
@@ -495,8 +495,8 @@ class _ExampleCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        // 奶油半透明底（原版 rgba(255,251,240,0.92)）
-        color: const Color(0xEBFFFBF0),
+        // 奶油半透明底（适配深色模式）
+        color: skin.colors.cardBg.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
@@ -513,7 +513,7 @@ class _ExampleCard extends StatelessWidget {
                     (p) => TextSpan(
                       text: p.text,
                       style: p.highlight
-                          ? const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2FA89F))
+                          ? TextStyle(fontWeight: FontWeight.bold, color: skin.colors.teal)
                           : null,
                     ),
                   )
@@ -560,7 +560,7 @@ class _DerivedWordsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xEBFFFBF0),
+        color: skin.colors.cardBg.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
@@ -572,7 +572,7 @@ class _DerivedWordsCard extends StatelessWidget {
               // 橙色三角标记
               CustomPaint(
                 size: const Size(12, 12),
-                painter: _OrangeTrianglePainter(),
+                painter: _OrangeTrianglePainter(color: skin.colors.accent),
               ),
               const SizedBox(width: 8),
               Text(
@@ -717,10 +717,12 @@ class _DerivedWordItem extends StatelessWidget {
 
 /// 橙色三角标记绘制器
 class _OrangeTrianglePainter extends CustomPainter {
+  final Color color;
+  _OrangeTrianglePainter({this.color = const Color(0xFF00754A)});
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFE8913A) // 橙色
+      ..color = color
       ..style = PaintingStyle.fill;
 
     final path = Path()

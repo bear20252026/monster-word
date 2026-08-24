@@ -12,6 +12,7 @@ import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../tokens/star_gold.dart';
 import '../widgets/animations.dart';
 import '../widgets/word_lookup_popup.dart';
 
@@ -100,7 +101,7 @@ class _TopBar extends StatelessWidget {
           IconButton(
             icon: Icon(
               isFav ? Icons.star : Icons.star_border,
-              color: isFav ? const Color(0xFFFFB300) : colors.text2, // 金色仅收藏态
+              color: isFav ? StarGold.gold : colors.text2, // 金色仅收藏态
               size: 22,
             ),
             tooltip: isFav ? '取消收藏' : '收藏',
