@@ -3,7 +3,6 @@
 // 外观 & 沉浸场景页：壁纸选择 + 主题切换 + 实时预览
 // 还原原版 v3.2 个人中心 → 外观&沉浸场景入口
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
@@ -78,7 +77,7 @@ class _AppearancePageState extends State<AppearancePage> {
           Expanded(
             child: Center(
               child: Text('外观 & 沉浸场景',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1)),
             ),
           ),
           const SizedBox(width: 48),
@@ -110,7 +109,7 @@ class _AppearancePageState extends State<AppearancePage> {
                   top: 40, left: 20, right: 20,
                   child: Container(
                     height: 30, decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.4),
+                      color: Colors.white.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -121,14 +120,14 @@ class _AppearancePageState extends State<AppearancePage> {
                     children: [
                       Expanded(child: Container(
                         height: 24, decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(6),
                         ),
                       )),
                       const SizedBox(width: 8),
                       Expanded(child: Container(
                         height: 24, decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(6),
                         ),
                       )),
@@ -142,7 +141,7 @@ class _AppearancePageState extends State<AppearancePage> {
                     child: Container(
                       width: 36, height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.lock, size: 18, color: Colors.black54),
@@ -168,7 +167,7 @@ class _AppearancePageState extends State<AppearancePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(width: 60, height: 10, decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.6), borderRadius: BorderRadius.circular(4),
+                    color: Colors.white.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(4),
                   )),
                   const SizedBox(height: 12),
                   ...List.generate(4, (i) => Padding(
@@ -177,7 +176,7 @@ class _AppearancePageState extends State<AppearancePage> {
                       height: 10,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
@@ -196,7 +195,7 @@ class _AppearancePageState extends State<AppearancePage> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: skin.colors.cardBg,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -214,13 +213,13 @@ class _AppearancePageState extends State<AppearancePage> {
                     shape: BoxShape.circle,
                     color: preset.vars.pageBg,
                     border: Border.all(
-                      color: isSelected ? const Color(0xFFFF6800) : preset.vars.divider,
+                      color: isSelected ? skin.colors.accent : preset.vars.divider,
                       width: isSelected ? 3 : 1,
                     ),
                   ),
                   child: isSelected
-                      ? const Center(
-                          child: Icon(Icons.check, color: Color(0xFFFF6800), size: 20),
+                      ? Center(
+                          child: Icon(Icons.check, color: skin.colors.accent, size: 20),
                         )
                       : null,
                 ),
@@ -244,21 +243,21 @@ class _AppearancePageState extends State<AppearancePage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: skin.colors.cardBg,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          const Expanded(
-            child: Text('跟随系统', style: TextStyle(fontSize: 16, color: Color(0xFF1A1A1A))),
+          Expanded(
+            child: Text('跟随系统', style: TextStyle(fontSize: 16, color: skin.colors.text1)),
           ),
           Switch(
             value: skin.followSystem,
             onChanged: (v) => skin.setFollowSystem(v),
             activeThumbColor: Colors.white,
-            activeTrackColor: const Color(0xFFE8913A),
+            activeTrackColor: skin.colors.accent,
             inactiveThumbColor: Colors.white,
-            inactiveTrackColor: const Color(0xFFE0E0E0),
+            inactiveTrackColor: MistralColors.hairline,
           ),
         ],
       ),
@@ -270,17 +269,17 @@ class _AppearancePageState extends State<AppearancePage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: skin.colors.cardBg,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           Expanded(
-            child: Text(title, style: const TextStyle(fontSize: 16, color: Color(0xFF1A1A1A))),
+            child: Text(title, style: TextStyle(fontSize: 16, color: skin.colors.text1)),
           ),
-          Text(value, style: const TextStyle(fontSize: 14, color: Color(0xFF999999))),
+          Text(value, style: TextStyle(fontSize: 14, color: skin.colors.text3)),
           const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, size: 20, color: Color(0xFF999999)),
+          Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
         ],
       ),
     );
