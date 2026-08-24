@@ -3,11 +3,11 @@
 // 翻译自 Figma MainShell.js
 // 手机/平板同构，差异仅在图标尺寸和栏高（由 responsive 派生）
 
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
+import '../tokens/starbucks_tokens.dart';
 import '../widgets/animations.dart';
 
 /// Tab 定义（原版 TABS）
@@ -109,7 +109,7 @@ class _TabBarState extends State<_TabBar> with TickerProviderStateMixin {
     super.initState();
     _bounceControllers = List.generate(widget.tabs.length, (i) {
       return AnimationController(
-        duration: const Duration(milliseconds: 350),
+        duration: const Duration(milliseconds: 300),
         vsync: this,
       );
     });
@@ -134,9 +134,9 @@ class _TabBarState extends State<_TabBar> with TickerProviderStateMixin {
     widget.onTap(i);
   }
 
-  // 原版底部导航栏配色（深色选中 + 灰色未选中）
-  static const Color _selectedColor = Color(0xFF1F1F1F); // 选中深色
-  static const Color _unselectedColor = Color(0xFF999999); // 未选中灰色
+  // 星巴克底部导航栏配色（batch4a）
+  static const Color _selectedColor = StarbucksCreamColors.greenHouse; // #006241 星巴克绿
+  // 未选中色由 context.skin.colors.text3 动态获取（随主题切换）
 
   @override
   Widget build(BuildContext context) {
@@ -144,55 +144,52 @@ class _TabBarState extends State<_TabBar> with TickerProviderStateMixin {
     final iconSize = resp.tabIconSize;
     final height = resp.tabBarHeight;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
+    final skin = context.skin;
 
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          height: height + bottomPad,
-          padding: EdgeInsets.only(bottom: bottomPad > 0 ? bottomPad : 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.6),
-            border: Border(top: BorderSide(color: Colors.white.withOpacity(0.3), width: 0.5)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: List.generate(widget.tabs.length, (i) {
-              final on = i == widget.active;
-              final t = widget.tabs[i];
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => _onTap(i),
-                  behavior: HitTestBehavior.opaque,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ScaleTransition(
-                        scale: _bounceAnims[i],
-                        child: Icon(
-                          t.icon,
-                          size: iconSize,
-                          color: on ? _selectedColor : _unselectedColor,
-                        ),
-                      ),
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        curve: standardCurve,
-                        margin: const EdgeInsets.only(top: 4),
-                        width: on ? 18 : 0,
-                        height: 2,
-                        decoration: BoxDecoration(
-                          color: on ? _selectedColor : Colors.transparent,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                    ],
+    // 星巴克底栏：奶油画布实心 + 顶部发丝线（batch4a 线框图规格）
+    return Container(
+      height: height + bottomPad,
+      padding: EdgeInsets.only(bottom: bottomPad > 0 ? bottomPad : 8),
+      decoration: BoxDecoration(
+        color: skin.colors.pageBg, // 奶油画布 #F2F0EB（亮）/ 墨绿 #101B17（暗）
+        border: Border(top: BorderSide(color: skin.colors.divider, width: 0.5)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(widget.tabs.length, (i) {
+          final on = i == widget.active;
+          final t = widget.tabs[i];
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => _onTap(i),
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ScaleTransition(
+                    scale: _bounceAnims[i],
+                    child: Icon(
+                      t.icon,
+                      size: iconSize,
+                      color: on ? _selectedColor : skin.colors.text3,
+                    ),
                   ),
-                ),
-              );
-            }),
-          ),
-        ),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: standardCurve,
+                    margin: const EdgeInsets.only(top: 4),
+                    width: on ? 18 : 0,
+                    height: 2,
+                    decoration: BoxDecoration(
+                      color: on ? _selectedColor : Colors.transparent,
+                      borderRadius: BorderRadius.circular(1),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
