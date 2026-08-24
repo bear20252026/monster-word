@@ -95,7 +95,6 @@ class LexisFileSystem {
 
   /// TTS 目录
   static Future<String> getTTSDir() async {
-    final basePath = await getLocalFilePath();
     return _ttsPath;
   }
 

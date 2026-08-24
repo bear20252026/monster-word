@@ -216,16 +216,6 @@ class LockPresenterImp implements LockPresenter {
     // PhoneticAudioPlayer.playAudio(_getWord(_wordProcess));
   }
 
-  void _initExample(String? exampleHtml, String? word) {
-    if (exampleHtml == null || word == null) return;
-
-    // TODO: 在后台线程处理例句数据
-    // 1. 解析例句 HTML
-    // 2. 提取英文/中文文本
-    // 3. 生成 WebView HTML
-    // 4. 回调 UI 更新
-  }
-
   // 辅助方法：从 wordProcess Map 中获取字段
   String _getWord(dynamic wp) {
     if (wp is Map) return wp['word'] ?? '';
@@ -233,15 +223,6 @@ class LockPresenterImp implements LockPresenter {
       return (wp as dynamic).getWord();
     } catch (_) {
       return '';
-    }
-  }
-
-  String? _getExample(dynamic wp) {
-    if (wp is Map) return wp['example'];
-    try {
-      return (wp as dynamic).getExample();
-    } catch (_) {
-      return null;
     }
   }
 

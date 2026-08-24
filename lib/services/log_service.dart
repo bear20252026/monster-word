@@ -314,9 +314,6 @@ class LogTracker {
 
   // ------ 持久化 super properties ------
 
-  static const String _prefKey = 'superPro';
-  static const String _prefSuperKey = 'superKey';
-
   void _initSuperProperties() {
     // Flutter 中使用 SharedPreferences，这里简化处理
     // 实际应异步加载，但为保持与原版同步初始化的兼容性，先用内存

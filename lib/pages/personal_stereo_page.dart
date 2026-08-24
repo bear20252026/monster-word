@@ -3,9 +3,7 @@
 // 移植自 v3.2 PersonalStereoActivity
 // 随身听：碎片时间听记单词
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 

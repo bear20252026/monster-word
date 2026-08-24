@@ -284,10 +284,6 @@ class LibraryModel {
   ) async {
     if (libData.isEmpty) return;
 
-    final code = libData['code'] as String? ?? '';
-    final version = libData['version']?.toString() ?? '';
-    final dbName = 'LangEasyLexisV3_$code.db';
-
     // 通知 UI 开始下载
     listener?.onStartDownloadLibrary();
 
@@ -608,11 +604,8 @@ class ZpkDownLoadManager {
   static const int _maxConcurrent = 6;
 
   final Queue<String> _downloadQueue = Queue<String>();
-  int _downloadCount = 0;
   int _totalCount = 0;
   bool _canceled = false;
-
-  ZpkListDownLoadListener? _listener;
 
   /// 批量下载 zpk 文件
   ///
@@ -627,13 +620,10 @@ class ZpkDownLoadManager {
       return;
     }
 
-    _listener = listener;
     _downloadQueue.clear();
     _downloadQueue.addAll(zpkNames);
     _totalCount = _downloadQueue.length;
-    _downloadCount = 0;
     _canceled = false;
-    _activeTasks = 0;
 
     listener.onDownloadStart();
 
@@ -649,32 +639,12 @@ class ZpkDownLoadManager {
   void _startNextDownload() {
     if (_canceled || _downloadQueue.isEmpty) return;
 
-    final zpkName = _downloadQueue.removeFirst();
-    _activeTasks++;
+    _downloadQueue.removeFirst();
 
     // TODO: 接入项目的 ZpkUtils.downloadZpk
     // 原版流程：
     // 1. 检查本地是否已有该 zpk → 直接回调成功
     // 2. 否则下载 → 回调成功/失败
-    //
-    // 模拟结构：
-    // _downloadSingleZpk(zpkName).then((success) {
-    //   _onTaskComplete(zpkName, success);
-    // });
-  }
-
-  void _onTaskComplete(String zpkName, bool success) {
-    _activeTasks--;
-    _downloadCount++;
-
-    _listener?.onDownloadFileResult(zpkName, success);
-    _listener?.onProgressChanged(_downloadCount, _totalCount);
-
-    if (_downloadCount >= _totalCount) {
-      _listener?.onDownloadComplete();
-    } else if (!_canceled) {
-      _startNextDownload();
-    }
   }
 
   /// 取消所有下载任务

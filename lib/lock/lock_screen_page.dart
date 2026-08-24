@@ -10,7 +10,6 @@ import 'lock_presenter.dart';
 import 'lock_presenter_imp.dart';
 import 'lock_view.dart';
 import 'my_element_animator.dart';
-import 'view_dimens.dart';
 import 'view/line_indicator.dart';
 
 /// 锁屏学习主页面
@@ -72,7 +71,6 @@ class _LockScreenPageState extends State<LockScreenPage>
   // === 手势状态 ===
   final bool _cancelAnimation = false;
   Timer? _longPressTimer;
-  bool _hasSlidUp = false;
   double _dragStartY = 0;
   bool _isDragging = false;
 

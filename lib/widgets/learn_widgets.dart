@@ -46,8 +46,6 @@ class _LearnMainViewState extends State<LearnMainView>
   late AnimationController _leftPanelController;
   LearnPanelState _rightPanelState = LearnPanelState.collapsed;
   LearnPanelState _leftPanelState = LearnPanelState.collapsed;
-  double _rightSlideOffset = 0;
-  double _leftSlideOffset = 0;
   double _bottomPanelTranslation = 0;
 
   @override
@@ -70,35 +68,8 @@ class _LearnMainViewState extends State<LearnMainView>
     super.dispose();
   }
 
-  void _showRightPanel(bool show) {
-    setState(() {
-      _rightPanelState =
-          show ? LearnPanelState.expanded : LearnPanelState.collapsed;
-      _rightSlideOffset = show ? 1.0 : 0.0;
-      _updateBottomPanel();
-    });
-    widget.onRightPanelChanged?.call(show);
-  }
-
-  void _showLeftPanel(bool show) {
-    if (!widget.leftPanelEnabled && show) return;
-    setState(() {
-      _leftPanelState =
-          show ? LearnPanelState.expanded : LearnPanelState.collapsed;
-      _leftSlideOffset = show ? 1.0 : 0.0;
-      _updateBottomPanel();
-    });
-    widget.onLeftPanelChanged?.call(show);
-  }
-
-  void _updateBottomPanel() {
-    _bottomPanelTranslation =
-        _rightSlideOffset > _leftSlideOffset ? _rightSlideOffset : _leftSlideOffset;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
     final statusBarHeight = MediaQuery.of(context).padding.top;
 
     return Stack(
@@ -203,8 +174,6 @@ class LoadInfoWidget extends StatelessWidget {
 /// 学习数据辅助（翻译自 LearnReviewHelper.dart）
 /// WebView 池管理 — Flutter 中使用 WebView widget 直接管理
 class WebViewPool {
-  static const int _maxPoolSize = 3;
-
   /// 获取 WebView 实例（Flutter 中直接创建 widget 即可）
   static Widget getWebView({
     required String url,

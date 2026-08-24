@@ -388,7 +388,6 @@ class CardDragHelper {
   final TickerProvider vsync;
   late AnimationController _controller;
   double _offset = 0;
-  double _targetOffset = 0;
   final double slideRange;
   final VoidCallback? onPositionChanged;
   final ValueChanged<LearnPanelState>? onStateChanged;
@@ -412,7 +411,6 @@ class CardDragHelper {
   }
 
   void smoothSlideTo(double target) {
-    _targetOffset = target;
     final anim = Tween<double>(begin: _offset, end: target).animate(
       CurvedAnimation(parent: _controller, curve: const SpringCurve()),
     );

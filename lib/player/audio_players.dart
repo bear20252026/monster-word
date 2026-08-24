@@ -83,7 +83,6 @@ class PlayAudioListenerAdapter implements PlayAudioListener {
 class BBAudioPlayer {
   final AudioPlayer _player = AudioPlayer();
   MediaPlayStateListener? playStateListener;
-  String _currentUrl = '';
   String _currentFileName = '';
   bool _lock = false;
 
@@ -111,7 +110,6 @@ class BBAudioPlayer {
   /// 播放 URL（原版 play）
   Future<void> play(String url) async {
     if (_lock) return;
-    _currentUrl = url;
     _currentFileName = url;
     playStateListener?.onPlayStart(url);
     await _player.play(UrlSource(url));
@@ -412,7 +410,6 @@ class SentenceAudioPlayer {
   SentenceAudioPlayer._() {
     _audioPlayer.setPlayStateListener(MediaPlayStateListener(
       onPlayStart: (url) {
-        final fullUrl = _getCompleteAudioUrl(url);
         playStateListener?.onPlayStart();
       },
       onPlayPause: (url) {
@@ -434,7 +431,6 @@ class SentenceAudioPlayer {
   SentencePlayListener? _sentenceListener;
   String _currentUrl = '';
   String _oldUrl = '';
-  double _playSpeed = 1.0;
   bool _needPlay = false;
 
   /// 获取完整的音频 URL
@@ -467,7 +463,6 @@ class SentenceAudioPlayer {
 
     // 暂停之前的播放
     _audioPlayer.pause();
-    _playSpeed = speed;
 
     // 检查本地缓存
     final localPath = await _AudioCacheDir.sentenceAudioPath(fullUrl);
@@ -571,7 +566,6 @@ class TextAudioPlayer {
 
   final BBAudioPlayer _audioPlayer = BBAudioPlayer();
   PlayAudioListener? playStateListener;
-  bool _isFirstDownload = true;
 
   /// 获取单例
   static TextAudioPlayer getInstance() => _instance;
@@ -625,8 +619,6 @@ class TextAudioPlayer {
   /// 下载并播放（原版 downLoadTextAudioPlay_internal）
   Future<void> _downloadAndPlay(
       String audioUrl, String localPath, double speed) async {
-    _isFirstDownload = true;
-
     // 主 URL：beingfine
     final primaryUrl = '$_baseAudioUrl$audioUrl';
     // 备用 URL：七牛

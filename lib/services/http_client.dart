@@ -269,7 +269,6 @@ class CoolParams extends RequestParams {
 class CoolHttpClient {
   static const String _logTag = 'CoolHttpClient';
   static const String _serviceType = 'type';
-  static const String _serviceUrl = '/v1';
   static const String _baseUrl = 'https://sapi.beingfine.cn/v1';
 
   static int _timeoutSeconds = 30;
@@ -484,7 +483,6 @@ class CoolHttpClientV3 {
   static const int resultAccountExpire = 30102;
   static const int resultAccountExpire2 = 30104;
   static const String _serviceType = 'type';
-  static const String _serviceUrl = '/v3';
   static const String _baseUrl = 'https://sapi.beingfine.cn/v3';
 
   static final int _timeoutSeconds = 30;

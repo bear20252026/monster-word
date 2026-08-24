@@ -154,8 +154,6 @@ class ClickableImageWidget extends StatelessWidget {
 /// 计算惯性滚动距离和时长
 class FlingUtils {
   static const double _inflexion = 0.35;
-  static const double _decelerationRate =
-      -1.7976931348623157e+308; // ln(0.78) / ln(0.9) approx
 
   /// 根据速度计算惯性滚动距离
   static double getSplineFlingDistance(int velocity) {

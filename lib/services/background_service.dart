@@ -138,8 +138,6 @@ class NotiService {
 /// Android 原版是 AsyncTask + AlarmManager，Flutter 用 Timer 替代
 class LocalRemindStudyTask {
   static const String _logTag = 'LocalRemindStudyTask';
-  static const int _remindReviewStartIndex = 1024;
-  static const int _remindLearnStartIndex = 10240;
 
   /// 执行学习提醒调度（原版 doInBackground 逻辑）
   /// 根据复习计划设置定时提醒
@@ -464,7 +462,6 @@ typedef UnzipCallback = void Function(String zipPath, bool success, int code);
 /// 文件解压工具（翻译自 Unzip.java）
 class Unzip {
   static const String _logTag = 'Unzip';
-  static const int _bufferSize = 16384;
   static const int _successCode = 100;
   static const int _failCode = 101;
 
@@ -521,7 +518,6 @@ class Unzip {
         return false;
       }
 
-      final bytes = await file.readAsBytes();
       // TODO: 使用 archive 包解压
       // final archive = ZipDecoder().decodeBytes(bytes);
       // for (final entry in archive) {

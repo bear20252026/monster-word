@@ -39,7 +39,6 @@ class InfinitePageView extends StatefulWidget {
 
 class _InfinitePageViewState extends State<InfinitePageView> {
   late PageController _controller;
-  int _currentPage = 0;
   bool _isAutoPlaying = false;
 
   @override
@@ -86,7 +85,6 @@ class _InfinitePageViewState extends State<InfinitePageView> {
       physics: widget.physics ?? const BouncingScrollPhysics(),
       onPageChanged: (index) {
         final realIndex = index % widget.itemCount;
-        setState(() => _currentPage = realIndex);
         widget.onPageChanged?.call(realIndex);
       },
       itemBuilder: (context, index) {

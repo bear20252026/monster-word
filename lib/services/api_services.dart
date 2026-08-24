@@ -217,9 +217,6 @@ class CoolHttpClientV3 {
 // ============================================================
 
 class LexisBooks {
-  static const String _logTag = 'LexisBooks';
-  static const String _addSuffix = 'addlib';
-
   /// 获取词书分组列表（原版 getLexisGroupBooks）
   /// 端点：GET 2/bb/wordbooks
   static Future<CoolHttpResponse> getLexisGroupBooks(
@@ -610,7 +607,6 @@ abstract class SyncListener {
 class SyncChainServiceV2 {
   static const String _logTag = 'SyncChainServiceV2';
   static bool isSynchronizing = false;
-  static final int _todayReviewCount = -1;
 
   /// 链式同步入口（原版 call）
   /// 流程：chainRequest1 → chainRequerst2Pre → chainRequest2
@@ -658,19 +654,6 @@ class SyncChainServiceV2 {
     // CoolHttpClient.setTimeout(1200000); // 20 分钟超时
 
     // 成功后进入下一步
-    await _chainRequest2(listener);
-  }
-
-  /// 第 1.5 步：同步生词修复数据（原版 chainRequerst2Pre）
-  /// 端点：SyncUserVocabularyFix1
-  /// 参数：sync_file（JSON 数组）
-  static Future<void> _chainRequerst2Pre(SyncListener? listener) async {
-    // TODO: 需要 NewWordDao 集成
-    // final syncPreData = NewWordDao.getSyncPreData();
-    // if (syncPreData == null || syncPreData.isEmpty) {
-    //   await _chainRequest2(listener);
-    //   return;
-    // }
     await _chainRequest2(listener);
   }
 
@@ -750,8 +733,6 @@ class LearnDurationService {
 // ============================================================
 
 class ReportUserAction {
-  static const String _logTag = 'ReportUserAction';
-
   /// 上报用户行为（原版 call）
   /// 端点：POST report/webview/action {action_type, action_data}
   static Future<void> call(
@@ -779,7 +760,6 @@ class ReportUserAction {
 // ============================================================
 
 class ReportUserDaily {
-  static const String _logTag = 'ReportUserDaily';
   static bool _bSyning = false;
   static bool _bReviewTaskSyncing = false;
 
