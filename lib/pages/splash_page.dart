@@ -213,13 +213,13 @@ class _SplashPageState extends State<SplashPage>
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
-                              color: MistralColors.cream,
+                              color: skin.colors.pageBg,
                             ),
                             child: Center(
                               child: Icon(
                                 _getGuideIcon(index),
                                 size: 120,
-                                color: MistralColors.primary,
+                                color: skin.colors.accent,
                               ),
                             ),
                           ),
@@ -260,8 +260,8 @@ class _SplashPageState extends State<SplashPage>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: i == _currentPage
-                              ? MistralColors.primary
-                              : MistralColors.hairline,
+                              ? skin.colors.accent
+                              : skin.colors.divider,
                         ),
                       );
                     }),
@@ -274,7 +274,7 @@ class _SplashPageState extends State<SplashPage>
                       child: ElevatedButton(
                         onPressed: _goToMain,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: MistralColors.primary,
+                          backgroundColor: skin.colors.accent,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppRadius.pill),

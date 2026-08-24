@@ -396,7 +396,7 @@ class _SettingsPageState extends State<SettingsPage> {
       isScrollControlled: true,
       builder: (_) => Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: skin.cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
@@ -409,7 +409,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Container(
                 width: 36, height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: skin.divider,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
