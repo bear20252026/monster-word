@@ -144,12 +144,12 @@ class _WordDetailPageState extends State<WordDetailPage> {
                   children: [
                     // 单词 + 音标 + 发音
                     _buildWordHeader(word, skin),
-                    const SizedBox(height: 20),
+                    SizedBox(height: AppleSpacing.lg),
                     // 释义
                     if (lines.isNotEmpty) ...[
                       Text('释义',
                         style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-                      const SizedBox(height: 8),
+                      SizedBox(height: AppleSpacing.xs),
                       ...lines.map((line) => Padding(
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Text(line,
@@ -158,10 +158,10 @@ class _WordDetailPageState extends State<WordDetailPage> {
                     ],
                     // 例句
                     if (examples.isNotEmpty) ...[
-                      const SizedBox(height: 20),
+                      SizedBox(height: AppleSpacing.lg),
                       Text('例句',
                         style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-                      const SizedBox(height: 8),
+                      SizedBox(height: AppleSpacing.xs),
                       ...examples.take(3).map((ex) => _ExampleTile(
                         ex,
                         skin,
@@ -171,10 +171,10 @@ class _WordDetailPageState extends State<WordDetailPage> {
                     ],
                     // 形近词
                     if (confuseList.isNotEmpty) ...[
-                      const SizedBox(height: 20),
+                      SizedBox(height: AppleSpacing.lg),
                       Text('形近词',
                         style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-                      const SizedBox(height: 8),
+                      SizedBox(height: AppleSpacing.xs),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -187,10 +187,10 @@ class _WordDetailPageState extends State<WordDetailPage> {
                       ),
                     ],
                     // 常见用法
-                    const SizedBox(height: 20),
+                    SizedBox(height: AppleSpacing.lg),
                     Text('常见用法',
                       style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-                    const SizedBox(height: 8),
+                    SizedBox(height: AppleSpacing.xs),
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -215,7 +215,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                       ),
                     ),
                     // ===== 笔记区 =====
-                    const SizedBox(height: 20),
+                    SizedBox(height: AppleSpacing.lg),
                     _buildNotesSection(skin),
                   ],
                 ),
@@ -350,7 +350,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
             children: [
               Text(word.word,
                 style: MistralTypography.heading1.copyWith(color: skin.colors.text1, fontSize: 40)),
-              const SizedBox(width: 12),
+              SizedBox(width: AppleSpacing.sm),
               GestureDetector(
                 onTap: () async {
                   try {
@@ -623,7 +623,7 @@ class _ExampleTileState extends State<_ExampleTile> {
                   child: Icon(
                     _isFav ? Icons.favorite : Icons.favorite_border,
                     size: 18,
-                    color: _isFav ? Colors.red : widget.skin.colors.text3,
+                    color: _isFav ? widget.skin.colors.danger : widget.skin.colors.text3,
                   ),
                 ),
               ),
