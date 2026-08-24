@@ -4,6 +4,7 @@
 // 辅助工具与混合组件集合
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
 // ─────────────────────────────────────────────────────────────
 // ScrollLoadMore — 滚动加载更多监听（移植自 OnScrollLoadMoreListener.java）
 // ─────────────────────────────────────────────────────────────
@@ -349,7 +350,7 @@ class LearnStatusTag extends StatelessWidget {
     String text;
     switch (status) {
       case LearnStatus.newWord:
-        color = Colors.blue;
+        color = MistralColors.info;
         text = '新词';
         break;
       case LearnStatus.learning:
@@ -357,11 +358,11 @@ class LearnStatusTag extends StatelessWidget {
         text = '学习中';
         break;
       case LearnStatus.reviewing:
-        color = Colors.orange;
+        color = MistralColors.warning;
         text = '复习中';
         break;
       case LearnStatus.mastered:
-        color = Colors.green;
+        color = MistralColors.success;
         text = '已掌握';
         break;
     }
@@ -437,7 +438,7 @@ class LearnReviewBand extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.orange.withAlpha(20),
+                color: MistralColors.warning.withAlpha(20),
                 borderRadius: const BorderRadius.horizontal(
                     right: Radius.circular(8)),
               ),
@@ -447,7 +448,7 @@ class LearnReviewBand extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.orange)),
+                          color: MistralColors.warning)),
                   const SizedBox(height: 2),
                   Text('待复习',
                       style: TextStyle(

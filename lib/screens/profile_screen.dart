@@ -99,8 +99,8 @@ class ProfileScreen extends StatelessWidget {
                   height: 88,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white, // 纯白底（移除金色渐变）
-                    border: Border.all(color: Colors.white, width: 3),
+                    color: AppColors.white100, // 纯白底（移除金色渐变）
+                    border: Border.all(color: AppColors.white100, width: 3),
                   ),
                   child: Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 40), // 品牌绿图标
                 ),
@@ -113,11 +113,11 @@ class ProfileScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: skin.colors.accent, // 绿色 VIP 徽章（原 #4A6741 → accent）
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: AppColors.white100, width: 2),
                     ),
                     child: const Center(
                       child: Text('VIP', style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.white100,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                       )),

@@ -145,7 +145,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                 ),
               ),
               child: Center(
-                child: Icon(Icons.wallpaper, size: 48, color: Colors.white54),
+                child: Icon(Icons.wallpaper, size: 48, color: MistralColors.white54),
               ),
             ),
           ),
@@ -155,7 +155,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black.withValues(alpha: 0.1)],
+                colors: [Colors.transparent, MistralColors.black15],
               ),
             ),
           ),
@@ -167,21 +167,21 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                 Text(
                   'Monster',
                   style: MistralTypography.heading1.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white100,
                     fontWeight: FontWeight.bold,
-                    shadows: [Shadow(color: Colors.black26, blurRadius: 8)],
+                    shadows: [Shadow(color: MistralColors.black26, blurRadius: 8)],
                   ),
                 ),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: AppColors.white100.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
                     'Learn 10  ·  Review 0',
-                    style: MistralTypography.bodySm.copyWith(color: Colors.white),
+                    style: MistralTypography.bodySm.copyWith(color: AppColors.white100),
                   ),
                 ),
               ],
@@ -212,7 +212,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
               style: MistralTypography.heading1.copyWith(
                 color: wallpaper.id == 'default'
                     ? MistralColors.ink
-                    : Colors.white.withValues(alpha: 0.9),
+                    : AppColors.white100.withValues(alpha: 0.9),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -222,7 +222,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
               decoration: BoxDecoration(
                 color: (wallpaper.id == 'default'
                         ? MistralColors.ink
-                        : Colors.white)
+                        : AppColors.white100)
                     .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
@@ -231,7 +231,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                 style: MistralTypography.bodySm.copyWith(
                   color: wallpaper.id == 'default'
                       ? MistralColors.slate
-                      : Colors.white70,
+                      : MistralColors.white70,
                 ),
               ),
             ),
@@ -302,7 +302,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
           ),
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(
-            color: isSelected ? MistralColors.primary : Colors.white24,
+            color: isSelected ? MistralColors.primary : MistralColors.white24,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -311,14 +311,14 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
             Text(
               wallpaper.name,
               style: MistralTypography.bodyMd.copyWith(
-                color: Colors.white,
+                color: AppColors.white100,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                shadows: [Shadow(color: Colors.black26, blurRadius: 4)],
+                shadows: [Shadow(color: MistralColors.black26, blurRadius: 4)],
               ),
             ),
             const Spacer(),
             if (isSelected)
-              Icon(Icons.check_circle, color: Colors.white, size: 22),
+              Icon(Icons.check_circle, color: AppColors.white100, size: 22),
           ],
         ),
       ),
@@ -364,7 +364,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                         end: wallpaper.end ?? Alignment.bottomCenter,
                       ),
                     ),
-                    child: Icon(Icons.wallpaper, size: 36, color: Colors.white54),
+                    child: Icon(Icons.wallpaper, size: 36, color: MistralColors.white54),
                   ),
                 ),
                 // 底部名称 + 选中标记
@@ -378,18 +378,18 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.black54],
+                        colors: [Colors.transparent, MistralColors.black54],
                       ),
                     ),
                     child: Row(
                       children: [
                         Text(
                           wallpaper.name,
-                          style: MistralTypography.bodySm.copyWith(color: Colors.white),
+                          style: MistralTypography.bodySm.copyWith(color: AppColors.white100),
                         ),
                         const Spacer(),
                         if (isSelected)
-                          Icon(Icons.check_circle, color: Colors.white, size: 18),
+                          Icon(Icons.check_circle, color: AppColors.white100, size: 18),
                       ],
                     ),
                   ),

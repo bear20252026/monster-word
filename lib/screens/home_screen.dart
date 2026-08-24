@@ -9,6 +9,7 @@ import '../pages/search_page.dart';
 import '../pages/word_machine_page.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
 import '../widgets/sb_card.dart';
 import '../widgets/review_dialog.dart';
 import '../widgets/scale_down_on_press.dart';
@@ -99,7 +100,7 @@ class HomeScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
+                          color: MistralColors.black26,
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),

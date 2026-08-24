@@ -81,7 +81,7 @@ class _HelpPageState extends State<HelpPage> {
                             onPressed: () => _controller.reload(),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: MistralColors.primary,
-                              foregroundColor: Colors.white,
+                              foregroundColor: AppColors.white100,
                             ),
                             child: const Text('重试'),
                           ),

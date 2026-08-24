@@ -46,7 +46,16 @@ class MistralColors {
   static const Color danger = StarbucksCreamColors.danger;
   static const Color dangerDark = StarbucksDarkColors.danger;
   static const Color warning = Color(0xFFF59E0B);
+  static const Color info = Color(0xFF3B82F6);                         // 蓝色 - 新词/信息
   static const Color link = StarbucksCreamColors.greenBrand;         // 0xFF00754A 品牌绿
+
+  // 透明度白/黑（用于阴影、遮罩、次要文字）
+  static const Color white54 = Color(0x8AFFFFFF);
+  static const Color white70 = Color(0xB3FFFFFF);
+  static const Color white24 = Color(0x3DFFFFFF);
+  static const Color black15 = Color(0x26000000);
+  static const Color black26 = Color(0x42000000);
+  static const Color black54 = Color(0x8A000000);
 }
 
 /// 圆角
