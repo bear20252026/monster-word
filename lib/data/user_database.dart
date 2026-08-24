@@ -112,7 +112,7 @@ class UserDatabase {
   /// 获取收藏数量
   Future<int> getFavoriteCount() async {
     final result = await db.rawQuery('SELECT COUNT(*) as count FROM favorites');
-    return (result.isNotEmpty ? result.first['count'] : 0) as int;
+    return (result.isNotEmpty ? (result.first['count'] as int?) ?? 0 : 0);
   }
 
   /// 切换收藏状态
@@ -142,7 +142,7 @@ class UserDatabase {
       whereArgs: wordIds,
     );
 
-    final favoriteIds = rows.map((row) => row['word_id'] as int).toSet();
+    final favoriteIds = rows.map((row) => (row['word_id'] as int?) ?? 0).toSet();
     return Map.fromEntries(
       wordIds.map((id) => MapEntry(id, favoriteIds.contains(id))),
     );

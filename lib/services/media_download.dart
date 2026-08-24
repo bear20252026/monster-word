@@ -210,13 +210,13 @@ class MediaButtonManager {
     if (_listener != null) {
       switch (_clickNum) {
         case 1:
-          _listener!.onClick();
+          _listener?.onClick();
           break;
         case 2:
-          _listener!.onDoubleClick();
+          _listener?.onDoubleClick();
           break;
         case 3:
-          _listener!.onTripleClick();
+          _listener?.onTripleClick();
           break;
       }
     }

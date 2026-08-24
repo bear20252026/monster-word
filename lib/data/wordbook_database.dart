@@ -26,9 +26,9 @@ class Book {
   });
 
   factory Book.fromMap(Map<String, dynamic> map) => Book(
-        id: map['id'] as int,
-        code: map['code'] as String,
-        name: (map['name'] as String?) ?? map['code'] as String,
+        id: (map['id'] as int?) ?? 0,
+        code: (map['code'] as String?) ?? '',
+        name: (map['name'] as String?) ?? (map['code'] as String?) ?? '',
         wordCount: (map['word_count'] as int?) ?? 0,
       );
 }
@@ -64,8 +64,8 @@ class Word {
   });
 
   factory Word.fromMap(Map<String, dynamic> map) => Word(
-        id: map['id'] as int,
-        word: map['word'] as String,
+        id: (map['id'] as int?) ?? 0,
+        word: (map['word'] as String?) ?? '',
         mainWord: (map['main_word'] as String?) ?? '',
         interpret: (map['interpret'] as String?) ?? '',
         ukPron: (map['uk_pron'] as String?) ?? '',

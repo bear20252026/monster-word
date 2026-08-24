@@ -356,8 +356,7 @@ class ListWordLearnModel {
 
   /// 当前单词的基础信息
   BBWordBaseInfo? getCurWordData() {
-    if (_curWordData == null) return null;
-    return _curWordData!.wordBaseInfo;
+    return _curWordData?.wordBaseInfo;
   }
 
   /// 初始化三词缓存
@@ -555,7 +554,7 @@ class MessageModel extends BaseListModel<MessageSetData> {
   @override
   void commitRefreshNewData(MessageSetData newData) {
     if (result != null) {
-      result!.addRefreshNewData(newData);
+      result?.addRefreshNewData(newData);
     } else {
       result = newData;
     }
@@ -567,7 +566,7 @@ class MessageModel extends BaseListModel<MessageSetData> {
       hasMore = moreData.count >= pageNum;
     }
     if (result != null) {
-      result!.addMoreData(moreData);
+      result?.addMoreData(moreData);
     }
   }
 

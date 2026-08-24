@@ -190,7 +190,7 @@ class _LockScreenPageState extends State<LockScreenPage>
       directions: [_timeDirection, _wordDirection, _bottomDirection],
       vsync: this,
     );
-    _elementAnimator!.setMinDistance(
+    _elementAnimator?.setMinDistance(
       (screenHeight * 0.3).toInt(), // 上滑 30% 触发解锁
     );
   }
@@ -786,7 +786,7 @@ class _LockScreenPageState extends State<LockScreenPage>
   void _onVerticalDragUpdate(DragUpdateDetails details) {
     if (!_isDragging || _elementAnimator == null) return;
     final delta = (details.globalPosition.dy - _dragStartY).toInt();
-    _elementAnimator!.onScroll(delta);
+    _elementAnimator?.onScroll(delta);
   }
 
   /// 垂直拖拽结束：判断是解锁还是回弹
@@ -795,7 +795,7 @@ class _LockScreenPageState extends State<LockScreenPage>
     _isDragging = false;
 
     final velocity = details.primaryVelocity ?? 0;
-    final scrollDelta = _elementAnimator!.scrollDelta;
+    final scrollDelta = _elementAnimator?.scrollDelta ?? 0;
     final screenHeight = MediaQuery.of(context).size.height;
     final threshold = screenHeight * 0.3; // 30% 屏幕高度
 
@@ -803,13 +803,13 @@ class _LockScreenPageState extends State<LockScreenPage>
     if (-scrollDelta > threshold || velocity < -800) {
       // 解锁动画
       final speedY = (-velocity).toInt().abs().clamp(1, 5000);
-      _elementAnimator!.finishAnimate(speedY, onUnlock: () {
+      _elementAnimator?.finishAnimate(speedY, onUnlock: () {
         _unlockToLearn();
       });
     } else {
       // 回弹动画
       final speedY = velocity.toInt().abs().clamp(1, 5000);
-      _elementAnimator!.rollbackAnimate(speedY);
+      _elementAnimator?.rollbackAnimate(speedY);
     }
   }
 }
