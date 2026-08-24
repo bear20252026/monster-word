@@ -283,12 +283,10 @@ class LibraryModel {
     bool isUpdate,
   ) async {
     if (libData.isEmpty) return;
-    _isFirstDownload = true;
 
     final code = libData['code'] as String? ?? '';
     final version = libData['version']?.toString() ?? '';
     final dbName = 'LangEasyLexisV3_$code.db';
-    final zipPath = '/dicts/v3/$code/$version/$dbName.zip';
 
     // 通知 UI 开始下载
     listener?.onStartDownloadLibrary();
@@ -613,7 +611,6 @@ class ZpkDownLoadManager {
   int _downloadCount = 0;
   int _totalCount = 0;
   bool _canceled = false;
-  int _activeTasks = 0;
 
   ZpkListDownLoadListener? _listener;
 

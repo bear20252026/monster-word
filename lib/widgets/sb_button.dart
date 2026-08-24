@@ -128,34 +128,6 @@ class SbButton extends StatelessWidget {
   static const Color _houseGreen = Color(0xFF00754A);
   static const Color _darkGreen = Color(0xFF1E3932);
 
-  /// 获取当前变体的填充色
-  Color get _defaultFillColor {
-    switch (variant) {
-      case SbButtonVariant.primary:
-        return _houseGreen;
-      case SbButtonVariant.outlined:
-        return Colors.transparent;
-      case SbButtonVariant.dark:
-        return _darkGreen;
-      case SbButtonVariant.inverse:
-        return Colors.white;
-    }
-  }
-
-  /// 获取当前变体的文字色
-  Color get _defaultTextColor {
-    switch (variant) {
-      case SbButtonVariant.primary:
-        return Colors.white;
-      case SbButtonVariant.outlined:
-        return _houseGreen;
-      case SbButtonVariant.dark:
-        return Colors.white;
-      case SbButtonVariant.inverse:
-        return _houseGreen;
-    }
-  }
-
   /// 获取当前变体的描边
   BorderSide get _defaultBorderSide {
     switch (variant) {
