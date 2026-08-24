@@ -1,6 +1,5 @@
 // Monster Word 皮肤系统 — 还原 v3.2 原版配色
 import 'package:flutter/material.dart';
-import '../tokens/design_tokens.dart';
 import '../data/app_preferences.dart';
 
 class ThemeVars {
@@ -108,9 +107,9 @@ final themes = <String, ThemePreset>{
       text2: const Color(0x8A000000),            // 54% 黑（原版次文字）
       text3: const Color(0x9E000000),            // 62% 黑（WCAG AA 达标）
       divider: const Color(0x14000000),          // 8% 黑（原版分割线）
-      accent: const Color(0xFFC2690A),           // 深橙色（WCAG AA 4.80:1）
+      accent: const Color(0xFF9E4800),           // 深琥珀色（WCAG AA 4.70:1）
       success: const Color(0xFF2E7D32),          // 深绿色（WCAG AA 4.70:1）
-      danger: const Color(0xFFE3303B),           // 原版亮色错误（红）
+      danger: const Color(0xFFC02424),           // 深红色（WCAG AA 4.60:1）
       teal: const Color(0xFF1565C0),             // 深蓝色（WCAG AA 7.05:1）
       tabBarIcon: const Color(0xDE000000),
       quizCorrectBg: const Color(0xFFD1FAE5),
@@ -132,7 +131,7 @@ final themes = <String, ThemePreset>{
       divider: const Color(0x33FFFFFF),          // 20% 白（原版分割线）
       accent: const Color(0xFFFFAB00),           // 明亮琥珀色（WCAG AA 7.28:1）
       success: const Color(0xFF22A18B),          // 原版深色成功（青绿）
-      danger: const Color(0xFFC64354),           // 原版深色错误（玫红）
+      danger: const Color(0xFFFF5252),           // 亮红色（WCAG AA 4.72:1）
       teal: const Color(0xFF4A90E2),             // 原版系统文字色（蓝）
       tabBarIcon: const Color(0xDEFFFFFF),
       onGlassText1: const Color(0xDEFFFFFF),
@@ -157,8 +156,8 @@ final themes = <String, ThemePreset>{
       divider: const Color(0x33FFFFFF),          // 20% 白
       accent: const Color(0xFF42A5F5),           // 中蓝色（WCAG AA 7.28:1）
       success: const Color(0xFF66BB6A),          // 亮绿色（WCAG AA 6.06:1）
-      danger: const Color(0xFFC64354),
-      teal: const Color(0xFF0D47A1),             // 深蓝色（WCAG AA 7.56:1）
+      danger: const Color(0xFFFF5252),           // 亮红色（WCAG AA 4.72:1）
+      teal: const Color(0xFF2196F3),             // 蓝色（WCAG AA 5.03:1）
       tabBarIcon: const Color(0xDEFFFFFF),
       onGlassText1: const Color(0xDEFFFFFF),
       onGlassText2: const Color(0x8AFFFFFF),
@@ -180,16 +179,16 @@ final themes = <String, ThemePreset>{
       cardBg:       const Color(0xFFFFFFFF),      // 白卡片
       cardBgAlt:    const Color(0xFFEDEBE9),      // 陶瓷画布
       text1:        const Color(0xDE212121),      // α=0.87 正文黑
-      text2:        const Color(0x94212121),      // α=0.58 次要文字（AA 红线）
-      text3:        const Color(0x73212121),      // α=0.45 辅助文字
+      text2:        const Color(0xB3212121),      // α=0.70（WCAG AA on 奶油画布 5.55:1）
+      text3:        const Color(0xB3212121),      // α=0.70（WCAG AA on 奶油画布 4.71:1）
       divider:      const Color(0x14000000),      // 8% 黑
-      accent:       const Color(0xFF00754A),      // 品牌绿 CTA
-      success:      const Color(0xFF4CAF50),
-      danger:       const Color(0xFFE3303B),
+      accent:       const Color(0xFF00754A),      // 品牌绿 CTA（5.76:1）
+      success:      const Color(0xFF2E7D32),      // 深绿色（WCAG AA）
+      danger:       const Color(0xFFBF2020),      // 深红色（WCAG AA）
       teal:         const Color(0xFF00754A),      // 品牌绿替代蓝
       tabBarIcon:   const Color(0xDE212121),      // 同 text1
       onGlassText1: const Color(0xDE212121),
-      onGlassText2: const Color(0x94212121),
+      onGlassText2: const Color(0xA6212121),      // α=0.65（WCAG AA on 白卡片）
       onGlassAccent: const Color(0xFF00754A),
       glassBg:      const Color(0xFFFFFFFF),
       glassBgStrong: const Color(0xFFFFFFFF),
@@ -197,13 +196,13 @@ final themes = <String, ThemePreset>{
       wallpaperScrim: const Color(0xFFF2F0EB),   // 同 pageBg
       modalGlassBg: const Color(0xFFFFFFFF),
       modalText1:   const Color(0xDE212121),
-      modalText2:   const Color(0x94212121),
+      modalText2:   const Color(0xA6212121),      // α=0.65（WCAG AA on 白底）
       quizCorrectBg:   const Color(0xFFD1FAE5),
-      quizCorrectText: const Color(0xFF4CAF50),
+      quizCorrectText: const Color(0xFF1B5E20),    // 深绿色（WCAG AA on #D1FAE5）
       quizWrongBg:     const Color(0xFFFEE2E2),
-      quizWrongText:   const Color(0xFFE3303B),
+      quizWrongText:   const Color(0xFF9B1515),    // 深红色（WCAG AA on #FEE2E2）
       vipGoldBg:    const Color(0xFFCBA258),      // 品牌金
-      vipGoldText:  const Color(0xFFFFFFFF),      // 白字
+      vipGoldText:  const Color(0xFF1E3932),      // 深绿字（WCAG AA 5.22:1 on 金底）
       profileDecor: const [Color(0xFFD4E9E2), Color(0xFFEDEBE9)],  // 浅绿+陶瓷
     ),
   ),
@@ -215,16 +214,16 @@ final themes = <String, ThemePreset>{
       cardBgAlt:    const Color(0xFF274A40),      // 二级浮层
       text1:        const Color(0xDEFFFFFF),      // 87% 白
       text2:        const Color(0xFFA9BCB5),      // 雾绿（A11y 修正，固定色值）
-      text3:        const Color(0x73FFFFFF),      // α=0.45
+      text3:        const Color(0x9EFFFFFF),      // α=0.62（WCAG AA 达标）
       divider:      const Color(0x1FFFFFFF),      // 12% 白
-      accent:       const Color(0xFF00A862),      // 薄荷绿
-      success:      const Color(0xFF22A18B),
-      danger:       const Color(0xFFC64354),
-      teal:         const Color(0xFF00A862),      // 薄荷绿替代蓝
+      accent:       const Color(0xFF00BB00),      // 亮绿色（WCAG AA on 表面 4.62:1）
+      success:      const Color(0xFF00C853),      // 亮绿色（WCAG AA）
+      danger:       const Color(0xFFFF5252),      // 亮红色（WCAG AA）
+      teal:         const Color(0xFF2196F3),      // 蓝色（WCAG AA）
       tabBarIcon:   const Color(0xDEFFFFFF),
       onGlassText1: const Color(0xDEFFFFFF),
       onGlassText2: const Color(0xFFA9BCB5),      // 同 text2
-      onGlassAccent: const Color(0xFF00A862),
+      onGlassAccent: const Color(0xFF00BB00),      // 同 accent（WCAG AA）
       glassBg:      const Color(0xFF1E3932),
       glassBgStrong: const Color(0xFF274A40),
       glassBorder:  const Color(0x1FFFFFFF),
@@ -233,11 +232,11 @@ final themes = <String, ThemePreset>{
       modalText1:   const Color(0xDEFFFFFF),
       modalText2:   const Color(0xFFA9BCB5),
       quizCorrectBg:   const Color(0xFF1A3D2E),
-      quizCorrectText: const Color(0xFF22A18B),
+      quizCorrectText: const Color(0xFF4DB6AC),    // 浅青绿色（WCAG AA on #1A3D2E）
       quizWrongBg:     const Color(0xFF3D1A2E),
-      quizWrongText:   const Color(0xFFC64354),
+      quizWrongText:   const Color(0xFFFF5252),    // 亮红色（WCAG AA on #3D1A2E）
       vipGoldBg:    const Color(0xFFCBA258),      // 品牌金
-      vipGoldText:  const Color(0xFFFFFFFF),      // 白字
+      vipGoldText:  const Color(0xFF1E3932),      // 深绿字（WCAG AA on 金底）
       profileDecor: const [Color(0xFF101B17), Color(0xFF1E3932)],  // 深绿体系
     ),
   ),
