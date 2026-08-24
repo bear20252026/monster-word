@@ -11,6 +11,7 @@ import '../data/dictionary_extra.dart';
 import '../data/fav_sentence_dao.dart';
 import '../data/note_database.dart';
 import '../data/wordbook_database.dart' show Word;
+import '../hooks/responsive.dart';
 import '../models/sentence_models.dart';
 import '../models/word_note.dart';
 import '../state/learning_state.dart';
@@ -18,7 +19,6 @@ import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/text_generate_effect.dart';
 import '../widgets/box_reveal.dart';
-import '../hooks/responsive.dart';
 
 class WordDetailPage extends StatefulWidget {
   const WordDetailPage({super.key});
@@ -144,7 +144,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
             // 顶部导航
             Container(
               height: AppSpacing.navH,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: EdgeInsets.symmetric(horizontal: resp.horizontalPadding),
               decoration: BoxDecoration(
                 color: skin.colors.cardBg,
                 border: Border(bottom: BorderSide(color: skin.colors.divider, width: 0.5)),
@@ -163,20 +163,43 @@ class _WordDetailPageState extends State<WordDetailPage> {
             ),
             // 内容
             Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(resp.pageMargin),
+              child: resp.isDesktop
+                ? _buildDesktopLayout(word, skin, resp, examples, lines, confuseList)
+                : _buildMobileLayout(word, skin, resp, examples, lines, confuseList),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(Word word, SkinSystem skin, AppResponsive resp, List<dynamic> examples, List<String> lines, List<String> confuseList) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(resp.pageMargin),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 左侧：单词 + 音标 + 发音
+              Expanded(
+                flex: 2,
+                child: BoxReveal(
+                  direction: BoxRevealDirection.top,
+                  duration: const Duration(milliseconds: 400),
+                  reveal: true,
+                  child: _buildWordHeader(word, skin),
+                ),
+              ),
+              SizedBox(width: resp.horizontalPadding),
+              // 右侧：释义 + 例句 + 扩展
+              Expanded(
+                flex: 3,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 单词 + 音标 + 发音（BoxReveal 从上方揭示）
-                    BoxReveal(
-                      direction: BoxRevealDirection.top,
-                      duration: const Duration(milliseconds: 400),
-                      reveal: true,
-                      child: _buildWordHeader(word, skin),
-                    ),
-                    SizedBox(height: AppleSpacing.lg),
-                    // 释义（BoxReveal 从左侧揭示）
+                    // 释义
                     if (lines.isNotEmpty) ...[
                       BoxReveal(
                         direction: BoxRevealDirection.left,
@@ -193,7 +216,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                           style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
                       )),
                     ],
-                    // 例句（BoxReveal 从右侧揭示）
+                    // 例句
                     if (examples.isNotEmpty) ...[
                       SizedBox(height: AppleSpacing.lg),
                       BoxReveal(
@@ -229,7 +252,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                         )).toList(),
                       ),
                     ],
-                    // 补充数据：派生词 / 近义词 / 真题例句（dictionary_extra.json）
+                    // 补充数据
                     if (_extra != null) ...[
                       SizedBox(height: AppleSpacing.lg),
                       Text('拓展 · 派生词',
@@ -329,40 +352,190 @@ class _WordDetailPageState extends State<WordDetailPage> {
                         ],
                       ),
                     ),
-                    // ===== 笔记区 =====
+                    // 笔记区
                     SizedBox(height: AppleSpacing.lg),
                     _buildNotesSection(skin),
                   ],
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(Word word, SkinSystem skin, AppResponsive resp, List<dynamic> examples, List<String> lines, List<String> confuseList) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(resp.pageMargin),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 单词 + 音标 + 发音（BoxReveal 从上方揭示）
+          BoxReveal(
+            direction: BoxRevealDirection.top,
+            duration: const Duration(milliseconds: 400),
+            reveal: true,
+            child: _buildWordHeader(word, skin),
+          ),
+          SizedBox(height: AppleSpacing.lg),
+          // 释义（BoxReveal 从左侧揭示）
+          if (lines.isNotEmpty) ...[
+            BoxReveal(
+              direction: BoxRevealDirection.left,
+              duration: const Duration(milliseconds: 350),
+              delay: const Duration(milliseconds: 100),
+              reveal: true,
+              child: Text('释义',
+                style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
             ),
-            // 底部：下一词按钮
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: skin.colors.cardBg,
-                border: Border(top: BorderSide(color: skin.colors.divider, width: 0.5)),
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton(
-                  onPressed: () {
-                    state.next();
-                    Navigator.pop(context);
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: skin.colors.accent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md)),
-                  ),
-                  child: Text('下一词',
-                    style: MistralTypography.buttonMd.copyWith(color: Colors.white)),
-                ),
-              ),
+            SizedBox(height: AppleSpacing.xs),
+            ...lines.map((line) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Text(line,
+                style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
+            )),
+          ],
+          // 例句（BoxReveal 从右侧揭示）
+          if (examples.isNotEmpty) ...[
+            SizedBox(height: AppleSpacing.lg),
+            BoxReveal(
+              direction: BoxRevealDirection.right,
+              duration: const Duration(milliseconds: 350),
+              delay: const Duration(milliseconds: 200),
+              reveal: true,
+              child: Text('例句',
+                style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+            ),
+            SizedBox(height: AppleSpacing.xs),
+            ...examples.take(3).map((ex) => _ExampleTile(
+              ex,
+              skin,
+              word: word.word,
+              wordId: word.id,
+            )),
+          ],
+          // 形近词
+          if (confuseList.isNotEmpty) ...[
+            SizedBox(height: AppleSpacing.lg),
+            Text('形近词',
+              style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+            SizedBox(height: AppleSpacing.xs),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: confuseList.map((c) => Chip(
+                label: Text(c,
+                  style: MistralTypography.bodySm.copyWith(color: skin.colors.text1)),
+                backgroundColor: skin.colors.pageBg,
+                side: BorderSide(color: skin.colors.divider),
+              )).toList(),
             ),
           ],
-        ),
+          // 补充数据
+          if (_extra != null) ...[
+            SizedBox(height: AppleSpacing.lg),
+            Text('拓展 · 派生词',
+              style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+            SizedBox(height: AppleSpacing.xs),
+            ..._extra!.derivatives.map((d) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('· ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: Text(d,
+                      style: MistralTypography.bodyMd.copyWith(
+                        color: skin.colors.text1, height: 1.5)),
+                  ),
+                ],
+              ),
+            )),
+            SizedBox(height: AppleSpacing.lg),
+            Text('近义词',
+              style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+            SizedBox(height: AppleSpacing.xs),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _extra!.synonyms.map((s) => Chip(
+                label: Text(s,
+                  style: MistralTypography.bodySm.copyWith(color: AppColors.white100)),
+                backgroundColor: skin.colors.accent.withValues(alpha: 0.85),
+                side: BorderSide.none,
+              )).toList(),
+            ),
+            if (_extra!.examSentences.isNotEmpty) ...[
+              SizedBox(height: AppleSpacing.lg),
+              Text('真题例句',
+                style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+              SizedBox(height: AppleSpacing.xs),
+              ..._extra!.examSentences.map((e) => Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: skin.colors.cardBgAlt,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppColors.highlightOrange,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(e.source,
+                            style: MistralTypography.caption.copyWith(
+                              color: AppColors.white100)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(e.sentence,
+                      style: MistralTypography.bodyMd.copyWith(
+                        color: skin.colors.text1, height: 1.5)),
+                  ],
+                ),
+              )),
+            ],
+          ],
+          // 常见用法
+          SizedBox(height: AppleSpacing.lg),
+          Text('常见用法',
+            style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          SizedBox(height: AppleSpacing.xs),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: skin.colors.pageBg,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: skin.colors.divider),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${word.word} — 详细用法',
+                  style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1)),
+                const SizedBox(height: 4),
+                Text('释义: ${word.interpret}',
+                  style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                if (word.phrase.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text('词组: ${word.phrase}',
+                    style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                ],
+              ],
+            ),
+          ),
+          // 笔记区
+          SizedBox(height: AppleSpacing.lg),
+          _buildNotesSection(skin),
+        ],
       ),
     );
   }

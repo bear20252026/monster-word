@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/wordbook_database.dart';
+import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -73,6 +74,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   @override
   Widget build(BuildContext context) {
     final colors = context.skin.colors;
+    final resp = context.responsive;
     return Scaffold(
       backgroundColor: colors.cardBg,
       body: SafeArea(
@@ -287,13 +289,28 @@ class _LibSelectPageState extends State<LibSelectPage> {
                       ],
                     );
                   }
-                  return ListView.builder(
-                    itemCount: books.length,
-                    itemBuilder: (context, index) {
-                      final book = books[index];
-                      return _LibItem(book: book, showDescription: _showDescription);
-                    },
-                  );
+                  return resp.isDesktop
+                    ? GridView.builder(
+                        padding: EdgeInsets.all(resp.horizontalPadding),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: resp.bookGridColumns,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: resp.horizontalPadding,
+                          mainAxisSpacing: resp.horizontalPadding,
+                        ),
+                        itemCount: books.length,
+                        itemBuilder: (context, index) {
+                          final book = books[index];
+                          return _LibItem(book: book, showDescription: _showDescription);
+                        },
+                      )
+                    : ListView.builder(
+                        itemCount: books.length,
+                        itemBuilder: (context, index) {
+                          final book = books[index];
+                          return _LibItem(book: book, showDescription: _showDescription);
+                        },
+                      );
                 },
               ),
             ),
