@@ -19,7 +19,7 @@ class AppRefProcessor {
 
   /// 公共常量（原版 PublicConstants）
   static String localFilePath = ''; // 需在应用启动时设置
-  static String baseImgUrl = 'http://img.beingfine.cn/';
+  static String baseImgUrl = 'https://img.beingfine.cn/';
 
   /// 缓存的推荐列表（原版 PublicConstants.appRecList）
   static List<AppRec>? appRecList;

@@ -85,12 +85,12 @@ class LexisFileSystem {
 
   /// ZPK 下载 URL
   static String wordZpkUrl(String zpkName) {
-    return 'http://static.beingfine.cn/r/$zpkName$_zpkSuffix';
+    return 'https://static.beingfine.cn/r/$zpkName$_zpkSuffix';
   }
 
   /// ZPK 备用下载 URL
   static String wordZpk7NUrl(String zpkName) {
-    return 'http://7ncdn.beingfine.cn/r/$zpkName$_zpkSuffix';
+    return 'https://7ncdn.beingfine.cn/r/$zpkName$_zpkSuffix';
   }
 
   /// TTS 目录

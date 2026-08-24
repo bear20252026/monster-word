@@ -1257,7 +1257,7 @@ class FavSentencePageView extends StatelessWidget {
                               top: Radius.circular(AppleRadius.lg),
                             ),
                             child: Image.network(
-                              'http://img.beingfine.cn/${sentence.image}',
+                              'https://img.beingfine.cn/${sentence.image}',
                               fit: BoxFit.cover,
                               width: double.infinity,
                               errorBuilder: (_, _, _) =>
@@ -1777,7 +1777,7 @@ class _FavSentenceSectionedListViewState extends State<FavSentenceSectionedListV
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: Image.network(
-                        'http://img.beingfine.cn/${sentence.image}',
+                        'https://img.beingfine.cn/${sentence.image}',
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) =>
                             Icon(Icons.image, size: 24, color: _black54),

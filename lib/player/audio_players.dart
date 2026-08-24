@@ -288,10 +288,10 @@ String _buildYoudaoUrl(String word, {bool isUK = false}) {
 }
 
 /// beingfine 音频服务器 URL（原版 PublicConstants.BASE_AUDIO_URL）
-const String _baseAudioUrl = 'http://audio.beingfine.cn/';
+const String _baseAudioUrl = 'https://audio.beingfine.cn/';
 
 /// 七牛 CDN URL（原版 PublicConstants.QINIU_RESOURCE_URL，下载备用）
-const String _qiniuResourceUrl = 'http://7ncdn.beingfine.cn/';
+const String _qiniuResourceUrl = 'https://7ncdn.beingfine.cn/';
 
 // ============================================================
 // PhoneticAudioPlayer（翻译自 PhoneticAudioPlayer.java）

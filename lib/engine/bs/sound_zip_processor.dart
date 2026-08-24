@@ -22,7 +22,7 @@ abstract class SoundZipCallback {
 /// 下载 US-UK-speech.zip 离线语音包到本地，支持断点续传、进度回调、解压。
 /// 下载完成后自动解压到 dicts/US-UK-speech 目录。
 class SoundZipProcessor {
-  static const _soundZipUrl = 'http://static.beingfine.cn/dicts/US-UK-speech.zip';
+  static const _soundZipUrl = 'https://static.beingfine.cn/dicts/US-UK-speech.zip';
   static const _soundZipPath = '/dicts/US-UK-speech.zip';
   static const _soundZipTmpPath = '/dicts/US-UK-speech.zip.tmp';
 

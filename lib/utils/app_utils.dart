@@ -134,14 +134,14 @@ class Tools {
 
   /// 获取图片 URL（带尺寸，翻译自 getImageUrlWithSize）
   static String getImageUrlWithSize(String path, int width, int height) {
-    final url = 'http://img.beingfine.cn/$path';
+    final url = 'https://img.beingfine.cn/$path';
     final process = 'x-oss-process=image/resize,m_mfit,w_$width,h_$height,limit_1';
     return url.contains('?') ? '$url&$process' : '$url?$process';
   }
 
   /// 获取图片 URL（带宽度）
   static String getImageUrlWithWidth(String path, int width) {
-    final url = 'http://img.beingfine.cn/$path';
+    final url = 'https://img.beingfine.cn/$path';
     final process = 'x-oss-process=image/resize,w_$width,limit_1';
     return url.contains('?') ? '$url&$process' : '$url?$process';
   }

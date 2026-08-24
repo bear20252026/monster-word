@@ -121,7 +121,7 @@ class ExampleProcessor {
       return _buildNoSentenceHtml(height);
     }
 
-    final imgUrl = 'http://img.beingfine.cn/${sentence.i}.thumb.jpg';
+    final imgUrl = 'https://img.beingfine.cn/${sentence.i}.thumb.jpg';
     final fileBaseName = _getFileBaseName(audio);
     int rowNum = 0;
     if (fileBaseName.isNotEmpty && fileBaseName.length > 5) {

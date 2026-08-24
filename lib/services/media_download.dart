@@ -26,16 +26,16 @@ import 'package:path/path.dart' as p;
 // ============================================================
 
 /// 基础音频 URL（原版 PublicConstants.BASE_AUDIO_URL）
-const String _kBaseAudioUrl = 'http://audio.beingfine.cn/';
+const String _kBaseAudioUrl = 'https://audio.beingfine.cn/';
 
 /// 七牛资源 URL（原版 PublicConstants.QINIU_RESOURCE_URL）
-const String _kQiniuResourceUrl = 'http://7ncdn.beingfine.cn/';
+const String _kQiniuResourceUrl = 'https://7ncdn.beingfine.cn/';
 
 /// TTS 音频 URL 1（原版 TextSpeechDownloadTask.getDownloadUrlPath1）
-const String _kTtsAudioUrl1 = 'http://audio.beingfine.cn/';
+const String _kTtsAudioUrl1 = 'https://audio.beingfine.cn/';
 
 /// TTS 音频 URL 2（原版 TextSpeechDownloadTask.getDownloadURlPath2）
-const String _kTtsAudioUrl2 = 'http://7ncdn.beingfine.cn/';
+const String _kTtsAudioUrl2 = 'https://7ncdn.beingfine.cn/';
 
 // ============================================================
 // HeadSetUtils（翻译自 HeadSetUtils.java）

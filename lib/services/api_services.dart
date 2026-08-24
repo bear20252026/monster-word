@@ -8,10 +8,16 @@
 import 'dart:convert';
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../utils/date_utils.dart';
 import '../utils/crypto_utils.dart';
+
+/// Release 包禁用 print，防止 token/URL/参数泄露到 logcat
+void _log(Object? message) {
+  if (kDebugMode) print(message);
+}
 
 // ============================================================
 // 基础封装（翻译自 asynchttp/ 包）
@@ -87,8 +93,8 @@ class RequestParams {
 // ============================================================
 
 class CoolHttpClientV3 {
-  static const String baseUrl = 'http://api.beingfine.cn/';
-  static const String baseImgUrl = 'http://img.beingfine.cn/';
+  static const String baseUrl = 'https://api.beingfine.cn/';
+  static const String baseImgUrl = 'https://img.beingfine.cn/';
   static const String localFilePath = ''; // TODO: 本地文件缓存路径
   static const String appId = '600000001';
   static const String _userSecret = 'iscooler';
@@ -617,17 +623,17 @@ class SyncChainServiceV2 {
     //   return;
     // }
     if (isSynchronizing) {
-      print('$_logTag: 正在同步，跳过');
+      _log('$_logTag: 正在同步，跳过');
       return;
     }
-    print('$_logTag: 链式同步开始');
+    _log('$_logTag: 链式同步开始');
     isSynchronizing = true;
     listener?.onSyncStart();
 
     try {
       await _chainRequest1(listener);
     } catch (e) {
-      print('$_logTag: 同步异常: $e');
+      _log('$_logTag: 同步异常: $e');
       _syncServiceFailed(listener);
     }
   }
@@ -641,7 +647,7 @@ class SyncChainServiceV2 {
     //   await _chainRequest2(listener);
     //   return;
     // }
-    print('$_logTag: 第 1 步 ------ 同步用户学习记录');
+    _log('$_logTag: 第 1 步 ------ 同步用户学习记录');
 
     // 模拟：获取待同步数据
     // final syncData = BBWordProcessDao.getSyncData();
@@ -661,7 +667,7 @@ class SyncChainServiceV2 {
   /// 端点：SyncUserVocabulary
   /// 参数：last_sync_time, sync_file
   static Future<void> _chainRequest2(SyncListener? listener) async {
-    print('$_logTag: 第 2 步 ------ 同步用户生词');
+    _log('$_logTag: 第 2 步 ------ 同步用户生词');
 
     // TODO: 需要 NewWordDao 和 UserPreferences 集成
     // final syncData = NewWordDao.getSyncData();
@@ -699,13 +705,13 @@ class SyncChainServiceV2 {
   }
 
   static void _syncServiceFailed(SyncListener? listener) {
-    print('$_logTag: 链式同步服务异常');
+    _log('$_logTag: 链式同步服务异常');
     isSynchronizing = false;
     listener?.onSyncFailed();
   }
 
   static void _syncServiceSuccess(SyncListener? listener) {
-    print('$_logTag: 链式同步服务完成');
+    _log('$_logTag: 链式同步服务完成');
     isSynchronizing = false;
     listener?.onSyncSuccess();
   }
@@ -819,7 +825,7 @@ class _ReportDailyHandler extends CoolJsonHttpResponseHandler {
 
   @override
   void onFailure(CoolHttpResponse response) {
-    print('ReportUserDaily: 上报失败 ${response.errorInfo}');
+    _log('ReportUserDaily: 上报失败 ${response.errorInfo}');
     ReportUserDaily._bSyning = false;
   }
 }
@@ -833,7 +839,7 @@ class _ReportReviewTaskHandler extends CoolJsonHttpResponseHandler {
 
   @override
   void onFailure(CoolHttpResponse response) {
-    print('ReportUserDaily: 上报复习任务失败 ${response.errorInfo}');
+    _log('ReportUserDaily: 上报复习任务失败 ${response.errorInfo}');
     ReportUserDaily._bReviewTaskSyncing = false;
   }
 }
@@ -1027,7 +1033,7 @@ class _AppConfigHandler extends CoolJsonHttpResponseHandler {
       final config = AppConfiguration.fromJson(feature);
       listener.onSuccess(config);
     } catch (e) {
-      print('GetAppConfiguration: 解析失败 $e');
+      _log('GetAppConfiguration: 解析失败 $e');
       listener.onFailed();
     }
   }
