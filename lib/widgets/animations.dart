@@ -78,15 +78,29 @@ class ShakeWidget extends AnimatedWidget {
   }
 }
 
-/// Builds the horizontal shake tween (left-right oscillation, 5 cycles).
-Animation<double> buildShakeAnim(AnimationController controller) {
+/// Builds the horizontal shake tween (left-right oscillation).
+/// [amplitude] 抖动幅度（像素），[cycles] 周期数
+Animation<double> buildShakeAnim(
+  AnimationController controller, {
+  double amplitude = 6.0,
+  int cycles = 5,
+}) {
   return TweenSequence<double>([
-    for (int i = 0; i < 5; i++) ...[
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: -6.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -6.0, end: 6.0), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: 6.0, end: 0.0), weight: 1),
+    for (int i = 0; i < cycles; i++) ...[
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -amplitude), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -amplitude, end: amplitude), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: amplitude, end: 0.0), weight: 1),
     ],
   ]).animate(CurvedAnimation(parent: controller, curve: Curves.linear));
+}
+
+/// 单周期抖动偏移计算（P3: 替代 TweenSequence，更轻量）
+/// 用于 AnimatedBuilder 实时计算，避免 ShakeWidget 的 listenable 类型问题
+double computeShakeOffset(double t, {double amplitude = 3.0, int cycles = 1}) {
+  final phase = (t * cycles * 4) % 4;
+  if (phase < 1) return -amplitude * phase;
+  if (phase < 3) return -amplitude + amplitude * (phase - 1);
+  return amplitude - amplitude * (phase - 3);
 }
 
 /// Wraps [child] in a scale bounce animation (correct-answer feedback).

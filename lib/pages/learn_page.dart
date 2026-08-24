@@ -247,7 +247,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _shakeController = AnimationController(
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 300), // P3: motion_spec slow 档
       vsync: this,
     );
 
@@ -360,7 +360,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             height: 56,
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: const EdgeInsets.only(bottom: 16), // P5: 触控审计 P0 间距
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
               color: bgColor,
@@ -410,9 +410,16 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       );
     }
 
-    // Wrap wrong choice with shake animation
+    // P3c: 收敛抖动 ±3px/300ms 单周期（AnimatedBuilder 替代 ShakeWidget）
     if (isWrong) {
-      tile = ShakeWidget(controller: _shakeController, child: tile);
+      tile = AnimatedBuilder(
+        animation: _shakeController,
+        builder: (context, child) {
+          final offset = computeShakeOffset(_shakeController.value, amplitude: 3.0, cycles: 1);
+          return Transform.translate(offset: Offset(offset, 0), child: child);
+        },
+        child: tile,
+      );
     }
 
     // P7: 答对后其余选项降权 0.40
