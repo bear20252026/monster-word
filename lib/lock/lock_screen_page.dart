@@ -12,6 +12,25 @@ import 'lock_view.dart';
 import 'my_element_animator.dart';
 import 'view/line_indicator.dart';
 
+/// 锁屏专用颜色常量（刻意独立于 app 主题，始终深色）
+/// 锁屏是系统级全屏覆盖，无论 app 当前皮肤如何都应保持深色背景 + 白色文字。
+class LockScreenColors {
+  LockScreenColors._();
+  static const Color background = Colors.black;
+  static const Color gradientTop = Color(0xFF1a1a2e);
+  static const Color gradientMid = Color(0xFF16213e);
+  static const Color gradientBottom = Color(0xFF0f3460);
+  static const Color textPrimary = Colors.white;
+  static const Color textSecondary = Colors.white70;
+  static const Color textTertiary = Colors.white60;
+  static const Color textMuted = Colors.white54;
+  static const Color iconDim = Colors.white38;
+  static const Color borderLight = Colors.white30;
+  static const Color chargingIcon = Colors.greenAccent;
+  static const Color overlayScrim = Colors.black87;
+  static const Color pillBg = Color(0x26FFFFFF); // white 15%
+}
+
 /// 锁屏学习主页面
 /// 完整还原 v3.2 LockViewProcessorImp 的功能：
 /// - 锁屏界面显示单词、音标、释义
@@ -315,8 +334,10 @@ class _LockScreenPageState extends State<LockScreenPage>
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
 
+    // 锁屏覆层：颜色刻意独立于 app 主题（始终深色），不走 ThemeVars。
+    // 锁屏是系统级全屏覆盖，无论 app 当前皮肤如何都应保持深色背景 + 白色文字。
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: LockScreenColors.background,
       body: GestureDetector(
         onLongPressStart: (_) => _onLongPressStart(),
         onLongPressEnd: (_) => _onLongPressEnd(),
@@ -360,9 +381,9 @@ class _LockScreenPageState extends State<LockScreenPage>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF1a1a2e),
-              Color(0xFF16213e),
-              Color(0xFF0f3460),
+              LockScreenColors.gradientTop,
+              LockScreenColors.gradientMid,
+              LockScreenColors.gradientBottom,
             ],
           ),
         ),
@@ -384,7 +405,7 @@ class _LockScreenPageState extends State<LockScreenPage>
               Text(
                 _time,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: LockScreenColors.textPrimary,
                   fontSize: 48,
                   fontWeight: FontWeight.w200,
                 ),
@@ -407,7 +428,7 @@ class _LockScreenPageState extends State<LockScreenPage>
             opacity: _chargingController,
             child: const Icon(
               Icons.battery_charging_full,
-              color: Colors.greenAccent,
+              color: LockScreenColors.chargingIcon,
               size: 20,
             ),
           ),
@@ -415,7 +436,7 @@ class _LockScreenPageState extends State<LockScreenPage>
         Text(
           '$_powerPercent%',
           style: const TextStyle(
-            color: Colors.white70,
+            color: LockScreenColors.textSecondary,
             fontSize: 14,
           ),
         ),
@@ -444,7 +465,7 @@ class _LockScreenPageState extends State<LockScreenPage>
             Text(
               _dateEn,
               style: const TextStyle(
-                color: Colors.white54,
+                color: LockScreenColors.textMuted,
                 fontSize: 14,
               ),
             ),
@@ -453,7 +474,7 @@ class _LockScreenPageState extends State<LockScreenPage>
             Text(
               _word,
               style: const TextStyle(
-                color: Colors.white,
+                color: LockScreenColors.textPrimary,
                 fontSize: 36,
                 fontWeight: FontWeight.bold,
               ),
@@ -472,13 +493,13 @@ class _LockScreenPageState extends State<LockScreenPage>
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white30),
+                      border: Border.all(color: LockScreenColors.borderLight),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       _phoneticType,
                       style: const TextStyle(
-                        color: Colors.white70,
+                        color: LockScreenColors.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -487,7 +508,7 @@ class _LockScreenPageState extends State<LockScreenPage>
                   Text(
                     _phonetic,
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: LockScreenColors.textSecondary,
                       fontSize: 16,
                     ),
                   ),
@@ -523,7 +544,7 @@ class _LockScreenPageState extends State<LockScreenPage>
                     child: Text(
                       interp['type']!,
                       style: const TextStyle(
-                        color: Colors.white60,
+                        color: LockScreenColors.textTertiary,
                         fontSize: 14,
                       ),
                     ),
@@ -532,7 +553,7 @@ class _LockScreenPageState extends State<LockScreenPage>
                   child: Text(
                     interp['meaning'] ?? '',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: LockScreenColors.textPrimary,
                       fontSize: 16,
                     ),
                   ),
@@ -571,7 +592,7 @@ class _LockScreenPageState extends State<LockScreenPage>
                   opacity: (_slideUpAnimation.value.abs() / 50).clamp(0.0, 1.0),
                   child: const Icon(
                     Icons.keyboard_arrow_up,
-                    color: Colors.white38,
+                    color: LockScreenColors.iconDim,
                     size: 32,
                   ),
                 ),
@@ -585,7 +606,7 @@ class _LockScreenPageState extends State<LockScreenPage>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
+                color: LockScreenColors.pillBg,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: const Row(
@@ -594,14 +615,14 @@ class _LockScreenPageState extends State<LockScreenPage>
                   Text(
                     '左滑进入学习',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: LockScreenColors.textPrimary,
                       fontSize: 14,
                     ),
                   ),
                   SizedBox(width: 8),
                   Icon(
                     Icons.arrow_forward_ios,
-                    color: Colors.white,
+                    color: LockScreenColors.textPrimary,
                     size: 14,
                   ),
                 ],
@@ -634,7 +655,7 @@ class _LockScreenPageState extends State<LockScreenPage>
           }
         },
         child: Container(
-          color: Colors.black87,
+          color: LockScreenColors.overlayScrim,
           child: Column(
             children: [
               // 顶部区域：单词 + 释义
@@ -656,7 +677,7 @@ class _LockScreenPageState extends State<LockScreenPage>
   Widget _buildExamplePager() {
     if (_isProcessingExample) {
       return const Center(
-        child: CircularProgressIndicator(color: Colors.white54),
+        child: CircularProgressIndicator(color: LockScreenColors.textMuted),
       );
     }
 
@@ -664,7 +685,7 @@ class _LockScreenPageState extends State<LockScreenPage>
       return const Center(
         child: Text(
           '暂无例句',
-          style: TextStyle(color: Colors.white54),
+          style: TextStyle(color: LockScreenColors.textMuted),
         ),
       );
     }
@@ -693,7 +714,7 @@ class _LockScreenPageState extends State<LockScreenPage>
                 Text(
                   _examples[realIndex],
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: LockScreenColors.textPrimary,
                     fontSize: 18,
                     height: 1.5,
                   ),
@@ -704,7 +725,7 @@ class _LockScreenPageState extends State<LockScreenPage>
                   Text(
                     _sentences[realIndex]['cn'] ?? '',
                     style: const TextStyle(
-                      color: Colors.white60,
+                      color: LockScreenColors.textTertiary,
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -733,7 +754,7 @@ class _LockScreenPageState extends State<LockScreenPage>
               opacity: (_slideDownAnimation.value.abs() / 50).clamp(0.0, 1.0),
               child: const Icon(
                 Icons.keyboard_arrow_down,
-                color: Colors.white38,
+                color: LockScreenColors.iconDim,
                 size: 32,
               ),
             ),
