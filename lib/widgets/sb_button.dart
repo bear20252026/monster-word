@@ -187,7 +187,7 @@ class SbButton extends StatelessWidget {
       enabled: enabled,
       child: AnimatedOpacity(
         opacity: _isInteractive ? 1.0 : 0.4,
-        duration: const Duration(milliseconds: 200),
+        duration: MotionDurations.base,
         child: Container(
           constraints: minWidth != null
               ? BoxConstraints(minWidth: minWidth!)

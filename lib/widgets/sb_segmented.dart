@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
+import '../tokens/motion_tokens.dart';
 
 /// 星巴克分段控件
 ///
@@ -58,8 +59,8 @@ class SbSegmented<T> extends StatelessWidget {
           // 选中滑块：cardBg 小卡浮起 + 双层阴影
           AnimatedAlign(
             alignment: Alignment(i * 2 / (keys.length - 1) - 1, 0),
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.ease,
+            duration: MotionDurations.base,
+            curve: Curves.ease, // motion_tokens: Curves.easeOut 可替代，保留 ease 匹配星巴克原规格
             child: SizedBox(
               width: w,
               height: 44,

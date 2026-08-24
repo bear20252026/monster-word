@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
+import '../tokens/motion_tokens.dart';
 
 /// 星巴克进度指示组件
 ///
@@ -52,8 +53,8 @@ class SbLinearProgress extends StatelessWidget {
       borderRadius: BorderRadius.circular(50),
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 0, end: value.clamp(0.0, 1.0)),
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.ease,
+        duration: MotionDurations.base,
+        curve: Curves.ease, // motion_tokens: Curves.easeOut 可替代，保留 ease 匹配星巴克原规格
         builder: (_, v, _) => LinearProgressIndicator(
           value: v,
           minHeight: height,
@@ -111,7 +112,7 @@ class SbRingProgress extends StatelessWidget {
     final colors = context.skin.colors;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: value.clamp(0.0, 1.0)),
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 400), // 环形进度特例档（非用户交互反馈，符合 motion_spec >800ms 环境类约束）
       curve: Curves.ease,
       builder: (_, v, _) => Stack(
         alignment: Alignment.center,
