@@ -16,6 +16,14 @@ class FuncColors {
   /// 信息蓝浅色变体（用于背景/选中态）
   static const Color infoLight = Color(0xFFBBDEFB);
 
+  // ─── 成功绿 ─────────────────────────────────────────────
+  /// 成功状态色（Material Green 500）
+  /// 用途：成功提示、完成状态
+  static const Color success = Color(0xFF4CAF50);
+
+  /// 成功绿浅色变体（用于背景）
+  static const Color successLight = Color(0xFFE8F5E9);
+
   // ─── 警告橙 ─────────────────────────────────────────────
   /// 警告状态色（Material Orange 500）
   /// 用途：警告标签、提醒

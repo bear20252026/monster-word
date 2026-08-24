@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../data/wordbook_database.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../tokens/func_colors.dart';
 
 /// 考试类型
 enum ExamType {
@@ -68,11 +69,11 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
   // 统计
   final QuickReviewStats _stats = QuickReviewStats();
 
-  // 选项背景色（装饰性，无全局 token，页面级常量）
-  static const Color _optionGreen = Color(0xFFE8F5E9);
-  static const Color _optionBlue = Color(0xFFE3F2FD);
-  static const Color _optionOrange = Color(0xFFFFF3E0);
-  static const Color _optionPurple = Color(0xFFF3E5F5);
+  // 选项背景色（使用 FuncColors 浅色变体）
+  static const Color _optionGreen = FuncColors.successLight;
+  static const Color _optionBlue = FuncColors.infoLight;
+  static const Color _optionOrange = FuncColors.warningLight;
+  static const Color _optionPurple = FuncColors.purpleLight;
 
   final List<Color> _optionColors = [
     _optionGreen,
