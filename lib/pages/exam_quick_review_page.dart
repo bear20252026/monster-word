@@ -68,12 +68,17 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
   // 统计
   final QuickReviewStats _stats = QuickReviewStats();
 
-  // 选项颜色
+  // 选项背景色（装饰性，无全局 token，页面级常量）
+  static const Color _optionGreen = Color(0xFFE8F5E9);
+  static const Color _optionBlue = Color(0xFFE3F2FD);
+  static const Color _optionOrange = Color(0xFFFFF3E0);
+  static const Color _optionPurple = Color(0xFFF3E5F5);
+
   final List<Color> _optionColors = [
-    const Color(0xFFE8F5E9), // 浅绿
-    const Color(0xFFE3F2FD), // 浅蓝
-    const Color(0xFFFFF3E0), // 浅橙
-    const Color(0xFFF3E5F5), // 浅紫
+    _optionGreen,
+    _optionBlue,
+    _optionOrange,
+    _optionPurple,
   ];
 
   @override
@@ -385,13 +390,13 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: isOvertime ? Colors.red.withValues(alpha: 0.1) : Colors.transparent,
+                      color: isOvertime ? skin.colors.danger.withValues(alpha: 0.1) : Colors.transparent,
                       borderRadius: BorderRadius.circular(AppRadius.sm),
                     ),
                     child: Text(
                       _stats.timeFormatted,
                       style: MistralTypography.body.copyWith(
-                        color: isOvertime ? Colors.red : skin.colors.text1,
+                        color: isOvertime ? skin.colors.danger : skin.colors.text1,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -406,9 +411,9 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStatItem('正确', '${_stats.correct}', Colors.green),
-                  _buildStatItem('错误', '${_stats.wrong}', Colors.red),
-                  _buildStatItem('跳过', '${_stats.skipped}', Colors.orange),
+                  _buildStatItem('正确', '${_stats.correct}', skin.colors.success),
+                  _buildStatItem('错误', '${_stats.wrong}', skin.colors.danger),
+                  _buildStatItem('跳过', '${_stats.skipped}', MistralColors.warning),
                   _buildStatItem('正确率', _stats.accuracyPercent, MistralColors.primary),
                 ],
               ),
@@ -503,11 +508,11 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
     Color borderColor;
     if (showResult) {
       if (isCorrect) {
-        bgColor = Colors.green.withValues(alpha: 0.1);
-        borderColor = Colors.green;
+        bgColor = skin.colors.success.withValues(alpha: 0.1);
+        borderColor = skin.colors.success;
       } else if (isSelected && !isCorrect) {
-        bgColor = Colors.red.withValues(alpha: 0.1);
-        borderColor = Colors.red;
+        bgColor = skin.colors.danger.withValues(alpha: 0.1);
+        borderColor = skin.colors.danger;
       } else {
         bgColor = _optionColors[index % _optionColors.length];
         borderColor = skin.colors.divider;
@@ -555,9 +560,9 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
               ),
             ),
             if (showResult && isCorrect)
-              const Icon(Icons.check_circle, color: Colors.green, size: 20),
+              Icon(Icons.check_circle, color: skin.colors.success, size: 20),
             if (showResult && isSelected && !isCorrect)
-              const Icon(Icons.cancel, color: Colors.red, size: 20),
+              Icon(Icons.cancel, color: skin.colors.danger, size: 20),
           ],
         ),
       ),
@@ -574,7 +579,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: MistralTypography.micro.copyWith(color: Colors.grey),
+          style: MistralTypography.micro.copyWith(color: MistralColors.muted),
         ),
       ],
     );
@@ -632,7 +637,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                       _buildResultRow('跳过', '${_stats.skipped}', skin),
                       const Divider(),
                       _buildResultRow('正确率', _stats.accuracyPercent, skin,
-                          valueColor: _stats.accuracy >= 0.8 ? Colors.green : Colors.red),
+                          valueColor: _stats.accuracy >= 0.8 ? skin.colors.success : skin.colors.danger),
                       _buildResultRow('用时', _stats.timeFormatted, skin),
                     ],
                   ),
