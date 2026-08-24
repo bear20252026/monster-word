@@ -157,9 +157,11 @@ class _ScaleDownOnPressState extends State<ScaleDownOnPress>
       return widget.child;
     }
 
-    Widget result = ScaleTransition(
-      scale: _animation,
-      child: widget.child,
+    Widget result = RepaintBoundary(
+      child: ScaleTransition(
+        scale: _animation,
+        child: widget.child,
+      ),
     );
 
     // 支持长按时使用 GestureDetector 统一处理

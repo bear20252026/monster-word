@@ -45,9 +45,9 @@ class _LearnMainViewState extends State<LearnMainView>
     with TickerProviderStateMixin {
   late AnimationController _rightPanelController;
   late AnimationController _leftPanelController;
-  LearnPanelState _rightPanelState = LearnPanelState.collapsed;
-  LearnPanelState _leftPanelState = LearnPanelState.collapsed;
-  double _bottomPanelTranslation = 0;
+  final LearnPanelState _rightPanelState = LearnPanelState.collapsed;
+  final LearnPanelState _leftPanelState = LearnPanelState.collapsed;
+  final double _bottomPanelTranslation = 0;
 
   @override
   void initState() {

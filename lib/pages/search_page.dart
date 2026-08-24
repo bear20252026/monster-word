@@ -159,6 +159,8 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildResultList(ThemeVars skin) {
     return ListView.builder(
       itemCount: _results.length,
+      addAutomaticKeepAlives: false,
+      addRepaintBoundaries: true,
       itemBuilder: (context, i) {
         final w = _results[i];
         return ScaleDownOnPress(

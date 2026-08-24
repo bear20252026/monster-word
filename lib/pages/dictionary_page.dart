@@ -357,6 +357,8 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
 
     return ListView.builder(
       itemCount: examples.length,
+      addAutomaticKeepAlives: false,
+      addRepaintBoundaries: true,
       itemBuilder: (context, index) {
         final ex = examples[index];
         return Container(
@@ -489,6 +491,8 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
 
         return ListView.builder(
           itemCount: synonyms.length,
+          addAutomaticKeepAlives: false,
+          addRepaintBoundaries: true,
           itemBuilder: (context, index) {
             final synonym = synonyms[index];
             final firstInterpret = synonym.interpretLines.isNotEmpty

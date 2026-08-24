@@ -158,6 +158,8 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
     return ListView.builder(
       itemCount: _words.length,
       padding: const EdgeInsets.symmetric(vertical: 8),
+      addAutomaticKeepAlives: false,
+      addRepaintBoundaries: true,
       itemBuilder: (context, index) {
         final word = _words[index];
         final isSelected = _selectedIndices.contains(index);

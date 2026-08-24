@@ -399,6 +399,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       );
     }
 
-    return tile;
+    // 动画性能优化：RepaintBoundary 隔离重绘区域
+    return RepaintBoundary(child: tile);
   }
 }

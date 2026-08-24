@@ -77,6 +77,12 @@ Future<void> main() async {
     return true; // 标记已处理，避免直接崩溃退出
   };
 
+  // 3) 自定义 Widget 构建异常页面（替代默认灰红错误屏）
+  ErrorWidget.builder = (details) {
+    debugPrint('[GlobalError] Widget build error: ${details.exception}');
+    return _FriendlyErrorPage(exception: details.exception);
+  };
+
   await WordBookDatabase.ensurePlatform();
   await WordBookDatabase.instance.initialize();
   await UserDatabase.instance.initialize();
@@ -93,6 +99,41 @@ class WordApp extends StatefulWidget {
 
   @override
   State<WordApp> createState() => _WordAppState();
+}
+
+/// Widget 构建异常时的友好错误页（替代 Flutter 默认灰红错误屏）
+class _FriendlyErrorPage extends StatelessWidget {
+  final Object exception;
+  const _FriendlyErrorPage({required this.exception});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFF7F4EF),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 56, color: Color(0xFFB0885A)),
+              const SizedBox(height: 16),
+              const Text(
+                '页面出了一点小问题',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3D3630)),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '我们已记录此问题，请尝试返回或重新进入该页面。\n($exception)',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, color: Color(0xFF8A8078)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
