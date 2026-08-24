@@ -56,10 +56,10 @@ class CollinsDetailIntroPage extends StatelessWidget {
       children: [
         // 1. 橙色单词标题
         Text(d.word,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
-            color: Color(0xFFE8913A),
+            color: skin.colors.accent,
           ),
         ),
         const SizedBox(height: 10),
@@ -67,10 +67,10 @@ class CollinsDetailIntroPage extends StatelessWidget {
         // 2. 评分圆点 + 考试标签
         Row(
           children: [
-            _buildRatingDots(d.rating),
+            _buildRatingDots(d.rating, skin),
             if (d.tags.isNotEmpty) ...[
               const SizedBox(width: 12),
-              ...d.tags.map((tag) => _buildTag(tag)),
+              ...d.tags.map((tag) => _buildTag(tag, skin)),
             ],
           ],
         ),
@@ -110,8 +110,8 @@ class CollinsDetailIntroPage extends StatelessWidget {
     );
   }
 
-  /// 评分圆点（橙色填充 + 灰色空心）
-  Widget _buildRatingDots(int rating) {
+  /// 评分圆点（品牌色填充 + 分割线色空心）
+  Widget _buildRatingDots(int rating, SkinSystem skin) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(4, (i) {
@@ -123,7 +123,7 @@ class CollinsDetailIntroPage extends StatelessWidget {
             height: 10,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: filled ? const Color(0xFFE8913A) : const Color(0xFFD0D0D0),
+              color: filled ? skin.colors.accent : skin.colors.divider,
             ),
           ),
         );
@@ -132,20 +132,20 @@ class CollinsDetailIntroPage extends StatelessWidget {
   }
 
   /// 考试标签（CET4 / TEM4 等）
-  Widget _buildTag(String tag) {
+  Widget _buildTag(String tag, SkinSystem skin) {
     return Container(
       margin: const EdgeInsets.only(right: 6),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF3E0),
+        color: skin.colors.accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: const Color(0xFFE8913A).withValues(alpha: 0.3)),
+        border: Border.all(color: skin.colors.accent.withValues(alpha: 0.3)),
       ),
       child: Text(tag,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: Color(0xFFE8913A),
+          color: skin.colors.accent,
         )),
     );
   }
@@ -170,9 +170,9 @@ class CollinsDetailIntroPage extends StatelessWidget {
               // TODO: 跳转到相关单词详情
             },
             child: Text(w,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF4A90E2),
+                color: skin.colors.teal,
                 decoration: TextDecoration.underline,
               )),
           )).toList(),
@@ -204,7 +204,7 @@ class CollinsDetailIntroPage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: skin.colors.cardBg,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -217,11 +217,11 @@ class CollinsDetailIntroPage extends StatelessWidget {
                 margin: const EdgeInsets.only(right: 8, top: 2),
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8913A).withValues(alpha: 0.1),
+                  color: skin.colors.accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(3),
                 ),
-                child: const Text('例',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFE8913A))),
+                child: Text('例',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: skin.colors.accent)),
               ),
               Expanded(
                 child: Text(ex.english,
