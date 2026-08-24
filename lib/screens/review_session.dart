@@ -251,27 +251,27 @@ class _ReviewSessionState extends State<ReviewSession> {
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
       child: Row(
         children: [
-          _verdictBtn('认识', skin.colors.teal, () => _rate(RecallRating.good), skin),
-          _verdictBtn('模糊', skin.colors.accent, () => _rate(RecallRating.hard), skin),
-          _verdictBtn('忘记了', skin.colors.danger, () => _rate(RecallRating.again), skin),
+          Expanded(child: _verdictBtn('认识', skin.colors.teal, () => _rate(RecallRating.good), skin)),
+          const SizedBox(width: 12), // P6: 触控审计 P0 三键间距
+          Expanded(child: _verdictBtn('模糊', skin.colors.accent, () => _rate(RecallRating.hard), skin)),
+          const SizedBox(width: 12), // P6: 触控审计 P0 三键间距
+          Expanded(child: _verdictBtn('忘记了', skin.colors.danger, () => _rate(RecallRating.again), skin)),
         ],
       ),
     );
   }
 
   Widget _verdictBtn(String label, Color color, VoidCallback onTap, SkinSystem skin) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: 48,
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: color, width: AppUnderline.thickness)),
-          ),
-          child: Center(
-            child: Text(label,
-                style: AppTypography.body.copyWith(color: skin.colors.onGlassText1)),
-          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: color, width: AppUnderline.thickness)),
+        ),
+        child: Center(
+          child: Text(label,
+              style: AppTypography.body.copyWith(color: skin.colors.onGlassText1)),
         ),
       ),
     );

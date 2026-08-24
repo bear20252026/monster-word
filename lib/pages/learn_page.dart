@@ -232,6 +232,7 @@ class _QuizArea extends StatefulWidget {
 
 class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   int _wrongIndex = -1; // -1=未选错
+  int _correctIndex = -1; // -1=未答对（P4 guard + P1 绿色确认态）
 
   // Shake animation (wrong answer feedback)
   late AnimationController _shakeController;
@@ -265,12 +266,15 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.word.word != widget.word.word) {
       _wrongIndex = -1;
+      _correctIndex = -1;
       _shakeController.reset();
       _bounceController.reset();
     }
   }
 
   void _onChoice(int i) {
+    // --- P4: 防重复点击 guard ---
+    if (_correctIndex >= 0) return;
     final isCorrect = widget.state.choices[i].word == widget.word.word;
     if (isCorrect) {
       // 选对：评分 + 弹跳反馈，跳转字典详情页
