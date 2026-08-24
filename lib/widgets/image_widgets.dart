@@ -4,6 +4,7 @@
 // 图片类组件集合
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
 // ─────────────────────────────────────────────────────────────
 // CircularImage — 圆形头像图片（移植自 CircularImageView.java）
 // ─────────────────────────────────────────────────────────────
@@ -117,7 +118,7 @@ class RatioImage extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         child: image != null
             ? Image(image: image!, fit: fit)
-            : Container(color: Colors.grey[200]),
+            : Container(color: MistralColors.slate.withValues(alpha: 0.2)),
       ),
     );
   }
@@ -176,7 +177,7 @@ class FullScreenImageViewer extends StatelessWidget {
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
-        barrierColor: Colors.black87,
+        barrierColor: MistralColors.ink,
         pageBuilder: (context, _, _) {
           return FullScreenImageViewer(image: image, heroTag: heroTag);
         },
