@@ -10,6 +10,7 @@ build/
 
 # Android
 android/.gradle/
+android/.kotlin/
 android/app/build/
 android/local.properties
 
@@ -35,3 +36,12 @@ linux/flutter/ephemeral/
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+
+# Flutter metadata
+.metadata
+
+# Test coverage
+coverage/
