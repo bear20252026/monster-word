@@ -69,8 +69,10 @@ class DictionaryExtraStore {
   }
 
   static DictionaryExtra _parse(dynamic entry) {
-    if (entry is! Map<String, dynamic>) return const DictionaryExtra(
+    if (entry is! Map<String, dynamic>) {
+      return const DictionaryExtra(
         derivatives: [], synonyms: [], examSentences: []);
+    }
     final derivatives = (entry['derivatives'] as List<dynamic>? ?? [])
         .map((e) => e.toString())
         .toList();

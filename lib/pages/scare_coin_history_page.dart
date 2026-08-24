@@ -20,6 +20,9 @@ class ScareCoinLedger {
   static const String _kBalance = 'scare_coin.balance';
   static const String _kHistory = 'scare_coin.history';
   static const String _kLastCheckIn = 'scare_coin.last_checkin';
+
+  /// 全部签到日期（yyyy-MM-dd 集合），供弹性签到日历渲染
+  static const String _kCheckinDates = 'scare_coin.checkin_dates';
   static const int checkInReward = 10;
 
   /// 当前余额
@@ -27,6 +30,32 @@ class ScareCoinLedger {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kBalance) ?? 0;
   }
+
+  /// 全部已签到日期（yyyy-MM-dd）
+  static Future<Set<String>> checkinDates() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_kCheckinDates) ?? const [];
+    return list.toSet();
+  }
+
+  /// 连续签到天数：从今天（若今日已签）或昨天往回连续计数
+  static Future<int> streak() async {
+    final dates = await checkinDates();
+    if (dates.isEmpty) return 0;
+    var day = DateTime.now();
+    bool has(DateTime d) => dates.contains(_iso(d));
+    // 今天没签则从昨天起算（连击不断）
+    if (!has(day)) day = day.subtract(const Duration(days: 1));
+    var count = 0;
+    while (has(day)) {
+      count++;
+      day = day.subtract(const Duration(days: 1));
+    }
+    return count;
+  }
+
+  static String _iso(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   /// 流水列表（新→旧）
   static Future<List<ScareCoinEntry>> history() async {
@@ -57,12 +86,17 @@ class ScareCoinLedger {
     final now = DateTime.now();
     final last = await lastCheckInDate();
     if (isSameDay(last, now)) return null;
-    return _apply(
-      delta: checkInReward,
-      reason: '每日签到',
-      lastCheckInIso:
-          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
-    );
+    final iso = _iso(now);
+    // 记入签到日历集合（弹性签到日历渲染用）
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dates = (prefs.getStringList(_kCheckinDates) ?? const <String>[]).toSet()
+        ..add(iso);
+      await prefs.setStringList(_kCheckinDates, dates.toList()..sort());
+    } catch (_) {
+      // 日历集合写入失败不阻断主签到流程
+    }
+    return _apply(delta: checkInReward, reason: '每日签到', lastCheckInIso: iso);
   }
 
   /// 发放奖励（供学习/复习结算等场景调用）
@@ -236,7 +270,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                       padding: EdgeInsets.fromLTRB(context.responsive.pageMargin, 0,
                           context.responsive.pageMargin, 8),
                       itemCount: _entries.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (context, i) {
                         final e = _entries[i];
                         return Container(

@@ -66,13 +66,19 @@ class MyContentPage extends StatelessWidget {
                     // 列表组 2：单词本 / 句库 / 笔记
                     _ListGroup(
                       children: [
-                        _ListItem(
-                          icon: Icons.book_outlined,
-                          iconColor: FuncColors.info,
-                          title: '单词本',
-                          value: '${context.watch<LearningState>().favoriteCount} 词',
-                          skin: skin,
-                          onTap: () => Navigator.pushNamed(context, MyFavPage.routeName),
+                        // 用 Selector 只订阅 favoriteCount，避免 LearningState
+                        // 任意变化导致整页 rebuild
+                        Selector<LearningState, int>(
+                          selector: (_, s) => s.favoriteCount,
+                          builder: (context, favCount, _) => _ListItem(
+                            icon: Icons.book_outlined,
+                            iconColor: FuncColors.info,
+                            title: '单词本',
+                            value: '$favCount 词',
+                            skin: skin,
+                            onTap: () =>
+                                Navigator.pushNamed(context, MyFavPage.routeName),
+                          ),
                         ),
                         _ListItem(
                           icon: Icons.format_quote,

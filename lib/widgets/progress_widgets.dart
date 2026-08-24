@@ -7,6 +7,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+import '../tokens/design_tokens.dart';
+
 /// 圆形进度条（翻译自 CircleProgressBar.dart）
 class CircleProgressBar extends StatelessWidget {
   final double progress; // 0.0 ~ 1.0
@@ -23,7 +25,7 @@ class CircleProgressBar extends StatelessWidget {
     this.size = 60,
     this.strokeWidth = 4,
     this.backgroundColor = const Color(0x12000000),
-    this.progressColor = Colors.blue,
+    this.progressColor = AppColors.primary,
     this.child,
     this.showPercentage = false,
   });
@@ -118,7 +120,7 @@ class IndeterminateCircleProgress extends StatefulWidget {
     super.key,
     this.size = 40,
     this.strokeWidth = 3,
-    this.color = Colors.blue,
+    this.color = AppColors.primary,
   });
 
   @override

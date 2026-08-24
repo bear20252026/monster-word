@@ -6,6 +6,9 @@
 
 import 'package:flutter/material.dart';
 
+import '../tokens/design_tokens.dart';
+import '../tokens/func_colors.dart';
+
 /// 验证码输入框（翻译自 CustomInputView.dart）
 /// 显示 N 个方格，每个格子显示一个字符
 class VerificationCodeInput extends StatelessWidget {
@@ -27,7 +30,7 @@ class VerificationCodeInput extends StatelessWidget {
     this.boxSize = 40,
     this.boxRadius = 8,
     this.boxColor = const Color(0x40000000),
-    this.textColor = Colors.black,
+    this.textColor = AppColors.black87,
     this.fontSize = 24,
     this.autofocus = false,
   });
@@ -84,8 +87,8 @@ class VerificationCodeField extends StatefulWidget {
     this.boxSize = 40,
     this.boxRadius = 8,
     this.boxColor = const Color(0x40000000),
-    this.textColor = Colors.black,
-    this.cursorColor = Colors.blue,
+    this.textColor = AppColors.black87,
+    this.cursorColor = FuncColors.info,
   });
 
   @override

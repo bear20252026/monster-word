@@ -4,6 +4,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+import '../tokens/design_tokens.dart';
+import '../tokens/func_colors.dart';
 import '../widgets/animations.dart';
 
 import 'lock_presenter.dart';
@@ -14,21 +16,23 @@ import 'view/line_indicator.dart';
 
 /// 锁屏专用颜色常量（刻意独立于 app 主题，始终深色）
 /// 锁屏是系统级全屏覆盖，无论 app 当前皮肤如何都应保持深色背景 + 白色文字。
+/// 颜色值已迁移到 Token 系统（AppColors / MistralColors / FuncColors），
+/// 本类作为锁屏语义层，引用 Token 而非 Material 字面量。
 class LockScreenColors {
   LockScreenColors._();
-  static const Color background = Colors.black;
+  static const Color background = FuncColors.black;
   static const Color gradientTop = Color(0xFF1a1a2e);
   static const Color gradientMid = Color(0xFF16213e);
   static const Color gradientBottom = Color(0xFF0f3460);
-  static const Color textPrimary = Colors.white;
-  static const Color textSecondary = Colors.white70;
-  static const Color textTertiary = Colors.white60;
-  static const Color textMuted = Colors.white54;
-  static const Color iconDim = Colors.white38;
-  static const Color borderLight = Colors.white30;
-  static const Color chargingIcon = Colors.greenAccent;
-  static const Color overlayScrim = Colors.black87;
-  static const Color pillBg = Color(0x26FFFFFF); // white 15%
+  static const Color textPrimary = AppColors.white100;
+  static const Color textSecondary = MistralColors.white70;
+  static const Color textTertiary = MistralColors.white60;
+  static const Color textMuted = MistralColors.white54;
+  static const Color iconDim = MistralColors.white38;
+  static const Color borderLight = MistralColors.white30;
+  static const Color chargingIcon = FuncColors.success;
+  static const Color overlayScrim = MistralColors.scrim87;
+  static const Color pillBg = MistralColors.white15; // white 15%
 }
 
 /// 锁屏学习主页面

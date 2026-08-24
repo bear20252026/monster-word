@@ -7,6 +7,8 @@ import '../data/example_parser.dart';
 import '../data/wordbook_database.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
+import '../tokens/func_colors.dart';
 
 /// 单词字典弹出框
 /// 显示：单词 + 音标 + 释义 + 例句 + 收藏按钮 + 查看详情入口
@@ -26,7 +28,7 @@ class WordDictionaryPopup extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'dismiss',
-      barrierColor: Colors.black38,
+      barrierColor: MistralColors.black38,
       transitionDuration: const Duration(milliseconds: 200),
       transitionBuilder: (ctx, anim, secondaryAnim, child) {
         return FadeTransition(
@@ -61,7 +63,7 @@ class WordDictionaryPopup extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
+              color: MistralColors.black15,
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -103,7 +105,7 @@ class WordDictionaryPopup extends StatelessWidget {
           IconButton(
             icon: Icon(
               isFav ? Icons.star : Icons.star_border,
-              color: isFav ? Colors.amber : skin.colors.text3,
+              color: isFav ? FuncColors.warning : skin.colors.text3, // 收藏星标：品牌金
               size: 22,
             ),
             tooltip: isFav ? '取消收藏' : '收藏',

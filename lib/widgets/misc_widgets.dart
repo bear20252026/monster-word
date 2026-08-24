@@ -7,6 +7,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+import '../tokens/design_tokens.dart';
+
 /// 垂直虚线（翻译自 VerticalDotLine.dart）
 class VerticalDotLine extends StatelessWidget {
   final double width;
@@ -229,8 +231,8 @@ class WalkmanWaveAnimation extends StatefulWidget {
   const WalkmanWaveAnimation({
     super.key,
     this.isPlaying = false,
-    this.waveColor = Colors.blue,
-    this.logoColor = Colors.white,
+    this.waveColor = AppColors.primary,
+    this.logoColor = AppColors.white100,
     this.size = 200,
   });
 

@@ -27,6 +27,7 @@ class MistralColors {
 
   // 深色系 → 深绿体系
   static const Color ink = Color(0xFF212121);                        // 正文黑
+  static const Color grey500 = Color(0xFF9E9E9E);                    // 中性灰（对应 Material Colors.grey）
   static const Color inkTint = StarbucksCreamColors.greenBanner;     // 0xFF1E3932
   static const Color charcoal = StarbucksDarkColors.pageBg;          // 0xFF101B17 墨绿
   static const Color slate = StarbucksDarkColors.cardBgAlt;          // 0xFF274A40 浮层绿
@@ -53,9 +54,16 @@ class MistralColors {
   static const Color white54 = Color(0x8AFFFFFF);
   static const Color white70 = Color(0xB3FFFFFF);
   static const Color white24 = Color(0x3DFFFFFF);
+  static const Color white15 = Color(0x26FFFFFF);
+  static const Color white60 = Color(0x99FFFFFF);
+  static const Color white38 = Color(0x61FFFFFF);
+  static const Color white30 = Color(0x4DFFFFFF);
   static const Color black15 = Color(0x26000000);
   static const Color black26 = Color(0x42000000);
+  static const Color black38 = Color(0x66000000);
   static const Color black54 = Color(0x8A000000);
+  /// 深色遮罩（对应 Material Colors.black87 的透明度语义）
+  static const Color scrim87 = Color(0xDD000000);
 }
 
 /// 圆角
