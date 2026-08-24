@@ -1,0 +1,969 @@
+{
+  "version": 2,
+  "generated": "2026-08-24",
+  "books": {
+    "AWL": {
+      "name": "学术词汇表",
+      "confidence": "high",
+      "basis": "已知考试/词汇表缩写：AWL=Academic Word List"
+    },
+    "BARRONSAT": {
+      "name": "巴朗·SAT",
+      "confidence": "high",
+      "basis": "tokens: ['BARRON', 'SAT'], classification: {'brand': '巴朗', 'exam': 'SAT', 'textbook': None, 'content': [], 'numbers': [], 'unknown': []}"
+    },
+    "BECHIGHER": {
+      "name": "BEC高级",
+      "confidence": "high",
+      "basis": "已知考试缩写：BEC Higher"
+    },
+    "BECPRE": {
+      "name": "BEC初级",
+      "confidence": "high",
+      "basis": "已知考试缩写：BEC Preliminary"
+    },
+    "BECVAN": {
+      "name": "BEC中级",
+      "confidence": "high",
+      "basis": "已知考试缩写：BEC Vantage"
+    },
+    "BIZLAW": {
+      "name": "商务法律英语",
+      "confidence": "medium",
+      "basis": "已知考试缩写：Business Law"
+    },
+    "CET4DGCH": {
+      "name": "四级·大纲词汇",
+      "confidence": "high",
+      "basis": "tokens: ['CET4', 'DGCH'], classification: {'brand': None, 'exam': '四级', 'textbook': None, 'content': ['大纲词汇'], 'numbers': [], 'unknown': []}"
+    },
+    "CET4HXCH": {
+      "name": "四级·核心词汇",
+      "confidence": "high",
+      "basis": "tokens: ['CET4', 'HXCH'], classification: {'brand': None, 'exam': '四级', 'textbook': None, 'content': ['核心词汇'], 'numbers': [], 'unknown': []}"
+    },
+    "CET4ZTHXCZ": {
+      "name": "四级·真题核心",
+      "confidence": "high",
+      "basis": "tokens: ['CET4', 'ZTHXCZ'], classification: {'brand': None, 'exam': '四级', 'textbook': None, 'content': ['真题核心'], 'numbers': [], 'unknown': []}"
+    },
+    "CET4ZTTZCZ": {
+      "name": "四级·真题拓展",
+      "confidence": "high",
+      "basis": "tokens: ['CET4', 'ZTTZCZ'], classification: {'brand': None, 'exam': '四级', 'textbook': None, 'content': ['真题拓展'], 'numbers': [], 'unknown': []}"
+    },
+    "CET6CHSG": {
+      "name": "六级·冲刺高分",
+      "confidence": "high",
+      "basis": "tokens: ['CET6', 'CHSG'], classification: {'brand': None, 'exam': '六级', 'textbook': None, 'content': ['冲刺高分'], 'numbers': [], 'unknown': []}"
+    },
+    "CET6DGCH": {
+      "name": "六级·大纲词汇",
+      "confidence": "high",
+      "basis": "tokens: ['CET6', 'DGCH'], classification: {'brand': None, 'exam': '六级', 'textbook': None, 'content': ['大纲词汇'], 'numbers': [], 'unknown': []}"
+    },
+    "CET6HXCH": {
+      "name": "六级·核心词汇",
+      "confidence": "high",
+      "basis": "tokens: ['CET6', 'HXCH'], classification: {'brand': None, 'exam': '六级', 'textbook': None, 'content': ['核心词汇'], 'numbers': [], 'unknown': []}"
+    },
+    "CET6ZTHXCZ": {
+      "name": "六级·真题核心",
+      "confidence": "high",
+      "basis": "tokens: ['CET6', 'ZTHXCZ'], classification: {'brand': None, 'exam': '六级', 'textbook': None, 'content': ['真题核心'], 'numbers': [], 'unknown': []}"
+    },
+    "CET6ZTTZCZ": {
+      "name": "六级·真题拓展",
+      "confidence": "high",
+      "basis": "tokens: ['CET6', 'ZTTZCZ'], classification: {'brand': None, 'exam': '六级', 'textbook': None, 'content': ['真题拓展'], 'numbers': [], 'unknown': []}"
+    },
+    "CHDLJ2025": {
+      "name": "冲刺·乱序·2025版·(DJ)",
+      "confidence": "medium",
+      "basis": "tokens: ['CH', 'D', 'L', 'J', '2025'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['冲刺', '乱序'], 'numbers': ['2025'], 'unknown': ['D', 'J']}"
+    },
+    "COCA1": {
+      "name": "COCA语料库·第1级",
+      "confidence": "high",
+      "basis": "已知语料库缩写：COCA Corpus of Contemporary American English"
+    },
+    "COCA2": {
+      "name": "COCA语料库·第2级",
+      "confidence": "high",
+      "basis": "已知语料库缩写：COCA Corpus of Contemporary American English"
+    },
+    "COCA3": {
+      "name": "COCA语料库·第3级",
+      "confidence": "high",
+      "basis": "已知语料库缩写：COCA Corpus of Contemporary American English"
+    },
+    "CZBGZDC": {
+      "name": "(CZBGZDC)",
+      "confidence": "low",
+      "basis": "待人工确认：可能是\"初中背诵古诗词\"或\"初中必背古诗词\""
+    },
+    "CZCHXKB": {
+      "name": "冲刺·(CZXKB)",
+      "confidence": "medium",
+      "basis": "tokens: ['C', 'Z', 'CH', 'X', 'K', 'B'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['冲刺'], 'numbers': [], 'unknown': ['C', 'Z', 'X', 'K', 'B']}"
+    },
+    "DBCZ2027": {
+      "name": "2027版·(DBCZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['D', 'B', 'C', 'Z', '2027'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': [], 'numbers': ['2027'], 'unknown': ['D', 'B', 'C', 'Z']}"
+    },
+    "DBGZ2027": {
+      "name": "2027版·(DBGZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['D', 'B', 'G', 'Z', '2027'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': [], 'numbers': ['2027'], 'unknown': ['D', 'B', 'G', 'Z']}"
+    },
+    "DBGZYY": {
+      "name": "(DBGZYY)",
+      "confidence": "low",
+      "basis": "候选解释：大纲?高中? 可能是\"大纲高中英语\""
+    },
+    "FCEHXC": {
+      "name": "FCE·(HXC)",
+      "confidence": "medium",
+      "basis": "tokens: ['FCE', 'H', 'X', 'C'], classification: {'brand': None, 'exam': 'FCE', 'textbook': None, 'content': [], 'numbers': [], 'unknown': ['H', 'X', 'C']}"
+    },
+    "GAOKAO": {
+      "name": "高考词汇",
+      "confidence": "high",
+      "basis": "已知考试缩写：高考"
+    },
+    "GDTOEFL7T": {
+      "name": "托福·(GDT)",
+      "confidence": "medium",
+      "basis": "tokens: ['G', 'D', 'TOEFL', '7', 'T'], classification: {'brand': None, 'exam': '托福', 'textbook': None, 'content': [], 'numbers': ['7'], 'unknown': ['G', 'D', 'T']}"
+    },
+    "GKDGZXB": {
+      "name": "高考·(DGZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['GK', 'D', 'G', 'Z', 'X', 'B'], classification: {'brand': None, 'exam': '高考', 'textbook': None, 'content': [], 'numbers': [], 'unknown': ['D', 'G', 'Z', 'X', 'B']}"
+    },
+    "GKHXCH": {
+      "name": "高考·核心词汇",
+      "confidence": "high",
+      "basis": "tokens: ['GK', 'HXCH'], classification: {'brand': None, 'exam': '高考', 'textbook': None, 'content': ['核心词汇'], 'numbers': [], 'unknown': []}"
+    },
+    "GKHXGP688": {
+      "name": "高考·高频·(HX)",
+      "confidence": "medium",
+      "basis": "tokens: ['GK', 'H', 'X', 'GP', '688'], classification: {'brand': None, 'exam': '高考', 'textbook': None, 'content': ['高频'], 'numbers': ['688'], 'unknown': ['H', 'X']}"
+    },
+    "GKSG2026": {
+      "name": "高考·闪过·2026版",
+      "confidence": "high",
+      "basis": "tokens: ['GK', 'SG', '2026'], classification: {'brand': None, 'exam': '高考', 'textbook': None, 'content': ['闪过'], 'numbers': ['2026'], 'unknown': []}"
+    },
+    "GKSG2027": {
+      "name": "高考·闪过·2027版",
+      "confidence": "high",
+      "basis": "tokens: ['GK', 'SG', '2027'], classification: {'brand': None, 'exam': '高考', 'textbook': None, 'content': ['闪过'], 'numbers': ['2027'], 'unknown': []}"
+    },
+    "GKZTHXCZ": {
+      "name": "高考·真题核心",
+      "confidence": "high",
+      "basis": "tokens: ['GK', 'ZTHXCZ'], classification: {'brand': None, 'exam': '高考', 'textbook': None, 'content': ['真题核心'], 'numbers': [], 'unknown': []}"
+    },
+    "GKZTTZCZ": {
+      "name": "高考·真题拓展",
+      "confidence": "high",
+      "basis": "tokens: ['GK', 'ZTTZCZ'], classification: {'brand': None, 'exam': '高考', 'textbook': None, 'content': ['真题拓展'], 'numbers': [], 'unknown': []}"
+    },
+    "GMATGAOFEN": {
+      "name": "GMAT·新版·(GAOFE)",
+      "confidence": "medium",
+      "basis": "tokens: ['GMAT', 'G', 'A', 'O', 'F', 'E', 'N'], classification: {'brand': None, 'exam': 'GMAT', 'textbook': None, 'content': ['新版'], 'numbers': [], 'unknown': ['G', 'A', 'O', 'F', 'E']}"
+    },
+    "GMATJICHU": {
+      "name": "GMAT·冲刺·(JIU)",
+      "confidence": "medium",
+      "basis": "tokens: ['GMAT', 'J', 'I', 'CH', 'U'], classification: {'brand': None, 'exam': 'GMAT', 'textbook': None, 'content': ['冲刺'], 'numbers': [], 'unknown': ['J', 'I', 'U']}"
+    },
+    "GRECH": {
+      "name": "GRE·冲刺",
+      "confidence": "high",
+      "basis": "tokens: ['GRE', 'CH'], classification: {'brand': None, 'exam': 'GRE', 'textbook': None, 'content': ['冲刺'], 'numbers': [], 'unknown': []}"
+    },
+    "GRECHLX": {
+      "name": "GRE·冲刺·练习",
+      "confidence": "high",
+      "basis": "tokens: ['GRE', 'CH', 'LX'], classification: {'brand': None, 'exam': 'GRE', 'textbook': None, 'content': ['冲刺', '练习'], 'numbers': [], 'unknown': []}"
+    },
+    "GREHXKF": {
+      "name": "GRE·(HXKF)",
+      "confidence": "medium",
+      "basis": "tokens: ['GRE', 'H', 'X', 'K', 'F'], classification: {'brand': None, 'exam': 'GRE', 'textbook': None, 'content': [], 'numbers': [], 'unknown': ['H', 'X', 'K', 'F']}"
+    },
+    "GREHXKFJX": {
+      "name": "GRE·精选·(HXKF)",
+      "confidence": "medium",
+      "basis": "tokens: ['GRE', 'H', 'X', 'K', 'F', 'JX'], classification: {'brand': None, 'exam': 'GRE', 'textbook': None, 'content': ['精选'], 'numbers': [], 'unknown': ['H', 'X', 'K', 'F']}"
+    },
+    "GZBGZDC": {
+      "name": "(GZBGZDC)",
+      "confidence": "low",
+      "basis": "待人工确认：可能是\"高中背诵古诗词\"或\"高中必背古诗词\""
+    },
+    "GZCGLXL1": {
+      "name": "练习·乱序·(GZCG)",
+      "confidence": "medium",
+      "basis": "tokens: ['G', 'Z', 'C', 'G', 'LX', 'L', '1'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['练习', '乱序'], 'numbers': ['1'], 'unknown': ['G', 'Z', 'C', 'G']}"
+    },
+    "HJBGZBX1": {
+      "name": "沪教版·(GZBX)",
+      "confidence": "medium",
+      "basis": "tokens: ['HJB', 'G', 'Z', 'B', 'X', '1'], classification: {'brand': None, 'exam': None, 'textbook': '沪教版', 'content': [], 'numbers': ['1'], 'unknown': ['G', 'Z', 'B', 'X']}"
+    },
+    "HJBGZBX2": {
+      "name": "沪教版·(GZBX)",
+      "confidence": "medium",
+      "basis": "tokens: ['HJB', 'G', 'Z', 'B', 'X', '2'], classification: {'brand': None, 'exam': None, 'textbook': '沪教版', 'content': [], 'numbers': ['2'], 'unknown': ['G', 'Z', 'B', 'X']}"
+    },
+    "HJBGZBX3": {
+      "name": "沪教版·(GZBX)",
+      "confidence": "medium",
+      "basis": "tokens: ['HJB', 'G', 'Z', 'B', 'X', '3'], classification: {'brand': None, 'exam': None, 'textbook': '沪教版', 'content': [], 'numbers': ['3'], 'unknown': ['G', 'Z', 'B', 'X']}"
+    },
+    "HJBGZXB1": {
+      "name": "沪教版·(GZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['HJB', 'G', 'Z', 'X', 'B', '1'], classification: {'brand': None, 'exam': None, 'textbook': '沪教版', 'content': [], 'numbers': ['1'], 'unknown': ['G', 'Z', 'X', 'B']}"
+    },
+    "HJBGZXB2": {
+      "name": "沪教版·(GZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['HJB', 'G', 'Z', 'X', 'B', '2'], classification: {'brand': None, 'exam': None, 'textbook': '沪教版', 'content': [], 'numbers': ['2'], 'unknown': ['G', 'Z', 'X', 'B']}"
+    },
+    "HJBGZXB3": {
+      "name": "沪教版·(GZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['HJB', 'G', 'Z', 'X', 'B', '3'], classification: {'brand': None, 'exam': None, 'textbook': '沪教版', 'content': [], 'numbers': ['3'], 'unknown': ['G', 'Z', 'X', 'B']}"
+    },
+    "HJBGZXB4": {
+      "name": "沪教版·(GZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['HJB', 'G', 'Z', 'X', 'B', '4'], classification: {'brand': None, 'exam': None, 'textbook': '沪教版', 'content': [], 'numbers': ['4'], 'unknown': ['G', 'Z', 'X', 'B']}"
+    },
+    "HUMSOCIAL": {
+      "name": "乱序·(HUMSOCIA)",
+      "confidence": "medium",
+      "basis": "tokens: ['H', 'U', 'M', 'S', 'O', 'C', 'I', 'A', 'L'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['乱序'], 'numbers': [], 'unknown': ['H', 'U', 'M', 'S', 'O', 'C', 'I', 'A']}"
+    },
+    "HWJGZBX1": {
+      "name": "外研版·(GZBX)",
+      "confidence": "medium",
+      "basis": "tokens: ['HWJ', 'G', 'Z', 'B', 'X', '1'], classification: {'brand': None, 'exam': None, 'textbook': '外研版', 'content': [], 'numbers': ['1'], 'unknown': ['G', 'Z', 'B', 'X']}"
+    },
+    "HWJGZBX2": {
+      "name": "外研版·(GZBX)",
+      "confidence": "medium",
+      "basis": "tokens: ['HWJ', 'G', 'Z', 'B', 'X', '2'], classification: {'brand': None, 'exam': None, 'textbook': '外研版', 'content': [], 'numbers': ['2'], 'unknown': ['G', 'Z', 'B', 'X']}"
+    },
+    "HWJGZBX3": {
+      "name": "外研版·(GZBX)",
+      "confidence": "medium",
+      "basis": "tokens: ['HWJ', 'G', 'Z', 'B', 'X', '3'], classification: {'brand': None, 'exam': None, 'textbook': '外研版', 'content': [], 'numbers': ['3'], 'unknown': ['G', 'Z', 'B', 'X']}"
+    },
+    "HWJGZXB1": {
+      "name": "外研版·(GZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['HWJ', 'G', 'Z', 'X', 'B', '1'], classification: {'brand': None, 'exam': None, 'textbook': '外研版', 'content': [], 'numbers': ['1'], 'unknown': ['G', 'Z', 'X', 'B']}"
+    },
+    "HWJGZXB2": {
+      "name": "外研版·(GZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['HWJ', 'G', 'Z', 'X', 'B', '2'], classification: {'brand': None, 'exam': None, 'textbook': '外研版', 'content': [], 'numbers': ['2'], 'unknown': ['G', 'Z', 'X', 'B']}"
+    },
+    "HWJGZXB3": {
+      "name": "外研版·(GZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['HWJ', 'G', 'Z', 'X', 'B', '3'], classification: {'brand': None, 'exam': None, 'textbook': '外研版', 'content': [], 'numbers': ['3'], 'unknown': ['G', 'Z', 'X', 'B']}"
+    },
+    "HWJGZXB4": {
+      "name": "外研版·(GZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['HWJ', 'G', 'Z', 'X', 'B', '4'], classification: {'brand': None, 'exam': None, 'textbook': '外研版', 'content': [], 'numbers': ['4'], 'unknown': ['G', 'Z', 'X', 'B']}"
+    },
+    "HY6JGPKP": {
+      "name": "华研外语·高频·(JKP)",
+      "confidence": "medium",
+      "basis": "tokens: ['HY', '6', 'J', 'GP', 'K', 'P'], classification: {'brand': '华研外语', 'exam': None, 'textbook': None, 'content': ['高频'], 'numbers': ['6'], 'unknown': ['J', 'K', 'P']}"
+    },
+    "HYCET4GP": {
+      "name": "华研外语·四级·高频",
+      "confidence": "high",
+      "basis": "tokens: ['HY', 'CET4', 'GP'], classification: {'brand': '华研外语', 'exam': '四级', 'textbook': None, 'content': ['高频'], 'numbers': [], 'unknown': []}"
+    },
+    "HZB2025": {
+      "name": "红宝书·2025版",
+      "confidence": "high",
+      "basis": "tokens: ['HZB', '2025'], classification: {'brand': '红宝书', 'exam': None, 'textbook': None, 'content': [], 'numbers': ['2025'], 'unknown': []}"
+    },
+    "HZB2027": {
+      "name": "红宝书·2027版",
+      "confidence": "high",
+      "basis": "tokens: ['HZB', '2027'], classification: {'brand': '红宝书', 'exam': None, 'textbook': None, 'content': [], 'numbers': ['2027'], 'unknown': []}"
+    },
+    "HZBCET4": {
+      "name": "红宝书·四级",
+      "confidence": "high",
+      "basis": "tokens: ['HZB', 'CET4'], classification: {'brand': '红宝书', 'exam': '四级', 'textbook': None, 'content': [], 'numbers': [], 'unknown': []}"
+    },
+    "HZBCET6": {
+      "name": "红宝书·六级",
+      "confidence": "high",
+      "basis": "tokens: ['HZB', 'CET6'], classification: {'brand': '红宝书', 'exam': '六级', 'textbook': None, 'content': [], 'numbers': [], 'unknown': []}"
+    },
+    "HZBCET6N": {
+      "name": "红宝书·六级·新版",
+      "confidence": "high",
+      "basis": "tokens: ['HZB', 'CET6', 'N'], classification: {'brand': '红宝书', 'exam': '六级', 'textbook': None, 'content': ['新版'], 'numbers': [], 'unknown': []}"
+    },
+    "HZBGK": {
+      "name": "红宝书·高考",
+      "confidence": "high",
+      "basis": "tokens: ['HZB', 'GK'], classification: {'brand': '红宝书', 'exam': '高考', 'textbook': None, 'content': [], 'numbers': [], 'unknown': []}"
+    },
+    "HZBZK": {
+      "name": "红宝书·中考",
+      "confidence": "high",
+      "basis": "tokens: ['HZB', 'ZK'], classification: {'brand': '红宝书', 'exam': '中考', 'textbook': None, 'content': [], 'numbers': [], 'unknown': []}"
+    },
+    "IELTSHXCZ": {
+      "name": "雅思·核心常考",
+      "confidence": "high",
+      "basis": "tokens: ['IELTS', 'HXCZ'], classification: {'brand': None, 'exam': '雅思', 'textbook': None, 'content': ['核心常考'], 'numbers': [], 'unknown': []}"
+    },
+    "IELTSTZCZ": {
+      "name": "雅思·拓展常考",
+      "confidence": "high",
+      "basis": "tokens: ['IELTS', 'TZCZ'], classification: {'brand': None, 'exam': '雅思', 'textbook': None, 'content': ['拓展常考'], 'numbers': [], 'unknown': []}"
+    },
+    "JSGGBB": {
+      "name": "闪过·(JGBB)",
+      "confidence": "medium",
+      "basis": "tokens: ['J', 'SG', 'G', 'B', 'B'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['闪过'], 'numbers': [], 'unknown': ['J', 'G', 'B', 'B']}"
+    },
+    "KAOBO": {
+      "name": "考博词汇",
+      "confidence": "high",
+      "basis": "已知考试缩写：考博"
+    },
+    "KETHXC": {
+      "name": "KET·(HXC)",
+      "confidence": "medium",
+      "basis": "tokens: ['KET', 'H', 'X', 'C'], classification: {'brand': None, 'exam': 'KET', 'textbook': None, 'content': [], 'numbers': [], 'unknown': ['H', 'X', 'C']}"
+    },
+    "KYHBS2027": {
+      "name": "考研·2027版·(HBS)",
+      "confidence": "medium",
+      "basis": "tokens: ['KY', 'H', 'B', 'S', '2027'], classification: {'brand': None, 'exam': '考研', 'textbook': None, 'content': [], 'numbers': ['2027'], 'unknown': ['H', 'B', 'S']}"
+    },
+    "KYHBS2027L": {
+      "name": "考研·乱序·2027版·(HBS)",
+      "confidence": "medium",
+      "basis": "tokens: ['KY', 'H', 'B', 'S', '2027', 'L'], classification: {'brand': None, 'exam': '考研', 'textbook': None, 'content': ['乱序'], 'numbers': ['2027'], 'unknown': ['H', 'B', 'S']}"
+    },
+    "KYHXCH": {
+      "name": "考研·核心词汇",
+      "confidence": "high",
+      "basis": "tokens: ['KY', 'HXCH'], classification: {'brand': None, 'exam': '考研', 'textbook': None, 'content': ['核心词汇'], 'numbers': [], 'unknown': []}"
+    },
+    "KYLX2026": {
+      "name": "考研·练习·2026版",
+      "confidence": "high",
+      "basis": "tokens: ['KY', 'LX', '2026'], classification: {'brand': None, 'exam': '考研', 'textbook': None, 'content': ['练习'], 'numbers': ['2026'], 'unknown': []}"
+    },
+    "KYSG2027": {
+      "name": "考研·闪过·2027版",
+      "confidence": "high",
+      "basis": "tokens: ['KY', 'SG', '2027'], classification: {'brand': None, 'exam': '考研', 'textbook': None, 'content': ['闪过'], 'numbers': ['2027'], 'unknown': []}"
+    },
+    "KYZTHXCZ": {
+      "name": "考研·真题核心",
+      "confidence": "high",
+      "basis": "tokens: ['KY', 'ZTHXCZ'], classification: {'brand': None, 'exam': '考研', 'textbook': None, 'content': ['真题核心'], 'numbers': [], 'unknown': []}"
+    },
+    "KYZTTZCZ": {
+      "name": "考研·真题拓展",
+      "confidence": "high",
+      "basis": "tokens: ['KY', 'ZTTZCZ'], classification: {'brand': None, 'exam': '考研', 'textbook': None, 'content': ['真题拓展'], 'numbers': [], 'unknown': []}"
+    },
+    "LIFENEW": {
+      "name": "乱序·新版·(IFEEW)",
+      "confidence": "medium",
+      "basis": "tokens: ['L', 'I', 'F', 'E', 'N', 'E', 'W'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['乱序', '新版'], 'numbers': [], 'unknown': ['I', 'F', 'E', 'E', 'W']}"
+    },
+    "LJCHLX": {
+      "name": "乱序·基础·练习·(H)",
+      "confidence": "medium",
+      "basis": "tokens: ['L', 'JC', 'H', 'LX'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['乱序', '基础', '练习'], 'numbers': [], 'unknown': ['H']}"
+    },
+    "LLYC2027": {
+      "name": "恋练有词·2027版·(C)",
+      "confidence": "medium",
+      "basis": "tokens: ['LLY', 'C', '2027'], classification: {'brand': '恋练有词', 'exam': None, 'textbook': None, 'content': [], 'numbers': ['2027'], 'unknown': ['C']}"
+    },
+    "LLYCKY2026": {
+      "name": "恋练有词·考研·2026版·(C)",
+      "confidence": "medium",
+      "basis": "tokens: ['LLY', 'C', 'KY', '2026'], classification: {'brand': '恋练有词', 'exam': '考研', 'textbook': None, 'content': [], 'numbers': ['2026'], 'unknown': ['C']}"
+    },
+    "LONGMAN3K": {
+      "name": "朗文词典·(K)",
+      "confidence": "medium",
+      "basis": "tokens: ['LONGMAN', '3', 'K'], classification: {'brand': '朗文词典', 'exam': None, 'textbook': None, 'content': [], 'numbers': ['3'], 'unknown': ['K']}"
+    },
+    "LXYCET4": {
+      "name": "四级·练习·(Y)",
+      "confidence": "medium",
+      "basis": "tokens: ['LX', 'Y', 'CET4'], classification: {'brand': None, 'exam': '四级', 'textbook': None, 'content': ['练习'], 'numbers': [], 'unknown': ['Y']}"
+    },
+    "MBA": {
+      "name": "MBA词汇",
+      "confidence": "high",
+      "basis": "已知考试缩写：MBA"
+    },
+    "MTYKY2025": {
+      "name": "考研·2025版·(MTY)",
+      "confidence": "medium",
+      "basis": "tokens: ['M', 'T', 'Y', 'KY', '2025'], classification: {'brand': None, 'exam': '考研', 'textbook': None, 'content': [], 'numbers': ['2025'], 'unknown': ['M', 'T', 'Y']}"
+    },
+    "NJSHBGZ1": {
+      "name": "牛津上海版·(BGZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['NJSH', 'B', 'G', 'Z', '1'], classification: {'brand': None, 'exam': None, 'textbook': '牛津上海版', 'content': [], 'numbers': ['1'], 'unknown': ['B', 'G', 'Z']}"
+    },
+    "NJSHBGZ2": {
+      "name": "牛津上海版·(BGZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['NJSH', 'B', 'G', 'Z', '2'], classification: {'brand': None, 'exam': None, 'textbook': '牛津上海版', 'content': [], 'numbers': ['2'], 'unknown': ['B', 'G', 'Z']}"
+    },
+    "NJSHBGZ3": {
+      "name": "牛津上海版·(BGZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['NJSH', 'B', 'G', 'Z', '3'], classification: {'brand': None, 'exam': None, 'textbook': '牛津上海版', 'content': [], 'numbers': ['3'], 'unknown': ['B', 'G', 'Z']}"
+    },
+    "NJSHBGZ4": {
+      "name": "牛津上海版·(BGZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['NJSH', 'B', 'G', 'Z', '4'], classification: {'brand': None, 'exam': None, 'textbook': '牛津上海版', 'content': [], 'numbers': ['4'], 'unknown': ['B', 'G', 'Z']}"
+    },
+    "NJSHBGZ5": {
+      "name": "牛津上海版·(BGZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['NJSH', 'B', 'G', 'Z', '5'], classification: {'brand': None, 'exam': None, 'textbook': '牛津上海版', 'content': [], 'numbers': ['5'], 'unknown': ['B', 'G', 'Z']}"
+    },
+    "NJSHBGZ6": {
+      "name": "牛津上海版·(BGZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['NJSH', 'B', 'G', 'Z', '6'], classification: {'brand': None, 'exam': None, 'textbook': '牛津上海版', 'content': [], 'numbers': ['6'], 'unknown': ['B', 'G', 'Z']}"
+    },
+    "NJYLBGZBX": {
+      "name": "牛津译林版·(GZBX)",
+      "confidence": "medium",
+      "basis": "tokens: ['NJYLB', 'G', 'Z', 'B', 'X'], classification: {'brand': None, 'exam': None, 'textbook': '牛津译林版', 'content': [], 'numbers': [], 'unknown': ['G', 'Z', 'B', 'X']}"
+    },
+    "OXFORD3K": {
+      "name": "牛津词典·(K)",
+      "confidence": "medium",
+      "basis": "tokens: ['OXFORD', '3', 'K'], classification: {'brand': '牛津词典', 'exam': None, 'textbook': None, 'content': [], 'numbers': ['3'], 'unknown': ['K']}"
+    },
+    "PETHXC": {
+      "name": "PET·(HXC)",
+      "confidence": "medium",
+      "basis": "tokens: ['PET', 'H', 'X', 'C'], classification: {'brand': None, 'exam': 'PET', 'textbook': None, 'content': [], 'numbers': [], 'unknown': ['H', 'X', 'C']}"
+    },
+    "PETS1": {
+      "name": "公共英语一级",
+      "confidence": "high",
+      "basis": "已知考试缩写：PETS1"
+    },
+    "PETS2": {
+      "name": "公共英语二级",
+      "confidence": "high",
+      "basis": "已知考试缩写：PETS2"
+    },
+    "PETS3": {
+      "name": "公共英语三级",
+      "confidence": "high",
+      "basis": "已知考试缩写：PETS3"
+    },
+    "PETS4": {
+      "name": "公共英语四级",
+      "confidence": "high",
+      "basis": "已知考试缩写：PETS4"
+    },
+    "PETS5": {
+      "name": "公共英语五级",
+      "confidence": "high",
+      "basis": "已知考试缩写：PETS5"
+    },
+    "PRO4": {
+      "name": "专四词汇",
+      "confidence": "high",
+      "basis": "已知考试缩写：专四"
+    },
+    "PRO4HY8000": {
+      "name": "华研外语·专四·8000词",
+      "confidence": "high",
+      "basis": "tokens: ['PRO4', 'HY', '8000'], classification: {'brand': '华研外语', 'exam': '专四', 'textbook': None, 'content': [], 'numbers': ['8000'], 'unknown': []}"
+    },
+    "PRO4ZTHXCZ": {
+      "name": "专四·真题核心",
+      "confidence": "high",
+      "basis": "tokens: ['PRO4', 'ZTHXCZ'], classification: {'brand': None, 'exam': '专四', 'textbook': None, 'content': ['真题核心'], 'numbers': [], 'unknown': []}"
+    },
+    "PRO4ZTTZCZ": {
+      "name": "专四·真题拓展",
+      "confidence": "high",
+      "basis": "tokens: ['PRO4', 'ZTTZCZ'], classification: {'brand': None, 'exam': '专四', 'textbook': None, 'content': ['真题拓展'], 'numbers': [], 'unknown': []}"
+    },
+    "PRO8": {
+      "name": "专八词汇",
+      "confidence": "high",
+      "basis": "已知考试缩写：专八"
+    },
+    "PRO8HY1W3": {
+      "name": "华研外语·专八·(W)",
+      "confidence": "medium",
+      "basis": "tokens: ['PRO8', 'HY', '1', 'W', '3'], classification: {'brand': '华研外语', 'exam': '专八', 'textbook': None, 'content': [], 'numbers': ['1', '3'], 'unknown': ['W']}"
+    },
+    "PRO8ZTHXCZ": {
+      "name": "专八·真题核心",
+      "confidence": "high",
+      "basis": "tokens: ['PRO8', 'ZTHXCZ'], classification: {'brand': None, 'exam': '专八', 'textbook': None, 'content': ['真题核心'], 'numbers': [], 'unknown': []}"
+    },
+    "PRO8ZTTZCZ": {
+      "name": "专八·真题拓展",
+      "confidence": "high",
+      "basis": "tokens: ['PRO8', 'ZTTZCZ'], classification: {'brand': None, 'exam': '专八', 'textbook': None, 'content': ['真题拓展'], 'numbers': [], 'unknown': []}"
+    },
+    "PTECH": {
+      "name": "PTE·冲刺",
+      "confidence": "high",
+      "basis": "tokens: ['PTE', 'CH'], classification: {'brand': None, 'exam': 'PTE', 'textbook': None, 'content': ['冲刺'], 'numbers': [], 'unknown': []}"
+    },
+    "PTEHXCH": {
+      "name": "PTE·核心词汇",
+      "confidence": "high",
+      "basis": "tokens: ['PTE', 'HXCH'], classification: {'brand': None, 'exam': 'PTE', 'textbook': None, 'content': ['核心词汇'], 'numbers': [], 'unknown': []}"
+    },
+    "RJ2027": {
+      "name": "2027版·(RJ)",
+      "confidence": "medium",
+      "basis": "tokens: ['R', 'J', '2027'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': [], 'numbers': ['2027'], 'unknown': ['R', 'J']}"
+    },
+    "RJB2022GZ1": {
+      "name": "人教版·高二上册·2022版·(GZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', '2022', 'G', 'Z', '1'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['2022', '1'], 'unknown': ['G', 'Z']}"
+    },
+    "RJB7NJS": {
+      "name": "人教版·新版·(JS)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', '7', 'N', 'J', 'S'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': ['新版'], 'numbers': ['7'], 'unknown': ['J', 'S']}"
+    },
+    "RJB7NJX": {
+      "name": "人教版·新版·精选",
+      "confidence": "high",
+      "basis": "tokens: ['RJB', '7', 'N', 'JX'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': ['新版', '精选'], 'numbers': ['7'], 'unknown': []}"
+    },
+    "RJB7NJX2": {
+      "name": "人教版·新版·精选",
+      "confidence": "high",
+      "basis": "tokens: ['RJB', '7', 'N', 'JX', '2'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': ['新版', '精选'], 'numbers': ['7', '2'], 'unknown': []}"
+    },
+    "RJB7S2024": {
+      "name": "人教版·高二上册·2024版·(S)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', '7', 'S', '2024'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['7', '2024'], 'unknown': ['S']}"
+    },
+    "RJB8NJS": {
+      "name": "人教版·新版·(JS)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', '8', 'N', 'J', 'S'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': ['新版'], 'numbers': ['8'], 'unknown': ['J', 'S']}"
+    },
+    "RJB8NJX": {
+      "name": "人教版·新版·精选",
+      "confidence": "high",
+      "basis": "tokens: ['RJB', '8', 'N', 'JX'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': ['新版', '精选'], 'numbers': ['8'], 'unknown': []}"
+    },
+    "RJB8S": {
+      "name": "人教版·(S)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', '8', 'S'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['8'], 'unknown': ['S']}"
+    },
+    "RJB8X": {
+      "name": "人教版·(X)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', '8', 'X'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['8'], 'unknown': ['X']}"
+    },
+    "RJB9NJQ": {
+      "name": "人教版·新版·(JQ)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', '9', 'N', 'J', 'Q'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': ['新版'], 'numbers': ['9'], 'unknown': ['J', 'Q']}"
+    },
+    "RJB9X": {
+      "name": "人教版·(X)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', '9', 'X'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['9'], 'unknown': ['X']}"
+    },
+    "RJBGZ1": {
+      "name": "人教版·(GZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', 'G', 'Z', '1'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['1'], 'unknown': ['G', 'Z']}"
+    },
+    "RJBGZ2": {
+      "name": "人教版·(GZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', 'G', 'Z', '2'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['2'], 'unknown': ['G', 'Z']}"
+    },
+    "RJBGZ3": {
+      "name": "人教版·(GZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', 'G', 'Z', '3'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['3'], 'unknown': ['G', 'Z']}"
+    },
+    "RJBGZXB2": {
+      "name": "人教版·(GZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', 'G', 'Z', 'X', 'B', '2'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['2'], 'unknown': ['G', 'Z', 'X', 'B']}"
+    },
+    "RJBGZXB3": {
+      "name": "人教版·(GZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', 'G', 'Z', 'X', 'B', '3'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['3'], 'unknown': ['G', 'Z', 'X', 'B']}"
+    },
+    "RJBGZXB4": {
+      "name": "人教版·(GZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', 'G', 'Z', 'X', 'B', '4'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['4'], 'unknown': ['G', 'Z', 'X', 'B']}"
+    },
+    "RJBGZXZBX1": {
+      "name": "人教版·(GZXZBX)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', 'G', 'Z', 'X', 'Z', 'B', 'X', '1'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': [], 'numbers': ['1'], 'unknown': ['G', 'Z', 'X', 'Z', 'B', 'X']}"
+    },
+    "RJBJNJS": {
+      "name": "人教版·新版·(JJS)",
+      "confidence": "medium",
+      "basis": "tokens: ['RJB', 'J', 'N', 'J', 'S'], classification: {'brand': None, 'exam': None, 'textbook': '人教版', 'content': ['新版'], 'numbers': [], 'unknown': ['J', 'J', 'S']}"
+    },
+    "RYDSPRO4": {
+      "name": "如鱼得水·专四·(S)",
+      "confidence": "medium",
+      "basis": "tokens: ['RYD', 'S', 'PRO4'], classification: {'brand': '如鱼得水', 'exam': '专四', 'textbook': None, 'content': [], 'numbers': [], 'unknown': ['S']}"
+    },
+    "RYDSPRO8": {
+      "name": "如鱼得水·专八·(S)",
+      "confidence": "medium",
+      "basis": "tokens: ['RYD', 'S', 'PRO8'], classification: {'brand': '如鱼得水', 'exam': '专八', 'textbook': None, 'content': [], 'numbers': [], 'unknown': ['S']}"
+    },
+    "SAT": {
+      "name": "SAT词汇",
+      "confidence": "high",
+      "basis": "已知考试缩写：SAT"
+    },
+    "SGSJ2025": {
+      "name": "闪过·2025版·(SJ)",
+      "confidence": "medium",
+      "basis": "tokens: ['SG', 'S', 'J', '2025'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['闪过'], 'numbers': ['2025'], 'unknown': ['S', 'J']}"
+    },
+    "SHGK2025": {
+      "name": "上海高考·2025版",
+      "confidence": "high",
+      "basis": "tokens: ['SHGK', '2025'], classification: {'brand': None, 'exam': '上海高考', 'textbook': None, 'content': [], 'numbers': ['2025'], 'unknown': []}"
+    },
+    "SHZKKG": {
+      "name": "上海中考考纲词汇",
+      "confidence": "high",
+      "basis": "已知考试缩写：上海中考考纲"
+    },
+    "SJCHLX": {
+      "name": "基础·练习·(SH)",
+      "confidence": "medium",
+      "basis": "tokens: ['S', 'JC', 'H', 'LX'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['基础', '练习'], 'numbers': [], 'unknown': ['S', 'H']}"
+    },
+    "SY4K1": {
+      "name": "上海教材分册·第1册",
+      "confidence": "high",
+      "basis": "教材分册模式：SY4K+数字"
+    },
+    "SY4K2": {
+      "name": "上海教材分册·第2册",
+      "confidence": "high",
+      "basis": "教材分册模式：SY4K+数字"
+    },
+    "SY4K3": {
+      "name": "上海教材分册·第3册",
+      "confidence": "high",
+      "basis": "教材分册模式：SY4K+数字"
+    },
+    "SY4K4": {
+      "name": "上海教材分册·第4册",
+      "confidence": "high",
+      "basis": "教材分册模式：SY4K+数字"
+    },
+    "SY4K5": {
+      "name": "上海教材分册·第5册",
+      "confidence": "high",
+      "basis": "教材分册模式：SY4K+数字"
+    },
+    "SY4K6": {
+      "name": "上海教材分册·第6册",
+      "confidence": "high",
+      "basis": "教材分册模式：SY4K+数字"
+    },
+    "TFCYLJ": {
+      "name": "托福·乱序·(CYJ)",
+      "confidence": "medium",
+      "basis": "tokens: ['TF', 'C', 'Y', 'L', 'J'], classification: {'brand': None, 'exam': '托福', 'textbook': None, 'content': ['乱序'], 'numbers': [], 'unknown': ['C', 'Y', 'J']}"
+    },
+    "TFJLXB": {
+      "name": "托福·练习·(JB)",
+      "confidence": "medium",
+      "basis": "tokens: ['TF', 'J', 'LX', 'B'], classification: {'brand': None, 'exam': '托福', 'textbook': None, 'content': ['练习'], 'numbers': [], 'unknown': ['J', 'B']}"
+    },
+    "TFJZXB": {
+      "name": "托福·(JZXB)",
+      "confidence": "medium",
+      "basis": "tokens: ['TF', 'J', 'Z', 'X', 'B'], classification: {'brand': None, 'exam': '托福', 'textbook': None, 'content': [], 'numbers': [], 'unknown': ['J', 'Z', 'X', 'B']}"
+    },
+    "TJGK2024": {
+      "name": "天津高考·2024版",
+      "confidence": "high",
+      "basis": "tokens: ['TJGK', '2024'], classification: {'brand': None, 'exam': '天津高考', 'textbook': None, 'content': [], 'numbers': ['2024'], 'unknown': []}"
+    },
+    "TOEFLHXCZ": {
+      "name": "托福·核心常考",
+      "confidence": "high",
+      "basis": "tokens: ['TOEFL', 'HXCZ'], classification: {'brand': None, 'exam': '托福', 'textbook': None, 'content': ['核心常考'], 'numbers': [], 'unknown': []}"
+    },
+    "TOEFLTZCZ": {
+      "name": "托福·拓展常考",
+      "confidence": "high",
+      "basis": "tokens: ['TOEFL', 'TZCZ'], classification: {'brand': None, 'exam': '托福', 'textbook': None, 'content': ['拓展常考'], 'numbers': [], 'unknown': []}"
+    },
+    "TOEIC": {
+      "name": "托业词汇",
+      "confidence": "high",
+      "basis": "已知考试缩写：TOEIC"
+    },
+    "TPYW10000": {
+      "name": "10000词·(TPYW)",
+      "confidence": "medium",
+      "basis": "tokens: ['T', 'P', 'Y', 'W', '10000'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': [], 'numbers': ['10000'], 'unknown': ['T', 'P', 'Y', 'W']}"
+    },
+    "TPYW5000": {
+      "name": "5000词·(TPYW)",
+      "confidence": "medium",
+      "basis": "tokens: ['T', 'P', 'Y', 'W', '5000'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': [], 'numbers': ['5000'], 'unknown': ['T', 'P', 'Y', 'W']}"
+    },
+    "TPYWJC": {
+      "name": "基础·(TPYW)",
+      "confidence": "medium",
+      "basis": "tokens: ['T', 'P', 'Y', 'W', 'JC'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['基础'], 'numbers': [], 'unknown': ['T', 'P', 'Y', 'W']}"
+    },
+    "WKD2024LX": {
+      "name": "练习·2024版·(WKD)",
+      "confidence": "medium",
+      "basis": "tokens: ['W', 'K', 'D', '2024', 'LX'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['练习'], 'numbers': ['2024'], 'unknown': ['W', 'K', 'D']}"
+    },
+    "WKD2025L1": {
+      "name": "乱序·2025版·(WKD)",
+      "confidence": "medium",
+      "basis": "tokens: ['W', 'K', 'D', '2025', 'L', '1'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['乱序'], 'numbers': ['2025', '1'], 'unknown': ['W', 'K', 'D']}"
+    },
+    "WKDCZ": {
+      "name": "(WKDCZ)",
+      "confidence": "low",
+      "basis": "候选解释：文都考研? 可能是\"文都考研词汇\""
+    },
+    "WKDCZL": {
+      "name": "乱序·(WKDCZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['W', 'K', 'D', 'C', 'Z', 'L'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['乱序'], 'numbers': [], 'unknown': ['W', 'K', 'D', 'C', 'Z']}"
+    },
+    "WKDGZ2024": {
+      "name": "2024版·(WKDGZ)",
+      "confidence": "medium",
+      "basis": "tokens: ['W', 'K', 'D', 'G', 'Z', '2024'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': [], 'numbers': ['2024'], 'unknown': ['W', 'K', 'D', 'G', 'Z']}"
+    },
+    "WL807YSCH": {
+      "name": "雅思·乱序·冲刺·(W)",
+      "confidence": "medium",
+      "basis": "tokens: ['W', 'L', '807', 'YS', 'CH'], classification: {'brand': None, 'exam': '雅思', 'textbook': None, 'content': ['乱序', '冲刺'], 'numbers': ['807'], 'unknown': ['W']}"
+    },
+    "XDFIELTS": {
+      "name": "新东方·雅思",
+      "confidence": "high",
+      "basis": "tokens: ['XDF', 'IELTS'], classification: {'brand': '新东方', 'exam': '雅思', 'textbook': None, 'content': [], 'numbers': [], 'unknown': []}"
+    },
+    "XDFTOEFL": {
+      "name": "新东方·托福",
+      "confidence": "high",
+      "basis": "tokens: ['XDF', 'TOEFL'], classification: {'brand': '新东方', 'exam': '托福', 'textbook': None, 'content': [], 'numbers': [], 'unknown': []}"
+    },
+    "XGNYY1": {
+      "name": "新编大学英语·第1册",
+      "confidence": "high",
+      "basis": "教材分册模式：XGNYY+数字"
+    },
+    "XGNYY2": {
+      "name": "新编大学英语·第2册",
+      "confidence": "high",
+      "basis": "教材分册模式：XGNYY+数字"
+    },
+    "XGNYY3": {
+      "name": "新编大学英语·第3册",
+      "confidence": "high",
+      "basis": "教材分册模式：XGNYY+数字"
+    },
+    "XGNYY4": {
+      "name": "新编大学英语·第4册",
+      "confidence": "high",
+      "basis": "教材分册模式：XGNYY+数字"
+    },
+    "XHCET4QJ": {
+      "name": "星火英语·四级·全景",
+      "confidence": "high",
+      "basis": "tokens: ['XH', 'CET4', 'QJ'], classification: {'brand': '星火英语', 'exam': '四级', 'textbook': None, 'content': ['全景'], 'numbers': [], 'unknown': []}"
+    },
+    "XHCET6QJ": {
+      "name": "星火英语·六级·全景",
+      "confidence": "high",
+      "basis": "tokens: ['XH', 'CET6', 'QJ'], classification: {'brand': '星火英语', 'exam': '六级', 'textbook': None, 'content': ['全景'], 'numbers': [], 'unknown': []}"
+    },
+    "XHGK2024": {
+      "name": "星火英语·高考·2024版",
+      "confidence": "high",
+      "basis": "tokens: ['XH', 'GK', '2024'], classification: {'brand': '星火英语', 'exam': '高考', 'textbook': None, 'content': [], 'numbers': ['2024'], 'unknown': []}"
+    },
+    "XHGKLX": {
+      "name": "星火英语·高考·练习",
+      "confidence": "high",
+      "basis": "tokens: ['XH', 'GK', 'LX'], classification: {'brand': '星火英语', 'exam': '高考', 'textbook': None, 'content': ['练习'], 'numbers': [], 'unknown': []}"
+    },
+    "XHPRO4ZJH": {
+      "name": "星火英语·真题汇",
+      "confidence": "high",
+      "basis": "tokens: ['XHPRO', '4', 'ZJH'], classification: {'brand': '星火英语', 'exam': None, 'textbook': None, 'content': ['真题汇'], 'numbers': ['4'], 'unknown': []}"
+    },
+    "XHPRO8ZJH": {
+      "name": "星火英语·真题汇",
+      "confidence": "high",
+      "basis": "tokens: ['XHPRO', '8', 'ZJH'], classification: {'brand': '星火英语', 'exam': None, 'textbook': None, 'content': ['真题汇'], 'numbers': ['8'], 'unknown': []}"
+    },
+    "XSYDX1": {
+      "name": "新视野大学英语·(X)",
+      "confidence": "medium",
+      "basis": "tokens: ['XSYD', 'X', '1'], classification: {'brand': None, 'exam': None, 'textbook': '新视野大学英语', 'content': [], 'numbers': ['1'], 'unknown': ['X']}"
+    },
+    "XSYDX2": {
+      "name": "新视野大学英语·(X)",
+      "confidence": "medium",
+      "basis": "tokens: ['XSYD', 'X', '2'], classification: {'brand': None, 'exam': None, 'textbook': '新视野大学英语', 'content': [], 'numbers': ['2'], 'unknown': ['X']}"
+    },
+    "XSYDX3": {
+      "name": "新视野大学英语·(X)",
+      "confidence": "medium",
+      "basis": "tokens: ['XSYD', 'X', '3'], classification: {'brand': None, 'exam': None, 'textbook': '新视野大学英语', 'content': [], 'numbers': ['3'], 'unknown': ['X']}"
+    },
+    "XSYDX4": {
+      "name": "新视野大学英语·(X)",
+      "confidence": "medium",
+      "basis": "tokens: ['XSYD', 'X', '4'], classification: {'brand': None, 'exam': None, 'textbook': '新视野大学英语', 'content': [], 'numbers': ['4'], 'unknown': ['X']}"
+    },
+    "XSYDXYY1": {
+      "name": "新视野大学英语·(XYY)",
+      "confidence": "medium",
+      "basis": "tokens: ['XSYD', 'X', 'Y', 'Y', '1'], classification: {'brand': None, 'exam': None, 'textbook': '新视野大学英语', 'content': [], 'numbers': ['1'], 'unknown': ['X', 'Y', 'Y']}"
+    },
+    "XSYDXYY2": {
+      "name": "新视野大学英语·(XYY)",
+      "confidence": "medium",
+      "basis": "tokens: ['XSYD', 'X', 'Y', 'Y', '2'], classification: {'brand': None, 'exam': None, 'textbook': '新视野大学英语', 'content': [], 'numbers': ['2'], 'unknown': ['X', 'Y', 'Y']}"
+    },
+    "XSYDXYY3": {
+      "name": "新视野大学英语·(XYY)",
+      "confidence": "medium",
+      "basis": "tokens: ['XSYD', 'X', 'Y', 'Y', '3'], classification: {'brand': None, 'exam': None, 'textbook': '新视野大学英语', 'content': [], 'numbers': ['3'], 'unknown': ['X', 'Y', 'Y']}"
+    },
+    "XSYDXYY4": {
+      "name": "新视野大学英语·(XYY)",
+      "confidence": "medium",
+      "basis": "tokens: ['XSYD', 'X', 'Y', 'Y', '4'], classification: {'brand': None, 'exam': None, 'textbook': '新视野大学英语', 'content': [], 'numbers': ['4'], 'unknown': ['X', 'Y', 'Y']}"
+    },
+    "XYJC": {
+      "name": "基础·(XY)",
+      "confidence": "medium",
+      "basis": "tokens: ['X', 'Y', 'JC'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['基础'], 'numbers': [], 'unknown': ['X', 'Y']}"
+    },
+    "YASJ": {
+      "name": "雅思圣经",
+      "confidence": "high",
+      "basis": "已知考试缩写：雅思圣经"
+    },
+    "YSCHLXB": {
+      "name": "雅思·冲刺·练习·(B)",
+      "confidence": "medium",
+      "basis": "tokens: ['YS', 'CH', 'LX', 'B'], classification: {'brand': None, 'exam': '雅思', 'textbook': None, 'content': ['冲刺', '练习'], 'numbers': [], 'unknown': ['B']}"
+    },
+    "YSZCH": {
+      "name": "雅思·冲刺·(Z)",
+      "confidence": "medium",
+      "basis": "tokens: ['YS', 'Z', 'CH'], classification: {'brand': None, 'exam': '雅思', 'textbook': None, 'content': ['冲刺'], 'numbers': [], 'unknown': ['Z']}"
+    },
+    "ZK1600": {
+      "name": "中考·1600词",
+      "confidence": "high",
+      "basis": "tokens: ['ZK', '1600'], classification: {'brand': None, 'exam': '中考', 'textbook': None, 'content': [], 'numbers': ['1600'], 'unknown': []}"
+    },
+    "ZKCHSG2025": {
+      "name": "中考·冲刺高分·2025版",
+      "confidence": "high",
+      "basis": "tokens: ['ZK', 'CHSG', '2025'], classification: {'brand': None, 'exam': '中考', 'textbook': None, 'content': ['冲刺高分'], 'numbers': ['2025'], 'unknown': []}"
+    },
+    "ZKSG2027": {
+      "name": "中考·闪过·2027版",
+      "confidence": "high",
+      "basis": "tokens: ['ZK', 'SG', '2027'], classification: {'brand': None, 'exam': '中考', 'textbook': None, 'content': ['闪过'], 'numbers': ['2027'], 'unknown': []}"
+    },
+    "ZKZTHXCZ": {
+      "name": "中考·真题核心",
+      "confidence": "high",
+      "basis": "tokens: ['ZK', 'ZTHXCZ'], classification: {'brand': None, 'exam': '中考', 'textbook': None, 'content': ['真题核心'], 'numbers': [], 'unknown': []}"
+    },
+    "ZKZTTZCZ": {
+      "name": "中考·真题拓展",
+      "confidence": "high",
+      "basis": "tokens: ['ZK', 'ZTTZCZ'], classification: {'brand': None, 'exam': '中考', 'textbook': None, 'content': ['真题拓展'], 'numbers': [], 'unknown': []}"
+    },
+    "ZSBZTHXCZ": {
+      "name": "真题核心·(ZSB)",
+      "confidence": "medium",
+      "basis": "tokens: ['Z', 'S', 'B', 'ZTHXCZ'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['真题核心'], 'numbers': [], 'unknown': ['Z', 'S', 'B']}"
+    },
+    "ZSBZTTZCZ": {
+      "name": "真题拓展·(ZSB)",
+      "confidence": "medium",
+      "basis": "tokens: ['Z', 'S', 'B', 'ZTTZCZ'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['真题拓展'], 'numbers': [], 'unknown': ['Z', 'S', 'B']}"
+    },
+    "ZSLX": {
+      "name": "练习·(ZS)",
+      "confidence": "medium",
+      "basis": "tokens: ['Z', 'S', 'LX'], classification: {'brand': None, 'exam': None, 'textbook': None, 'content': ['练习'], 'numbers': [], 'unknown': ['Z', 'S']}"
+    }
+  },
+  "updated": "2026-08-24 19:24:18",
+  "update_notes": "应用质量审查修正：31本提升至高置信，1本提升至中置信，4本补充候选解释",
+  "statistics": {
+    "total": 191,
+    "high": 90,
+    "medium": 97,
+    "low": 4
+  }
+}

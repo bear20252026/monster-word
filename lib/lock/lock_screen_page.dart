@@ -10,10 +10,8 @@ import 'lock_presenter.dart';
 import 'lock_presenter_imp.dart';
 import 'lock_view.dart';
 import 'my_element_animator.dart';
-import 'number_utils.dart';
 import 'view_dimens.dart';
 import 'view/line_indicator.dart';
-import 'view/scroll_top_bottom_layout.dart';
 
 /// 锁屏学习主页面
 /// 完整还原 v3.2 LockViewProcessorImp 的功能：
@@ -76,7 +74,7 @@ class _LockScreenPageState extends State<LockScreenPage>
   late ElementDirection _bottomDirection;
 
   // === 手势状态 ===
-  bool _cancelAnimation = false;
+  final bool _cancelAnimation = false;
   Timer? _longPressTimer;
   bool _hasSlidUp = false;
   bool _hasLongPress = false;
@@ -84,11 +82,11 @@ class _LockScreenPageState extends State<LockScreenPage>
   bool _isDragging = false;
 
   // === 引导状态 ===
-  bool _shouldShowExampleGuide = true;
+  final bool _shouldShowExampleGuide = true;
 
   // === 导航页面 ===
   final PageController _navPageController = PageController();
-  int _navPageIndex = 0;
+  final int _navPageIndex = 0;
 
   @override
   void initState() {
@@ -173,9 +171,9 @@ class _LockScreenPageState extends State<LockScreenPage>
     _bottomDirection = ElementDirection(speedFactor: 0.6);
 
     // 设置更新回调：当动画器更新值时触发 UI 重建
-    final VoidCallback refresh = () {
+    void refresh() {
       if (mounted) setState(() {});
-    };
+    }
     _timeDirection.onUpdate = refresh;
     _wordDirection.onUpdate = refresh;
     _bottomDirection.onUpdate = refresh;
@@ -612,7 +610,7 @@ class _LockScreenPageState extends State<LockScreenPage>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: const Row(

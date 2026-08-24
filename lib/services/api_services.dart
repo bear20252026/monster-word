@@ -10,7 +10,6 @@ import 'dart:async';
 
 import 'package:http/http.dart' as http;
 
-import '../utils/app_utils.dart';
 import '../utils/date_utils.dart';
 import '../utils/crypto_utils.dart';
 
@@ -611,7 +610,7 @@ abstract class SyncListener {
 class SyncChainServiceV2 {
   static const String _logTag = 'SyncChainServiceV2';
   static bool isSynchronizing = false;
-  static int _todayReviewCount = -1;
+  static final int _todayReviewCount = -1;
 
   /// 链式同步入口（原版 call）
   /// 流程：chainRequest1 → chainRequerst2Pre → chainRequest2

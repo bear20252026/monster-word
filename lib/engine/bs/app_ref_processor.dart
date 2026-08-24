@@ -24,7 +24,7 @@ class AppRefProcessor {
   /// 缓存的推荐列表（原版 PublicConstants.appRecList）
   static List<AppRec>? appRecList;
 
-  AppRec _appRec;
+  final AppRec _appRec;
 
   AppRefProcessor({bool forceFirst = false})
       : _appRec = _selectAppRec(forceFirst);

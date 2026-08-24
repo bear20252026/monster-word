@@ -6,8 +6,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
 import 'animations.dart';
-import '../tokens/design_tokens.dart';
-
 // ─────────────────────────────────────────────────────────────
 // AutoFitText — 自动适配字号文本（移植自 AutoFitTextView.java）
 // ─────────────────────────────────────────────────────────────

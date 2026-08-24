@@ -139,7 +139,7 @@ class CollinsDetailIntroPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF3E0),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: const Color(0xFFE8913A).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFE8913A).withValues(alpha: 0.3)),
       ),
       child: Text(tag,
         style: const TextStyle(
@@ -217,7 +217,7 @@ class CollinsDetailIntroPage extends StatelessWidget {
                 margin: const EdgeInsets.only(right: 8, top: 2),
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8913A).withOpacity(0.1),
+                  color: const Color(0xFFE8913A).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(3),
                 ),
                 child: const Text('例',

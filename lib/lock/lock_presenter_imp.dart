@@ -22,7 +22,7 @@ class LockPresenterImp implements LockPresenter {
   dynamic _wordProcess; // BBWordProcess
   final Map<String, int> _wordSentenceIndex = {};
   bool _canPlay = false;
-  bool _isExtensiveListeningPlaying = false;
+  final bool _isExtensiveListeningPlaying = false;
 
   // 计数器
   int _count = -1;
@@ -95,7 +95,7 @@ class LockPresenterImp implements LockPresenter {
     final weekdayIndex = weekday % 7; // 0=Sunday, 6=Saturday
 
     final time = '${NumberUtils.zeroAdd(hour)}:${NumberUtils.zeroAdd(minute)}';
-    final dateCn = '${month}月$day日 ${DateTimeConstants.weekdayCn[weekdayIndex]}';
+    final dateCn = '$month月$day日 ${DateTimeConstants.weekdayCn[weekdayIndex]}';
     final dateEn =
         '${DateTimeConstants.monthEn[month - 1]} $day ${DateTimeConstants.weekdayEn[weekdayIndex]}';
 
@@ -176,6 +176,7 @@ class LockPresenterImp implements LockPresenter {
   }
 
   /// 加载下一个单词
+  @override
   void nextWord() {
     _count++;
     _loadCurrentWord();

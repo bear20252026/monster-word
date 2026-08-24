@@ -44,15 +44,15 @@ class GlassCard extends StatelessWidget {
           margin: margin,
           padding: padding,
           decoration: BoxDecoration(
-            color: skin.glassBg.withOpacity(opacity),
+            color: skin.glassBg.withValues(alpha: opacity),
             borderRadius: BorderRadius.circular(radius),
             border: Border.all(
-              color: skin.glassBorder.withOpacity(0.2),
+              color: skin.glassBorder.withValues(alpha: 0.2),
               width: 0.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: skin.text1.withOpacity(0.1),
+                color: skin.text1.withValues(alpha: 0.1),
                 blurRadius: 10.0,
                 offset: const Offset(0, 4),
               ),
@@ -96,15 +96,15 @@ class GlassEntryCard extends StatelessWidget {
             height: 88,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: skin.glassBg.withOpacity(0.8),
+              color: skin.glassBg.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(16.0),
               border: Border.all(
-                color: skin.glassBorder.withOpacity(0.2),
+                color: skin.glassBorder.withValues(alpha: 0.2),
                 width: 0.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: skin.text1.withOpacity(0.1),
+                  color: skin.text1.withValues(alpha: 0.1),
                   blurRadius: 10.0,
                   offset: const Offset(0, 4),
                 ),
@@ -157,15 +157,15 @@ class GlassPill extends StatelessWidget {
           child: Container(
             padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: skin.glassBg.withOpacity(0.8),
+              color: skin.glassBg.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(20.0),
               border: Border.all(
-                color: skin.glassBorder.withOpacity(0.2),
+                color: skin.glassBorder.withValues(alpha: 0.2),
                 width: 0.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: skin.text1.withOpacity(0.1),
+                  color: skin.text1.withValues(alpha: 0.1),
                   blurRadius: 10.0,
                   offset: const Offset(0, 4),
                 ),
@@ -217,7 +217,7 @@ class GlassModal extends StatelessWidget {
     return GestureDetector(
       onTap: onClose,
       child: Container(
-        color: skin.text1.withOpacity(0.38),
+        color: skin.text1.withValues(alpha: 0.38),
         child: Center(
           child: GestureDetector(
             onTap: () {},
@@ -229,15 +229,15 @@ class GlassModal extends StatelessWidget {
                   width: width ?? 320,
                   constraints: const BoxConstraints(maxHeight: 500),
                   decoration: BoxDecoration(
-                    color: skin.glassBg.withOpacity(0.8),
+                    color: skin.glassBg.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(16.0),
                     border: Border.all(
-                      color: skin.glassBorder.withOpacity(0.2),
+                      color: skin.glassBorder.withValues(alpha: 0.2),
                       width: 0.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: skin.text1.withOpacity(0.1),
+                        color: skin.text1.withValues(alpha: 0.1),
                         blurRadius: 10.0,
                         offset: const Offset(0, 4),
                       ),

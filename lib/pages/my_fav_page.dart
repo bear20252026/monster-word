@@ -152,7 +152,7 @@ class _MyFavPageState extends State<MyFavPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: MistralColors.primary.withOpacity(0.1),
+              color: MistralColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(

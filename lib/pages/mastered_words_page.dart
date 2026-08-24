@@ -3,11 +3,9 @@
 // 移植自 v3.2 MasteredWordsActivity
 // 已掌握单词：显示已标记为掌握的单词
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../state/learning_state.dart';
 import '../models/word.dart';
-import '../theme/skin_system.dart';
 import 'list_words_page.dart';
 
 class MasteredWordsPage extends ListWordsPage {

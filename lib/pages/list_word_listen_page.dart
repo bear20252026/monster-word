@@ -3,9 +3,7 @@
 // 移植自 v3.2 ListWordListenActivity
 // 单词听写：播放单词语音，用户拼写练习
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 

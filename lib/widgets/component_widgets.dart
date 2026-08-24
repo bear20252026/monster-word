@@ -4,8 +4,6 @@
 // 通用组件集合：按钮、文本、进度条、图片等
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
-
 // ─────────────────────────────────────────────────────────────
 // CustomButton — 自定义按钮（移植自 component/CustomButton.java）
 // ─────────────────────────────────────────────────────────────

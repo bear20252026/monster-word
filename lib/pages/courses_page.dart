@@ -113,9 +113,9 @@ class _CourseBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            MistralColors.primary.withOpacity(0.85),
-            const Color(0xFF9EC5E8).withOpacity(0.8),
-            const Color(0xFFE8C5B8).withOpacity(0.7),
+            MistralColors.primary.withValues(alpha: 0.85),
+            const Color(0xFF9EC5E8).withValues(alpha: 0.8),
+            const Color(0xFFE8C5B8).withValues(alpha: 0.7),
           ],
         ),
       ),
@@ -130,7 +130,7 @@ class _CourseBanner extends StatelessWidget {
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
               ),
             ),
           ),
@@ -142,7 +142,7 @@ class _CourseBanner extends StatelessWidget {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -193,7 +193,7 @@ class _CourseBanner extends StatelessWidget {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
+                    color: Colors.white.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
@@ -326,7 +326,7 @@ class _CourseCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
-                    color: data.color.withOpacity(0.2),
+                    color: data.color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppRadius.xs),
                   ),
                   child: Text(
@@ -354,7 +354,7 @@ class _CourseCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: data.color.withOpacity(0.2),
+                color: data.color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(data.icon, color: data.color, size: 20),
@@ -461,7 +461,7 @@ class _EntryTile extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.12),
+                color: iconColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
               child: Icon(icon, color: iconColor, size: 24),

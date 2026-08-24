@@ -56,7 +56,7 @@ class SbLinearProgress extends StatelessWidget {
         tween: Tween(begin: 0, end: value.clamp(0.0, 1.0)),
         duration: const Duration(milliseconds: 200),
         curve: Curves.ease,
-        builder: (_, v, __) => LinearProgressIndicator(
+        builder: (_, v, _) => LinearProgressIndicator(
           value: v,
           minHeight: height,
           backgroundColor: backgroundColor ?? const Color(0xFFEDEBE9),
@@ -114,7 +114,7 @@ class SbRingProgress extends StatelessWidget {
       tween: Tween(begin: 0, end: value.clamp(0.0, 1.0)),
       duration: const Duration(milliseconds: 400),
       curve: Curves.ease,
-      builder: (_, v, __) => Stack(
+      builder: (_, v, _) => Stack(
         alignment: Alignment.center,
         children: [
           SizedBox(

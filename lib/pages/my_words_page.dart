@@ -3,11 +3,9 @@
 // 移植自 v3.2 MyWordsActivity
 // 我的单词：显示所有已学单词
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../state/learning_state.dart';
 import '../models/word.dart';
-import '../theme/skin_system.dart';
 import 'list_words_page.dart';
 
 class MyWordsPage extends ListWordsPage {

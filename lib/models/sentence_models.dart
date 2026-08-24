@@ -149,7 +149,7 @@ class NormalAcceptationSentence extends AcceptationSentence {
     final result = <SentenceData>[];
     for (final usage in g) {
       final sList = usage.sentenceList;
-      if (sList != null) result.addAll(sList);
+      result.addAll(sList);
     }
     return result;
   }

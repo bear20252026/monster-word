@@ -3,11 +3,9 @@
 // 移植自 v3.2 ReViewingWordsActivity
 // 复习中单词：显示正在复习周期中的单词
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../state/learning_state.dart';
 import '../models/word.dart';
-import '../theme/skin_system.dart';
 import 'list_words_page.dart';
 
 class ReviewingWordsPage extends ListWordsPage {

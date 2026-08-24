@@ -114,7 +114,7 @@ class _ReviewPageState extends State<ReviewPage> {
                 ),
                 // 半透明遮罩
                 Positioned.fill(
-                  child: Container(color: skin.wallpaperScrim.withOpacity(0.15)),
+                  child: Container(color: skin.wallpaperScrim.withValues(alpha: 0.15)),
                 ),
                 SafeArea(
                   child: Column(
@@ -148,7 +148,7 @@ class _ReviewPageState extends State<ReviewPage> {
           image: DecorationImage(
             image: AssetImage(wallpaper.assetPath!),
             fit: BoxFit.cover,
-            onError: (_, __) {},
+            onError: (_, _) {},
           ),
         ),
       );
@@ -247,7 +247,7 @@ class _ReviewPageState extends State<ReviewPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: skin.glassBg.withOpacity(0.25),
+                    color: skin.glassBg.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('美', style: TextStyle(fontSize: 12, color: skin.onGlassText1, fontWeight: FontWeight.w500)),
@@ -269,7 +269,7 @@ class _ReviewPageState extends State<ReviewPage> {
           // 提示文字
           Text(
             '先回想词义再选择，想不起来「看答案」',
-            style: TextStyle(fontSize: 14, color: skin.onGlassText2.withOpacity(0.7)),
+            style: TextStyle(fontSize: 14, color: skin.onGlassText2.withValues(alpha: 0.7)),
           ),
         ],
       ),
@@ -414,14 +414,14 @@ class _FrostedChoiceCard extends StatelessWidget {
     Color bgColor;
     Color borderColor;
     if (isSelectedWrong) {
-      bgColor = skin.quizWrongBg.withOpacity(0.6);
+      bgColor = skin.quizWrongBg.withValues(alpha: 0.6);
       borderColor = skin.quizWrongBg;
     } else if (isCorrect && showAnswer) {
-      bgColor = skin.quizCorrectBg.withOpacity(0.6);
+      bgColor = skin.quizCorrectBg.withValues(alpha: 0.6);
       borderColor = skin.quizCorrectBg;
     } else {
-      bgColor = skin.glassBg.withOpacity(0.25);
-      borderColor = skin.glassBorder.withOpacity(0.3);
+      bgColor = skin.glassBg.withValues(alpha: 0.25);
+      borderColor = skin.glassBorder.withValues(alpha: 0.3);
     }
 
     return GestureDetector(

@@ -4,8 +4,6 @@
 // 特殊功能组件集合
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
-
 // ─────────────────────────────────────────────────────────────
 // SlideBar — 字母索引滑动条（移植自 SlideBar.java）
 // ─────────────────────────────────────────────────────────────

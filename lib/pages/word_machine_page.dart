@@ -5,16 +5,12 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/example_parser.dart';
 import '../engine/srs_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
-import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
 import '../tokens/gameboy.dart';
 
 /// 不背单词机页面

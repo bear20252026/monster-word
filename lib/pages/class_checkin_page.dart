@@ -132,7 +132,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
         borderRadius: BorderRadius.circular(AppRadius.xl),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF667EEA).withOpacity(0.3),
+            color: const Color(0xFF667EEA).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -149,7 +149,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
               height: 150,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -161,7 +161,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -175,7 +175,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
@@ -195,7 +195,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 Text(
                   '连续打卡7天，赢取学习徽章',
                   style: MistralTypography.bodySm.copyWith(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -339,7 +339,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
               backgroundColor: MistralColors.primary,
               foregroundColor: Colors.white,
               elevation: 2,
-              shadowColor: MistralColors.primary.withOpacity(0.3),
+              shadowColor: MistralColors.primary.withValues(alpha: 0.3),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.xl),
               ),
@@ -643,8 +643,8 @@ class _ClassInfoCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            MistralColors.primary.withOpacity(0.85),
-            MistralColors.primaryDeep.withOpacity(0.75),
+            MistralColors.primary.withValues(alpha: 0.85),
+            MistralColors.primaryDeep.withValues(alpha: 0.75),
           ],
         ),
         borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -663,7 +663,7 @@ class _ClassInfoCard extends StatelessWidget {
           Text(
             '$memberCount 名成员',
             style: MistralTypography.bodySm.copyWith(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -705,7 +705,7 @@ class _StatItem extends StatelessWidget {
         Text(
           label,
           style: MistralTypography.bodySm.copyWith(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -911,7 +911,7 @@ class _RankTile extends StatelessWidget {
             height: 28,
             decoration: isTop3
                 ? BoxDecoration(
-                    color: rankColors[rank - 1].withOpacity(0.15),
+                    color: rankColors[rank - 1].withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   )
                 : null,
@@ -983,7 +983,7 @@ class _HotClassTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: MistralColors.primary.withOpacity(0.12),
+                color: MistralColors.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
               child: Icon(data.icon, color: MistralColors.primary, size: 24),
@@ -1084,7 +1084,7 @@ class _GuideStep extends StatelessWidget {
               Container(
                 width: 2,
                 height: 40,
-                color: MistralColors.primary.withOpacity(0.3),
+                color: MistralColors.primary.withValues(alpha: 0.3),
               ),
           ],
         ),
@@ -1147,7 +1147,7 @@ class _FeatureCard extends StatelessWidget {
         border: Border.all(color: skin.divider),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1160,7 +1160,7 @@ class _FeatureCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Icon(icon, color: color, size: 22),
@@ -1226,7 +1226,7 @@ class _CommentCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundColor: MistralColors.primary.withOpacity(0.12),
+                backgroundColor: MistralColors.primary.withValues(alpha: 0.12),
                 child: Text(
                   comment.avatar,
                   style: MistralTypography.bodySm.copyWith(

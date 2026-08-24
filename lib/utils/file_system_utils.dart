@@ -96,7 +96,7 @@ class LexisFileSystem {
   /// TTS 目录
   static Future<String> getTTSDir() async {
     final basePath = await getLocalFilePath();
-    return '$_ttsPath';
+    return _ttsPath;
   }
 
   /// 从 ZPK 文件名解析信息

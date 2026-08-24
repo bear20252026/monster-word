@@ -4,7 +4,6 @@
 // 列表与翻页组件集合
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
 import 'animations.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -314,7 +313,7 @@ class FullWidthHorizontalList<T> extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
         itemCount: items.length,
-        separatorBuilder: (_, __) => SizedBox(width: spacing),
+        separatorBuilder: (_, _) => SizedBox(width: spacing),
         itemBuilder: (context, index) =>
             itemBuilder(context, items[index], index),
       ),

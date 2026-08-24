@@ -20,8 +20,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' show MediaType;
 
@@ -355,7 +353,6 @@ class CoolHttpClient {
     CoolParams coolParams,
     CoolJsonHttpResponseHandler handler,
   ) async {
-    if (coolParams == null) return;
     coolParams.put('sign', coolParams.getParamsSign());
     return post(coolParams, handler);
   }
@@ -490,7 +487,7 @@ class CoolHttpClientV3 {
   static const String _serviceUrl = '/v3';
   static const String _baseUrl = 'https://sapi.beingfine.cn/v3';
 
-  static int _timeoutSeconds = 30;
+  static final int _timeoutSeconds = 30;
   static int _dealExpireDlgTime = 0;
 
   /// 账号过期回调（原版 dealAccountExpire 弹窗逻辑的 Flutter 等价）
@@ -514,7 +511,6 @@ class CoolHttpClientV3 {
 
   /// 追加签名（原版 appendParamSign）
   static void appendParamSign(RequestParams requestParams) {
-    if (requestParams == null) return;
     final secret = _getSecret();
     requestParams.put(
       'sign',

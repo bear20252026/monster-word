@@ -136,8 +136,7 @@ class ElementDirection {
   double _translateY = 0;
   double _alpha = 1.0;
 
-  ElementDirection({required this.speedFactor, VoidCallback? onUpdate})
-      : _onUpdate = onUpdate;
+  ElementDirection({required this.speedFactor, this._onUpdate});
 
   void update(double translateY, double alpha) {
     _translateY = translateY;

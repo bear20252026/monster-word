@@ -19,7 +19,7 @@ class UserInfoManagePage extends StatefulWidget {
 class _UserInfoManagePageState extends State<UserInfoManagePage> {
   String _nickname = 'Monster Word';
   String _signature = '';
-  String _avatarUrl = '';
+  final String _avatarUrl = '';
 
   @override
   Widget build(BuildContext context) {

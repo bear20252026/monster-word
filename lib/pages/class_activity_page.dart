@@ -133,7 +133,7 @@ class _ActivityBanner extends StatelessWidget {
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -145,7 +145,7 @@ class _ActivityBanner extends StatelessWidget {
               height: 60,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -167,7 +167,7 @@ class _ActivityBanner extends StatelessWidget {
                 Text(
                   '刷词不掉队',
                   style: MistralTypography.heading4.copyWith(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -177,7 +177,7 @@ class _ActivityBanner extends StatelessWidget {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
@@ -199,7 +199,7 @@ class _ActivityBanner extends StatelessWidget {
               width: 80,
               height: 100,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppRadius.xl),
               ),
               child: const Center(
@@ -299,7 +299,7 @@ class _GuideStep extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -415,7 +415,7 @@ class _FunctionCardTile extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: data.color.withOpacity(0.12),
+              color: data.color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Icon(data.icon, color: data.color, size: 20),
@@ -524,7 +524,7 @@ class _UpgradeSection extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: MistralColors.primary.withOpacity(0.12),
+                  color: MistralColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Text(
@@ -686,7 +686,7 @@ class _AnnouncementTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: MistralColors.primary.withOpacity(0.12),
+                    color: MistralColors.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.xs),
                   ),
                   child: Text(
@@ -833,7 +833,7 @@ class _CommentTile extends StatelessWidget {
           // 头像
           CircleAvatar(
             radius: 18,
-            backgroundColor: MistralColors.primary.withOpacity(0.12),
+            backgroundColor: MistralColors.primary.withValues(alpha: 0.12),
             child: Text(
               data.avatar,
               style: MistralTypography.bodySm.copyWith(

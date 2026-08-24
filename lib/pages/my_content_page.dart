@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
 import 'my_fav_page.dart';
 
 class MyContentPage extends StatelessWidget {

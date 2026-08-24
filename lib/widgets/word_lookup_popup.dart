@@ -64,8 +64,8 @@ class WordLookupPopup extends StatelessWidget {
       barrierLabel: 'lookup_popup',
       barrierColor: Colors.transparent,
       transitionDuration: const Duration(milliseconds: 200),
-      pageBuilder: (_, __, ___) => const SizedBox.shrink(),
-      transitionBuilder: (ctx, anim, _, __) {
+      pageBuilder: (_, _, _) => const SizedBox.shrink(),
+      transitionBuilder: (ctx, anim, _, _) {
         final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
         return Stack(
           children: [
@@ -134,7 +134,7 @@ class _PopupCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.xl),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -146,10 +146,10 @@ class _PopupCard extends StatelessWidget {
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
               decoration: BoxDecoration(
-                color: skin.cardBg.withOpacity(0.92),
+                color: skin.cardBg.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(AppRadius.xl),
                 border: Border.all(
-                  color: skin.divider.withOpacity(0.5),
+                  color: skin.divider.withValues(alpha: 0.5),
                   width: 0.5,
                 ),
               ),

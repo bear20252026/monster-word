@@ -3,7 +3,6 @@
 // 移植自 v3.2 UIThemeSelectActivity
 // 主题选择：切换应用主题/皮肤
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';

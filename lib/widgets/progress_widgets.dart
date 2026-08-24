@@ -45,7 +45,7 @@ class CircleProgressBar extends StatelessWidget {
               progressColor: progressColor,
             ),
           ),
-          if (child != null) child!,
+          ?child,
           if (showPercentage && child == null)
             Text(
               '${(progress * 100).toInt()}%',

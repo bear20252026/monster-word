@@ -184,8 +184,8 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: _isCorrect
-                              ? MistralColors.success.withOpacity(0.1)
-                              : MistralColors.danger.withOpacity(0.1),
+                              ? MistralColors.success.withValues(alpha: 0.1)
+                              : MistralColors.danger.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(AppRadius.md),
                           border: Border.all(
                             color: _isCorrect ? MistralColors.success : MistralColors.danger,

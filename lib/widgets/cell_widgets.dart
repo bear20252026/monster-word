@@ -4,9 +4,7 @@
 // 单元格与列表项组件集合
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
 import 'input_controls.dart';
-import 'input_widgets.dart';
 
 // ─────────────────────────────────────────────────────────────
 // SwitchCell — 开关单元格（移植自 component/SwitchCellView.java）
@@ -107,7 +105,7 @@ class SelectedCell extends StatelessWidget {
                 ),
               ),
             ),
-            if (trailing != null) trailing!,
+            ?trailing,
             if (selected)
               Icon(Icons.check, size: 20, color: skin.colors.accent),
           ],
@@ -232,7 +230,7 @@ class SubtitleCell extends StatelessWidget {
                 ],
               ),
             ),
-            if (trailing != null) trailing!,
+            ?trailing,
           ],
         ),
       ),

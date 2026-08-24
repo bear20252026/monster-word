@@ -29,7 +29,7 @@ class BookWordsPage extends ListWordsPage {
 
 class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
   // 配套真题词组状态
-  List<ExamPhraseGroup> _phraseGroups = [];
+  final List<ExamPhraseGroup> _phraseGroups = [];
   List<ExamPhraseGroup> _availableGroups = [];
 
   @override
@@ -56,21 +56,21 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
         ExamPhraseGroup(
           id: 1,
           bookId: widget.bookId,
-          name: '${examType}高频真题词组',
+          name: '$examType高频真题词组',
           examType: examType,
           phraseCount: 120,
         ),
         ExamPhraseGroup(
           id: 2,
           bookId: widget.bookId,
-          name: '${examType}阅读真题词组',
+          name: '$examType阅读真题词组',
           examType: examType,
           phraseCount: 85,
         ),
         ExamPhraseGroup(
           id: 3,
           bookId: widget.bookId,
-          name: '${examType}写作真题词组',
+          name: '$examType写作真题词组',
           examType: examType,
           phraseCount: 60,
         ),

@@ -136,7 +136,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
           Image.asset(
             wallpaper.assetPath!,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
+            errorBuilder: (_, _, _) => Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: wallpaper.colors ?? [MistralColors.cream],
@@ -155,7 +155,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black.withOpacity(0.1)],
+                colors: [Colors.transparent, Colors.black.withValues(alpha: 0.1)],
               ),
             ),
           ),
@@ -176,7 +176,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
@@ -212,7 +212,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
               style: MistralTypography.heading1.copyWith(
                 color: wallpaper.id == 'default'
                     ? MistralColors.ink
-                    : Colors.white.withOpacity(0.9),
+                    : Colors.white.withValues(alpha: 0.9),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -223,7 +223,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                 color: (wallpaper.id == 'default'
                         ? MistralColors.ink
                         : Colors.white)
-                    .withOpacity(0.1),
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: Text(
@@ -356,7 +356,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                 Image.asset(
                   wallpaper.assetPath!,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: wallpaper.colors!,

@@ -88,9 +88,9 @@ class OnScrollLoadMoreNotification extends ScrollNotification {
   final VoidCallback onLoad;
   OnScrollLoadMoreNotification({
     required this.onLoad,
-    required ScrollMetrics metrics,
-    required BuildContext context,
-  }) : super(metrics: metrics, context: context);
+    required super.metrics,
+    required BuildContext super.context,
+  });
 }
 
 /// 可自动加载更多的滚动视图包装

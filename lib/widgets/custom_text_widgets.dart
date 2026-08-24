@@ -5,7 +5,6 @@
 // 文件：MyTextView, MyEditText, MyAnimatedNumTextView, CustomeTypefaceSpan, TextViewUtils, CustomSelectedView
 
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'animations.dart';
 
 /// 自定义字体文本（翻译自 MyTextView.java）
@@ -177,12 +176,12 @@ class CustomFontTextSpan extends TextSpan {
   final String? fontFamily;
 
   const CustomFontTextSpan({
-    required String text,
+    required String super.text,
     this.fontFamily,
-    TextStyle? style,
-    List<InlineSpan>? children,
-    GestureRecognizer? recognizer,
-  }) : super(text: text, style: style, children: children, recognizer: recognizer);
+    super.style,
+    super.children,
+    super.recognizer,
+  });
 }
 
 /// 文本工具类（翻译自 TextViewUtils.dart）

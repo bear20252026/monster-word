@@ -84,9 +84,9 @@ String _failureMessage(
   double actual,
   double required,
 ) {
-  final fgHex = '#${originalFg.value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
-  final bgHex = '#${bg.value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
-  final effHex = '#${effectiveFg.value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
+  final fgHex = '#${originalFg.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase()}';
+  final bgHex = '#${bg.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase()}';
+  final effHex = '#${effectiveFg.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase()}';
 
   // 判断是否经过了 alpha 合成
   final alphaNote = originalFg.alpha < 255

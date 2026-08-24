@@ -69,7 +69,7 @@ class InterpretationContainer extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   margin: const EdgeInsets.only(right: 8, top: 2),
                   decoration: BoxDecoration(
-                    color: skin.accent.withOpacity(0.1),
+                    color: skin.accent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -127,7 +127,7 @@ class SentenceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: skin.text1.withOpacity(0.05),
+            color: skin.text1.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -199,7 +199,7 @@ class WordRootCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: skin.accent.withOpacity(0.1),
+                  color: skin.accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(

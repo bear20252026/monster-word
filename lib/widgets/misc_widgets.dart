@@ -207,7 +207,7 @@ class ThirdPartyIcon extends StatelessWidget {
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: color?.withOpacity(0.1),
+          color: color?.withValues(alpha: 0.1),
         ),
         child: Center(
           child: child ??
@@ -325,14 +325,14 @@ class _WavePainter extends CustomPainter {
     // 画波浪
     if (isPlaying) {
       final wavePaint = Paint()
-        ..color = waveColor.withOpacity(0.3)
+        ..color = waveColor.withValues(alpha: 0.3)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2;
 
       for (int i = 0; i < 3; i++) {
         final waveRadius = radius * (0.3 + i * 0.2) * waveProgress;
         final opacity = (1 - waveProgress).clamp(0.0, 1.0);
-        wavePaint.color = waveColor.withOpacity(0.3 * opacity);
+        wavePaint.color = waveColor.withValues(alpha: 0.3 * opacity);
         canvas.drawCircle(center, waveRadius, wavePaint);
       }
     }

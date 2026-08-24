@@ -684,6 +684,7 @@ class TextSpeechDownloadTask extends DownloadResourceTask {
     }
   }
 
+  @override
   void _log(String msg) {
     // ignore: avoid_print
     print('TextSpeechDownloadTask: $msg');
@@ -736,10 +737,8 @@ class _SimpleCallback implements FileDownloadCallback {
   final void Function(File file) _onSuccess;
   final void Function(String message, int errorCode) _onFailure;
 
-  _SimpleCallback({required void Function(File file) onSuccess,
-      required void Function(String message, int errorCode) onFailure})
-      : _onSuccess = onSuccess,
-        _onFailure = onFailure;
+  _SimpleCallback({required this._onSuccess,
+      required this._onFailure});
 
   @override
   void onSuccess(File file) => _onSuccess(file);

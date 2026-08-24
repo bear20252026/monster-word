@@ -76,7 +76,7 @@ class ISKRuntimeWatchItem {
   final int started; // 毫秒时间戳
   int stopped; // 毫秒时间戳，0 表示未停止
 
-  ISKRuntimeWatchItem._(this.name, this.started, {this.stopped = 0});
+  ISKRuntimeWatchItem._(this.name, this.started) : stopped = 0;
 
   /// 创建并启动一个计时项
   static ISKRuntimeWatchItem itemWithName(String name) {

@@ -601,7 +601,7 @@ class _SheetSwitchRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
-    return Container(
+    return SizedBox(
       height: 52,
       child: Row(
         children: [
@@ -635,7 +635,7 @@ class _SheetOptionRow extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Container(
+      child: SizedBox(
         height: 52,
         child: Row(
           children: [

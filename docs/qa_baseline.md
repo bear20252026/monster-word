@@ -19,9 +19,10 @@ flutter 已在 PATH 中，无需额外定位。
 
 ## 2. flutter analyze 全量结果
 
-**总计 364 个 issue：ERROR 0 / WARNING 114 / INFO 250**
+**绿色基线后（commit 5a77609）：总计 364 个 issue：ERROR 0 / WARNING 114 / INFO 250**
 
 - 绿色基线已达成：ERROR=0，编译错误已全部清除
+- 注：修复前（commit 5f17e18）为 368 个 issue（ERROR 4 / WARNING 114 / INFO 250），test_plan.md 和 findings_cross_audit.md 中引用的 368 为修复前数据
 
 ## 3. 测试现状
 

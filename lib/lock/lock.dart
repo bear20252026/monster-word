@@ -21,7 +21,7 @@
 ///   builder: (_) => const LockScreenPage(),
 /// ));
 /// ```
-library lock;
+library;
 
 // 核心接口
 export 'lock_presenter.dart';

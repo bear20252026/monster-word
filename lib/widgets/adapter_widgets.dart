@@ -392,7 +392,7 @@ class SelectLibraryView extends StatelessWidget {
                           child: Image.network(
                             book.coverUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
+                            errorBuilder: (_, _, _) =>
                                 Icon(Icons.book, color: _black54),
                           ),
                         )
@@ -1260,7 +1260,7 @@ class FavSentencePageView extends StatelessWidget {
                               'http://img.beingfine.cn/${sentence.image}',
                               fit: BoxFit.cover,
                               width: double.infinity,
-                              errorBuilder: (_, __, ___) =>
+                              errorBuilder: (_, _, _) =>
                                   Icon(Icons.image, size: 48, color: _black54),
                             ),
                           )
@@ -1779,7 +1779,7 @@ class _FavSentenceSectionedListViewState extends State<FavSentenceSectionedListV
                       child: Image.network(
                         'http://img.beingfine.cn/${sentence.image}',
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
+                        errorBuilder: (_, _, _) =>
                             Icon(Icons.image, size: 24, color: _black54),
                       ),
                     )

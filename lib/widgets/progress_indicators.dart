@@ -4,7 +4,6 @@
 // 进度条与指示器组件集合
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
 import 'animations.dart';
 
 // ─────────────────────────────────────────────────────────────

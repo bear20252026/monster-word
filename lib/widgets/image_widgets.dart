@@ -2,11 +2,8 @@
 
 // 由 Claude 团队生成 | 移植自 v3.2 widget/CircularImageView.java, RoundImageView.java, ClipParallaxImageView.java, FullScreenImageView.java, CustomImageView.java, MyRatioImageView.java
 // 图片类组件集合
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
-
 // ─────────────────────────────────────────────────────────────
 // CircularImage — 圆形头像图片（移植自 CircularImageView.java）
 // ─────────────────────────────────────────────────────────────
@@ -180,7 +177,7 @@ class FullScreenImageViewer extends StatelessWidget {
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.black87,
-        pageBuilder: (context, _, __) {
+        pageBuilder: (context, _, _) {
           return FullScreenImageViewer(image: image, heroTag: heroTag);
         },
       ),

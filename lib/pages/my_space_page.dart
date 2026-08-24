@@ -208,7 +208,7 @@ class _MenuItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: skin.text1.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: skin.text1.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -242,7 +242,7 @@ class _CoinCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: skin.cardBg,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: skin.text1.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2))],
+          boxShadow: [BoxShadow(color: skin.text1.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
         ),
         child: Row(
           children: [
@@ -293,7 +293,7 @@ class _EquipCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: skin.cardBg,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: skin.text1.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2))],
+          boxShadow: [BoxShadow(color: skin.text1.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
         ),
         child: Row(
           children: [
