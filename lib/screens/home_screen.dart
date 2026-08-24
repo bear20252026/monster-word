@@ -1,24 +1,18 @@
-// 由 Claude 团队生成 | Monster Word App
-
-// 由账号4生成
-// 首页：Mistral AI 设计风格 — 奶油黄背景 + 日落渐变条 + Charter 衬线 HeroWord
+// Monster Word — 首页（星巴克改造 batch4a）
+// 方案C：画布归品牌，移除壁纸系统，奶油画布 + ContentCard 白卡
 import 'dart:math' as math;
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/wallpaper_data.dart';
 import '../hooks/responsive.dart';
 import '../pages/lib_select_page.dart';
 import '../pages/search_page.dart';
 import '../pages/word_machine_page.dart';
-import '../screens/review_session.dart';
 import '../state/learning_state.dart';
-import '../state/wallpaper_state.dart';
 import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
-import '../widgets/glass_widgets.dart';
+import '../widgets/sb_card.dart';
 import '../widgets/review_dialog.dart';
+import '../widgets/scale_down_on_press.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -34,53 +28,38 @@ class HomeScreen extends StatelessWidget {
     final skin = context.skin;
     final resp = context.responsive;
     final state = context.watch<LearningState>();
-    final wallpaper = context.watch<WallpaperState>().current;
 
-    return _WallpaperBg(
-      wallpaper: wallpaper,
-      fallbackColor: skin.colors.pageBg,
+    // 方案C：奶油画布，移除壁纸系统
+    return Container(
+      color: skin.colors.pageBg,
       child: Stack(
         children: [
           SafeArea(
             child: Column(
               children: [
                 const Spacer(flex: 2),
-                // 签到卡片（毛玻璃）
+                // 签到卡片（SbCard 白卡，替代毛玻璃）
                 Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                      child: Container(
-                        width: 160,
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.55),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withOpacity(0.3), width: 0.5),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.calendar_today_outlined, size: 30, color: skin.colors.text1),
-                            const SizedBox(height: 10),
-                            Text('签到',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1)),
-                            const SizedBox(height: 4),
-                            Text(_formatDate(),
-                              style: TextStyle(fontSize: 14, color: skin.colors.text2)),
-                          ],
-                        ),
-                      ),
+                  child: SbCard(
+                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_today_outlined, size: 30, color: skin.colors.text1),
+                        const SizedBox(height: 10),
+                        Text('签到',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1)),
+                        const SizedBox(height: 4),
+                        Text(_formatDate(),
+                          style: TextStyle(fontSize: 14, color: skin.colors.text2)),
+                      ],
                     ),
                   ),
                 ),
                 const Spacer(flex: 2),
-                // Learn / Review 入口卡
+                // Learn / Review 入口卡（SbCard 替代 GlassEntryCard）
                 Padding(
                   padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
-                  // 卡片宽度受实际约束限制：AdaptiveScale 缩放框架下窗口 MediaQuery 与布局宽度不一致，
-                  // 固定 glassCardWidth 会导致 Learn/Review 行溢出（见 docs/qa_baseline.md）
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final double cardW = math.min(
@@ -90,14 +69,14 @@ class HomeScreen extends StatelessWidget {
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          GlassEntryCard(
+                          _EntryCard(
                             title: 'Learn',
                             count: state.total > 0 ? state.total : 0,
                             width: cardW,
                             onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
                           ),
                           const SizedBox(width: 12),
-                          GlassEntryCard(
+                          _EntryCard(
                             title: 'Review',
                             count: state.dueCount,
                             width: cardW,
@@ -111,20 +90,20 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          // 右上角：不背单词机入口
+          // 右上角：单词机入口（GameBoy 风格保留，word_machine 豁免）
           Positioned(
             top: 0,
             right: 0,
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.only(right: 12, top: 12),
-                child: GestureDetector(
+                child: ScaleDownOnPress(
                   onTap: () => Navigator.pushNamed(context, WordMachinePage.routeName),
                   child: Container(
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF9BBC0F),
+                      color: const Color(0xFF9BBC0F), // GameBoy 绿（豁免）
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -141,7 +120,7 @@ class HomeScreen extends StatelessWidget {
                           fontFamily: 'monospace',
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F380F),
+                          color: Color(0xFF0F380F), // GameBoy 深绿（豁免）
                         ),
                       ),
                     ),
@@ -150,97 +129,91 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          // 左上角浮动按钮
+          // 左上角：查词入口（SbCard 风格圆形按钮）
           Positioned(
             top: 0,
             left: 0,
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.only(left: 12, top: 12),
-                child: GestureDetector(
+                child: ScaleDownOnPress(
                   onTap: () => Navigator.pushNamed(context, SearchPage.routeName),
                   child: Container(
                     width: 48,
                     height: 48,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFF3CD),
+                    decoration: BoxDecoration(
+                      color: skin.colors.cardBg,
                       shape: BoxShape.circle,
+                      boxShadow: const [
+                        BoxShadow(color: Color(0x23000000), blurRadius: 0.5),
+                        BoxShadow(color: Color(0x3D000000), blurRadius: 1.0, offset: Offset(0, 1)),
+                      ],
                     ),
-                    child: const Icon(Icons.menu_book_rounded, color: Color(0xFF8B6914), size: 24),
+                    child: Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 24),
                   ),
                 ),
               ),
             ),
           ),
-          // 下滑查词提示覆盖层
+          // 下滑查词提示覆盖层（SbCard 风格，移除毛玻璃）
           Positioned(
             top: MediaQuery.of(context).size.height * 0.3,
             left: MediaQuery.of(context).size.width * 0.15,
             right: MediaQuery.of(context).size.width * 0.15,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('下滑查词',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-                      const SizedBox(height: 16),
-                      // 手机插图
-                      Container(
-                        width: 120,
-                        height: 180,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
-                          borderRadius: BorderRadius.circular(16),
+            child: SbCard(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('下滑查词',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1)),
+                  const SizedBox(height: 16),
+                  // 手机插图
+                  Container(
+                    width: 120,
+                    height: 180,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: skin.colors.divider, width: 2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Stack(
+                      children: [
+                        // 模拟手机内容
+                        Positioned(
+                          top: 20, left: 12, right: 12,
+                          child: Column(
+                            children: [
+                              Container(height: 6, width: double.infinity,
+                                decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(3))),
+                              const SizedBox(height: 8),
+                              Container(height: 6, width: double.infinity,
+                                decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(3))),
+                              const SizedBox(height: 8),
+                              Container(height: 6, width: 80,
+                                decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(3))),
+                            ],
+                          ),
                         ),
-                        child: Stack(
-                          children: [
-                            // 模拟手机内容
-                            Positioned(
-                              top: 20, left: 12, right: 12,
-                              child: Column(
-                                children: [
-                                  Container(height: 6, width: double.infinity,
-                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.3), borderRadius: BorderRadius.circular(3))),
-                                  const SizedBox(height: 8),
-                                  Container(height: 6, width: double.infinity,
-                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.3), borderRadius: BorderRadius.circular(3))),
-                                  const SizedBox(height: 8),
-                                  Container(height: 6, width: 80,
-                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.3), borderRadius: BorderRadius.circular(3))),
-                                ],
-                              ),
+                        // 键盘模拟
+                        Positioned(
+                          bottom: 10, left: 8, right: 8,
+                          child: Container(
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: skin.colors.cardBgAlt,
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            // 键盘模拟
-                            Positioned(
-                              bottom: 10, left: 8, right: 8,
-                              child: Container(
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ),
-                            // 手指图标
-                            Positioned(
-                              bottom: 60, right: 30,
-                              child: Icon(Icons.touch_app, color: const Color(0xFFFFCC80), size: 40),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                        // 手指图标
+                        Positioned(
+                          bottom: 60, right: 30,
+                          child: Icon(Icons.touch_app, color: skin.colors.accent, size: 40),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -250,50 +223,42 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// 壁纸背景组件：根据壁纸类型显示对应背景
-class _WallpaperBg extends StatelessWidget {
-  final WallpaperItem wallpaper;
-  final Color fallbackColor;
-  final Widget child;
+/// 入口卡片（替代 GlassEntryCard，使用 SbCard 白卡风格）
+class _EntryCard extends StatelessWidget {
+  final String title;
+  final int count;
+  final double width;
+  final VoidCallback onTap;
 
-  const _WallpaperBg({
-    required this.wallpaper,
-    required this.fallbackColor,
-    required this.child,
+  const _EntryCard({
+    required this.title,
+    required this.count,
+    required this.width,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (wallpaper.type == WallpaperType.image && wallpaper.assetPath != null) {
-      return Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(wallpaper.assetPath!),
-            fit: BoxFit.cover,
-            onError: (_, __) {},
-          ),
+    final skin = context.skin;
+    return SbCard(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      child: SizedBox(
+        width: width,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: skin.colors.text1)),
+            const SizedBox(height: 8),
+            Text('$count',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w300, color: skin.colors.accent)),
+            const SizedBox(height: 4),
+            Text(title == 'Learn' ? '待学' : '待复习',
+              style: TextStyle(fontSize: 12, color: skin.colors.text3)),
+          ],
         ),
-        child: child,
-      );
-    }
-
-    if (wallpaper.type == WallpaperType.gradient && wallpaper.colors != null) {
-      return Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: wallpaper.colors!,
-            begin: wallpaper.begin ?? Alignment.topCenter,
-            end: wallpaper.end ?? Alignment.bottomCenter,
-          ),
-        ),
-        child: child,
-      );
-    }
-
-    // 纯色
-    return Container(
-      color: wallpaper.colors?.first ?? fallbackColor,
-      child: child,
+      ),
     );
   }
 }
