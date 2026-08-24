@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../engine/srs_engine.dart';
+import '../engine/fsrs5_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -246,7 +246,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     final isCorrect = widget.state.choices[i].word == widget.word.word;
     if (isCorrect) {
       // P1b+P2b: 记录答对索引，驱动绿色确认态 + 弹跳 + 对勾
-      widget.state.rate(RecallRating.good);
+      widget.state.rate(FsrsRating.good);
       setState(() => _correctIndex = i);
       _bounceController.forward(from: 0);
       _checkController.forward(from: 0);

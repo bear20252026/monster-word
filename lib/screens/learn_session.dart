@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
-import '../engine/srs_engine.dart';
+import '../engine/fsrs5_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -401,7 +401,7 @@ class _LearnSessionState extends State<LearnSession>
         child: Center(
           child: GestureDetector(
             onTap: () {
-              state.rate(RecallRating.good);
+              state.rate(FsrsRating.good);
               if (_pageController.hasClients) {
                 _pageController.animateToPage(
                   state.currentIndex,

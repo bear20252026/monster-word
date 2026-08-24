@@ -8,7 +8,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../engine/srs_engine.dart';
+import '../engine/fsrs5_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../tokens/gameboy.dart';
@@ -96,7 +96,7 @@ class _WordMachinePageState extends State<WordMachinePage>
         _streak++;
         _statusText = 'CORRECT! +${100 + (_streak - 1) * 10}';
       });
-      state.rate(RecallRating.good);
+      state.rate(FsrsRating.good);
 
       Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted) {
@@ -109,7 +109,7 @@ class _WordMachinePageState extends State<WordMachinePage>
         _statusText = 'WRONG!';
       });
       _shakeController.forward().then((_) => _shakeController.reset());
-      state.rate(RecallRating.again);
+      state.rate(FsrsRating.again);
 
       Future.delayed(const Duration(milliseconds: 1200), () {
         if (mounted) {

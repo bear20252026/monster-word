@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../engine/srs_engine.dart';
+import '../engine/fsrs5_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -74,7 +74,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
           _dragOffset = 0;
           _isDragging = false;
         });
-        state.rate(RecallRating.good);
+        state.rate(FsrsRating.good);
       });
     } else if (_dragOffset > threshold) {
       // 下滑 = 不认识
@@ -85,7 +85,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
           _dragOffset = 0;
           _isDragging = false;
         });
-        state.rate(RecallRating.again);
+        state.rate(FsrsRating.again);
       });
     } else {
       // 回弹
