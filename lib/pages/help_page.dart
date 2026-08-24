@@ -10,7 +10,7 @@ import '../tokens/design_tokens.dart';
 
 class HelpPage extends StatefulWidget {
   final String? url;
-  final int type; // 0=默认, 1=查看逻辑复习, 2=免费获取酷币
+  final int type; // 0=默认, 1=查看逻辑复习, 2=免费获取尖叫币
 
   const HelpPage({super.key, this.url, this.type = 0});
 

@@ -55,14 +55,18 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final current = widget.tabs[_active];
-
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // Z2 内容：全屏铺满，Tab 栏悬浮其上
+          // Z2 内容：使用 IndexedStack 避免切换时白屏
           Positioned.fill(
-            child: current.builder(context),
+            child: IndexedStack(
+              index: _active,
+              children: widget.tabs
+                  .map((t) => t.builder(context))
+                  .toList(),
+            ),
           ),
           // Z3 底部 Tab 栏（透明，仅图标）
           Positioned(

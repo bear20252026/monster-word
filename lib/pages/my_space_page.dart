@@ -6,6 +6,7 @@ import '../data/app_preferences.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import 'message_page.dart';
+import 'scare_coin_history_page.dart';
 import 'settings_page.dart';
 
 class MySpacePage extends StatelessWidget {
@@ -85,7 +86,7 @@ class MySpacePage extends StatelessWidget {
                   // 头像 + VIP 徽章 + 用户 ID + 会员状态
                   _buildProfileHeader(skin),
                   const SizedBox(height: 16),
-                  // 酷币 + 装备卡片
+                  // 尖叫币 + 装备卡片
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
@@ -157,29 +158,6 @@ class MySpacePage extends StatelessWidget {
           AppPreferences().getUserInfoSync().nickname,
           style: MistralTypography.bodyMd.copyWith(color: skin.text2),
         ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [
-              MistralColors.sunshine500.withValues(alpha: 0.15),
-              MistralColors.sunshine300.withValues(alpha: 0.1),
-            ]),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: MistralColors.sunshine500.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.workspace_premium, size: 16, color: MistralColors.sunshine700),
-              const SizedBox(width: 6),
-              Text('成为终身大会员 1379 天',
-                style: MistralTypography.caption.copyWith(
-                  color: MistralColors.sunshine700, fontWeight: FontWeight.w500,
-                )),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -232,7 +210,7 @@ class _MenuItem extends StatelessWidget {
   }
 }
 
-/// 酷币卡片：图标 + 数字 + 箭头
+/// 尖叫币卡片：动态余额，点击进入历史记录页
 class _CoinCard extends StatelessWidget {
   final ThemeVars skin;
   const _CoinCard({required this.skin});
@@ -240,7 +218,7 @@ class _CoinCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () => Navigator.pushNamed(context, '/scare_coin_history'),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
@@ -265,13 +243,20 @@ class _CoinCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('酷币', style: MistralTypography.micro.copyWith(color: skin.text3)),
+                  Text('尖叫币', style: MistralTypography.micro.copyWith(color: skin.text3)),
                   const SizedBox(height: 2),
-                  Text('6,821',
-                    style: MistralTypography.heading4.copyWith(
-                      color: skin.text1,
-                      fontWeight: FontWeight.w700,
-                    )),
+                  FutureBuilder<int>(
+                    future: ScareCoinLedger.balance(),
+                    builder: (context, snap) {
+                      return Text(
+                        '${snap.data ?? 0}',
+                        style: MistralTypography.heading4.copyWith(
+                          color: skin.text1,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),

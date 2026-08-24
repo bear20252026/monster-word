@@ -1,4 +1,4 @@
-// 个人中心页：星巴克风格 — 奶油画布 + 头像 + 酷币/装备 + 菜单
+// 个人中心页：星巴克风格 — 奶油画布 + 头像 + 尖叫币/装备 + 菜单
 // batch4a 改造：金色渐变→奶油纯色，硬编码→token，卡片→SbCard
 import 'package:flutter/material.dart';
 
@@ -6,6 +6,7 @@ import '../data/app_preferences.dart';
 import '../hooks/responsive.dart';
 import '../pages/appearance_page.dart';
 import '../pages/more_settings_page.dart';
+import '../pages/scare_coin_history_page.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../tokens/func_colors.dart';
@@ -57,7 +58,7 @@ class ProfileScreen extends StatelessWidget {
                     // 金色渐变头部区
                     _buildProfileHeader(skin),
                     const SizedBox(height: 20),
-                    // 酷币 + 装备卡片
+                    // 尖叫币 + 装备卡片
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
                       child: Row(
@@ -186,44 +187,55 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-/// 酷币卡片
+/// 尖叫币卡片：动态余额，点击进入历史记录页
 class _CoinCard extends StatelessWidget {
   final SkinSystem skin;
   const _CoinCard({required this.skin});
 
   @override
   Widget build(BuildContext context) {
-    return SbCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('酷币', style: MistralTypography.bodyMd.copyWith(
-                color: skin.colors.text1, fontWeight: FontWeight.w600)),
-              const Spacer(),
-              Icon(Icons.chevron_right, color: skin.colors.text3, size: 16),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: MistralColors.sunshine300, // 品牌金 #CBA258（token）
-                  shape: BoxShape.circle,
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/scare_coin_history'),
+      child: SbCard(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('尖叫币', style: MistralTypography.bodyMd.copyWith(
+                  color: skin.colors.text1, fontWeight: FontWeight.w600)),
+                const Spacer(),
+                Icon(Icons.chevron_right, color: skin.colors.text3, size: 16),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: MistralColors.sunshine300, // 品牌金 #CBA258（token）
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.monetization_on, color: FuncColors.warning, size: 18), // 尖叫币图标金
                 ),
-                child: Icon(Icons.monetization_on, color: FuncColors.warning, size: 18), // 酷币图标金
-              ),
-              const SizedBox(width: 8),
-              Text('6,821', style: MistralTypography.heading4.copyWith(
-                color: skin.colors.text1, fontWeight: FontWeight.w700)),
-            ],
-          ),
-        ],
+                const SizedBox(width: 8),
+                FutureBuilder<int>(
+                  future: ScareCoinLedger.balance(),
+                  builder: (context, snap) {
+                    return Text(
+                      '${snap.data ?? 0}',
+                      style: MistralTypography.heading4.copyWith(
+                        color: skin.colors.text1, fontWeight: FontWeight.w700),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
