@@ -379,6 +379,8 @@ class _SearchPageState extends State<SearchPage> {
       await player.play(UrlSource(
         'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2',
       ));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Audio playback error: $e');
+    }
   }
 }

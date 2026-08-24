@@ -68,7 +68,9 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
       await _audioPlayer.play(UrlSource(
         'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(_currentWord)}&type=2',
       ));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Audio playback error: $e');
+    }
   }
 
   void _check() {

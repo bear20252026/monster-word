@@ -54,7 +54,9 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
       await _audioPlayer.play(UrlSource(
         'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(widget.word)}&type=2',
       ));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Audio playback error: $e');
+    }
   }
 
   void _check() {

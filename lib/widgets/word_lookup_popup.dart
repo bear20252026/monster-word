@@ -104,7 +104,8 @@ class WordLookupPopup extends StatelessWidget {
   Future<Word?> _lookupWord(String word) async {
     try {
       return await WordBookDatabase.instance.getWord(word);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Word lookup error: $e');
       return null;
     }
   }

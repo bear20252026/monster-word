@@ -40,7 +40,8 @@ class _WordDetailPageState extends State<WordDetailPage> {
       await NoteDatabase.instance.initialize();
       final notes = await NoteDatabase.instance.getNotesByWordId(word.id);
       if (mounted) setState(() { _notes = notes; _notesLoaded = true; });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Notes loading error: $e');
       if (mounted) setState(() => _notesLoaded = true);
     }
   }
@@ -356,7 +357,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
                     final player = AudioPlayer();
                     await player.play(UrlSource(
                       'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2'));
-                  } catch (_) {}
+                  } catch (e) {
+                    debugPrint('Audio playback error: $e');
+                  }
                 },
                 child: Icon(Icons.volume_up_outlined, color: skin.colors.accent, size: 28),
               ),

@@ -102,7 +102,8 @@ class LearningState extends ChangeNotifier {
           (k, v) => MapEntry(k, SrsCard.fromJson(v as Map<String, dynamic>)),
         );
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('SRS cards loading error: $e');
       _cards = {};
     }
   }
@@ -122,7 +123,9 @@ class LearningState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getStringList(_favoritesPrefKey);
       if (raw != null) _favoriteWords.addAll(raw);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Favorites loading error: $e');
+    }
   }
 
   /// 从 SharedPreferences 加载已掌握列表
@@ -131,7 +134,9 @@ class LearningState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getStringList(_masteredPrefKey);
       if (raw != null) _masteredWords.addAll(raw);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Mastered words loading error: $e');
+    }
   }
 
   /// 保存收藏列表到 SharedPreferences
@@ -169,7 +174,8 @@ class LearningState extends ChangeNotifier {
           });
         });
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Daily stats loading error: $e');
       _dailyStats = {};
     }
   }
@@ -186,7 +192,8 @@ class LearningState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getStringList(_activeDatesPrefKey);
       if (raw != null) _activeDates = raw.toSet();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Active dates loading error: $e');
       _activeDates = {};
     }
   }
