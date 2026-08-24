@@ -2,6 +2,7 @@
 // 管理锁屏状态下的音频播放
 
 import 'package:just_audio/just_audio.dart';
+import 'package:flutter/foundation.dart';
 
 /// 锁屏媒体播放管理器
 /// 管理单词发音和例句音频的播放
@@ -26,7 +27,7 @@ class LockMedia {
       await _wordPlayer.setUrl(url);
       await _wordPlayer.play();
     } catch (e) {
-      print('LockMedia.playWord error: $e');
+      debugPrint('LockMedia.playWord error: $e');
     }
   }
 
@@ -41,7 +42,7 @@ class LockMedia {
       }
       await _sentencePlayer.play();
     } catch (e) {
-      print('LockMedia.playSentence error: $e');
+      debugPrint('LockMedia.playSentence error: $e');
     }
   }
 

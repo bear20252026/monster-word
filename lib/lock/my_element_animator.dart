@@ -114,6 +114,9 @@ class MyElementAnimator {
     _minDistance = distance;
   }
 
+  /// 最小距离阈值
+  int get minDistance => _minDistance;
+
   /// 当前滚动偏移量
   int get scrollDelta => _scrollDelta;
 

@@ -35,11 +35,11 @@ class SyncDataService {
   /// 3. 链式同步学习数据
   static Future<void> execute() async {
     if (_state == SyncServiceState.syncing) {
-      print('$_logTag: 正在同步，跳过');
+      debugPrint('$_logTag: 正在同步，跳过');
       return;
     }
     _state = SyncServiceState.syncing;
-    print('$_logTag: 开始同步');
+    debugPrint('$_logTag: 开始同步');
 
     try {
       // 步骤 1：上报每日统计（原版 ReportUserDaily.call()）
@@ -52,10 +52,10 @@ class SyncDataService {
       await SyncChainServiceV2.call(_SyncListenerImpl());
 
       _state = SyncServiceState.success;
-      print('$_logTag: 同步完成');
+      debugPrint('$_logTag: 同步完成');
     } catch (e) {
       _state = SyncServiceState.failed;
-      print('$_logTag: 同步异常: $e');
+      debugPrint('$_logTag: 同步异常: $e');
     }
   }
 
@@ -66,17 +66,17 @@ class SyncDataService {
 class _SyncListenerImpl implements SyncListener {
   @override
   void onSyncStart() {
-    print('SyncDataService: 同步开始');
+    debugPrint('SyncDataService: 同步开始');
   }
 
   @override
   void onSyncSuccess() {
-    print('SyncDataService: 同步成功');
+    debugPrint('SyncDataService: 同步成功');
   }
 
   @override
   void onSyncFailed() {
-    print('SyncDataService: 同步失败');
+    debugPrint('SyncDataService: 同步失败');
   }
 }
 
@@ -126,7 +126,7 @@ class NotiService {
     // await flutterLocalNotificationsPlugin.show(
     //   notifyId, title, content, details,
     // );
-    print('NotiService: 显示通知 - $title: $content');
+    debugPrint('NotiService: 显示通知 - $title: $content');
   }
 }
 
@@ -142,7 +142,7 @@ class LocalRemindStudyTask {
   /// 执行学习提醒调度（原版 doInBackground 逻辑）
   /// 根据复习计划设置定时提醒
   static Future<void> execute() async {
-    print('$_logTag: 开始调度学习提醒');
+    debugPrint('$_logTag: 开始调度学习提醒');
 
     // TODO: 需要以下依赖集成：
     // - UserPreferences.isLearnRemind()
@@ -157,13 +157,13 @@ class LocalRemindStudyTask {
     // 4. 为每个复习日期设置 AlarmManager 定时通知
     // 5. 为未来 10 天设置学习提醒
 
-    print('$_logTag: 学习提醒调度完成');
+    debugPrint('$_logTag: 学习提醒调度完成');
   }
 
   /// 取消所有提醒（原版 AlarmManager.cancel 逻辑）
   static Future<void> cancelAll() async {
     // TODO: 取消所有已设置的定时通知
-    print('$_logTag: 取消所有提醒');
+    debugPrint('$_logTag: 取消所有提醒');
   }
 }
 
@@ -393,18 +393,18 @@ class DimImage {
     final dimFile = File(dimPath);
 
     if (await dimFile.exists()) {
-      print('$_logTag: 模糊图已存在，跳过: $dimPath');
+      debugPrint('$_logTag: 模糊图已存在，跳过: $dimPath');
       return;
     }
 
-    print('$_logTag: 开始生成模糊背景: $imagePath');
+    debugPrint('$_logTag: 开始生成模糊背景: $imagePath');
 
     try {
       // 在后台 Isolate 中处理
       await compute(_blurImageIsolate, _BlurParams(imagePath, dimPath, 60));
-      print('$_logTag: 模糊背景生成完成: $dimPath');
+      debugPrint('$_logTag: 模糊背景生成完成: $dimPath');
     } catch (e) {
-      print('$_logTag: 模糊背景生成失败: $e');
+      debugPrint('$_logTag: 模糊背景生成失败: $e');
     }
   }
 
@@ -418,17 +418,17 @@ class DimImage {
     final dimFile = File(dimPath);
 
     if (await dimFile.exists()) {
-      print('$_logTag: 模糊图2已存在，跳过: $dimPath');
+      debugPrint('$_logTag: 模糊图2已存在，跳过: $dimPath');
       return;
     }
 
-    print('$_logTag: 开始生成模糊背景2: $imagePath');
+    debugPrint('$_logTag: 开始生成模糊背景2: $imagePath');
 
     try {
       await compute(_blurImageIsolate, _BlurParams(imagePath, dimPath, 20));
-      print('$_logTag: 模糊背景2生成完成: $dimPath');
+      debugPrint('$_logTag: 模糊背景2生成完成: $dimPath');
     } catch (e) {
-      print('$_logTag: 模糊背景2生成失败: $e');
+      debugPrint('$_logTag: 模糊背景2生成失败: $e');
     }
   }
 }
@@ -449,7 +449,7 @@ Future<void> _blurImageIsolate(_BlurParams params) async {
   // final blurred = gaussianBlur(image, radius: params.blurRadius);
   // final encoded = encodeJpg(blurred, quality: 100);
   // await File(params.outputPath).writeAsBytes(encoded);
-  print('DimImage: 模糊处理 ${params.inputPath} (radius=${params.blurRadius})');
+  debugPrint('DimImage: 模糊处理 ${params.inputPath} (radius=${params.blurRadius})');
 }
 
 // ============================================================
@@ -473,7 +473,7 @@ class Unzip {
     String? suffix,
     UnzipCallback? callback,
   ) async {
-    print('$_logTag: 开始解压: $zipPath');
+    debugPrint('$_logTag: 开始解压: $zipPath');
 
     try {
       final result = await compute(
@@ -482,14 +482,14 @@ class Unzip {
       );
 
       if (result) {
-        print('$_logTag: 解压成功: $zipPath');
+        debugPrint('$_logTag: 解压成功: $zipPath');
         callback?.call(zipPath, true, _successCode);
       } else {
-        print('$_logTag: 解压失败: $zipPath');
+        debugPrint('$_logTag: 解压失败: $zipPath');
         callback?.call(zipPath, false, _failCode);
       }
     } catch (e) {
-      print('$_logTag: 解压异常: $e');
+      debugPrint('$_logTag: 解压异常: $e');
       callback?.call(zipPath, false, _failCode);
     }
   }
@@ -514,7 +514,7 @@ class Unzip {
     try {
       final file = File(zipPath);
       if (!await file.exists()) {
-        print('$_logTag: ZIP 文件不存在: $zipPath');
+        debugPrint('$_logTag: ZIP 文件不存在: $zipPath');
         return false;
       }
 
@@ -531,14 +531,14 @@ class Unzip {
       //   }
       // }
 
-      print('$_logTag: 解压完成: $zipPath -> $destDir');
+      debugPrint('$_logTag: 解压完成: $zipPath -> $destDir');
 
       // 删除源 ZIP 文件（原版逻辑）
       // await file.delete();
 
       return true;
     } catch (e) {
-      print('$_logTag: 解压失败: $e');
+      debugPrint('$_logTag: 解压失败: $e');
       return false;
     }
   }

@@ -434,7 +434,7 @@ class SelectLibraryView extends StatelessWidget {
                     ),
                     child: const Text(
                       '当前',
-                      style: TextStyle(fontSize: 11, color: Colors.white),
+                      style: TextStyle(fontSize: 11, color: AppColors.white100),
                     ),
                   ),
                 ],
@@ -455,7 +455,7 @@ class SelectLibraryView extends StatelessWidget {
                       book.hasBought ? '已购' : '付费',
                       style: TextStyle(
                         fontSize: 11,
-                        color: book.hasBought ? Colors.white : _black87,
+                        color: book.hasBought ? AppColors.white100 : _black87,
                       ),
                     ),
                   ),
@@ -690,7 +690,7 @@ class MessageListView extends StatelessWidget {
                     height: 8,
                     margin: const EdgeInsets.only(top: 6, right: 8),
                     decoration: const BoxDecoration(
-                      color: Colors.red,
+                      color: AppColors.errorRed,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -1075,11 +1075,11 @@ class _SentenceCardPageViewState extends State<SentenceCardPageView> {
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white100,
           borderRadius: BorderRadius.circular(AppleRadius.lg),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: AppColors.black12,
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -1237,7 +1237,7 @@ class FavSentencePageView extends StatelessWidget {
             margin: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppleRadius.lg),
-              color: Colors.white,
+              color: AppColors.white100,
             ),
             child: Column(
               children: [
@@ -1880,7 +1880,7 @@ class WordListenPageView extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white100,
         borderRadius: BorderRadius.circular(AppleRadius.lg),
       ),
       child: Column(

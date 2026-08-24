@@ -16,6 +16,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -492,8 +493,7 @@ abstract class DownloadResourceTask {
   }
 
   void _log(String msg) {
-    // ignore: avoid_print
-    print('$_logTag: $msg');
+    debugPrint('$_logTag: $msg');
   }
 }
 
@@ -686,8 +686,7 @@ class TextSpeechDownloadTask extends DownloadResourceTask {
 
   @override
   void _log(String msg) {
-    // ignore: avoid_print
-    print('TextSpeechDownloadTask: $msg');
+    debugPrint('TextSpeechDownloadTask: $msg');
   }
 
   /// 静态便捷方法：下载 TTS 音频并返回 File

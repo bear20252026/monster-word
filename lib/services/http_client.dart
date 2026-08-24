@@ -783,6 +783,12 @@ class DownloadHttpClient {
   bool _bSupportResume = false;
   int _startRange = 0;
 
+  /// 连接超时（秒）
+  int get connectTimeout => _connectTimeout;
+
+  /// 读取超时（秒）
+  int get readTimeout => _readTimeout;
+
   DownloadHttpClient()
       : _connectTimeout = 10,
         _readTimeout = 120;

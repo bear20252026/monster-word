@@ -2,6 +2,7 @@
 // 锁屏服务 - Platform Channel 接口
 
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
 /// 锁屏服务，通过 Platform Channel 与原生 Android 通信
 /// 实现锁屏显示、解锁、Activity 管理等功能
@@ -22,7 +23,7 @@ class LockService {
       final result = await _channel.invokeMethod('showLockScreen');
       return result == true;
     } on PlatformException catch (e) {
-      print('LockService.showLockScreen error: ${e.message}');
+      debugPrint('LockService.showLockScreen error: ${e.message}');
       return false;
     }
   }
@@ -32,7 +33,7 @@ class LockService {
     try {
       await _channel.invokeMethod('closeLockScreen');
     } on PlatformException catch (e) {
-      print('LockService.closeLockScreen error: ${e.message}');
+      debugPrint('LockService.closeLockScreen error: ${e.message}');
     }
   }
 
@@ -41,7 +42,7 @@ class LockService {
     try {
       await _channel.invokeMethod('unlock');
     } on PlatformException catch (e) {
-      print('LockService.unlock error: ${e.message}');
+      debugPrint('LockService.unlock error: ${e.message}');
     }
   }
 
@@ -55,7 +56,7 @@ class LockService {
         'className': className,
       });
     } on PlatformException catch (e) {
-      print('LockService.bringTaskToFront error: ${e.message}');
+      debugPrint('LockService.bringTaskToFront error: ${e.message}');
     }
   }
 
@@ -72,7 +73,7 @@ class LockService {
         'flags': flags,
       });
     } on PlatformException catch (e) {
-      print('LockService.ensureLaunchActivity error: ${e.message}');
+      debugPrint('LockService.ensureLaunchActivity error: ${e.message}');
     }
   }
 
@@ -85,7 +86,7 @@ class LockService {
       final result = await _channel.invokeMethod('getBatteryInfo');
       return Map<String, dynamic>.from(result);
     } on PlatformException catch (e) {
-      print('LockService.getBatteryInfo error: ${e.message}');
+      debugPrint('LockService.getBatteryInfo error: ${e.message}');
       return {'isCharging': false, 'percent': 0};
     }
   }
@@ -97,7 +98,7 @@ class LockService {
       final result = await _channel.invokeMethod('getBringTaskId');
       return result as int? ?? -1;
     } on PlatformException catch (e) {
-      print('LockService.getBringTaskId error: ${e.message}');
+      debugPrint('LockService.getBringTaskId error: ${e.message}');
       return -1;
     }
   }
@@ -109,7 +110,7 @@ class LockService {
     try {
       await _channel.invokeMethod('playWordAudio', {'word': word});
     } on PlatformException catch (e) {
-      print('LockService.playWordAudio error: ${e.message}');
+      debugPrint('LockService.playWordAudio error: ${e.message}');
     }
   }
 
@@ -118,7 +119,7 @@ class LockService {
     try {
       await _channel.invokeMethod('playSentenceAudio', {'mp3Path': mp3Path});
     } on PlatformException catch (e) {
-      print('LockService.playSentenceAudio error: ${e.message}');
+      debugPrint('LockService.playSentenceAudio error: ${e.message}');
     }
   }
 
@@ -127,7 +128,7 @@ class LockService {
     try {
       await _channel.invokeMethod('pauseAudio');
     } on PlatformException catch (e) {
-      print('LockService.pauseAudio error: ${e.message}');
+      debugPrint('LockService.pauseAudio error: ${e.message}');
     }
   }
 

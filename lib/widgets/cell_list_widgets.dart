@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'input_controls.dart';
+import '../tokens/design_tokens.dart';
 
 /// 开关单元格（翻译自 SwitchCellView.dart）
 /// 左侧标题 + 右侧开关
@@ -44,7 +45,7 @@ class SwitchCellView extends StatelessWidget {
                 title,
                 style: TextStyle(
                   fontSize: 16,
-                  color: enabled ? Colors.black87 : Colors.grey,
+                  color: enabled ? MistralColors.charcoal : MistralColors.steel,
                 ),
               ),
             ),
@@ -80,8 +81,8 @@ class VerticalLevelBar extends StatelessWidget {
     required this.totalLevel,
     required this.currentLevel,
     this.bgColor = const Color(0x08000000),
-    this.progressColor = Colors.amber,
-    this.fullProgressColor = Colors.green,
+    this.progressColor = MistralColors.warning,
+    this.fullProgressColor = MistralColors.success,
     this.width = 20,
     this.height = 100,
     this.radius = 10,
@@ -198,7 +199,7 @@ class UserBindItem extends StatelessWidget {
                 ? statusText
                 : (isBound ? '已绑定' : '立即绑定'),
             style: TextStyle(
-              color: isBound ? Colors.grey : Colors.blue,
+              color: isBound ? MistralColors.steel : MistralColors.link,
               fontSize: 14,
             ),
           ),
