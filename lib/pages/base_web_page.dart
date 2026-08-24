@@ -32,13 +32,55 @@ class _BaseWebPageState extends State<BaseWebPage> {
   bool _hasError = false;
   String _pageTitle = '';
 
+  /// 允许的域名白名单
+  static const _allowedDomains = [
+    'beingfine.cn',
+    'www.beingfine.cn',
+  ];
+
+  /// 检查 URL 是否在白名单内
+  bool _isUrlAllowed(String url) {
+    try {
+      final uri = Uri.parse(url);
+
+      // 拒绝危险协议
+      if (uri.scheme == 'javascript' || uri.scheme == 'data') {
+        return false;
+      }
+
+      // 只允许 http/https
+      if (uri.scheme != 'http' && uri.scheme != 'https') {
+        return false;
+      }
+
+      // 检查域名白名单
+      return _allowedDomains.any((domain) =>
+          uri.host == domain || uri.host.endsWith('.$domain'));
+    } catch (e) {
+      return false;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _pageTitle = widget.title ?? '';
+
+    // 检查初始 URL 是否在白名单
+    if (!_isUrlAllowed(widget.url)) {
+      _hasError = true;
+      return;
+    }
+
     _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setJavaScriptMode(JavaScriptMode.disabled)
       ..setNavigationDelegate(NavigationDelegate(
+        onNavigationRequest: (request) {
+          if (!_isUrlAllowed(request.url)) {
+            return NavigationDecision.prevent;
+          }
+          return NavigationDecision.navigate;
+        },
         onPageStarted: (_) => setState(() {
           _isLoading = true;
           _hasError = false;

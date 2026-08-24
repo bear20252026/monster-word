@@ -105,7 +105,7 @@ class UserInfoBeanFull {
   String email;
   String phone;
   String photo;
-  String password;
+  // password 字段已移除 — 禁止本地存储密码（安全审计 H4）
   int quota;
   int continueX; // JSON key: "continue"
   int totalDays;
@@ -119,7 +119,6 @@ class UserInfoBeanFull {
     this.email = '',
     this.phone = '',
     this.photo = '',
-    this.password = '',
     this.quota = 0,
     this.continueX = 0,
     this.totalDays = 0,
@@ -147,7 +146,6 @@ class UserInfoBeanFull {
         email: json['email'] ?? '',
         phone: json['phone'] ?? '',
         photo: json['photo'] ?? '',
-        password: json['password'] ?? '',
         quota: (json['quota'] as num?)?.toInt() ?? 0,
         continueX: (json['continue'] as num?)?.toInt() ?? 0,
         totalDays: (json['totalDays'] as num?)?.toInt() ?? 0,
@@ -164,7 +162,6 @@ class UserInfoBeanFull {
         'email': email,
         'phone': phone,
         'photo': photo,
-        'password': password,
         'quota': quota,
         'continue': continueX,
         'totalDays': totalDays,
@@ -576,7 +573,7 @@ class UserPreferencesExt {
   static const String lockWallpaperPre = 'lock_wallpaper_';
   static const String newWordLastClickWordId = 'new_word_last_click_word_id';
   static const String noMoreLockscreenPermissionTip = 'no_more_lockscreen_permission_tip';
-  static const String password = 'userPwd';
+  // password ('userPwd') 已移除 — 禁止明文存储密码（安全审计 H4）
   static const String settingStrategyHasArtificiallyTriggered = 'setting_strategy_has_artificallytriggered_';
   static const String synTimeLexisOld = 'synTime_lexis';
   static const String synTimeNewword = 'syn_time_newword';
@@ -762,12 +759,6 @@ class UserPreferencesExt {
       await _remove(synTimeNewword);
     }
   }
-
-  // ── 密码（已废弃，保留兼容）──
-
-  String? getPassword() => _prefs.getString(password);
-
-  Future<bool> savePassword(String value) => _setString(password, value);
 
   // ── 用户信息 Bean 存取（用户级 key）──
 
