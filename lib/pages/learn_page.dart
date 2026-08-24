@@ -240,6 +240,9 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   // Bounce animation (correct answer feedback)
   late AnimationController _bounceController;
 
+  // P2: 对勾 springPop 控制器
+  late AnimationController _checkController;
+
   @override
   void initState() {
     super.initState();
@@ -252,12 +255,18 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+
+    _checkController = AnimationController(
+      duration: const Duration(milliseconds: 200), // base 档
+      vsync: this,
+    );
   }
 
   @override
   void dispose() {
     _shakeController.dispose();
     _bounceController.dispose();
+    _checkController.dispose();
     super.dispose();
   }
 
@@ -269,6 +278,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       _correctIndex = -1;
       _shakeController.reset();
       _bounceController.reset();
+      _checkController.reset();
     }
   }
 
@@ -277,10 +287,11 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     if (_correctIndex >= 0) return;
     final isCorrect = widget.state.choices[i].word == widget.word.word;
     if (isCorrect) {
-      // 选对：评分 + 弹跳反馈，跳转字典详情页
+      // P1b+P2b: 记录答对索引，驱动绿色确认态 + 弹跳 + 对勾
       widget.state.rate(RecallRating.good);
+      setState(() => _correctIndex = i);
       _bounceController.forward(from: 0);
-      setState(() {});
+      _checkController.forward(from: 0);
       Future.delayed(const Duration(milliseconds: 400), () {
         if (mounted) Navigator.pushNamed(context, '/word_detail');
       });
@@ -320,45 +331,98 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   Widget _buildChoice(int i) {
     final choice = widget.state.choices[i];
     final isWrong = i == _wrongIndex;
+    final isCorrect = i == _correctIndex; // P1d
     final interpret = choice.interpret.toString();
 
+    // P1d: 三态颜色（绿/红/默认）
     Color bgColor;
     Color borderColor;
-    if (isWrong) {
+    Color textColor;
+    if (isCorrect) {
+      bgColor = const Color(0xFF4CAF50).withOpacity(0.35);
+      borderColor = const Color(0xFF4CAF50);
+      textColor = const Color(0xFF2E7D32);
+    } else if (isWrong) {
       bgColor = const Color(0xFFE8A0A0).withOpacity(0.6);
       borderColor = const Color(0xFFE8A0A0);
+      textColor = Colors.white;
     } else {
       bgColor = Colors.white.withOpacity(0.25);
       borderColor = Colors.white.withOpacity(0.3);
+      textColor = Colors.white;
     }
 
     Widget tile = GestureDetector(
       onTap: () => _onChoice(i),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: 56,
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 0.5),
-        ),
-        child: Center(
-          child: Text(interpret,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
+      child: Stack(
+        alignment: Alignment.centerRight,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 56,
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: borderColor, width: 0.5),
             ),
-            maxLines: 2, overflow: TextOverflow.ellipsis),
-        ),
+            child: Center(
+              child: Text(interpret,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: textColor,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 2, overflow: TextOverflow.ellipsis),
+            ),
+          ),
+          // P2c: 对勾图标 springPop 弹入
+          if (isCorrect)
+            Padding(
+              padding: const EdgeInsets.only(right: 14),
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.6, end: 1.0).animate(
+                  CurvedAnimation(
+                    parent: _checkController,
+                    curve: const Cubic(0.32, 2.32, 0.61, 0.27), // springPop
+                  ),
+                ),
+                child: FadeTransition(
+                  opacity: _checkController,
+                  child: const Icon(
+                    Icons.check_circle_outline,
+                    color: Color(0xFF2E7D32),
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
+
+    // P1e: 答对项接入 BounceWidget
+    if (isCorrect) {
+      tile = ScaleTransition(
+        scale: buildBounceAnim(_bounceController),
+        child: tile,
+      );
+    }
 
     // Wrap wrong choice with shake animation
     if (isWrong) {
       tile = ShakeWidget(controller: _shakeController, child: tile);
+    }
+
+    // P7: 答对后其余选项降权 0.40
+    if (_correctIndex >= 0 && !isCorrect) {
+      tile = AnimatedOpacity(
+        opacity: 0.40,
+        duration: const Duration(milliseconds: 200),
+        curve: standardCurve,
+        child: tile,
+      );
     }
 
     return tile;
