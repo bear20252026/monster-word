@@ -125,8 +125,11 @@ class _ReviewDialog extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.pushNamed(context, '/learn');
+                        // 修复：先捕获页面级 Navigator 再关弹窗，避免在已失活的
+                        // bottom sheet context 上调用 pushNamed（会抛 deactivated widget 异常）
+                        final nav = Navigator.of(context);
+                        nav.pop();
+                        nav.pushNamed('/learn');
                       },
                       icon: const Icon(Icons.play_arrow, size: 18),
                       label: const Text('继续学习'),
@@ -144,8 +147,10 @@ class _ReviewDialog extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.pushNamed(context, '/review_session');
+                        // 修复：同上，先捕获 Navigator 再关弹窗
+                        final nav = Navigator.of(context);
+                        nav.pop();
+                        nav.pushNamed('/review_session');
                       },
                       icon: const Icon(Icons.replay, size: 18),
                       label: const Text('开始复习'),

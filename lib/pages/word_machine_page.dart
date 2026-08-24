@@ -31,6 +31,7 @@ class _WordMachinePageState extends State<WordMachinePage>
   int _streak = 0;
   String _statusText = 'PRESS START';
   bool _started = false;
+  bool _showWordDetails = false;
 
   late AnimationController _blinkController;
   late AnimationController _shakeController;
@@ -58,6 +59,34 @@ class _WordMachinePageState extends State<WordMachinePage>
     _blinkController.dispose();
     _shakeController.dispose();
     super.dispose();
+  }
+
+  /// 切换到上一个单词
+  void _previousWord() {
+    final state = context.read<LearningState>();
+    if (state.currentIndex > 0) {
+      state.jumpTo(state.currentIndex - 1);
+      setState(() {
+        _selectedChoice = -1;
+        _showResult = false;
+        _showWordDetails = false;
+        _statusText = 'WORD ${state.currentIndex + 1}';
+      });
+    }
+  }
+
+  /// 切换到下一个单词
+  void _nextWordManual() {
+    final state = context.read<LearningState>();
+    if (state.currentIndex < state.total - 1) {
+      state.jumpTo(state.currentIndex + 1);
+      setState(() {
+        _selectedChoice = -1;
+        _showResult = false;
+        _showWordDetails = false;
+        _statusText = 'WORD ${state.currentIndex + 1}';
+      });
+    }
   }
 
   void _startGame() {
@@ -395,6 +424,8 @@ class _WordMachinePageState extends State<WordMachinePage>
           _buildStatusBar(),
           // 单词展示
           _buildWordDisplay(word),
+          // 单词详情面板（可展开/收起）
+          _buildWordDetails(),
           // 释义区域
           _buildMeaningArea(word),
           // 4 个选项
@@ -574,6 +605,116 @@ class _WordMachinePageState extends State<WordMachinePage>
     );
   }
 
+  /// 播放发音
+  void _playPronunciation() {
+    final state = context.read<LearningState>();
+    final word = state.currentWord;
+    if (word == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('🔊 ${word.word}'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  /// 构建单词详情面板（可展开/收起）
+  Widget _buildWordDetails() {
+    final state = context.read<LearningState>();
+    final word = state.currentWord;
+    if (word == null) return const SizedBox.shrink();
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      height: _showWordDetails ? 120 : 0,
+      child: _showWordDetails
+          ? Container(
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: GameBoyPalette.screenDark,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: GameBoyPalette.screenMid),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 音标
+                    if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[
+                      Text(
+                        '🔊 ${word.usPron}  ${word.ukPron}',
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 11,
+                          color: GameBoyPalette.screenLight,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    // 释义
+                    if (word.interpret.isNotEmpty) ...[
+                      Text(
+                        word.interpret.length > 80
+                            ? '${word.interpret.substring(0, 80)}...'
+                            : word.interpret,
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 10,
+                          color: GameBoyPalette.screenLight,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    // 例句
+                    if (word.example.isNotEmpty) ...[
+                      const Text(
+                        '📖 例句:',
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 9,
+                          color: GameBoyPalette.screenMid,
+                        ),
+                      ),
+                      Text(
+                        word.example.length > 80
+                            ? '${word.example.substring(0, 80)}...'
+                            : word.example,
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 9,
+                          color: GameBoyPalette.screenLight,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    // 词根
+                    if (word.wordRoot.isNotEmpty) ...[
+                      const Text(
+                        '🌱 词根:',
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 9,
+                          color: GameBoyPalette.screenMid,
+                        ),
+                      ),
+                      Text(
+                        word.wordRoot,
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 9,
+                          color: GameBoyPalette.screenLight,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
   /// 按钮区域
   Widget _buildControls() {
     return Padding(
@@ -660,46 +801,85 @@ class _WordMachinePageState extends State<WordMachinePage>
     );
   }
 
-  /// D-pad 方向键（装饰）
+  /// D-pad 方向键（功能：上=上一个，下=下一个，左=详情，右=发音）
   Widget _buildDpad() {
     return SizedBox(
       width: 100,
       height: 100,
       child: Stack(
+        alignment: Alignment.center,
         children: [
-          // 水平条
+          // 上 - 上一个单词
           Positioned(
-            left: 0,
-            right: 0,
-            top: 35,
-            child: Container(
-              height: 30,
-              decoration: BoxDecoration(
-                color: GameBoyPalette.dpadGray,
-                borderRadius: BorderRadius.circular(4),
+            top: 0,
+            child: GestureDetector(
+              onTap: _started ? _previousWord : null,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: _started ? GameBoyPalette.dpadGray : GameBoyPalette.dpadGray,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                ),
+                child: Icon(Icons.keyboard_arrow_up, color: GameBoyPalette.screenDark, size: 20),
               ),
             ),
           ),
-          // 垂直条
+          // 下 - 下一个单词
           Positioned(
-            top: 0,
             bottom: 0,
-            left: 35,
-            child: Container(
-              width: 30,
-              decoration: BoxDecoration(
-                color: GameBoyPalette.dpadGray,
-                borderRadius: BorderRadius.circular(4),
+            child: GestureDetector(
+              onTap: _started ? _nextWordManual : null,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: _started ? GameBoyPalette.dpadGray : GameBoyPalette.dpadGray,
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(4)),
+                ),
+                child: Icon(Icons.keyboard_arrow_down, color: GameBoyPalette.screenDark, size: 20),
+              ),
+            ),
+          ),
+          // 左 - 显示/隐藏详情
+          Positioned(
+            left: 0,
+            child: GestureDetector(
+              onTap: _started ? () => setState(() => _showWordDetails = !_showWordDetails) : null,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: _started ? GameBoyPalette.dpadGray : GameBoyPalette.dpadGray,
+                  borderRadius: const BorderRadius.horizontal(left: Radius.circular(4)),
+                ),
+                child: Icon(Icons.info_outline, color: GameBoyPalette.screenDark, size: 16),
+              ),
+            ),
+          ),
+          // 右 - 发音
+          Positioned(
+            right: 0,
+            child: GestureDetector(
+              onTap: _started ? _playPronunciation : null,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: _started ? GameBoyPalette.dpadGray : GameBoyPalette.dpadGray,
+                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)),
+                ),
+                child: Icon(Icons.volume_up, color: GameBoyPalette.screenDark, size: 16),
               ),
             ),
           ),
           // 中心圆
-          const Positioned(
-            left: 35,
-            top: 35,
-            child: SizedBox(
-              width: 30,
-              height: 30,
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: GameBoyPalette.dpadGray,
+              shape: BoxShape.circle,
             ),
           ),
         ],

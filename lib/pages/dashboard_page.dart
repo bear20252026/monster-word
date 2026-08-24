@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../data/wordbook_database.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -58,7 +59,7 @@ class DashboardPage extends StatelessWidget {
   }
 
   /// 顶部导航栏
-  Widget _buildTopNav(BuildContext context, dynamic skin) {
+  Widget _buildTopNav(BuildContext context, ThemeVars skin) {
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -86,7 +87,7 @@ class DashboardPage extends StatelessWidget {
   }
 
   /// 当前词书卡片（封面 + 名称 + 学习进度条）
-  Widget _buildCurrentBookCard(BuildContext context, LearningState state, Book? book, int learned, dynamic skin) {
+  Widget _buildCurrentBookCard(BuildContext context, LearningState state, Book? book, int learned, ThemeVars skin) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -173,7 +174,7 @@ class DashboardPage extends StatelessWidget {
   }
 
   /// 我的数据统计卡片
-  Widget _buildMyDataSection(LearningState state, Book? book, int learned, dynamic skin) {
+  Widget _buildMyDataSection(LearningState state, Book? book, int learned, ThemeVars skin) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

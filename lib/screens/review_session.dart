@@ -14,6 +14,7 @@ import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/session_exit_guard.dart';
 
 class ReviewSession extends StatefulWidget {
   const ReviewSession({super.key});
@@ -108,7 +109,10 @@ class _ReviewSessionState extends State<ReviewSession> {
     final skin = context.skin;
     final resp = context.responsive;
 
-    return Scaffold(
+    // 返回保护：系统返回需确认，防止误触丢失复习进度
+    return SessionExitGuard(
+      subject: '本次复习',
+      child: Scaffold(
       backgroundColor: skin.colors.pageBg,
       body: SafeArea(
         child: Column(
@@ -125,6 +129,7 @@ class _ReviewSessionState extends State<ReviewSession> {
             _buildVerdictRow(skin),
           ],
         ),
+      ),
       ),
     );
   }

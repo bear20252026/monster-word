@@ -195,12 +195,20 @@ class BBAudioPlayer {
 
   /// 停止（原版 stop）
   Future<void> stop() async {
-    await _player.stop();
+    try {
+      await _player.stop();
+    } catch (e) {
+      debugPrint('[BBAudioPlayer] stop() error (player may be disposed): $e');
+    }
   }
 
   /// 暂停（原版 pause）
   Future<void> pause() async {
-    await _player.pause();
+    try {
+      await _player.pause();
+    } catch (e) {
+      debugPrint('[BBAudioPlayer] pause() error (player may be disposed): $e');
+    }
     if (_currentFileName.isNotEmpty) {
       playStateListener?.onPlayPause(_currentFileName);
     }
@@ -213,7 +221,11 @@ class BBAudioPlayer {
     await _processingStateSub?.cancel();
     _processingStateSub = null;
     playStateListener = null;
-    await _player.dispose();
+    try {
+      await _player.dispose();
+    } catch (e) {
+      debugPrint('[BBAudioPlayer] release() dispose error: $e');
+    }
   }
 
   /// 是否正在播放

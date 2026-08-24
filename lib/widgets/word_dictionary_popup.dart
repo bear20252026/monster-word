@@ -71,163 +71,150 @@ class WordDictionaryPopup extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 顶部：单词 + 收藏按钮
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
-              child: Row(
-                children: [
-                  // 单词
-                  Expanded(
-                    child: Text(
-                      word.word,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: skin.colors.text1,
-                      ),
-                    ),
-                  ),
-                  // 收藏按钮
-                  IconButton(
-                    icon: Icon(
-                      isFav ? Icons.star : Icons.star_border,
-                      color: isFav ? Colors.amber : skin.colors.text3,
-                      size: 22,
-                    ),
-                    tooltip: isFav ? '取消收藏' : '收藏',
-                    onPressed: () async {
-                      await state.toggleFavorite(word.word);
-                    },
-                  ),
-                ],
+            _buildHeader(state, isFav, skin),
+            if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) _buildPhonetics(skin),
+            if (word.interpret.isNotEmpty) _buildInterpret(skin),
+            if (examples.isNotEmpty) _buildExample(skin, examples.first),
+            _buildDetailLink(context, skin),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 顶部：单词 + 收藏按钮
+  Widget _buildHeader(LearningState state, bool isFav, dynamic skin) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
+      child: Row(
+        children: [
+          // 单词
+          Expanded(
+            child: Text(
+              word.word,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: skin.colors.text1,
               ),
             ),
-            // 音标
-            if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                child: Row(
-                  children: [
-                    if (word.usPron.isNotEmpty) ...[
-                      _PopupPhoneticPill(label: '美'),
-                      const SizedBox(width: 4),
-                      Text(
-                        '/${word.usPron}/',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: skin.colors.text3,
-                        ),
-                      ),
-                    ],
-                    if (word.ukPron.isNotEmpty) ...[
-                      const SizedBox(width: 12),
-                      _PopupPhoneticPill(label: '英'),
-                      const SizedBox(width: 4),
-                      Text(
-                        '/${word.ukPron}/',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: skin.colors.text3,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            // 释义
-            if (word.interpret.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                child: Text(
-                  word.interpret,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: skin.colors.text1,
-                    height: 1.5,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            // 例句（如果有）
-            if (examples.isNotEmpty)
-              Container(
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: skin.colors.cardBgAlt,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: skin.colors.text1,
-                          height: 1.5,
-                        ),
-                        children: examples.first.highlightedParts
-                            .map(
-                              (p) => TextSpan(
-                                text: p.text,
-                                style: p.highlight
-                                    ? const TextStyle(fontWeight: FontWeight.bold)
-                                    : null,
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    ),
-                    if (examples.first.cn.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        examples.first.cn,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: skin.colors.text3,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            // 底部：查看详细释义链接
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop(); // 先关闭弹窗
-                if (onViewDetail != null) onViewDetail!();
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: skin.colors.divider, width: 0.5),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '查看详细释义',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: skin.colors.accent,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 12,
-                      color: skin.colors.accent,
-                    ),
-                  ],
-                ),
-              ),
+          ),
+          // 收藏按钮
+          IconButton(
+            icon: Icon(
+              isFav ? Icons.star : Icons.star_border,
+              color: isFav ? Colors.amber : skin.colors.text3,
+              size: 22,
             ),
+            tooltip: isFav ? '取消收藏' : '收藏',
+            onPressed: () async {
+              await state.toggleFavorite(word.word);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 音标行（美式/英式）
+  Widget _buildPhonetics(dynamic skin) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Row(
+        children: [
+          if (word.usPron.isNotEmpty) ...[
+            _PopupPhoneticPill(label: '美'),
+            const SizedBox(width: 4),
+            Text('/${word.usPron}/',
+              style: TextStyle(fontSize: 13, color: skin.colors.text3)),
+          ],
+          if (word.ukPron.isNotEmpty) ...[
+            const SizedBox(width: 12),
+            _PopupPhoneticPill(label: '英'),
+            const SizedBox(width: 4),
+            Text('/${word.ukPron}/',
+              style: TextStyle(fontSize: 13, color: skin.colors.text3)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 释义文本
+  Widget _buildInterpret(dynamic skin) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+      child: Text(
+        word.interpret,
+        style: TextStyle(fontSize: 15, color: skin.colors.text1, height: 1.5),
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  /// 例句卡（高亮关键词 + 中文翻译）
+  Widget _buildExample(dynamic skin, dynamic example) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: skin.colors.cardBgAlt,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RichText(
+            text: TextSpan(
+              style: TextStyle(fontSize: 13, color: skin.colors.text1, height: 1.5),
+              children: example.highlightedParts
+                  .map(
+                    (p) => TextSpan(
+                      text: p.text,
+                      style:
+                          p.highlight ? const TextStyle(fontWeight: FontWeight.bold) : null,
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          if (example.cn.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(example.cn,
+              style: TextStyle(fontSize: 12, color: skin.colors.text3)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 底部：查看详细释义链接
+  Widget _buildDetailLink(BuildContext context, dynamic skin) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).pop(); // 先关闭弹窗
+        if (onViewDetail != null) onViewDetail!();
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: skin.colors.divider, width: 0.5),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('查看详细释义',
+              style: TextStyle(
+                fontSize: 14,
+                color: skin.colors.accent,
+                fontWeight: FontWeight.w500,
+              )),
+            const SizedBox(width: 4),
+            Icon(Icons.arrow_forward_ios, size: 12, color: skin.colors.accent),
           ],
         ),
       ),
