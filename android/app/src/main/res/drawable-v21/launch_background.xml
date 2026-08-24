@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
+<!-- Monster Word 启动屏 — API 21+ 版（与 drawable/launch_background.xml 同步） -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="?android:colorBackground" />
+    <!-- 奶油色背景 -->
+    <item android:drawable="@color/splash_background" />
 
-    <!-- You can insert your own image assets here -->
+    <!-- 居中 logo（素材就绪后取消注释） -->
     <!-- <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/launch_image" />
+            android:src="@mipmap/splash_logo" />
     </item> -->
 </layer-list>

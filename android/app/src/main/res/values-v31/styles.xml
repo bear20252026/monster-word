@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ (API 31+) SplashScreen API 适配 -->
+<resources>
+    <style name="LaunchTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <!-- 素材就绪后启用： -->
+        <!-- <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item> -->
+    </style>
+</resources>

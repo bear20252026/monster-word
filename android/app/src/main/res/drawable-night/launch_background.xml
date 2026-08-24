@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Monster Word 启动屏 — 浅色模式（星巴克奶油色） -->
+<!-- Monster Word 启动屏 — 深色模式（深绿色） -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 奶油色背景 -->
+    <!-- 深绿色背景 -->
     <item android:drawable="@color/splash_background" />
 
-    <!-- 居中 logo（素材就绪后取消注释） -->
+    <!-- 居中白色 logo（素材就绪后取消注释） -->
     <!-- <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/splash_logo" />
+            android:src="@mipmap/splash_logo_dark" />
     </item> -->
 </layer-list>

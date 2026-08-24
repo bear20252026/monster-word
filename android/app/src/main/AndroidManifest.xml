@@ -2,7 +2,7 @@
     <!-- 网络权限：release 包联网必需（http/webview_flutter 等依赖） -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="word_app"
+        android:label="Monster Word"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
