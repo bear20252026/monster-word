@@ -4,6 +4,7 @@
 // 通用组件集合：按钮、文本、进度条、图片等
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
 // ─────────────────────────────────────────────────────────────
 // CustomButton — 自定义按钮（移植自 component/CustomButton.java）
 // ─────────────────────────────────────────────────────────────
@@ -41,7 +42,7 @@ class CustomButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final btnColor = color ?? skin.colors.accent;
-    final txtColor = textColor ?? (variant == ButtonVariant.filled ? Colors.white : btnColor);
+    final txtColor = textColor ?? (variant == ButtonVariant.filled ? AppColors.white100 : btnColor);
 
     return SizedBox(
       width: width,
@@ -267,7 +268,7 @@ class ShadowBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: shadowColor ?? Colors.black.withAlpha(20),
+            color: shadowColor ?? MistralColors.black15,
             blurRadius: blurRadius,
             offset: offset,
           ),

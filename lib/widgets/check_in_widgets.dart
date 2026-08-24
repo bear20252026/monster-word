@@ -60,10 +60,10 @@ class BBCheckIn extends StatelessWidget {
             width: 139,
             height: 135,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: AppColors.white100.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.5),
+                color: AppColors.white100.withValues(alpha: 0.5),
                 width: 1.5,
               ),
             ),
@@ -124,7 +124,7 @@ class LearnButton extends StatelessWidget {
     required this.text,
     required this.indicatorColor,
     this.bgColor = Colors.transparent,
-    this.textColor = AppColors.black87,
+    this.textColor = MistralColors.ink,
     required this.onTap,
   });
 

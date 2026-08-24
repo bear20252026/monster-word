@@ -5,6 +5,7 @@
 // 文件：MyTextView, MyEditText, MyAnimatedNumTextView, CustomeTypefaceSpan, TextViewUtils, CustomSelectedView
 
 import 'package:flutter/material.dart';
+import '../tokens/design_tokens.dart';
 import 'animations.dart';
 
 /// 自定义字体文本（翻译自 MyTextView.java）
@@ -48,7 +49,7 @@ class MyCustomText extends StatelessWidget {
         shadows: showShadow
             ? [
                 Shadow(
-                  color: color ?? Colors.black,
+                  color: color ?? MistralColors.ink,
                   blurRadius: 20,
                 ),
               ]
