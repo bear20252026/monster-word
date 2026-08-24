@@ -329,7 +329,7 @@ class _LoginPageState extends State<LoginPage>
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: MistralColors.primary,
-                            foregroundColor: Colors.white,
+                            foregroundColor: AppColors.white100,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppRadius.md),
                             ),
@@ -493,8 +493,8 @@ class _LoginPageState extends State<LoginPage>
             )
           : ElevatedButton.icon(
               onPressed: onTap,
-              icon: Icon(icon, color: Colors.white, size: 20),
-              label: Text(label, style: const TextStyle(color: Colors.white)),
+              icon: Icon(icon, color: AppColors.white100, size: 20),
+              label: Text(label, style: const TextStyle(color: AppColors.white100)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: color,
                 shape: RoundedRectangleBorder(

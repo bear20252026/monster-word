@@ -171,7 +171,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 20),
             color: MistralColors.danger,
-            child: const Icon(Icons.delete, color: Colors.white),
+            child: const Icon(Icons.delete, color: AppColors.white100),
           ),
           confirmDismiss: (direction) async {
             return await showDialog<bool>(

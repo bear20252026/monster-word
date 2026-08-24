@@ -130,7 +130,7 @@ class _CourseBanner extends StatelessWidget {
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.15),
+                color: AppColors.white100.withValues(alpha: 0.15),
               ),
             ),
           ),
@@ -142,7 +142,7 @@ class _CourseBanner extends StatelessWidget {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.1),
+                color: AppColors.white100.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -165,7 +165,7 @@ class _CourseBanner extends StatelessWidget {
                   child: Text(
                     '全新上线',
                     style: MistralTypography.micro.copyWith(
-                      color: Colors.white,
+                      color: AppColors.white100,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -174,7 +174,7 @@ class _CourseBanner extends StatelessWidget {
                 Text(
                   'CET-6',
                   style: MistralTypography.bodySm.copyWith(
-                    color: Colors.white70,
+                    color: AppColors.white100.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -182,7 +182,7 @@ class _CourseBanner extends StatelessWidget {
                 Text(
                   '六级听力 阶梯训练',
                   style: MistralTypography.heading3.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white100,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -193,13 +193,13 @@ class _CourseBanner extends StatelessWidget {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.25),
+                    color: AppColors.white100.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
                     '轻松练真题 →',
                     style: MistralTypography.bodySm.copyWith(
-                      color: Colors.white,
+                      color: AppColors.white100,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

@@ -5,6 +5,7 @@
 // 文件：MyBadgeView, ThirdPartIconView, TipLabelDynamicView, LableClassifyView
 
 import 'package:flutter/material.dart';
+import '../tokens/design_tokens.dart';
 
 /// 角标视图（翻译自 MyBadgeView.dart）
 /// 用于显示未读数量等
@@ -19,7 +20,7 @@ class BadgeView extends StatelessWidget {
     super.key,
     required this.count,
     this.bgColor = const Color(0xFFFF5253),
-    this.textColor = Colors.white,
+    this.textColor = AppColors.white100,
     this.fontSize = 12,
     this.height,
   });
@@ -164,7 +165,7 @@ class _AnimatedTipLabelState extends State<AnimatedTipLabel>
             opacity: _arrowAlpha,
             child: Icon(
               _getArrowIcon(),
-              color: Colors.white,
+              color: AppColors.white100,
               size: 24,
             ),
           ),
@@ -173,7 +174,7 @@ class _AnimatedTipLabelState extends State<AnimatedTipLabel>
         Text(
           widget.text,
           style: widget.textStyle ??
-              const TextStyle(color: Colors.white, fontSize: 14),
+              const TextStyle(color: AppColors.white100, fontSize: 14),
         ),
       ],
     );
@@ -212,9 +213,9 @@ class TagClassifyView extends StatelessWidget {
     required this.tags,
     this.selectedTag,
     this.onTagSelected,
-    this.selectedColor = Colors.blue,
+    this.selectedColor = MistralColors.info,
     this.normalColor = const Color(0x08000000),
-    this.selectedTextColor = Colors.white,
+    this.selectedTextColor = AppColors.white100,
     this.normalTextColor = const Color(0x8A000000),
     this.tagHeight = 36,
     this.tagWidth = 80,

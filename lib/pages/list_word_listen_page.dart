@@ -160,7 +160,7 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
                             onPressed: _showAnswer ? _loadNextWord : _checkSpelling,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: MistralColors.primary,
-                              foregroundColor: Colors.white,
+                              foregroundColor: AppColors.white100,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppRadius.md),
                               ),

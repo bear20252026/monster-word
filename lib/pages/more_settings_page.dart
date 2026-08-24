@@ -337,9 +337,9 @@ class _SwitchCell extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: Colors.white,
+            activeThumbColor: AppColors.white100,
             activeTrackColor: skin.accent,
-            inactiveThumbColor: Colors.white,
+            inactiveThumbColor: AppColors.white100,
             inactiveTrackColor: skin.text3,
           ),
         ],

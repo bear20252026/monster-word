@@ -321,7 +321,7 @@ class PopFilterCell extends StatelessWidget {
           title,
           style: TextStyle(
             fontSize: 14,
-            color: selected ? Colors.white : skin.colors.text2,
+            color: selected ? AppColors.white100 : skin.colors.text2,
           ),
         ),
       ),

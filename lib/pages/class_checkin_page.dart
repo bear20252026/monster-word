@@ -151,7 +151,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
               height: 150,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.1),
+                color: AppColors.white100.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -163,7 +163,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
+                color: AppColors.white100.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -177,19 +177,19 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: AppColors.white100.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
                     '限时活动',
-                    style: MistralTypography.micro.copyWith(color: Colors.white),
+                    style: MistralTypography.micro.copyWith(color: AppColors.white100),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   '班级打卡挑战赛',
                   style: MistralTypography.heading3.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white100,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -197,14 +197,14 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 Text(
                   '连续打卡7天，赢取学习徽章',
                   style: MistralTypography.bodySm.copyWith(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: AppColors.white100.withValues(alpha: 0.9),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.white100,
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
@@ -339,7 +339,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
             onPressed: () => _showJoinClassDialog(context, skin),
             style: ElevatedButton.styleFrom(
               backgroundColor: MistralColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white100,
               elevation: 2,
               shadowColor: MistralColors.primary.withValues(alpha: 0.3),
               shape: RoundedRectangleBorder(
@@ -354,7 +354,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 Text(
                   '加入班级',
                   style: MistralTypography.bodyMd.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white100,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -578,7 +578,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: MistralColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white100,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.lg),
                   ),
@@ -586,7 +586,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 child: Text(
                   '加入',
                   style: MistralTypography.bodyMd.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white100,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -603,7 +603,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 20),
+            const Icon(Icons.check_circle, color: AppColors.white100, size: 20),
             const SizedBox(width: 8),
             Text('打卡成功！连续 $_streakDays 天'),
           ],
@@ -657,7 +657,7 @@ class _ClassInfoCard extends StatelessWidget {
           Text(
             className,
             style: MistralTypography.heading4.copyWith(
-              color: Colors.white,
+              color: AppColors.white100,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -665,7 +665,7 @@ class _ClassInfoCard extends StatelessWidget {
           Text(
             '$memberCount 名成员',
             style: MistralTypography.bodySm.copyWith(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: AppColors.white100.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -699,7 +699,7 @@ class _StatItem extends StatelessWidget {
         Text(
           value,
           style: MistralTypography.heading3.copyWith(
-            color: Colors.white,
+            color: AppColors.white100,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -707,7 +707,7 @@ class _StatItem extends StatelessWidget {
         Text(
           label,
           style: MistralTypography.bodySm.copyWith(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: AppColors.white100.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -745,14 +745,14 @@ class _CheckInButton extends StatelessWidget {
             children: [
               Icon(
                 checkedIn ? Icons.check_circle : Icons.touch_app,
-                color: checkedIn ? MistralColors.success : Colors.white,
+                color: checkedIn ? MistralColors.success : AppColors.white100,
                 size: 22,
               ),
               const SizedBox(width: AppSpacing.xs),
               Text(
                 checkedIn ? '今日已打卡' : '立即打卡',
                 style: MistralTypography.bodyMd.copyWith(
-                  color: checkedIn ? MistralColors.success : Colors.white,
+                  color: checkedIn ? MistralColors.success : AppColors.white100,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1076,7 +1076,7 @@ class _GuideStep extends StatelessWidget {
                 child: Text(
                   number,
                   style: MistralTypography.bodySm.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white100,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
