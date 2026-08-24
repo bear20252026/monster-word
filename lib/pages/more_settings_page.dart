@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/sb_button.dart';
+import '../widgets/sb_modal.dart';
+import '../widgets/scale_down_on_press.dart';
 
 /// 更多设置页
 class MoreSettingsPage extends StatefulWidget {
@@ -142,18 +145,11 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                   // 退出登录
                   SizedBox(
                     width: double.infinity,
-                    height: 48,
-                    child: OutlinedButton(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: skin.colors.danger, width: 1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.pill),
-                        ),
-                      ),
-                      child: Text('退出登录',
-                          style: MistralTypography.buttonMd
-                              .copyWith(color: skin.colors.danger)),
+                    child: SbButton.outlined(
+                      label: '退出登录',
+                      onTap: () => _showLogoutSheet(context),
+                      borderSide: BorderSide(color: skin.colors.danger, width: 1),
+                      textColor: skin.colors.danger,
                     ),
                   ),
                   const SizedBox(height: AppleSpacing.xxl),
@@ -163,6 +159,35 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           ],
         ),
       ),
+    );
+  }
+
+  /// 退出登录确认弹窗（SbModal 底部弹出）
+  void _showLogoutSheet(BuildContext context) {
+    SbModal.show(
+      context,
+      mode: SbModalMode.bottom,
+      title: '退出登录',
+      child: Text(
+        '确定要退出登录吗？退出后学习数据将保留在本地，但同步功能将不可用。',
+        style: MistralTypography.bodyMd.copyWith(
+          color: context.skin.colors.text2,
+        ),
+      ),
+      actions: [
+        SbButton.outlined(
+          label: '取消',
+          onTap: () => Navigator.pop(context),
+        ),
+        SbButton(
+          label: '退出',
+          onTap: () {
+            Navigator.pop(context);
+            // TODO: 执行退出登录逻辑
+          },
+          fillColor: context.skin.colors.danger,
+        ),
+      ],
     );
   }
 
@@ -237,7 +262,7 @@ class _Cell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
-    return InkWell(
+    return ScaleDownOnPress(
       onTap: onTap,
       child: Container(
         height: 56,
