@@ -1149,7 +1149,7 @@ class _FeatureCard extends StatelessWidget {
         border: Border.all(color: skin.divider),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: MistralColors.black15,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
