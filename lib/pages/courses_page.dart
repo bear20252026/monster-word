@@ -228,21 +228,21 @@ class _CourseCardGrid extends StatelessWidget {
         title: '备考速刷',
         subtitle: '考前快速n刷必备',
         tag: '热门',
-        color: const Color(0xFF90CAF9),
+        color: const Color(0xFF90CAF9), // 课程装饰色（蓝）- 可保留
         icon: Icons.rocket_launch,
       ),
       _CourseData(
         title: '班级打卡',
         subtitle: '全班一起学，刷词不掉队',
         tag: '推荐',
-        color: const Color(0xFFF8BBD0),
+        color: const Color(0xFFF8BBD0), // 课程装饰色（粉）- 可保留
         icon: Icons.groups,
       ),
       _CourseData(
         title: '六级听力 阶梯训练',
         subtitle: '轻松练真题',
         tag: '',
-        color: const Color(0xFFCE93D8),
+        color: const Color(0xFFCE93D8), // 课程装饰色（紫）- 可保留
         icon: Icons.headphones,
       ),
       _CourseData(
@@ -263,14 +263,14 @@ class _CourseCardGrid extends StatelessWidget {
         title: '小野解词',
         subtitle: '词根词缀，图记单词',
         tag: '',
-        color: const Color(0xFF80CBC4),
+        color: const Color(0xFF80CBC4), // 课程装饰色（青）- 可保留
         icon: Icons.person,
       ),
       _CourseData(
         title: '口语达人',
         subtitle: '地道口语特训课',
         tag: '新课',
-        color: const Color(0xFFFFAB91),
+        color: const Color(0xFFFFAB91), // 课程装饰色（橙）- 可保留
         icon: Icons.mic,
       ),
     ];
