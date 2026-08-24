@@ -118,6 +118,19 @@ a03b6de refactor(settings): integrate SbDropdown + sbShowSheet components
 | **Batch 5** 品牌资产 | ✅ | 启动屏(奶油/深绿) + 应用名统一 + 版本 2.0.0+2 |
 | **Batch 6** 收尾 | 🔄 | 硬编码审计、import 清理、构建验证、回归测试 |
 
+### Phase 7: 最终收尾（2026-08-24）
+
+| 任务 | 状态 | 说明 |
+|---|---|---|
+| 启动图标集成 | ✅ | 方案A1（M+眼睛）已通过 flutter_launcher_icons 生成三平台图标 |
+| 功能色 Token 创建 | ✅ | info/warning/purple 语义色 Token 已添加至 starbucks_tokens.dart |
+| 颜色迁移收尾 | ✅ | 硬编码颜色审计完成，迁移覆盖率见 final_color_migration_report.md |
+| Kotlin 跨盘符修复 | ✅ | `-Pkotlin.incremental=false` workaround 验证通过，Android build 成功 |
+| Windows/Android 构建 | ✅ | 双平台 debug build 均通过 |
+| Import 验证 | ✅ | 59 个"无效导入"确认为脚本误报，0 真实无效 |
+| .gitignore 审计 | ✅ | 3 个 Kotlin 缓存文件需清理，6 条规则待补充 |
+| 未提交文件统一提交 | ✅ | 31 文件已提交（dc1fb4e + e26321d + ba6c640） |
+
 ---
 
 ## 5. 进行中工作清单（7 项）

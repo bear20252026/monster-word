@@ -37,6 +37,7 @@ Monster Word 迎来 v2.0 重大视觉升级！整个 App 采用星巴克设计�
   - `SbSegmented` — 分段控件
   - `ScaleDownOnPress` — 统一按压反馈（scale 0.95）
 - **字体系统**：Inter 字体 + 中西文混排回退链（PingFang SC / Microsoft YaHei / Noto Sans SC）
+- **功能色 Token 系统**：info（蓝）、warning（橙）、purple（紫）语义色 Token，覆盖全场景反馈
 - **动效规范**：五档时长（150ms/200ms/300ms）+ 克制缓动曲线
 
 ### 页面改造（13 个活跃页面）
@@ -57,6 +58,7 @@ Monster Word 迎来 v2.0 重大视觉升级！整个 App 采用星巴克设计�
 - **跟随系统**：真正的系统深浅色跟随开关（双通道监听）
 - **亮度语义拆分**：UI 亮度与状态栏亮度独立控制
 - **启动屏**：Android 浅色（奶油 #F2F0EB）/ 深色（深绿 #1E3932）双模式
+- **自定义启动图标**：方案A1（M+眼睛）品牌图标，三平台 flutter_launcher_icons 生成
 - **Android 12+ 适配**：SplashScreen API 支持
 - **应用名统一**：全平台一致显示「Monster Word」
 
@@ -79,6 +81,7 @@ Monster Word 迎来 v2.0 重大视觉升级！整个 App 采用星巴克设计�
 - **音标清洗**：修复 129 处误录字符（68 冒号 → 长音符 ː，61 撇号 → 主重音符 ˈ）
 - **字体修复**：解决未注册 phonetic 字体家族导致的音标回退问题
 - **编译修复**：清除 4 个阻塞编译的 ERROR
+- **Android 跨驱动器编译修复**：Kotlin 增量编译跨盘符 bug workaround（-Pkotlin.incremental=false）
 - **布局修复**：首页 Row 溢出 → Expanded 布局
 - **资源修复**：移除指向不存在文件的壁纸 assetPath
 

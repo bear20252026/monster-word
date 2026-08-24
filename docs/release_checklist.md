@@ -45,7 +45,7 @@
 - [x] 应用名统一为「Monster Word」— Windows 窗口标题 / Runner.rc / android:label
 - [x] 版本号 `2.0.0+2` — pubspec.yaml / Runner.rc 同步
 - [x] 启动屏 — 浅色 #F2F0EB / 深色 #1E3932 双模式
-- [ ] Launcher 图标 — ⚠️ AI 生图候选已产出（8 张），待最终选定和 flutter_launcher_icons 集成
+- [x] Launcher 图标 — ✅ 方案A1（M+眼睛）已集成，三平台 flutter_launcher_icons 生成完成
 - [x] 旧品牌「不背单词」字样 — release 归档区外无残留
 
 ---
@@ -58,6 +58,7 @@
 - [x] 页面转场 — 统一 300ms + standardCurve
 - [x] 动效验证报告 — `docs/motion_verification_report.md`
 - [ ] 旧版 ScaleDownOnPress（widget_utils.dart 100ms）— ⚠️ 3 个文件待迁移
+- [x] Kotlin 跨盘符编译 — ✅ `-Pkotlin.incremental=false` workaround 已验证（Android build 通过）
 
 ---
 
@@ -78,8 +79,8 @@
 
 - [x] flutter analyze ERROR=0 ✅
 - [x] flutter test 101/101 ✅
-- [ ] Windows debug build — ⚠️ CI 环境无 MSVC C++ 编译器，需本地验证
-- [ ] Android debug build — ⚠️ 需本地验证
+- [x] Windows debug build — ✅ 通过（167.0s，MonsterWord.exe 1.2MB）
+- [x] Android debug build — ✅ 通过（261.6s，app-debug.apk 188.6MB，需 -Pkotlin.incremental=false）
 - [x] 代码层面编译正确性已由 ERROR=0 + test 101/101 佐证
 
 ---
@@ -111,16 +112,16 @@
 | 代码质量 | ✅ 绿 | ERROR=0, WARNING=0, test 101/101 |
 | WCAG 无障碍 | ✅ 绿 | 对比度 100/100，触控无硬违规 |
 | Batch 实施 | ✅ 绿 | Batch 0-5 全部完成 |
-| 品牌一致性 | ⚠️ 黄 | Launcher 图标待最终选定 |
+| 品牌一致性 | ✅ 绿 | Launcher 图标已集成（方案A1） |
 | 动效规范 | ⚠️ 黄 | 旧版 ScaleDownOnPress 待迁移（3 文件） |
 | 文档完整性 | ✅ 绿 | 75+ 文档完整 |
-| 构建验证 | ⚠️ 黄 | Windows/Android build 需本地环境验证 |
+| 构建验证 | ✅ 绿 | Windows + Android debug build 均通过 |
 | Git 健康 | ✅ 绿 | 干净历史，无敏感信息 |
 | 数据完整性 | ✅ 绿 | 词库完整，音标已清洗 |
 
-**发布就绪状态：🟡 基本就绪（3 项黄灯为非阻塞性收尾工作）**
+**发布就绪状态：🟢 就绪（1 项黄灯为非阻塞性收尾工作）**
 
-阻塞性问题：无。3 项黄灯（图标选定、旧版组件迁移、本地构建验证）均为收尾优化，不影响核心功能和质量指标。
+阻塞性问题：无。1 项黄灯（旧版 ScaleDownOnPress 迁移）为收尾优化，不影响核心功能和质量指标。
 
 ---
 
