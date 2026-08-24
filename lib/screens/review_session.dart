@@ -14,7 +14,6 @@ import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
-import '../widgets/glass_widgets.dart';
 
 class ReviewSession extends StatefulWidget {
   const ReviewSession({super.key});
@@ -96,22 +95,21 @@ class _ReviewSessionState extends State<ReviewSession> {
     final resp = context.responsive;
 
     return Scaffold(
-      body: GlassBg(
-        child: SafeArea(
-          child: Column(
-            children: [
-              // 透明导航栏
-              _buildNav(skin, resp),
-              // 四选一区（未答）或释义区（已答）
-              Expanded(
-                child: _showAnswer
-                    ? _buildAnswer(word, skin, resp)
-                    : _buildQuiz(word, skin, resp),
-              ),
-              // 底部下划线三键
-              _buildVerdictRow(skin),
-            ],
-          ),
+      backgroundColor: skin.colors.pageBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 透明导航栏
+            _buildNav(skin, resp),
+            // 四选一区（未答）或释义区（已答）
+            Expanded(
+              child: _showAnswer
+                  ? _buildAnswer(word, skin, resp)
+                  : _buildQuiz(word, skin, resp),
+            ),
+            // 底部下划线三键
+            _buildVerdictRow(skin),
+          ],
         ),
       ),
     );
@@ -279,18 +277,19 @@ class _ReviewSessionState extends State<ReviewSession> {
 
   Widget _buildDone() {
     final skin = context.skin.colors;
-    return GlassBg(
+    return Container(
+      color: skin.pageBg,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle_outline, color: skin.onGlassText1, size: 72),
+            Icon(Icons.check_circle_outline, color: skin.text1, size: 72),
             const SizedBox(height: 16),
             Text('今日复习完成！',
-                style: MistralTypography.heading3.copyWith(fontWeight: FontWeight.bold, color: skin.onGlassText1)),
+                style: MistralTypography.heading3.copyWith(fontWeight: FontWeight.bold, color: skin.text1)),
             const SizedBox(height: 8),
             Text('共复习 $_done 个单词',
-                style: MistralTypography.bodySm.copyWith(color: skin.onGlassText2)),
+                style: MistralTypography.bodySm.copyWith(color: skin.text2)),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => Navigator.pop(context),
