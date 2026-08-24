@@ -73,7 +73,7 @@ class LockPresenterImp implements LockPresenter {
     try {
       (lockView as dynamic).updatePower(isCharging, percent);
     } catch (e) {
-      debugPrint('$_tag: updatePower error: $e');
+      if (kDebugMode) debugPrint('$_tag: updatePower error: $e');
     }
   }
 
@@ -98,7 +98,7 @@ class LockPresenterImp implements LockPresenter {
     try {
       (lockView as dynamic).updateDateTime(time, dateCn, dateEn);
     } catch (e) {
-      debugPrint('$_tag: updateDateTime error: $e');
+      if (kDebugMode) debugPrint('$_tag: updateDateTime error: $e');
     }
   }
 

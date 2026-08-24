@@ -1,6 +1,7 @@
 // 复习页：壁纸沉浸 + 四选一 + 眭底操作栏
 // 已接入 SkinSystem 主题
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -387,7 +388,9 @@ class _ReviewPageState extends State<ReviewPage> {
       await player.play(UrlSource(
         'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2',
       ));
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Audio playback error: $e');
+    }
   }
 }
 

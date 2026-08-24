@@ -4,6 +4,7 @@
 // 学习页：Mistral AI 设计风格
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -156,7 +157,9 @@ class _WordArea extends StatelessWidget {
                       final player = AudioPlayer();
                       await player.play(UrlSource(
                         'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2'));
-                    } catch (_) {}
+                    } catch (e) {
+                      if (kDebugMode) debugPrint('Audio playback error: $e');
+                    }
                   },
                   child: Icon(Icons.volume_up_outlined, color: colors.text2, size: 28),
                 ),

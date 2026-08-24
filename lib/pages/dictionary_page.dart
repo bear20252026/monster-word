@@ -2,6 +2,7 @@
 // 字典详情页：完整单词释义、柯林斯、例句、派生、词根、近义词
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
@@ -579,6 +580,8 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
       await player.play(UrlSource(
         'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2',
       ));
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Audio playback error: $e');
+    }
   }
 }
