@@ -58,6 +58,7 @@ import 'shell/main_shell.dart';
 import 'state/learning_state.dart';
 import 'state/wallpaper_state.dart';
 import 'theme/skin_system.dart';
+import 'data/app_preferences.dart';
 import 'widgets/adaptive_scale.dart';
 import 'widgets/transition_widgets.dart';
 
@@ -66,11 +67,41 @@ Future<void> main() async {
   await WordBookDatabase.ensurePlatform();
   await WordBookDatabase.instance.initialize();
   await UserDatabase.instance.initialize();
+  await AppPreferences().init();                // 主题读取的前置依赖
   runApp(const WordApp());
 }
 
-class WordApp extends StatelessWidget {
+class WordApp extends StatefulWidget {
   const WordApp({super.key});
+
+  @override
+  State<WordApp> createState() => _WordAppState();
+}
+
+class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.platformDispatcher.onPlatformBrightnessChanged =
+        () => context.read<SkinSystem>()
+              .updateSystemBrightness(
+                  WidgetsBinding.instance.platformDispatcher.platformBrightness);
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    // 双保险（部分平台只走这里）
+    context.read<SkinSystem>().updateSystemBrightness(
+        WidgetsBinding.instance.platformDispatcher.platformBrightness);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance.platformDispatcher.onPlatformBrightnessChanged = null;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,12 +116,15 @@ class WordApp extends StatelessWidget {
           return MaterialApp(
             title: 'Monster Word',
             debugShowCheckedModeBanner: false,
+            // 注释：不引入 darkTheme+ThemeMode 三件套——三皮肤的暗色是自定义 vars 全量配色，
+            // 不是标准 Material darkTheme 能表达的；继续走单一 theme: + Consumer 整体重建。
+            // effectiveUiBrightness 正确驱动 ColorScheme。
             theme: ThemeData(
-              brightness: skin.currentTheme.statusBarBrightness,
+              brightness: skin.effectiveUiBrightness,
               scaffoldBackgroundColor: skin.colors.pageBg,
               colorScheme: ColorScheme.fromSeed(
                 seedColor: skin.colors.accent,
-                brightness: skin.currentTheme.statusBarBrightness,
+                brightness: skin.effectiveUiBrightness,
               ),
               useMaterial3: true,
             ),

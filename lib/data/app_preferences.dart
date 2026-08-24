@@ -75,6 +75,18 @@ class AppPreferences extends BaseSharedPreferences {
   static const String keyAppFirstCheckin = 'key_app_first_checkin';
   static const String keyUserTrackEnable = 'key_user_track_enable';
 
+  // === 皮肤主题持久化（批1新增）===
+  static const String skinThemeId = 'skin_theme_id';           // 'bright'|'dark'|'pure_black'
+  static const String skinFollowSystem = 'skin_follow_system'; // bool
+
+  /// 获取皮肤主题 ID（空=未设置）
+  String getSkinThemeId() => getString(skinThemeId);
+  Future<bool> setSkinThemeId(String v) => setString(skinThemeId, v);
+
+  /// 是否跟随系统主题
+  bool isSkinFollowSystem() => getBool(skinFollowSystem);
+  Future<bool> setSkinFollowSystem(bool v) => setBool(skinFollowSystem, v);
+
   /// 初始化（原版 getInstance 延迟初始化）
   @override
   Future<void> init() async {

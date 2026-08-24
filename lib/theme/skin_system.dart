@@ -1,6 +1,7 @@
 // Monster Word 皮肤系统 — 还原 v3.2 原版配色
 import 'package:flutter/material.dart';
 import '../tokens/design_tokens.dart';
+import '../data/app_preferences.dart';
 
 class ThemeVars {
   final Color pageBg;
@@ -84,9 +85,12 @@ class ThemeVars {
 class ThemePreset {
   final String id;
   final String name;
+  /// UI 亮度：驱动 ThemeData/ColorScheme（组件按亮或暗渲染）
+  final Brightness uiBrightness;
+  /// 状态栏图标明暗：仅供未来 SystemChrome/AnnotatedRegion 使用（本批不接线）
   final Brightness statusBarBrightness;
   final ThemeVars vars;
-  const ThemePreset({required this.id, required this.name, required this.statusBarBrightness, required this.vars});
+  const ThemePreset({required this.id, required this.name, required this.uiBrightness, required this.statusBarBrightness, required this.vars});
 }
 
 /// 三档主题：还原 v3.2 原版配色
@@ -95,7 +99,7 @@ class ThemePreset {
 /// - 极夜（AppBlackTheme）：纯黑背景 + 蓝色强调
 final themes = <String, ThemePreset>{
   'bright': ThemePreset(
-    id: 'bright', name: '明亮', statusBarBrightness: Brightness.dark,
+    id: 'bright', name: '明亮', uiBrightness: Brightness.light, statusBarBrightness: Brightness.dark,
     vars: ThemeVars(
       pageBg: const Color(0xFFF5F5F5),          // 原版亮色背景
       cardBg: const Color(0xFFFFFFFF),           // 原版白色卡片
@@ -117,7 +121,7 @@ final themes = <String, ThemePreset>{
     ),
   ),
   'dark': ThemePreset(
-    id: 'dark', name: '深邃', statusBarBrightness: Brightness.light,
+    id: 'dark', name: '深邃', uiBrightness: Brightness.dark, statusBarBrightness: Brightness.light,
     vars: ThemeVars(
       pageBg: const Color(0xFF212532),           // 原版深色背景（深蓝灰）
       cardBg: const Color(0xFF2E344A),           // 原版深色卡片（蓝灰）
@@ -142,7 +146,7 @@ final themes = <String, ThemePreset>{
     ),
   ),
   'pure_black': ThemePreset(
-    id: 'pure_black', name: '极夜', statusBarBrightness: Brightness.light,
+    id: 'pure_black', name: '极夜', uiBrightness: Brightness.dark, statusBarBrightness: Brightness.light,
     vars: ThemeVars(
       pageBg: const Color(0xFF040404),           // 原版极夜背景
       cardBg: const Color(0xFF1A1B1C),           // 原版极夜卡片
@@ -170,12 +174,58 @@ final themes = <String, ThemePreset>{
 
 class SkinSystem extends ChangeNotifier {
   String _themeId = 'bright';
+  bool _followSystem = false;
+
   String get themeId => _themeId;
+  bool get followSystem => _followSystem;
   ThemePreset get currentTheme => themes[_themeId]!;
   ThemeVars get colors => currentTheme.vars;
 
+  /// 当前系统亮度（监听刷新）
+  Brightness _systemBrightness = WidgetsBinding
+      .instance.platformDispatcher.platformBrightness;
+
+  SkinSystem() {
+    try {
+      final saved = AppPreferences().getSkinThemeId();
+      _themeId = themes.containsKey(saved) ? saved : 'bright';   // 非法值兜底
+      _followSystem = AppPreferences().isSkinFollowSystem();
+    } catch (e) {
+      // 测试环境或未初始化时使用默认值
+      _themeId = 'bright';
+      _followSystem = false;
+    }
+  }
+
+  void setFollowSystem(bool v) {
+    if (_followSystem == v) return;
+    _followSystem = v;
+    notifyListeners();
+    AppPreferences().setSkinFollowSystem(v);            // fire-and-forget
+  }
+
   void setTheme(String id) {
-    if (themes.containsKey(id)) { _themeId = id; notifyListeners(); }
+    if (!themes.containsKey(id)) return;
+    _themeId = id;
+    if (_followSystem) setFollowSystem(false);          // 手动选择即退出跟随
+    notifyListeners();
+    AppPreferences().setSkinThemeId(_themeId);          // ← 持久化落点
+  }
+
+  /// 权威计算：跟随系统时按系统亮度映射到 dark/pure_black 二选一
+  String get effectiveThemeId {
+    if (!_followSystem) return _themeId;
+    return _systemBrightness == Brightness.dark ? 'pure_black' : 'bright';
+  }
+
+  Brightness get effectiveUiBrightness =>
+      themes[effectiveThemeId]!.uiBrightness;           // §1.3 的消费源
+
+  /// 系统亮度变化回调（由 WordApp State 触发）
+  void updateSystemBrightness(Brightness b) {
+    if (_systemBrightness == b) return;
+    _systemBrightness = b;
+    if (_followSystem) notifyListeners();
   }
 }
 
@@ -187,7 +237,9 @@ class SkinProvider extends InheritedWidget {
     return provider?.skin ?? SkinSystem();
   }
   @override
-  bool updateShouldNotify(SkinProvider old) => skin.themeId != old.skin.themeId;
+  bool updateShouldNotify(SkinProvider old) =>
+      skin.effectiveThemeId != old.skin.effectiveThemeId ||
+      skin.followSystem != old.skin.followSystem;
 }
 
 extension SkinExt on BuildContext {

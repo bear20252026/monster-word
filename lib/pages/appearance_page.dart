@@ -202,7 +202,7 @@ class _AppearancePageState extends State<AppearancePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: themes.values.map((preset) {
-          final isSelected = skin.themeId == preset.id;
+          final isSelected = skin.effectiveThemeId == preset.id;
           return GestureDetector(
             onTap: () => skin.setTheme(preset.id),
             child: Column(
@@ -253,8 +253,8 @@ class _AppearancePageState extends State<AppearancePage> {
             child: Text('跟随系统', style: TextStyle(fontSize: 16, color: Color(0xFF1A1A1A))),
           ),
           Switch(
-            value: true,
-            onChanged: (v) {},
+            value: skin.followSystem,
+            onChanged: (v) => skin.setFollowSystem(v),
             activeThumbColor: Colors.white,
             activeTrackColor: const Color(0xFFE8913A),
             inactiveThumbColor: Colors.white,
