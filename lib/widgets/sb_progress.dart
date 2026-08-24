@@ -1,3 +1,7 @@
+// Monster Word — 星巴克进度指示组件
+// 来源规格：docs/component_spec.md §10（SbProgress）
+// 4px 细线进度条 + stroke6 环形进度，绿系实色，禁渐变
+
 import 'package:flutter/material.dart';
 
 /// 星巴克进度指示组件

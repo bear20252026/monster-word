@@ -1,3 +1,7 @@
+// Monster Word — 星巴克分段控件
+// 来源规格：docs/component_spec.md §9（SbSegmented）
+// ceramic #EDEBE9 轨道 + 白底选中滑块 + 绿字高亮，用于学习模式切换
+
 import 'package:flutter/material.dart';
 
 /// 星巴克分段控件
