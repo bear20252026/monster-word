@@ -2,4 +2,5 @@
 <resources>
     <!-- 星巴克奶油色启动屏背景（浅色模式） -->
     <color name="splash_background">#F2F0EB</color>
+	<color name="ic_launcher_background">#006241</color>
 </resources>
