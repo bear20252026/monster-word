@@ -10,6 +10,9 @@ import '../data/wordbook_database.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/bending_gallery.dart';
+import '../widgets/morphing_tabs.dart';
+import '../widgets/word_globe.dart';
 import 'book_words_page.dart';
 import 'search_page.dart';
 
@@ -60,6 +63,11 @@ class _LibSelectPageState extends State<LibSelectPage> {
       return '专业出国';
     }
     return '其他';
+  }
+
+  /// 从弯曲画廊打开词书（导航到词书内容页）
+  void _openBookFromGallery(BuildContext context, Book book) {
+    Navigator.pushNamed(context, BookWordsPage.routeName, arguments: book);
   }
 
   @override
@@ -126,36 +134,20 @@ class _LibSelectPageState extends State<LibSelectPage> {
               ),
             ),
             Container(height: 1, color: colors.divider),
-            // ===== 分类选项卡（原版 TabPageIndicator）=====
-            SizedBox(
-              height: 40,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                itemCount: _tabs.length,
-                itemBuilder: (context, i) {
-                  final selected = i == _tabIndex;
-                  return GestureDetector(
-                    onTap: () => setState(() => _tabIndex = i),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: selected ? colors.accent : Colors.transparent,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        _tabs[i],
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: selected ? AppColors.white100 : colors.text3,
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  );
-                },
+            // ===== 分类选项卡（Morphing Tabs 变形标签）=====
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: SimpleMorphingTabs(
+                labels: _tabs.toList(),
+                initialIndex: _tabIndex,
+                height: 36,
+                borderRadius: 14,
+                padding: const EdgeInsets.all(3),
+                activeColor: AppColors.white100,
+                inactiveColor: colors.text3,
+                indicatorColor: colors.accent,
+                backgroundColor: colors.cardBgAlt,
+                onChanged: (i) => setState(() => _tabIndex = i),
               ),
             ),
             Container(height: 1, color: colors.divider),
@@ -173,6 +165,127 @@ class _LibSelectPageState extends State<LibSelectPage> {
                   final books = _filterByTab(_allBooks, _tabIndex);
                   if (books.isEmpty) {
                     return const Center(child: Text('暂无词书'));
+                  }
+                  // 全部标签页顶部展示推荐词书「弯曲画廊」（3D透视+交互弯曲）
+                  if (_tabIndex == 0 && books.length > 3) {
+                    final featured = books.take(8).toList();
+                    return Column(
+                      children: [
+                        const SizedBox(height: 10),
+                        // ===== 词源星球品牌展示（3D 旋转地球 + 六大词源地，可拖拽/缩放）=====
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: colors.cardBgAlt,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              children: [
+                                WordGlobe(
+                                  size: 100,
+                                  arcColor: colors.accent,
+                                  atmosphereColor: colors.accent,
+                                  points: WordOriginData.origins,
+                                  arcs: WordOriginData.connections,
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('单词的环球之旅',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: colors.text1,
+                                        )),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '从罗马到伦敦，追溯每个词的起源与传播路径。拖动星球旋转，双指缩放探索。',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          height: 1.4,
+                                          color: colors.text2,
+                                        )),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text('精选词书 · 左右滑动探索',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: colors.text2,
+                              )),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        BendingGallery(
+                          height: 175,
+                          itemWidth: 112,
+                          curvature: 0.35,
+                          activeColor: colors.accent,
+                          items: featured.map((book) {
+                            final idx = featured.indexOf(book);
+                            return BendingGalleryItem(
+                              label: book.name,
+                              color: _LibItem._coverColorsLight[
+                                idx % _LibItem._coverColorsLight.length],
+                              onTap: () => _openBookFromGallery(context, book),
+                              // 画廊单元格固定约 112×122，放不下完整卡片，
+                              // 这里用紧凑封面内容（图标 + 编码 + 词数）
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.menu_book,
+                                      color: AppColors.white100, size: 26),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    book.code,
+                                    style: MistralTypography.bodyMd.copyWith(
+                                      color: AppColors.white100,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${book.wordCount} 词',
+                                    style: MistralTypography.caption.copyWith(
+                                      color: AppColors.white100
+                                          .withValues(alpha: 0.75),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const Divider(height: 1),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: books.length,
+                            itemBuilder: (context, index) {
+                              final book = books[index];
+                              return _LibItem(book: book, showDescription: _showDescription);
+                            },
+                          ),
+                        ),
+                      ],
+                    );
                   }
                   return ListView.builder(
                     itemCount: books.length,
@@ -345,18 +458,18 @@ class _LibItem extends StatelessWidget {
                 color: _coverColor(context, book.code),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Center(
-                child: Text(
-                  _coverText(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                child: Center(
+                  child: Text(
+                    _coverText(),
+                    style: const TextStyle(
+                      color: AppColors.white100,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
               ),
             ),
             const SizedBox(width: 16),

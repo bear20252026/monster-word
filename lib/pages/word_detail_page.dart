@@ -1,5 +1,7 @@
 // 字典详情页：单词详解（释义+音标+例句+常见用法+词根+形近词+笔记）
 // 从学习页答题后进入，看完后点击"下一词"返回学习
+import 'dart:async';
+
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +17,7 @@ import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/text_generate_effect.dart';
+import '../widgets/box_reveal.dart';
 
 class WordDetailPage extends StatefulWidget {
   const WordDetailPage({super.key});
@@ -28,6 +31,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
   List<WordNote> _notes = [];
   bool _notesLoaded = false;
   DictionaryExtra? _extra; // 字典补充数据（派生词/近义词/真题）
+  StreamSubscription<ProcessingState>? _audioSub; // 音频播放状态订阅
 
   /// 解析要展示的单词：路由参数优先（从词书/收藏/列表点入时显示所点的词），
   /// 否则回退到当前学习词。修复此前所有入口都显示 currentWord 的问题。
@@ -162,13 +166,24 @@ class _WordDetailPageState extends State<WordDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 单词 + 音标 + 发音
-                    _buildWordHeader(word, skin),
+                    // 单词 + 音标 + 发音（BoxReveal 从上方揭示）
+                    BoxReveal(
+                      direction: BoxRevealDirection.top,
+                      duration: const Duration(milliseconds: 400),
+                      reveal: true,
+                      child: _buildWordHeader(word, skin),
+                    ),
                     SizedBox(height: AppleSpacing.lg),
-                    // 释义
+                    // 释义（BoxReveal 从左侧揭示）
                     if (lines.isNotEmpty) ...[
-                      Text('释义',
-                        style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+                      BoxReveal(
+                        direction: BoxRevealDirection.left,
+                        duration: const Duration(milliseconds: 350),
+                        delay: const Duration(milliseconds: 100),
+                        reveal: true,
+                        child: Text('释义',
+                          style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+                      ),
                       SizedBox(height: AppleSpacing.xs),
                       ...lines.map((line) => Padding(
                         padding: const EdgeInsets.only(bottom: 6),
@@ -176,11 +191,17 @@ class _WordDetailPageState extends State<WordDetailPage> {
                           style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
                       )),
                     ],
-                    // 例句
+                    // 例句（BoxReveal 从右侧揭示）
                     if (examples.isNotEmpty) ...[
                       SizedBox(height: AppleSpacing.lg),
-                      Text('例句',
-                        style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+                      BoxReveal(
+                        direction: BoxRevealDirection.right,
+                        duration: const Duration(milliseconds: 350),
+                        delay: const Duration(milliseconds: 200),
+                        reveal: true,
+                        child: Text('例句',
+                          style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+                      ),
                       SizedBox(height: AppleSpacing.xs),
                       ...examples.take(3).map((ex) => _ExampleTile(
                         ex,
@@ -205,6 +226,78 @@ class _WordDetailPageState extends State<WordDetailPage> {
                           side: BorderSide(color: skin.colors.divider),
                         )).toList(),
                       ),
+                    ],
+                    // 补充数据：派生词 / 近义词 / 真题例句（dictionary_extra.json）
+                    if (_extra != null) ...[
+                      SizedBox(height: AppleSpacing.lg),
+                      Text('拓展 · 派生词',
+                        style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+                      SizedBox(height: AppleSpacing.xs),
+                      ..._extra!.derivatives.map((d) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('· ', style: TextStyle(fontWeight: FontWeight.bold)),
+                            Expanded(
+                              child: Text(d,
+                                style: MistralTypography.bodyMd.copyWith(
+                                  color: skin.colors.text1, height: 1.5)),
+                            ),
+                          ],
+                        ),
+                      )),
+                      SizedBox(height: AppleSpacing.lg),
+                      Text('近义词',
+                        style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+                      SizedBox(height: AppleSpacing.xs),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _extra!.synonyms.map((s) => Chip(
+                          label: Text(s,
+                            style: MistralTypography.bodySm.copyWith(color: AppColors.white100)),
+                          backgroundColor: skin.colors.accent.withValues(alpha: 0.85),
+                          side: BorderSide.none,
+                        )).toList(),
+                      ),
+                      if (_extra!.examSentences.isNotEmpty) ...[
+                        SizedBox(height: AppleSpacing.lg),
+                        Text('真题例句',
+                          style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+                        SizedBox(height: AppleSpacing.xs),
+                        ..._extra!.examSentences.map((e) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: skin.colors.cardBgAlt,
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.highlightOrange,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(e.source,
+                                      style: MistralTypography.caption.copyWith(
+                                        color: AppColors.white100)),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(e.sentence,
+                                style: MistralTypography.bodyMd.copyWith(
+                                  color: skin.colors.text1, height: 1.5)),
+                            ],
+                          ),
+                        )),
+                      ],
                     ],
                     // 常见用法
                     SizedBox(height: AppleSpacing.lg),
@@ -373,14 +466,17 @@ class _WordDetailPageState extends State<WordDetailPage> {
               GestureDetector(
                 onTap: () async {
                   try {
+                    // 取消上一次播放
+                    await _audioSub?.cancel();
                     final player = AudioPlayer();
                     await player.setUrl(
                       'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2');
                     await player.play();
                     // 播放完成后释放资源
-                    player.processingStateStream.listen((state) {
+                    _audioSub = player.processingStateStream.listen((state) {
                       if (state == ProcessingState.completed) {
                         player.dispose();
+                        _audioSub = null;
                       }
                     });
                   } catch (e) {
@@ -419,6 +515,12 @@ class _WordDetailPageState extends State<WordDetailPage> {
           .where((e) => e.isNotEmpty).toList();
     }
     return [t];
+  }
+
+  @override
+  void dispose() {
+    _audioSub?.cancel();
+    super.dispose();
   }
 }
 

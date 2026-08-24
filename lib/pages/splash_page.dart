@@ -9,6 +9,9 @@ import 'package:provider/provider.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../widgets/animations.dart';
+import '../widgets/liquid_logo.dart';
+import '../widgets/path_marquee.dart';
+import '../widgets/meteors.dart';
 import '../tokens/design_tokens.dart';
 import 'login_page.dart';
 
@@ -107,86 +110,90 @@ class _SplashPageState extends State<SplashPage>
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnim,
-          child: SlideTransition(
-            position: _slideAnim,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // "不" — 橙色描边圆圈
-                SizedBox(
-                  width: 56,
-                  height: 56,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFFF6800),
-                        width: 2.5,
-                      ),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        '不',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFFFF6800),
-                          height: 1.0,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                // "背" — 橙色实心圆
-                SizedBox(
-                  width: 56,
-                  height: 56,
-                  child: DecoratedBox(
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFFFF6800),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        '背',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          height: 1.0,
-                        ),
-                      ),
+      body: Stack(
+        children: [
+          // 流星雨背景（仅在深色主题时显示）
+          if (skin.colors.pageBg.computeLuminance() < 0.3)
+            const Positioned.fill(
+              child: MeteorShower(
+                count: 15,
+                enableStars: true,
+                colors: [
+                  Color(0xFF006241),
+                  Color(0xFF00754A),
+                  Color(0xFFcba258),
+                  Color(0xFF4D96FF),
+                ],
+              ),
+            ),
+          Center(
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: SlideTransition(
+                position: _slideAnim,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                // 液态 Logo 动画
+                LiquidLogo(
+                  size: 100,
+                  colors: [
+                    skin.colors.accent,
+                    skin.colors.accent.withValues(alpha: 0.8),
+                    const Color(0xFF1E3932),
+                    const Color(0xFFcba258),
+                  ],
+                  child: const Text(
+                    '怪',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      height: 1.0,
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                // "单" "词" — 黑色竖排
+                const SizedBox(height: 16),
+                // 品牌名
                 Text(
-                  '单',
+                  'Monster Word',
                   style: TextStyle(
-                    fontSize: 26,
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
                     color: skin.colors.text1,
-                    height: 1.2,
+                    letterSpacing: 1.2,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  '词',
+                  '背单词 · 从未如此有趣',
                   style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                    color: skin.colors.text1,
-                    height: 1.2,
+                    fontSize: 13,
+                    color: skin.colors.text3,
                   ),
+                ),
+                const SizedBox(height: 24),
+                // 波浪滚动文字装饰
+                PathMarquee(
+                  text: 'Monster Word · 背单词 · 从未如此有趣 · ',
+                  pathType: MarqueePathType.sine,
+                  pathWidth: 280,
+                  pathHeight: 30,
+                  speed: 0.6,
+                  loopDuration: const Duration(seconds: 5),
+                  textStyle: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: skin.colors.text3.withValues(alpha: 0.7),
+                  ),
+                  showPath: false,
                 ),
               ],
             ),
           ),
         ),
+        ),
+        ],
       ),
     );
   }

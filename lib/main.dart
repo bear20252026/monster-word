@@ -58,6 +58,7 @@ import 'state/wallpaper_state.dart';
 import 'theme/skin_system.dart';
 import 'data/app_preferences.dart';
 import 'widgets/adaptive_scale.dart';
+import 'widgets/fluid_cursor.dart';
 import 'widgets/transition_widgets.dart';
 
 Future<void> main() async {
@@ -202,7 +203,12 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
             ),
             builder: (context, child) {
               ScreenUtils.init(context);
-              return child!;
+              return FluidCursorOverlay(
+                rippleColor: skin.colors.accent.withValues(alpha: 0.4),
+                maxRadius: 60,
+                enabled: true,
+                child: child!,
+              );
             },
             home: SkinProvider(
               skin: skin,
@@ -251,8 +257,14 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
       case '/lib_select': return const LibSelectPage();
       case '/book_words':
         // 词书内容页：从路由参数取词书信息（选择词书后展开内容）
-        final args = settings.arguments;
-        final map = args is Map<String, dynamic> ? args : const <String, dynamic>{};
+        // 兼容两种传参：直接传 Book 对象，或 {bookId, bookName} Map
+        final routeArgs = settings.arguments;
+        if (routeArgs is Book) {
+          return BookWordsPage(bookId: routeArgs.id, bookName: routeArgs.name);
+        }
+        final map = routeArgs is Map<String, dynamic>
+            ? routeArgs
+            : const <String, dynamic>{};
         return BookWordsPage(
           bookId: (map['bookId'] as num?)?.toInt() ?? 0,
           bookName: (map['bookName'] as String?) ?? '词书',

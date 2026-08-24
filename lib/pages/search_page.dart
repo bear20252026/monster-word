@@ -12,6 +12,8 @@ import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/scale_down_on_press.dart';
+import '../widgets/halo_search.dart';
+import '../widgets/path_marquee.dart';
 import 'dictionary_page.dart';
 
 class SearchPage extends StatefulWidget {
@@ -73,20 +75,23 @@ class _SearchPageState extends State<SearchPage> {
 
     return Scaffold(
       backgroundColor: skin.pageBg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildSearchBar(skin),
-            Expanded(
-              child: _selectedWord != null
-                  ? _buildWordDetail(_selectedWord!, skin)
-                  : _results.isNotEmpty
-                      ? _buildResultList(skin)
-                      : _searchHistory.isNotEmpty
-                          ? _buildHistory(skin)
-                          : _buildEmpty(skin),
-            ),
-          ],
+      body: HaloSearchBackground(
+        color: skin.accent,
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildSearchBar(skin),
+              Expanded(
+                child: _selectedWord != null
+                    ? _buildWordDetail(_selectedWord!, skin)
+                    : _results.isNotEmpty
+                        ? _buildResultList(skin)
+                        : _searchHistory.isNotEmpty
+                            ? _buildHistory(skin)
+                            : _buildEmpty(skin),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -102,47 +107,28 @@ class _SearchPageState extends State<SearchPage> {
       child: Row(
         children: [
           Expanded(
-            child: Container(
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: skin.cardBgAlt,
-                borderRadius: BorderRadius.circular(20),
+            child: HaloSearchField(
+              controller: _controller,
+              hintText: '输入要查询的英文或中文',
+              haloColor: skin.accent,
+              bgColor: skin.cardBgAlt,
+              textStyle: MistralTypography.bodyMd.copyWith(color: skin.text1),
+              hintStyle: MistralTypography.bodyMd.copyWith(
+                color: MistralColors.muted,
+                fontSize: 15,
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.search, size: 20, color: skin.text3),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: '输入要查询的英文或中文',
-                        hintStyle: MistralTypography.bodyMd.copyWith(
-                          color: MistralColors.muted,
-                          fontSize: 15,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.only(bottom: 12),
-                      ),
-                      style: MistralTypography.bodyMd.copyWith(color: skin.text1),
-                      onChanged: _search,
-                      onSubmitted: _search,
-                    ),
-                  ),
-                  if (_controller.text.isNotEmpty)
-                    GestureDetector(
+              onChanged: _search,
+              onSubmitted: _search,
+              autoFocus: true,
+              suffixIcon: _controller.text.isNotEmpty
+                  ? GestureDetector(
                       onTap: () {
                         _controller.clear();
                         _search('');
                       },
                       child: Icon(Icons.clear, size: 18, color: skin.text3),
                     )
-                  else
-                    Icon(Icons.qr_code_scanner, size: 20, color: MistralColors.slate),
-                ],
-              ),
+                  : Icon(Icons.qr_code_scanner, size: 20, color: MistralColors.slate),
             ),
           ),
           const SizedBox(width: 12),
@@ -370,6 +356,21 @@ class _SearchPageState extends State<SearchPage> {
           const SizedBox(height: 16),
           Text('输入单词开始查询',
             style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+          const SizedBox(height: 24),
+          // 波浪滚动装饰文字
+          PathMarquee(
+            text: 'abandon · ability · about · above · accept · ',
+            pathType: MarqueePathType.sine,
+            pathWidth: 260,
+            pathHeight: 24,
+            speed: 0.5,
+            loopDuration: const Duration(seconds: 6),
+            textStyle: TextStyle(
+              fontSize: 12,
+              color: skin.text3.withValues(alpha: 0.5),
+              letterSpacing: 1,
+            ),
+          ),
         ],
       ),
     );

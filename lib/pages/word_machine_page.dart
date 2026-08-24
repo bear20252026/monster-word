@@ -14,6 +14,7 @@ import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../tokens/gameboy.dart';
 import '../widgets/text_generate_effect.dart';
+import '../widgets/box_reveal.dart';
 
 /// 不背单词机页面
 class WordMachinePage extends StatefulWidget {
@@ -38,6 +39,7 @@ class _WordMachinePageState extends State<WordMachinePage>
   late AnimationController _blinkController;
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
+  StreamSubscription<ProcessingState>? _audioSub; // 音频播放状态订阅
 
   @override
   void initState() {
@@ -60,6 +62,7 @@ class _WordMachinePageState extends State<WordMachinePage>
   void dispose() {
     _blinkController.dispose();
     _shakeController.dispose();
+    _audioSub?.cancel();
     super.dispose();
   }
 
@@ -620,14 +623,16 @@ class _WordMachinePageState extends State<WordMachinePage>
   /// 播放单词音频（在线发音）
   Future<void> _playAudio(String wordText) async {
     try {
+      await _audioSub?.cancel();
       final player = AudioPlayer();
       await player.setUrl(
         'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(wordText)}&type=2');
       await player.play();
       // 播放完成后释放资源
-      player.processingStateStream.listen((state) {
-        if (state == ProcessingState.completed) {
+      _audioSub = player.processingStateStream.listen((s) {
+        if (s == ProcessingState.completed) {
           player.dispose();
+          _audioSub = null;
         }
       });
     } catch (e) {
@@ -643,101 +648,103 @@ class _WordMachinePageState extends State<WordMachinePage>
     }
   }
 
-  /// 构建单词详情面板（可展开/收起）
+  /// 构建单词详情面板（BoxReveal 动画展开/收起）
   Widget _buildWordDetails() {
     final state = context.read<LearningState>();
     final word = state.currentWord;
     if (word == null) return const SizedBox.shrink();
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      height: _showWordDetails ? 120 : 0,
-      child: _showWordDetails
-          ? Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: GameBoyPalette.screenDark,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: GameBoyPalette.screenMid),
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 音标
-                    if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[
-                      Text(
-                        '🔊 ${word.usPron}  ${word.ukPron}',
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 11,
-                          color: GameBoyPalette.screenLight,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                    ],
-                    // 释义
-                    if (word.interpret.isNotEmpty) ...[
-                      Text(
-                        word.interpret.length > 80
-                            ? '${word.interpret.substring(0, 80)}...'
-                            : word.interpret,
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 10,
-                          color: GameBoyPalette.screenLight,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                    ],
-                    // 例句
-                    if (word.example.isNotEmpty) ...[
-                      const Text(
-                        '📖 例句:',
-                        style: TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 9,
-                          color: GameBoyPalette.screenMid,
-                        ),
-                      ),
-                      TextGenerateEffect(
-                        text: word.example.length > 80
-                            ? '${word.example.substring(0, 80)}...'
-                            : word.example,
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 9,
-                          color: GameBoyPalette.screenLight,
-                        ),
-                        duration: const Duration(milliseconds: 800),
-                      ),
-                      const SizedBox(height: 4),
-                    ],
-                    // 词根
-                    if (word.wordRoot.isNotEmpty) ...[
-                      const Text(
-                        '🌱 词根:',
-                        style: TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 9,
-                          color: GameBoyPalette.screenMid,
-                        ),
-                      ),
-                      Text(
-                        word.wordRoot,
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 9,
-                          color: GameBoyPalette.screenLight,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            )
-          : const SizedBox.shrink(),
+    return BoxReveal(
+      direction: BoxRevealDirection.top,
+      duration: const Duration(milliseconds: 350),
+      reveal: _showWordDetails,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: GameBoyPalette.screenDark,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: GameBoyPalette.screenMid),
+        ),
+        child: SizedBox(
+          height: 110,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 音标
+                if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[
+                  Text(
+                    '🔊 ${word.usPron}  ${word.ukPron}',
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                      color: GameBoyPalette.screenLight,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+                // 释义
+                if (word.interpret.isNotEmpty) ...[
+                  Text(
+                    word.interpret.length > 80
+                        ? '${word.interpret.substring(0, 80)}...'
+                        : word.interpret,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 10,
+                      color: GameBoyPalette.screenLight,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+                // 例句
+                if (word.example.isNotEmpty) ...[
+                  const Text(
+                    '📖 例句:',
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 9,
+                      color: GameBoyPalette.screenMid,
+                    ),
+                  ),
+                  TextGenerateEffect(
+                    text: word.example.length > 80
+                        ? '${word.example.substring(0, 80)}...'
+                        : word.example,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 9,
+                      color: GameBoyPalette.screenLight,
+                    ),
+                    duration: const Duration(milliseconds: 800),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+                // 词根
+                if (word.wordRoot.isNotEmpty) ...[
+                  const Text(
+                    '🌱 词根:',
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 9,
+                      color: GameBoyPalette.screenMid,
+                    ),
+                  ),
+                  Text(
+                    word.wordRoot,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 9,
+                      color: GameBoyPalette.screenLight,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

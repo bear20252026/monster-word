@@ -16,6 +16,9 @@ import '../tokens/design_tokens.dart';
 import '../tokens/star_gold.dart';
 import '../widgets/animations.dart';
 import '../widgets/word_lookup_popup.dart';
+import '../widgets/box_reveal.dart';
+import '../widgets/confetti.dart';
+import '../widgets/scratch_to_reveal.dart';
 
 class LearnPage extends StatefulWidget {
   const LearnPage({super.key});
@@ -128,6 +131,14 @@ class _WordArea extends StatelessWidget {
   final AppResponsive resp;
   const _WordArea({required this.word, required this.skin, required this.resp});
 
+  /// 词义提示（刮开可见）：截取释义前 24 字，避免直接泄露完整答案
+  String _hintText(dynamic word) {
+    final raw = word.interpret?.toString() ?? '';
+    if (raw.isEmpty) return '这个词的意思是……';
+    final clean = raw.replaceAll(RegExp(r'\\n|\s{2,}'), ' ').trim();
+    return clean.length <= 24 ? clean : '${clean.substring(0, 24)}…';
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = skin.colors;
@@ -170,6 +181,13 @@ class _WordArea extends StatelessWidget {
               Text('/${word.usPron}/',
                 style: TextStyle(fontSize: 14, color: colors.text3)),
             ],
+            // 刮刮揭示：刮开查看词义提示（scratch-to-reveal 微交互）
+            const SizedBox(height: 18),
+            WordScratchCard(
+              word: '刮开看提示',
+              meaning: _hintText(word),
+              color: colors.accent,
+            ),
           ],
         ),
       ),
@@ -201,6 +219,9 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   // P2: 对勾 springPop 控制器
   late AnimationController _checkController;
 
+  // Confetti 控制器（答对时庆祝彩带）
+  late ConfettiController _confettiController;
+
   @override
   void initState() {
     super.initState();
@@ -218,6 +239,8 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 200), // base 档
       vsync: this,
     );
+
+    _confettiController = ConfettiController();
   }
 
   @override
@@ -225,6 +248,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     _shakeController.dispose();
     _bounceController.dispose();
     _checkController.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -237,6 +261,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       _shakeController.reset();
       _bounceController.reset();
       _checkController.reset();
+      _confettiController.reset();
     }
   }
 
@@ -250,6 +275,8 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       setState(() => _correctIndex = i);
       _bounceController.forward(from: 0);
       _checkController.forward(from: 0);
+      // 触发彩带庆祝效果
+      _confettiController.play();
       Future.delayed(const Duration(milliseconds: 400), () {
         if (mounted) Navigator.pushNamed(context, '/word_detail');
       });
@@ -265,23 +292,42 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     final state = widget.state;
     final colors = widget.skin.colors;
 
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: context.responsive.pageMargin),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_wrongIndex >= 0 ? '请再选出正确答案' : '请选择正确释义',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: colors.text2,
-              )),
-            const SizedBox(height: 12),
-            for (int i = 0; i < state.choices.length && i < 4; i++)
-              _buildChoice(i),
-          ],
+    return ConfettiOverlay(
+      controller: _confettiController,
+      particleCount: 30,
+      direction: ConfettiDirection.down,
+      duration: const Duration(seconds: 2),
+      colors: const [
+        Color(0xFF006241),
+        Color(0xFF00754A),
+        Color(0xFFcba258),
+        Color(0xFFFFD93D),
+        Color(0xFF6BCB77),
+      ],
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: context.responsive.pageMargin),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_wrongIndex >= 0 ? '请再选出正确答案' : '请选择正确释义',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: colors.text2,
+                )),
+              const SizedBox(height: 12),
+              for (int i = 0; i < state.choices.length && i < 4; i++)
+                BoxReveal(
+                  direction: BoxRevealDirection.left,
+                  duration: const Duration(milliseconds: 300),
+                  delay: Duration(milliseconds: 50 * i),
+                  reveal: true,
+                  child: _buildChoice(i),
+                ),
+            ],
+          ),
         ),
       ),
     );

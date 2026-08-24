@@ -13,6 +13,9 @@ import '../tokens/design_tokens.dart';
 import '../widgets/sb_card.dart';
 import '../widgets/review_dialog.dart';
 import '../widgets/scale_down_on_press.dart';
+import '../widgets/spring_check_in_calendar.dart';
+import '../widgets/testimonial_slider.dart';
+import '../widgets/text_reveal_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -27,7 +30,6 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final resp = context.responsive;
-    final state = context.watch<LearningState>();
 
     // 方案C：奶油画布，移除壁纸系统
     // 下滑查词：在首页任意位置向下滑动打开查词页（提示卡也可直接点击）
@@ -48,7 +50,7 @@ class HomeScreen extends StatelessWidget {
                 // 签到卡片（SbCard 白卡，替代毛玻璃）
                 _EntranceIn(
                   delayMs: 120,
-                  child: _buildCheckInCard(skin),
+                  child: _buildCheckInCard(context, skin),
                 ),
                 const Spacer(flex: 2),
                 // Learn / Review 入口卡（SbCard 替代 GlassEntryCard）
@@ -56,26 +58,45 @@ class HomeScreen extends StatelessWidget {
                   delayMs: 260,
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
-                    child: Row(
-                    children: [
-                      Expanded(
-                        child: _EntryCard(
-                          title: 'Learn',
-                          count: state.total > 0 ? state.total : 0,
-                          onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
-                        ),
+                    // Selector 只订阅 total/dueCount，避免 LearningState
+                    // 其他字段变化导致整页 rebuild
+                    child: Selector<LearningState, ({int total, int dueCount})>(
+                      selector: (_, s) => (total: s.total, dueCount: s.dueCount),
+                      builder: (context, state, _) => Row(
+                        children: [
+                          Expanded(
+                            child: _EntryCard(
+                              title: 'Learn',
+                              count: state.total > 0 ? state.total : 0,
+                              onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _EntryCard(
+                              title: 'Review',
+                              count: state.dueCount,
+                              onTap: () => showReviewDialog(context),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _EntryCard(
-                          title: 'Review',
-                          count: state.dueCount,
-                          onTap: () => showReviewDialog(context),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
+                // 每日一句励志语轮播（testimonial-slider，自动轮播+弹性滑动）
+                _EntranceIn(
+                  delayMs: 380,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
+                    child: TestimonialSlider(
+                      items: TestimonialData.defaults,
+                      height: 120,
+                      activeColor: skin.colors.accent,
+                      inactiveColor: skin.colors.divider,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -97,23 +118,79 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// 签到卡片（SbCard 白卡，替代毛玻璃）
-  Widget _buildCheckInCard(SkinSystem skin) {
+  /// 签到卡片（TextRevealCard：点击揭示每日一句）；右上角「打卡」角标打开弹性签到日历
+  Widget _buildCheckInCard(BuildContext context, SkinSystem skin) {
     return Center(
-      child: SbCard(
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.calendar_today_outlined, size: 30, color: skin.colors.text1),
-            const SizedBox(height: 10),
-            Text('签到',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1)),
-            const SizedBox(height: 4),
-            Text(_formatDate(),
-              style: TextStyle(fontSize: 14, color: skin.colors.text2)),
-          ],
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          TextRevealCard(
+            title: '📅 签到 ${_formatDate()}',
+            revealText: '"The limits of my language mean the limits of my world." — Wittgenstein\n\n今天也要加油背单词！每一个单词都在拓展你的世界。',
+            icon: null,
+            bgColor: skin.colors.cardBg,
+            revealBgColor: skin.colors.cardBgAlt,
+            titleStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1),
+            revealStyle: TextStyle(fontSize: 13, color: skin.colors.text2, height: 1.5),
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+            borderRadius: 16,
+          ),
+          // 弹性签到日历入口（不干扰卡片自身的每日一句揭示交互）
+          Positioned(
+            top: -8,
+            right: -8,
+            child: ScaleDownOnPress(
+              onTap: () => _showCheckInSheet(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [
+                    AppColors.highlightOrange,
+                    MistralColors.sunshine500,
+                  ]),
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.highlightOrange.withValues(alpha: 0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.redeem_rounded, size: 14, color: AppColors.white100),
+                    SizedBox(width: 4),
+                    Text('打卡 +10',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.white100)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 弹性签到日历底部弹层
+  void _showCheckInSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetCtx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 12,
+          bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 24,
         ),
+        child: const SpringCheckInCalendar(),
       ),
     );
   }
