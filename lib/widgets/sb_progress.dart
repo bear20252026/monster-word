@@ -1,8 +1,9 @@
 // Monster Word — 星巴克进度指示组件
 // 来源规格：docs/component_spec.md §10（SbProgress）
-// 4px 细线进度条 + stroke6 环形进度，绿系实色，禁渐变
+// 使用 ThemeVars 语义 token，支持深色模式
 
 import 'package:flutter/material.dart';
+import '../theme/skin_system.dart';
 
 /// 星巴克进度指示组件
 ///
@@ -10,15 +11,11 @@ import 'package:flutter/material.dart';
 /// - [SbLinearProgress]：细线进度条（4px 高度，圆角）
 /// - [SbRingProgress]：环形进度（stroke 6，圆帽，中心百分比）
 ///
-/// 颜色规范：
-/// - 前景：Green Accent #00754A
-/// - 轨道：ceramic #edebe9（细线）/ #e6e6e6（环形）
-///
-/// 动画规范：
-/// - 细线进度条：200ms ease
-/// - 环形进度：400ms ease
+/// 颜色规范（通过 ThemeVars 自动适配深色模式）：
+/// - 前景：accent
+/// - 轨道：cardBgAlt（细线）/ divider（环形）
 
-/// 细线进度条：高 4px 胶囊，填充 Green Accent，轨道 ceramic
+/// 细线进度条：高 4px 胶囊，填充 accent，轨道 cardBgAlt
 ///
 /// 用于 `dashboard_page.dart`（统计卡进度）、`home_screen.dart`（今日目标细线条）、
 /// `learn_page.dart` / `review_session.dart`（会话答题进度条）。
@@ -31,10 +28,10 @@ class SbLinearProgress extends StatelessWidget {
   /// 进度值，范围 0.0 到 1.0
   final double value;
 
-  /// 前景颜色，默认为 Green Accent #00754A
+  /// 前景颜色，默认为 accent
   final Color? color;
 
-  /// 轨道背景颜色，默认为 ceramic #edebe9
+  /// 轨道背景颜色，默认为 cardBgAlt
   final Color? backgroundColor;
 
   /// 高度，默认为 4px
@@ -50,6 +47,7 @@ class SbLinearProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
     return ClipRRect(
       borderRadius: BorderRadius.circular(50),
       child: TweenAnimationBuilder<double>(
@@ -59,8 +57,8 @@ class SbLinearProgress extends StatelessWidget {
         builder: (_, v, _) => LinearProgressIndicator(
           value: v,
           minHeight: height,
-          backgroundColor: backgroundColor ?? const Color(0xFFEDEBE9),
-          color: color ?? const Color(0xFF00754A),
+          backgroundColor: backgroundColor ?? colors.cardBgAlt,
+          color: color ?? colors.accent,
         ),
       ),
     );
@@ -82,10 +80,10 @@ class SbRingProgress extends StatelessWidget {
   /// 中心显示的标签文字，如 '72%'
   final String label;
 
-  /// 前景颜色，默认为 Green Accent #00754A
+  /// 前景颜色，默认为 accent
   final Color? color;
 
-  /// 轨道背景颜色，默认为 #e6e6e6
+  /// 轨道背景颜色，默认为 divider
   final Color? backgroundColor;
 
   /// 尺寸，默认为 64x64
@@ -110,6 +108,7 @@ class SbRingProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: value.clamp(0.0, 1.0)),
       duration: const Duration(milliseconds: 400),
@@ -124,17 +123,17 @@ class SbRingProgress extends StatelessWidget {
               value: v,
               strokeWidth: strokeWidth,
               strokeCap: StrokeCap.round,
-              color: color ?? const Color(0xFF00754A),
-              backgroundColor: backgroundColor ?? const Color(0xFFE6E6E6),
+              color: color ?? colors.accent,
+              backgroundColor: backgroundColor ?? colors.divider,
             ),
           ),
           Text(
             label,
             style: labelStyle ??
-                const TextStyle(
+                TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xDE000000), // 黑 87
+                  color: colors.text1,
                 ),
           ),
         ],

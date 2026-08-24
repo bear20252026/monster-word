@@ -1,12 +1,13 @@
 // 星巴克下拉菜单组件（component_spec.md §7）
-// #F9F9F9 底色、12px 圆角、绿字高亮、200ms 展开动画
+// 使用 ThemeVars 语义 token，支持深色模式
 import 'package:flutter/material.dart';
+import '../theme/skin_system.dart';
 
 /// 显示星巴克风格下拉菜单
 ///
 /// - [anchor] 触发行的 RenderBox（用于定位）
 /// - [items] Map<T, String> 键值对，T 为业务值，String 为显示文本
-/// - [selected] 当前选中值（高亮态：绿字 #00754A w600 + tint 底）
+/// - [selected] 当前选中值（高亮态：绿字 w600 + tint 底）
 /// - [label] 可选的前缀标签
 Future<T?> showSbDropdown<T>({
   required BuildContext context,
@@ -16,6 +17,8 @@ Future<T?> showSbDropdown<T>({
   String? label,
 }) {
   final size = MediaQuery.of(context).size;
+  final skin = context.skin;
+  final colors = skin.colors;
 
   // 构建菜单项列表
   final menuItems = <PopupMenuItem<T>>[];
@@ -28,10 +31,10 @@ Future<T?> showSbDropdown<T>({
         height: 40,
         child: Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: Color(0x8A000000),
+            color: colors.text2,
           ),
         ),
       ),
@@ -48,7 +51,7 @@ Future<T?> showSbDropdown<T>({
         child: Container(
           decoration: isSelected
               ? BoxDecoration(
-                  color: const Color(0x5400754A), // green-light @33%
+                  color: colors.accent.withValues(alpha: 0.33),
                   borderRadius: BorderRadius.circular(8),
                 )
               : null,
@@ -58,9 +61,7 @@ Future<T?> showSbDropdown<T>({
             style: TextStyle(
               fontSize: 16,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-              color: isSelected
-                  ? const Color(0xFF00754A) // 绿字高亮
-                  : const Color(0xDE000000), // 黑 87%
+              color: isSelected ? colors.accent : colors.text1,
             ),
           ),
         ),
@@ -75,7 +76,7 @@ Future<T?> showSbDropdown<T>({
           Size(anchor.size.width, 0),
       Offset.zero & size,
     ),
-    color: const Color(0xFFF9F9F9), // Neutral Cool 无边框
+    color: colors.cardBg,
     elevation: 4,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),

@@ -1,17 +1,18 @@
 // Monster Word — 星巴克分段控件
 // 来源规格：docs/component_spec.md §9（SbSegmented）
-// ceramic #EDEBE9 轨道 + 白底选中滑块 + 绿字高亮，用于学习模式切换
+// 使用 ThemeVars 语义 token，支持深色模式
 
 import 'package:flutter/material.dart';
+import '../theme/skin_system.dart';
 
 /// 星巴克分段控件
 ///
 /// 用于学习模式切换等场景，支持泛型键值对。
 ///
 /// 规格（遵循 docs/component_spec.md §9）：
-/// - 轨道：ceramic #edebe9 实底、全胶囊圆角 50、内衬 4
-/// - 选中段：白底小卡浮起（双层阴影）+ 绿字 #00754A w600
-/// - 未选中：透明底黑 87 w400
+/// - 轨道：cardBgAlt 实底、全胶囊圆角 50、内衬 4
+/// - 选中段：cardBg 小卡浮起（双层阴影）+ 绿字 accent w600
+/// - 未选中：透明底 text1 w400
 /// - 尺寸：段高 44；文字 15px
 /// - 动画：选中滑块 AnimatedAlign 200ms ease
 ///
@@ -44,16 +45,17 @@ class SbSegmented<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final keys = segments.keys.toList();
     final i = keys.indexOf(value);
+    final colors = context.skin.colors;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFEDEBE9), // ceramic 轨道
-        borderRadius: BorderRadius.circular(50), // 全胶囊圆角
+        color: colors.cardBgAlt,
+        borderRadius: BorderRadius.circular(50),
       ),
       child: LayoutBuilder(builder: (context, c) {
         final w = (c.maxWidth - 8) / keys.length;
         return Stack(children: [
-          // 选中滑块：白底小卡浮起 + 双层阴影
+          // 选中滑块：cardBg 小卡浮起 + 双层阴影
           AnimatedAlign(
             alignment: Alignment(i * 2 / (keys.length - 1) - 1, 0),
             duration: const Duration(milliseconds: 200),
@@ -63,19 +65,19 @@ class SbSegmented<T> extends StatelessWidget {
               height: 44,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.cardBg,
                   borderRadius: BorderRadius.circular(50),
                   boxShadow: const [
                     // 双层阴影（同 §2 ContentCard）
                     BoxShadow(
                       offset: Offset.zero,
                       blurRadius: 0.5,
-                      color: Color(0x24000000), // rgba(0,0,0,.14)
+                      color: Color(0x24000000),
                     ),
                     BoxShadow(
                       offset: Offset(0, 1),
                       blurRadius: 1,
-                      color: Color(0x3D000000), // rgba(0,0,0,.24)
+                      color: Color(0x3D000000),
                     ),
                   ],
                 ),
@@ -99,9 +101,7 @@ class SbSegmented<T> extends StatelessWidget {
                           fontWeight: k == value
                               ? FontWeight.w600
                               : FontWeight.w400,
-                          color: k == value
-                              ? const Color(0xFF00754A) // 绿字 #00754A
-                              : const Color(0xDE000000), // 黑 87
+                          color: k == value ? colors.accent : colors.text1,
                         ),
                       ),
                     ),

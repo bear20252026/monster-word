@@ -1,8 +1,10 @@
 // 由 MotionEngineer 生成 | Monster Word App
 // 星巴克模态框组件：居中款 + 底部弹出版
+// 使用 ThemeVars 语义 token，支持深色模式
 // 规格来源：docs/component_spec.md §8 + docs/motion_spec.md
 
 import 'package:flutter/material.dart';
+import '../theme/skin_system.dart';
 
 /// 星巴克模态框模式
 enum SbModalMode {
@@ -93,12 +95,13 @@ class SbModal extends StatelessWidget {
     SbModal modal,
     bool barrierDismissible,
   ) {
+    final colors = context.skin.colors;
     return showDialog<T>(
       context: context,
       barrierDismissible: barrierDismissible,
       barrierColor: Colors.black.withValues(alpha: 0.55),
       builder: (_) => Dialog(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.cardBg,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -117,9 +120,10 @@ class SbModal extends StatelessWidget {
     SbModal modal,
     bool barrierDismissible,
   ) {
+    final colors = context.skin.colors;
     return showModalBottomSheet<T>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: colors.cardBg,
       isScrollControlled: true,
       barrierColor: Colors.black.withValues(alpha: 0.55),
       shape: const RoundedRectangleBorder(
@@ -131,6 +135,7 @@ class SbModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
     return Stack(
       children: [
         // 内容区域
@@ -144,10 +149,10 @@ class SbModal extends StatelessWidget {
               if (title != null) ...[
                 Text(
                   title!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xDE000000), // rgba(0,0,0,0.87)
+                    color: colors.text1,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -190,21 +195,22 @@ class _CloseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
     return SizedBox(
       width: 32,
       height: 32,
       child: Material(
         color: Colors.transparent,
-        shape: const CircleBorder(
-          side: BorderSide(color: Color(0x3F000000), width: 1), // rgba(0,0,0,0.25)
+        shape: CircleBorder(
+          side: BorderSide(color: colors.divider, width: 1),
         ),
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onTap,
-          child: const Icon(
+          child: Icon(
             Icons.close,
             size: 18,
-            color: Color(0x99000000), // rgba(0,0,0,0.6)
+            color: colors.text2,
           ),
         ),
       ),
