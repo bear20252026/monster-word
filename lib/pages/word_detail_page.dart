@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
+import '../data/dictionary_extra.dart';
 import '../data/fav_sentence_dao.dart';
 import '../data/note_database.dart';
 import '../data/wordbook_database.dart' show Word;
@@ -13,6 +14,7 @@ import '../models/word_note.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/text_generate_effect.dart';
 
 class WordDetailPage extends StatefulWidget {
   const WordDetailPage({super.key});
@@ -25,6 +27,7 @@ class WordDetailPage extends StatefulWidget {
 class _WordDetailPageState extends State<WordDetailPage> {
   List<WordNote> _notes = [];
   bool _notesLoaded = false;
+  DictionaryExtra? _extra; // 字典补充数据（派生词/近义词/真题）
 
   /// 解析要展示的单词：路由参数优先（从词书/收藏/列表点入时显示所点的词），
   /// 否则回退到当前学习词。修复此前所有入口都显示 currentWord 的问题。
@@ -38,6 +41,15 @@ class _WordDetailPageState extends State<WordDetailPage> {
   void initState() {
     super.initState();
     _loadNotes();
+    _loadExtra();
+  }
+
+  Future<void> _loadExtra() async {
+    final word = _resolveTargetWord(null);
+    if (word == null) return;
+    final extra = await DictionaryExtraStore.forWord(word.word);
+    if (!mounted || extra == null || extra.isEmpty) return;
+    setState(() => _extra = extra);
   }
 
   Future<void> _loadNotes() async {
@@ -647,9 +659,11 @@ class _ExampleTileState extends State<_ExampleTile> {
           ),
           if (widget.example.cn.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(
-              widget.example.cn,
+            TextGenerateEffect(
+              text: widget.example.cn,
               style: MistralTypography.micro.copyWith(color: widget.skin.colors.text3),
+              duration: const Duration(milliseconds: 600),
+              delay: const Duration(milliseconds: 300),
             ),
           ],
           if (widget.example.source.isNotEmpty)

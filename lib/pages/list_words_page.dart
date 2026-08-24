@@ -24,6 +24,9 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
   String get pageTitle;
   Future<List<Word>> loadWords(LearningState state);
 
+  /// 子类可提供的主操作按钮（如「开始学习」FAB）；默认无
+  Widget? get learningFab => null;
+
   @override
   void initState() {
     super.initState();
@@ -75,6 +78,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
+      floatingActionButton: learningFab,
       body: SafeArea(
         child: Column(
           children: [

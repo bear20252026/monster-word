@@ -10,7 +10,7 @@ import '../data/wordbook_database.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
-import 'learn_page.dart';
+import 'book_words_page.dart';
 import 'search_page.dart';
 
 class LibSelectPage extends StatefulWidget {
@@ -320,7 +320,13 @@ class _LibItem extends StatelessWidget {
       onTap: () async {
         await state.loadBook(book, limit: 50);
         if (context.mounted) {
-          Navigator.pushNamed(context, LearnPage.routeName);
+          // 选择词书后先展开词书内容（单词列表，带返回键），
+          // 由用户在列表页点「开始学习」进入学习流程
+          Navigator.pushNamed(
+            context,
+            BookWordsPage.routeName,
+            arguments: {'bookId': book.id, 'bookName': book.name},
+          );
         }
       },
       child: Container(

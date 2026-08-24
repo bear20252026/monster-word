@@ -1,6 +1,7 @@
 // 由账号4生成
 // Monster Word App 入口：接入新设计系统（SkinProvider + MainShell + 三主题）
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 import 'data/wordbook_database.dart';
@@ -13,6 +14,7 @@ import 'pages/foot_mark_page.dart';
 import 'pages/help_page.dart';
 import 'pages/learn_page.dart';
 import 'pages/lib_select_page.dart';
+import 'pages/book_words_page.dart';
 import 'pages/linked_me_middle_page.dart';
 import 'pages/list_word_listen_page.dart';
 import 'pages/login_page.dart';
@@ -181,6 +183,16 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
             theme: ThemeData(
               brightness: skin.effectiveUiBrightness,
               fontFamily: skin.effectiveFontFamily, // 用户字体选择（null=默认 Inter）
+              // 灵动转场：Android 缩放淡入 / iOS 滑动(可手势返回) / 桌面向上展开
+              pageTransitionsTheme: PageTransitionsTheme(
+                builders: {
+                  TargetPlatform.android: ZoomPageTransitionsBuilder(),
+                  TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+                  TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+                  TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+                  TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
+                },
+              ),
               scaffoldBackgroundColor: skin.colors.pageBg,
               colorScheme: ColorScheme.fromSeed(
                 seedColor: skin.colors.accent,
@@ -237,6 +249,14 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
     switch (name) {
       case '/learn': return const LearnPage();
       case '/lib_select': return const LibSelectPage();
+      case '/book_words':
+        // 词书内容页：从路由参数取词书信息（选择词书后展开内容）
+        final args = settings.arguments;
+        final map = args is Map<String, dynamic> ? args : const <String, dynamic>{};
+        return BookWordsPage(
+          bookId: (map['bookId'] as num?)?.toInt() ?? 0,
+          bookName: (map['bookName'] as String?) ?? '词书',
+        );
       case '/review': return const ReviewPage();
       case '/review_session': return const ReviewSession();
       case '/learn_session': return const LearnSession();

@@ -1,0 +1,170 @@
+{
+  "_meta": {
+    "desc": "字典补充数据：主词库（wordbook.db，只读）之外的扩展字段——派生词、近义词、真题例句。",
+    "version": 1,
+    "source": "Monster Word 团队整理，真题句标注来源（CET-4/CET-6/考研）",
+    "merge": "按 word 小写精确匹配；主库已有释义/例句/词根不在此重复"
+  },
+  "entries": {
+    "abandon": {
+      "derivatives": ["abandoned adj. 被遗弃的", "abandonment n. 抛弃；放弃", "abandoning v. 放弃（进行时）"],
+      "synonyms": ["desert", "forsake", "give up", "quit"],
+      "examSentences": [
+        {"sentence": "The plan was abandoned due to lack of funding.", "source": "CET-4"},
+        {"sentence": "He abandoned himself to despair after losing his job.", "source": "考研"}
+      ]
+    },
+    "ability": {
+      "derivatives": ["able adj. 能够的", "disable v. 使失去能力", "capability n. 能力", "disability n. 残疾；无能"],
+      "synonyms": ["capacity", "capability", "competence", "talent"],
+      "examSentences": [
+        {"sentence": "Her ability to solve problems impressed the interviewers.", "source": "CET-4"},
+        {"sentence": "To the best of my ability, I will finish the task on time.", "source": "CET-6"}
+      ]
+    },
+    "achieve": {
+      "derivatives": ["achievement n. 成就", "achievable adj. 可实现的", "achiever n. 获得成功的人"],
+      "synonyms": ["accomplish", "attain", "fulfill", "reach"],
+      "examSentences": [
+        {"sentence": "Only by working hard can we achieve our goals.", "source": "CET-4"},
+        {"sentence": "She achieved remarkable success in medical research.", "source": "考研"}
+      ]
+    },
+    "benefit": {
+      "derivatives": ["beneficial adj. 有益的", "beneficiary n. 受益人", "benefactor n. 恩人；捐助者"],
+      "synonyms": ["advantage", "profit", "gain", "welfare"],
+      "examSentences": [
+        {"sentence": "Regular exercise benefits both body and mind.", "source": "CET-4"},
+        {"sentence": "The new policy will benefit millions of rural residents.", "source": "CET-6"}
+      ]
+    },
+    "consider": {
+      "derivatives": ["consideration n. 考虑", "considerable adj. 相当大的", "considerate adj. 体贴的", "considering prep. 鉴于"],
+      "synonyms": ["contemplate", "ponder", "weigh", "reflect on"],
+      "examSentences": [
+        {"sentence": "We should consider the environmental impact of the project.", "source": "CET-4"},
+        {"sentence": "Taking everything into consideration, the plan is feasible.", "source": "考研"}
+      ]
+    },
+    "demonstrate": {
+      "derivatives": ["demonstration n. 示范；游行", "demonstrative adj. 易流露感情的", "demonstrator n. 游行者；示范者"],
+      "synonyms": ["illustrate", "exhibit", "display", "prove"],
+      "examSentences": [
+        {"sentence": "The experiment demonstrates how memory works.", "source": "CET-6"},
+        {"sentence": "Thousands of people demonstrated against the new law.", "source": "考研"}
+      ]
+    },
+    "effort": {
+      "derivatives": ["effortless adj. 不费力的", "effortlessly adv. 轻松地"],
+      "synonyms": ["attempt", "endeavor", "exertion", "struggle"],
+      "examSentences": [
+        {"sentence": "Great efforts have been made to improve air quality.", "source": "CET-4"},
+        {"sentence": "Without effort, talent means nothing.", "source": "考研"}
+      ]
+    },
+    "essential": {
+      "derivatives": ["essentially adv. 本质上", "essence n. 本质；精髓", "inessential adj. 非必需的"],
+      "synonyms": ["crucial", "vital", "indispensable", "fundamental"],
+      "examSentences": [
+        {"sentence": "Water is essential to all living things.", "source": "CET-4"},
+        {"sentence": "It is essential that every student (should) attend the lecture.", "source": "CET-6"}
+      ]
+    },
+    "establish": {
+      "derivatives": ["establishment n. 建立；机构", "established adj. 已确立的", "re-establish v. 重建"],
+      "synonyms": ["found", "set up", "institute", "confirm"],
+      "examSentences": [
+        {"sentence": "The university was established over a century ago.", "source": "CET-4"},
+        {"sentence": "Scientists have established a link between diet and health.", "source": "考研"}
+      ]
+    },
+    "focus": {
+      "derivatives": ["focused adj. 专注的", "focuses n. 焦点（复数）", "focusing v. 聚焦（进行时）"],
+      "synonyms": ["concentrate", "center", "spotlight", "emphasis"],
+      "examSentences": [
+        {"sentence": "You should focus your attention on the main idea.", "source": "CET-4"},
+        {"sentence": "The focus of the debate shifted to economic policy.", "source": "CET-6"}
+      ]
+    },
+    "improve": {
+      "derivatives": ["improvement n. 改进", "improved adj. 改善的", "improving adj. 好转的"],
+      "synonyms": ["enhance", "upgrade", "refine", "better"],
+      "examSentences": [
+        {"sentence": "Reading widely is an effective way to improve vocabulary.", "source": "CET-4"},
+        {"sentence": "The service quality has improved significantly this year.", "source": "考研"}
+      ]
+    },
+    "influence": {
+      "derivatives": ["influential adj. 有影响力的", "influencer n. 影响者；网红"],
+      "synonyms": ["impact", "effect", "sway", "shape"],
+      "examSentences": [
+        {"sentence": "Parents have a profound influence on children's habits.", "source": "CET-4"},
+        {"sentence": "Climate influences the distribution of plants and animals.", "source": "CET-6"}
+      ]
+    },
+    "knowledge": {
+      "derivatives": ["knowledgeable adj. 博学的", "acknowledge v. 承认；致谢"],
+      "synonyms": ["understanding", "expertise", "insight", "wisdom"],
+      "examSentences": [
+        {"sentence": "Knowledge comes from practice.", "source": "CET-4"},
+        {"sentence": "He has a good working knowledge of English.", "source": "CET-6"}
+      ]
+    },
+    "maintain": {
+      "derivatives": ["maintenance n. 维护；保养", "maintainable adj. 可维持的", "sustainable adj. 可持续的"],
+      "synonyms": ["preserve", "sustain", "retain", "keep up"],
+      "examSentences": [
+        {"sentence": "It is important to maintain a balanced diet.", "source": "CET-4"},
+        {"sentence": "The machine requires regular maintenance.", "source": "CET-6"}
+      ]
+    },
+    "necessary": {
+      "derivatives": ["necessarily adv. 必然地", "necessity n. 必需品；必要性", "unnecessary adj. 不必要的"],
+      "synonyms": ["essential", "required", "indispensable", "requisite"],
+      "examSentences": [
+        {"sentence": "It is necessary to make a detailed plan before the trip.", "source": "CET-4"},
+        {"sentence": "Sleep is a biological necessity for human beings.", "source": "考研"}
+      ]
+    },
+    "opportunity": {
+      "derivatives": ["opportune adj. 恰逢其时的", "opportunism n. 投机主义"],
+      "synonyms": ["chance", "opening", "prospect", "occasion"],
+      "examSentences": [
+        {"sentence": "Studying abroad provides a great opportunity to learn a language.", "source": "CET-4"},
+        {"sentence": "Opportunity favors the prepared mind.", "source": "考研"}
+      ]
+    },
+    "participate": {
+      "derivatives": ["participation n. 参与", "participant n. 参与者", "participatory adj. 参与式的"],
+      "synonyms": ["take part in", "engage in", "join in", "get involved"],
+      "examSentences": [
+        {"sentence": "All students are encouraged to participate in class discussions.", "source": "CET-4"},
+        {"sentence": "Active participation leads to better learning outcomes.", "source": "CET-6"}
+      ]
+    },
+    "quality": {
+      "derivatives": ["qualify v. 使合格", "qualified adj. 有资格的", "qualification n. 资格；资历", "qualitative adj. 定性的"],
+      "synonyms": ["standard", "caliber", "trait", "property"],
+      "examSentences": [
+        {"sentence": "The quality of education should never be compromised.", "source": "CET-4"},
+        {"sentence": "Honesty is the most important quality of a friend.", "source": "考研"}
+      ]
+    },
+    "require": {
+      "derivatives": ["requirement n. 要求", "required adj. 必需的", "requisition n. 征用；申请"],
+      "synonyms": ["demand", "need", "call for", "entail"],
+      "examSentences": [
+        {"sentence": "This position requires at least three years of experience.", "source": "CET-4"},
+        {"sentence": "The regulations require that all passengers (should) wear seat belts.", "source": "CET-6"}
+      ]
+    },
+    "significant": {
+      "derivatives": ["significance n. 意义；重要性", "significantly adv. 显著地", "insignificant adj. 微不足道的"],
+      "synonyms": ["important", "notable", "substantial", "meaningful"],
+      "examSentences": [
+        {"sentence": "There has been a significant increase in online learning.", "source": "CET-4"},
+        {"sentence": "The discovery is of great significance to medicine.", "source": "考研"}
+      ]
+    }
+  }
+}

@@ -9,6 +9,8 @@ import '../state/learning_state.dart';
 import '../models/word.dart';
 import '../theme/skin_system.dart';
 import '../widgets/exam_phrase_widgets.dart';
+import '../widgets/sb_fab.dart';
+import 'learn_page.dart';
 import 'list_words_page.dart';
 
 class BookWordsPage extends ListWordsPage {
@@ -31,6 +33,14 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
   // 配套真题词组状态
   final List<ExamPhraseGroup> _phraseGroups = [];
   List<ExamPhraseGroup> _availableGroups = [];
+
+  /// 词书内容页主操作：直接开始学习当前词书
+  @override
+  Widget? get learningFab => SbFab(
+        icon: Icons.play_arrow_rounded,
+        label: '开始学习',
+        onTap: () => Navigator.pushNamed(context, LearnPage.routeName),
+      );
 
   @override
   String get pageTitle => widget.bookName;

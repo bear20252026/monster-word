@@ -45,11 +45,18 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               children: [
                 const Spacer(flex: 2),
-                _buildCheckInCard(skin),
+                // 签到卡片（SbCard 白卡，替代毛玻璃）
+                _EntranceIn(
+                  delayMs: 120,
+                  child: _buildCheckInCard(skin),
+                ),
                 const Spacer(flex: 2),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
-                  child: Row(
+                // Learn / Review 入口卡（SbCard 替代 GlassEntryCard）
+                _EntranceIn(
+                  delayMs: 260,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
+                    child: Row(
                     children: [
                       Expanded(
                         child: _EntryCard(
@@ -68,6 +75,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                ),
                 ),
               ],
             ),
@@ -237,6 +245,33 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+/// 入场动画：淡入 + 上滑，delayMs 提供错峰节奏（首页卡片灵动感）
+class _EntranceIn extends StatelessWidget {
+  final Widget child;
+  final int delayMs;
+
+  const _EntranceIn({required this.child, this.delayMs = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    final total = 520 + delayMs;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: total),
+      // 用 Interval 把延迟编入时间线：前段保持初值，实现"晚开始"
+      curve: Interval(delayMs / total, 1.0, curve: Curves.easeOutCubic),
+      builder: (context, t, child) => Opacity(
+        opacity: t.clamp(0.0, 1.0),
+        child: Transform.translate(
+          offset: Offset(0, 24 * (1 - t)),
+          child: child,
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
 /// 入口卡片（替代 GlassEntryCard，使用 SbCard 白卡风格）
 class _EntryCard extends StatelessWidget {
   final String title;
@@ -252,21 +287,24 @@ class _EntryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    return SbCard(
+    // 微交互：按压缩放反馈（星巴克 --buttonActiveScale）
+    return ScaleDownOnPress(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(title,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: skin.colors.text1)),
-          const SizedBox(height: 8),
-          Text('$count',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w300, color: skin.colors.accent)),
-          const SizedBox(height: 4),
-          Text(title == 'Learn' ? '待学' : '待复习',
-            style: TextStyle(fontSize: 12, color: skin.colors.text3)),
-        ],
+      child: SbCard(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: skin.colors.text1)),
+            const SizedBox(height: 8),
+            Text('$count',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w300, color: skin.colors.accent)),
+            const SizedBox(height: 4),
+            Text(title == 'Learn' ? '待学' : '待复习',
+              style: TextStyle(fontSize: 12, color: skin.colors.text3)),
+          ],
+        ),
       ),
     );
   }

@@ -13,6 +13,7 @@ import '../engine/fsrs5_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../tokens/gameboy.dart';
+import '../widgets/text_generate_effect.dart';
 
 /// 不背单词机页面
 class WordMachinePage extends StatefulWidget {
@@ -479,8 +480,8 @@ class _WordMachinePageState extends State<WordMachinePage>
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       child: Column(
         children: [
-          Text(
-            word.word,
+          TextGenerateEffect(
+            text: word.word,
             style: const TextStyle(
               fontFamily: 'monospace',
               fontSize: 28,
@@ -488,6 +489,7 @@ class _WordMachinePageState extends State<WordMachinePage>
               color: GameBoyPalette.screenDark,
               letterSpacing: 2,
             ),
+            duration: const Duration(milliseconds: 500),
           ),
           if (word.usPron.isNotEmpty)
             Text(
@@ -699,8 +701,8 @@ class _WordMachinePageState extends State<WordMachinePage>
                           color: GameBoyPalette.screenMid,
                         ),
                       ),
-                      Text(
-                        word.example.length > 80
+                      TextGenerateEffect(
+                        text: word.example.length > 80
                             ? '${word.example.substring(0, 80)}...'
                             : word.example,
                         style: const TextStyle(
@@ -708,6 +710,7 @@ class _WordMachinePageState extends State<WordMachinePage>
                           fontSize: 9,
                           color: GameBoyPalette.screenLight,
                         ),
+                        duration: const Duration(milliseconds: 800),
                       ),
                       const SizedBox(height: 4),
                     ],

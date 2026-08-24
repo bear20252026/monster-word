@@ -22,32 +22,36 @@ abstract class BaseSharedPreferences {
     _prefs ??= await SharedPreferences.getInstance();
   }
 
+  // ── 读操作：未初始化（如测试环境 / 首帧前）时返回默认值，避免 UI 构建期抛 StateError ──
   String getString(String key, {String defaultValue = ''}) =>
-      prefs.getString(key) ?? defaultValue;
-  Future<bool> setString(String key, String value) =>
-      prefs.setString(key, value);
+      _prefs?.getString(key) ?? defaultValue;
 
   int getInt(String key, {int defaultValue = 0}) =>
-      prefs.getInt(key) ?? defaultValue;
-  Future<bool> setInt(String key, int value) => prefs.setInt(key, value);
+      _prefs?.getInt(key) ?? defaultValue;
 
   bool getBool(String key, {bool defaultValue = false}) =>
-      prefs.getBool(key) ?? defaultValue;
-  Future<bool> setBool(String key, bool value) => prefs.setBool(key, value);
+      _prefs?.getBool(key) ?? defaultValue;
 
   double getDouble(String key, {double defaultValue = 0.0}) =>
-      prefs.getDouble(key) ?? defaultValue;
-  Future<bool> setDouble(String key, double value) =>
-      prefs.setDouble(key, value);
+      _prefs?.getDouble(key) ?? defaultValue;
 
   List<String> getStringList(String key, {List<String>? defaultValue}) =>
-      prefs.getStringList(key) ?? defaultValue ?? [];
+      _prefs?.getStringList(key) ?? defaultValue ?? [];
+
+  bool containsKey(String key) => _prefs?.containsKey(key) ?? false;
+  Set<String> getKeys() => _prefs?.getKeys() ?? const {};
+
+  // ── 写操作：未初始化仍抛错，及时暴露初始化时序问题 ──
+  Future<bool> setString(String key, String value) =>
+      prefs.setString(key, value);
+  Future<bool> setInt(String key, int value) => prefs.setInt(key, value);
+  Future<bool> setBool(String key, bool value) => prefs.setBool(key, value);
+  Future<bool> setDouble(String key, double value) =>
+      prefs.setDouble(key, value);
   Future<bool> setStringList(String key, List<String> value) =>
       prefs.setStringList(key, value);
 
   Future<bool> remove(String key) => prefs.remove(key);
-  bool containsKey(String key) => prefs.containsKey(key);
-  Set<String> getKeys() => prefs.getKeys();
   Future<bool> clear() => prefs.clear();
 }
 
