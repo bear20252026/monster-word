@@ -162,7 +162,7 @@ class _DragDownContainerState extends State<DragDownContainer>
     );
     _resetController.forward(from: 0);
     anim.addListener(() {
-      setState(() => _translateY = anim.value);
+      if (mounted) setState(() => _translateY = anim.value);
     });
   }
 

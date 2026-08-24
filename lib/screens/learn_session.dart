@@ -91,7 +91,7 @@ class _LearnSessionState extends State<LearnSession>
                   onPageChanged: (page) {
                     if (page != state.currentIndex) {
                       state.jumpTo(page);
-                      setState(() {});
+                      if (mounted) setState(() {});
                     }
                   },
                   itemCount: state.total,

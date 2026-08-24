@@ -31,11 +31,12 @@ Future<void> initMobileAudioSession() async {
       debugPrint('[AudioInit] Disabled skip silence');
 
       // 设置处理状态监听，便于调试
-      player.processingStateStream.listen((state) {
+      final stateSub = player.processingStateStream.listen((state) {
         debugPrint('[AudioInit] Processing state: $state');
       });
 
-      // 立即释放临时播放器，避免资源占用
+      // 立即释放临时播放器，避免资源占用（先取消订阅再释放）
+      await stateSub.cancel();
       await player.dispose();
       debugPrint('[AudioInit] Mobile audio session initialized successfully');
     } catch (e) {
@@ -115,6 +116,8 @@ class PlayAudioListenerAdapter implements PlayAudioListener {
 /// 音频播放封装
 class BBAudioPlayer {
   final AudioPlayer _player = AudioPlayer();
+  StreamSubscription? _playerStateSub;
+  StreamSubscription? _processingStateSub;
   MediaPlayStateListener? playStateListener;
   String _currentFileName = '';
   bool _lock = false;
@@ -122,7 +125,7 @@ class BBAudioPlayer {
   BBAudioPlayer() {
     debugPrint('[BBAudioPlayer] Created new player instance');
     // 监听播放状态变化
-    _player.playerStateStream.listen((playerState) {
+    _playerStateSub = _player.playerStateStream.listen((playerState) {
       if (_currentFileName.isEmpty) return;
       debugPrint('[BBAudioPlayer] Player state: playing=${playerState.playing}, fileName=$_currentFileName');
       if (playerState.playing) {
@@ -132,7 +135,7 @@ class BBAudioPlayer {
       }
     });
     // 监听播放完成
-    _player.processingStateStream.listen((state) {
+    _processingStateSub = _player.processingStateStream.listen((state) {
       debugPrint('[BBAudioPlayer] Processing state: $state for $_currentFileName');
       if (state == ProcessingState.completed) {
         playStateListener?.onPlayComplete(_currentFileName);
@@ -203,8 +206,13 @@ class BBAudioPlayer {
     }
   }
 
-  /// 释放（原版 release）
+  /// 释放（原版 release）—— 取消所有流订阅并释放播放器，防止内存泄漏
   Future<void> release() async {
+    await _playerStateSub?.cancel();
+    _playerStateSub = null;
+    await _processingStateSub?.cancel();
+    _processingStateSub = null;
+    playStateListener = null;
     await _player.dispose();
   }
 

@@ -59,6 +59,24 @@ import 'widgets/transition_widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ===== 全局错误捕获 =====
+  // 1) 框架层异常（Widget 构建 / 布局 / 绘制 / 手势回调中抛出）
+  FlutterError.onError = (details) {
+    debugPrint('[GlobalError] FlutterError: ${details.exception}');
+    if (details.stack != null) {
+      debugPrint('[GlobalError] Stack:\n${details.stack}');
+    }
+    // 保留默认处理：调试期红屏 / 测试环境抛错等行为不受影响
+    FlutterError.presentError(details);
+  };
+  // 2) 未捕获的异步与平台层异常（Timer/Future/事件循环），兜底防崩溃
+  WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+    debugPrint('[GlobalError] Uncaught: $error');
+    debugPrint('[GlobalError] Stack:\n$stack');
+    return true; // 标记已处理，避免直接崩溃退出
+  };
+
   await WordBookDatabase.ensurePlatform();
   await WordBookDatabase.instance.initialize();
   await UserDatabase.instance.initialize();
