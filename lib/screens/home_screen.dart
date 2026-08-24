@@ -2,6 +2,7 @@
 
 // 由账号4生成
 // 首页：Mistral AI 设计风格 — 奶油黄背景 + 日落渐变条 + Charter 衬线 HeroWord
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -78,23 +79,33 @@ class HomeScreen extends StatelessWidget {
                 // Learn / Review 入口卡
                 Padding(
                   padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      GlassEntryCard(
-                        title: 'Learn',
-                        count: state.total > 0 ? state.total : 0,
-                        width: resp.glassCardWidth,
-                        onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
-                      ),
-                      const SizedBox(width: 12),
-                      GlassEntryCard(
-                        title: 'Review',
-                        count: state.dueCount,
-                        width: resp.glassCardWidth,
-                        onTap: () => showReviewDialog(context),
-                      ),
-                    ],
+                  // 卡片宽度受实际约束限制：AdaptiveScale 缩放框架下窗口 MediaQuery 与布局宽度不一致，
+                  // 固定 glassCardWidth 会导致 Learn/Review 行溢出（见 docs/qa_baseline.md）
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final double cardW = math.min(
+                        resp.glassCardWidth,
+                        (constraints.maxWidth - 12) / 2,
+                      );
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GlassEntryCard(
+                            title: 'Learn',
+                            count: state.total > 0 ? state.total : 0,
+                            width: cardW,
+                            onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
+                          ),
+                          const SizedBox(width: 12),
+                          GlassEntryCard(
+                            title: 'Review',
+                            count: state.dueCount,
+                            width: cardW,
+                            onTap: () => showReviewDialog(context),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ],

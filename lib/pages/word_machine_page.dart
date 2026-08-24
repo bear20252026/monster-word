@@ -269,7 +269,7 @@ class _WordMachinePageState extends State<WordMachinePage>
   /// 屏幕区域
   Widget _buildScreen() {
     return AnimatedBuilder(
-      animation: _shakeAnimation,
+      listenable: _shakeAnimation,
       builder: (context, child) {
         return Transform.translate(
           offset: Offset(_shakeAnimation.value, 0),

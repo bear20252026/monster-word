@@ -3,6 +3,7 @@
 // 完善版：Banner+班级活动指引+功能卡片+用户评论
 import 'package:flutter/material.dart';
 
+import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -86,7 +87,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
 
   Widget _buildJoinContent(BuildContext context, ThemeVars skin) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(context.responsive.pageMargin ?? AppSpacing.md),
+      padding: EdgeInsets.all(context.responsive.pageMargin),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -475,7 +476,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
 
   Widget _buildJoinedContent(BuildContext context, ThemeVars skin) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(context.responsive.pageMargin ?? AppSpacing.md),
+      padding: EdgeInsets.all(context.responsive.pageMargin),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
