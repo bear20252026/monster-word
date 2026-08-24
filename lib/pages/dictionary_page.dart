@@ -394,6 +394,13 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
                   style: MistralTypography.bodySm.copyWith(color: skin.text3),
                 ),
               ],
+              if (ex.source.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  ex.source,
+                  style: MistralTypography.micro.copyWith(color: skin.text3),
+                ),
+              ],
             ],
           ),
         );

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'data/wordbook_database.dart';
 import 'data/user_database.dart';
+import 'player/audio_players.dart';
 import 'utils/screen_utils.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/extensive_model_select_page.dart';
@@ -62,6 +63,10 @@ Future<void> main() async {
   await WordBookDatabase.instance.initialize();
   await UserDatabase.instance.initialize();
   await AppPreferences().init();                // 主题读取的前置依赖
+
+  // 初始化移动端音频会话（确保手机发音功能正常）
+  await initMobileAudioSession();
+
   runApp(const WordApp());
 }
 

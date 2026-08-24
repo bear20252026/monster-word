@@ -19,13 +19,31 @@ import 'package:path/path.dart' as p;
 Future<void> initMobileAudioSession() async {
   if (Platform.isIOS || Platform.isAndroid) {
     try {
-      // just_audio 会自动处理音频会话，但我们需要确保不被系统静音
+      debugPrint('[AudioInit] Initializing mobile audio session for ${Platform.isIOS ? "iOS" : "Android"}');
       final player = AudioPlayer();
+
+      // 确保音频不被系统静音，设置最大音量
       await player.setVolume(1.0);
+      debugPrint('[AudioInit] Set volume to 1.0');
+
+      // 禁用跳过静音，确保音频完整播放
       await player.setSkipSilenceEnabled(false);
+      debugPrint('[AudioInit] Disabled skip silence');
+
+      // 设置处理状态监听，便于调试
+      player.processingStateStream.listen((state) {
+        debugPrint('[AudioInit] Processing state: $state');
+      });
+
+      // 立即释放临时播放器，避免资源占用
+      await player.dispose();
+      debugPrint('[AudioInit] Mobile audio session initialized successfully');
     } catch (e) {
-      debugPrint('initMobileAudioSession error: $e');
+      debugPrint('[AudioInit] ERROR initializing mobile audio session: $e');
+      debugPrint('[AudioInit] Stack trace: ${StackTrace.current}');
     }
+  } else {
+    debugPrint('[AudioInit] Skipping mobile audio init on desktop platform');
   }
 }
 
@@ -102,9 +120,11 @@ class BBAudioPlayer {
   bool _lock = false;
 
   BBAudioPlayer() {
+    debugPrint('[BBAudioPlayer] Created new player instance');
     // 监听播放状态变化
     _player.playerStateStream.listen((playerState) {
       if (_currentFileName.isEmpty) return;
+      debugPrint('[BBAudioPlayer] Player state: playing=${playerState.playing}, fileName=$_currentFileName');
       if (playerState.playing) {
         playStateListener?.onPlayStart(_currentFileName);
       } else {
@@ -113,6 +133,7 @@ class BBAudioPlayer {
     });
     // 监听播放完成
     _player.processingStateStream.listen((state) {
+      debugPrint('[BBAudioPlayer] Processing state: $state for $_currentFileName');
       if (state == ProcessingState.completed) {
         playStateListener?.onPlayComplete(_currentFileName);
       }
@@ -121,31 +142,45 @@ class BBAudioPlayer {
 
   /// 播放 URL（原版 play）- 带移动端错误处理
   Future<void> play(String url) async {
-    if (_lock) return;
+    if (_lock) {
+      debugPrint('[BBAudioPlayer] play() skipped - player locked');
+      return;
+    }
     _currentFileName = url;
+    debugPrint('[BBAudioPlayer] play() URL: $url');
     playStateListener?.onPlayStart(url);
     try {
       await _player.stop(); // 先停止当前播放
       await _player.setUrl(url);
       await _player.play();
+      debugPrint('[BBAudioPlayer] play() started successfully');
     } catch (e) {
-      debugPrint('BBAudioPlayer.play error: $e (url: $url)');
+      debugPrint('[BBAudioPlayer] ERROR in play(): $e');
+      debugPrint('[BBAudioPlayer] URL: $url');
+      debugPrint('[BBAudioPlayer] Stack trace: ${StackTrace.current}');
       playStateListener?.onPlayError(url);
     }
   }
 
   /// 播放本地文件（原版 play(File, float)）- 带移动端错误处理
   Future<void> playFile(File file, {double speed = 1.0}) async {
-    if (_lock) return;
+    if (_lock) {
+      debugPrint('[BBAudioPlayer] playFile() skipped - player locked');
+      return;
+    }
     _currentFileName = p.basename(file.path);
+    debugPrint('[BBAudioPlayer] playFile() path: ${file.path}, speed: $speed');
     playStateListener?.onPlayStart(_currentFileName);
     try {
       await _player.stop();
       await _player.setSpeed(speed);
       await _player.setFilePath(file.path);
       await _player.play();
+      debugPrint('[BBAudioPlayer] playFile() started successfully');
     } catch (e) {
-      debugPrint('BBAudioPlayer.playFile error: $e');
+      debugPrint('[BBAudioPlayer] ERROR in playFile(): $e');
+      debugPrint('[BBAudioPlayer] File path: ${file.path}');
+      debugPrint('[BBAudioPlayer] Stack trace: ${StackTrace.current}');
       playStateListener?.onPlayError(_currentFileName);
     }
   }
