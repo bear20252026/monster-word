@@ -5,6 +5,7 @@
 // AppPreferences（应用配置）+ UserPreferences（用户配置）+ GuidePreference（引导）
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// 基础 SharedPreferences 封装（原版 BaseSharedPreferences）
 abstract class BaseSharedPreferences {
@@ -46,6 +47,67 @@ abstract class BaseSharedPreferences {
   bool containsKey(String key) => prefs.containsKey(key);
   Set<String> getKeys() => prefs.getKeys();
   Future<bool> clear() => prefs.clear();
+}
+
+/// 安全 Token 存储（flutter_secure_storage 封装）
+///
+/// 将敏感凭证（token/secret）从 SharedPreferences 明文迁移到
+/// 平台安全存储（iOS Keychain / Android Keystore）。
+class SecureTokenStorage {
+  static final SecureTokenStorage _instance = SecureTokenStorage._();
+  factory SecureTokenStorage() => _instance;
+  SecureTokenStorage._();
+
+  final FlutterSecureStorage _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+
+  static const _keyToken = 'user_token';
+  static const _keySecret = 'user_secret';
+
+  /// 读取 token（安全存储 → 回退 SharedPreferences → 空字符串）
+  Future<String> getToken() async {
+    var value = await _storage.read(key: _keyToken);
+    if (value != null && value.isNotEmpty) return value;
+    // 回退：从 SharedPreferences 读取旧值并迁移
+    final prefs = AppPreferences();
+    value = prefs.getString(_keyToken);
+    if (value.isNotEmpty) {
+      await _storage.write(key: _keyToken, value: value);
+      await prefs.remove(_keyToken); // 清除明文
+    }
+    return value;
+  }
+
+  /// 写入 token（安全存储）
+  Future<void> setToken(String value) async {
+    await _storage.write(key: _keyToken, value: value);
+  }
+
+  /// 读取 secret（安全存储 → 回退 SharedPreferences → 空字符串）
+  Future<String> getSecret() async {
+    var value = await _storage.read(key: _keySecret);
+    if (value != null && value.isNotEmpty) return value;
+    // 回退：从 SharedPreferences 读取旧值并迁移
+    final prefs = AppPreferences();
+    value = prefs.getString(_keySecret);
+    if (value.isNotEmpty) {
+      await _storage.write(key: _keySecret, value: value);
+      await prefs.remove(_keySecret); // 清除明文
+    }
+    return value;
+  }
+
+  /// 写入 secret（安全存储）
+  Future<void> setSecret(String value) async {
+    await _storage.write(key: _keySecret, value: value);
+  }
+
+  /// 清除所有安全存储的凭证
+  Future<void> clearAll() async {
+    await _storage.delete(key: _keyToken);
+    await _storage.delete(key: _keySecret);
+  }
 }
 
 /// 应用配置（翻译自 AppPreferences.java，key = "sysData"）
@@ -98,9 +160,11 @@ class AppPreferences extends BaseSharedPreferences {
   Future<bool> setBookGroupList(String value) =>
       setString(bookGroupList, value);
 
-  /// 用户 token
+  /// 用户 token（推荐使用 SecureTokenStorage.getToken() 异步版本）
   String getUserToken() => getString(userToken);
-  Future<bool> setUserToken(String value) => setString(userToken, value);
+
+  /// 用户 secret（推荐使用 SecureTokenStorage.getSecret() 异步版本）
+  String getUserSecret() => getString(userSecret);
 
   /// 用户 ID
   String getUserId() => getString(userId);

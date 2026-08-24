@@ -20,11 +20,17 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' show MediaType;
 
 import '../data/app_preferences.dart';
 import '../utils/crypto_utils.dart';
+
+/// Release 包禁用 print，防止 token/URL/参数泄露到 logcat
+void _log(Object? message) {
+  if (kDebugMode) print(message);
+}
 
 // ============================================================
 // CoolHttpResponse — 响应封装（原版 CoolHttpResponse.java）
@@ -84,7 +90,7 @@ class CoolHttpResponse {
         _errorMessage = _errorBody!['user_message'] as String? ?? '';
       }
     } catch (e) {
-      print('CoolHttpResponse parse JsonError: $e');
+      _log('CoolHttpResponse parse JsonError: $e');
     }
   }
 
@@ -110,7 +116,7 @@ class CoolHttpResponse {
         _v3Security = json['v3_security'] as Map<String, dynamic>;
       }
     } catch (e) {
-      print('CoolHttpResponse parse JsonError: $e');
+      _log('CoolHttpResponse parse JsonError: $e');
     }
   }
 
@@ -138,7 +144,7 @@ class CoolHttpResponse {
     try {
       _dataBody = jsonDecode(decryptedText) as Map<String, dynamic>?;
     } catch (e) {
-      print('CoolHttpResponse decryDataBody error: $e');
+      _log('CoolHttpResponse decryDataBody error: $e');
     }
   }
 
@@ -147,7 +153,7 @@ class CoolHttpResponse {
 
   /// 失败日志（原版 failTrace）
   void failTrace() {
-    print('CoolHttpResponse FAIL: data_kind=$_dataKind, '
+    _log('CoolHttpResponse FAIL: data_kind=$_dataKind, '
         'data_version=$_dataVersion, result_code=$_resultCode, '
         'error_info=$_errorInfo, error_message=$_errorMessage');
   }
@@ -302,7 +308,7 @@ class CoolHttpClient {
   ) async {
     _traceParams(requestParams);
     final uri = _buildGetUri((requestParams as CoolParams?), suffix);
-    print('$_logTag request: $uri');
+    _log('$_logTag request: $uri');
 
     try {
       final response = await http.get(uri).timeout(
@@ -310,7 +316,7 @@ class CoolHttpClient {
       );
       _handleResponse(response, handler);
     } catch (e) {
-      print('$_logTag IOException: $e');
+      _log('$_logTag IOException: $e');
       _notifyError(handler, CoolHttpResponse());
     }
   }
@@ -321,7 +327,7 @@ class CoolHttpClient {
     CoolJsonHttpResponseHandler handler,
   ) async {
     final uri = Uri.parse(_getAbsoluteUrl(null));
-    print('$_logTag post request: $uri');
+    _log('$_logTag post request: $uri');
 
     try {
       final coolParams = requestParams as CoolParams?;
@@ -342,7 +348,7 @@ class CoolHttpClient {
       }
       _handleResponse(response, handler);
     } catch (e) {
-      print('$_logTag post IOException: $e');
+      _log('$_logTag post IOException: $e');
       _notifyError(handler, CoolHttpResponse());
     }
   }
@@ -374,7 +380,7 @@ class CoolHttpClient {
   /// 取消所有请求（原版 cancelAllRequest）
   /// 注意：Flutter http 包不支持原生取消，此方法为兼容接口
   static void cancelAllRequest() {
-    print('$_logTag cancelAllRequest');
+    _log('$_logTag cancelAllRequest');
   }
 
   // === 内部方法 ===
@@ -410,11 +416,11 @@ class CoolHttpClient {
           _notifyError(handler, coolResponse);
         }
       } catch (e) {
-        print('$_logTag response parse error: $e');
+        _log('$_logTag response parse error: $e');
         _notifyError(handler, CoolHttpResponse());
       }
     } else {
-      print('$_logTag response error: ${response.statusCode}');
+      _log('$_logTag response error: ${response.statusCode}');
       _notifyError(handler, CoolHttpResponse());
     }
   }
@@ -466,7 +472,7 @@ class CoolHttpClient {
   }
 
   static void _traceParams(RequestParams params) {
-    print('$_logTag RequestParams: ${params.toString()}');
+    _log('$_logTag RequestParams: ${params.toString()}');
   }
 }
 
@@ -532,7 +538,7 @@ class CoolHttpClientV3 {
   ) async {
     _traceParams(requestParams);
     final uri = _buildGetUri(requestParams as CoolParams?, suffix);
-    print('$_logTag request: $uri');
+    _log('$_logTag request: $uri');
 
     try {
       final response = await http.get(uri).timeout(
@@ -540,7 +546,7 @@ class CoolHttpClientV3 {
       );
       _handleV3Response(response, handler);
     } catch (e) {
-      print('$_logTag IOException: $e');
+      _log('$_logTag IOException: $e');
       _notifyError(handler, CoolHttpResponse());
     }
   }
@@ -551,7 +557,7 @@ class CoolHttpClientV3 {
     CoolJsonHttpResponseHandler handler,
   ) async {
     final uri = Uri.parse(_getAbsoluteUrl(null));
-    print('$_logTag post request: $uri');
+    _log('$_logTag post request: $uri');
 
     try {
       final coolParams = requestParams as CoolParams?;
@@ -570,7 +576,7 @@ class CoolHttpClientV3 {
       }
       _handleV3Response(response, handler);
     } catch (e) {
-      print('$_logTag post IOException: $e');
+      _log('$_logTag post IOException: $e');
       _notifyError(handler, CoolHttpResponse());
     }
   }
@@ -581,7 +587,7 @@ class CoolHttpClientV3 {
     CoolJsonHttpResponseHandler handler,
   ) async {
     final uri = _buildGetUri(requestParams as CoolParams?, null);
-    print('$_logTag request: $uri');
+    _log('$_logTag request: $uri');
 
     try {
       final response = await http.get(uri).timeout(
@@ -592,15 +598,15 @@ class CoolHttpClientV3 {
           final json = jsonDecode(response.body) as Map<String, dynamic>;
           _notifySucc(handler, CoolHttpResponse.fromJsonV3(json));
         } catch (e) {
-          print('$_logTag exception response: $e');
+          _log('$_logTag exception response: $e');
           _notifyError(handler, CoolHttpResponse());
         }
       } else {
-        print('$_logTag error response: ${response.statusCode}');
+        _log('$_logTag error response: ${response.statusCode}');
         _notifyError(handler, CoolHttpResponse());
       }
     } catch (e) {
-      print('$_logTag IOException: $e');
+      _log('$_logTag IOException: $e');
       _notifyError(handler, CoolHttpResponse());
     }
   }
@@ -662,32 +668,39 @@ class CoolHttpClientV3 {
           _notifyError(handler, coolResponse);
         }
       } catch (e) {
-        print('$_logTag response parse error: $e');
+        _log('$_logTag response parse error: $e');
         _notifyError(handler, CoolHttpResponse());
       }
     } else {
-      print('$_logTag error response: ${response.statusCode}');
+      _log('$_logTag error response: ${response.statusCode}');
       _notifyError(handler, CoolHttpResponse());
     }
   }
 
   /// 保存 v3 security 信息（原版 saveV3Security）
+  /// 写入 SecureTokenStorage（加密）+ SharedPreferences（同步回退）
   static void _saveV3Security(Map<String, dynamic>? security) {
     if (security == null) return;
     try {
       final prefs = AppPreferences();
+      final secure = SecureTokenStorage();
       if (security.containsKey('token') && security['token'] != null) {
-        prefs.setUserToken(security['token'] as String);
+        final token = security['token'] as String;
+        prefs.setString(AppPreferences.userToken, token); // 同步回退
+        secure.setToken(token); // 加密存储（fire-and-forget）
       }
       if (security.containsKey('secret') && security['secret'] != null) {
-        prefs.setString(AppPreferences.userSecret, security['secret'] as String);
+        final secret = security['secret'] as String;
+        prefs.setString(AppPreferences.userSecret, secret); // 同步回退
+        secure.setSecret(secret); // 加密存储（fire-and-forget）
       }
     } catch (e) {
-      print('$_logTag saveV3Security error: $e');
+      _log('$_logTag saveV3Security error: $e');
     }
   }
 
   /// 获取 secret（原版 getSecret）
+  /// 优先从 SecureTokenStorage 读取，回退 SharedPreferences
   static String _getSecret() {
     return AppPreferences().getString(AppPreferences.userSecret);
   }
@@ -748,7 +761,7 @@ class CoolHttpClientV3 {
   }
 
   static void _traceParams(RequestParams params) {
-    print('$_logTag RequestParams: ${params.toString()}');
+    _log('$_logTag RequestParams: ${params.toString()}');
   }
 }
 
@@ -782,7 +795,7 @@ class DownloadHttpClient {
     String url,
     FileHttpResponseHandler handler,
   ) async {
-    print('$_logTag asyncDownloadFile: $url');
+    _log('$_logTag asyncDownloadFile: $url');
     try {
       final request = http.Request('GET', Uri.parse(url));
       final streamed = await http.Client().send(request).timeout(
@@ -822,7 +835,7 @@ class DownloadHttpClient {
         handler.onFailure(savePath, streamed.statusCode);
       }
     } catch (e) {
-      print('$_logTag IOException: $e');
+      _log('$_logTag IOException: $e');
       handler.onFailure(savePath, serviceError);
     }
   }
@@ -893,14 +906,14 @@ class DownloadHttpClient {
         handler.onFailure(savePath, streamed.statusCode);
       }
     } catch (e) {
-      print('$_logTag IOException: $e');
+      _log('$_logTag IOException: $e');
       handler.onFailure(savePath, serviceError);
     }
   }
 
   /// 取消所有请求（原版 cancelPeviousRequest）
   void cancelPreviousRequest() {
-    print('$_logTag cancelPreviousRequest');
+    _log('$_logTag cancelPreviousRequest');
   }
 
   // === 内部方法 ===
@@ -910,8 +923,8 @@ class DownloadHttpClient {
     String url,
     FileHttpResponseHandler handler,
   ) async {
-    print('$_logTag asyncDownloadFile: ${file.path}');
-    print('$_logTag url: $url');
+    _log('$_logTag asyncDownloadFile: ${file.path}');
+    _log('$_logTag url: $url');
 
     try {
       final uri = Uri.parse(url);
@@ -962,7 +975,7 @@ class DownloadHttpClient {
         if (file.existsSync()) file.deleteSync();
       }
     } catch (e) {
-      print('$_logTag Exception: $e');
+      _log('$_logTag Exception: $e');
       if (_bSupportResume) {
         handler.onFailure(file.path, serviceError);
       } else {
@@ -990,7 +1003,7 @@ class CoolHttpDnsManager {
   static void initHttpDns() {
     if (_initialized) return;
     _initialized = true;
-    print('CoolHttpDnsManager: initHttpDns (stub)');
+    _log('CoolHttpDnsManager: initHttpDns (stub)');
   }
 
   /// 通过 HTTPDNS 获取 IP（原版 getIpByHostAsync）
