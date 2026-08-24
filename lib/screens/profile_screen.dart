@@ -10,10 +10,19 @@ import '../tokens/design_tokens.dart';
 import '../widgets/sb_badge.dart';
 import '../widgets/sb_card.dart';
 
-// 金色系 token（待提取为全局 StarGold 组，docs/starbucks_tokens_draft.md §4）
-const Color _goldCream = Color(0xFFF2F0EB);   // 奶油画布（头部底色）
-const Color _goldAccent = Color(0xFFCBA258);   // 品牌金（仅成就）
-const Color _goldCoin = Color(0xFFCC8800);     // 酷币图标金
+// 功能图标色（无全局 token，保留在页面级）
+const Color _iconPurple = Color(0xFF9C27B0);   // 学习偏好图标
+const Color _iconBlue = Color(0xFF2196F3);     // 更多设置图标
+
+// 装备徽章色（无全局 token，保留在页面级）
+const Color _equipGoldBg = Color(0xFFFFE0B2);  // 金系装备底
+const Color _equipGoldFg = Color(0xFFCC8800);  // 金系装备前景
+const Color _equipBlueBg = Color(0xFFBBDEFB);  // 蓝系装备底
+const Color _equipBlueFg = Color(0xFF1976D2);  // 蓝系装备前景
+const Color _equipGreenBg = Color(0xFFE8F5E9); // 绿系装备底
+const Color _equipGreenFg = Color(0xFF388E3C); // 绿系装备前景
+const Color _equipPurpleBg = Color(0xFFF3E5F5); // 紫系装备底
+const Color _equipPurpleFg = Color(0xFF7B1FA2); // 紫系装备前景
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -75,7 +84,7 @@ class ProfileScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.only(top: 8, bottom: 24),
-      color: _goldCream, // 奶油画布纯色（移除金色渐变）
+      color: MistralColors.cream, // 奶油画布纯色（token：#F2F0EB）
       child: Column(
         children: [
           // 头像 + VIP 徽章（白框 + 绿色 VIP）
@@ -145,9 +154,9 @@ class ProfileScreen extends StatelessWidget {
             onTap: () => Navigator.pushNamed(context, AppearancePage.routeName),
           ),
           Divider(height: 1, color: skin.colors.divider),
-          _menuRow(Icons.tune, const Color(0xFF9C27B0), '学习偏好', skin), // 紫色保留（功能色）
+          _menuRow(Icons.tune, _iconPurple, '学习偏好', skin),
           Divider(height: 1, color: skin.colors.divider),
-          _menuRow(Icons.settings_outlined, const Color(0xFF2196F3), '更多设置', skin, // 蓝色保留（功能色）
+          _menuRow(Icons.settings_outlined, _iconBlue, '更多设置', skin,
             onTap: () => Navigator.pushNamed(context, MoreSettingsPage.routeName)),
         ]),
       ),
@@ -206,11 +215,11 @@ class _CoinCard extends StatelessWidget {
               Container(
                 width: 28,
                 height: 28,
-                decoration: const BoxDecoration(
-                  color: _goldAccent, // 品牌金 #CBA258（仅成就场景）
+                decoration: BoxDecoration(
+                  color: MistralColors.sunshine300, // 品牌金 #CBA258（token）
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.monetization_on, color: _goldCoin, size: 18), // 酷币图标金
+                child: Icon(Icons.monetization_on, color: _equipGoldFg, size: 18), // 酷币图标金
               ),
               const SizedBox(width: 8),
               Text('6,821', style: MistralTypography.heading4.copyWith(
@@ -249,14 +258,14 @@ class _EquipCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              // 装备徽章（4组功能色，docs/live_pages_hardcode_map.md §4 装备图标）
-              _equipIcon(const Color(0xFFFFE0B2), _goldCoin, Icons.auto_stories),   // 金系
+              // 装备徽章（4组功能色，页面级常量）
+              _equipIcon(_equipGoldBg, _equipGoldFg, Icons.auto_stories),
               const SizedBox(width: 6),
-              _equipIcon(const Color(0xFFBBDEFB), const Color(0xFF1976D2), Icons.menu_book), // 蓝系
+              _equipIcon(_equipBlueBg, _equipBlueFg, Icons.menu_book),
               const SizedBox(width: 6),
-              _equipIcon(const Color(0xFFE8F5E9), const Color(0xFF388E3C), Icons.headphones), // 绿系
+              _equipIcon(_equipGreenBg, _equipGreenFg, Icons.headphones),
               const SizedBox(width: 6),
-              _equipIcon(const Color(0xFFF3E5F5), const Color(0xFF7B1FA2), Icons.edit), // 紫系
+              _equipIcon(_equipPurpleBg, _equipPurpleFg, Icons.edit),
             ],
           ),
         ],
