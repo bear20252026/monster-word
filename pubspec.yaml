@@ -77,7 +77,6 @@ flutter:
   # 词库数据（gzip 压缩，首启解压到应用目录）
   assets:
     - assets/db/wordbook.db.gz
-    - assets/icons/
     - assets/wallpapers/
 
   # 字体（Mistral AI：Inter 无衬线 + Charter 衬线）
