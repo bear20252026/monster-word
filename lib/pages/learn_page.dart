@@ -3,7 +3,6 @@
 // 由账号4生成
 // 学习页：Mistral AI 设计风格
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
-import 'dart:ui';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,8 +10,6 @@ import 'package:provider/provider.dart';
 import '../engine/srs_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
-import '../data/wallpaper_data.dart';
-import '../state/wallpaper_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/animations.dart';
@@ -33,76 +30,30 @@ class _LearnPageState extends State<LearnPage> {
     final resp = context.responsive;
     final state = context.watch<LearningState>();
     final word = state.currentWord;
-    final wallpaper = context.watch<WallpaperState>().current;
 
     return Scaffold(
+      backgroundColor: skin.colors.pageBg, // 奶油画布（batch4c: 壁纸→cream canvas）
       body: word == null
-          ? const Center(child: Text('暂无单词'))
-          : Stack(
-              children: [
-                // 全屏壁纸背景
-                Positioned.fill(
-                  child: _buildWallpaperBg(wallpaper, skin),
-                ),
-                // 半透明遮罩
-                Positioned.fill(
-                  child: Container(color: Colors.black.withOpacity(0.15)),
-                ),
-                SafeArea(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: resp.contentWidth),
-                      child: Column(
-                        children: [
-                          _TopBar(skin: skin, state: state),
-                          Expanded(flex: 4, child: _WordArea(word: word, skin: skin, resp: resp)),
-                          Expanded(flex: 6, child: _QuizArea(word: word, state: state)),
-                        ],
-                      ),
-                    ),
+          ? Center(child: Text('暂无单词', style: TextStyle(color: skin.colors.text2)))
+          : SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: resp.contentWidth),
+                  child: Column(
+                    children: [
+                      _TopBar(skin: skin, state: state),
+                      Expanded(flex: 4, child: _WordArea(word: word, skin: skin, resp: resp)),
+                      Expanded(flex: 6, child: _QuizArea(word: word, state: state, skin: skin)),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-    );
-  }
-
-  Widget _buildWallpaperBg(dynamic wallpaper, SkinSystem skin) {
-    if (wallpaper.type == WallpaperType.image && wallpaper.assetPath != null) {
-      return Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(wallpaper.assetPath!),
-            fit: BoxFit.cover,
-            onError: (_, __) {},
-          ),
-        ),
-      );
-    }
-    if (wallpaper.type == WallpaperType.gradient && wallpaper.colors != null) {
-      return Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: wallpaper.colors!,
-            begin: wallpaper.begin ?? Alignment.topCenter,
-            end: wallpaper.end ?? Alignment.bottomCenter,
-          ),
-        ),
-      );
-    }
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [skin.colors.pageBg, skin.colors.cardBg],
-        ),
-      ),
     );
   }
 }
 
-/// 顶部导航栏
+/// 顶部导航栏（batch4c: 白色→token 颜色）
 class _TopBar extends StatelessWidget {
   final SkinSystem skin;
   final LearningState state;
@@ -112,6 +63,7 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final word = state.currentWord;
     final isFav = word != null && state.isFavorite(word.word);
+    final colors = skin.colors;
 
     return Container(
       height: AppSpacing.navH,
@@ -120,11 +72,11 @@ class _TopBar extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: Colors.white,
+            color: colors.text1,
             onPressed: () => Navigator.pop(context),
           ),
           Text('${state.currentIndex + 1}/${state.total}',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1)),
           const SizedBox(width: 8),
           Expanded(
             child: TweenAnimationBuilder<double>(
@@ -138,8 +90,8 @@ class _TopBar extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: value,
                   minHeight: 3,
-                  backgroundColor: Colors.white30,
-                  valueColor: const AlwaysStoppedAnimation(Colors.white),
+                  backgroundColor: colors.divider,
+                  valueColor: AlwaysStoppedAnimation(colors.accent),
                 ),
               ),
             ),
@@ -148,7 +100,7 @@ class _TopBar extends StatelessWidget {
           IconButton(
             icon: Icon(
               isFav ? Icons.star : Icons.star_border,
-              color: isFav ? Colors.amber : Colors.white70,
+              color: isFav ? const Color(0xFFFFB300) : colors.text2, // 金色仅收藏态
               size: 22,
             ),
             tooltip: isFav ? '取消收藏' : '收藏',
@@ -158,7 +110,7 @@ class _TopBar extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.more_horiz, size: 22),
-            color: Colors.white70,
+            color: colors.text2,
             onPressed: () {},
           ),
         ],
@@ -167,7 +119,7 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-/// 上半：单词 + 音标 + 发音按钮
+/// 上半：单词 + 音标 + 发音按钮（batch4c: 白色→token 颜色）
 class _WordArea extends StatelessWidget {
   final dynamic word;
   final SkinSystem skin;
@@ -176,6 +128,7 @@ class _WordArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = skin.colors;
     return Center(
       child: Padding(
         padding: const EdgeInsets.only(left: 60, right: 24),
@@ -188,10 +141,10 @@ class _WordArea extends StatelessWidget {
                 WordLookupPopup(
                   word: word.word,
                   child: Text(word.word,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 40,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                      color: colors.text1,
                       height: 1.1,
                     )),
                 ),
@@ -204,14 +157,14 @@ class _WordArea extends StatelessWidget {
                         'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2'));
                     } catch (_) {}
                   },
-                  child: const Icon(Icons.volume_up_outlined, color: Colors.white70, size: 28),
+                  child: Icon(Icons.volume_up_outlined, color: colors.text2, size: 28),
                 ),
               ],
             ),
             if (word.usPron.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text('/${word.usPron}/',
-                style: const TextStyle(fontSize: 14, color: Colors.white60)),
+                style: TextStyle(fontSize: 14, color: colors.text3)),
             ],
           ],
         ),
@@ -220,11 +173,12 @@ class _WordArea extends StatelessWidget {
   }
 }
 
-/// 下半：4选1 选错标红重选，选对标绿进字典详情页
+/// 下半：4选1 选错标红重选，选对标绿进字典详情页（batch4c: 星巴克样式）
 class _QuizArea extends StatefulWidget {
   final dynamic word;
   final LearningState state;
-  const _QuizArea({required this.word, required this.state});
+  final SkinSystem skin;
+  const _QuizArea({required this.word, required this.state, required this.skin});
 
   @override
   State<_QuizArea> createState() => _QuizAreaState();
@@ -305,6 +259,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
+    final colors = widget.skin.colors;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: context.responsive.pageMargin),
@@ -314,10 +269,10 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(_wrongIndex >= 0 ? '请再选出正确答案' : '请选择正确释义',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Colors.white60,
+                color: colors.text2,
               )),
             const SizedBox(height: 12),
             for (int i = 0; i < state.choices.length && i < 4; i++)
@@ -331,25 +286,26 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   Widget _buildChoice(int i) {
     final choice = widget.state.choices[i];
     final isWrong = i == _wrongIndex;
-    final isCorrect = i == _correctIndex; // P1d
+    final isCorrect = i == _correctIndex;
     final interpret = choice.interpret.toString();
+    final colors = widget.skin.colors;
 
-    // P1d: 三态颜色（绿/红/默认）
+    // batch4c: 三态颜色使用 ThemeVars token
     Color bgColor;
     Color borderColor;
     Color textColor;
     if (isCorrect) {
-      bgColor = const Color(0xFF4CAF50).withOpacity(0.35);
-      borderColor = const Color(0xFF4CAF50);
-      textColor = const Color(0xFF2E7D32);
+      bgColor = colors.quizCorrectBg;
+      borderColor = colors.quizCorrectText;
+      textColor = colors.quizCorrectText;
     } else if (isWrong) {
-      bgColor = const Color(0xFFE8A0A0).withOpacity(0.6);
-      borderColor = const Color(0xFFE8A0A0);
-      textColor = Colors.white;
+      bgColor = colors.quizWrongBg;
+      borderColor = colors.quizWrongText;
+      textColor = colors.quizWrongText;
     } else {
-      bgColor = Colors.white.withOpacity(0.25);
-      borderColor = Colors.white.withOpacity(0.3);
-      textColor = Colors.white;
+      bgColor = colors.cardBg;
+      borderColor = colors.divider;
+      textColor = colors.text1;
     }
 
     Widget tile = GestureDetector(
@@ -364,8 +320,15 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
               color: bgColor,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: borderColor, width: 0.5),
+              borderRadius: BorderRadius.circular(12), // batch4c: 12px 圆角（ContentCard 规格）
+              border: Border.all(color: borderColor, width: isCorrect || isWrong ? 1.5 : 0.5),
+              // batch4c: ContentCard 双层低透明度阴影
+              boxShadow: isCorrect || isWrong
+                  ? null // 答对/答错态不加阴影，靠颜色区分
+                  : const [
+                      BoxShadow(color: Color(0x24000000), blurRadius: 0.5, offset: Offset(0, 0)),
+                      BoxShadow(color: Color(0x3D000000), blurRadius: 1, offset: Offset(0, 1)),
+                    ],
             ),
             child: Center(
               child: Text(interpret,
@@ -390,9 +353,9 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
                 ),
                 child: FadeTransition(
                   opacity: _checkController,
-                  child: const Icon(
+                  child: Icon(
                     Icons.check_circle_outline,
-                    color: Color(0xFF2E7D32),
+                    color: colors.quizCorrectText,
                     size: 24,
                   ),
                 ),
