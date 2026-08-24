@@ -96,7 +96,7 @@ class SbModal extends StatelessWidget {
     return showDialog<T>(
       context: context,
       barrierDismissible: barrierDismissible,
-      barrierColor: Colors.black.withOpacity(0.55),
+      barrierColor: Colors.black.withValues(alpha: 0.55),
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -121,7 +121,7 @@ class SbModal extends StatelessWidget {
       context: context,
       backgroundColor: Colors.white,
       isScrollControlled: true,
-      barrierColor: Colors.black.withOpacity(0.55),
+      barrierColor: Colors.black.withValues(alpha: 0.55),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
