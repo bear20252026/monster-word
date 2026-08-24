@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 
 import '../data/wordbook_database.dart';
 import '../state/learning_state.dart';
-import '../theme/app_theme.dart';
 import '../theme/skin_system.dart';
 import 'learn_page.dart';
 import 'search_page.dart';
@@ -142,7 +141,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: selected ? colors.success : Colors.transparent,
+                        color: selected ? colors.accent : Colors.transparent,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
@@ -187,7 +186,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
             // ===== 底部工具栏（原版底部操作栏）=====
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colors.cardBg,
                 border: Border(top: BorderSide(color: colors.divider)),
               ),
               child: SafeArea(
@@ -284,9 +283,36 @@ class _LibItem extends StatelessWidget {
   final bool showDescription;
   const _LibItem({required this.book, this.showDescription = true});
 
+  // 三档绿（亮色模式）—— 星巴克品牌绿轮换
+  static const _coverColorsLight = [
+    Color(0xFF006241), // Starbucks Green
+    Color(0xFF00754A), // House Green
+    Color(0xFF1E3932), // 墨绿
+  ];
+
+  // 三档绿（深色模式：绿-3 提亮，避免与深色画布混淆）
+  static const _coverColorsDark = [
+    Color(0xFF006241),
+    Color(0xFF00754A),
+    Color(0xFF2b5148), // 墨绿提亮（替代 #1E3932）
+  ];
+
+  /// 按 book code hash 稳定分配三档绿
+  Color _coverColor(BuildContext context, String code) {
+    final index = code.hashCode.abs() % 3;
+    final isDark = context.skin.currentTheme.uiBrightness == Brightness.dark;
+    return isDark ? _coverColorsDark[index] : _coverColorsLight[index];
+  }
+
+  String _coverText() {
+    final name = book.name.replaceAll(RegExp(r'MonsterWord_'), '');
+    return name.length > 4 ? name.substring(0, 4) : name;
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.read<LearningState>();
+    final colors = context.skin.colors;
     final isLearning = state.currentBook?.id == book.id;
 
     return GestureDetector(
@@ -299,22 +325,18 @@ class _LibItem extends StatelessWidget {
       child: Container(
         height: 120,
         padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.dividerGrey)),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: colors.divider)),
         ),
         child: Row(
           children: [
-            // ===== 词书封面（原版 lib_fengmian，圆角 4dp）=====
+            // ===== 词书封面（星巴克风格：纯色底 + 白字，三档绿 hash 轮换）=====
             Container(
               width: 72,
               height: 88,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.mainBgTop, AppColors.mainBgBottom],
-                ),
-                borderRadius: BorderRadius.circular(4),
+                color: _coverColor(context, book.code),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
                 child: Text(
@@ -322,9 +344,11 @@ class _LibItem extends StatelessWidget {
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
@@ -339,10 +363,10 @@ class _LibItem extends StatelessWidget {
                       Expanded(
                         child: Text(
                           book.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.black87,
+                            color: colors.text1,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -350,11 +374,11 @@ class _LibItem extends StatelessWidget {
                       ),
                       // 正在学习标签（原版 right_tag）
                       if (isLearning)
-                        const Text(
+                        Text(
                           '正在学习',
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.successGreen,
+                            color: colors.success,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -364,7 +388,7 @@ class _LibItem extends StatelessWidget {
                   if (showDescription)
                     Text(
                       '考研核心高频 | 2026',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                      style: TextStyle(fontSize: 12, color: colors.text3),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -374,15 +398,15 @@ class _LibItem extends StatelessWidget {
                     children: [
                       Text(
                         '单词量',
-                        style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                        style: TextStyle(fontSize: 12, color: colors.text3),
                       ),
                       const SizedBox(width: 5),
                       Text(
                         '${book.wordCount}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textTertiary,
+                          color: colors.text3,
                         ),
                       ),
                     ],
@@ -394,11 +418,6 @@ class _LibItem extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _coverText() {
-    final name = book.name.replaceAll(RegExp(r'MonsterWord_'), '');
-    return name.length > 4 ? name.substring(0, 4) : name;
   }
 }
 
