@@ -18,6 +18,7 @@ import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/text_generate_effect.dart';
 import '../widgets/box_reveal.dart';
+import '../hooks/responsive.dart';
 
 class WordDetailPage extends StatefulWidget {
   const WordDetailPage({super.key});
@@ -125,6 +126,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
+    final resp = context.responsive;
     final state = context.watch<LearningState>();
     final word = _resolveTargetWord(state);
 
@@ -162,7 +164,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
             // 内容
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(resp.pageMargin),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
