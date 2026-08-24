@@ -111,34 +111,28 @@ class WallpaperData {
     end: Alignment.bottomCenter,
   );
 
+  // 以下 3 张图片壁纸源文件缺失（forest/city/night.jpg 不存在于 assets/wallpapers/），
+  // 降级为纯色壁纸使用原有 fallback 色值，消除 assetPath 悬空引用的运行时风险。
+  // 待"壁纸系统下线"重构任务统一清理。
   static const forestWallpaper = WallpaperItem(
     id: 'forest',
     name: '森林',
-    type: WallpaperType.image,
-    assetPath: 'assets/wallpapers/forest.jpg',
-    colors: [Color(0xFF81C784), Color(0xFF4CAF50)], // fallback
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
+    type: WallpaperType.solid,
+    colors: [Color(0xFF81C784)],
   );
 
   static const cityWallpaper = WallpaperItem(
     id: 'city',
     name: '城市',
-    type: WallpaperType.image,
-    assetPath: 'assets/wallpapers/city.jpg',
-    colors: [Color(0xFF90A4AE), Color(0xFF607D8B)], // fallback
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
+    type: WallpaperType.solid,
+    colors: [Color(0xFF90A4AE)],
   );
 
   static const nightWallpaper = WallpaperItem(
     id: 'night',
     name: '夜空',
-    type: WallpaperType.image,
-    assetPath: 'assets/wallpapers/night.jpg',
-    colors: [Color(0xFF263238), Color(0xFF37474F)], // fallback
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
+    type: WallpaperType.solid,
+    colors: [Color(0xFF263238)],
   );
 
   /// 全部可用壁纸
