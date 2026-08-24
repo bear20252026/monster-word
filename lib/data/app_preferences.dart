@@ -346,6 +346,18 @@ class UserInfoBean {
 // ── 用户信息存取 ──
 
 extension UserInfoPrefs on AppPreferences {
+  /// 同步获取用户信息（返回缓存，可能为空）
+  UserInfoBean getUserInfoSync() {
+    final jsonStr = getString(_userInfoKey);
+    if (jsonStr.isEmpty) return UserInfoBean();
+    try {
+      return UserInfoBean.fromJson(
+          jsonDecode(jsonStr) as Map<String, dynamic>);
+    } catch (_) {
+      return UserInfoBean();
+    }
+  }
+
   /// 获取用户信息
   Future<UserInfoBean> getUserInfo() async {
     final jsonStr = getString(_userInfoKey);

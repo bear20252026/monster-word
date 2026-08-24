@@ -21,7 +21,7 @@ class PrefConfig {
   PrefConfig._();
 
   /// 当前应用版本号（原版 PublicConstants.appVersion）
-  static String appVersion = '';
+  static String appVersion = '1.0.0';
 
   /// 当前登录用户 ID（原版 PublicConstants.userId）
   static String userId = '';

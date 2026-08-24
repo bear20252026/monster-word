@@ -1,12 +1,13 @@
 // 字典详情页：单词详解（释义+音标+例句+常见用法+词根+形近词+笔记）
 // 从学习页答题后进入，看完后点击"下一词"返回学习
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
 import '../data/fav_sentence_dao.dart';
 import '../data/note_database.dart';
+import '../data/wordbook_database.dart' show Word;
 import '../models/sentence_models.dart';
 import '../models/word_note.dart';
 import '../state/learning_state.dart';
@@ -25,6 +26,14 @@ class _WordDetailPageState extends State<WordDetailPage> {
   List<WordNote> _notes = [];
   bool _notesLoaded = false;
 
+  /// 解析要展示的单词：路由参数优先（从词书/收藏/列表点入时显示所点的词），
+  /// 否则回退到当前学习词。修复此前所有入口都显示 currentWord 的问题。
+  Word? _resolveTargetWord(LearningState? state) {
+    final arg = ModalRoute.of(context)?.settings.arguments;
+    if (arg is Word) return arg;
+    return state?.currentWord ?? context.read<LearningState>().currentWord;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -32,8 +41,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
   }
 
   Future<void> _loadNotes() async {
-    final state = context.read<LearningState>();
-    final word = state.currentWord;
+    final word = _resolveTargetWord(null);
     if (word == null) return;
 
     try {
@@ -47,8 +55,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
   }
 
   Future<void> _addNote() async {
-    final state = context.read<LearningState>();
-    final word = state.currentWord;
+    final word = _resolveTargetWord(null);
     if (word == null) return;
 
     final controller = TextEditingController();
@@ -103,7 +110,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final state = context.watch<LearningState>();
-    final word = state.currentWord;
+    final word = _resolveTargetWord(state);
 
     if (word == null) return const Scaffold(body: Center(child: Text('暂无单词')));
 
@@ -355,8 +362,15 @@ class _WordDetailPageState extends State<WordDetailPage> {
                 onTap: () async {
                   try {
                     final player = AudioPlayer();
-                    await player.play(UrlSource(
-                      'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2'));
+                    await player.setUrl(
+                      'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2');
+                    await player.play();
+                    // 播放完成后释放资源
+                    player.processingStateStream.listen((state) {
+                      if (state == ProcessingState.completed) {
+                        player.dispose();
+                      }
+                    });
                   } catch (e) {
                     debugPrint('Audio playback error: $e');
                   }

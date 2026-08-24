@@ -2,6 +2,7 @@
 // 已接入 SkinSystem 主题
 import 'package:flutter/material.dart';
 
+import '../data/app_preferences.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import 'message_page.dart';
@@ -152,7 +153,10 @@ class MySpacePage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        Text('44459754', style: MistralTypography.bodyMd.copyWith(color: skin.text2)),
+        Text(
+          AppPreferences().getUserInfoSync().nickname,
+          style: MistralTypography.bodyMd.copyWith(color: skin.text2),
+        ),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

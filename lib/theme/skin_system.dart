@@ -1,5 +1,6 @@
 // Monster Word 皮肤系统 — 还原 v3.2 原版配色
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/app_preferences.dart';
 
 class ThemeVars {
@@ -246,6 +247,11 @@ class SkinSystem extends ChangeNotifier {
   String _themeId = 'bright';
   bool _followSystem = false;
 
+  /// 用户选择的字体覆盖（null = 默认 Inter）。持久化走独立的 SharedPreferences 键，
+  /// 与主题偏好解耦。
+  String? _fontFamily;
+  static const String _kFontPrefKey = 'app.font_family';
+
   String get themeId => _themeId;
   bool get followSystem => _followSystem;
   ThemePreset get currentTheme => themes[_themeId]!;
@@ -265,7 +271,49 @@ class SkinSystem extends ChangeNotifier {
       _themeId = 'bright';
       _followSystem = false;
     }
+    // 异步恢复字体偏好（构造器是同步的，加载后通知刷新）
+    _loadFontPreference();
   }
+
+  Future<void> _loadFontPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_kFontPrefKey);
+      if (saved != _fontFamily && mounted) {
+        _fontFamily = saved;
+        notifyListeners();
+      }
+    } catch (_) {
+      // 测试环境无插件时静默忽略
+    }
+  }
+
+  /// 当前字体覆盖（null = 使用默认 Inter）
+  String? get fontFamilyOverride => _fontFamily;
+
+  /// 供 MaterialApp.theme 使用的实际字体族：'system' 视为平台默认（返回 null）
+  String? get effectiveFontFamily =>
+      (_fontFamily == null || _fontFamily == 'system') ? null : _fontFamily;
+
+  /// 设置字体覆盖；传 null 恢复默认。可选值见 appearance_page 的字体选择对话框。
+  void setFontFamily(String? family) {
+    if (_fontFamily == family) return;
+    _fontFamily = family;
+    notifyListeners();
+    // fire-and-forget 持久化
+    SharedPreferences.getInstance()
+        .then((p) {
+          if (family == null) {
+            return p.remove(_kFontPrefKey);
+          } else {
+            return p.setString(_kFontPrefKey, family);
+          }
+        })
+        .catchError((e) => false);
+  }
+
+  /// ChangeNotifier 挂载状态（测试环境中可能未绑定）
+  bool get mounted => true;
 
   void setFollowSystem(bool v) {
     if (_followSystem == v) return;
@@ -309,7 +357,8 @@ class SkinProvider extends InheritedWidget {
   @override
   bool updateShouldNotify(SkinProvider old) =>
       skin.effectiveThemeId != old.skin.effectiveThemeId ||
-      skin.followSystem != old.skin.followSystem;
+      skin.followSystem != old.skin.followSystem ||
+      skin.fontFamilyOverride != old.skin.fontFamilyOverride;
 }
 
 extension SkinExt on BuildContext {

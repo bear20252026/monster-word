@@ -14,6 +14,7 @@ import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/animations.dart';
 import '../widgets/glass_widgets.dart';
+import '../widgets/session_exit_guard.dart';
 import '../widgets/word_dictionary_popup.dart';
 
 class LearnSession extends StatefulWidget {
@@ -74,7 +75,10 @@ class _LearnSessionState extends State<LearnSession>
       return const Scaffold(body: Center(child: Text('暂无单词')));
     }
 
-    return Scaffold(
+    // 返回保护：系统返回需确认，防止误触丢失学习进度
+    return SessionExitGuard(
+      subject: '本次学习',
+      child: Scaffold(
       body: GlassBg(
         child: SafeArea(
           child: Column(
@@ -223,6 +227,7 @@ class _LearnSessionState extends State<LearnSession>
             ],
           ),
         ),
+      ),
       ),
     );
   }

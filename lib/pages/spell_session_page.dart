@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/session_exit_guard.dart';
 
 class SpellSessionPage extends StatefulWidget {
   const SpellSessionPage({super.key});
@@ -164,7 +165,10 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
       );
     }
 
-    return Scaffold(
+    // 返回保护：系统返回需确认，防止误触丢失拼写进度
+    return SessionExitGuard(
+      subject: '拼写练习',
+      child: Scaffold(
       backgroundColor: skin.colors.pageBg,
       body: SafeArea(
         child: Column(
@@ -290,6 +294,7 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

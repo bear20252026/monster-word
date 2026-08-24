@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 
 import '../engine/fsrs5_engine.dart';
@@ -610,12 +611,34 @@ class _WordMachinePageState extends State<WordMachinePage>
     final state = context.read<LearningState>();
     final word = state.currentWord;
     if (word == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('🔊 ${word.word}'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    // 使用 TTS 或在线音频播放
+    _playAudio(word.word);
+  }
+
+  /// 播放单词音频（在线发音）
+  Future<void> _playAudio(String wordText) async {
+    try {
+      final player = AudioPlayer();
+      await player.setUrl(
+        'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(wordText)}&type=2');
+      await player.play();
+      // 播放完成后释放资源
+      player.processingStateStream.listen((state) {
+        if (state == ProcessingState.completed) {
+          player.dispose();
+        }
+      });
+    } catch (e) {
+      debugPrint('Audio playback error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('🔊 $wordText'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
   }
 
   /// 构建单词详情面板（可展开/收起）

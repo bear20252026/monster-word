@@ -2,13 +2,13 @@
 // batch4a 改造：金色渐变→奶油纯色，硬编码→token，卡片→SbCard
 import 'package:flutter/material.dart';
 
+import '../data/app_preferences.dart';
 import '../hooks/responsive.dart';
 import '../pages/appearance_page.dart';
 import '../pages/more_settings_page.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../tokens/func_colors.dart';
-import '../widgets/sb_badge.dart';
 import '../widgets/sb_card.dart';
 
 // 功能图标色（使用 FuncColors token）
@@ -128,14 +128,10 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // 用户 ID
-          Text('44459754',
-            style: MistralTypography.heading4.copyWith(color: skin.colors.text1)),
-          const SizedBox(height: 10),
-          // 会员状态（SbBadge 金色胶囊）
-          SbBadge(
-            text: '成为终身大会员 1379 天',
-            icon: Icons.chevron_right,
+          // 用户 ID（用户可自定义）
+          Text(
+            AppPreferences().getUserInfoSync().nickname,
+            style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
           ),
         ],
       ),

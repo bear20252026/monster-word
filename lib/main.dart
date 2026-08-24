@@ -30,6 +30,7 @@ import 'pages/personal_stereo_page.dart';
 import 'pages/play_order_page.dart';
 import 'pages/review_page.dart';
 import 'pages/reviewing_words_page.dart';
+import 'pages/scare_coin_history_page.dart';
 import 'pages/search_page.dart';
 import 'pages/sentence_detail_page.dart';
 import 'pages/sentence_quiz_page.dart';
@@ -179,6 +180,7 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
             // effectiveUiBrightness 正确驱动 ColorScheme。
             theme: ThemeData(
               brightness: skin.effectiveUiBrightness,
+              fontFamily: skin.effectiveFontFamily, // 用户字体选择（null=默认 Inter）
               scaffoldBackgroundColor: skin.colors.pageBg,
               colorScheme: ColorScheme.fromSeed(
                 seedColor: skin.colors.accent,
@@ -241,6 +243,7 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
       case '/my_space': return const MySpacePage();
       case '/dashboard': return const DashboardPage();
       case '/settings': return const SettingsPage();
+      case '/scare_coin_history': return const ScareCoinHistoryPage();
       case '/search': return const SearchPage();
       case '/splash': return const SplashPage();
       case '/login': return const LoginPage();

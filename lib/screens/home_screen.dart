@@ -30,7 +30,14 @@ class HomeScreen extends StatelessWidget {
     final state = context.watch<LearningState>();
 
     // 方案C：奶油画布，移除壁纸系统
-    return Container(
+    // 下滑查词：在首页任意位置向下滑动打开查词页（提示卡也可直接点击）
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onVerticalDragEnd: (details) {
+        final v = details.primaryVelocity ?? 0;
+        if (v > 160) Navigator.pushNamed(context, SearchPage.routeName);
+      },
+      child: Container(
       color: skin.colors.pageBg,
       child: Stack(
         children: [
@@ -74,9 +81,10 @@ class HomeScreen extends StatelessWidget {
             top: MediaQuery.of(context).size.height * 0.3,
             left: MediaQuery.of(context).size.width * 0.15,
             right: MediaQuery.of(context).size.width * 0.15,
-            child: _buildSwipeHintOverlay(skin),
+            child: _buildSwipeHintOverlay(context, skin),
           ),
         ],
+      ),
       ),
     );
   }
@@ -165,9 +173,11 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// 下滑查词提示覆盖层内容（含手机插图模拟）
-  Widget _buildSwipeHintOverlay(SkinSystem skin) {
-    return SbCard(
+  /// 下滑查词提示覆盖层内容（含手机插图模拟）；点击提示卡直接打开查词
+  Widget _buildSwipeHintOverlay(BuildContext context, SkinSystem skin) {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, SearchPage.routeName),
+      child: SbCard(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -221,6 +231,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

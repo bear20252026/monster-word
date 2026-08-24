@@ -73,6 +73,45 @@ class LearningState extends ChangeNotifier {
   Word? get currentWord =>
       _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
 
+  // 学习进度持久化
+  static const _currentBookPrefKey = 'current_book_v1';
+  static const _currentIndexPrefKey = 'current_index_v1';
+  static const _queueSnapshotPrefKey = 'queue_snapshot_v1';
+
+  /// 保存当前学习进度
+  Future<void> _saveProgress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_currentBook != null) {
+        await prefs.setString(_currentBookPrefKey, _currentBook!.id.toString());
+        await prefs.setInt(_currentIndexPrefKey, _currentIndex);
+        // 保存队列快照（单词ID列表）
+        final queueIds = _queue.map((w) => w.id).toList();
+        await prefs.setString(_queueSnapshotPrefKey, jsonEncode(queueIds));
+      }
+    } catch (e) {
+      debugPrint('Save progress error: $e');
+    }
+  }
+
+  /// 加载上次的学习进度
+  Future<void> _loadProgress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final bookId = prefs.getString(_currentBookPrefKey);
+      if (bookId != null) {
+        _currentIndex = prefs.getInt(_currentIndexPrefKey) ?? 0;
+        final queueStr = prefs.getString(_queueSnapshotPrefKey);
+        if (queueStr != null) {
+          // 队列将在 loadBook 时重建，此处仅保存快照标记
+        }
+      }
+    } catch (e) {
+      debugPrint('Load progress error: $e');
+    }
+  }
+
+  /// 构造函数：加载所有持久化数据
   LearningState() {
     _loadCards();
     _loadFavorites();
@@ -80,6 +119,7 @@ class LearningState extends ChangeNotifier {
     _loadDailyStats();
     _loadActiveDates();
     _loadDailyNewWords();
+    _loadProgress();
   }
 
   Future<void> _loadDailyNewWords() async {
@@ -350,6 +390,7 @@ class LearningState extends ChangeNotifier {
     _leitnerEngine.init(_processQueue);
     _regenerateChoices();
     notifyListeners();
+    _saveProgress();
   }
 
   /// 翻卡片（显示答案）
@@ -485,6 +526,7 @@ class LearningState extends ChangeNotifier {
     _showAnswer = false;
     _regenerateChoices();
     notifyListeners();
+    _saveProgress();
   }
 
   /// 上一个单词

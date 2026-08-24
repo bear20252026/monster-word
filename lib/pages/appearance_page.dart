@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../hooks/responsive.dart';
+import '../pages/immersive_swipe_page.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -46,11 +47,11 @@ class _AppearancePageState extends State<AppearancePage> {
                     // 跟随系统开关
                     _buildFollowSystemRow(skin),
                     const SizedBox(height: AppleSpacing.md),
-                    // 风格字体
-                    _buildSettingRow(skin, '风格字体', '现代简约'),
+                    // 风格字体（可切换，全局生效）
+                    _buildFontRow(skin),
                     const SizedBox(height: AppleSpacing.md),
-                    // 沉浸场景
-                    _buildSettingRow(skin, '沉浸场景', '未开启'),
+                    // 沉浸场景（点击查看使用方法并前往体验）
+                    _buildImmersiveRow(skin),
                     const SizedBox(height: AppleSpacing.xxl),
                   ],
                 ),
@@ -264,23 +265,130 @@ class _AppearancePageState extends State<AppearancePage> {
     );
   }
 
-  /// 设置行
-  Widget _buildSettingRow(SkinSystem skin, String title, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+  static const Map<String, String?> _fontChoices = {
+    '现代简约（默认）': null, // Inter
+    '经典衬线': 'Charter', // 衬线阅读体
+    '系统字体': 'system', // 跟随平台
+  };
+
+  /// 风格字体行：点击弹出选择对话框，全局生效并持久化
+  Widget _buildFontRow(SkinSystem skin) {
+    final current = skin.fontFamilyOverride;
+    final currentLabel = _fontChoices.entries
+        .firstWhere((e) => e.value == current,
+            orElse: () => _fontChoices.entries.first)
+        .key;
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.xl),
+      onTap: () => _showFontDialog(context, skin),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: skin.colors.cardBg,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text('风格字体', style: TextStyle(fontSize: 16, color: skin.colors.text1)),
+            ),
+            Text(currentLabel, style: TextStyle(fontSize: 14, color: skin.colors.text3)),
+            const SizedBox(width: AppleSpacing.xxs),
+            Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
+          ],
+        ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(title, style: TextStyle(fontSize: 16, color: skin.colors.text1)),
+    );
+  }
+
+  void _showFontDialog(BuildContext context, SkinSystem skin) {
+    final current = skin.fontFamilyOverride;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('选择风格字体'),
+        children: _fontChoices.entries.map((entry) {
+          return RadioListTile<String?>(
+            value: entry.value,
+            groupValue: current,
+            title: Text(entry.key),
+            activeColor: skin.colors.accent,
+            onChanged: (_) {
+              skin.setFontFamily(entry.value);
+              Navigator.pop(ctx);
+            },
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  /// 沉浸场景行：点击弹窗说明使用方法，可直接前往体验
+  Widget _buildImmersiveRow(SkinSystem skin) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.xl),
+      onTap: () => _showImmersiveSheet(skin),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: skin.colors.cardBg,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text('沉浸场景', style: TextStyle(fontSize: 16, color: skin.colors.text1)),
+            ),
+            Text('点击体验', style: TextStyle(fontSize: 14, color: skin.colors.text3)),
+            const SizedBox(width: AppleSpacing.xxs),
+            Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showImmersiveSheet(SkinSystem skin) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: skin.colors.cardBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('沉浸场景',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: skin.colors.text1)),
+              const SizedBox(height: 12),
+              Text(
+                '全屏滑动式背单词模式：整词卡片左右滑动作答，无界面干扰，'
+                '适合快速过词。\n\n入口：课程页 → 「沉浸背单词」，或点击下方按钮直接体验。',
+                style: TextStyle(fontSize: 14, height: 1.6, color: skin.colors.text2),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(backgroundColor: skin.colors.accent),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.pushNamed(context, ImmersiveSwipePage.routeName);
+                  },
+                  icon: const Icon(Icons.swipe_up_alt),
+                  label: const Text('立即体验'),
+                ),
+              ),
+            ],
           ),
-          Text(value, style: TextStyle(fontSize: 14, color: skin.colors.text3)),
-          const SizedBox(width: AppleSpacing.xxs),
-          Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
-        ],
+        ),
       ),
     );
   }
