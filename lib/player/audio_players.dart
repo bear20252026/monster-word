@@ -486,7 +486,7 @@ class SentenceAudioPlayer {
         return;
       }
       // 有 listener 时检查是否应该播放
-      if (_sentenceListener!.checkWhetherPlay(_currentUrl)) {
+      if (_sentenceListener?.checkWhetherPlay(_currentUrl) ?? true) { // null 时默认播放（原行为）
         _audioPlayer.stop();
         _audioPlayer.playFile(file, speed: speed);
       }

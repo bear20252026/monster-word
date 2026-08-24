@@ -106,13 +106,13 @@ class UserDatabase {
       limit: limit,
       offset: offset,
     );
-    return rows.map((row) => row['word_id'] as int).toList();
+    return rows.map((row) => (row['word_id'] as int?) ?? 0).toList();
   }
 
   /// 获取收藏数量
   Future<int> getFavoriteCount() async {
     final result = await db.rawQuery('SELECT COUNT(*) as count FROM favorites');
-    return result.first['count'] as int;
+    return (result.isNotEmpty ? result.first['count'] : 0) as int;
   }
 
   /// 切换收藏状态
