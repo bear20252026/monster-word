@@ -9,10 +9,25 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+
+/// 移动端音频会话初始化（确保手机能正常发音）
+Future<void> initMobileAudioSession() async {
+  if (Platform.isIOS || Platform.isAndroid) {
+    try {
+      // just_audio 会自动处理音频会话，但我们需要确保不被系统静音
+      final player = AudioPlayer();
+      await player.setVolume(1.0);
+      await player.setSkipSilenceEnabled(false);
+    } catch (e) {
+      debugPrint('initMobileAudioSession error: $e');
+    }
+  }
+}
 
 // ============================================================
 // 接口层（翻译自 MediaPlayStateListener.java + PlayAudioListener.java）
@@ -87,41 +102,52 @@ class BBAudioPlayer {
   bool _lock = false;
 
   BBAudioPlayer() {
-    _player.onPlayerStateChanged.listen((state) {
+    // 监听播放状态变化
+    _player.playerStateStream.listen((playerState) {
       if (_currentFileName.isEmpty) return;
-      switch (state) {
-        case PlayerState.playing:
-          playStateListener?.onPlayStart(_currentFileName);
-        case PlayerState.paused:
-          playStateListener?.onPlayPause(_currentFileName);
-        case PlayerState.completed:
-          playStateListener?.onPlayComplete(_currentFileName);
-        case PlayerState.stopped:
-          playStateListener?.onPlayPause(_currentFileName);
-        case PlayerState.disposed:
-          break;
+      if (playerState.playing) {
+        playStateListener?.onPlayStart(_currentFileName);
+      } else {
+        playStateListener?.onPlayPause(_currentFileName);
       }
     });
-    _player.onPlayerComplete.listen((_) {
-      playStateListener?.onPlayComplete(_currentFileName);
+    // 监听播放完成
+    _player.processingStateStream.listen((state) {
+      if (state == ProcessingState.completed) {
+        playStateListener?.onPlayComplete(_currentFileName);
+      }
     });
   }
 
-  /// 播放 URL（原版 play）
+  /// 播放 URL（原版 play）- 带移动端错误处理
   Future<void> play(String url) async {
     if (_lock) return;
     _currentFileName = url;
     playStateListener?.onPlayStart(url);
-    await _player.play(UrlSource(url));
+    try {
+      await _player.stop(); // 先停止当前播放
+      await _player.setUrl(url);
+      await _player.play();
+    } catch (e) {
+      debugPrint('BBAudioPlayer.play error: $e (url: $url)');
+      playStateListener?.onPlayError(url);
+    }
   }
 
-  /// 播放本地文件（原版 play(File, float)）
+  /// 播放本地文件（原版 play(File, float)）- 带移动端错误处理
   Future<void> playFile(File file, {double speed = 1.0}) async {
     if (_lock) return;
     _currentFileName = p.basename(file.path);
     playStateListener?.onPlayStart(_currentFileName);
-    await _player.setPlaybackRate(speed);
-    await _player.play(DeviceFileSource(file.path));
+    try {
+      await _player.stop();
+      await _player.setSpeed(speed);
+      await _player.setFilePath(file.path);
+      await _player.play();
+    } catch (e) {
+      debugPrint('BBAudioPlayer.playFile error: $e');
+      playStateListener?.onPlayError(_currentFileName);
+    }
   }
 
   /// 播放本地文件路径
@@ -148,7 +174,7 @@ class BBAudioPlayer {
   }
 
   /// 是否正在播放
-  bool get isPlaying => _player.state == PlayerState.playing;
+  bool get isPlaying => _player.playerState.playing;
 
   /// 锁定播放（原版 setLock）
   void setLock(bool lock) {

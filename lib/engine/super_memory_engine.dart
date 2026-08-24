@@ -106,17 +106,44 @@ class SuperMemoryEngine extends BBCoreEngine {
   @override
   List<WordChoicePair> getListChoicesRandom() => _choicesRandom;
 
+  /// 更新随机选项池（始终确保4个选项：1个正确 + 3个干扰项）
   @override
   void updateListChoicesRandom() {
-    final pool = <WordChoicePair>[];
-    final seen = <String>{};
+    final current = currentWord();
+    if (current == null || current.interpret.isEmpty) {
+      _choicesRandom = [];
+      return;
+    }
+
+    // 正确选项
+    final correctPair = WordChoicePair(current.word, current.interpret);
+
+    // 构建干扰项池（排除当前单词）
+    final seen = <String>{current.word};
+    final distractorPool = <WordChoicePair>[];
     for (final w in [...reviewList, ...alreadyReviewed]) {
-      if (w.interpret.isNotEmpty && !seen.contains(w.interpret)) {
-        seen.add(w.interpret);
-        pool.add(WordChoicePair(w.word, w.interpret));
+      if (w.interpret.isNotEmpty && !seen.contains(w.word)) {
+        seen.add(w.word);
+        distractorPool.add(WordChoicePair(w.word, w.interpret));
       }
     }
-    _choicesRandom = shuffleList(pool);
+
+    // 随机选取 3 个干扰项
+    distractorPool.shuffle();
+    final distractors = distractorPool.take(3).toList();
+
+    // 如果干扰项不足3个，用通用释义填充
+    while (distractors.length < 3) {
+      distractors.add(WordChoicePair(
+        'option_${distractors.length}',
+        '释义 ${distractors.length + 1}',
+      ));
+    }
+
+    // 组合4个选项并随机打乱顺序
+    final allChoices = [correctPair, ...distractors];
+    allChoices.shuffle();
+    _choicesRandom = allChoices;
   }
 
   @override
