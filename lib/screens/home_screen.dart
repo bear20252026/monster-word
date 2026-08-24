@@ -1,6 +1,5 @@
 // Monster Word — 首页（星巴克改造 batch4a）
 // 方案C：画布归品牌，移除壁纸系统，奶油画布 + ContentCard 白卡
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -60,31 +59,24 @@ class HomeScreen extends StatelessWidget {
                 // Learn / Review 入口卡（SbCard 替代 GlassEntryCard）
                 Padding(
                   padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final double cardW = math.min(
-                        resp.glassCardWidth,
-                        (constraints.maxWidth - 12) / 2,
-                      );
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _EntryCard(
-                            title: 'Learn',
-                            count: state.total > 0 ? state.total : 0,
-                            width: cardW,
-                            onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
-                          ),
-                          const SizedBox(width: 12),
-                          _EntryCard(
-                            title: 'Review',
-                            count: state.dueCount,
-                            width: cardW,
-                            onTap: () => showReviewDialog(context),
-                          ),
-                        ],
-                      );
-                    },
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _EntryCard(
+                          title: 'Learn',
+                          count: state.total > 0 ? state.total : 0,
+                          onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _EntryCard(
+                          title: 'Review',
+                          count: state.dueCount,
+                          onTap: () => showReviewDialog(context),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -227,13 +219,11 @@ class HomeScreen extends StatelessWidget {
 class _EntryCard extends StatelessWidget {
   final String title;
   final int count;
-  final double width;
   final VoidCallback onTap;
 
   const _EntryCard({
     required this.title,
     required this.count,
-    required this.width,
     required this.onTap,
   });
 
@@ -243,21 +233,18 @@ class _EntryCard extends StatelessWidget {
     return SbCard(
       onTap: onTap,
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      child: SizedBox(
-        width: width,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: skin.colors.text1)),
-            const SizedBox(height: 8),
-            Text('$count',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w300, color: skin.colors.accent)),
-            const SizedBox(height: 4),
-            Text(title == 'Learn' ? '待学' : '待复习',
-              style: TextStyle(fontSize: 12, color: skin.colors.text3)),
-          ],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(title,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: skin.colors.text1)),
+          const SizedBox(height: 8),
+          Text('$count',
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w300, color: skin.colors.accent)),
+          const SizedBox(height: 4),
+          Text(title == 'Learn' ? '待学' : '待复习',
+            style: TextStyle(fontSize: 12, color: skin.colors.text3)),
+        ],
       ),
     );
   }
