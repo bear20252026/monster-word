@@ -33,7 +33,8 @@ class PhoneticText extends StatelessWidget {
           TextStyle(
             fontSize: 14,
             color: skin.text2,
-            fontFamily: 'phonetic', // 音标字体
+            // 音标字体：原 'phonetic' family 未在 pubspec 注册，Charter 又缺 ŋ/ˈ/ˌ/ː 等 IPA 字符，
+            // 故不指定 fontFamily，回退主题默认字体（Inter 对 IPA 覆盖完整）。
           ),
     );
   }
