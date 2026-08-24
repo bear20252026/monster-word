@@ -4,6 +4,7 @@
 // 输入与交互类组件集合
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
 import 'animations.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -11,7 +12,7 @@ import 'animations.dart';
 // ─────────────────────────────────────────────────────────────
 const Color kSwitchActiveColor = Color(0xFFE8913A);
 const Color kSwitchInactiveColor = Color(0xFFE0E0E0);
-const Color kSwitchThumbColor = Colors.white;
+const Color kSwitchThumbColor = AppColors.white100;
 
 // ─────────────────────────────────────────────────────────────
 // FakeSwitch — 自定义开关（移植自 BBFakeSwitch.java）

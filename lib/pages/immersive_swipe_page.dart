@@ -135,7 +135,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: skin.colors.accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white100,
                 ),
                 child: const Text('返回'),
               ),
@@ -233,7 +233,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
         border: Border.all(color: borderColor, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: MistralColors.black15,
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),

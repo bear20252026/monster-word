@@ -176,7 +176,7 @@ class _AppearancePageState extends State<AppearancePage> {
                       height: 10,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: AppColors.white100.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(AppRadius.xs),
                       ),
                     ),

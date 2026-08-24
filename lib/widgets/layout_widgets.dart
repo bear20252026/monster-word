@@ -5,6 +5,7 @@
 // 文件：ShadowLinearLayout, NewLinearLayout, SwipeLinearLayout, DragDownFrameLayout, SimpleSlidingDownView
 
 import 'package:flutter/material.dart';
+import '../tokens/design_tokens.dart';
 import 'animations.dart';
 
 /// 阴影线性布局（翻译自 ShadowLinearLayout.dart）
@@ -20,8 +21,8 @@ class ShadowContainer extends StatelessWidget {
   const ShadowContainer({
     super.key,
     required this.child,
-    this.shadowColor = Colors.black26,
-    this.bgColor = Colors.white,
+    this.shadowColor = MistralColors.black26,
+    this.bgColor = AppColors.white100,
     this.shadowRadius = 4.0,
     this.shadowOffsetY = 2.0,
     this.padding,

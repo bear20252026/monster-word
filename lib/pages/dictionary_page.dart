@@ -453,7 +453,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
               border: Border.all(color: skin.divider, width: 0.5),
             ),
             child: const Center(
-              child: CircularProgressIndicator(color: Colors.white54),
+              child: CircularProgressIndicator(color: MistralColors.white54),
             ),
           );
         }

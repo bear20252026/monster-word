@@ -404,7 +404,7 @@ class _LoginPageState extends State<LoginPage>
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: MistralColors.primary,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.white100,
                       disabledBackgroundColor: MistralColors.muted,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -416,7 +416,7 @@ class _LoginPageState extends State<LoginPage>
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: AppColors.white100,
                             ),
                           )
                         : const Text('登录'),

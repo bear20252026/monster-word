@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/func_colors.dart';
+import '../tokens/design_tokens.dart';
 import 'my_fav_page.dart';
 
 class MyContentPage extends StatelessWidget {
@@ -234,7 +235,7 @@ class _FeatureCard extends StatelessWidget {
                     color: iconBg,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: Colors.white, size: 15),
+                  child: Icon(icon, color: AppColors.white100, size: 15),
                 ),
                 const SizedBox(width: 8),
                 Text(title,
@@ -268,7 +269,7 @@ class _MiniCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.65),
+          color: AppColors.white100.withValues(alpha: 0.65),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

@@ -94,7 +94,7 @@ class DashboardPage extends StatelessWidget {
                                   child: Text(
                                     _shortName(book?.name ?? '未选择'),
                                     style: MistralTypography.micro.copyWith(
-                                      color: Colors.white,
+                                      color: AppColors.white100,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),

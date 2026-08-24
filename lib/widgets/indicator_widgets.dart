@@ -5,6 +5,7 @@
 // 文件：DotIndicator, SquareIndicator, CircleIndicator, PageNumView
 
 import 'package:flutter/material.dart';
+import '../tokens/design_tokens.dart';
 import 'animations.dart';
 
 /// 圆点指示器（翻译自 DotIndicator.dart）
@@ -23,7 +24,7 @@ class DotIndicator extends StatelessWidget {
     this.dotRadius = 4.0,
     this.gap = 8.0,
     this.normalColor = const Color(0x12000000),
-    this.activeColor = Colors.blue,
+    this.activeColor = MistralColors.info,
   });
 
   @override
@@ -103,8 +104,8 @@ class CircleIndicator extends StatelessWidget {
     required this.currentIndex,
     this.size = 10.0,
     this.normalColor = const Color(0x12000000),
-    this.activeColor = Colors.blue,
-    this.passedColor = Colors.blue,
+    this.activeColor = MistralColors.info,
+    this.passedColor = MistralColors.info,
   });
 
   @override
@@ -148,7 +149,7 @@ class PageNumIndicator extends StatelessWidget {
     required this.totalPages,
     required this.currentPage,
     this.cursorWidth = 4.0,
-    this.cursorColor = Colors.blue,
+    this.cursorColor = MistralColors.info,
     this.backgroundColor = Colors.transparent,
   });
 
