@@ -46,7 +46,7 @@ class ClassActivityBanner extends StatelessWidget {
                 height: 100,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: AppColors.white100.withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -58,9 +58,9 @@ class ClassActivityBanner extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: AppColors.white100.withValues(alpha: 0.2),
                 ),
-                child: const Icon(Icons.wb_sunny, color: Colors.white, size: 24),
+                child: const Icon(Icons.wb_sunny, color: AppColors.white100, size: 24),
               ),
             ),
             // 小圆点装饰
@@ -72,7 +72,7 @@ class ClassActivityBanner extends StatelessWidget {
                 height: 12,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: AppColors.white100.withValues(alpha: 0.2),
                 ),
               ),
             ),
@@ -84,7 +84,7 @@ class ClassActivityBanner extends StatelessWidget {
                 height: 8,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: AppColors.white100.withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -99,7 +99,7 @@ class ClassActivityBanner extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: AppColors.white100.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -107,7 +107,7 @@ class ClassActivityBanner extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                        color: AppColors.white100,
                       ),
                     ),
                   ),
@@ -118,7 +118,7 @@ class ClassActivityBanner extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                      color: AppColors.white100,
                       height: 1.2,
                     ),
                   ),
@@ -128,7 +128,7 @@ class ClassActivityBanner extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                      color: AppColors.white100,
                       height: 1.2,
                     ),
                   ),
@@ -145,20 +145,20 @@ class ClassActivityBanner extends StatelessWidget {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: AppColors.white100.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.groups, color: Colors.white, size: 32),
+                    child: const Icon(Icons.groups, color: AppColors.white100, size: 32),
                   ),
                   const SizedBox(height: 4),
                   Container(
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: AppColors.white100.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.person, color: Colors.white, size: 20),
+                    child: const Icon(Icons.person, color: AppColors.white100, size: 20),
                   ),
                 ],
               ),

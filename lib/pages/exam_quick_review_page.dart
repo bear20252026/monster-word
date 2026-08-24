@@ -334,14 +334,14 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                   onPressed: _startReview,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MistralColors.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white100,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.lg),
                     ),
                   ),
                   child: Text(
                     '开始速刷',
-                    style: MistralTypography.buttonMd.copyWith(color: Colors.white),
+                    style: MistralTypography.buttonMd.copyWith(color: AppColors.white100),
                   ),
                 ),
               ),
@@ -481,7 +481,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                       onPressed: _showAnswer ? _nextWord : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: MistralColors.primary,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.white100,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -670,7 +670,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                         onPressed: _startReview,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: MistralColors.primary,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.white100,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppRadius.md),

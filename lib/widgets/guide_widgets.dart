@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 import 'animations.dart';
+import '../tokens/design_tokens.dart';
 
 /// 新手引导提示（翻译自 GuideView2.dart）
 /// 在指定 View 附近显示带箭头的提示气泡
@@ -30,8 +31,8 @@ class GuideTooltip extends StatefulWidget {
     this.emoji,
     this.onDismiss,
     this.showDelay = const Duration(milliseconds: 200),
-    this.bgColor = Colors.white,
-    this.textColor = Colors.black87,
+    this.bgColor = AppColors.white100,
+    this.textColor = MistralColors.ink,
     this.theme = 0,
   });
 
@@ -102,11 +103,11 @@ class _GuideTooltipState extends State<GuideTooltip>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: widget.theme == 1 ? Colors.black87 : widget.bgColor,
+            color: widget.theme == 1 ? MistralColors.ink : widget.bgColor,
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: MistralColors.black15,
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -123,7 +124,7 @@ class _GuideTooltipState extends State<GuideTooltip>
                 child: Text(
                   widget.message,
                   style: TextStyle(
-                    color: widget.theme == 1 ? Colors.white : widget.textColor,
+                    color: widget.theme == 1 ? AppColors.white100 : widget.textColor,
                     fontSize: 14,
                   ),
                 ),
@@ -154,8 +155,8 @@ class LabGuideBubble extends StatelessWidget {
     required this.message,
     this.arrowOnTop = false,
     this.emoji,
-    this.bgColor = Colors.white,
-    this.textColor = Colors.black87,
+    this.bgColor = AppColors.white100,
+    this.textColor = MistralColors.ink,
     this.theme = 0,
   });
 
@@ -165,7 +166,7 @@ class LabGuideBubble extends StatelessWidget {
     return CustomPaint(
       painter: _BubbleArrowPainter(
         arrowOnTop: arrowOnTop,
-        color: isDark ? Colors.black87 : bgColor,
+        color: isDark ? MistralColors.ink : bgColor,
       ),
       child: Container(
         margin: EdgeInsets.only(
@@ -174,7 +175,7 @@ class LabGuideBubble extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isDark ? Colors.black87 : bgColor,
+          color: isDark ? MistralColors.ink : bgColor,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -187,7 +188,7 @@ class LabGuideBubble extends StatelessWidget {
             Text(
               message,
               style: TextStyle(
-                color: isDark ? Colors.white : textColor,
+                color: isDark ? AppColors.white100 : textColor,
                 fontSize: 14,
               ),
             ),

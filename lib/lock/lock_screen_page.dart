@@ -538,11 +538,11 @@ class _LockScreenPageState extends State<LockScreenPage>
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (interp['type']!.isNotEmpty)
+                if ((interp['type'] ?? '').isNotEmpty)
                   SizedBox(
                     width: 50,
                     child: Text(
-                      interp['type']!,
+                      interp['type'] ?? '',
                       style: const TextStyle(
                         color: LockScreenColors.textTertiary,
                         fontSize: 14,

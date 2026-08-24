@@ -229,7 +229,7 @@ class LableClassify extends StatelessWidget {
               labels[i],
               style: TextStyle(
                 fontSize: 14,
-                color: isSelected ? Colors.white : skin.colors.text2,
+                color: isSelected ? AppColors.white100 : skin.colors.text2,
               ),
             ),
           ),

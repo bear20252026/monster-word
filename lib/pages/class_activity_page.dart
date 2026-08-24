@@ -133,7 +133,7 @@ class _ActivityBanner extends StatelessWidget {
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.1),
+                color: AppColors.white100.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -145,7 +145,7 @@ class _ActivityBanner extends StatelessWidget {
               height: 60,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
+                color: AppColors.white100.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -159,7 +159,7 @@ class _ActivityBanner extends StatelessWidget {
                 Text(
                   '全班一起学',
                   style: MistralTypography.heading2.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white100,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -167,7 +167,7 @@ class _ActivityBanner extends StatelessWidget {
                 Text(
                   '刷词不掉队',
                   style: MistralTypography.heading4.copyWith(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: AppColors.white100.withValues(alpha: 0.9),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -177,13 +177,13 @@ class _ActivityBanner extends StatelessWidget {
                     vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: AppColors.white100.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
                     '立即参与 →',
                     style: MistralTypography.bodySm.copyWith(
-                      color: Colors.white,
+                      color: AppColors.white100,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -199,14 +199,14 @@ class _ActivityBanner extends StatelessWidget {
               width: 80,
               height: 100,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
+                color: AppColors.white100.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppRadius.xl),
               ),
               child: const Center(
                 child: Icon(
                   Icons.people,
                   size: 48,
-                  color: Colors.white,
+                  color: AppColors.white100,
                 ),
               ),
             ),

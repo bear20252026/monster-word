@@ -5,6 +5,7 @@
 // 文件：CustomHeadView, SegmentedGroup, SlideBar
 
 import 'package:flutter/material.dart';
+import '../tokens/design_tokens.dart';
 
 /// 自定义头部栏（翻译自 CustomHeadView.dart）
 /// 支持左右按钮、标题、双标题切换
@@ -80,7 +81,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? Colors.black : Colors.grey,
+              color: isSelected ? MistralColors.ink : MistralColors.slate,
             ),
           ),
           const SizedBox(height: 4),
@@ -89,7 +90,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             width: isSelected ? 20 : 0,
             height: 2,
             decoration: BoxDecoration(
-              color: isSelected ? Colors.blue : Colors.transparent,
+              color: isSelected ? MistralColors.info : Colors.transparent,
               borderRadius: BorderRadius.circular(1),
             ),
           ),
@@ -115,10 +116,10 @@ class SegmentedSelector extends StatelessWidget {
     required this.segments,
     required this.selectedIndex,
     this.onChanged,
-    this.selectedColor = Colors.blue,
+    this.selectedColor = MistralColors.info,
     this.unselectedColor = Colors.transparent,
-    this.selectedTextColor = Colors.white,
-    this.unselectedTextColor = Colors.black87,
+    this.selectedTextColor = AppColors.white100,
+    this.unselectedTextColor = MistralColors.ink,
   });
 
   @override
@@ -176,7 +177,7 @@ class AlphabetSlideBar extends StatelessWidget {
     super.key,
     this.onLetterChanged,
     this.textColor = const Color(0xFF212121),
-    this.activeColor = Colors.blue,
+    this.activeColor = MistralColors.info,
   });
 
   @override

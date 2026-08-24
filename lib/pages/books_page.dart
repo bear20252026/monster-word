@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../hooks/responsive.dart';
 import '../theme/app_theme.dart';
 import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
 import 'dashboard_page.dart';
 import 'lib_select_page.dart';
 import 'my_space_page.dart';
@@ -209,14 +210,14 @@ class _LearnReviewBand extends StatelessWidget {
       child: Container(
         height: 70,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.25),
+          color: AppColors.white100.withValues(alpha: 0.25),
           borderRadius: BorderRadius.circular(AppDimens.radiusNormal),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+          border: Border.all(color: AppColors.white100.withValues(alpha: 0.4)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Colors.white, size: 30),
+            Icon(icon, color: AppColors.white100, size: 30),
             SizedBox(width: 10),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -225,7 +226,7 @@ class _LearnReviewBand extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.white100,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
@@ -235,7 +236,7 @@ class _LearnReviewBand extends StatelessWidget {
                   subtitle,
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: AppColors.white100.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -262,11 +263,11 @@ class _HomeIcon extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: Colors.white, size: 26),
+          Icon(icon, color: AppColors.white100, size: 26),
           SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.85)),
+            style: TextStyle(fontSize: 10, color: AppColors.white100.withValues(alpha: 0.85)),
           ),
         ],
       ),

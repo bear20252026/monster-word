@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../data/wordbook_database.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
+import '../tokens/design_tokens.dart';
 import 'learn_page.dart';
 import 'search_page.dart';
 
@@ -148,7 +149,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                         _tabs[i],
                         style: TextStyle(
                           fontSize: 12,
-                          color: selected ? Colors.white : colors.text3,
+                          color: selected ? AppColors.white100 : colors.text3,
                           fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                         ),
                       ),
