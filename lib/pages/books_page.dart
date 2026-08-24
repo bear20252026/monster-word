@@ -55,24 +55,24 @@ class _BooksPageState extends State<BooksPage> {
                         height: 44,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.35),
+                          color: AppColors.white100.withValues(alpha: 0.35),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: AppColors.white100.withValues(alpha: 0.5),
                           ),
                         ),
-                        child: Icon(Icons.person, color: Colors.white, size: 26),
+                        child: Icon(Icons.person, color: AppColors.white100, size: 26),
                       ),
                       const SizedBox(width: 16),
                       Text(
                         '数据同步中',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: AppColors.white100.withValues(alpha: 0.8),
                         ),
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: Icon(Icons.more_horiz, color: Colors.white),
+                        icon: Icon(Icons.more_horiz, color: AppColors.white100),
                         onPressed: () {},
                       ),
                     ],
@@ -166,20 +166,20 @@ class _CheckInBadge extends StatelessWidget {
         color: AppColors.checkInBg,
         shape: BoxShape.circle,
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.5),
+          color: AppColors.white100.withValues(alpha: 0.5),
           width: 1.5,
         ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.event_available, color: Colors.white, size: 36),
+          Icon(Icons.event_available, color: AppColors.white100, size: 36),
           SizedBox(height: 6),
           Text(
             '今日打卡',
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.9),
+              color: AppColors.white100.withValues(alpha: 0.9),
               fontWeight: FontWeight.w500,
             ),
           ),

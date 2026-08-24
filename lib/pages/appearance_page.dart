@@ -109,7 +109,7 @@ class _AppearancePageState extends State<AppearancePage> {
                   top: 40, left: 20, right: 20,
                   child: Container(
                     height: 30, decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: AppColors.white100.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                   ),
@@ -120,14 +120,14 @@ class _AppearancePageState extends State<AppearancePage> {
                     children: [
                       Expanded(child: Container(
                         height: 24, decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: AppColors.white100.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
                       )),
                       const SizedBox(width: AppleSpacing.xs),
                       Expanded(child: Container(
                         height: 24, decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: AppColors.white100.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
                       )),
@@ -141,7 +141,7 @@ class _AppearancePageState extends State<AppearancePage> {
                     child: Container(
                       width: 36, height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: AppColors.white100.withValues(alpha: 0.6),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(Icons.lock, size: 18, color: skin.colors.text3),
@@ -254,9 +254,9 @@ class _AppearancePageState extends State<AppearancePage> {
           Switch(
             value: skin.followSystem,
             onChanged: (v) => skin.setFollowSystem(v),
-            activeThumbColor: Colors.white,
+            activeThumbColor: AppColors.white100,
             activeTrackColor: skin.colors.accent,
-            inactiveThumbColor: Colors.white,
+            inactiveThumbColor: AppColors.white100,
             inactiveTrackColor: MistralColors.hairline,
           ),
         ],

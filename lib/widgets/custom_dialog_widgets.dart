@@ -5,6 +5,7 @@
 // 文件：MyCustomeDialog, MiddleToast, BottomInformationDialog
 
 import 'package:flutter/material.dart';
+import '../tokens/design_tokens.dart';
 import 'animations.dart';
 
 /// 自定义弹窗（翻译自 MyCustomeDialog.dart）
@@ -129,19 +130,19 @@ class _MiddleToastWidgetState extends State<_MiddleToastWidget>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.black87,
+            color: MistralColors.ink,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.icon != null) ...[
-                Icon(widget.icon, color: Colors.white, size: 36),
+                Icon(widget.icon, color: AppColors.white100, size: 36),
                 const SizedBox(height: 8),
               ],
               Text(
                 widget.message,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style: const TextStyle(color: AppColors.white100, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -188,7 +189,7 @@ class BottomInfoSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white100,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: Column(
@@ -200,7 +201,7 @@ class BottomInfoSheet extends StatelessWidget {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: MistralColors.slate.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
