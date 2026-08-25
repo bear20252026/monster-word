@@ -314,6 +314,9 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
 
   Widget _buildWordCard(SkinSystem skin, AppResponsive resp) {
     final word = _currentWord;
+    final meaningText = word.hasStructuredDefinitions
+        ? word.formattedDefinitions
+        : word.cleanInterpret;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(resp.pageMargin * 1.5),
@@ -345,16 +348,17 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
               textAlign: TextAlign.center,
             ),
           ],
-          // 释义（可显示/隐藏）
-          if (word.cleanInterpret.isNotEmpty) ...[
+          // 释义（可显示/隐藏，优先结构化释义）
+          if (meaningText.isNotEmpty) ...[
             const SizedBox(height: 16),
             AnimatedCrossFade(
               firstChild: const SizedBox.shrink(),
               secondChild: Text(
-                word.cleanInterpret,
+                meaningText,
                 style: MistralTypography.body.copyWith(
                   color: skin.colors.text2,
                   fontSize: 18 * resp.fontScale,
+                  height: 1.5,
                 ),
                 textAlign: TextAlign.center,
               ),

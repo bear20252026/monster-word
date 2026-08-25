@@ -87,11 +87,17 @@ class DictionaryService {
     return _db.getWord(word);
   }
 
-  /// 获取单词释义（按词性分行）
+  /// 获取单词释义（按词性分行，优先结构化释义）
   /// [word] 单词
   Future<List<String>> getWordInterpretations(String word) async {
     final wordData = await _db.getWord(word);
     if (wordData == null) return [];
+    if (wordData.hasStructuredDefinitions) {
+      return wordData.formattedDefinitions
+          .split('\n')
+          .where((l) => l.trim().isNotEmpty)
+          .toList();
+    }
     return wordData.interpretLines;
   }
 

@@ -167,6 +167,9 @@ class _PopupCard extends StatelessWidget {
 
   Widget _buildContent(ThemeVars skin) {
     final w = wordData!;
+    final meaningText = w.hasStructuredDefinitions
+        ? w.formattedDefinitions
+        : w.interpret;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -194,13 +197,14 @@ class _PopupCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        // 释义
-        if (w.interpret.isNotEmpty)
+        // 释义（优先结构化释义）
+        if (meaningText.isNotEmpty)
           Text(
-            w.interpret,
+            meaningText,
             style: MistralTypography.body.copyWith(
               color: skin.text2,
               fontSize: 14,
+              height: 1.5,
             ),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,

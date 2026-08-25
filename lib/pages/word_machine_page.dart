@@ -691,6 +691,10 @@ class _WordMachinePageState extends State<WordMachinePage>
     final word = state.currentWord;
     if (word == null) return const SizedBox.shrink();
 
+    final meaningText = word.hasStructuredDefinitions
+        ? word.formattedDefinitions
+        : word.interpret;
+
     return BoxReveal(
       direction: BoxRevealDirection.top,
       duration: const Duration(milliseconds: 350),
@@ -721,12 +725,12 @@ class _WordMachinePageState extends State<WordMachinePage>
                   ),
                   const SizedBox(height: 4),
                 ],
-                // 释义
-                if (word.interpret.isNotEmpty) ...[
+                // 释义（优先结构化释义）
+                if (meaningText.isNotEmpty) ...[
                   Text(
-                    word.interpret.length > 80
-                        ? '${word.interpret.substring(0, 80)}...'
-                        : word.interpret,
+                    meaningText.length > 80
+                        ? '${meaningText.substring(0, 80)}...'
+                        : meaningText,
                     style: const TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 10,

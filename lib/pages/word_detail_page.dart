@@ -656,7 +656,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                 Text('${word.word} — 详细用法',
                   style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1)),
                 const SizedBox(height: 4),
-                Text('释义: ${word.cleanInterpret}',
+                Text('释义: ${word.hasStructuredDefinitions ? word.formattedDefinitions : word.cleanInterpret}',
                   style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
                 if (word.phrase.isNotEmpty) ...[
                   const SizedBox(height: 4),

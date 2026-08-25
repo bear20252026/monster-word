@@ -144,10 +144,13 @@ class WordDictionaryPopup extends StatelessWidget {
 
   /// 释义文本
   Widget _buildInterpret(dynamic skin) {
+    final meaningText = word.hasStructuredDefinitions
+        ? word.formattedDefinitions
+        : word.interpret;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
       child: Text(
-        word.interpret,
+        meaningText,
         style: TextStyle(fontSize: 15, color: skin.colors.text1, height: 1.5),
         maxLines: 3,
         overflow: TextOverflow.ellipsis,

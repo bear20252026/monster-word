@@ -459,7 +459,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
           addRepaintBoundaries: true,
           itemBuilder: (context, index) {
             final w = derived[index];
-            final firstInterp = w.interpretLines.isNotEmpty ? w.interpretLines.first : '';
+            final firstInterp = w.firstInterpretLine;
             return GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(
@@ -562,9 +562,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
           addRepaintBoundaries: true,
           itemBuilder: (context, index) {
             final synonym = synonyms[index];
-            final firstInterpret = synonym.interpretLines.isNotEmpty
-                ? synonym.interpretLines.first
-                : '';
+            final firstInterpret = synonym.firstInterpretLine;
             return GestureDetector(
               onTap: () {
                 Navigator.push(

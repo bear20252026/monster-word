@@ -4,6 +4,8 @@
 // 数据模型层：翻译自 bean/BBWordProcess.java（v3.2 源码 1:1）
 // 单词学习进度（SRS 核心数据模型，对应 SQLite 用户表字段）
 
+import 'dart:convert';
+
 import 'lexis_dict.dart';
 
 /// 单词学习进度（翻译自 BBWordProcess.java）
@@ -114,6 +116,78 @@ class BBWordProcess {
 
   /// 是否有释义数据
   bool isBaseInfoOK() => interpret.isNotEmpty || usPron.isNotEmpty;
+
+  /// 清理 HTML 标签和格式代码
+  static String cleanHtml(String text) {
+    if (text.isEmpty) return '';
+    var result = text.replaceAll(RegExp(r'<[^>]*>'), '');
+    result = result.replaceAll(RegExp(r'\s+'), ' ').trim();
+    result = result
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'");
+    return result;
+  }
+
+  /// 原始释义（清理 HTML 标签后）
+  String get cleanInterpret => cleanHtml(interpret);
+
+  /// 结构化释义缓存
+  List<Map<String, String>>? _structuredDefs;
+
+  /// 是否有结构化释义
+  bool get hasStructuredDefinitions {
+    return parsedDefinitions.isNotEmpty;
+  }
+
+  /// 解析结构化释义
+  List<Map<String, String>> get parsedDefinitions {
+    if (_structuredDefs != null) return _structuredDefs!;
+    try {
+      final decoded = jsonDecode(interpret);
+      if (decoded is List) {
+        final result = <Map<String, String>>[];
+        for (final item in decoded) {
+          if (item is Map && item['def'] is List) {
+            for (final def in item['def']) {
+              if (def is Map) {
+                result.add({
+                  'cn': (def['cn'] ?? def['cndef'] ?? '').toString(),
+                  'en': (def['en'] ?? def['endef'] ?? '').toString(),
+                  'pos': (item['t'] ?? '').toString(),
+                });
+              }
+            }
+          }
+        }
+        _structuredDefs = result;
+        return result;
+      }
+    } catch (_) {}
+    _structuredDefs = [];
+    return _structuredDefs!;
+  }
+
+  /// 格式化结构化释义（用于显示）
+  String get formattedDefinitions {
+    final defs = parsedDefinitions;
+    if (defs.isEmpty) return cleanInterpret;
+    final lines = <String>[];
+    for (final def in defs) {
+      final cn = def['cn'] ?? '';
+      final en = def['en'] ?? '';
+      final pos = def['pos'] ?? '';
+      if (cn.isNotEmpty) {
+        lines.add(pos.isNotEmpty ? '$pos. $cn' : cn);
+      } else if (en.isNotEmpty) {
+        lines.add(pos.isNotEmpty ? '$pos. $en' : en);
+      }
+    }
+    return lines.join('\n');
+  }
 
   /// 形近词列表
   List<String> get confusedWordListSafe => confusedWordList;

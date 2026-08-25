@@ -293,9 +293,9 @@ class _MyFavPageState extends State<MyFavPage> {
                     word.word,
                     style: MistralTypography.heading5.copyWith(color: skin.colors.text1),
                   ),
-                  subtitle: word.interpret.isNotEmpty
+                  subtitle: word.firstInterpretLine.isNotEmpty
                       ? Text(
-                          word.interpret.split('\n').first,
+                          word.firstInterpretLine,
                           style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

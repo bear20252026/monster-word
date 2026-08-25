@@ -167,10 +167,13 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
                         _buildPlayButton(skin, resp),
                         const SizedBox(height: 16),
                         Text(
-                          _currentWord.interpret,
+                          _currentWord.hasStructuredDefinitions
+                              ? _currentWord.formattedDefinitions
+                              : _currentWord.cleanInterpret,
                           style: MistralTypography.body.copyWith(
                             color: skin.colors.text2,
                             fontSize: 18 * resp.fontScale,
+                            height: 1.5,
                           ),
                           textAlign: TextAlign.center,
                         ),

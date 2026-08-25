@@ -229,17 +229,20 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
             ),
             builder: (context, child) {
               ScreenUtils.init(context);
+              // 关键修复：SkinProvider 必须放在 Navigator 之外（builder 中），
+              // 这样所有推入的页面（如 AppearancePage）都能通过 context.skin 访问同一个 SkinSystem 实例
               return FluidCursorOverlay(
                 rippleColor: skin.colors.accent.withValues(alpha: 0.4),
                 maxRadius: 60,
-                enabled: true,
-                child: child!,
+                enabled: false, // 默认关闭以提升性能，需要时可在设置中开启
+                child: SkinProvider(
+                  skin: skin,
+                  child: child!,
+                ),
               );
             },
-            home: SkinProvider(
-              skin: skin,
-              child: AdaptiveScale(
-                child: MainShell(
+            home: AdaptiveScale(
+              child: MainShell(
                   tabs: [
                     TabDef(
                       id: 'learn',
@@ -262,7 +265,6 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
                   ],
                 ),
               ),
-            ),
             onGenerateRoute: (settings) {
               final page = _buildPage(settings);
               if (page == null) return null;

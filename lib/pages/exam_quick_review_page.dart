@@ -142,13 +142,13 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
   void _generateChoices() {
     if (_currentIndex >= _words.length) return;
     final current = _words[_currentIndex];
-    final choices = <String>[current.interpret.split('\n').first];
+    final choices = <String>[current.firstInterpretLine];
 
     // 生成干扰项（从其他词的释义中随机选3个）
     final otherWords = _words.where((w) => w.id != current.id).toList();
     otherWords.shuffle();
     for (var i = 0; i < 3 && i < otherWords.length; i++) {
-      choices.add(otherWords[i].interpret.split('\n').first);
+      choices.add(otherWords[i].firstInterpretLine);
     }
     choices.shuffle();
 
@@ -163,7 +163,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
     if (_showAnswer) return;
 
     final current = _words[_currentIndex];
-    final isCorrect = _choices[index] == current.interpret.split('\n').first;
+    final isCorrect = _choices[index] == current.firstInterpretLine;
 
     setState(() {
       _selectedChoice = index;
@@ -501,7 +501,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
 
   Widget _buildChoiceItem(int index, SkinSystem skin) {
     final current = _words[_currentIndex];
-    final isCorrect = _choices[index] == current.interpret.split('\n').first;
+    final isCorrect = _choices[index] == current.firstInterpretLine;
     final isSelected = _selectedChoice == index;
     final showResult = _showAnswer;
 

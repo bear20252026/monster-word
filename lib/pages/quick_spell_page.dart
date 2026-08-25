@@ -303,10 +303,13 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
       child: Column(
         children: [
           Text(
-            _currentWord.interpret,
+            _currentWord.hasStructuredDefinitions
+                ? _currentWord.formattedDefinitions
+                : _currentWord.cleanInterpret,
             style: MistralTypography.heading4.copyWith(
               color: skin.colors.text1,
               fontSize: 24 * resp.fontScale,
+              height: 1.5,
             ),
             textAlign: TextAlign.center,
           ),

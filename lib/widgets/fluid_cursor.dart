@@ -84,11 +84,28 @@ class _FluidCursorOverlayState extends State<FluidCursorOverlay>
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
-    )..repeat();
-    _animController.addListener(() {
-      _controller.cleanOldRipples();
-      if (mounted) setState(() {});
-    });
+    );
+    _controller.addListener(_onControllerChanged);
+  }
+
+  void _onControllerChanged() {
+    if (!mounted) return;
+    _controller.cleanOldRipples();
+    // 仅在存在涟漪时启动动画，无涟漪时停止以节省帧率
+    if (_controller.ripples.isNotEmpty && !_animController.isAnimating) {
+      _animController.repeat();
+    } else if (_controller.ripples.isEmpty && _animController.isAnimating) {
+      _animController.stop();
+    }
+    setState(() {});
+  }
+
+  @override
+  void didUpdateWidget(covariant FluidCursorOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.rippleColor != widget.rippleColor) {
+      _controller.setRippleColor(widget.rippleColor);
+    }
   }
 
   @override
@@ -177,7 +194,10 @@ class _FluidRipplePainter extends CustomPainter {
   double _easeOutCubic(double t) => 1 - math.pow(1 - t, 3).toDouble();
 
   @override
-  bool shouldRepaint(covariant _FluidRipplePainter oldDelegate) => true;
+  bool shouldRepaint(covariant _FluidRipplePainter oldDelegate) {
+    return ripples.length != oldDelegate.ripples.length ||
+        now.millisecondsSinceEpoch != oldDelegate.now.millisecondsSinceEpoch;
+  }
 }
 
 /// 流体触摸反馈按钮（按钮按下时产生涟漪）

@@ -205,7 +205,7 @@ class _SearchPageState extends State<SearchPage> {
                 color: skin.text1,
               )),
             subtitle: Text(
-              w.interpret.split('\n').first,
+              w.firstInterpretLine,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: MistralTypography.caption.copyWith(color: skin.text3),

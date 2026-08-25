@@ -12,6 +12,8 @@
 //         SentenceSortResultModel, FavSentenceViewPagerAdapter,
 //         FavCardSentencePagerAdapter, FavSentenceRecycleViewAdapter
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
@@ -479,6 +481,49 @@ class CandidateWordInfo {
   final String interpret;
 
   const CandidateWordInfo({this.word = '', this.interpret = ''});
+
+  /// 是否有结构化释义
+  bool get hasStructuredDefinitions => _cachedDefs?.isNotEmpty ?? false;
+
+  /// 格式化结构化释义（用于显示）
+  String get formattedDefinitions {
+    final defs = _cachedDefs;
+    if (defs == null || defs.isEmpty) return interpret;
+    final lines = <String>[];
+    for (final def in defs) {
+      final cn = def['cn'] ?? '';
+      final en = def['en'] ?? '';
+      if (cn.isNotEmpty) {
+        lines.add(cn);
+      } else if (en.isNotEmpty) {
+        lines.add(en);
+      }
+    }
+    return lines.join('\n');
+  }
+
+  List<Map<String, String>>? get _cachedDefs {
+    try {
+      final decoded = jsonDecode(interpret);
+      if (decoded is List) {
+        final result = <Map<String, String>>[];
+        for (final item in decoded) {
+          if (item is Map && item['def'] is List) {
+            for (final def in item['def']) {
+              if (def is Map) {
+                result.add({
+                  'cn': (def['cn'] ?? def['cndef'] ?? '').toString(),
+                  'en': (def['en'] ?? def['endef'] ?? '').toString(),
+                });
+              }
+            }
+          }
+        }
+        return result;
+      }
+    } catch (_) {}
+    return null;
+  }
 }
 
 /// 候选单词列表适配器（翻译自 CandidateAdapter.java）
@@ -498,6 +543,9 @@ class CandidateListView extends StatelessWidget {
       itemCount: words.length,
       itemBuilder: (context, index) {
         final wordInfo = words[index];
+        final meaningText = wordInfo.hasStructuredDefinitions
+            ? wordInfo.formattedDefinitions
+            : wordInfo.interpret;
         return GestureDetector(
           onTap: () => onWordTap?.call(index),
           child: Container(
@@ -512,10 +560,10 @@ class CandidateListView extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                if (wordInfo.interpret.isNotEmpty) ...[
+                if (meaningText.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
-                    wordInfo.interpret,
+                    meaningText,
                     style: const TextStyle(fontSize: 13, color: _black54),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -1847,6 +1895,50 @@ class WordListenData {
     this.interpret,
     this.firstSentence,
   });
+
+  /// 是否有结构化释义
+  bool get hasStructuredDefinitions => _cachedDefs?.isNotEmpty ?? false;
+
+  /// 格式化结构化释义（用于显示）
+  String get formattedDefinitions {
+    final defs = _cachedDefs;
+    if (defs == null || defs.isEmpty) return interpret ?? '';
+    final lines = <String>[];
+    for (final def in defs) {
+      final cn = def['cn'] ?? '';
+      final en = def['en'] ?? '';
+      if (cn.isNotEmpty) {
+        lines.add(cn);
+      } else if (en.isNotEmpty) {
+        lines.add(en);
+      }
+    }
+    return lines.join('\n');
+  }
+
+  List<Map<String, String>>? get _cachedDefs {
+    if (interpret == null) return null;
+    try {
+      final decoded = jsonDecode(interpret!);
+      if (decoded is List) {
+        final result = <Map<String, String>>[];
+        for (final item in decoded) {
+          if (item is Map && item['def'] is List) {
+            for (final def in item['def']) {
+              if (def is Map) {
+                result.add({
+                  'cn': (def['cn'] ?? def['cndef'] ?? '').toString(),
+                  'en': (def['en'] ?? def['endef'] ?? '').toString(),
+                });
+              }
+            }
+          }
+        }
+        return result;
+      }
+    } catch (_) {}
+    return null;
+  }
 }
 
 /// 单词听写页面视图（翻译自 WordListenAdapter.java）
@@ -1876,6 +1968,9 @@ class WordListenPageView extends StatelessWidget {
   }
 
   Widget _buildWordListenCard(WordListenData wordData) {
+    final meaningText = wordData.hasStructuredDefinitions
+        ? wordData.formattedDefinitions
+        : wordData.interpret;
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -1919,10 +2014,10 @@ class WordListenPageView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
           ],
-          // 释义
-          if (wordData.interpret != null) ...[
+          // 释义（优先结构化释义）
+          if (meaningText != null && meaningText.isNotEmpty) ...[
             Text(
-              wordData.interpret!,
+              meaningText,
               style: const TextStyle(fontSize: 16, height: 1.5),
             ),
             const SizedBox(height: 16),

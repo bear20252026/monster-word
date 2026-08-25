@@ -295,7 +295,9 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      word.cleanInterpret,
+                      word.hasStructuredDefinitions
+                          ? word.formattedDefinitions
+                          : word.cleanInterpret,
                       style: MistralTypography.body.copyWith(
                         color: skin.colors.text1,
                         height: 1.5,

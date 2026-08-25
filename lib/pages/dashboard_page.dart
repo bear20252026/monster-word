@@ -60,18 +60,13 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  /// 顶部导航栏
+  /// 顶部导航栏（仪表盘是主页标签，无需返回按钮）
   Widget _buildTopNav(BuildContext context, ThemeVars skin) {
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.text1,
-            onPressed: () => Navigator.pop(context),
-          ),
           const SizedBox(width: 4),
           Text(
             '仪表盘',
@@ -194,24 +189,56 @@ class DashboardPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.lg),
             border: Border.all(color: skin.divider),
           ),
-          child: resp.isDesktop
-              ? Row(
-                  children: [
-                    Expanded(child: _DataItem(label: '今日学习', value: '$learned')),
-                    Container(width: 1, height: 40, color: skin.divider),
-                    Expanded(child: _DataItem(label: '待复习', value: '${state.dueCount}')),
-                    Container(width: 1, height: 40, color: skin.divider),
-                    Expanded(child: _DataItem(label: '词书', value: '${book == null ? 0 : 1}')),
-                  ],
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _DataItem(label: '今日学习', value: '$learned'),
-                    _DataItem(label: '待复习', value: '${state.dueCount}'),
-                    _DataItem(label: '词书', value: '${book == null ? 0 : 1}'),
-                  ],
-                ),
+          // FSRS-6 记忆统计（基于精确记忆曲线）
+          child: _buildFsrsStats(context, state, skin, resp),
+        ),
+      ],
+    );
+  }
+
+  /// FSRS-6 记忆统计面板
+  Widget _buildFsrsStats(BuildContext context, LearningState state, ThemeVars skin, AppResponsive resp) {
+    final stats = state.memoryStats;
+    final todayStats = state.todayStats;
+    final newCount = stats['new'] ?? 0;
+    final dueCount = stats['due'] ?? 0;
+    final learningCount = stats['learning'] ?? 0;
+    final matureCount = stats['mature'] ?? 0;
+    final totalCount = stats['total'] ?? 0;
+
+    if (resp.isDesktop) {
+      return Row(
+        children: [
+          Expanded(child: _DataItem(label: '新词', value: '$newCount', color: Colors.blue)),
+          Container(width: 1, height: 40, color: skin.divider),
+          Expanded(child: _DataItem(label: '学习中', value: '$learningCount', color: Colors.orange)),
+          Container(width: 1, height: 40, color: skin.divider),
+          Expanded(child: _DataItem(label: '待复习', value: '$dueCount', color: Colors.red)),
+          Container(width: 1, height: 40, color: skin.divider),
+          Expanded(child: _DataItem(label: '已掌握', value: '$matureCount', color: Colors.green)),
+          Container(width: 1, height: 40, color: skin.divider),
+          Expanded(child: _DataItem(label: '总词汇', value: '$totalCount')),
+        ],
+      );
+    }
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _DataItem(label: '新词', value: '$newCount', color: Colors.blue),
+            _DataItem(label: '学习中', value: '$learningCount', color: Colors.orange),
+            _DataItem(label: '待复习', value: '$dueCount', color: Colors.red),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _DataItem(label: '已掌握', value: '$matureCount', color: Colors.green),
+            _DataItem(label: '总词汇', value: '$totalCount'),
+            _DataItem(label: '今日已学', value: '${todayStats['learned'] ?? 0}'),
+          ],
         ),
       ],
     );
@@ -252,7 +279,8 @@ class DashboardPage extends StatelessWidget {
 class _DataItem extends StatelessWidget {
   final String label;
   final String value;
-  const _DataItem({required this.label, required this.value});
+  final Color? color;
+  const _DataItem({required this.label, required this.value, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -262,7 +290,7 @@ class _DataItem extends StatelessWidget {
         Text(
           value,
           style: MistralTypography.heading3.copyWith(
-            color: skin.success,
+            color: color ?? skin.success,
             fontWeight: FontWeight.bold,
           ),
         ),

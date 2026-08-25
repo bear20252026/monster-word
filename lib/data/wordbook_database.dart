@@ -143,8 +143,15 @@ class Word {
   List<String> get interpretLines =>
       cleanInterpret.split('\n').where((l) => l.trim().isNotEmpty).toList();
 
-  /// 第一行释义（用于列表显示）
+  /// 第一行释义（用于列表显示，优先结构化释义）
   String get firstInterpretLine {
+    if (hasStructuredDefinitions) {
+      final defs = parsedDefinitions;
+      if (defs.isNotEmpty) {
+        final first = defs.first;
+        return first.cnDef.isNotEmpty ? first.cnDef : first.enDef;
+      }
+    }
     final lines = interpretLines;
     return lines.isNotEmpty ? lines.first : '';
   }

@@ -1,9 +1,11 @@
 // Monster Word — 首页（星巴克改造 batch4a）
-// 方案C：画布归品牌，移除壁纸系统，奶油画布 + ContentCard 白卡
+// 星巴克设计方案：奶油画布 + 白卡 + 圆润温润
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../data/wordbook_database.dart';
 import '../hooks/responsive.dart';
+import '../pages/learn_page.dart';
 import '../pages/lib_select_page.dart';
 import '../pages/search_page.dart';
 import '../pages/word_machine_page.dart';
@@ -76,7 +78,8 @@ class HomeScreen extends StatelessWidget {
                                 child: _EntryCard(
                                   title: 'Learn',
                                   count: state.total > 0 ? state.total : 0,
-                                  onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
+                                  // 直接开始背单词（不再跳转到选书页）
+                                  onTap: () => _startLearning(context),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -106,6 +109,14 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+                    // 底部：选择词书区域（点击跳转到词书选择页）
+                    _EntranceIn(
+                      delayMs: 480,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
+                        child: _buildBookSelector(context, skin, resp),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -115,15 +126,62 @@ class HomeScreen extends StatelessWidget {
           Positioned(top: 0, right: 0, child: _buildWordMachineButton(context, skin)),
           // 左上角：查词入口（SbCard 风格圆形按钮）
           Positioned(top: 0, left: 0, child: _buildSearchButton(context, skin)),
-          // 下滑查词提示覆盖层（SbCard 风格，移除毛玻璃）
-          Positioned(
-            top: MediaQuery.of(context).size.height * 0.3,
-            left: MediaQuery.of(context).size.width * 0.15,
-            right: MediaQuery.of(context).size.width * 0.15,
-            child: _buildSwipeHintOverlay(context, skin),
-          ),
         ],
       ),
+      ),
+    );
+  }
+
+  /// 直接开始背单词（加载第一本书并跳转到学习页）
+  Future<void> _startLearning(BuildContext context) async {
+    final state = context.read<LearningState>();
+    // 如果已有队列，直接开始学习
+    if (state.queue.isNotEmpty) {
+      if (context.mounted) {
+        Navigator.pushNamed(context, LearnPage.routeName);
+      }
+      return;
+    }
+    // 否则加载第一本书
+    final books = await WordBookDatabase.instance.getBooks();
+    if (books.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('暂无词书，请先添加词书')),
+        );
+      }
+      return;
+    }
+    // 加载第一本书（乱序）
+    await state.loadBook(books.first, shuffle: true);
+    if (context.mounted) {
+      Navigator.pushNamed(context, LearnPage.routeName);
+    }
+  }
+
+  /// 底部词书选择器（点击跳转到词书选择页）
+  Widget _buildBookSelector(BuildContext context, SkinSystem skin, AppResponsive resp) {
+    return ScaleDownOnPress(
+      onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
+      child: SbCard(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Icon(Icons.library_books_outlined, color: skin.colors.accent, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('选择词书', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1)),
+                  const SizedBox(height: 2),
+                  Text('点击切换不同的单词书', style: TextStyle(fontSize: 13, color: skin.colors.text3)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
+          ],
+        ),
       ),
     );
   }
@@ -147,7 +205,8 @@ class HomeScreen extends StatelessWidget {
                     Expanded(child: _EntryCard(
                       title: 'Learn',
                       count: state.total,
-                      onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
+                      // 横屏布局也直接开始背单词
+                      onTap: () => _startLearning(context),
                     )),
                     const SizedBox(width: 12),
                     Expanded(child: _EntryCard(
@@ -161,21 +220,35 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
-        // 右侧：推荐语
+        // 右侧：推荐语 + 选择词书
         Expanded(
           child: Center(
-            child: _EntranceIn(
-              delayMs: 380,
-              child: Padding(
-                padding: EdgeInsets.all(resp.pageMargin),
-                child: TestimonialSlider(
-                  items: TestimonialData.defaults,
-                  height: 200,
-                  activeColor: skin.colors.accent,
-                  inactiveColor: skin.colors.divider,
-                  borderRadius: BorderRadius.circular(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _EntranceIn(
+                  delayMs: 380,
+                  child: Padding(
+                    padding: EdgeInsets.all(resp.pageMargin),
+                    child: TestimonialSlider(
+                      items: TestimonialData.defaults,
+                      height: 160,
+                      activeColor: skin.colors.accent,
+                      inactiveColor: skin.colors.divider,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                // 横屏布局：底部词书选择器
+                _EntranceIn(
+                  delayMs: 480,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
+                    child: _buildBookSelector(context, skin, resp),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

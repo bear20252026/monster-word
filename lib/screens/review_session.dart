@@ -7,11 +7,14 @@ import 'package:flutter/material.dart';
 
 import '../data/example_parser.dart';
 import '../data/wordbook_database.dart';
+import 'package:provider/provider.dart';
 import '../engine/core_engine.dart';
+import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../engine/srs_engine.dart';
 import '../engine/super_memory_engine.dart';
 import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
+import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/scale_down_on_press.dart';
@@ -86,11 +89,23 @@ class _ReviewSessionState extends State<ReviewSession> {
   }
 
   void _rate(RecallRating rating) {
+    // 同步到 Leitner 引擎
     switch (rating) {
       case RecallRating.again: _engine.iDontKnow();
       case RecallRating.hard: _engine.iMayKnow();
       case RecallRating.good: _engine.iReallyKnow();
       case RecallRating.easy: _engine.tooEasy();
+    }
+    // 同步到 FSRS-6 算法（精确记忆评估）
+    final fsrsRating = switch (rating) {
+      RecallRating.again => FsrsRating.again,
+      RecallRating.hard => FsrsRating.hard,
+      RecallRating.good => FsrsRating.good,
+      RecallRating.easy => FsrsRating.easy,
+    };
+    final currentWord = _engine.currentWord();
+    if (currentWord != null && mounted) {
+      context.read<LearningState>().rate(fsrsRating);
     }
     _done++;
     _showAnswer = false;
@@ -268,6 +283,9 @@ class _ReviewSessionState extends State<ReviewSession> {
   /// 已答后：释义+例句
   Widget _buildAnswer(BBWordProcess word, SkinSystem skin, AppResponsive resp) {
     final examples = ExampleParser.parse(word.example);
+    final meaningText = word.hasStructuredDefinitions
+        ? word.formattedDefinitions
+        : word.cleanInterpret;
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: resp.pageMargin, vertical: 20),
       child: Column(
@@ -277,8 +295,8 @@ class _ReviewSessionState extends State<ReviewSession> {
               style: AppTypography.heroWord.copyWith(
                   fontSize: resp.heroFontSize, color: skin.colors.onGlassText1)),
           const SizedBox(height: 16),
-          if (word.interpret.isNotEmpty)
-            Text(word.interpret,
+          if (meaningText.isNotEmpty)
+            Text(meaningText,
                 style: AppTypography.body.copyWith(
                     color: skin.colors.onGlassText1, height: 1.5)),
           if (examples.isNotEmpty) ...[

@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
-import '../engine/fsrs5_engine.dart';
+import '../engine/fsrs6_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -30,6 +30,9 @@ class _LearnSessionState extends State<LearnSession>
   int _selectedTab = 0;
 
   static const _tabs = ['派生', '词组搭配', '词根', '笔记', '近义'];
+
+  // FSRS-6 引擎（用于显示记忆状态）
+  final Fsrs6Engine _fsrsEngine = Fsrs6Engine();
 
   // Card page view (PageView with spring physics)
   late PageController _pageController;
@@ -178,8 +181,14 @@ class _LearnSessionState extends State<LearnSession>
                                   ],
                                 ),
                               const SizedBox(height: 20),
-                              // 释义
-                              ...w.interpretLines.map(
+                              // 释义（优先结构化释义）
+                              ...(w.hasStructuredDefinitions
+                                      ? w.formattedDefinitions
+                                          .split('\n')
+                                          .where((l) => l.trim().isNotEmpty)
+                                          .toList()
+                                      : w.interpretLines)
+                                  .map(
                                 (line) => Padding(
                                   padding: const EdgeInsets.only(bottom: 8),
                                   child: Text(
@@ -308,6 +317,9 @@ class _LearnSessionState extends State<LearnSession>
                     if (mounted) setState(() {});
                   },
           ),
+          // FSRS 记忆状态指示器
+          if (word != null)
+            _buildFsrsIndicator(context, word.word, skin),
           // 更多按钮
           IconButton(
             icon: Icon(Icons.more_horiz, color: skin.colors.onGlassText2, size: 20),
@@ -484,6 +496,35 @@ class _LearnSessionState extends State<LearnSession>
     }
     buffer.write(word.substring(lastConsonantRun));
     return buffer.toString();
+  }
+
+  /// FSRS 记忆状态指示器（显示当前单词的记忆状态）
+  Widget _buildFsrsIndicator(BuildContext context, String word, SkinSystem skin) {
+    final state = context.read<LearningState>();
+    final card = state.getCard(word);
+    if (card == null || card.isNew) {
+      return const SizedBox.shrink();
+    }
+    // 根据记忆状态选择颜色
+    final r = card.stability;
+    final color = r < 3
+        ? Colors.red
+        : r < 7
+            ? Colors.orange
+            : r < 14
+                ? Colors.blue
+                : Colors.green;
+    return Tooltip(
+      message: '记忆状态: ${_fsrsEngine.getStatusText(card)} · 难度: ${_fsrsEngine.getDifficultyText(card)}',
+      child: Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
   }
 }
 
