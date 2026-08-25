@@ -104,7 +104,7 @@ class SbModal extends StatelessWidget {
         backgroundColor: colors.cardBg,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: modal.maxWidth ?? 360),
@@ -127,7 +127,7 @@ class SbModal extends StatelessWidget {
       isScrollControlled: true,
       barrierColor: Colors.black.withValues(alpha: 0.55),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) => SafeArea(child: modal),
     );

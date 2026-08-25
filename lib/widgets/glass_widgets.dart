@@ -26,9 +26,9 @@ class GlassCard extends StatelessWidget {
     this.margin,
     this.width,
     this.height,
-    this.blur = 10.0,
+    this.blur = 20.0,
     this.opacity = 0.8,
-    this.radius = 16.0,
+    this.radius = 24.0,
   });
 
   @override
@@ -88,16 +88,16 @@ class GlassEntryCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(24.0),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+          filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
           child: Container(
             width: w,
             height: 88,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: skin.glassBg.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(16.0),
+              borderRadius: BorderRadius.circular(24.0),
               border: Border.all(
                 color: skin.glassBorder.withValues(alpha: 0.2),
                 width: 0.5,

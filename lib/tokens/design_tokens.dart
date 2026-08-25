@@ -68,14 +68,14 @@ class MistralColors {
   static const Color scrim87 = Color(0xDD000000);
 }
 
-/// 圆角
+/// 圆角（圆润温润版）
 class AppleRadius {
-  static const double xs = 4;
-  static const double sm = 6;
-  static const double md = 8;
-  static const double lg = 12;
-  static const double xl = 16;
-  static const double xxl = 20;
+  static const double xs = 6;
+  static const double sm = 10;
+  static const double md = 14;
+  static const double lg = 20;
+  static const double xl = 24;
+  static const double xxl = 32;
   static const double pill = 9999;
 }
 
@@ -263,23 +263,23 @@ class AppSpacing {
 }
 
 class AppRadius {
-  static const double xs = 4;
-  static const double sm = 6;
-  static const double md = 8;
-  static const double lg = 12;
-  static const double xl = 16;
-  static const double xxl = 20;
-  static const double card = 16;
-  static const double control = 8;
-  static const double glass = 0;
-  static const double sheet = 24;
+  static const double xs = 6;
+  static const double sm = 10;
+  static const double md = 14;
+  static const double lg = 20;
+  static const double xl = 24;
+  static const double xxl = 32;
+  static const double card = 24;
+  static const double control = 16;
+  static const double glass = 20;
+  static const double sheet = 28;
   static const double pill = 9999;
-  static const double radiusNormal = 8;
+  static const double radiusNormal = 16;
 }
 
 class AppGlass {
-  static const double blur = 0;
-  static const double blurStrong = 0;
+  static const double blur = 20;
+  static const double blurStrong = 40;
 }
 
 class AppUnderline {

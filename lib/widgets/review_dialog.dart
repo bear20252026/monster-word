@@ -27,7 +27,7 @@ class _ReviewDialog extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: skin.pageBg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
         top: false,
@@ -105,10 +105,10 @@ class _ReviewDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(8),
                     child: LinearProgressIndicator(
                       value: state.total > 0 ? state.learnedNum / state.total : 0,
-                      minHeight: 6,
+                      minHeight: 8,
                       backgroundColor: skin.divider,
                       valueColor: AlwaysStoppedAnimation(skin.accent),
                     ),

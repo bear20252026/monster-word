@@ -375,7 +375,7 @@ class AppDialog {
     required Widget child,
     bool barrierDismissible = true,
     double? width,
-    double borderRadius = 16,
+    double borderRadius = 24,
   }) {
     final skin = context.skin;
     return showDialog<T>(
@@ -411,7 +411,7 @@ class AppDialog {
       builder: (context) => Container(
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         padding: const EdgeInsets.all(20),
         child: child,

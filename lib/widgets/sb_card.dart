@@ -1,6 +1,6 @@
 // Monster Word — 星巴克卡片组件
 // 来源规格：docs/component_spec.md §2（SbCard）
-// 12px 圆角、白底、双层低透明度阴影、奶油画布浮起效果
+// 24px 圆角、白底、双层低透明度阴影、奶油画布浮起效果（圆润温润版）
 
 import 'package:flutter/material.dart';
 import '../theme/skin_system.dart';
@@ -8,7 +8,7 @@ import 'scale_down_on_press.dart';
 
 /// 星巴克标准卡片组件
 ///
-/// 12px 圆角白色卡片，带双层低透明度阴影，在奶油画布上呈现浮起效果。
+/// 24px 圆角白色卡片，带双层低透明度阴影，在奶油画布上呈现浮起效果（圆润温润）。
 /// 可选 [onTap] 回调（自动包装 [ScaleDownOnPress] 按压反馈）。
 ///
 /// 用法：
@@ -34,7 +34,7 @@ class SbCard extends StatelessWidget {
   /// 外边距。直接应用到 Container 的 margin。
   final EdgeInsetsGeometry? margin;
 
-  /// 圆角半径，默认 12px（星巴克规范）
+  /// 圆角半径，默认 24px（圆润温润版）
   final double borderRadius;
 
   /// 背景色，默认白色
@@ -49,7 +49,7 @@ class SbCard extends StatelessWidget {
     this.onTap,
     this.padding,
     this.margin,
-    this.borderRadius = 12.0,
+    this.borderRadius = 24.0,
     this.color,
     this.shadow = true,
   });

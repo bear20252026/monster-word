@@ -121,12 +121,12 @@ class StarbucksDarkColors {
 
 /// 形状系统（星巴克规范）
 class StarbucksShape {
-  // 圆角
-  static const double cardRadius = 12;                    // 卡片
+  // 圆角（圆润温润版）
+  static const double cardRadius = 24;                    // 卡片
   static const double buttonRadius = 50;                  // 胶囊按钮
   static const double frapRadius = 56;                    // Frap 悬浮按钮
-  static const double inputRadius = 12;                   // 输入框
-  static const double modalRadius = 12;                   // 模态框
+  static const double inputRadius = 16;                   // 输入框
+  static const double modalRadius = 24;                   // 模态框
 
   // 阴影（双层低透明度）
   static const List<BoxShadow> cardShadow = [
