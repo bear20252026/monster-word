@@ -172,13 +172,13 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
 
   Future<void> _onCheckIn() async {
     final newBalance = await ScareCoinLedger.checkIn();
+    if (!mounted) return;
     if (newBalance == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('今天已经签到过啦，明天再来～')),
       );
       return;
     }
-    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('签到成功！尖叫币 +${ScareCoinLedger.checkInReward} 👹')),
     );

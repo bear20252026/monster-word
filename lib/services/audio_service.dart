@@ -1,7 +1,6 @@
 // 音频播放服务
 // 统一管理单词发音播放，提供加载状态和错误反馈
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class AudioService extends ChangeNotifier {
@@ -17,10 +16,11 @@ class AudioService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
+    AudioPlayer? player;
     try {
       // 优先使用系统 TTS（离线可用）
       // 桌面端回退到网络音频
-      final player = AudioPlayer();
+      player = AudioPlayer();
       await player.play(UrlSource(
         'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.trim())}&type=2'));
     } catch (e) {
@@ -34,6 +34,7 @@ class AudioService extends ChangeNotifier {
         );
       }
     } finally {
+      await player?.dispose();
       _isLoading = false;
       notifyListeners();
     }

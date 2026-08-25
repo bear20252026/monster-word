@@ -2,7 +2,6 @@
 // 字典详情页：完整单词释义、柯林斯、例句、派生、词根、近义词
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
@@ -694,8 +693,9 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
   }
 
   Future<void> _playAudio(String word) async {
+    AudioPlayer? player;
     try {
-      final player = AudioPlayer();
+      player = AudioPlayer();
       await player.play(UrlSource(
         'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2',
       ));
@@ -705,6 +705,8 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
           const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
         );
       }
+    } finally {
+      await player?.dispose();
     }
   }
 }

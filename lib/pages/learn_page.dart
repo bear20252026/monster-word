@@ -34,8 +34,9 @@ class _LearnPageState extends State<LearnPage> {
   Future<void> _playAudio(String word) async {
     if (_audioLoading) return;
     setState(() => _audioLoading = true);
+    AudioPlayer? player;
     try {
-      final player = AudioPlayer();
+      player = AudioPlayer();
       await player.play(UrlSource(
         'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2'));
     } catch (e) {
@@ -46,6 +47,7 @@ class _LearnPageState extends State<LearnPage> {
         );
       }
     } finally {
+      await player?.dispose();
       if (mounted) setState(() => _audioLoading = false);
     }
   }

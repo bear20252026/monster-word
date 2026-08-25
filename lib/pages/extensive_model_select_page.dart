@@ -5,12 +5,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/wordbook_database.dart';
-import '../hooks/responsive.dart';
-import '../pages/listening_player_page.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import 'listening_player_page.dart';
 
 class ListenMode {
   final String name;

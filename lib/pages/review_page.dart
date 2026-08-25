@@ -631,8 +631,9 @@ class _ReviewPageState extends State<ReviewPage> {
   Future<void> _playWordAudio(BBWordProcess word) async {
     if (_audioLoading) return;
     setState(() => _audioLoading = true);
+    AudioPlayer? player;
     try {
-      final player = AudioPlayer();
+      player = AudioPlayer();
       await player.play(UrlSource(
         'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2',
       ));
@@ -643,6 +644,7 @@ class _ReviewPageState extends State<ReviewPage> {
         );
       }
     } finally {
+      await player?.dispose();
       if (mounted) setState(() => _audioLoading = false);
     }
   }

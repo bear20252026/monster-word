@@ -659,21 +659,23 @@ class _WordMachinePageState extends State<WordMachinePage>
 
   /// 播放单词音频（在线发音）
   Future<void> _playAudio(String wordText) async {
+    AudioPlayer? player;
     try {
       await _audioSub?.cancel();
-      final player = AudioPlayer();
+      player = AudioPlayer();
       await player.setUrl(
         'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(wordText)}&type=2');
       await player.play();
       // 播放完成后释放资源
       _audioSub = player.processingStateStream.listen((s) {
         if (s == ProcessingState.completed) {
-          player.dispose();
+          player?.dispose();
           _audioSub = null;
         }
       });
     } catch (e) {
       debugPrint('Audio playback error: $e');
+      await player?.dispose();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
