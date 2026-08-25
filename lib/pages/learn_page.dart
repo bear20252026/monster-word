@@ -56,7 +56,14 @@ class _LearnPageState extends State<LearnPage> {
     final word = state.currentWord;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) return;
+        // 清除学习状态，确保返回首页后不会残留
+        state.exitLearning();
+      },
+      child: Scaffold(
       backgroundColor: skin.colors.pageBg, // 奶油画布（batch4c: 壁纸→cream canvas）
       body: word == null
           ? Center(child: Text('暂无单词', style: TextStyle(color: skin.colors.text2)))
@@ -89,6 +96,7 @@ class _LearnPageState extends State<LearnPage> {
                 ),
               ),
             ),
+    ),
     );
   }
 }

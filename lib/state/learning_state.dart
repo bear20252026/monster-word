@@ -1,5 +1,6 @@
 // 由账号4生成
 // 学习状态管理：当前词书、学习队列、进度、SRS 评分、4选1选词
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -7,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart';
-import '../engine/fsrs5_engine.dart';
+import '../engine/fsrs6_engine.dart';
 import '../engine/leitner_engine.dart';
 import '../models/bb_word_process.dart';
 
@@ -18,10 +19,10 @@ class LearningState extends ChangeNotifier {
   int _currentIndex = 0;
   bool _showAnswer = false;
 
-  // FSRS-5 SRS 相关
-  final Fsrs5Engine _fsrsEngine = Fsrs5Engine();
+  // FSRS-6 SRS 相关（升级自 FSRS-5，支持短时记忆模型和更精确的记忆预测）
+  final Fsrs6Engine _fsrsEngine = Fsrs6Engine();
   Map<String, FsrsCard> _cards = {};
-  static const _cardsPrefKey = 'fsrs5_cards_v1';
+  static const _cardsPrefKey = 'fsrs6_cards_v1';
 
   // 收藏 & 标记已掌握
   final Set<String> _favoriteWords = {};
@@ -56,6 +57,9 @@ class LearningState extends ChangeNotifier {
   // Leitner 学习引擎（4选1选词）
   final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
   List<BBWordProcess> _processQueue = [];
+
+  // 音频播放（学习页面的发音）
+  StreamSubscription<void>? _audioSub;
   List<WordChoicePair> _choices = []; // 4 选 1 选项
 
   Book? get currentBook => _currentBook;
@@ -368,13 +372,18 @@ class LearningState extends ChangeNotifier {
   /// 已掌握单词数量
   int get masteredCount => _masteredWords.length;
 
-  /// 加载一本书进入学习队列
-  Future<void> loadBook(Book book, {int limit = 50}) async {
+  /// 加载一本书进入学习队列（乱序版：单词顺序随机打乱）
+  Future<void> loadBook(Book book, {int limit = 50, bool shuffle = true}) async {
     _currentBook = book;
     _queue = await WordBookDatabase.instance
         .getWordsByBook(book.id, limit: limit, offset: 0);
     _currentIndex = 0;
     _showAnswer = false;
+
+    // 乱序版：打乱单词顺序，避免每次都从 A 开始
+    if (shuffle) {
+      _queue.shuffle();
+    }
 
     // 初始化 Leitner 引擎（4选1选词逻辑 1:1）
     _processQueue = _queue
@@ -407,29 +416,39 @@ class LearningState extends ChangeNotifier {
     final correctInterpret = current.interpret;
     final correctWord = current.word;
 
-    // 构建候选池（去重释义）
+    // 构建候选池（去重释义，优先有中文的）
     final seenInterprets = <String>{correctInterpret};
     final pool = <Map<String, String>>[];
     for (final w in _queue) {
       if (w.word != correctWord && w.interpret.isNotEmpty && !seenInterprets.contains(w.interpret)) {
         seenInterprets.add(w.interpret);
-        pool.add({'word': w.word, 'interpret': w.interpret});
+        final cn = _extractCn(w.interpret);
+        pool.add({'word': w.word, 'interpret': w.interpret, 'cn': cn});
       }
     }
 
-    // 打乱候选池，取前 3 个不同释义
+    // 优先选择有中文释义的干扰项
     pool.shuffle();
+    final withCn = pool.where((w) => (w['cn'] ?? '').isNotEmpty).toList();
+    final withoutCn = pool.where((w) => (w['cn'] ?? '').isEmpty).toList();
+
     final distractors = <Map<String, String>>[];
-    for (final w in pool) {
+    // 先取有中文的
+    for (final w in withCn) {
+      if (distractors.length >= 3) break;
+      distractors.add(w);
+    }
+    // 不够再补无中文的
+    for (final w in withoutCn) {
       if (distractors.length >= 3) break;
       distractors.add(w);
     }
 
     // 如果不够 3 个，用占位释义补齐
     final fallbacks = [
-      {'word': '', 'interpret': '非标准用法'},
-      {'word': '', 'interpret': '罕用释义'},
-      {'word': '', 'interpret': '非正式表达'},
+      {'word': '', 'interpret': '非标准用法', 'cn': '非标准用法'},
+      {'word': '', 'interpret': '罕用释义', 'cn': '罕用释义'},
+      {'word': '', 'interpret': '非正式表达', 'cn': '非正式表达'},
     ];
     int fb = 0;
     while (distractors.length < 3 && fb < fallbacks.length) {
@@ -447,6 +466,33 @@ class LearningState extends ChangeNotifier {
       ...distractors.map((d) => WordChoicePair(d['word'] ?? '', d['interpret'] ?? '')),
     ];
     _choices = choices.toList()..shuffle();
+  }
+
+  /// 从 interpret JSON 提取中文释义
+  String _extractCn(String interpret) {
+    try {
+      final decoded = jsonDecode(interpret);
+      if (decoded is List && decoded.isNotEmpty) {
+        final first = decoded.first;
+        if (first is Map) {
+          final defList = first['def'];
+          if (defList is List && defList.isNotEmpty) {
+            final firstDef = defList.first;
+            if (firstDef is Map) {
+              final cn = (firstDef['cn'] ?? firstDef['cndef'] ?? '') as String;
+              return cn.trim();
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  /// 退出学习：清除当前学习状态，释放音频资源
+  void exitLearning() {
+    _audioSub?.cancel();
+    _audioSub = null;
   }
 
   /// 用户评分（SRS）：不认识/模糊/认识/熟练
@@ -541,6 +587,67 @@ class LearningState extends ChangeNotifier {
 
   /// 已学数量（Leitner 引擎）
   int get learnedNum => _leitnerEngine.learnedNumber;
+
+  // ========== FSRS-6 数据访问 ==========
+
+  /// 获取当前单词的 FSRS 卡片
+  FsrsCard? get currentCard {
+    final word = currentWord;
+    if (word == null) return null;
+    return _cards[word.word];
+  }
+
+  /// 获取任意单词的 FSRS 卡片
+  FsrsCard? getCard(String word) => _cards[word];
+
+  /// 获取当前单词的记忆预测信息
+  Map<String, dynamic>? get currentPrediction {
+    final card = currentCard;
+    if (card == null) return null;
+    return _fsrsEngine.getPrediction(card);
+  }
+
+  /// 获取记忆统计（用于仪表盘）
+  Map<String, int> get memoryStats {
+    int newCount = 0, dueCount = 0, learningCount = 0, matureCount = 0;
+    for (final card in _cards.values) {
+      if (card.isNew) {
+        newCount++;
+      } else if (card.isDue) {
+        dueCount++;
+      } else if (card.stability < 7) {
+        learningCount++;
+      } else {
+        matureCount++;
+      }
+    }
+    return {
+      'new': newCount,
+      'due': dueCount,
+      'learning': learningCount,
+      'mature': matureCount,
+      'total': _cards.length,
+    };
+  }
+
+  /// 获取今日学习统计
+  Map<String, int> get todayStats {
+    final stats = memoryStats;
+    return {
+      'learned': _queue.length - (stats['new'] ?? 0),
+      'due': stats['due'] ?? 0,
+      'total': stats['total'] ?? 0,
+      'mature': stats['mature'] ?? 0,
+    };
+  }
+
+  /// 获取所有到期需要复习的单词
+  List<Word> get dueWords {
+    return _queue.where((w) {
+      final card = _cards[w.word];
+      return card != null && !card.isNew && card.isDue;
+    }).toList();
+  }
 
   // ========== 登录状态 ==========
 

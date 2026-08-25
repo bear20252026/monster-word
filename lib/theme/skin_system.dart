@@ -192,14 +192,14 @@ final themes = <String, ThemePreset>{
       text2:        const Color(0xB3212121),      // α=0.70（WCAG AA on 奶油画布 5.55:1）
       text3:        const Color(0xB3212121),      // α=0.70（WCAG AA on 奶油画布 4.71:1）
       divider:      const Color(0x14000000),      // 8% 黑
-      accent:       const Color(0xFF00754A),      // 品牌绿 CTA（5.76:1）
+      accent:       const Color(0xFF008550),      // 稍亮的星巴克绿（按钮背景）
       success:      const Color(0xFF2E7D32),      // 深绿色（WCAG AA）
       danger:       const Color(0xFFBF2020),      // 深红色（WCAG AA）
-      teal:         const Color(0xFF00754A),      // 品牌绿替代蓝
+      teal:         const Color(0xFF008550),      // 稍亮的星巴克绿替代蓝
       tabBarIcon:   const Color(0xDE212121),      // 同 text1
       onGlassText1: const Color(0xDE212121),
       onGlassText2: const Color(0xA6212121),      // α=0.65（WCAG AA on 白卡片）
-      onGlassAccent: const Color(0xFF00754A),
+      onGlassAccent: const Color(0xFFFFFFFF),    // 白字（在绿色按钮上清晰可读）
       glassBg:      const Color(0xFFFFFFFF),
       glassBgStrong: const Color(0xFFFFFFFF),
       glassBorder:  const Color(0x14000000),
@@ -233,7 +233,7 @@ final themes = <String, ThemePreset>{
       tabBarIcon:   const Color(0xDEFFFFFF),
       onGlassText1: const Color(0xDEFFFFFF),
       onGlassText2: const Color(0xFFA9BCB5),      // 同 text2
-      onGlassAccent: const Color(0xFF00BB00),      // 同 accent（WCAG AA）
+      onGlassAccent: const Color(0xFFFFFFFF),    // 白字（在绿色按钮上清晰可读）
       glassBg:      const Color(0xFF1E3932),
       glassBgStrong: const Color(0xFF274A40),
       glassBorder:  const Color(0x1FFFFFFF),

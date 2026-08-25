@@ -56,13 +56,15 @@ class SuperMemoryEngine extends BBCoreEngine {
 
   SuperMemoryEngine({super.eventLabel = 'review'});
 
-  /// 初始化复习列表（原版 arrayForReviewWords 逻辑）
+  /// 初始化复习列表（原版 arrayForReviewWords 逻辑）+ 随机打乱
   void init(List<BBWordProcess> dueWords) {
     reviewList = List.from(dueWords);
     tooEasyList = [];
     alreadyReviewed = [];
     _currentIndex = 0;
     _totalNum = reviewList.length;
+    // 随机打乱复习顺序
+    reviewList.shuffle();
     // 为每个单词分配测试模式（原版 reviewTestModeForWord）
     for (final w in reviewList) {
       w.testMode = _reviewTestModeForWord(w);

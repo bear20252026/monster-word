@@ -42,7 +42,7 @@ class LeitnerCardEngine extends BBCoreEngine {
   LeitnerCardEngine({super.eventLabel = 'learn', LearnStrategy? strategy})
       : strategy = strategy ?? const LearnStrategy();
 
-  /// 初始化：填充等级列表（原版 fillTheArray）
+  /// 初始化：填充等级列表（原版 fillTheArray）+ 随机打乱
   void init(List<BBWordProcess> allWords) {
     level0.clear();
     level1.clear();
@@ -68,15 +68,23 @@ class LeitnerCardEngine extends BBCoreEngine {
           level0.add(w);
       }
     }
+    // 每个等级内部随机打乱，确保学习顺序不总是 A→Z
+    level0.shuffle();
+    level1.shuffle();
+    level2.shuffle();
+    level3.shuffle();
+    level4.shuffle();
     _buildNextGroup();
   }
 
-  /// 构建下一组（原版逻辑：取 activeList 前 GROUP_SIZE 个）
+  /// 构建下一组（原版逻辑：取 activeList 前 GROUP_SIZE 个）+ 组内打乱
   void _buildNextGroup() {
     final active = _activeList;
     _currentGroup = active.length <= strategy.groupSize
         ? List.from(active)
         : List.from(active.sublist(0, strategy.groupSize));
+    // 组内随机打乱，避免每次都是 A→Z 顺序
+    _currentGroup.shuffle();
     _currentIndexInGroup = 0;
     updateListChoicesRandom();
   }

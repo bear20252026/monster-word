@@ -2,7 +2,7 @@
 // 从学习页答题后进入，看完后点击"下一词"返回学习
 import 'dart:async';
 
-import 'package:just_audio/just_audio.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -35,7 +35,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
   List<WordNote> _notes = [];
   bool _notesLoaded = false;
   DictionaryExtra? _extra; // 字典补充数据（派生词/近义词/真题）
-  StreamSubscription<ProcessingState>? _audioSub; // 音频播放状态订阅
+  StreamSubscription<void>? _audioSub; // 音频播放完成订阅
 
   /// 解析要展示的单词：路由参数优先（从词书/收藏/列表点入时显示所点的词），
   /// 否则回退到当前学习词。修复此前所有入口都显示 currentWord 的问题。
@@ -139,7 +139,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
     final lines = word.interpretLines;
     final confuseList = _parseConfuse(word.confuse);
 
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
       backgroundColor: skin.colors.pageBg,
       body: SafeArea(
         child: Column(
@@ -175,6 +177,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -765,15 +768,14 @@ class _WordDetailPageState extends State<WordDetailPage> {
                     // 取消上一次播放
                     await _audioSub?.cancel();
                     final player = AudioPlayer();
-                    await player.setUrl(
-                      'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2');
-                    await player.play();
+                    // 使用 HTTPS 避免网络安全策略拦截
+                    final url = 'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2';
+                    await player.setSource(UrlSource(url));
+                    await player.resume();
                     // 播放完成后释放资源
-                    _audioSub = player.processingStateStream.listen((state) {
-                      if (state == ProcessingState.completed) {
-                        player.dispose();
-                        _audioSub = null;
-                      }
+                    _audioSub = player.onPlayerComplete.listen((_) {
+                      player.dispose();
+                      _audioSub = null;
                     });
                   } catch (e) {
                     if (mounted) {
