@@ -10,6 +10,9 @@ import '../tokens/design_tokens.dart';
 import '../widgets/sb_button.dart';
 import '../widgets/sb_modal.dart';
 import '../widgets/scale_down_on_press.dart';
+import 'account_info_page.dart';
+import 'feedback_page.dart';
+import 'redemption_center_page.dart';
 
 /// 更多设置页
 class MoreSettingsPage extends StatefulWidget {
@@ -26,6 +29,187 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$feature 功能即将上线'), duration: const Duration(seconds: 1)),
+    );
+  }
+
+  /// 评价应用弹窗（5星评分）
+  void _showRatingDialog(BuildContext context) {
+    int rating = 0;
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: context.skin.colors.cardBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Column(
+            children: [
+              const Text('⭐', style: TextStyle(fontSize: 36)),
+              const SizedBox(height: 8),
+              Text('给个好评吧！',
+                  style: MistralTypography.heading5
+                      .copyWith(color: context.skin.colors.text1)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('您的支持是我们前进的动力',
+                  style: MistralTypography.body
+                      .copyWith(color: context.skin.colors.text2)),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (i) {
+                  return GestureDetector(
+                    onTap: () => setDialogState(() => rating = i + 1),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Icon(
+                        i < rating ? Icons.star : Icons.star_border,
+                        color: const Color(0xFFFFC107),
+                        size: 36,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('取消',
+                  style: TextStyle(color: context.skin.colors.text3)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.skin.colors.accent,
+                foregroundColor: context.skin.colors.onGlassAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              onPressed: rating == 0
+                  ? null
+                  : () {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('感谢您的 $rating 星好评！⭐'),
+                          backgroundColor: context.skin.colors.success,
+                        ),
+                      );
+                    },
+              child: const Text('提交'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 检查更新弹窗
+  void _showUpdateDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.skin.colors.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Column(
+          children: [
+            const Text('🎉', style: TextStyle(fontSize: 36)),
+            const SizedBox(height: 8),
+            Text('已是最新版本',
+                style: MistralTypography.heading5
+                    .copyWith(color: context.skin.colors.text1)),
+          ],
+        ),
+        content: Text('当前版本 v5.11.1 已是最新，无需更新',
+            style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
+            textAlign: TextAlign.center),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.skin.colors.accent,
+              foregroundColor: context.skin.colors.onGlassAccent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('知道了'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 分享给好友弹窗（宣传海报）
+  void _showShareDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.skin.colors.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 宣传海报
+            Container(
+              width: 200,
+              height: 280,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    context.skin.colors.accent,
+                    context.skin.colors.accent.withOpacity(0.7),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('👹', style: TextStyle(fontSize: 48)),
+                  const SizedBox(height: 12),
+                  Text('Monster Word',
+                      style: MistralTypography.heading5
+                          .copyWith(color: context.skin.colors.onGlassAccent)),
+                  const SizedBox(height: 4),
+                  Text('背单词，so easy！',
+                      style: MistralTypography.bodySm
+                          .copyWith(color: context.skin.colors.onGlassAccent.withOpacity(0.9))),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: context.skin.colors.onGlassAccent,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('扫码下载',
+                        style: MistralTypography.micro.copyWith(
+                            color: context.skin.colors.accent)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('扫码下载 Monster Word',
+                style: MistralTypography.body.copyWith(color: context.skin.colors.text2)),
+          ],
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('关闭', style: TextStyle(color: context.skin.colors.text3)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -52,7 +236,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       iconColor: skin.colors.accent,
                       title: '账号信息',
                       subtitle: '点击设置',
-                      onTap: () => _showComingSoon('账号信息'),
+                      onTap: () => Navigator.pushNamed(context, AccountInfoPage.routeName),
                     ),
                   ]),
                   const SizedBox(height: AppleSpacing.md),
@@ -77,7 +261,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       icon: Icons.help_outline,
                       iconColor: MistralColors.success,
                       title: '帮助与反馈',
-                      onTap: () => _showComingSoon('帮助与反馈'),
+                      onTap: () => Navigator.pushNamed(context, FeedbackPage.routeName),
                     ),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
@@ -85,21 +269,21 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       iconColor: MistralColors.warning,
                       title: '评价应用',
                       subtitle: 'v5.11.1',
-                      onTap: () => _showComingSoon('评价应用'),
+                      onTap: () => _showRatingDialog(context),
                     ),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
                       icon: Icons.system_update_outlined,
                       iconColor: MistralColors.link,
                       title: '检查更新',
-                      onTap: () => _showComingSoon('检查更新'),
+                      onTap: () => _showUpdateDialog(context),
                     ),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
                       icon: Icons.share_outlined,
                       iconColor: MistralColors.ink,
                       title: '推荐给好友',
-                      onTap: () => _showComingSoon('推荐好友'),
+                      onTap: () => _showShareDialog(context),
                     ),
                   ]),
                   const SizedBox(height: AppleSpacing.md),
@@ -110,7 +294,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       icon: Icons.redeem_outlined,
                       iconColor: MistralColors.primary,
                       title: '兑换中心',
-                      onTap: () => _showComingSoon('兑换中心'),
+                      onTap: () => Navigator.pushNamed(context, RedemptionCenterPage.routeName),
                     ),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
