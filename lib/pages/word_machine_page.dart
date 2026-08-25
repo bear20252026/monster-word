@@ -412,14 +412,47 @@ class _WordMachinePageState extends State<WordMachinePage>
     if (word == null) {
       return Container(
         color: GameBoyPalette.screenBg,
-        child: const Center(
-          child: Text(
-            'NO DATA',
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 16,
-              color: GameBoyPalette.screenDark,
-            ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'CLEAR!',
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 16,
+                  color: GameBoyPalette.screenDark,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '今日学习完成',
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 10,
+                  color: GameBoyPalette.screenMid,
+                ),
+              ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: GameBoyPalette.screenDark,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    '返回首页',
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 10,
+                      color: GameBoyPalette.screenBg,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );

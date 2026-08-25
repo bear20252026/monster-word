@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../engine/fsrs5_engine.dart';
+import '../engine/fsrs6_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -145,7 +145,9 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
       );
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
       backgroundColor: skin.colors.pageBg,
       body: SafeArea(
         child: Column(
@@ -173,6 +175,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
             _buildBottomHint(skin),
           ],
         ),
+      ),
       ),
     );
   }
@@ -292,7 +295,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      word.interpret,
+                      word.cleanInterpret,
                       style: MistralTypography.body.copyWith(
                         color: skin.colors.text1,
                         height: 1.5,

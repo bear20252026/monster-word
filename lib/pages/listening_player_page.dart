@@ -8,6 +8,7 @@ import '../hooks/responsive.dart';
 import '../player/system_tts.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/sb_card.dart';
 
 enum ListeningMode {
   wordOnly,       // 仅单词
@@ -104,11 +105,11 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         await _tts.speakEnglish(word.word);
         break;
       case ListeningMode.wordMeaning:
-        await _tts.speakWordWithMeaning(word.word, word.interpret);
+        await _tts.speakWordWithMeaning(word.word, word.cleanInterpret);
         break;
       case ListeningMode.meaningWord:
         // 先中文后英文
-        await _tts.speakChinese(word.interpret);
+        await _tts.speakChinese(word.cleanInterpret);
         await Future.delayed(const Duration(milliseconds: 500));
         await _tts.speakEnglish(word.word);
         break;
@@ -195,7 +196,9 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
       );
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
       backgroundColor: skin.colors.pageBg,
       body: SafeArea(
         child: Column(
@@ -229,6 +232,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -342,12 +346,12 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
             ),
           ],
           // 释义（可显示/隐藏）
-          if (word.interpret.isNotEmpty) ...[
+          if (word.cleanInterpret.isNotEmpty) ...[
             const SizedBox(height: 16),
             AnimatedCrossFade(
               firstChild: const SizedBox.shrink(),
               secondChild: Text(
-                word.interpret,
+                word.cleanInterpret,
                 style: MistralTypography.body.copyWith(
                   color: skin.colors.text2,
                   fontSize: 18 * resp.fontScale,
@@ -398,36 +402,39 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
 
   Widget _buildControls(SkinSystem skin, AppResponsive resp) {
     final buttonSize = 56.0 * resp.scale;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // 上一首
-        _ControlButton(
-          icon: Icons.skip_previous_rounded,
-          size: buttonSize,
-          onPressed: _currentIndex > 0 ? _previous : null,
-          skin: skin,
-        ),
-        const SizedBox(width: 24),
-        // 播放/暂停
-        _ControlButton(
-          icon: _isPlaying && !_isPaused
-              ? Icons.pause_rounded
-              : Icons.play_arrow_rounded,
-          size: buttonSize * 1.4,
-          onPressed: _togglePlayPause,
-          skin: skin,
-          isPrimary: true,
-        ),
-        const SizedBox(width: 24),
-        // 下一首
-        _ControlButton(
-          icon: Icons.skip_next_rounded,
-          size: buttonSize,
-          onPressed: _currentIndex < widget.words.length - 1 ? _next : null,
-          skin: skin,
-        ),
-      ],
+    return SbCard(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 上一首
+          _ControlButton(
+            icon: Icons.skip_previous_rounded,
+            size: buttonSize,
+            onPressed: _currentIndex > 0 ? _previous : null,
+            skin: skin,
+          ),
+          const SizedBox(width: 32),
+          // 播放/暂停（主按钮）
+          _ControlButton(
+            icon: _isPlaying && !_isPaused
+                ? Icons.pause_rounded
+                : Icons.play_arrow_rounded,
+            size: buttonSize * 1.5,
+            onPressed: _togglePlayPause,
+            skin: skin,
+            isPrimary: true,
+          ),
+          const SizedBox(width: 32),
+          // 下一首
+          _ControlButton(
+            icon: Icons.skip_next_rounded,
+            size: buttonSize,
+            onPressed: _currentIndex < widget.words.length - 1 ? _next : null,
+            skin: skin,
+          ),
+        ],
+      ),
     );
   }
 
