@@ -28,6 +28,8 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
   late final AnimationController _monthAnimCtrl;
   late final Animation<double> _monthFadeAnim;
   late final Animation<Offset> _monthSlideAnim;
+  late final AnimationController _progressAnimCtrl;
+  late final Animation<double> _progressAnim;
 
   @override
   void initState() {
@@ -45,25 +47,47 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
     ).animate(
       CurvedAnimation(parent: _monthAnimCtrl, curve: Curves.easeOutCubic),
     );
+    _progressAnimCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _progressAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _progressAnimCtrl, curve: Curves.easeOutCubic),
+    );
     _refresh();
   }
 
   @override
   void dispose() {
     _monthAnimCtrl.dispose();
+    _progressAnimCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _refresh() async {
-    final dates = await ScareCoinLedger.checkinDates();
-    final streak = await ScareCoinLedger.streak();
-    if (!mounted) return;
-    setState(() {
-      _checkedDates = dates;
-      _streak = streak;
-      _totalDays = dates.length;
-      _isLoading = false;
-    });
+    try {
+      final dates = await ScareCoinLedger.checkinDates();
+      final streak = await ScareCoinLedger.streak();
+      if (!mounted) return;
+      setState(() {
+        _checkedDates = dates;
+        _streak = streak;
+        _totalDays = dates.length;
+        _isLoading = false;
+      });
+      // 进度环入场动画
+      _progressAnimCtrl.forward(from: 0);
+      // 月份切换动画
+      _monthAnimCtrl.forward(from: 0);
+    } catch (e) {
+      debugPrint('[CheckInHistory] refresh error: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('加载签到数据失败，请重试')),
+        );
+      }
+    }
   }
 
   void _shiftMonth(int delta) {
@@ -302,21 +326,31 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                           strokeWidth: 5,
                           color: skin.divider,
                         ),
-                        // 进度环
-                        CircularProgressIndicator(
-                          value: _monthlyProgress,
-                          strokeWidth: 5,
-                          color: skin.accent,
-                          strokeCap: StrokeCap.round,
+                        // 进度环（带入场动画）
+                        AnimatedBuilder(
+                          animation: _progressAnim,
+                          builder: (context, child) {
+                            return CircularProgressIndicator(
+                              value: _monthlyProgress * _progressAnim.value,
+                              strokeWidth: 5,
+                              color: skin.accent,
+                              strokeCap: StrokeCap.round,
+                            );
+                          },
                         ),
                         // 中心文字
-                        Text(
-                          '${(_monthlyProgress * 100).round()}%',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: skin.text1,
-                          ),
+                        AnimatedBuilder(
+                          animation: _progressAnim,
+                          builder: (context, child) {
+                            return Text(
+                              '${(_monthlyProgress * _progressAnim.value * 100).round()}%',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: skin.text1,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -354,11 +388,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
               // 月份标签
               Text(
                 '${_currentMonth.year}年${_currentMonth.month}月',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: skin.text1,
-                ),
+                style: MistralTypography.heading5.copyWith(color: skin.text1),
               ),
               const SizedBox(width: 8),
               _MonthSwitchArrow(
@@ -373,29 +403,19 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
             ],
           ),
           const SizedBox(height: 12),
-          // 上月日历（半透明）
-          AnimatedBuilder(
-            animation: _monthAnimCtrl,
-            builder: (context, child) {
-              return Opacity(
-                opacity: 0.45 + 0.55 * (1 - _monthAnimCtrl.value),
-                child: _buildMonthGrid(prevMonth, skin, isPrevious: true),
-              );
-            },
+          // 上月日历（始终半透明的辅助视图）
+          Opacity(
+            opacity: 0.45,
+            child: _buildMonthGrid(prevMonth, skin, isPrevious: true),
           ),
           const SizedBox(height: 8),
-          // 当月日历（主视图，带弹性入场）
-          AnimatedBuilder(
-            animation: Listenable.merge([_monthAnimCtrl, _monthFadeAnim]),
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _monthFadeAnim,
-                child: SlideTransition(
-                  position: _monthSlideAnim,
-                  child: _buildMonthGrid(_currentMonth, skin, isPrevious: false),
-                ),
-              );
-            },
+          // 当月日历（主视图，带弹性入场动画）
+          FadeTransition(
+            opacity: _monthFadeAnim,
+            child: SlideTransition(
+              position: _monthSlideAnim,
+              child: _buildMonthGrid(_currentMonth, skin, isPrevious: false),
+            ),
           ),
         ],
       ),
@@ -485,7 +505,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
             shape: BoxShape.circle,
             border: isToday
                 ? Border.all(
-                    color: const Color(0xFFCBA258), // 金色边框
+                    color: skin.vipGoldBg,
                     width: 2,
                   )
                 : null,
@@ -651,7 +671,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                       ),
                     ),
                     // 尖叫币图标
-                    Icon(Icons.monetization_on, size: 18, color: const Color(0xFFCBA258)),
+                    Icon(Icons.monetization_on, size: 18, color: skin.vipGoldBg),
                   ],
                 ),
               ),
