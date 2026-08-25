@@ -47,6 +47,7 @@ import 'pages/my_content_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/spell_check_page.dart';
 import 'pages/spell_session_page.dart';
+import 'pages/check_in_history_page.dart';
 import 'pages/splash_page.dart';
 import 'pages/ui_theme_select_page.dart';
 import 'pages/user_info_manage_page.dart';
@@ -342,6 +343,7 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
         final a = args as Map<String, dynamic>?;
         return SpellCheckPage(word: a?['word'] ?? '', phonetic: a?['phonetic']);
       case '/spell_session': return const SpellSessionPage();
+      case '/check_in_history': return const CheckInHistoryPage();
       case '/linked_me':
         final a = args as Map<String, dynamic>?;
         return LinkedMeMiddlePage(word: a?['word'] ?? '', association: a?['association']);
@@ -398,6 +400,7 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
       case '/user_info_manage':
       case '/help':
       case '/net_diagnosis':
+      case '/check_in_history':
         return SlideUpRoute(page: page) as Route<dynamic>;
 
       // 渐变进入：学习会话/复习会话

@@ -177,6 +177,34 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
+          // 查看签到历史按钮
+          Positioned(
+            top: -8,
+            left: -8,
+            child: ScaleDownOnPress(
+              onTap: () => Navigator.pushNamed(context, '/check_in_history'),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: skin.colors.cardBg,
+                  shape: BoxShape.circle,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x23000000),
+                      blurRadius: 0.5,
+                      offset: Offset(0, 0),
+                    ),
+                    BoxShadow(
+                      color: Color(0x3D000000),
+                      blurRadius: 1.0,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Icon(Icons.calendar_today, size: 16, color: skin.colors.accent),
+              ),
+            ),
+          ),
         ],
       ),
     );
