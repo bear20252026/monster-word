@@ -269,7 +269,11 @@ class _LearnSessionState extends State<LearnSession>
           // 撤销按钮（原版 ↩）
           IconButton(
             icon: Icon(Icons.undo, color: skin.colors.onGlassText2, size: 20),
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('撤销功能开发中'), duration: Duration(seconds: 1)),
+              );
+            },
           ),
           // 收藏（原版 star_border 按钮）
           IconButton(

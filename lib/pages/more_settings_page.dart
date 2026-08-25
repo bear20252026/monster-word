@@ -23,6 +23,12 @@ class MoreSettingsPage extends StatefulWidget {
 class _MoreSettingsPageState extends State<MoreSettingsPage> {
   bool _wallpaperParallax = true;
 
+  void _showComingSoon(String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$feature 功能即将上线'), duration: const Duration(seconds: 1)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
@@ -46,7 +52,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       iconColor: skin.colors.accent,
                       title: '账号信息',
                       subtitle: '点击设置',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('账号信息'),
                     ),
                   ]),
                   const SizedBox(height: AppleSpacing.md),
@@ -71,7 +77,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       icon: Icons.help_outline,
                       iconColor: MistralColors.success,
                       title: '帮助与反馈',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('帮助与反馈'),
                     ),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
@@ -79,21 +85,21 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       iconColor: MistralColors.warning,
                       title: '评价应用',
                       subtitle: 'v5.11.1',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('评价应用'),
                     ),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
                       icon: Icons.system_update_outlined,
                       iconColor: MistralColors.link,
                       title: '检查更新',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('检查更新'),
                     ),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
                       icon: Icons.share_outlined,
                       iconColor: MistralColors.ink,
                       title: '推荐给好友',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('推荐好友'),
                     ),
                   ]),
                   const SizedBox(height: AppleSpacing.md),
@@ -104,14 +110,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       icon: Icons.redeem_outlined,
                       iconColor: MistralColors.primary,
                       title: '兑换中心',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('兑换中心'),
                     ),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
                       icon: Icons.flag_outlined,
                       iconColor: MistralColors.danger,
                       title: '违法不良信息举报',
-                      onTap: () {},
+                      onTap: () => _showComingSoon('举报'),
                     ),
                   ]),
                   const SizedBox(height: AppleSpacing.md),
