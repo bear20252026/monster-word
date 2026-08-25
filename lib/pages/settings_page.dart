@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
+import '../widgets/scale_down_on_press.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -428,17 +429,33 @@ class _SettingsPageState extends State<SettingsPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 拖拽条
-            Center(
-              child: Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(
-                  color: skin.divider,
-                  borderRadius: BorderRadius.circular(2),
+            // 拖拽条 + 关闭按钮
+            Row(
+              children: [
+                const SizedBox(width: 36),
+                Expanded(
+                  child: Center(
+                    child: Container(
+                      width: 36, height: 4,
+                      decoration: BoxDecoration(
+                        color: skin.divider,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    child: Icon(Icons.close, size: 20, color: skin.text3),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             // 标题
             Text(title,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: skin.text1)),
@@ -484,24 +501,27 @@ class _Cell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
-    return GestureDetector(
+    return ScaleDownOnPress(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
-            ),
-            if (value != null)
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: Text(value!, style: TextStyle(fontSize: 14, color: skin.text3)),
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
               ),
-            Icon(Icons.chevron_right, size: 20, color: skin.text3),
-          ],
+              if (value != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Text(value!, style: TextStyle(fontSize: 14, color: skin.text3)),
+                ),
+              Icon(Icons.chevron_right, size: 20, color: skin.text3),
+            ],
+          ),
         ),
       ),
     );
@@ -518,25 +538,28 @@ class _CellWithDesc extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
-    return GestureDetector(
+    return ScaleDownOnPress(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
-                  const SizedBox(height: 4),
-                  Text(desc, style: TextStyle(fontSize: 12, color: skin.text3)),
-                ],
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
+                    const SizedBox(height: 4),
+                    Text(desc, style: TextStyle(fontSize: 12, color: skin.text3)),
+                  ],
+                ),
               ),
-            ),
-            Icon(Icons.chevron_right, size: 20, color: skin.text3),
-          ],
+              Icon(Icons.chevron_right, size: 20, color: skin.text3),
+            ],
+          ),
         ),
       ),
     );

@@ -32,6 +32,7 @@ class _SearchPageState extends State<SearchPage> {
   String _lastQuery = '';
   Word? _selectedWord;
   List<String> _searchHistory = [];
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -46,7 +47,9 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _loadHistory() {
-    _searchHistory = AppPreferences().getSearchHistory();
+    setState(() {
+      _searchHistory = AppPreferences().getSearchHistory();
+    });
   }
 
   Future<void> _saveToHistory(String word) async {
@@ -64,14 +67,17 @@ class _SearchPageState extends State<SearchPage> {
       setState(() { _results = []; _selectedWord = null; _hasSearched = false; _lastQuery = ''; });
       return;
     }
-    setState(() {});
+    setState(() => _isLoading = true);
     final results = await WordBookDatabase.instance.searchWords(query.trim(), limit: 30);
-    setState(() {
-      _results = results;
-      _selectedWord = results.isNotEmpty ? results.first : null;
-      _hasSearched = true;
-      _lastQuery = query.trim();
-    });
+    if (mounted) {
+      setState(() {
+        _results = results;
+        _selectedWord = results.isNotEmpty ? results.first : null;
+        _hasSearched = true;
+        _lastQuery = query.trim();
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -91,15 +97,26 @@ class _SearchPageState extends State<SearchPage> {
                 children: [
                   _buildSearchBar(skin),
                   Expanded(
-                    child: _selectedWord != null
-                        ? _buildWordDetail(_selectedWord!, skin)
-                        : _results.isNotEmpty
-                            ? _buildResultList(skin)
-                            : _hasSearched
-                                ? _buildNoResults(skin)
-                                : _searchHistory.isNotEmpty
-                                    ? _buildHistory(skin)
-                                    : _buildEmpty(skin),
+                    child: _isLoading
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircularProgressIndicator(color: skin.accent),
+                                const SizedBox(height: 12),
+                                Text('搜索中…', style: TextStyle(color: skin.text3, fontSize: 14)),
+                              ],
+                            ),
+                          )
+                        : _selectedWord != null
+                            ? _buildWordDetail(_selectedWord!, skin)
+                            : _results.isNotEmpty
+                                ? _buildResultList(skin)
+                                : _hasSearched
+                                    ? _buildNoResults(skin)
+                                    : _searchHistory.isNotEmpty
+                                        ? _buildHistory(skin)
+                                        : _buildEmpty(skin),
                   ),
                 ],
               ),

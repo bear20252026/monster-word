@@ -11,6 +11,7 @@ import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../tokens/func_colors.dart';
 import '../widgets/sb_card.dart';
+import '../widgets/scale_down_on_press.dart';
 
 // 功能图标色（使用 FuncColors token）
 // _iconPurple → FuncColors.purple
@@ -201,26 +202,29 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _menuRow(IconData icon, Color iconColor, String label, SkinSystem skin, {VoidCallback? onTap}) {
-    return InkWell(
+    return ScaleDownOnPress(
       onTap: onTap,
-      child: Container(
-        height: AppSpacing.rowH,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          height: AppSpacing.rowH,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(width: 14),
-          Expanded(child: Text(label,
-            style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1))),
-          Icon(Icons.chevron_right, size: 18, color: skin.colors.text3),
-        ]),
+            const SizedBox(width: 14),
+            Expanded(child: Text(label,
+              style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1))),
+            Icon(Icons.chevron_right, size: 18, color: skin.colors.text3),
+          ]),
+        ),
       ),
     );
   }

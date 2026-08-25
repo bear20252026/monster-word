@@ -741,20 +741,21 @@ class _NoteCard extends StatelessWidget {
               Text(_formatDate(note.updatedAt),
                 style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
               const Spacer(),
-              GestureDetector(
-                onTap: onEdit,
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Icon(Icons.edit_outlined, size: 16, color: skin.colors.text3),
-                ),
+              IconButton(
+                onPressed: onEdit,
+                icon: Icon(Icons.edit_outlined, size: 18, color: skin.colors.text3),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                padding: const EdgeInsets.all(6),
+                splashRadius: 18,
+                tooltip: '编辑',
               ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: onDelete,
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Icon(Icons.delete_outline, size: 16, color: skin.colors.danger),
-                ),
+              IconButton(
+                onPressed: onDelete,
+                icon: Icon(Icons.delete_outline, size: 18, color: skin.colors.danger),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                padding: const EdgeInsets.all(6),
+                splashRadius: 18,
+                tooltip: '删除',
               ),
             ],
           ),

@@ -14,6 +14,7 @@ import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/scale_down_on_press.dart';
 import '../widgets/session_exit_guard.dart';
 
 class ReviewSession extends StatefulWidget {
@@ -218,11 +219,13 @@ class _ReviewSessionState extends State<ReviewSession> {
             final correct = selected && isAnswer;
             final wrong = selected && !isAnswer;
 
-            return GestureDetector(
+            return ScaleDownOnPress(
               onTap: () {
                 _rate(isAnswer ? RecallRating.good : RecallRating.again);
               },
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -238,7 +241,11 @@ class _ReviewSessionState extends State<ReviewSession> {
                         : wrong
                             ? skin.colors.quizWrongText
                             : skin.colors.divider,
+                    width: selected ? 2 : 1,
                   ),
+                  boxShadow: selected
+                      ? [BoxShadow(color: skin.colors.accent.withValues(alpha: 0.15), blurRadius: 8, offset: const Offset(0, 2))]
+                      : null,
                 ),
                 child: Text(
                   c.interpret,

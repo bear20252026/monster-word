@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../widgets/animations.dart';
+import '../widgets/scale_down_on_press.dart';
 import '../tokens/design_tokens.dart';
 
 class LoginPage extends StatefulWidget {
@@ -540,24 +541,27 @@ class _LoginPageState extends State<LoginPage>
   }
 
   Widget _buildSocialIcon(IconData icon, String label, VoidCallback onTap) {
-    return GestureDetector(
+    return ScaleDownOnPress(
       onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: MistralColors.hairline),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: MistralColors.hairline),
+              ),
+              child: Icon(icon, size: 22, color: MistralColors.stone),
             ),
-            child: Icon(icon, size: 22, color: MistralColors.stone),
-          ),
-          const SizedBox(height: 4),
-          Text(label, style: MistralTypography.micro.copyWith(
-            color: MistralColors.stone,
-          )),
-        ],
+            const SizedBox(height: 4),
+            Text(label, style: MistralTypography.micro.copyWith(
+              color: MistralColors.stone,
+            )),
+          ],
+        ),
       ),
     );
   }

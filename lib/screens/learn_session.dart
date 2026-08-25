@@ -617,29 +617,26 @@ class _DerivedWordsCard extends StatelessWidget {
             skin: skin,
           )),
           const SizedBox(height: 12),
-          // 查看详细解析链接
-          GestureDetector(
-            onTap: () {
-              // TODO: 导航到详细解析页面
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('详细解析功能开发中...')),
-              );
-            },
-            child: Row(
-              children: [
-                Text(
-                  '查看详细解析',
-                  style: AppTypography.caption.copyWith(
+          // 查看详细解析链接（功能暂未上线，禁用状态）
+          Opacity(
+            opacity: 0.4,
+            child: IgnorePointer(
+              child: Row(
+                children: [
+                  Text(
+                    '查看详细解析',
+                    style: AppTypography.caption.copyWith(
+                      color: skin.colors.accent,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
                     color: skin.colors.accent,
                   ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 12,
-                  color: skin.colors.accent,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
