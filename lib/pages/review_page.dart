@@ -1,5 +1,7 @@
 // 复习页：壁纸沉浸 + 四选一 + 睭底操作栏
 // 已接入 SkinSystem 主题
+import 'dart:convert';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -94,18 +96,87 @@ class _ReviewPageState extends State<ReviewPage> {
     return await WordBookDatabase.instance.searchWords('the', limit: 20);
   }
 
-  /// 生成 4 选 1 选项（原版 confuseItemsForChoice）
+  /// 生成 4 选 1 选项（优先选择有中文释义的干扰项）
   void _regenerateChoices() {
     final current = _engine.currentWord();
     if (current == null) return;
-    final confuses = _engine.confuseItemsForChoice(current);
-    final choices = <WordChoicePair>[
-      WordChoicePair(current.word, current.interpret),
-    ];
-    for (final c in confuses) {
-      choices.add(WordChoicePair(c.i, c.i));
+
+    final correctInterpret = current.interpret;
+    final correctWord = current.word;
+
+    // 构建候选池（从复习列表中取，去重释义，优先有中文的）
+    final seenInterprets = <String>{correctInterpret};
+    final pool = <Map<String, String>>[];
+    for (final w in _engine.reviewList) {
+      if (w.word != correctWord &&
+          w.interpret.isNotEmpty &&
+          !seenInterprets.contains(w.interpret)) {
+        seenInterprets.add(w.interpret);
+        final cn = _extractCn(w.interpret);
+        pool.add({'word': w.word, 'interpret': w.interpret, 'cn': cn});
+      }
     }
-    _choices = _engine.shuffleList(choices);
+
+    // 优先选择有中文释义的干扰项
+    pool.shuffle();
+    final withCn = pool.where((w) => (w['cn'] ?? '').isNotEmpty).toList();
+    final withoutCn = pool.where((w) => (w['cn'] ?? '').isEmpty).toList();
+
+    final distractors = <Map<String, String>>[];
+    // 先取有中文的
+    for (final w in withCn) {
+      if (distractors.length >= 3) break;
+      distractors.add(w);
+    }
+    // 不够再补无中文的
+    for (final w in withoutCn) {
+      if (distractors.length >= 3) break;
+      distractors.add(w);
+    }
+
+    // 如果不够 3 个，用占位释义补齐
+    final fallbacks = [
+      {'word': '', 'interpret': '非标准用法', 'cn': '非标准用法'},
+      {'word': '', 'interpret': '罕用释义', 'cn': '罕用释义'},
+      {'word': '', 'interpret': '非正式表达', 'cn': '非正式表达'},
+    ];
+    int fb = 0;
+    while (distractors.length < 3 && fb < fallbacks.length) {
+      final fbInterpret = fallbacks[fb]['interpret']!;
+      if (!seenInterprets.contains(fbInterpret)) {
+        distractors.add(fallbacks[fb]);
+        seenInterprets.add(fbInterpret);
+      }
+      fb++;
+    }
+
+    // 组装 4 个选项并打乱
+    final choices = <WordChoicePair>[
+      WordChoicePair(correctWord, correctInterpret),
+      ...distractors.map((d) => WordChoicePair(d['word'] ?? '', d['interpret'] ?? '')),
+    ];
+    _choices = choices.toList()..shuffle();
+  }
+
+  /// 从 interpret JSON 提取中文释义
+  String _extractCn(String interpret) {
+    try {
+      final decoded = jsonDecode(interpret);
+      if (decoded is List && decoded.isNotEmpty) {
+        final first = decoded.first;
+        if (first is Map) {
+          final defList = first['def'];
+          if (defList is List && defList.isNotEmpty) {
+            final firstDef = defList.first;
+            if (firstDef is Map) {
+              final cn = (firstDef['cn'] ?? firstDef['cndef'] ?? '') as String;
+              return cn.trim();
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return '';
   }
 
   /// 评分（同步到 FSRS-6 算法 + Leitner 引擎）
