@@ -54,6 +54,7 @@ dependencies:
   webview_flutter: ^4.10.0 # WebView 页面（帮助页/网页活动/锁屏缓存）
   flutter_tts: ^4.2.0      # 系统 TTS 引擎（随身听/听写/随手拼）
   share_plus: ^10.1.4      # 导出分享词表
+  file_selector: ^1.0.3     # 文件选择器（自定义壁纸上传，Flutter 官方维护）
 
 dev_dependencies:
   flutter_test:

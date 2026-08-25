@@ -1,5 +1,8 @@
-// 壁纸选择页面：展示可用壁纸列表，支持预览和选择
+// 壁纸选择页面：展示可用壁纸列表，支持预览、选择和自定义上传
 // 对应原版 App 的"外观&沉浸场景"设置
+import 'dart:io';
+
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../data/wallpaper_data.dart';
@@ -18,16 +21,23 @@ class WallpaperSelectPage extends StatefulWidget {
 class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
   WallpaperItem _selected = WallpaperData.defaultWallpaper;
   WallpaperItem? _previewing;
+  List<WallpaperItem> _customWallpapers = [];
 
   @override
   void initState() {
     super.initState();
     _loadCurrent();
+    _loadCustomWallpapers();
   }
 
   Future<void> _loadCurrent() async {
     final current = await WallpaperData.loadSelected();
     if (mounted) setState(() => _selected = current);
+  }
+
+  Future<void> _loadCustomWallpapers() async {
+    final custom = await WallpaperData.loadCustomWallpapers();
+    if (mounted) setState(() => _customWallpapers = custom);
   }
 
   Future<void> _selectWallpaper(WallpaperItem item) async {
@@ -42,6 +52,55 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
           content: Text('已切换为「${item.name}」壁纸'),
           duration: const Duration(seconds: 1),
         ),
+      );
+    }
+  }
+
+  /// 上传自定义壁纸
+  Future<void> _uploadCustomWallpaper() async {
+    try {
+      const typeGroup = XTypeGroup(label: 'images', extensions: ['jpg', 'jpeg', 'png', 'webp']);
+      final file = await openFile(acceptedTypeGroups: [typeGroup]);
+      if (file == null) return;
+
+      final filePath = file.path;
+      if (filePath.isEmpty) return;
+
+      // 创建自定义壁纸
+      final customItem = WallpaperItem(
+        id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+        name: '自定义壁纸',
+        type: WallpaperType.custom,
+        filePath: filePath,
+      );
+
+      await WallpaperData.addCustomWallpaper(customItem);
+      await _loadCustomWallpapers();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('壁纸上传成功！')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('上传失败：$e')),
+        );
+      }
+    }
+  }
+
+  /// 删除自定义壁纸
+  Future<void> _deleteCustomWallpaper(WallpaperItem item) async {
+    await WallpaperData.removeCustomWallpaper(item.id);
+    // 如果当前选中的是被删除的壁纸，切换到默认
+    if (_selected.id == item.id) {
+      await _selectWallpaper(WallpaperData.defaultWallpaper);
+    }
+    await _loadCustomWallpapers();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('已删除自定义壁纸')),
       );
     }
   }
@@ -67,6 +126,16 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // 自定义壁纸上传按钮
+                    _buildUploadButton(skin),
+                    const SizedBox(height: 20),
+                    // 自定义壁纸列表
+                    if (_customWallpapers.isNotEmpty) ...[
+                      _buildSectionTitle(skin, '我的自定义壁纸'),
+                      const SizedBox(height: 8),
+                      _buildCustomGrid(skin),
+                      const SizedBox(height: 20),
+                    ],
                     _buildSectionTitle(skin, '纯色'),
                     const SizedBox(height: 8),
                     _buildColorTile(skin, WallpaperData.defaultWallpaper),
@@ -114,6 +183,32 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
     );
   }
 
+  Widget _buildUploadButton(ThemeVars skin) {
+    return GestureDetector(
+      onTap: _uploadCustomWallpaper,
+      child: Container(
+        height: 80,
+        decoration: BoxDecoration(
+          color: skin.cardBg,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: skin.divider, width: 1),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add_photo_alternate_outlined,
+                  size: 32, color: skin.accent),
+              const SizedBox(height: 4),
+              Text('上传自定义壁纸',
+                  style: MistralTypography.bodyMd.copyWith(color: skin.accent)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPreview(WallpaperItem wallpaper) {
     return Container(
       width: double.infinity,
@@ -129,6 +224,69 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
   }
 
   Widget _buildWallpaperDecoration(WallpaperItem wallpaper, {double? height}) {
+    // 自定义壁纸（本地文件）
+    if (wallpaper.type == WallpaperType.custom && wallpaper.filePath != null) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.file(
+            File(wallpaper.filePath!),
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [MistralColors.cream, MistralColors.slate],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: Center(
+                child: Icon(Icons.wallpaper, size: 48, color: MistralColors.white54),
+              ),
+            ),
+          ),
+          // 半透明遮罩 + 模拟首页内容
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, MistralColors.black15],
+              ),
+            ),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Monster',
+                  style: MistralTypography.heading1.copyWith(
+                    color: AppColors.white100,
+                    fontWeight: FontWeight.bold,
+                    shadows: [Shadow(color: MistralColors.black26, blurRadius: 8)],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.white100.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: Text(
+                    'Learn 10  ·  Review 0',
+                    style: MistralTypography.bodySm.copyWith(color: AppColors.white100),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // assets 图片壁纸
     if (wallpaper.type == WallpaperType.image && wallpaper.assetPath != null) {
       return Stack(
         fit: StackFit.expand,
@@ -391,6 +549,102 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                         if (isSelected)
                           Icon(Icons.check_circle, color: AppColors.white100, size: 18),
                       ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildCustomGrid(ThemeVars skin) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 1.4,
+      children: _customWallpapers.map((wallpaper) {
+        final isSelected = _selected.id == wallpaper.id;
+        return GestureDetector(
+          onTap: () => _selectWallpaper(wallpaper),
+          onTapDown: (_) => setState(() => _previewing = wallpaper),
+          onTapUp: (_) => setState(() => _previewing = null),
+          onTapCancel: () => setState(() => _previewing = null),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              border: Border.all(
+                color: isSelected ? MistralColors.primary : skin.divider,
+                width: isSelected ? 3 : 1,
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // 自定义壁纸图片
+                if (wallpaper.filePath != null)
+                  Image.file(
+                    File(wallpaper.filePath!),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Container(
+                      color: MistralColors.slate,
+                      child: Icon(Icons.wallpaper, size: 36, color: MistralColors.white54),
+                    ),
+                  )
+                else
+                  Container(
+                    color: MistralColors.slate,
+                    child: Icon(Icons.wallpaper, size: 36, color: MistralColors.white54),
+                  ),
+                // 底部名称 + 选中标记 + 删除按钮
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, MistralColors.black54],
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            wallpaper.name,
+                            style: MistralTypography.bodySm.copyWith(color: AppColors.white100),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isSelected)
+                          Icon(Icons.check_circle, color: AppColors.white100, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+                // 删除按钮
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () => _deleteCustomWallpaper(wallpaper),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: MistralColors.black54,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.close, color: Colors.white, size: 16),
                     ),
                   ),
                 ),

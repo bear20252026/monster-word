@@ -1,5 +1,7 @@
 // 壁纸数据模型与持久化
 // 对应原版 App 的背景系统：纯色/渐变/照片壁纸
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -7,7 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum WallpaperType {
   solid,    // 纯色背景
   gradient, // 渐变背景
-  image,    // 图片壁纸
+  image,    // 图片壁纸（assets）
+  custom,   // 用户自定义上传
 }
 
 /// 壁纸数据
@@ -21,8 +24,11 @@ class WallpaperItem {
   final Alignment? begin;
   final Alignment? end;
 
-  // 图片壁纸
+  // 图片壁纸（assets）
   final String? assetPath;
+
+  // 自定义上传壁纸（本地文件路径）
+  final String? filePath;
 
   const WallpaperItem({
     required this.id,
@@ -32,10 +38,30 @@ class WallpaperItem {
     this.begin,
     this.end,
     this.assetPath,
+    this.filePath,
   });
 
   /// 是否为默认壁纸
   bool get isDefault => id == 'default';
+
+  /// 是否为自定义壁纸
+  bool get isCustom => type == WallpaperType.custom;
+
+  /// 序列化为 JSON（用于存储自定义壁纸）
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'type': type.index,
+        'filePath': filePath,
+      };
+
+  /// 从 JSON 反序列化
+  factory WallpaperItem.fromJson(Map<String, dynamic> json) => WallpaperItem(
+        id: json['id'] as String,
+        name: json['name'] as String? ?? '自定义壁纸',
+        type: WallpaperType.custom,
+        filePath: json['filePath'] as String?,
+      );
 }
 
 /// 预设壁纸列表
@@ -175,6 +201,56 @@ class WallpaperData {
   static Future<WallpaperItem> loadSelected() async {
     final prefs = await SharedPreferences.getInstance();
     final id = prefs.getString(_prefKey) ?? 'default';
+    // 如果是自定义壁纸，从自定义列表中查找
+    if (id.startsWith('custom_')) {
+      final customs = await loadCustomWallpapers();
+      return customs.firstWhere(
+        (w) => w.id == id,
+        orElse: () => defaultWallpaper,
+      );
+    }
     return getById(id);
+  }
+
+  // ===========================================================================
+  // 自定义壁纸管理
+  // ===========================================================================
+
+  static const String _customPrefKey = 'custom_wallpapers';
+
+  /// 加载自定义壁纸列表
+  static Future<List<WallpaperItem>> loadCustomWallpapers() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString(_customPrefKey);
+    if (jsonStr == null || jsonStr.isEmpty) return [];
+    try {
+      final list = List<Map<String, dynamic>>.from(
+        const JsonDecoder().convert(jsonStr) as List,
+      );
+      return list.map((e) => WallpaperItem.fromJson(e)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// 保存自定义壁纸列表
+  static Future<void> _saveCustomWallpapers(List<WallpaperItem> items) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = jsonEncode(items.map((e) => e.toJson()).toList());
+    await prefs.setString(_customPrefKey, jsonStr);
+  }
+
+  /// 添加自定义壁纸
+  static Future<void> addCustomWallpaper(WallpaperItem item) async {
+    final items = await loadCustomWallpapers();
+    items.add(item);
+    await _saveCustomWallpapers(items);
+  }
+
+  /// 删除自定义壁纸
+  static Future<void> removeCustomWallpaper(String id) async {
+    final items = await loadCustomWallpapers();
+    items.removeWhere((w) => w.id == id);
+    await _saveCustomWallpapers(items);
   }
 }
