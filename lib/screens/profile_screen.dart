@@ -12,6 +12,7 @@ import '../tokens/design_tokens.dart';
 import '../tokens/func_colors.dart';
 import '../widgets/sb_card.dart';
 import '../widgets/scale_down_on_press.dart';
+import '../widgets/monster_icon.dart';
 
 // 功能图标色（使用 FuncColors token）
 // _iconPurple → FuncColors.purple
@@ -255,15 +256,7 @@ class _CoinCard extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: MistralColors.sunshine300, // 品牌金 #CBA258（token）
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.monetization_on, color: FuncColors.warning, size: 18), // 尖叫币图标金
-                ),
+                const MonsterAvatar(size: 32),
                 const SizedBox(width: 8),
                 FutureBuilder<int>(
                   future: ScareCoinLedger.balance(),

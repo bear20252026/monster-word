@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/monster_icon.dart';
 
 /// 尖叫币账本：余额、签到与流水的本地持久化（SharedPreferences JSON）
 class ScareCoinLedger {
@@ -214,15 +215,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                 child: Row(
                   children: [
                     // 怪兽图标 + 余额
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: skin.accent.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(child: Text('👹', style: TextStyle(fontSize: 26))),
-                    ),
+                    const MonsterAvatar(size: 52),
                     const SizedBox(width: 16),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

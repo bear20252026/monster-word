@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import '../pages/scare_coin_history_page.dart' show ScareCoinLedger;
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import 'monster_icon.dart';
 
 /// 弹性签到日历
 ///
@@ -330,11 +331,18 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
               opacity: (1 - t).clamp(0.0, 1.0),
               child: Transform.translate(
                 offset: Offset(0, -46 * t),
-                child: Text('+${ScareCoinLedger.checkInReward} 👹',
-                    style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: skin.success)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('+${ScareCoinLedger.checkInReward}',
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: skin.success)),
+                    const SizedBox(width: 4),
+                    MonsterIcon(size: 24, bodyColor: skin.success),
+                  ],
+                ),
               ),
             );
           },

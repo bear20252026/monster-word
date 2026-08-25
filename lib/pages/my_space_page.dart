@@ -9,6 +9,7 @@ import '../tokens/design_tokens.dart';
 import 'message_page.dart';
 import 'scare_coin_history_page.dart';
 import 'settings_page.dart';
+import '../widgets/monster_icon.dart';
 
 class MySpacePage extends StatelessWidget {
   const MySpacePage({super.key});
@@ -289,15 +290,7 @@ class _CoinCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: MistralColors.sunshine300.withValues(alpha: 0.3),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.monetization_on, color: MistralColors.sunshine700, size: 22),
-            ),
+            const MonsterAvatar(size: 34),
             const SizedBox(width: 10),
             Expanded(
               child: Column(

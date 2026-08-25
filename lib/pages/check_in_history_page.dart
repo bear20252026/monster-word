@@ -8,6 +8,7 @@ import '../pages/scare_coin_history_page.dart' show ScareCoinLedger;
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/scale_down_on_press.dart';
+import '../widgets/monster_icon.dart';
 
 class CheckInHistoryPage extends StatefulWidget {
   const CheckInHistoryPage({super.key});
@@ -671,7 +672,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                       ),
                     ),
                     // 尖叫币图标
-                    Icon(Icons.monetization_on, size: 18, color: skin.vipGoldBg),
+                    MonsterIcon(size: 20, showCircle: true, circleColor: skin.vipGoldBg.withValues(alpha: 0.15)),
                   ],
                 ),
               ),
