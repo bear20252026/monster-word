@@ -7,6 +7,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../engine/fsrs6_engine.dart';
+
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -35,7 +37,7 @@ class _LearnPageState extends State<LearnPage> {
     try {
       final player = AudioPlayer();
       await player.play(UrlSource(
-        'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2'));
+        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2'));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -66,7 +68,7 @@ class _LearnPageState extends State<LearnPage> {
       child: Scaffold(
       backgroundColor: skin.colors.pageBg, // 奶油画布（batch4c: 壁纸→cream canvas）
       body: word == null
-          ? Center(child: Text('暂无单词', style: TextStyle(color: skin.colors.text2)))
+          ? _CompletionScreen(skin: skin)
           : SafeArea(
               child: Center(
                 child: ConstrainedBox(
@@ -156,15 +158,116 @@ class _TopBar extends StatelessWidget {
                 ? null
                 : () => state.toggleFavorite(word.word),
           ),
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.more_horiz, size: 22),
             color: colors.text2,
             tooltip: '更多',
-            onPressed: () {
-              // 更多操作菜单
+            onSelected: (value) {
+              switch (value) {
+                case 'skip':
+                  state.rate(FsrsRating.again);
+                  break;
+                case 'favorite':
+                  if (word != null) state.toggleFavorite(word.word);
+                  break;
+              }
             },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'skip',
+                child: ListTile(
+                  leading: Icon(Icons.skip_next, size: 20),
+                  title: Text('跳过当前单词'),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'favorite',
+                child: ListTile(
+                  leading: Icon(Icons.star, size: 20),
+                  title: Text('收藏/取消收藏'),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 完成学习后的总结页面
+class _CompletionScreen extends StatelessWidget {
+  final SkinSystem skin;
+  const _CompletionScreen({required this.skin});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = skin.colors;
+    return SafeArea(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.celebration, size: 80, color: colors.accent),
+              const SizedBox(height: 24),
+              Text(
+                '🎉 今日学习完成！',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: colors.text1,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '你已经完成了今天的所有单词',
+                style: TextStyle(fontSize: 16, color: colors.text2),
+              ),
+              const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: colors.cardBg,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colors.divider),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '继续加油，每天进步一点点！',
+                      style: TextStyle(fontSize: 14, color: colors.text2),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colors.accent,
+                    foregroundColor: colors.onGlassAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    '返回首页',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

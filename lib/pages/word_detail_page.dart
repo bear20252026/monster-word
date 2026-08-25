@@ -136,7 +136,12 @@ class _WordDetailPageState extends State<WordDetailPage> {
     if (word == null) return const Scaffold(body: Center(child: Text('暂无单词')));
 
     final examples = ExampleParser.parse(word.example);
-    final lines = word.interpretLines;
+    final lines = word.hasStructuredDefinitions
+        ? word.formattedDefinitions
+            .split('\n')
+            .where((l) => l.trim().isNotEmpty)
+            .toList()
+        : word.interpretLines;
     final confuseList = _parseConfuse(word.confuse);
 
     return PopScope(
@@ -271,8 +276,13 @@ class _WordDetailPageState extends State<WordDetailPage> {
             onPressed: () {
               // 记录评分并推进到下一个单词
               state.rate(FsrsRating.good);
-              // 返回学习页面，自动显示下一个单词
-              Navigator.pop(context);
+              if (isLastWord) {
+                // 最后一个单词：直接返回首页
+                Navigator.popUntil(context, (route) => route.isFirst);
+              } else {
+                // 返回学习页面，自动显示下一个单词
+                Navigator.pop(context);
+              }
             },
             icon: Icon(isLastWord ? Icons.check : Icons.arrow_forward, size: 20),
             label: Text(isLastWord ? '完成学习' : '下一词'),
