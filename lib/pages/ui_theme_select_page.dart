@@ -27,35 +27,25 @@ class UIThemeSelectPage extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _buildThemeOption(
-                    context: context,
-                    skin: skin,
-                    name: '明亮',
-                    description: 'Mistral AI 风格，奶油暖色调',
-                    colors: [MistralColors.cream, MistralColors.primary],
-                    isSelected: skin.themeId == 'bright',
-                    onTap: () => skin.setTheme('bright'),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildThemeOption(
-                    context: context,
-                    skin: skin,
-                    name: '深邃',
-                    description: '护眼深色主题',
-                    colors: [MistralColors.charcoal, const Color(0xFF3A3A3A)],
-                    isSelected: skin.themeId == 'dark',
-                    onTap: () => skin.setTheme('dark'),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildThemeOption(
-                    context: context,
-                    skin: skin,
-                    name: '极夜',
-                    description: '纯黑模式，OLED 友好',
-                    colors: [MistralColors.surfaceCode, const Color(0xFF2C2C2E)],
-                    isSelected: skin.themeId == 'pure_black',
-                    onTap: () => skin.setTheme('pure_black'),
-                  ),
+                  // 跟随系统开关
+                  _buildFollowSystemToggle(context, skin),
+                  const SizedBox(height: 16),
+                  // 动态渲染所有可用主题
+                  ...skin.availableThemes.map((theme) {
+                    final isSelected = skin.themeId == theme.id && !skin.followSystem;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _buildThemeOption(
+                        context: context,
+                        skin: skin,
+                        name: theme.name,
+                        description: _themeDescription(theme.id),
+                        colors: theme.previewColors,
+                        isSelected: isSelected,
+                        onTap: () => skin.setTheme(theme.id),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
@@ -81,6 +71,51 @@ class UIThemeSelectPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// 跟随系统开关
+  Widget _buildFollowSystemToggle(BuildContext context, SkinSystem skin) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: skin.colors.cardBgAlt,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.brightness_6, color: skin.colors.accent),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('跟随系统', style: MistralTypography.body.copyWith(color: skin.colors.text1)),
+                Text('根据系统深色/浅色自动切换',
+                    style: MistralTypography.caption.copyWith(color: skin.colors.text2)),
+              ],
+            ),
+          ),
+          Switch(
+            value: skin.followSystem,
+            onChanged: (v) => skin.setFollowSystem(v),
+            activeThumbColor: skin.colors.accent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 主题描述文字
+  String _themeDescription(String id) {
+    switch (id) {
+      case 'starbucks_cream': return '星巴克绿，奶油画布，温暖咖啡感';
+      case 'starbucks_dark': return '深绿夜空，沉浸式学习';
+      case 'bright': return 'Mistral AI 风格，清爽明亮';
+      case 'dark': return '护眼深色，夜间友好';
+      case 'pure_black': return '纯黑模式，OLED 省电';
+      case 'warm_orange': return '暖阳橙，活力温暖，适合日间';
+      default: return '';
+    }
   }
 
   Widget _buildThemeOption({

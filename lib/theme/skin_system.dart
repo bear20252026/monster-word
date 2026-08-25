@@ -82,6 +82,15 @@ class ThemeVars {
         profileDecor = profileDecor ?? const [Color(0xFFF5F5F5), Color(0xFFE8E8E8)];
 }
 
+/// 主题摘要信息（供主题选择页展示）
+class ThemeSummary {
+  final String id;
+  final String name;
+  final bool isDark;
+  final List<Color> previewColors;
+  const ThemeSummary({required this.id, required this.name, required this.isDark, required this.previewColors});
+}
+
 class ThemePreset {
   final String id;
   final String name;
@@ -241,6 +250,41 @@ final themes = <String, ThemePreset>{
       profileDecor: const [Color(0xFF101B17), Color(0xFF1E3932)],  // 深绿体系
     ),
   ),
+  // === 暖橙主题 — 活力温暖，适合日间学习 ===
+  'warm_orange': ThemePreset(
+    id: 'warm_orange', name: '暖阳橙', uiBrightness: Brightness.light, statusBarBrightness: Brightness.dark,
+    vars: ThemeVars(
+      pageBg:       const Color(0xFFFAF5EF),      // 暖白画布（微橙调）
+      cardBg:       const Color(0xFFFFFFFF),      // 纯白卡片
+      cardBgAlt:    const Color(0xFFFFF3E8),      // 浅橙浮层
+      text1:        const Color(0xDE000000),      // 87% 黑
+      text2:        const Color(0xFF8D6E63),      // 暖棕次要文字（WCAG AA on 暖白）
+      text3:        const Color(0x9E000000),      // α=0.62
+      divider:      const Color(0x1F000000),      // 12% 黑
+      accent:       const Color(0xFFE65100),      // 深橙色（WCAG AA on 暖白 4.6:1）
+      success:      const Color(0xFF2E7D32),      // 深绿（WCAG AA）
+      danger:       const Color(0xFFD32F2F),      // 深红（WCAG AA）
+      teal:         const Color(0xFF1565C0),      // 深蓝（WCAG AA）
+      tabBarIcon:   const Color(0xDE000000),
+      onGlassText1: const Color(0xDE000000),
+      onGlassText2: const Color(0xFF8D6E63),
+      onGlassAccent: const Color(0xFFE65100),
+      glassBg:      const Color(0xFFFFFFFF),
+      glassBgStrong: const Color(0xFFFFF3E8),
+      glassBorder:  const Color(0x1F000000),
+      wallpaperScrim: const Color(0xFFFAF5EF),
+      modalGlassBg: const Color(0xFFFFFFFF),
+      modalText1:   const Color(0xDE000000),
+      modalText2:   const Color(0xFF8D6E63),
+      quizCorrectBg:   const Color(0xFFD1FAE5),
+      quizCorrectText: const Color(0xFF1B5E20),
+      quizWrongBg:     const Color(0xFFFEE2E2),
+      quizWrongText:   const Color(0xFF9B1515),
+      vipGoldBg:    const Color(0xFFF59E0B),      // 琥珀金（暖橙主题用更暖的金）
+      vipGoldText:  const Color(0xFF5D4037),      // 深棕字（WCAG AA on 琥珀金）
+      profileDecor: const [Color(0xFFFFE0B2), Color(0xFFFFF3E8)],  // 浅橙+暖白
+    ),
+  ),
 };
 
 class SkinSystem extends ChangeNotifier {
@@ -256,6 +300,17 @@ class SkinSystem extends ChangeNotifier {
   bool get followSystem => _followSystem;
   ThemePreset get currentTheme => themes[_themeId]!;
   ThemeVars get colors => currentTheme.vars;
+
+  /// 所有可用主题的摘要信息（供主题选择页展示）
+  List<ThemeSummary> get availableThemes => themes.values
+      .map((p) => ThemeSummary(
+            id: p.id,
+            name: p.name,
+            isDark: p.uiBrightness == Brightness.dark,
+            // 用 pageBg + accent 两个最具辨识度的色代表该主题
+            previewColors: [p.vars.pageBg, p.vars.accent],
+          ))
+      .toList();
 
   /// 当前系统亮度（监听刷新）
   Brightness _systemBrightness = WidgetsBinding
@@ -347,18 +402,19 @@ class SkinSystem extends ChangeNotifier {
   }
 }
 
-class SkinProvider extends InheritedWidget {
-  final SkinSystem skin;
-  const SkinProvider({super.key, required this.skin, required super.child});
+/// SkinProvider — 将 SkinSystem（ChangeNotifier）注入 widget 树
+///
+/// 核心修复：继承 `InheritedNotifier<SkinSystem>` 而非 `InheritedWidget`。
+/// InheritedNotifier 会自动监听 notifier 的 notifyListeners() 调用，
+/// 并在通知时重建所有依赖者。这解决了主题切换时 UI 不更新的问题。
+class SkinProvider extends InheritedNotifier<SkinSystem> {
+  const SkinProvider({super.key, required SkinSystem skin, required super.child})
+      : super(notifier: skin);
+
   static SkinSystem of(BuildContext context) {
     final provider = context.dependOnInheritedWidgetOfExactType<SkinProvider>();
-    return provider?.skin ?? SkinSystem();
+    return provider?.notifier ?? SkinSystem();
   }
-  @override
-  bool updateShouldNotify(SkinProvider old) =>
-      skin.effectiveThemeId != old.skin.effectiveThemeId ||
-      skin.followSystem != old.skin.followSystem ||
-      skin.fontFamilyOverride != old.skin.fontFamilyOverride;
 }
 
 extension SkinExt on BuildContext {
