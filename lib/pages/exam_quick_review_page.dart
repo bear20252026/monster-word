@@ -142,13 +142,23 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
   void _generateChoices() {
     if (_currentIndex >= _words.length) return;
     final current = _words[_currentIndex];
-    final choices = <String>[current.firstInterpretLine];
+    final correctAnswer = current.firstInterpretLine;
+    // 如果当前词没有释义，跳过该词
+    if (correctAnswer.isEmpty) {
+      _skipWord();
+      return;
+    }
 
-    // 生成干扰项（从其他词的释义中随机选3个）
+    final choices = <String>[correctAnswer];
+
+    // 生成干扰项（从其他词的释义中随机选3个，过滤空释义）
     final otherWords = _words.where((w) => w.id != current.id).toList();
     otherWords.shuffle();
-    for (var i = 0; i < 3 && i < otherWords.length; i++) {
-      choices.add(otherWords[i].firstInterpretLine);
+    for (var i = 0; i < otherWords.length && choices.length < 4; i++) {
+      final meaning = otherWords[i].firstInterpretLine;
+      if (meaning.isNotEmpty && !choices.contains(meaning)) {
+        choices.add(meaning);
+      }
     }
     choices.shuffle();
 
