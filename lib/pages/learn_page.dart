@@ -29,6 +29,27 @@ class LearnPage extends StatefulWidget {
 }
 
 class _LearnPageState extends State<LearnPage> {
+  bool _audioLoading = false;
+
+  Future<void> _playAudio(String word) async {
+    if (_audioLoading) return;
+    setState(() => _audioLoading = true);
+    try {
+      final player = AudioPlayer();
+      await player.play(UrlSource(
+        'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2'));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('发音加载失败，请检查网络'),
+            duration: Duration(seconds: 2)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _audioLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
@@ -47,7 +68,11 @@ class _LearnPageState extends State<LearnPage> {
                   child: Column(
                     children: [
                       _TopBar(skin: skin, state: state),
-                      Expanded(flex: 4, child: _WordArea(word: word, skin: skin, resp: resp)),
+                      Expanded(flex: 4, child: _WordArea(
+                        word: word, skin: skin, resp: resp,
+                        audioLoading: _audioLoading,
+                        onPlayAudio: _playAudio,
+                      )),
                       Expanded(flex: 6, child: _QuizArea(word: word, state: state, skin: skin)),
                     ],
                   ),
@@ -129,7 +154,15 @@ class _WordArea extends StatelessWidget {
   final dynamic word;
   final SkinSystem skin;
   final AppResponsive resp;
-  const _WordArea({required this.word, required this.skin, required this.resp});
+  final bool audioLoading;
+  final Future<void> Function(String) onPlayAudio;
+  const _WordArea({
+    required this.word,
+    required this.skin,
+    required this.resp,
+    required this.audioLoading,
+    required this.onPlayAudio,
+  });
 
   /// 词义提示（刮开可见）：截取释义前 24 字，避免直接泄露完整答案
   String _hintText(dynamic word) {
@@ -164,16 +197,16 @@ class _WordArea extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
-                  onTap: () async {
-                    try {
-                      final player = AudioPlayer();
-                      await player.play(UrlSource(
-                        'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2'));
-                    } catch (e) {
-                      if (kDebugMode) debugPrint('Audio playback error: $e');
-                    }
-                  },
-                  child: Icon(Icons.volume_up_outlined, color: colors.text2, size: 28),
+                  onTap: () => onPlayAudio(word.word),
+                  child: SizedBox(
+                    width: 44, height: 44,
+                    child: Center(
+                      child: audioLoading
+                          ? SizedBox(width: 20, height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: colors.text2))
+                          : Icon(Icons.volume_up_outlined, color: colors.text2, size: 28),
+                    ),
+                  ),
                 ),
               ],
             ),

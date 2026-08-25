@@ -411,30 +411,92 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
   }
 
   Widget _buildDerivativesTab(ThemeVars skin, Word word) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: skin.divider, width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '派生词',
-            style: MistralTypography.bodyMd.copyWith(
-              color: skin.text1,
-              fontWeight: FontWeight.w600,
+    return FutureBuilder<List<Word>>(
+      future: DictionaryService.instance.getDerivedWords(word.word),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: skin.cardBg,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(color: skin.divider, width: 0.5),
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            '暂无派生词数据',
-            style: MistralTypography.bodyMd.copyWith(color: skin.text3),
-          ),
-        ],
-      ),
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final derived = snapshot.data ?? [];
+        if (derived.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: skin.cardBg,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(color: skin.divider, width: 0.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('派生词', style: MistralTypography.bodyMd.copyWith(
+                  color: skin.text1, fontWeight: FontWeight.w600,
+                )),
+                const SizedBox(height: AppSpacing.sm),
+                Text('暂无派生词', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          itemCount: derived.length,
+          addAutomaticKeepAlives: false,
+          addRepaintBoundaries: true,
+          itemBuilder: (context, index) {
+            final w = derived[index];
+            final firstInterp = w.interpretLines.isNotEmpty ? w.interpretLines.first : '';
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (_) => DictionaryPage(word: w),
+                ));
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: skin.cardBg,
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  border: Border.all(color: skin.divider, width: 0.5),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(w.word, style: MistralTypography.bodyMd.copyWith(
+                          color: skin.text1, fontWeight: FontWeight.w600,
+                        )),
+                        if (w.usPron.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(w.usPron, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                        ],
+                        if (firstInterp.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(firstInterp, style: MistralTypography.bodySm.copyWith(
+                            color: skin.text3,
+                          ), maxLines: 2, overflow: TextOverflow.ellipsis),
+                        ],
+                      ],
+                    )),
+                    Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -558,30 +620,73 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
   }
 
   Widget _buildExamTab(ThemeVars skin, Word word) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: skin.divider, width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '真题例句',
-            style: MistralTypography.bodyMd.copyWith(
-              color: skin.text1,
-              fontWeight: FontWeight.w600,
+    return FutureBuilder<List<Map<String, String>>>(
+      future: DictionaryService.instance.getExamExamples(word.word),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: skin.cardBg,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(color: skin.divider, width: 0.5),
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            '暂无真题数据',
-            style: MistralTypography.bodyMd.copyWith(color: skin.text3),
-          ),
-        ],
-      ),
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final examples = snapshot.data ?? [];
+        if (examples.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: skin.cardBg,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(color: skin.divider, width: 0.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('真题例句', style: MistralTypography.bodyMd.copyWith(
+                  color: skin.text1, fontWeight: FontWeight.w600,
+                )),
+                const SizedBox(height: AppSpacing.sm),
+                Text('暂无真题例句', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          itemCount: examples.length,
+          addAutomaticKeepAlives: false,
+          addRepaintBoundaries: true,
+          itemBuilder: (context, index) {
+            final ex = examples[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: skin.cardBg,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                border: Border.all(color: skin.divider, width: 0.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(ex['sentence'] ?? '', style: MistralTypography.bodyMd.copyWith(
+                    color: skin.text1, height: 1.5,
+                  )),
+                  if ((ex['translation'] ?? '').isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(ex['translation']!, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -592,7 +697,11 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
         'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2',
       ));
     } catch (e) {
-      if (kDebugMode) debugPrint('Audio playback error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
+        );
+      }
     }
   }
 }

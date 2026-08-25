@@ -163,6 +163,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
               child: FutureBuilder<List<Book>>(
                 future: _booksFuture,
                 builder: (context, snapshot) {
+                  final skin = context.skin.colors;
                   if (snapshot.connectionState != ConnectionState.done) {
                     return const Center(child: CircularProgressIndicator());
                   }
@@ -171,7 +172,29 @@ class _LibSelectPageState extends State<LibSelectPage> {
                   }
                   final books = _filterByTab(_allBooks, _tabIndex);
                   if (books.isEmpty) {
-                    return const Center(child: Text('暂无词书'));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.library_books_outlined, size: 64, color: skin.divider),
+                          const SizedBox(height: 16),
+                          Text('暂无词书', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+                          const SizedBox(height: 8),
+                          Text('当前分类下没有词书，请切换分类或刷新',
+                            style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                          const SizedBox(height: 24),
+                          OutlinedButton.icon(
+                            onPressed: () => setState(() => _booksFuture = _load()),
+                            icon: const Icon(Icons.refresh, size: 18),
+                            label: const Text('刷新'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: skin.text2,
+                              side: BorderSide(color: skin.divider),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   }
                   // 全部标签页顶部展示推荐词书「弯曲画廊」（3D透视+交互弯曲）
                   if (_tabIndex == 0 && books.length > 3) {

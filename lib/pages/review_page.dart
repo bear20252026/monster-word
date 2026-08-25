@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart';
+import '../pages/dictionary_page.dart';
 import '../engine/srs_engine.dart';
 import '../engine/super_memory_engine.dart';
 import '../hooks/responsive.dart';
@@ -33,6 +34,9 @@ class _ReviewPageState extends State<ReviewPage> {
   int _total = 0;
   int _done = 0;
   int _wrongChoiceIndex = -1;
+  bool _isFavorited = false;
+  bool _canUndo = false;
+  final List<BBWordProcess> _history = [];
 
   @override
   void initState() {
@@ -42,25 +46,51 @@ class _ReviewPageState extends State<ReviewPage> {
 
   /// 初始化复习（到期调度：从词库拉取今日到期词）
   Future<void> _initReview() async {
-    final dueWords = <BBWordProcess>[];
-    // 从词库取一批词作为复习池（真实实现：从 user_process 表按 reviewdate 筛选）
-    final sample = await WordBookDatabase.instance.searchWords('a', limit: 20);
-    for (final w in sample) {
-      dueWords.add(BBWordProcess(
-        word: w.word,
-        wordId: w.id,
-        interpret: w.interpret,
-        usPron: w.usPron,
-        ukPron: w.ukPron,
-        example: w.example,
-      ));
+    try {
+      final dueWords = <BBWordProcess>[];
+      // 从词库取一批词作为复习池（真实实现：从 user_process 表按 reviewdate 筛选）
+      final sample = await WordBookDatabase.instance.searchWords('a', limit: 20);
+      for (final w in sample) {
+        dueWords.add(BBWordProcess(
+          word: w.word,
+          wordId: w.id,
+          interpret: w.interpret,
+          usPron: w.usPron,
+          ukPron: w.ukPron,
+          example: w.example,
+        ));
+      }
+      if (dueWords.isEmpty) {
+        // 无到期词时从词库取一批
+        final fallback = await WordBookDatabase.instance.searchWords('the', limit: 20);
+        for (final w in fallback) {
+          dueWords.add(BBWordProcess(
+            word: w.word, wordId: w.id, interpret: w.interpret,
+            usPron: w.usPron, ukPron: w.ukPron, example: w.example,
+          ));
+        }
+      }
+      _engine.init(dueWords);
+      _total = _engine.totalNum;
+      _done = 0;
+      _initialized = true;
+      _regenerateChoices();
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('[ReviewPage] init error: $e');
+      _initialized = true;
+      if (mounted) setState(() {});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('加载复习数据失败: $e'), action: SnackBarAction(
+            label: '重试', onPressed: () {
+              _initialized = false;
+              _initReview();
+            },
+          )),
+        );
+      }
     }
-    _engine.init(dueWords);
-    _total = _engine.totalNum;
-    _done = 0;
-    _initialized = true;
-    _regenerateChoices();
-    if (mounted) setState(() {});
   }
 
   /// 生成 4 选 1 选项（原版 confuseItemsForChoice）
@@ -207,15 +237,18 @@ class _ReviewPageState extends State<ReviewPage> {
           const SizedBox(width: 8),
           IconButton(
             icon: Icon(Icons.undo, size: 22, color: skin.onGlassText2),
-            onPressed: () {},
+            tooltip: '撤销',
+            onPressed: _canUndo ? _undo : null,
           ),
           IconButton(
-            icon: Icon(Icons.star_border, size: 22, color: skin.onGlassText1),
-            onPressed: () {},
+            icon: Icon(_isFavorited ? Icons.star : Icons.star_border, size: 22,
+                color: _isFavorited ? MistralColors.accent : skin.onGlassText1),
+            tooltip: '收藏',
+            onPressed: _toggleFavorite,
           ),
-          // abc button
+          // abc button - 显示答案
           GestureDetector(
-            onTap: () {},
+            onTap: _revealAnswer,
             child: Text('abc', style: TextStyle(
               fontSize: 16 * resp.fontScale,
               fontWeight: FontWeight.w700,
@@ -223,9 +256,9 @@ class _ReviewPageState extends State<ReviewPage> {
             )),
           ),
           const SizedBox(width: 12),
-          // 熟 button
+          // 熟 button - 标记已掌握
           GestureDetector(
-            onTap: () {},
+            onTap: _markAsKnown,
             child: Text('熟', style: TextStyle(
               fontSize: 16 * resp.fontScale,
               fontWeight: FontWeight.w700,
@@ -235,7 +268,8 @@ class _ReviewPageState extends State<ReviewPage> {
           const SizedBox(width: 8),
           IconButton(
             icon: Icon(Icons.more_horiz, size: 22, color: skin.onGlassText1),
-            onPressed: () {},
+            tooltip: '更多',
+            onPressed: () => _showMoreOptions(context),
           ),
         ],
       ),
@@ -281,7 +315,10 @@ class _ReviewPageState extends State<ReviewPage> {
                 const SizedBox(width: 6),
                 GestureDetector(
                   onTap: () => _playWordAudio(word),
-                  child: Icon(Icons.volume_up_outlined, color: skin.onGlassText2, size: 20),
+                  child: _audioLoading
+                      ? SizedBox(width: 18, height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: skin.onGlassText2))
+                      : Icon(Icons.volume_up_outlined, color: skin.onGlassText2, size: 20),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -381,6 +418,83 @@ class _ReviewPageState extends State<ReviewPage> {
     );
   }
 
+  void _undo() {
+    if (_history.isNotEmpty && _done > 0) {
+      _history.removeLast();
+      _done = _done - 1;
+      _showAnswer = false;
+      _wrongChoiceIndex = -1;
+      _regenerateChoices();
+      if (mounted) setState(() {});
+    }
+  }
+
+  void _toggleFavorite() {
+    final current = _engine.currentWord();
+    if (current != null) {
+      setState(() => _isFavorited = !_isFavorited);
+      // TODO: persist favorite to database
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_isFavorited ? '已收藏 ${current.word}' : '已取消收藏'),
+          duration: const Duration(seconds: 1)),
+      );
+    }
+  }
+
+  void _revealAnswer() {
+    setState(() => _showAnswer = true);
+    _canUndo = true;
+  }
+
+  void _markAsKnown() {
+    _engine.iReallyKnow();
+    _done++;
+    _showAnswer = false;
+    _wrongChoiceIndex = -1;
+    _canUndo = true;
+    _regenerateChoices();
+    if (mounted) setState(() {});
+  }
+
+  void _showMoreOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.volume_up),
+              title: const Text('播放发音'),
+              onTap: () {
+                Navigator.pop(ctx);
+                final w = _engine.currentWord();
+                if (w != null) _playWordAudio(w);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('查看详情'),
+              onTap: () {
+                Navigator.pop(ctx);
+                final w = _engine.currentWord();
+                if (w != null) {
+                  Navigator.push(ctx, MaterialPageRoute(
+                    builder: (_) => DictionaryPage(word: Word(
+                      id: w.wordId, word: w.word, mainWord: w.word,
+                      interpret: w.interpret, usPron: w.usPron, ukPron: w.ukPron,
+                      example: w.example, phrase: '', confuse: '',
+                    )),
+                  ));
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// 复习完成页
   Widget _buildReviewDone() {
     final skin = context.skin.colors;
@@ -403,11 +517,11 @@ class _ReviewPageState extends State<ReviewPage> {
             ),
             const SizedBox(height: 24),
             FilledButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
               style: FilledButton.styleFrom(
                 backgroundColor: skin.success,
               ),
-              child: const Text('返回'),
+              child: const Text('返回首页'),
             ),
           ],
         ),
@@ -415,14 +529,24 @@ class _ReviewPageState extends State<ReviewPage> {
     );
   }
 
+  bool _audioLoading = false;
+
   Future<void> _playWordAudio(BBWordProcess word) async {
+    if (_audioLoading) return;
+    setState(() => _audioLoading = true);
     try {
       final player = AudioPlayer();
       await player.play(UrlSource(
         'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2',
       ));
     } catch (e) {
-      if (kDebugMode) debugPrint('Audio playback error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _audioLoading = false);
     }
   }
 }

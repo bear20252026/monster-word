@@ -28,6 +28,8 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _controller = TextEditingController();
   List<Word> _results = [];
+  bool _hasSearched = false;
+  String _lastQuery = '';
   Word? _selectedWord;
   List<String> _searchHistory = [];
 
@@ -59,7 +61,7 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<void> _search(String query) async {
     if (query.trim().isEmpty) {
-      setState(() { _results = []; _selectedWord = null; });
+      setState(() { _results = []; _selectedWord = null; _hasSearched = false; _lastQuery = ''; });
       return;
     }
     setState(() {});
@@ -67,6 +69,8 @@ class _SearchPageState extends State<SearchPage> {
     setState(() {
       _results = results;
       _selectedWord = results.isNotEmpty ? results.first : null;
+      _hasSearched = true;
+      _lastQuery = query.trim();
     });
   }
 
@@ -91,9 +95,11 @@ class _SearchPageState extends State<SearchPage> {
                         ? _buildWordDetail(_selectedWord!, skin)
                         : _results.isNotEmpty
                             ? _buildResultList(skin)
-                            : _searchHistory.isNotEmpty
-                                ? _buildHistory(skin)
-                                : _buildEmpty(skin),
+                            : _hasSearched
+                                ? _buildNoResults(skin)
+                                : _searchHistory.isNotEmpty
+                                    ? _buildHistory(skin)
+                                    : _buildEmpty(skin),
                   ),
                 ],
               ),
@@ -370,6 +376,31 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  Widget _buildNoResults(ThemeVars skin) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off, size: 64, color: skin.divider),
+          const SizedBox(height: 16),
+          Text('未找到匹配的单词',
+            style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+          const SizedBox(height: 8),
+          Text('请检查拼写，或尝试搜索其他关键词',
+            style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+          if (_lastQuery.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text('搜索词: "$_lastQuery"',
+              style: MistralTypography.bodySm.copyWith(
+                color: MistralColors.muted,
+                fontStyle: FontStyle.italic,
+              )),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmpty(ThemeVars skin) {
     return Center(
       child: Column(
@@ -406,7 +437,11 @@ class _SearchPageState extends State<SearchPage> {
         'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2',
       ));
     } catch (e) {
-      debugPrint('Audio playback error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
+        );
+      }
     }
   }
 }

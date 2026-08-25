@@ -655,7 +655,11 @@ class _WordDetailPageState extends State<WordDetailPage> {
                       }
                     });
                   } catch (e) {
-                    debugPrint('Audio playback error: $e');
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
+                      );
+                    }
                   }
                 },
                 child: Icon(Icons.volume_up_outlined, color: skin.colors.accent, size: 28),

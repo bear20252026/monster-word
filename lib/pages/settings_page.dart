@@ -167,16 +167,30 @@ class _SettingsPageState extends State<SettingsPage> {
 
         // --- 第五组：题型/助记 ---
         _SettingGroup([
-          _SwitchCell('听音选义题型'),
-          _Cell(title: '助记顺序', value: '派生词 - 词组搭配 - 特殊变形 - …'),
-          _SwitchCellWithDesc(title: '拆分助记', desc: '学习时自动拆分单词', defaultValue: true),
-          _SwitchCellWithDesc(title: '混淆项辨析', desc: '显示选择题错误选项词义', defaultValue: true),
+          _SwitchCell('听音选义题型', initialValue: true, onChanged: (v) {
+            // TODO: persist to SharedPreferences
+          }),
+          _Cell(title: '助记顺序', value: '派生词 - 词组搭配 - 特殊变形 - …', onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('助记顺序设置开发中...'), duration: Duration(seconds: 1)),
+            );
+          }),
+          _SwitchCellWithDesc(title: '拆分助记', desc: '学习时自动拆分单词', initialValue: true, onChanged: (v) {
+            // TODO: persist to SharedPreferences
+          }),
+          _SwitchCellWithDesc(title: '混淆项辨析', desc: '显示选择题错误选项词义', initialValue: true, onChanged: (v) {
+            // TODO: persist to SharedPreferences
+          }),
         ]),
         const SizedBox(height: 16),
 
         // --- 第六组：更多设置 ---
         _SettingGroup([
-          _Cell(title: '更多学习偏好'),
+          _Cell(title: '更多学习偏好', onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('更多学习偏好开发中...'), duration: Duration(seconds: 1)),
+            );
+          }),
         ]),
       ],
     );
@@ -530,9 +544,18 @@ class _CellWithDesc extends StatelessWidget {
 }
 
 /// 开关设置项
-class _SwitchCell extends StatelessWidget {
+class _SwitchCell extends StatefulWidget {
   final String title;
-  const _SwitchCell(this.title);
+  final bool initialValue;
+  final ValueChanged<bool>? onChanged;
+  const _SwitchCell(this.title, {this.initialValue = false, this.onChanged});
+
+  @override
+  State<_SwitchCell> createState() => _SwitchCellState();
+}
+
+class _SwitchCellState extends State<_SwitchCell> {
+  late bool _value = widget.initialValue;
 
   @override
   Widget build(BuildContext context) {
@@ -543,11 +566,14 @@ class _SwitchCell extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
+            child: Text(widget.title, style: TextStyle(fontSize: 16, color: skin.text1)),
           ),
           Switch(
-            value: false,
-            onChanged: (v) {},
+            value: _value,
+            onChanged: (v) {
+              setState(() => _value = v);
+              widget.onChanged?.call(v);
+            },
             activeThumbColor: Colors.white,
             activeTrackColor: skin.accent,
             inactiveThumbColor: Colors.white,
@@ -560,11 +586,24 @@ class _SwitchCell extends StatelessWidget {
 }
 
 /// 带描述的开关设置项
-class _SwitchCellWithDesc extends StatelessWidget {
+class _SwitchCellWithDesc extends StatefulWidget {
   final String title;
   final String desc;
-  final bool defaultValue;
-  const _SwitchCellWithDesc({required this.title, required this.desc, this.defaultValue = false});
+  final bool initialValue;
+  final ValueChanged<bool>? onChanged;
+  const _SwitchCellWithDesc({
+    required this.title,
+    required this.desc,
+    this.initialValue = false,
+    this.onChanged,
+  });
+
+  @override
+  State<_SwitchCellWithDesc> createState() => _SwitchCellWithDescState();
+}
+
+class _SwitchCellWithDescState extends State<_SwitchCellWithDesc> {
+  late bool _value = widget.initialValue;
 
   @override
   Widget build(BuildContext context) {
@@ -577,15 +616,18 @@ class _SwitchCellWithDesc extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
+                Text(widget.title, style: TextStyle(fontSize: 16, color: skin.text1)),
                 const SizedBox(height: 4),
-                Text(desc, style: TextStyle(fontSize: 12, color: skin.text3)),
+                Text(widget.desc, style: TextStyle(fontSize: 12, color: skin.text3)),
               ],
             ),
           ),
           Switch(
-            value: defaultValue,
-            onChanged: (v) {},
+            value: _value,
+            onChanged: (v) {
+              setState(() => _value = v);
+              widget.onChanged?.call(v);
+            },
             activeThumbColor: Colors.white,
             activeTrackColor: skin.accent,
             inactiveThumbColor: Colors.white,
