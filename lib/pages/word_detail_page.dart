@@ -11,14 +11,17 @@ import '../data/dictionary_extra.dart';
 import '../data/fav_sentence_dao.dart';
 import '../data/note_database.dart';
 import '../data/wordbook_database.dart' show Word;
+import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
 import '../models/sentence_models.dart';
 import '../models/word_note.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/sb_card.dart';
 import '../widgets/text_generate_effect.dart';
 import '../widgets/box_reveal.dart';
+import '../widgets/definition_view.dart';
 
 class WordDetailPage extends StatefulWidget {
   const WordDetailPage({super.key});
@@ -167,7 +170,116 @@ class _WordDetailPageState extends State<WordDetailPage> {
                 ? _buildDesktopLayout(word, skin, resp, examples, lines, confuseList)
                 : _buildMobileLayout(word, skin, resp, examples, lines, confuseList),
             ),
+            // 底部操作栏：下一词按钮
+            _buildBottomActionBar(context, skin, resp, state),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// FSRS-6 记忆预测卡片（显示记忆状态、难度、下次复习时间）
+  Widget _buildFsrsPredictionCard(BuildContext context, LearningState state, Word word) {
+    final skin = context.skin;
+    final card = state.getCard(word.word);
+    if (card == null || card.isNew) {
+      return SbCard(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(Icons.psychology_outlined, color: skin.colors.accent, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text('新词 — 开始学习后将生成记忆预测',
+                style: MistralTypography.bodyMd.copyWith(color: skin.colors.text2)),
+            ),
+          ],
+        ),
+      );
+    }
+    final prediction = state.getCard(word.word);
+    if (prediction == null) return const SizedBox.shrink();
+    final r = prediction.stability;
+    final statusColor = r < 3
+        ? Colors.red
+        : r < 7
+            ? Colors.orange
+            : r < 14
+                ? Colors.blue
+                : Colors.green;
+    return SbCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.psychology_outlined, color: skin.colors.accent, size: 20),
+              const SizedBox(width: 8),
+              Text('记忆预测',
+                style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  r < 3 ? '即将遗忘' : r < 7 ? '模糊' : r < 14 ? '一般' : '牢固',
+                  style: MistralTypography.caption.copyWith(color: statusColor),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _FsrsStat(label: '难度', value: prediction.difficulty.toStringAsFixed(1)),
+              const SizedBox(width: 16),
+              _FsrsStat(label: '稳定性', value: '${prediction.stability.toStringAsFixed(1)} 天'),
+              const SizedBox(width: 16),
+              _FsrsStat(label: '复习次数', value: '${prediction.reviewCount}'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 底部操作栏：下一词按钮（推进学习进度）
+  Widget _buildBottomActionBar(BuildContext context, SkinSystem skin, AppResponsive resp, LearningState state) {
+    final isLastWord = state.currentIndex >= state.queue.length - 1;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: resp.horizontalPadding,
+        vertical: 12,
+      ),
+      decoration: BoxDecoration(
+        color: skin.colors.cardBg,
+        border: Border(top: BorderSide(color: skin.colors.divider, width: 0.5)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              // 记录评分并推进到下一个单词
+              state.rate(FsrsRating.good);
+              // 返回学习页面，自动显示下一个单词
+              Navigator.pop(context);
+            },
+            icon: Icon(isLastWord ? Icons.check : Icons.arrow_forward, size: 20),
+            label: Text(isLastWord ? '完成学习' : '下一词'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: skin.colors.accent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
         ),
       ),
     );
@@ -235,6 +347,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
                         wordId: word.id,
                       )),
                     ],
+                    // FSRS-6 记忆预测卡片
+                    SizedBox(height: AppleSpacing.lg),
+                    _buildFsrsPredictionCard(context, context.read<LearningState>(), word),
                     // 形近词
                     if (confuseList.isNotEmpty) ...[
                       SizedBox(height: AppleSpacing.lg),
@@ -342,8 +457,11 @@ class _WordDetailPageState extends State<WordDetailPage> {
                           Text('${word.word} — 详细用法',
                             style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1)),
                           const SizedBox(height: 4),
-                          Text('释义: ${word.interpret}',
-                            style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                          if (word.hasStructuredDefinitions)
+                            DefinitionView(definitions: word.parsedDefinitions)
+                          else
+                            Text('释义: ${word.cleanInterpret}',
+                              style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
                           if (word.phrase.isNotEmpty) ...[
                             const SizedBox(height: 4),
                             Text('词组: ${word.phrase}',
@@ -415,6 +533,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
               wordId: word.id,
             )),
           ],
+          // FSRS-6 记忆预测卡片
+          SizedBox(height: AppleSpacing.lg),
+          _buildFsrsPredictionCard(context, context.read<LearningState>(), word),
           // 形近词
           if (confuseList.isNotEmpty) ...[
             SizedBox(height: AppleSpacing.lg),
@@ -522,7 +643,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                 Text('${word.word} — 详细用法',
                   style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1)),
                 const SizedBox(height: 4),
-                Text('释义: ${word.interpret}',
+                Text('释义: ${word.cleanInterpret}',
                   style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
                 if (word.phrase.isNotEmpty) ...[
                   const SizedBox(height: 4),
@@ -958,6 +1079,29 @@ class _ExampleTileState extends State<_ExampleTile> {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// FSRS 记忆统计小部件
+class _FsrsStat extends StatelessWidget {
+  final String label;
+  final String value;
+  const _FsrsStat({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.skin;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+          style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
+        const SizedBox(height: 2),
+        Text(value,
+          style: MistralTypography.bodyMd.copyWith(
+            color: skin.colors.text1, fontWeight: FontWeight.w600)),
+      ],
     );
   }
 }

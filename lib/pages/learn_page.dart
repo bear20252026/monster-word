@@ -7,7 +7,6 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../engine/fsrs5_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -180,7 +179,19 @@ class _WordArea extends StatelessWidget {
 
   /// 词义提示（刮开可见）：截取释义前 24 字，避免直接泄露完整答案
   String _hintText(dynamic word) {
-    final raw = word.interpret?.toString() ?? '';
+    // 优先使用结构化释义
+    if (word.hasStructuredDefinitions == true) {
+      final defs = word.parsedDefinitions as List;
+      if (defs.isNotEmpty) {
+        final first = defs.first;
+        final text = first.cnDef.isNotEmpty ? first.cnDef : first.enDef;
+        if (text.isNotEmpty) {
+          return text.length <= 24 ? text : '${text.substring(0, 24)}…';
+        }
+      }
+    }
+    // 回退到 cleanInterpret
+    final raw = word.cleanInterpret?.toString() ?? '';
     if (raw.isEmpty) return '这个词的意思是……';
     final clean = raw.replaceAll(RegExp(r'\\n|\s{2,}'), ' ').trim();
     return clean.length <= 24 ? clean : '${clean.substring(0, 24)}…';
@@ -322,7 +333,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     final isCorrect = widget.state.choices[i].word == widget.word.word;
     if (isCorrect) {
       // P1b+P2b: 记录答对索引，驱动绿色确认态 + 弹跳 + 对勾
-      widget.state.rate(FsrsRating.good);
+      // 注意：不调用 rate() 推进状态，等详情页"下一词"按钮推进
       setState(() => _correctIndex = i);
       _bounceController.forward(from: 0);
       _checkController.forward(from: 0);
@@ -394,7 +405,21 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     final choice = widget.state.choices[i];
     final isWrong = i == _wrongIndex;
     final isCorrect = i == _correctIndex;
-    final interpret = choice.interpret.toString();
+    // 优先使用结构化释义，回退到 cleanInterpret
+    String interpret = '';
+    if (choice.hasStructuredDefinitions) {
+      final defs = choice.parsedDefinitions;
+      if (defs.isNotEmpty) {
+        final first = defs.first as Map;
+        final cn = first['cn'] as String? ?? '';
+        final en = first['en'] as String? ?? '';
+        interpret = cn.isNotEmpty ? cn : en;
+      } else {
+        interpret = choice.cleanInterpret;
+      }
+    } else {
+      interpret = choice.cleanInterpret;
+    }
     final colors = widget.skin.colors;
     final resp = context.responsive;
 

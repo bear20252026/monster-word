@@ -4,6 +4,7 @@
 // 核心学习引擎：翻译自 coreengine/BBCoreEngine.java（v3.2 源码 1:1）
 // 抽象引擎：定义学习/复习流程的核心方法 + 4选1干扰项生成
 
+import 'dart:convert';
 import 'dart:math';
 
 import '../models/bb_word_process.dart';
@@ -23,7 +24,50 @@ enum DataPreparedState {
 class WordChoicePair {
   final String word;
   final String interpret;
-  const WordChoicePair(this.word, this.interpret);
+  WordChoicePair(this.word, this.interpret);
+
+  // === 结构化释义（动态解析，与 Word 模型保持一致）===
+  List<dynamic>? _cachedDefinitions;
+
+  /// 解析后的结构化释义列表
+  List<dynamic> get parsedDefinitions {
+    if (_cachedDefinitions != null) return _cachedDefinitions!;
+    final result = <dynamic>[];
+    try {
+      final decoded = jsonDecode(interpret);
+      if (decoded is List) {
+        for (final item in decoded) {
+          if (item is! Map) continue;
+          final pos = (item['t'] ?? item['pos'] ?? '') as String;
+          final defList = item['def'];
+          if (defList is List) {
+            for (final d in defList) {
+              if (d is! Map) continue;
+              result.add({
+                'pos': pos,
+                'en': (d['en'] ?? d['endef'] ?? '') as String,
+                'cn': (d['cn'] ?? d['cndef'] ?? '') as String,
+              });
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    _cachedDefinitions = result;
+    return result;
+  }
+
+  /// 是否有结构化释义
+  bool get hasStructuredDefinitions => parsedDefinitions.isNotEmpty;
+
+  /// 清理 HTML 标签
+  String get cleanInterpret {
+    return interpret
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll(RegExp(r'&[a-zA-Z]+;'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
 }
 
 /// 核心学习引擎抽象类（翻译自 BBCoreEngine.java）

@@ -3,6 +3,7 @@
 // 由账号4生成
 // 数据层：词库数据库初始化与查询
 // 跨平台支持：Windows (sqflite_common_ffi) / Android / iOS (sqflite)
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
@@ -10,6 +11,45 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+// === 释义 JSON 解析器 ===
+// interpret 字段存储的是复杂 JSON，结构如下：
+// [
+//   {
+//     "t": "n.",                      // 词性
+//     "def": [                        // 释义列表
+//       {
+//         "en": "definition",         // 英文释义
+//         "cn": "中文释义",           // 中文释义
+//         "p": [                      // 例句列表
+//           {"en": "example", "cn": "翻译", "exams": [...]}
+//         ]
+//       }
+//     ]
+//   }
+// ]
+
+/// 解析后的释义定义
+class Definition {
+  final String partOfSpeech;  // 词性：n., vt., adj. 等
+  final String enDef;         // 英文释义
+  final String cnDef;         // 中文释义
+  final List<DefExample> examples;  // 例句列表
+
+  const Definition({
+    required this.partOfSpeech,
+    required this.enDef,
+    required this.cnDef,
+    this.examples = const [],
+  });
+}
+
+/// 释义中的例句
+class DefExample {
+  final String en;
+  final String cn;
+  const DefExample({required this.en, required this.cn});
+}
 
 /// 词书模型
 class Book {
@@ -78,9 +118,106 @@ class Word {
         wordRoot: (map['word_root'] as String?) ?? '',
       );
 
-  /// 解释按行拆分（每个词性一行）
+  /// 清理 HTML 标签和格式代码（如 `<font color=...>`、`<b>` 等）
+  static String _cleanHtml(String text) {
+    if (text.isEmpty) return '';
+    // 移除所有 HTML 标签
+    var result = text.replaceAll(RegExp(r'<[^>]*>'), '');
+    // 移除多余的空白字符
+    result = result.replaceAll(RegExp(r'\s+'), ' ').trim();
+    // 移除残留的 HTML 实体
+    result = result
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'");
+    return result;
+  }
+
+  /// 原始释义（清理 HTML 标签后）
+  String get cleanInterpret => _cleanHtml(interpret);
+
+  /// 解释按行拆分（每个词性一行，已清理 HTML）
   List<String> get interpretLines =>
-      interpret.split('\n').where((l) => l.trim().isNotEmpty).toList();
+      cleanInterpret.split('\n').where((l) => l.trim().isNotEmpty).toList();
+
+  /// 第一行释义（用于列表显示）
+  String get firstInterpretLine {
+    final lines = interpretLines;
+    return lines.isNotEmpty ? lines.first : '';
+  }
+
+  // === JSON 释义解析 ===
+  List<Definition>? _cachedDefinitions;
+
+  /// 解析后的结构化释义列表（带缓存）
+  List<Definition> get parsedDefinitions {
+    if (_cachedDefinitions != null) return _cachedDefinitions!;
+    final result = <Definition>[];
+    try {
+      final decoded = jsonDecode(interpret);
+      if (decoded is List) {
+        for (final item in decoded) {
+          if (item is! Map) continue;
+          final pos = (item['t'] ?? item['pos'] ?? '') as String;  // 词性
+          final defList = item['def'];
+          if (defList is List) {
+            for (final d in defList) {
+              if (d is! Map) continue;
+              final enDef = (d['en'] ?? d['endef'] ?? '') as String;
+              final cnDef = (d['cn'] ?? d['cndef'] ?? '') as String;
+              final examples = <DefExample>[];
+              final pList = d['p'];
+              if (pList is List) {
+                for (final ex in pList) {
+                  if (ex is! Map) continue;
+                  final en = (ex['en'] ?? '') as String;
+                  final cn = (ex['cn'] ?? '') as String;
+                  if (en.isNotEmpty || cn.isNotEmpty) {
+                    examples.add(DefExample(en: en, cn: cn));
+                  }
+                }
+              }
+              result.add(Definition(
+                partOfSpeech: _cleanHtml(pos),
+                enDef: _cleanHtml(enDef),
+                cnDef: _cleanHtml(cnDef),
+                examples: examples,
+              ));
+            }
+          }
+        }
+      }
+    } catch (_) {
+      // JSON 解析失败时返回空列表，UI 会回退到 cleanInterpret
+    }
+    _cachedDefinitions = result;
+    return result;
+  }
+
+  /// 是否有结构化释义
+  bool get hasStructuredDefinitions => parsedDefinitions.isNotEmpty;
+
+  /// 格式化后的释义文本（用于简单显示）
+  String get formattedDefinitions {
+    if (!hasStructuredDefinitions) return cleanInterpret;
+    final sb = StringBuffer();
+    String currentPos = '';
+    for (final def in parsedDefinitions) {
+      if (def.partOfSpeech != currentPos) {
+        currentPos = def.partOfSpeech;
+        if (sb.isNotEmpty) sb.writeln();
+        sb.write('$currentPos ');
+      }
+      sb.writeln('${def.cnDef}; ${def.enDef}');
+      for (final ex in def.examples) {
+        sb.writeln('  • ${ex.en}  ${ex.cn}');
+      }
+    }
+    return sb.toString().trim();
+  }
 }
 
 /// 词库数据库管理器（单例）
