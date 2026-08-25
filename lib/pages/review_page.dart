@@ -1,7 +1,6 @@
 // 复习页：壁纸沉浸 + 四选一 + 睭底操作栏
 // 已接入 SkinSystem 主题
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -136,6 +135,9 @@ class _ReviewPageState extends State<ReviewPage> {
     final resp = context.responsive;
     final wallpaper = context.watch<WallpaperState>().current;
 
+    // 横屏检测
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
     return Scaffold(
       body: word == null
           ? _buildReviewDone()
@@ -152,8 +154,15 @@ class _ReviewPageState extends State<ReviewPage> {
                 SafeArea(
                   child: Center(
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
-                      child: Column(
+                      constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
+                      child: isLandscape
+                          ? Row(
+                              children: [
+                                Expanded(child: _buildWordArea(word, skin)),
+                                Expanded(child: _buildChoiceArea(word, skin)),
+                              ],
+                            )
+                          : Column(
                         children: [
                           // 顶部栏
                           _buildTopBar(skin),

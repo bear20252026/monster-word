@@ -31,6 +31,9 @@ class HomeScreen extends StatelessWidget {
     final skin = context.skin;
     final resp = context.responsive;
 
+    // 横屏检测
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
     // 方案C：奶油画布，移除壁纸系统
     // 下滑查词：在首页任意位置向下滑动打开查词页（提示卡也可直接点击）
     return GestureDetector(
@@ -46,8 +49,10 @@ class HomeScreen extends StatelessWidget {
           SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
-                child: Column(
+                constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
+                child: isLandscape
+                    ? _buildLandscapeLayout(context, skin, resp)
+                    : Column(
                   children: [
                     const Spacer(flex: 2),
                     // 签到卡片（SbCard 白卡，替代毛玻璃）
@@ -120,6 +125,61 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       ),
+    );
+  }
+
+  /// 横屏布局：左右分栏
+  Widget _buildLandscapeLayout(BuildContext context, SkinSystem skin, AppResponsive resp) {
+    return Row(
+      children: [
+        // 左侧：签到 + 入口
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _EntranceIn(delayMs: 120, child: _buildCheckInCard(context, skin)),
+              const SizedBox(height: 16),
+              _EntranceIn(delayMs: 200, child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
+                child: Selector<LearningState, ({int total, int dueCount})>(
+                  selector: (_, s) => (total: s.total, dueCount: s.dueCount),
+                  builder: (context, state, _) => Row(children: [
+                    Expanded(child: _EntryCard(
+                      title: 'Learn',
+                      count: state.total,
+                      onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
+                    )),
+                    const SizedBox(width: 12),
+                    Expanded(child: _EntryCard(
+                      title: 'Review',
+                      count: state.dueCount,
+                      onTap: () => showReviewDialog(context),
+                    )),
+                  ]),
+                ),
+              )),
+            ],
+          ),
+        ),
+        // 右侧：推荐语
+        Expanded(
+          child: Center(
+            child: _EntranceIn(
+              delayMs: 380,
+              child: Padding(
+                padding: EdgeInsets.all(resp.pageMargin),
+                child: TestimonialSlider(
+                  items: TestimonialData.defaults,
+                  height: 200,
+                  activeColor: skin.colors.accent,
+                  inactiveColor: skin.colors.divider,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

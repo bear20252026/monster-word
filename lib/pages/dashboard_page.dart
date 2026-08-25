@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 
 import '../data/wordbook_database.dart';
 import '../hooks/responsive.dart';
+import '../pages/scare_coin_history_page.dart';
+import '../services/share_image_service.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -80,11 +82,7 @@ class DashboardPage extends StatelessWidget {
             icon: const Icon(Icons.share, size: 20),
             color: skin.text1,
             tooltip: '分享',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('分享功能开发中...'), duration: Duration(seconds: 1)),
-              );
-            },
+            onPressed: () => _sharePoster(context),
           ),
         ],
       ),
@@ -221,6 +219,33 @@ class DashboardPage extends StatelessWidget {
 
   String _shortName(String name) {
     return name.length > 4 ? name.substring(0, 4) : name;
+  }
+
+  /// 生成分享海报并分享
+  Future<void> _sharePoster(BuildContext context) async {
+    try {
+      // 显示 loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('正在生成分享图...'), duration: Duration(seconds: 1)),
+      );
+
+      // 获取用户数据（临时使用 ScareCoinLedger 获取签到数据）
+      final totalDays = (await ScareCoinLedger.checkinDates()).length;
+      final streakDays = await ScareCoinLedger.streak();
+
+      // 生成并分享
+      await ShareImageService.generateAndShare(
+        totalWords: 25000, // 词库总数作为学习参考
+        streakDays: streakDays,
+        totalDays: totalDays,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('分享失败: $e')),
+        );
+      }
+    }
   }
 }
 

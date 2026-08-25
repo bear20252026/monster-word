@@ -55,6 +55,7 @@ class _LearnPageState extends State<LearnPage> {
     final resp = context.responsive;
     final state = context.watch<LearningState>();
     final word = state.currentWord;
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg, // 奶油画布（batch4c: 壁纸→cream canvas）
@@ -63,8 +64,19 @@ class _LearnPageState extends State<LearnPage> {
           : SafeArea(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
-                  child: Column(
+                  constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
+                  child: isLandscape
+                      ? Row(
+                          children: [
+                            Expanded(child: _WordArea(
+                              word: word, skin: skin, resp: resp,
+                              audioLoading: _audioLoading,
+                              onPlayAudio: _playAudio,
+                            )),
+                            Expanded(child: _QuizArea(word: word, state: state, skin: skin)),
+                          ],
+                        )
+                      : Column(
                     children: [
                       _TopBar(skin: skin, state: state),
                       Expanded(flex: 4, child: _WordArea(
