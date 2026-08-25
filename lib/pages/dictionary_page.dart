@@ -223,7 +223,12 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
   }
 
   Widget _buildInterpretation(ThemeVars skin, Word word) {
-    final lines = word.interpretLines;
+    final lines = word.hasStructuredDefinitions
+        ? word.formattedDefinitions
+            .split('\n')
+            .where((l) => l.trim().isNotEmpty)
+            .toList()
+        : word.interpretLines;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -694,7 +699,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
     try {
       final player = AudioPlayer();
       await player.play(UrlSource(
-        'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2',
+        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2',
       ));
     } catch (e) {
       if (mounted) {

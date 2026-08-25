@@ -365,7 +365,7 @@ class _AudioCacheDir {
 /// 有道词典发音 URL
 String _buildYoudaoUrl(String word, {bool isUK = false}) {
   final type = isUK ? '1' : '2'; // 1=英音 2=美音
-  return 'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=$type';
+  return 'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=$type';
 }
 
 /// beingfine 音频服务器 URL（原版 PublicConstants.BASE_AUDIO_URL）
@@ -689,7 +689,7 @@ class TextAudioPlayer {
     // 原版通过 GetAudioWithTextService 向服务器请求音频路径
     // 返回 JSON: {"path": "xxx/xxx.mp3"}
     // 这里简化为使用有道 TTS 接口
-    return 'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(text)}&type=2';
+    return 'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(text)}&type=2';
   }
 
   /// 播放本地文件

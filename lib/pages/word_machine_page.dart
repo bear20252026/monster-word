@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 
-import '../engine/fsrs5_engine.dart';
+import '../engine/fsrs6_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../tokens/gameboy.dart';
@@ -630,7 +630,7 @@ class _WordMachinePageState extends State<WordMachinePage>
       await _audioSub?.cancel();
       final player = AudioPlayer();
       await player.setUrl(
-        'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(wordText)}&type=2');
+        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(wordText)}&type=2');
       await player.play();
       // 播放完成后释放资源
       _audioSub = player.processingStateStream.listen((s) {

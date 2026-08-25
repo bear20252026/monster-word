@@ -6,12 +6,14 @@ import 'package:provider/provider.dart';
 
 import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart';
+import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../pages/dictionary_page.dart';
 import '../engine/srs_engine.dart';
 import '../engine/super_memory_engine.dart';
 import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
 import '../data/wallpaper_data.dart';
+import '../state/learning_state.dart';
 import '../state/wallpaper_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -43,33 +45,26 @@ class _ReviewPageState extends State<ReviewPage> {
     _initReview();
   }
 
-  /// 初始化复习（到期调度：从词库拉取今日到期词）
+  /// 初始化复习（使用 FSRS-6 到期调度）
   Future<void> _initReview() async {
     try {
-      final dueWords = <BBWordProcess>[];
-      // 从词库取一批词作为复习池（真实实现：从 user_process 表按 reviewdate 筛选）
-      final sample = await WordBookDatabase.instance.searchWords('a', limit: 20);
-      for (final w in sample) {
-        dueWords.add(BBWordProcess(
-          word: w.word,
-          wordId: w.id,
-          interpret: w.interpret,
-          usPron: w.usPron,
-          ukPron: w.ukPron,
-          example: w.example,
-        ));
-      }
-      if (dueWords.isEmpty) {
-        // 无到期词时从词库取一批
-        final fallback = await WordBookDatabase.instance.searchWords('the', limit: 20);
-        for (final w in fallback) {
-          dueWords.add(BBWordProcess(
-            word: w.word, wordId: w.id, interpret: w.interpret,
-            usPron: w.usPron, ukPron: w.ukPron, example: w.example,
-          ));
-        }
-      }
-      _engine.init(dueWords);
+      final state = context.read<LearningState>();
+      // 使用 FSRS-6 的到期单词（基于记忆曲线精确预测）
+      final dueWords = state.dueWords;
+      final pool = dueWords.isNotEmpty
+          ? dueWords
+          : (state.queue.isNotEmpty ? state.queue : await _fallbackWords());
+      final processes = pool
+          .map((w) => BBWordProcess(
+                word: w.word,
+                wordId: w.id,
+                interpret: w.interpret,
+                usPron: w.usPron,
+                ukPron: w.ukPron,
+                example: w.example,
+              ))
+          .toList();
+      _engine.init(processes);
       _total = _engine.totalNum;
       _done = 0;
       _initialized = true;
@@ -92,6 +87,13 @@ class _ReviewPageState extends State<ReviewPage> {
     }
   }
 
+  /// 获取备用单词（当没有到期词时）
+  Future<List<Word>> _fallbackWords() async {
+    final sample = await WordBookDatabase.instance.searchWords('a', limit: 20);
+    if (sample.isNotEmpty) return sample;
+    return await WordBookDatabase.instance.searchWords('the', limit: 20);
+  }
+
   /// 生成 4 选 1 选项（原版 confuseItemsForChoice）
   void _regenerateChoices() {
     final current = _engine.currentWord();
@@ -106,8 +108,9 @@ class _ReviewPageState extends State<ReviewPage> {
     _choices = _engine.shuffleList(choices);
   }
 
-  /// 评分（原版 iDontKnow/iMayKnow/iReallyKnow）
+  /// 评分（同步到 FSRS-6 算法 + Leitner 引擎）
   void _rate(RecallRating rating) {
+    // 同步到 Leitner 引擎
     switch (rating) {
       case RecallRating.again:
         _engine.iDontKnow();
@@ -117,6 +120,17 @@ class _ReviewPageState extends State<ReviewPage> {
         _engine.iReallyKnow();
       case RecallRating.easy:
         _engine.tooEasy();
+    }
+    // 同步到 FSRS-6 算法（精确记忆评估）
+    final fsrsRating = switch (rating) {
+      RecallRating.again => FsrsRating.again,
+      RecallRating.hard => FsrsRating.hard,
+      RecallRating.good => FsrsRating.good,
+      RecallRating.easy => FsrsRating.easy,
+    };
+    final currentWord = _engine.currentWord();
+    if (currentWord != null) {
+      context.read<LearningState>().rate(fsrsRating);
     }
     _done++;
     _showAnswer = false;
@@ -138,7 +152,9 @@ class _ReviewPageState extends State<ReviewPage> {
     // 横屏检测
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
       body: word == null
           ? _buildReviewDone()
           : Stack(
@@ -185,6 +201,7 @@ class _ReviewPageState extends State<ReviewPage> {
                 ),
               ],
             ),
+      ),
     );
   }
 
@@ -546,7 +563,7 @@ class _ReviewPageState extends State<ReviewPage> {
     try {
       final player = AudioPlayer();
       await player.play(UrlSource(
-        'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2',
+        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2',
       ));
     } catch (e) {
       if (mounted) {

@@ -265,7 +265,13 @@ class _SearchPageState extends State<SearchPage> {
               ],
             ),
           Divider(height: 32, color: skin.divider),
-          ...word.interpretLines.map((line) => Padding(
+          ...(word.hasStructuredDefinitions
+                  ? word.formattedDefinitions
+                      .split('\n')
+                      .where((l) => l.trim().isNotEmpty)
+                      .toList()
+                  : word.interpretLines)
+              .map((line) => Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(line,
               style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
@@ -451,7 +457,7 @@ class _SearchPageState extends State<SearchPage> {
     try {
       final player = AudioPlayer();
       await player.play(UrlSource(
-        'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2',
+        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2',
       ));
     } catch (e) {
       if (mounted) {

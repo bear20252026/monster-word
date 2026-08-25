@@ -22,7 +22,7 @@ class AudioService extends ChangeNotifier {
       // 桌面端回退到网络音频
       final player = AudioPlayer();
       await player.play(UrlSource(
-        'http://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.trim())}&type=2'));
+        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.trim())}&type=2'));
     } catch (e) {
       debugPrint('[AudioService] playback error: $e');
       if (context != null && context.mounted) {
