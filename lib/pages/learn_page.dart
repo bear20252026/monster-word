@@ -3,13 +3,13 @@
 // 由账号4生成
 // 学习页：Mistral AI 设计风格
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../engine/fsrs6_engine.dart';
 
 import '../hooks/responsive.dart';
+import '../player/audio_players.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -34,11 +34,9 @@ class _LearnPageState extends State<LearnPage> {
   Future<void> _playAudio(String word) async {
     if (_audioLoading) return;
     setState(() => _audioLoading = true);
-    AudioPlayer? player;
     try {
-      player = AudioPlayer();
-      await player.play(UrlSource(
-        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2'));
+      // 使用 PhoneticAudioPlayer（带缓存）
+      await playWordAudio(word);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -47,7 +45,6 @@ class _LearnPageState extends State<LearnPage> {
         );
       }
     } finally {
-      await player?.dispose();
       if (mounted) setState(() => _audioLoading = false);
     }
   }

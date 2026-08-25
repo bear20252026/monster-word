@@ -1,13 +1,13 @@
 // 由 Claude 团队生成 | Monster Word App
 // 字典详情页：完整单词释义、柯林斯、例句、派生、词根、近义词
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
 import '../data/wordbook_database.dart';
+import '../player/audio_players.dart';
 import '../services/dictionary_service.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -693,20 +693,15 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
   }
 
   Future<void> _playAudio(String word) async {
-    AudioPlayer? player;
     try {
-      player = AudioPlayer();
-      await player.play(UrlSource(
-        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2',
-      ));
+      // 使用 PhoneticAudioPlayer（带缓存）
+      await playWordAudio(word);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
         );
       }
-    } finally {
-      await player?.dispose();
     }
   }
 }

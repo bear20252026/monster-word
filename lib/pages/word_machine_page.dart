@@ -6,11 +6,11 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 
 import '../engine/fsrs6_engine.dart';
 import '../hooks/responsive.dart';
+import '../player/audio_players.dart';
 import '../state/learning_state.dart';
 import '../tokens/gameboy.dart';
 import '../widgets/session_exit_guard.dart';
@@ -40,7 +40,7 @@ class _WordMachinePageState extends State<WordMachinePage>
   late AnimationController _blinkController;
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
-  StreamSubscription<ProcessingState>? _audioSub; // 音频播放状态订阅
+  // 音频播放状态订阅（保留用于取消之前的播放）
 
   @override
   void initState() {
@@ -63,7 +63,6 @@ class _WordMachinePageState extends State<WordMachinePage>
   void dispose() {
     _blinkController.dispose();
     _shakeController.dispose();
-    _audioSub?.cancel();
     super.dispose();
   }
 
@@ -657,25 +656,12 @@ class _WordMachinePageState extends State<WordMachinePage>
     _playAudio(word.word);
   }
 
-  /// 播放单词音频（在线发音）
+  /// 播放单词音频（使用 PhoneticAudioPlayer，带缓存）
   Future<void> _playAudio(String wordText) async {
-    AudioPlayer? player;
     try {
-      await _audioSub?.cancel();
-      player = AudioPlayer();
-      await player.setUrl(
-        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(wordText)}&type=2');
-      await player.play();
-      // 播放完成后释放资源
-      _audioSub = player.processingStateStream.listen((s) {
-        if (s == ProcessingState.completed) {
-          player?.dispose();
-          _audioSub = null;
-        }
-      });
+      await playWordAudio(wordText);
     } catch (e) {
       debugPrint('Audio playback error: $e');
-      await player?.dispose();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

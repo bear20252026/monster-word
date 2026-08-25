@@ -1,8 +1,5 @@
 // 字典详情页：单词详解（释义+音标+例句+常见用法+词根+形近词+笔记）
 // 从学习页答题后进入，看完后点击"下一词"返回学习
-import 'dart:async';
-
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +12,7 @@ import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
 import '../models/sentence_models.dart';
 import '../models/word_note.dart';
+import '../player/audio_players.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -35,7 +33,6 @@ class _WordDetailPageState extends State<WordDetailPage> {
   List<WordNote> _notes = [];
   bool _notesLoaded = false;
   DictionaryExtra? _extra; // 字典补充数据（派生词/近义词/真题）
-  StreamSubscription<void>? _audioSub; // 音频播放完成订阅
 
   /// 解析要展示的单词：路由参数优先（从词书/收藏/列表点入时显示所点的词），
   /// 否则回退到当前学习词。修复此前所有入口都显示 currentWord 的问题。
@@ -775,18 +772,8 @@ class _WordDetailPageState extends State<WordDetailPage> {
               GestureDetector(
                 onTap: () async {
                   try {
-                    // 取消上一次播放
-                    await _audioSub?.cancel();
-                    final player = AudioPlayer();
-                    // 使用 HTTPS 避免网络安全策略拦截
-                    final url = 'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2';
-                    await player.setSource(UrlSource(url));
-                    await player.resume();
-                    // 播放完成后释放资源
-                    _audioSub = player.onPlayerComplete.listen((_) {
-                      player.dispose();
-                      _audioSub = null;
-                    });
+                    // 使用 PhoneticAudioPlayer（带缓存）
+                    await playWordAudio(word.word);
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -831,7 +818,6 @@ class _WordDetailPageState extends State<WordDetailPage> {
 
   @override
   void dispose() {
-    _audioSub?.cancel();
     super.dispose();
   }
 }

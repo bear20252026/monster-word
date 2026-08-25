@@ -2,9 +2,9 @@
 
 // 移植自 v3.2 spellcheck/SpellCheckFragment + SpellCheckPresenterImp
 // 拼写检查：播放音频 → 用户拼写 → 正确/错误反馈
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
+import '../player/audio_players.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -27,7 +27,7 @@ class SpellCheckPage extends StatefulWidget {
 class _SpellCheckPageState extends State<SpellCheckPage> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
-  final _audioPlayer = AudioPlayer();
+  // 音频通过 playWordAudio 统一播放
   String _result = '';
   bool _isCorrect = false;
   bool _hasChecked = false;
@@ -44,16 +44,13 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
   Future<void> _playAudio() async {
     if (widget.word.isEmpty) return;
     try {
-      await _audioPlayer.play(UrlSource(
-        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(widget.word)}&type=2',
-      ));
+      await playWordAudio(widget.word);
     } catch (e) {
       debugPrint('Audio playback error: $e');
     }

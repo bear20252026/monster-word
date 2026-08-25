@@ -1,6 +1,5 @@
 // 查词工具：下拉词典窗口
 // 已接入 SkinSystem 主题
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../data/app_preferences.dart';
@@ -9,6 +8,7 @@ import '../hooks/responsive.dart';
 import 'package:provider/provider.dart';
 
 import '../data/wordbook_database.dart';
+import '../player/audio_players.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -454,20 +454,15 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<void> _playAudio(String word) async {
-    AudioPlayer? player;
     try {
-      player = AudioPlayer();
-      await player.play(UrlSource(
-        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=2',
-      ));
+      // 使用 PhoneticAudioPlayer（带缓存）
+      await playWordAudio(word);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
         );
       }
-    } finally {
-      await player?.dispose();
     }
   }
 }

@@ -1,9 +1,9 @@
 // 听写单元测模式：多词连续听写
 // 播放音频 → 用户拼写 → 正确/错误反馈 → 下一词
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../player/audio_players.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -20,7 +20,7 @@ class SpellSessionPage extends StatefulWidget {
 class _SpellSessionPageState extends State<SpellSessionPage> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
-  final _audioPlayer = AudioPlayer();
+  // 音频通过 playWordAudio 统一播放
 
   int _currentIndex = 0;
   String _result = '';
@@ -41,7 +41,6 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -66,9 +65,7 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
   Future<void> _playCurrentWord() async {
     if (_currentWord.isEmpty) return;
     try {
-      await _audioPlayer.play(UrlSource(
-        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(_currentWord)}&type=2',
-      ));
+      await playWordAudio(_currentWord);
     } catch (e) {
       debugPrint('Audio playback error: $e');
     }

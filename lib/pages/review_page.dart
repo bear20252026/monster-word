@@ -2,7 +2,6 @@
 // 已接入 SkinSystem 主题
 import 'dart:convert';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +14,7 @@ import '../engine/super_memory_engine.dart';
 import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
 import '../data/wallpaper_data.dart';
+import '../player/audio_players.dart';
 import '../state/learning_state.dart';
 import '../state/wallpaper_state.dart';
 import '../theme/skin_system.dart';
@@ -631,12 +631,9 @@ class _ReviewPageState extends State<ReviewPage> {
   Future<void> _playWordAudio(BBWordProcess word) async {
     if (_audioLoading) return;
     setState(() => _audioLoading = true);
-    AudioPlayer? player;
     try {
-      player = AudioPlayer();
-      await player.play(UrlSource(
-        'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word.word)}&type=2',
-      ));
+      // 使用 PhoneticAudioPlayer（带缓存）
+      await playWordAudio(word.word);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -644,7 +641,6 @@ class _ReviewPageState extends State<ReviewPage> {
         );
       }
     } finally {
-      await player?.dispose();
       if (mounted) setState(() => _audioLoading = false);
     }
   }
