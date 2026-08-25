@@ -3,7 +3,12 @@
 // 移植自 v3.2 ExtensiveModelSelectActivity
 // 泛听模式选择：选择随身听的播放模式
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../data/wordbook_database.dart';
+import '../hooks/responsive.dart';
+import '../pages/listening_player_page.dart';
+import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -11,16 +16,25 @@ class ListenMode {
   final String name;
   final String description;
   final IconData icon;
+  final ListeningMode playerMode;
 
   const ListenMode({
     required this.name,
     required this.description,
     required this.icon,
+    required this.playerMode,
   });
 }
 
 class ExtensiveModelSelectPage extends StatefulWidget {
-  const ExtensiveModelSelectPage({super.key});
+  final int bookId;
+  final String bookName;
+
+  const ExtensiveModelSelectPage({
+    super.key,
+    required this.bookId,
+    this.bookName = '',
+  });
 
   static const routeName = '/listen_mode_select';
 
@@ -29,30 +43,35 @@ class ExtensiveModelSelectPage extends StatefulWidget {
 }
 
 class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
-  final List<ListenMode> _modes = [
-    const ListenMode(
+  final List<ListenMode> _modes = const [
+    ListenMode(
       name: '单词+释义',
       description: '播放单词发音后播放中文释义',
       icon: Icons.translate,
+      playerMode: ListeningMode.wordMeaning,
     ),
-    const ListenMode(
+    ListenMode(
       name: '仅单词',
       description: '只播放单词发音',
       icon: Icons.hearing,
+      playerMode: ListeningMode.wordOnly,
     ),
-    const ListenMode(
+    ListenMode(
       name: '单词+例句',
       description: '播放单词后播放例句',
       icon: Icons.format_quote,
+      playerMode: ListeningMode.wordExample,
     ),
-    const ListenMode(
+    ListenMode(
       name: '释义+单词',
       description: '先播放中文释义再播放单词',
       icon: Icons.swap_horiz,
+      playerMode: ListeningMode.meaningWord,
     ),
   ];
 
   int _selectedIndex = 0;
+  bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -118,10 +137,81 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
                 },
               ),
             ),
+            // 底部确认按钮
+            _buildConfirmButton(skin),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildConfirmButton(SkinSystem skin) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: skin.colors.pageBg,
+        border: Border(top: BorderSide(color: skin.colors.divider)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: _loading ? null : _onConfirm,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: MistralColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+              ),
+              elevation: 0,
+            ),
+            child: _loading
+                ? const SizedBox(
+                    width: 22, height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('开始播放', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onConfirm() async {
+    setState(() => _loading = true);
+    try {
+      final learningState = context.read<LearningState>();
+      final words = await learningState.getWordsByBook(widget.bookId);
+      if (!mounted) return;
+      if (words.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('该词书暂无单词')),
+        );
+        return;
+      }
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ListeningPlayerPage(
+            words: words,
+            mode: _modes[_selectedIndex].playerMode,
+            bookName: widget.bookName,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('加载单词失败: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Widget _buildNavBar(SkinSystem skin) {

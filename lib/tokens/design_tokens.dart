@@ -46,6 +46,8 @@ class MistralColors {
   static const Color successDark = StarbucksDarkColors.success;
   static const Color danger = StarbucksCreamColors.danger;
   static const Color dangerDark = StarbucksDarkColors.danger;
+  static const Color error = StarbucksCreamColors.danger; // 别名，同 danger
+  static const Color accent = StarbucksCreamColors.vipGoldBg; // 品牌金 accent
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6);                         // 蓝色 - 新词/信息
   static const Color link = StarbucksCreamColors.greenBrand;         // 0xFF00754A 品牌绿

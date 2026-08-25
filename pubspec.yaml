@@ -52,6 +52,8 @@ dependencies:
   encrypt: ^5.0.3          # AES 加密（原版签名机制 sign = md5(AES(...))）
   just_audio: ^0.9.42      # 锁屏音频播放（lock/lock_media.dart）
   webview_flutter: ^4.10.0 # WebView 页面（帮助页/网页活动/锁屏缓存）
+  flutter_tts: ^4.2.0      # 系统 TTS 引擎（随身听/听写/随手拼）
+  share_plus: ^10.1.4      # 导出分享词表
 
 dev_dependencies:
   flutter_test:

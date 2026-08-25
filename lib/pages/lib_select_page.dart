@@ -8,6 +8,10 @@ import 'package:provider/provider.dart';
 
 import '../data/wordbook_database.dart';
 import '../hooks/responsive.dart';
+import '../pages/dictation_session_page.dart';
+import '../pages/listening_player_page.dart';
+import '../pages/quick_spell_page.dart';
+import '../pages/word_export_page.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -15,6 +19,7 @@ import '../widgets/bending_gallery.dart';
 import '../widgets/morphing_tabs.dart';
 import '../widgets/word_globe.dart';
 import 'book_words_page.dart';
+import 'extensive_model_select_page.dart';
 import 'search_page.dart';
 
 class LibSelectPage extends StatefulWidget {
@@ -361,15 +366,93 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   void _onToolTap(BuildContext context, String tool) {
+    final state = context.read<LearningState>();
+    final book = state.currentBook;
+
+    if (book == null && tool != 'immersive') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请先选择一本词书')),
+      );
+      return;
+    }
+
     switch (tool) {
       case 'immersive':
         Navigator.pushNamed(context, '/immersive_swipe');
+        break;
+      case 'listen':
+        // 随身听 → 模式选择页
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ExtensiveModelSelectPage(
+              bookId: book!.id,
+              bookName: book.name,
+            ),
+          ),
+        );
+        break;
+      case 'dictation':
+        // 听写 → 直接加载单词进入听写
+        _startDictation(context, book!);
+        break;
+      case 'spell':
+        // 随手拼 → 直接加载单词进入拼写
+        _startQuickSpell(context, book!);
+        break;
+      case 'export':
+        // 导出 → 导出页面
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => WordExportPage(
+              bookId: book!.id,
+              bookName: book.name,
+            ),
+          ),
+        );
         break;
       default:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$tool 功能开发中...')),
         );
     }
+  }
+
+  Future<void> _startDictation(BuildContext context, Book book) async {
+    final state = context.read<LearningState>();
+    final words = await state.getWordsByBook(book.id);
+    if (!context.mounted) return;
+    if (words.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('该词书暂无单词')),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DictationSessionPage(words: words, bookName: book.name),
+      ),
+    );
+  }
+
+  Future<void> _startQuickSpell(BuildContext context, Book book) async {
+    final state = context.read<LearningState>();
+    final words = await state.getWordsByBook(book.id);
+    if (!context.mounted) return;
+    if (words.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('该词书暂无单词')),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => QuickSpellPage(words: words, bookName: book.name),
+      ),
+    );
   }
 
   void _showMoreMenu(BuildContext context, dynamic colors) {

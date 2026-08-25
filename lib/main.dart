@@ -9,11 +9,13 @@ import 'data/user_database.dart';
 import 'player/audio_players.dart';
 import 'utils/screen_utils.dart';
 import 'pages/dashboard_page.dart';
+import 'pages/dictation_session_page.dart';
 import 'pages/extensive_model_select_page.dart';
 import 'pages/foot_mark_page.dart';
 import 'pages/help_page.dart';
 import 'pages/learn_page.dart';
 import 'pages/lib_select_page.dart';
+import 'pages/listening_player_page.dart';
 import 'pages/book_words_page.dart';
 import 'pages/linked_me_middle_page.dart';
 import 'pages/list_word_listen_page.dart';
@@ -48,6 +50,8 @@ import 'pages/splash_page.dart';
 import 'pages/ui_theme_select_page.dart';
 import 'pages/user_info_manage_page.dart';
 import 'pages/word_detail_page.dart';
+import 'pages/word_export_page.dart';
+import 'pages/quick_spell_page.dart';
 import 'screens/home_screen.dart';
 import 'screens/learn_session.dart';
 import 'screens/profile_screen.dart';
@@ -302,7 +306,11 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
       case '/personal_stereo': return const PersonalStereoPage();
       case '/play_order': return const PlayOrderPage();
       case '/word_listen': return const ListWordListenPage();
-      case '/listen_mode_select': return const ExtensiveModelSelectPage();
+      case '/listen_mode_select':
+        final a = args as Map<String, dynamic>?;
+        return a != null
+            ? ExtensiveModelSelectPage(bookId: a['bookId'] as int, bookName: a['bookName'] as String? ?? '')
+            : const SplashPage();
       case '/sentence_quiz': return const SentenceQuizPage();
       case '/appearance': return const AppearancePage();
       case '/more_settings': return const MoreSettingsPage();
@@ -317,6 +325,40 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
         final a = args as Map<String, dynamic>?;
         return LinkedMeMiddlePage(word: a?['word'] ?? '', association: a?['association']);
       case '/word_detail': return const WordDetailPage();
+      // 新功能路由
+      case '/listening_player':
+        final a = args as Map<String, dynamic>?;
+        return a != null
+            ? ListeningPlayerPage(
+                words: (a['words'] as List).cast<Word>(),
+                mode: ListeningMode.values[a['mode'] as int? ?? 0],
+                bookName: a['bookName'] as String? ?? '',
+              )
+            : const SplashPage();
+      case '/dictation_session':
+        final a = args as Map<String, dynamic>?;
+        return a != null
+            ? DictationSessionPage(
+                words: (a['words'] as List).cast<Word>(),
+                bookName: a['bookName'] as String? ?? '',
+              )
+            : const SplashPage();
+      case '/quick_spell':
+        final a = args as Map<String, dynamic>?;
+        return a != null
+            ? QuickSpellPage(
+                words: (a['words'] as List).cast<Word>(),
+                bookName: a['bookName'] as String? ?? '',
+              )
+            : const SplashPage();
+      case '/word_export':
+        final a = args as Map<String, dynamic>?;
+        return a != null
+            ? WordExportPage(
+                bookId: a['bookId'] as int,
+                bookName: a['bookName'] as String? ?? '',
+              )
+            : const SplashPage();
       default: return null;
     }
   }
