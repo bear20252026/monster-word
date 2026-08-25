@@ -64,6 +64,11 @@ class _PathMarqueeState extends State<PathMarquee>
   late AnimationController _controller;
   bool _reversed = false;
 
+  // === 性能缓存 ===
+  Path? _cachedPath;
+  ui.PathMetric? _cachedMetric;
+  TextPainter? _cachedTextPainter;
+
   @override
   void initState() {
     super.initState();
@@ -89,6 +94,21 @@ class _PathMarqueeState extends State<PathMarquee>
         }
       });
     }
+
+    // 预计算缓存
+    _precomputeCache();
+  }
+
+  /// 预计算路径和文字布局（仅执行一次）
+  void _precomputeCache() {
+    final size = Size(widget.pathWidth, widget.pathHeight);
+    _cachedPath = _buildPath(size);
+    _cachedMetric = _cachedPath!.computeMetrics().first;
+    final style = widget.textStyle ?? const TextStyle(fontSize: 16, color: MistralColors.ink);
+    _cachedTextPainter = TextPainter(
+      text: TextSpan(text: widget.text, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
   }
 
   @override
@@ -180,24 +200,27 @@ class _PathMarqueeState extends State<PathMarquee>
     return SizedBox(
       width: widget.pathWidth,
       height: widget.pathHeight,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) {
-          final path = _buildPath(Size(widget.pathWidth, widget.pathHeight));
-
-          return CustomPaint(
-            size: Size(widget.pathWidth, widget.pathHeight),
-            painter: _PathMarqueePainter(
-              text: widget.text,
-              path: path,
-              progress: _controller.value,
-              textStyle: widget.textStyle ?? const TextStyle(fontSize: 16, color: MistralColors.ink),
-              pathColor: widget.pathColor,
-              showPath: widget.showPath,
-              direction: widget.direction,
-            ),
-          );
-        },
+      // RepaintBoundary 隔离动画重绘区域，防止影响其他组件
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            return CustomPaint(
+              size: Size(widget.pathWidth, widget.pathHeight),
+              painter: _PathMarqueePainter(
+                text: widget.text,
+                path: _cachedPath!,
+                metric: _cachedMetric!,
+                textPainter: _cachedTextPainter!,
+                progress: _controller.value,
+                textStyle: widget.textStyle ?? const TextStyle(fontSize: 16, color: MistralColors.ink),
+                pathColor: widget.pathColor,
+                showPath: widget.showPath,
+                direction: widget.direction,
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -206,6 +229,8 @@ class _PathMarqueeState extends State<PathMarquee>
 class _PathMarqueePainter extends CustomPainter {
   final String text;
   final Path path;
+  final ui.PathMetric? metric;
+  final TextPainter? textPainter;
   final double progress;
   final TextStyle textStyle;
   final Color? pathColor;
@@ -215,6 +240,8 @@ class _PathMarqueePainter extends CustomPainter {
   _PathMarqueePainter({
     required this.text,
     required this.path,
+    this.metric,
+    this.textPainter,
     required this.progress,
     required this.textStyle,
     this.pathColor,
@@ -233,16 +260,19 @@ class _PathMarqueePainter extends CustomPainter {
       canvas.drawPath(path, pathPaint);
     }
 
-    // 计算文字在路径上的位置
-    final metrics = path.computeMetrics().first;
+    // 使用缓存的 PathMetric（避免每帧重新计算）
+    final metrics = metric ?? path.computeMetrics().first;
     final textLength = metrics.length;
-    final textPainter = TextPainter(
-      text: TextSpan(text: text, style: textStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
+
+    // 使用缓存的 TextPainter（避免每帧重新 layout）
+    final tp = textPainter ??
+        TextPainter(
+          text: TextSpan(text: text, style: textStyle),
+          textDirection: TextDirection.ltr,
+        )..layout();
 
     // 沿路径偏移量
-    final textWidth = textPainter.width;
+    final textWidth = tp.width;
     final maxOffset = textLength + textWidth;
     double offset;
 
@@ -259,17 +289,19 @@ class _PathMarqueePainter extends CustomPainter {
     }
 
     // 沿路径绘制文字
-    _drawTextAlongPath(canvas, metrics, textPainter, offset, textLength);
+    _drawTextAlongPath(canvas, metrics, tp, offset, textLength);
   }
 
   void _drawTextAlongPath(
     Canvas canvas,
     ui.PathMetric metrics,
-    TextPainter textPainter,
+    TextPainter? textPainter,
     double startOffset,
     double pathLength,
   ) {
-    final text = textPainter.text!.toPlainText();
+    if (textPainter == null) return;
+    final text = textPainter.text?.toPlainText() ?? '';
+    if (text.isEmpty) return;
     final charWidth = textPainter.width / text.length;
 
     for (int i = 0; i < text.length; i++) {
