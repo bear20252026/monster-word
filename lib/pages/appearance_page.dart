@@ -358,7 +358,7 @@ class _AppearancePageState extends State<AppearancePage> {
       context: context,
       backgroundColor: skin.colors.cardBg,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (ctx) => SafeArea(
         child: Padding(

@@ -209,7 +209,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: colors.cardBgAlt,
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(24),
                             ),
                             child: Row(
                               children: [
@@ -579,7 +579,7 @@ class _LibItem extends StatelessWidget {
               height: 88,
               decoration: BoxDecoration(
                 color: _coverColor(context, book.code),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
               ),
                 child: Center(
                   child: Text(

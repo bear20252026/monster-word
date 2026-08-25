@@ -654,7 +654,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: skin.accent.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(4),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text('今天',
                                     style: TextStyle(fontSize: 11, color: skin.accent, fontWeight: FontWeight.w600)),

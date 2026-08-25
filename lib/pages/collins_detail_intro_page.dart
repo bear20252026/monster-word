@@ -138,7 +138,7 @@ class CollinsDetailIntroPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: skin.colors.accent.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: skin.colors.accent.withValues(alpha: 0.3)),
       ),
       child: Text(tag,
@@ -205,7 +205,7 @@ class CollinsDetailIntroPage extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,7 +218,7 @@ class CollinsDetailIntroPage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                 decoration: BoxDecoration(
                   color: skin.colors.accent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text('例',
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: skin.colors.accent)),

@@ -376,7 +376,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: on ? skin.accent : skin.cardBgAlt,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(24),
                           border: Border.all(
                             color: on ? skin.accent : skin.divider,
                           ),
@@ -439,7 +439,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       width: 36, height: 4,
                       decoration: BoxDecoration(
                         color: skin.divider,
-                        borderRadius: BorderRadius.circular(2),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ),

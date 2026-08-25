@@ -307,7 +307,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                                     decoration: BoxDecoration(
                                       color: AppColors.highlightOrange,
-                                      borderRadius: BorderRadius.circular(4),
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(e.source,
                                       style: MistralTypography.caption.copyWith(
@@ -487,7 +487,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                           decoration: BoxDecoration(
                             color: AppColors.highlightOrange,
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(e.source,
                             style: MistralTypography.caption.copyWith(

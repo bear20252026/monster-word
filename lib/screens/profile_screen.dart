@@ -331,7 +331,7 @@ class _EquipCard extends StatelessWidget {
       height: 28,
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, color: fg, size: 16),
     );

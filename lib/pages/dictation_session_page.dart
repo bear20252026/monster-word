@@ -223,11 +223,11 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
   Widget _buildProgress(SkinSystem skin) {
     final progress = (_currentIndex + 1) / widget.words.length;
     return Container(
-      height: 4,
+      height: 6,
       width: double.infinity,
       decoration: BoxDecoration(
         color: skin.colors.divider,
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: FractionallySizedBox(
         alignment: Alignment.centerLeft,
@@ -235,7 +235,7 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
         child: Container(
           decoration: BoxDecoration(
             color: MistralColors.primary,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
       ),

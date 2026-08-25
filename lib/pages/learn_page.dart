@@ -127,10 +127,10 @@ class _TopBar extends StatelessWidget {
               duration: const Duration(milliseconds: 400),
               curve: standardCurve,
               builder: (context, value, _) => ClipRRect(
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
                   value: value,
-                  minHeight: 3,
+                  minHeight: 6,
                   backgroundColor: colors.divider,
                   valueColor: AlwaysStoppedAnimation(colors.accent),
                 ),

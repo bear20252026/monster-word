@@ -371,7 +371,7 @@ class _LearnSessionState extends State<LearnSession>
                     height: 2,
                     decoration: BoxDecoration(
                       color: skin.colors.onGlassAccent,
-                      borderRadius: BorderRadius.circular(1),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                 ),
@@ -404,7 +404,7 @@ class _LearnSessionState extends State<LearnSession>
                       ? skin.colors.onGlassAccent
                       : skin.colors.onGlassText2)
                   .withValues(alpha: opacity),
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(8),
             ),
           );
         }),

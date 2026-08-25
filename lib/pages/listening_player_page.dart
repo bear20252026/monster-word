@@ -287,11 +287,11 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         ),
         const SizedBox(height: 8),
         Container(
-          height: 4,
+          height: 6,
           width: 200,
           decoration: BoxDecoration(
             color: skin.colors.divider,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
@@ -299,7 +299,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
             child: Container(
               decoration: BoxDecoration(
                 color: MistralColors.primary,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
           ),

@@ -301,7 +301,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             Container(
               width: 28,
               height: 28,
-              decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+              decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
               child: Icon(icon, size: 16, color: iconColor),
             ),
             const SizedBox(width: 12),
