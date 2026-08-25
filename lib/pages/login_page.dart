@@ -129,7 +129,16 @@ class _LoginPageState extends State<LoginPage>
   Widget build(BuildContext context) {
     final skin = context.skin;
 
-    return Scaffold(
+    // 主视图按系统返回键显示退出确认
+    final canExit = _loginMode != 0;
+    return PopScope(
+      canPop: canExit,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && !canExit) {
+          _showExitConfirmDialog(context);
+        }
+      },
+      child: Scaffold(
       backgroundColor: skin.colors.pageBg,
       body: SafeArea(
         child: FadeTransition(
@@ -141,6 +150,31 @@ class _LoginPageState extends State<LoginPage>
                 : _buildInputLoginView(skin),
           ),
         ),
+      ),
+    ),
+    );
+  }
+
+  void _showExitConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('退出应用'),
+        content: const Text('确定要退出 Monster Word 吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              // 退出应用
+              Navigator.pop(context);
+            },
+            child: const Text('确定'),
+          ),
+        ],
       ),
     );
   }

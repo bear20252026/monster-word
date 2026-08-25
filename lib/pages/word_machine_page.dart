@@ -13,6 +13,7 @@ import '../engine/fsrs5_engine.dart';
 import '../hooks/responsive.dart';
 import '../state/learning_state.dart';
 import '../tokens/gameboy.dart';
+import '../widgets/session_exit_guard.dart';
 import '../widgets/text_generate_effect.dart';
 import '../widgets/box_reveal.dart';
 
@@ -171,15 +172,18 @@ class _WordMachinePageState extends State<WordMachinePage>
   Widget build(BuildContext context) {
     final resp = context.responsive;
 
-    return Scaffold(
-      backgroundColor: GameBoyPalette.pageBackdrop,
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: min(400, resp.contentWidth),
+    return SessionExitGuard(
+      subject: '单词机',
+      child: Scaffold(
+        backgroundColor: GameBoyPalette.pageBackdrop,
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: min(400, resp.contentWidth),
+              ),
+              child: _buildConsole(),
             ),
-            child: _buildConsole(),
           ),
         ),
       ),

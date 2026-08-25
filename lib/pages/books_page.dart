@@ -73,7 +73,12 @@ class _BooksPageState extends State<BooksPage> {
                       const Spacer(),
                       IconButton(
                         icon: Icon(Icons.more_horiz, color: AppColors.white100),
-                        onPressed: () {},
+                        tooltip: '更多',
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('更多操作开发中...'), duration: Duration(seconds: 1)),
+                          );
+                        },
                       ),
                     ],
                   ),

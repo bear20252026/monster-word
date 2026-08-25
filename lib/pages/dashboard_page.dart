@@ -79,7 +79,12 @@ class DashboardPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.share, size: 20),
             color: skin.text1,
-            onPressed: () {},
+            tooltip: '分享',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('分享功能开发中...'), duration: Duration(seconds: 1)),
+              );
+            },
           ),
         ],
       ),

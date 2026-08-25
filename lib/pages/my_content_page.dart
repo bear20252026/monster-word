@@ -134,7 +134,12 @@ class _NavBar extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(Icons.lightbulb_outline, size: 22, color: skin.text1),
-            onPressed: () {},
+            tooltip: '提示',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('提示功能开发中...'), duration: Duration(seconds: 1)),
+              );
+            },
           ),
         ],
       ),

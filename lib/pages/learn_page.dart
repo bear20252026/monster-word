@@ -4,7 +4,6 @@
 // 学习页：Mistral AI 设计风格
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -141,7 +140,10 @@ class _TopBar extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.more_horiz, size: 22),
             color: colors.text2,
-            onPressed: () {},
+            tooltip: '更多',
+            onPressed: () {
+              // 更多操作菜单
+            },
           ),
         ],
       ),

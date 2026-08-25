@@ -157,15 +157,31 @@ class _ReviewSessionState extends State<ReviewSession> {
           const Spacer(),
           IconButton(
             icon: Icon(Icons.undo, color: skin.colors.onGlassText2, size: 20),
-            onPressed: () {},
+            tooltip: '撤销',
+            onPressed: () {
+              // TODO: 实现撤销逻辑
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('撤销功能开发中...'), duration: Duration(seconds: 1)),
+              );
+            },
           ),
           IconButton(
             icon: Icon(Icons.star_border, color: skin.colors.onGlassText2, size: 20),
-            onPressed: () {},
+            tooltip: '收藏',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('收藏功能开发中...'), duration: Duration(seconds: 1)),
+              );
+            },
           ),
           IconButton(
             icon: Icon(Icons.more_horiz, color: skin.colors.onGlassText2, size: 20),
-            onPressed: () {},
+            tooltip: '更多',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('更多操作开发中...'), duration: Duration(seconds: 1)),
+              );
+            },
           ),
         ],
       ),

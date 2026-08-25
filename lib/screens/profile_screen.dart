@@ -47,7 +47,12 @@ class ProfileScreen extends StatelessWidget {
                 const Spacer(),
                 IconButton(
                   icon: Icon(Icons.mail_outline, color: skin.colors.text1, size: 22),
-                  onPressed: () {},
+                  tooltip: '消息',
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('消息功能开发中...'), duration: Duration(seconds: 1)),
+                    );
+                  },
                 ),
               ]),
             ),

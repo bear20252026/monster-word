@@ -285,7 +285,12 @@ class _LearnSessionState extends State<LearnSession>
                 fontWeight: FontWeight.w600,
                 color: skin.colors.onGlassText2,
               )),
-            onPressed: () {},
+            tooltip: '拼写',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('拼写功能开发中...'), duration: Duration(seconds: 1)),
+              );
+            },
           ),
           // 熟（标记已掌握）
           IconButton(
@@ -306,7 +311,12 @@ class _LearnSessionState extends State<LearnSession>
           // 更多按钮
           IconButton(
             icon: Icon(Icons.more_horiz, color: skin.colors.onGlassText2, size: 20),
-            onPressed: () {},
+            tooltip: '更多',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('更多操作开发中...'), duration: Duration(seconds: 1)),
+              );
+            },
           ),
         ],
       ),

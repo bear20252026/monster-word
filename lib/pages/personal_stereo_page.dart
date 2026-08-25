@@ -15,6 +15,11 @@ class PersonalStereoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
+    void showDevToast() {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('随身听功能开发中...'), duration: Duration(seconds: 1)),
+      );
+    }
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
@@ -28,7 +33,7 @@ class PersonalStereoPage extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _buildPlayerCard(skin),
+                    _buildPlayerCard(skin, showDevToast),
                     const SizedBox(height: 24),
                     _buildMenuCard(
                       skin: skin,
@@ -95,7 +100,7 @@ class PersonalStereoPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlayerCard(SkinSystem skin) {
+  Widget _buildPlayerCard(SkinSystem skin, VoidCallback onDevTap) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -121,7 +126,8 @@ class PersonalStereoPage extends StatelessWidget {
             children: [
               IconButton(
                 icon: Icon(Icons.skip_previous, color: MistralColors.ink, size: 32),
-                onPressed: () {},
+                tooltip: '上一首',
+                onPressed: onDevTap,
               ),
               const SizedBox(width: 16),
               Container(
@@ -133,13 +139,15 @@ class PersonalStereoPage extends StatelessWidget {
                 ),
                 child: IconButton(
                   icon: const Icon(Icons.play_arrow, color: Colors.white, size: 32),
-                  onPressed: () {},
+                  tooltip: '播放',
+                  onPressed: onDevTap,
                 ),
               ),
               const SizedBox(width: 16),
               IconButton(
                 icon: Icon(Icons.skip_next, color: MistralColors.ink, size: 32),
-                onPressed: () {},
+                tooltip: '下一首',
+                onPressed: onDevTap,
               ),
             ],
           ),
