@@ -47,10 +47,6 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
   Timer? _autoPlayTimer;
   late AnimationController _progressController;
 
-  // 播放统计
-  int _playedCount = 0;
-  DateTime? _startTime;
-
   @override
   void initState() {
     super.initState();
@@ -62,7 +58,6 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
     _tts = SystemTts();
     _tts.onComplete = _onSpeechComplete;
     _tts.onErrorHandler = _onSpeechError;
-    _startTime = DateTime.now();
   }
 
   @override
@@ -85,7 +80,6 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
       _isPlaying = false;
       _showMeaning = true;
     });
-    _playedCount++;
   }
 
   void _onSpeechError() {
@@ -163,21 +157,6 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
       if (_isPlaying) {
         await _speakCurrent();
       }
-    }
-  }
-
-  /// 自动播放开关（在 TTS 完成回调后自动播放下一首）
-  void _toggleAutoPlay() {
-    if (_isPlaying) {
-      _autoPlayTimer?.cancel();
-      _tts.stop();
-      setState(() {
-        _isPlaying = false;
-        _isPaused = false;
-      });
-    } else {
-      setState(() => _isPlaying = true);
-      _speakCurrent();
     }
   }
 
