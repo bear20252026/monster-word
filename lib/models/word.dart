@@ -80,7 +80,38 @@ class Word {
   }
 
   /// 原始释义（清理 HTML 标签后）
-  String get cleanInterpret => cleanHtml(interpret);
+  /// 如果 interpret 是 JSON 格式但解析后无有效释义，则提取所有文本值拼接
+  String get cleanInterpret {
+    final raw = cleanHtml(interpret);
+    // 尝试从 JSON 中提取可读文本（处理 def 为 ID 引用的情况）
+    try {
+      final decoded = jsonDecode(interpret);
+      if (decoded is List && decoded.isNotEmpty) {
+        final texts = <String>[];
+        for (final item in decoded) {
+          if (item is! Map) continue;
+          final pos = (item['t'] ?? item['pos'] ?? '') as String;
+          if (pos.isNotEmpty) texts.add(pos);
+          final defList = item['def'];
+          if (defList is List) {
+            for (final d in defList) {
+              if (d is Map) {
+                final en = (d['en'] ?? d['endef'] ?? '') as String;
+                final cn = (d['cn'] ?? d['cndef'] ?? '') as String;
+                if (cn.isNotEmpty) texts.add(cn);
+                if (en.isNotEmpty) texts.add(en);
+              }
+              // 跳过整数 ID 引用（如 22285），不显示
+            }
+          }
+        }
+        if (texts.isNotEmpty) {
+          return texts.join('；');
+        }
+      }
+    } catch (_) {}
+    return raw;
+  }
 
   /// 解释按行拆分（每个词性一行，已清理 HTML）
   List<String> get interpretLines =>
@@ -145,7 +176,7 @@ class Word {
 
   /// 格式化释义（用于详情页显示）
   String get formattedDefinitions {
-    if (!hasStructuredDefinitions) return interpret;
+    if (!hasStructuredDefinitions) return cleanInterpret;
     final defs = parsedDefinitions;
     final buffer = StringBuffer();
     for (final def in defs) {
@@ -159,7 +190,9 @@ class Word {
         buffer.writeln(def.enDef);
       }
     }
-    return buffer.toString().trim();
+    final result = buffer.toString().trim();
+    // ✅ 修复：如果结构化解析结果为空（def 全是 ID 引用），回退到 cleanInterpret
+    return result.isNotEmpty ? result : cleanInterpret;
   }
 
   /// JSON 解析辅助方法

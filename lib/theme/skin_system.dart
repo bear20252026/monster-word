@@ -192,14 +192,14 @@ final themes = <String, ThemePreset>{
       text2:        const Color(0xB3212121),      // α=0.70（WCAG AA on 奶油画布 5.55:1）
       text3:        const Color(0xB3212121),      // α=0.70（WCAG AA on 奶油画布 4.71:1）
       divider:      const Color(0x14000000),      // 8% 黑
-      accent:       const Color(0xFF008550),      // 稍亮的星巴克绿（按钮背景）
+      accent:       const Color(0xFF006B3F),      // 深星巴克绿（WCAG AA on 奶油画布 ≥5.0:1）
       success:      const Color(0xFF2E7D32),      // 深绿色（WCAG AA）
       danger:       const Color(0xFFBF2020),      // 深红色（WCAG AA）
-      teal:         const Color(0xFF008550),      // 稍亮的星巴克绿替代蓝
+      teal:         const Color(0xFF006B3F),      // 深星巴克绿替代蓝（WCAG AA ≥5.0:1）
       tabBarIcon:   const Color(0xDE212121),      // 同 text1
       onGlassText1: const Color(0xDE212121),
       onGlassText2: const Color(0xA6212121),      // α=0.65（WCAG AA on 白卡片）
-      onGlassAccent: const Color(0xFFFFFFFF),    // 白字（在绿色按钮上清晰可读）
+      onGlassAccent: const Color(0xFF006B3F),    // 深绿字（WCAG AA on 白玻璃 ≥5.0:1）
       glassBg:      const Color(0xFFFFFFFF),
       glassBgStrong: const Color(0xFFFFFFFF),
       glassBorder:  const Color(0x14000000),
@@ -258,17 +258,17 @@ final themes = <String, ThemePreset>{
       cardBg:       const Color(0xFFFFFFFF),      // 纯白卡片
       cardBgAlt:    const Color(0xFFFFF3E8),      // 浅橙浮层
       text1:        const Color(0xDE000000),      // 87% 黑
-      text2:        const Color(0xFF8D6E63),      // 暖棕次要文字（WCAG AA on 暖白）
+      text2:        const Color(0xFF795548),      // 深暖棕次要文字（WCAG AA on 暖白 ≥4.5:1）
       text3:        const Color(0x9E000000),      // α=0.62
       divider:      const Color(0x1F000000),      // 12% 黑
-      accent:       const Color(0xFFE65100),      // 深橙色（WCAG AA on 暖白 4.6:1）
+      accent:       const Color(0xFFBF360C),      // 深橙色（WCAG AA on 暖白/白卡片 ≥4.5:1）
       success:      const Color(0xFF2E7D32),      // 深绿（WCAG AA）
       danger:       const Color(0xFFD32F2F),      // 深红（WCAG AA）
       teal:         const Color(0xFF1565C0),      // 深蓝（WCAG AA）
       tabBarIcon:   const Color(0xDE000000),
       onGlassText1: const Color(0xDE000000),
-      onGlassText2: const Color(0xFF8D6E63),
-      onGlassAccent: const Color(0xFFE65100),
+      onGlassText2: const Color(0xFF795548),      // 同 text2
+      onGlassAccent: const Color(0xFFBF360C),    // 深橙色（WCAG AA on 白玻璃 ≥4.5:1）
       glassBg:      const Color(0xFFFFFFFF),
       glassBgStrong: const Color(0xFFFFF3E8),
       glassBorder:  const Color(0x1F000000),
@@ -281,7 +281,7 @@ final themes = <String, ThemePreset>{
       quizWrongBg:     const Color(0xFFFEE2E2),
       quizWrongText:   const Color(0xFF9B1515),
       vipGoldBg:    const Color(0xFFF59E0B),      // 琥珀金（暖橙主题用更暖的金）
-      vipGoldText:  const Color(0xFF5D4037),      // 深棕字（WCAG AA on 琥珀金）
+      vipGoldText:  const Color(0xFF3E2723),      // 深棕字（WCAG AA on 琥珀金 ≥4.5:1）
       profileDecor: const [Color(0xFFFFE0B2), Color(0xFFFFF3E8)],  // 浅橙+暖白
     ),
   ),

@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../core/di/service_locator.dart';
 import '../repositories/book_repository.dart';
 import '../state/learning_state.dart';
+import '../state/learn_state.dart';
 import '../models/word.dart';
 import '../theme/skin_system.dart';
 import '../widgets/exam_phrase_widgets.dart';
@@ -42,12 +43,13 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
         icon: Icons.play_arrow_rounded,
         label: '开始学习',
         onTap: () async {
-          final state = context.read<LearningState>();
+          // ✅ 修复：使用 LearnState（与 LearnPage 一致），而非 LearningState
+          final learnState = context.read<LearnState>();
           final bookRepo = sl<BookRepository>();
           final books = await bookRepo.getBooks();
           final book = books.where((b) => b.id == widget.bookId).firstOrNull;
           if (book == null) return;
-          await state.loadBook(book, shuffle: true);
+          await learnState.loadBook(book, shuffle: true);
           if (context.mounted) {
             Navigator.pushNamed(context, LearnPage.routeName);
           }

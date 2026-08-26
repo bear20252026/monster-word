@@ -22,9 +22,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Create placeholder asset
-        run: mkdir -p assets/db && echo placeholder > assets/db/wordbook.db.gz
-
       - name: Analyze
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
