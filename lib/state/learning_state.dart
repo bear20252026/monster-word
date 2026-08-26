@@ -10,6 +10,7 @@ import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart';
 import '../engine/fsrs6_engine.dart';
 import '../engine/leitner_engine.dart';
+import '../features/learning/domain/choice_generator.dart';
 import '../models/bb_word_process.dart';
 
 /// 学习状态（ChangeNotifier，供 UI 监听）
@@ -74,8 +75,7 @@ class LearningState extends ChangeNotifier {
   /// 今日待复习数量
   int get dueCount => _fsrsEngine.getDueCards(_cards.values.toList()).length;
 
-  Word? get currentWord =>
-      _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
+  Word? get currentWord => _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
 
   // 学习进度持久化
   static const _currentBookPrefKey = 'current_book_v1';
@@ -146,9 +146,7 @@ class LearningState extends ChangeNotifier {
       final raw = prefs.getString(_cardsPrefKey);
       if (raw != null && raw.isNotEmpty) {
         final map = jsonDecode(raw) as Map<String, dynamic>;
-        _cards = map.map(
-          (k, v) => MapEntry(k, FsrsCard.fromJson(v as Map<String, dynamic>)),
-        );
+        _cards = map.map((k, v) => MapEntry(k, FsrsCard.fromJson(v as Map<String, dynamic>)));
       }
     } catch (e) {
       debugPrint('FSRS-5 cards loading error: $e');
@@ -216,10 +214,7 @@ class LearningState extends ChangeNotifier {
         final map = jsonDecode(raw) as Map<String, dynamic>;
         _dailyStats = map.map((date, counts) {
           final m = counts as Map<String, dynamic>;
-          return MapEntry(date, {
-            'learn': m['learn'] as int? ?? 0,
-            'review': m['review'] as int? ?? 0,
-          });
+          return MapEntry(date, {'learn': m['learn'] as int? ?? 0, 'review': m['review'] as int? ?? 0});
         });
       }
     } catch (e) {
@@ -347,14 +342,16 @@ class LearningState extends ChangeNotifier {
 
     // 初始化 Leitner 引擎
     _processQueue = _queue
-        .map((w) => BBWordProcess(
-              word: w.word,
-              wordId: w.id,
-              interpret: w.interpret,
-              usPron: w.usPron,
-              ukPron: w.ukPron,
-              example: w.example,
-            ))
+        .map(
+          (w) => BBWordProcess(
+            word: w.word,
+            wordId: w.id,
+            interpret: w.interpret,
+            usPron: w.usPron,
+            ukPron: w.ukPron,
+            example: w.example,
+          ),
+        )
         .toList();
     _leitnerEngine.init(_processQueue);
     _regenerateChoices();
@@ -375,8 +372,7 @@ class LearningState extends ChangeNotifier {
   /// 加载一本书进入学习队列（乱序版：单词顺序随机打乱）
   Future<void> loadBook(Book book, {int limit = 50, bool shuffle = true}) async {
     _currentBook = book;
-    _queue = await WordBookDatabase.instance
-        .getWordsByBook(book.id, limit: limit, offset: 0);
+    _queue = await WordBookDatabase.instance.getWordsByBook(book.id, limit: limit, offset: 0);
     _currentIndex = 0;
     _showAnswer = false;
 
@@ -387,14 +383,16 @@ class LearningState extends ChangeNotifier {
 
     // 初始化 Leitner 引擎（4选1选词逻辑 1:1）
     _processQueue = _queue
-        .map((w) => BBWordProcess(
-              word: w.word,
-              wordId: w.id,
-              interpret: w.interpret,
-              usPron: w.usPron,
-              ukPron: w.ukPron,
-              example: w.example,
-            ))
+        .map(
+          (w) => BBWordProcess(
+            word: w.word,
+            wordId: w.id,
+            interpret: w.interpret,
+            usPron: w.usPron,
+            ukPron: w.ukPron,
+            example: w.example,
+          ),
+        )
         .toList();
     _leitnerEngine.init(_processQueue);
     _regenerateChoices();
@@ -408,85 +406,22 @@ class LearningState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 重新生成 4 选 1 选项（保证始终 4 个：1 正确 + 3 干扰）
+  /// 重新生成 4 选 1 选项。
+  ///
+  /// 旧状态仍承担词书、统计和持久化职责；候选去重、中文优先与兜底策略
+  /// 则统一委托给学习领域规则，避免继续与 [LearnState] 漂移。
   void _regenerateChoices() {
     final current = _leitnerEngine.currentWord();
-    if (current == null) { _choices = []; return; }
-
-    final correctInterpret = current.interpret;
-    final correctWord = current.word;
-
-    // 构建候选池（去重释义，优先有中文的）
-    final seenInterprets = <String>{correctInterpret};
-    final pool = <Map<String, String>>[];
-    for (final w in _queue) {
-      if (w.word != correctWord && w.interpret.isNotEmpty && !seenInterprets.contains(w.interpret)) {
-        seenInterprets.add(w.interpret);
-        final cn = _extractCn(w.interpret);
-        pool.add({'word': w.word, 'interpret': w.interpret, 'cn': cn});
-      }
+    if (current == null) {
+      _choices = [];
+      return;
     }
 
-    // 优先选择有中文释义的干扰项
-    pool.shuffle();
-    final withCn = pool.where((w) => (w['cn'] ?? '').isNotEmpty).toList();
-    final withoutCn = pool.where((w) => (w['cn'] ?? '').isEmpty).toList();
-
-    final distractors = <Map<String, String>>[];
-    // 先取有中文的
-    for (final w in withCn) {
-      if (distractors.length >= 3) break;
-      distractors.add(w);
-    }
-    // 不够再补无中文的
-    for (final w in withoutCn) {
-      if (distractors.length >= 3) break;
-      distractors.add(w);
-    }
-
-    // 如果不够 3 个，用占位释义补齐
-    final fallbacks = [
-      {'word': '', 'interpret': '非标准用法', 'cn': '非标准用法'},
-      {'word': '', 'interpret': '罕用释义', 'cn': '罕用释义'},
-      {'word': '', 'interpret': '非正式表达', 'cn': '非正式表达'},
-    ];
-    int fb = 0;
-    while (distractors.length < 3 && fb < fallbacks.length) {
-      final fbInterpret = fallbacks[fb]['interpret']!;
-      if (!seenInterprets.contains(fbInterpret)) {
-        distractors.add(fallbacks[fb]);
-        seenInterprets.add(fbInterpret);
-      }
-      fb++;
-    }
-
-    // 组装 4 个选项并打乱
-    final choices = <WordChoicePair>[
-      WordChoicePair(correctWord, correctInterpret),
-      ...distractors.map((d) => WordChoicePair(d['word'] ?? '', d['interpret'] ?? '')),
-    ];
-    _choices = choices.toList()..shuffle();
-  }
-
-  /// 从 interpret JSON 提取中文释义
-  String _extractCn(String interpret) {
-    try {
-      final decoded = jsonDecode(interpret);
-      if (decoded is List && decoded.isNotEmpty) {
-        final first = decoded.first;
-        if (first is Map) {
-          final defList = first['def'];
-          if (defList is List && defList.isNotEmpty) {
-            final firstDef = defList.first;
-            if (firstDef is Map) {
-              final cn = (firstDef['cn'] ?? firstDef['cndef'] ?? '') as String;
-              return cn.trim();
-            }
-          }
-        }
-      }
-    } catch (_) {}
-    return '';
+    final generated = ChoiceGenerator.generate(
+      correct: ChoiceCandidate(word: current.word, interpret: current.interpret),
+      candidates: _queue.map((word) => ChoiceCandidate(word: word.word, interpret: word.interpret)),
+    );
+    _choices = generated.map((choice) => WordChoicePair(choice.word, choice.interpret)).toList();
   }
 
   /// 退出学习：清除当前学习状态，释放音频资源
@@ -515,9 +450,7 @@ class LearningState extends ChangeNotifier {
     // SRS 卡片更新
     final existing = _cards[word.word];
     final isLearn = existing == null; // 新词=learn，已有卡片=review
-    final updated = isLearn
-        ? _fsrsEngine.learn(word.word, rating)
-        : _fsrsEngine.review(existing, rating);
+    final updated = isLearn ? _fsrsEngine.learn(word.word, rating) : _fsrsEngine.review(existing, rating);
     _cards[word.word] = updated;
     await _saveCards();
 
@@ -621,13 +554,7 @@ class LearningState extends ChangeNotifier {
         matureCount++;
       }
     }
-    return {
-      'new': newCount,
-      'due': dueCount,
-      'learning': learningCount,
-      'mature': matureCount,
-      'total': _cards.length,
-    };
+    return {'new': newCount, 'due': dueCount, 'learning': learningCount, 'mature': matureCount, 'total': _cards.length};
   }
 
   /// 获取今日学习统计
@@ -725,5 +652,4 @@ class LearningState extends ChangeNotifier {
     // TODO: 从数据库查询指定词书的单词
     return await WordBookDatabase.instance.getWordsByBook(bookId, limit: 1000);
   }
-
 }

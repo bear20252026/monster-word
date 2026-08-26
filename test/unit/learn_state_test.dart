@@ -20,7 +20,7 @@ class MockLearnService implements LearnService {
   Future<void> loadBook(int bookId, {int limit = 50, int offset = 0, bool shuffle = true}) async {
     _loadBookCalled = true;
     // 模拟加载 5 个单词
-    _queue = List.generate(5, (i) => Word(id: i + 1, word: 'word$i', interpret: '释义$i'));
+    _queue = List.generate(5, (i) => Word(id: i + 1, word: 'word$i', interpret: '[{"def":[{"cn":"释义$i"}]}]'));
     _currentIndex = 0;
   }
 
@@ -201,6 +201,33 @@ void main() {
 
       expect(state.currentWord?.word, 'word4');
       expect(state.hasMoreWords, isFalse);
+    });
+  });
+
+  group('LearnState.choices', () {
+    test('加载词书后始终提供一个正确项与四个唯一候选项', () async {
+      final state = LearnState(learnService: MockLearnService(), audioService: MockAudioService());
+      final testBook = Book(id: 1, name: '测试词书', code: 'test', wordCount: 5);
+
+      await state.loadBook(testBook);
+
+      expect(state.choices, hasLength(4));
+      expect(state.currentWord, isNotNull);
+      expect(state.choices.where((choice) => choice.word == state.currentWord!.word), hasLength(1));
+      expect(state.choices.map((choice) => choice.interpret).toSet(), hasLength(4));
+    });
+
+    test('切换到下一词时候选正确项随会话当前词刷新', () async {
+      final state = LearnState(learnService: MockLearnService(), audioService: MockAudioService());
+      final testBook = Book(id: 1, name: '测试词书', code: 'test', wordCount: 5);
+
+      await state.loadBook(testBook);
+      final firstWord = state.currentWord!.word;
+      state.next();
+
+      expect(state.currentWord!.word, isNot(firstWord));
+      expect(state.choices, hasLength(4));
+      expect(state.choices.where((choice) => choice.word == state.currentWord!.word), hasLength(1));
     });
   });
 }
