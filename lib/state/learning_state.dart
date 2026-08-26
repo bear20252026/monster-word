@@ -12,6 +12,7 @@ import '../engine/fsrs6_engine.dart';
 import '../engine/leitner_engine.dart';
 import '../features/learning/domain/choice_generator.dart';
 import '../models/bb_word_process.dart';
+import '../repositories/fav_repository.dart';
 
 /// 学习状态（ChangeNotifier，供 UI 监听）
 class LearningState extends ChangeNotifier {
@@ -25,10 +26,9 @@ class LearningState extends ChangeNotifier {
   Map<String, FsrsCard> _cards = {};
   static const _cardsPrefKey = 'fsrs6_cards_v1';
 
-  // 收藏 & 标记已掌握
-  final Set<String> _favoriteWords = {};
+  // 掌握标记仍由遗留状态维护；单词收藏统一委托给 FavRepository。
+  final FavRepository _favRepository;
   final Set<String> _masteredWords = {};
-  static const _favoritesPrefKey = 'favorite_words_v1';
   static const _masteredPrefKey = 'mastered_words_v1';
 
   // ========== 学习统计（每日计数 + 连续天数） ==========
@@ -115,10 +115,11 @@ class LearningState extends ChangeNotifier {
     }
   }
 
-  /// 构造函数：加载所有持久化数据
-  LearningState() {
+  /// 构造函数：加载遗留持久化数据。
+  ///
+  /// 收藏列表由 [FavRepository] 负责加载和保存，因此不再在此重复维护。
+  LearningState({required FavRepository favRepository}) : _favRepository = favRepository {
     _loadCards();
-    _loadFavorites();
     _loadMastered();
     _loadDailyStats();
     _loadActiveDates();
@@ -163,17 +164,6 @@ class LearningState extends ChangeNotifier {
 
   // ========== 收藏 & 标记已掌握 ==========
 
-  /// 从 SharedPreferences 加载收藏列表
-  Future<void> _loadFavorites() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getStringList(_favoritesPrefKey);
-      if (raw != null) _favoriteWords.addAll(raw);
-    } catch (e) {
-      debugPrint('Favorites loading error: $e');
-    }
-  }
-
   /// 从 SharedPreferences 加载已掌握列表
   Future<void> _loadMastered() async {
     try {
@@ -183,12 +173,6 @@ class LearningState extends ChangeNotifier {
     } catch (e) {
       debugPrint('Mastered words loading error: $e');
     }
-  }
-
-  /// 保存收藏列表到 SharedPreferences
-  Future<void> _saveFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_favoritesPrefKey, _favoriteWords.toList());
   }
 
   /// 保存已掌握列表到 SharedPreferences
@@ -290,22 +274,19 @@ class LearningState extends ChangeNotifier {
     return count;
   }
 
-  /// 单词是否已收藏
-  bool isFavorite(String word) => _favoriteWords.contains(word);
+  /// 单词是否已收藏。
+  ///
+  /// 收藏的唯一事实来源是 [FavRepository]，与新学习状态及学习服务保持一致。
+  bool isFavorite(String word) => _favRepository.isFavorite(word);
 
   /// 单词是否已标记掌握
   bool isMastered(String word) => _masteredWords.contains(word);
 
-  /// 切换收藏状态（返回切换后的状态）
+  /// 切换收藏状态（返回切换后的状态）。
   Future<bool> toggleFavorite(String word) async {
-    if (_favoriteWords.contains(word)) {
-      _favoriteWords.remove(word);
-    } else {
-      _favoriteWords.add(word);
-    }
-    await _saveFavorites();
+    await _favRepository.toggleFavorite(word);
     notifyListeners();
-    return _favoriteWords.contains(word);
+    return _favRepository.isFavorite(word);
   }
 
   /// 切换已掌握状态（返回切换后的状态）
@@ -320,14 +301,15 @@ class LearningState extends ChangeNotifier {
     return _masteredWords.contains(word);
   }
 
-  /// 获取收藏单词列表（从完整词库查询，不仅限当前队列）
+  /// 获取收藏单词列表（从完整词库查询，不仅限当前队列）。
   Future<List<Word>> getFavoriteWords() async {
-    if (_favoriteWords.isEmpty) return [];
-    // 从完整词库批量查询收藏的单词
-    final words = await WordBookDatabase.instance.getWordsByNames(_favoriteWords);
+    final favoriteWords = await _favRepository.getFavoriteWords();
+    if (favoriteWords.isEmpty) return [];
+    // 从完整词库批量查询收藏的单词。
+    final words = await WordBookDatabase.instance.getWordsByNames(favoriteWords);
     if (words.isNotEmpty) return words;
-    // 回退：从当前队列过滤
-    return _queue.where((w) => _favoriteWords.contains(w.word)).toList();
+    // 回退：从当前队列过滤。
+    return _queue.where((w) => favoriteWords.contains(w.word)).toList();
   }
 
   /// 从收藏单词本开始学习
@@ -363,8 +345,8 @@ class LearningState extends ChangeNotifier {
     return _queue.where((w) => _masteredWords.contains(w.word)).toList();
   }
 
-  /// 收藏单词数量
-  int get favoriteCount => _favoriteWords.length;
+  /// 收藏单词数量。
+  int get favoriteCount => _favRepository.favoriteCount;
 
   /// 已掌握单词数量
   int get masteredCount => _masteredWords.length;

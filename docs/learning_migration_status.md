@@ -43,3 +43,9 @@
 `LearningCollectionsState` 向展示层提供收藏数与掌握数的不可变快照。`MyContentPage` 已通过该状态显示单词本数量，不再直接监听 `LearningState`。
 
 本轮刻意不迁移收藏与掌握的写入操作。仓库当前存在按单词字符串的 `FavRepository`、遗留 `LearningState` 的 SharedPreferences 集合，以及按 wordId 的用户数据库通道；虽然 `FavRepository` 与遗留状态复用 `favorite_words_v1`，其余路径尚未统一。写入迁移必须先确定唯一事实来源与数据同步策略，不能在仅展示层的低风险改造中贸然合并。
+
+## 单词收藏事实来源
+
+单词字符串维度的收藏现以 `FavRepository` 为唯一事实来源。`LearningState` 不再维护第二份 `favorite_words_v1` 内存集合或直接写入该键；其收藏查询、切换、计数和收藏词表查询均委托给仓储。这样遗留状态、新学习状态和学习服务共用同一份字符串收藏集合，已有用户数据因存储键不变而继续可见。
+
+`mastered_words_v1` 仍由 `LearningState` 维护；按 `wordId` 的用户数据库收藏表仍服务于字典/数据库通道。二者与字符串收藏的身份模型不同，本轮不做自动合并或数据回填，后续必须先定义跨身份映射与冲突策略。
