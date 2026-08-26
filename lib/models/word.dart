@@ -116,6 +116,7 @@ class Word {
           if (defList is List) {
             for (final d in defList) {
               if (d is! Map) continue;
+              // ✅ 修复：优先获取 en/cn 字段，忽略 id 引用
               final enDef = (d['en'] ?? d['endef'] ?? '') as String;
               final cnDef = (d['cn'] ?? d['cndef'] ?? '') as String;
               result.add(Definition(

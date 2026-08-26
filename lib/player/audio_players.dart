@@ -395,7 +395,7 @@ class PhoneticAudioPlayer {
   final BBAudioPlayer _audioPlayer = BBAudioPlayer();
   PlayAudioListener? playStateListener;
   bool _isPronounceUK = false;
-  bool _needPlay = false;
+  bool _needPlay = true; // ✅ 修复：默认允许播放
 
   /// 播放单词发音（原版 playAudio 静态方法）
   static Future<void> playAudio(String word, {bool? isUK}) async {
@@ -512,7 +512,7 @@ class SentenceAudioPlayer {
   SentencePlayListener? _sentenceListener;
   String _currentUrl = '';
   String _oldUrl = '';
-  bool _needPlay = false;
+  bool _needPlay = true; // ✅ 修复：默认允许播放
 
   /// 获取完整的音频 URL
   String _getCompleteAudioUrl(String url) {

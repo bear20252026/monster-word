@@ -310,6 +310,16 @@ class LearnState extends ChangeNotifier {
   /// 退出学习
   void exitLearning() {
     _audioService.stop();
+    // ✅ 修复：重置学习状态，防止返回黑屏
+    _queue.clear();
+    _currentIndex = 0;
+    _showAnswer = false;
+    _currentBook = null;
+    _choices.clear();
+    _leitnerEngine = LeitnerCardEngine();
+    _processQueue.clear();
+    _cards.clear();
+    notifyListeners();
   }
 
   /// 检查单词是否已收藏
