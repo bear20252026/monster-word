@@ -55,3 +55,9 @@
 `MasteredRepository` 现以 `mastered_words_v1` 为掌握标记的唯一字符串存储来源。`LearningState` 已删除重复集合和直接 SharedPreferences 写入，改为委托该仓储完成查询、切换、计数和已掌握词列表筛选。兼容测试覆盖已有键数据的加载和后续写入。
 
 `LearnState.isMastered` 目前表达的是会话内 FSRS 卡片状态，与手动的 `mastered_words_v1` 标记不是同一语义；本轮不将二者强行合并。足迹页的“已掌握单词”计数已迁移至集合展示状态，其余页面的学习统计、词表查询和会话交互会在后续按语义分别迁移。
+
+## 已掌握词表查询边界
+
+`MasteredWordsReader` 组合 `MasteredRepository` 与 `WordRepository`，负责把手动掌握的字符串标记解析为完整单词模型。`MasteredWordsPage` 已通过该读取器加载数据，不再调用 `LearningState.getMasteredWords()`；单词仓储新增批量文本查询接口以隔离数据库细节。
+
+通用 `ListWordsPage` 新增上下文数据源扩展点，默认仍兼容其他词表页的 `LearningState` 读取；`MasteredWordsPage` 覆盖该扩展点并从根 `Provider` 获取读取器，因此页面不再依赖遗留状态或全局依赖容器。后续若迁移更多词表页，应继续替换各自的数据源，而不是将不同业务语义重新塞回通用页面基类。

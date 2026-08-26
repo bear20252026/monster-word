@@ -35,6 +35,21 @@ void main() {
     });
   });
 
+  group('已掌握词表查询边界', () {
+    test('已掌握词表页面通过读取器加载数据', () {
+      final source = File('lib/pages/mastered_words_page.dart').readAsStringSync();
+
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+
+      expect(source, contains('MasteredWordsReader'));
+      expect(source, contains('loadWordsForContext'));
+      expect(appSource, contains('Provider<MasteredWordsReader>.value'));
+
+      expect(source, isNot(contains('LearningState')));
+      expect(source, isNot(contains('service_locator.dart')));
+    });
+  });
+
   group('学习集合展示状态边界', () {
     test('足迹页通过集合展示状态读取掌握数量', () {
       final source = File('lib/pages/foot_mark_page.dart').readAsStringSync();

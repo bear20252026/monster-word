@@ -1,8 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 // WordRepositoryImpl — 单词数据仓库实现
 
-import '../../data/wordbook_database.dart';
-import '../../models/word.dart';
+import '../data/wordbook_database.dart';
 import 'word_repository.dart';
 
 /// 单词数据仓库的具体实现
@@ -14,13 +13,7 @@ class WordRepositoryImpl implements WordRepository {
   @override
   Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset}) async {
     final db = _database.db;
-    final maps = await db.query(
-      'words',
-      where: 'book_id = ?',
-      whereArgs: [bookId],
-      limit: limit,
-      offset: offset,
-    );
+    final maps = await db.query('words', where: 'book_id = ?', whereArgs: [bookId], limit: limit, offset: offset);
     return maps.map((m) => Word.fromMap(m)).toList();
   }
 
@@ -35,25 +28,33 @@ class WordRepositoryImpl implements WordRepository {
   @override
   Future<Word?> getWordByText(String text) async {
     final db = _database.db;
-    final maps = await db.query(
-      'words',
-      where: 'word = ?',
-      whereArgs: [text],
-      limit: 1,
-    );
+    final maps = await db.query('words', where: 'word = ?', whereArgs: [text], limit: 1);
     if (maps.isEmpty) return null;
     return Word.fromMap(maps.first);
   }
 
   @override
+  Future<List<Word>> getWordsByTexts(Iterable<String> texts) async {
+    final uniqueTexts = texts.where((text) => text.isNotEmpty).toSet().toList(growable: false);
+    if (uniqueTexts.isEmpty) return [];
+
+    final db = _database.db;
+    final words = <Word>[];
+    const chunkSize = 900;
+    for (var start = 0; start < uniqueTexts.length; start += chunkSize) {
+      final end = start + chunkSize < uniqueTexts.length ? start + chunkSize : uniqueTexts.length;
+      final chunk = uniqueTexts.sublist(start, end);
+      final placeholders = List.filled(chunk.length, '?').join(', ');
+      final maps = await db.query('words', where: 'word IN ($placeholders)', whereArgs: chunk);
+      words.addAll(maps.map(Word.fromMap));
+    }
+    return words;
+  }
+
+  @override
   Future<List<Word>> searchWords(String query, {int? limit}) async {
     final db = _database.db;
-    final maps = await db.query(
-      'words',
-      where: 'word LIKE ?',
-      whereArgs: ['%$query%'],
-      limit: limit ?? 50,
-    );
+    final maps = await db.query('words', where: 'word LIKE ?', whereArgs: ['%$query%'], limit: limit ?? 50);
     return maps.map((m) => Word.fromMap(m)).toList();
   }
 
@@ -81,13 +82,7 @@ class WordRepositoryImpl implements WordRepository {
     final db = _database.db;
     final where = excludeBookId != null ? 'book_id != ?' : null;
     final whereArgs = excludeBookId != null ? [excludeBookId] : null;
-    final maps = await db.query(
-      'words',
-      where: where,
-      whereArgs: whereArgs,
-      orderBy: 'RANDOM()',
-      limit: count,
-    );
+    final maps = await db.query('words', where: where, whereArgs: whereArgs, orderBy: 'RANDOM()', limit: count);
     return maps.map((m) => Word.fromMap(m)).toList();
   }
 

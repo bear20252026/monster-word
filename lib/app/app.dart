@@ -6,6 +6,7 @@ import '../core/di/service_locator.dart';
 import '../core/router/app_router.dart';
 import '../repositories/fav_repository.dart';
 import '../repositories/mastered_repository.dart';
+import '../features/learning/application/mastered_words_reader.dart';
 import '../features/learning/presentation/learning_collections_state.dart';
 import '../features/learning/presentation/learning_statistics_state.dart';
 import '../pages/lib_select_page.dart';
@@ -48,6 +49,7 @@ class WordApp extends StatelessWidget {
           create: (_) => LearningCollectionsState(),
           update: (_, legacy, collections) => (collections ?? LearningCollectionsState())..synchronizeFrom(legacy),
         ),
+        Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),
         ChangeNotifierProvider(create: (_) => sl<LearnState>()),
         ChangeNotifierProvider(create: (_) => sl<ReviewState>()),
         ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
