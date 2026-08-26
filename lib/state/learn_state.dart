@@ -316,7 +316,6 @@ class LearnState extends ChangeNotifier {
     _showAnswer = false;
     _currentBook = null;
     _choices.clear();
-    _leitnerEngine = LeitnerCardEngine();
     _processQueue.clear();
     _cards.clear();
     notifyListeners();

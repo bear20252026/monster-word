@@ -22,14 +22,15 @@ class PlayerState extends ChangeNotifier {
   String get currentWord => _currentWord;
 
   /// 播放单词发音
-  Future<void> playWord(String word) async {
+  /// ✅ 修复：优先使用第三方服务器提供的 audioUrl
+  Future<void> playWord(String word, {String? audioUrl}) async {
     if (word.isEmpty) return;
     _currentWord = word;
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _audioService.playWordAudio(word);
+      await _audioService.playWordAudio(word, audioUrl: audioUrl);
       _isPlaying = true;
     } catch (e) {
       debugPrint('[PlayerState] play error: $e');

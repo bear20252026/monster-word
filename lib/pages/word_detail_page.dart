@@ -798,7 +798,11 @@ class _WordDetailPageState extends State<WordDetailPage> {
                         if (_isAudioLoading) return;
                         setState(() => _isAudioLoading = true);
                         try {
-                          await sl<AudioService>().playWordAudio(word.word);
+                          // ✅ 修复：优先使用第三方服务器提供的音频 URL
+                          await sl<AudioService>().playWordAudio(
+                            word.word,
+                            audioUrl: word.audioUrls.isNotEmpty ? word.audioUrls : null,
+                          );
                         } catch (e) {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(

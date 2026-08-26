@@ -30,12 +30,12 @@ class LearnPage extends StatefulWidget {
 class _LearnPageState extends State<LearnPage> {
   bool _audioLoading = false;
 
-  Future<void> _playAudio(String word) async {
+  Future<void> _playAudio(String word, {String? audioUrl}) async {
     if (_audioLoading) return;
     setState(() => _audioLoading = true);
     try {
-      // 使用 PlayerState 播放音频
-      await context.read<PlayerState>().playWord(word);
+      // ✅ 修复：优先使用第三方服务器提供的音频 URL
+      await context.read<PlayerState>().playWord(word, audioUrl: audioUrl);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -278,7 +278,7 @@ class _WordArea extends StatelessWidget {
   final SkinSystem skin;
   final AppResponsive resp;
   final bool audioLoading;
-  final Future<void> Function(String) onPlayAudio;
+  final Future<void> Function(String, {String? audioUrl}) onPlayAudio;
   const _WordArea({
     required this.word,
     required this.skin,
@@ -332,7 +332,8 @@ class _WordArea extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
-                  onTap: () => onPlayAudio(word.word),
+                  // ✅ 修复：优先使用第三方服务器提供的音频 URL
+                  onTap: () => onPlayAudio(word.word, audioUrl: word.audioUrls.isNotEmpty ? word.audioUrls : null),
                   child: SizedBox(
                     width: 44, height: 44,
                     child: Center(

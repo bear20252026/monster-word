@@ -14,10 +14,16 @@ class AudioServiceImpl implements AudioService {
   bool _disposed = false;
 
   @override
-  Future<void> playWordAudio(String word, {String accent = 'us'}) async {
+  Future<void> playWordAudio(String word, {String accent = 'us', String? audioUrl}) async {
     if (_disposed) return;
     try {
-      await PhoneticAudioPlayer.playAudio(word, isUK: accent == 'uk');
+      // ✅ 修复：优先使用第三方服务器提供的音频 URL
+      if (audioUrl != null && audioUrl.isNotEmpty) {
+        await playFromUrl(audioUrl);
+      } else {
+        // 回退到 Youdao 发音
+        await PhoneticAudioPlayer.playAudio(word, isUK: accent == 'uk');
+      }
     } catch (e) {
       debugPrint('[AudioService] Failed to play word audio: $e');
     }
