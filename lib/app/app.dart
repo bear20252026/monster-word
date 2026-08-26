@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../core/di/service_locator.dart';
 import '../core/router/app_router.dart';
+import '../features/learning/presentation/learning_collections_state.dart';
 import '../features/learning/presentation/learning_statistics_state.dart';
 import '../pages/lib_select_page.dart';
 import '../screens/home_screen.dart';
@@ -37,6 +38,10 @@ class WordApp extends StatelessWidget {
         ChangeNotifierProxyProvider<LearningState, LearningStatisticsState>(
           create: (_) => LearningStatisticsState(),
           update: (_, legacy, statistics) => (statistics ?? LearningStatisticsState())..synchronizeFrom(legacy),
+        ),
+        ChangeNotifierProxyProvider<LearningState, LearningCollectionsState>(
+          create: (_) => LearningCollectionsState(),
+          update: (_, legacy, collections) => (collections ?? LearningCollectionsState())..synchronizeFrom(legacy),
         ),
         ChangeNotifierProvider(create: (_) => sl<LearnState>()),
         ChangeNotifierProvider(create: (_) => sl<ReviewState>()),

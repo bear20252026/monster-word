@@ -37,3 +37,9 @@
 ## 当前词与候选一致性
 
 学习页面展示的当前词以状态队列索引为唯一来源。`LearnState` 与 `LearningState` 生成四选一候选时均以该当前词作为正确项，不能使用 Leitner 引擎的内部当前词；引擎初始化会随机组内顺序，直接读取它会使页面题干与正确候选不一致。`LearnState.choices` 回归测试覆盖了加载和切词后“恰有一个正确候选”的约束。
+
+## 收藏与掌握展示边界
+
+`LearningCollectionsState` 向展示层提供收藏数与掌握数的不可变快照。`MyContentPage` 已通过该状态显示单词本数量，不再直接监听 `LearningState`。
+
+本轮刻意不迁移收藏与掌握的写入操作。仓库当前存在按单词字符串的 `FavRepository`、遗留 `LearningState` 的 SharedPreferences 集合，以及按 wordId 的用户数据库通道；虽然 `FavRepository` 与遗留状态复用 `favorite_words_v1`，其余路径尚未统一。写入迁移必须先确定唯一事实来源与数据同步策略，不能在仅展示层的低风险改造中贸然合并。

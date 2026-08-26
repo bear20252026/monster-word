@@ -35,6 +35,15 @@ void main() {
     });
   });
 
+  group('学习集合展示状态边界', () {
+    test('我的内容页只读取收藏集合展示状态', () {
+      final source = File('lib/pages/my_content_page.dart').readAsStringSync();
+
+      expect(source, contains('LearningCollectionsState'));
+      expect(source, isNot(contains('LearningState')));
+    });
+  });
+
   group('学习统计状态边界', () {
     test('首页与仪表盘只读取学习统计状态', () {
       const statisticsPages = ['lib/screens/home_screen.dart', 'lib/pages/dashboard_page.dart'];
