@@ -19,3 +19,11 @@
 ## 下一轮目标
 
 下一轮先迁移 `LearningState` 的页面读写面，按功能而非全局替换 Provider。只有所有学习页面不再引用 `LearningState` 后，才删除旧 Provider；复习页面会在独立的 review feature 迁移中处理。
+
+## 学习会话状态边界
+
+学习会话页面只可读取 `LearnState`：`LearnPage`、`LearnSession` 和 `WordMachinePage` 的当前词、四选一候选、前进/跳转、评分和发音行为统一由该状态提供。页面不得新增对 `LearningState` 的会话操作调用，也不得直接重新实现候选或评分规则。
+
+`LearningState` 在迁移期只保留为跨页面的遗留聚合状态，继续服务于词书元数据、统计、收藏、掌握标记和已有 FSRS 展示。将来每迁移一个页面，应优先把它的会话行为切到 `LearnState`；只有其余读写职责也具备独立入口后，才能缩减或删除该旧状态。
+
+本轮已将 `WordMachinePage` 迁入该会话边界。它继续使用原有的评分、候选、跳转、发音和像素风 UI 流程，但不再直接读取 `LearningState`。仍直接依赖遗留状态的页面以词书、统计、收藏、搜索和复习页面为主，后续会按这些功能域分别迁移。

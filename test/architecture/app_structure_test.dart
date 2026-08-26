@@ -34,4 +34,20 @@ void main() {
       expect(bootstrapSource, isNot(contains('MaterialApp')));
     });
   });
+
+  group('学习会话状态边界', () {
+    test('学习会话页面统一读取 LearnState', () {
+      const sessionPages = [
+        'lib/pages/learn_page.dart',
+        'lib/screens/learn_session.dart',
+        'lib/pages/word_machine_page.dart',
+      ];
+
+      for (final path in sessionPages) {
+        final source = File(path).readAsStringSync();
+        expect(source, contains('LearnState'), reason: '$path 应读取 LearnState');
+        expect(source, isNot(contains('LearningState')), reason: '$path 不应直接读取遗留 LearningState');
+      }
+    });
+  });
 }
