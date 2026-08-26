@@ -170,7 +170,12 @@ class BBWordProcessDao {
   }
 
   /// 某词书的所有进度（按词书表过滤）
+  /// ✅ 安全修复：bookCode 是白名单表名，需验证防止 SQL 注入
   Future<List<BBWordProcess>> arrayForBook(String bookCode) async {
+    // 白名单验证：只允许字母数字下划线
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(bookCode)) {
+      throw ArgumentError('Invalid bookCode: $bookCode');
+    }
     final rows = await db.rawQuery(
       'SELECT p.* FROM $tableName p '
       'JOIN $bookCode b ON b.word = p.word '
