@@ -11,6 +11,7 @@ import '../pages/lib_select_page.dart';
 import '../pages/search_page.dart';
 import '../pages/word_machine_page.dart';
 import '../state/learning_state.dart';
+import '../state/learn_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/sb_card.dart';
