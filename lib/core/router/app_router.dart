@@ -117,7 +117,7 @@ class RouteNames {
 }
 
 /// 路由配置类
-/// 
+///
 /// 集中管理所有路由定义，包括：
 /// - 路由名称常量
 /// - 页面构建逻辑
@@ -279,10 +279,7 @@ class AppRouter {
       return BookWordsPage(bookId: args.id, bookName: args.name);
     }
     final map = args is Map<String, dynamic> ? args : const <String, dynamic>{};
-    return BookWordsPage(
-      bookId: (map['bookId'] as num?)?.toInt() ?? 0,
-      bookName: (map['bookName'] as String?) ?? '词书',
-    );
+    return BookWordsPage(bookId: (map['bookId'] as num?)?.toInt() ?? 0, bookName: (map['bookName'] as String?) ?? '词书');
   }
 
   static Widget _buildSentenceDetailPage(Object? args) {
@@ -301,26 +298,17 @@ class AppRouter {
       return const _RouteErrorPage(routeName: 'listen_mode_select', message: '缺少必要参数');
     }
     final bookId = (a['bookId'] as num?)?.toInt() ?? 0;
-    return ExtensiveModelSelectPage(
-      bookId: bookId,
-      bookName: a['bookName'] as String? ?? '',
-    );
+    return ExtensiveModelSelectPage(bookId: bookId, bookName: a['bookName'] as String? ?? '');
   }
 
   static Widget _buildSpellCheckPage(Object? args) {
     final a = args is Map<String, dynamic> ? args : null;
-    return SpellCheckPage(
-      word: a?['word'] as String? ?? '',
-      phonetic: a?['phonetic'] as String?,
-    );
+    return SpellCheckPage(word: a?['word'] as String? ?? '', phonetic: a?['phonetic'] as String?);
   }
 
   static Widget _buildLinkedMePage(Object? args) {
     final a = args is Map<String, dynamic> ? args : null;
-    return LinkedMeMiddlePage(
-      word: a?['word'] as String? ?? '',
-      association: a?['association'] as String?,
-    );
+    return LinkedMeMiddlePage(word: a?['word'] as String? ?? '', association: a?['association'] as String?);
   }
 
   static Widget _buildListeningPlayerPage(Object? args) {
@@ -333,11 +321,7 @@ class AppRouter {
     final mode = modeIdx >= 0 && modeIdx < ListeningMode.values.length
         ? ListeningMode.values[modeIdx]
         : ListeningMode.wordOnly;
-    return ListeningPlayerPage(
-      words: words,
-      mode: mode,
-      bookName: a['bookName'] as String? ?? '',
-    );
+    return ListeningPlayerPage(words: words, mode: mode, bookName: a['bookName'] as String? ?? '');
   }
 
   static Widget _buildDictationSessionPage(Object? args) {
@@ -346,10 +330,7 @@ class AppRouter {
       return const _RouteErrorPage(routeName: 'dictation_session', message: '缺少必要参数');
     }
     final words = (a['words'] as List?)?.map((e) => e as Word).toList() ?? [];
-    return DictationSessionPage(
-      words: words,
-      bookName: a['bookName'] as String? ?? '',
-    );
+    return DictationSessionPage(words: words, bookName: a['bookName'] as String? ?? '');
   }
 
   static Widget _buildQuickSpellPage(Object? args) {
@@ -358,10 +339,7 @@ class AppRouter {
       return const _RouteErrorPage(routeName: 'quick_spell', message: '缺少必要参数');
     }
     final words = (a['words'] as List?)?.map((e) => e as Word).toList() ?? [];
-    return QuickSpellPage(
-      words: words,
-      bookName: a['bookName'] as String? ?? '',
-    );
+    return QuickSpellPage(words: words, bookName: a['bookName'] as String? ?? '');
   }
 
   static Widget _buildWordExportPage(Object? args) {
@@ -370,10 +348,7 @@ class AppRouter {
       return const _RouteErrorPage(routeName: 'word_export', message: '缺少必要参数');
     }
     final bookId = (a['bookId'] as num?)?.toInt() ?? 0;
-    return WordExportPage(
-      bookId: bookId,
-      bookName: a['bookName'] as String? ?? '',
-    );
+    return WordExportPage(bookId: bookId, bookName: a['bookName'] as String? ?? '');
   }
 
   /// 路由错误页
@@ -387,10 +362,7 @@ class _RouteErrorPage extends StatelessWidget {
   final String routeName;
   final String message;
 
-  const _RouteErrorPage({
-    required this.routeName,
-    required this.message,
-  });
+  const _RouteErrorPage({required this.routeName, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -406,11 +378,7 @@ class _RouteErrorPage extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 '无法打开 $routeName',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF3D3630),
-                ),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3D3630)),
               ),
               const SizedBox(height: 8),
               Text(

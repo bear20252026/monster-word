@@ -79,9 +79,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
   }
 
   void _syncSystemBrightness() {
-    context.read<SkinSystem>().updateSystemBrightness(
-          WidgetsBinding.instance.platformDispatcher.platformBrightness,
-        );
+    context.read<SkinSystem>().updateSystemBrightness(WidgetsBinding.instance.platformDispatcher.platformBrightness);
   }
 
   @override
@@ -104,10 +102,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
               },
             ),
             scaffoldBackgroundColor: skin.colors.pageBg,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: skin.colors.accent,
-              brightness: skin.effectiveUiBrightness,
-            ),
+            colorScheme: ColorScheme.fromSeed(seedColor: skin.colors.accent, brightness: skin.effectiveUiBrightness),
             useMaterial3: true,
           ),
           builder: (context, child) {
@@ -142,24 +137,9 @@ class _HomeShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return MainShell(
       tabs: [
-        TabDef(
-          id: 'learn',
-          label: '学习',
-          icon: Icons.auto_stories_outlined,
-          builder: (_) => const HomeScreen(),
-        ),
-        TabDef(
-          id: 'course',
-          label: '课程',
-          icon: Icons.school_outlined,
-          builder: (_) => const LibSelectPage(),
-        ),
-        TabDef(
-          id: 'settings',
-          label: '设置',
-          icon: Icons.settings_outlined,
-          builder: (_) => const ProfileScreen(),
-        ),
+        TabDef(id: 'learn', label: '学习', icon: Icons.auto_stories_outlined, builder: (_) => const HomeScreen()),
+        TabDef(id: 'course', label: '课程', icon: Icons.school_outlined, builder: (_) => const LibSelectPage()),
+        TabDef(id: 'settings', label: '设置', icon: Icons.settings_outlined, builder: (_) => const ProfileScreen()),
       ],
     );
   }
@@ -188,9 +168,7 @@ class _AppBuildErrorPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                kDebugMode
-                    ? '我们已记录此问题，请尝试返回或重新进入该页面。\n(Debug: $exception)'
-                    : '我们已记录此问题，请尝试返回或重新进入该页面。',
+                kDebugMode ? '我们已记录此问题，请尝试返回或重新进入该页面。\n(Debug: $exception)' : '我们已记录此问题，请尝试返回或重新进入该页面。',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, color: Color(0xFF8A8078)),
               ),
