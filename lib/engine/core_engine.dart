@@ -60,8 +60,34 @@ class WordChoicePair {
   /// 是否有结构化释义
   bool get hasStructuredDefinitions => parsedDefinitions.isNotEmpty;
 
-  /// 清理 HTML 标签
+  /// 清理释义：优先从 JSON 提取可读文本，回退到 HTML 清理
   String get cleanInterpret {
+    // ✅ 修复：当 def 为 ID 引用（如 [22285]）时，提取可读文本而非显示原始 JSON
+    try {
+      final decoded = jsonDecode(interpret);
+      if (decoded is List && decoded.isNotEmpty) {
+        final texts = <String>[];
+        for (final item in decoded) {
+          if (item is! Map) continue;
+          final pos = (item['t'] ?? item['pos'] ?? '') as String;
+          if (pos.isNotEmpty) texts.add(pos);
+          final defList = item['def'];
+          if (defList is List) {
+            for (final d in defList) {
+              if (d is Map) {
+                final en = (d['en'] ?? d['endef'] ?? '') as String;
+                final cn = (d['cn'] ?? d['cndef'] ?? '') as String;
+                if (cn.isNotEmpty) texts.add(cn);
+                if (en.isNotEmpty) texts.add(en);
+              }
+              // 跳过整数 ID 引用（如 22285）
+            }
+          }
+        }
+        if (texts.isNotEmpty) return texts.join('；');
+      }
+    } catch (_) {}
+    // 回退：仅清理 HTML 标签
     return interpret
         .replaceAll(RegExp(r'<[^>]*>'), '')
         .replaceAll(RegExp(r'&[a-zA-Z]+;'), ' ')

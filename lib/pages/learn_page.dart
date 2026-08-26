@@ -522,9 +522,11 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     if (choice.hasStructuredDefinitions) {
       final defs = choice.parsedDefinitions;
       if (defs.isNotEmpty) {
-        // ✅ 修复：Definition 是对象而非 Map，使用属性访问
-        final first = defs.first;
-        interpret = first.cnDef.isNotEmpty ? first.cnDef : first.enDef;
+        // ✅ 修复：parsedDefinitions 返回 List<dynamic>，每项是 Map<String, String>
+        final first = defs.first as Map<String, String>;
+        final cn = first['cn'] ?? '';
+        final en = first['en'] ?? '';
+        interpret = cn.isNotEmpty ? cn : en;
       } else {
         interpret = choice.cleanInterpret;
       }
