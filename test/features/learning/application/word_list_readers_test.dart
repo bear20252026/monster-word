@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/features/learning/application/book_words_reader.dart';
 import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/repositories/mastered_repository.dart';
@@ -24,6 +25,8 @@ class _FakeMasteredRepository implements MasteredRepository {
 
 class _FakeWordRepository implements WordRepository {
   Iterable<String>? requestedTexts;
+  int? requestedBookId;
+  int? requestedBookLimit;
 
   @override
   Future<List<Word>> getWordsByTexts(Iterable<String> texts) async {
@@ -38,7 +41,11 @@ class _FakeWordRepository implements WordRepository {
   Future<Word?> getWordByText(String text) => throw UnimplementedError();
 
   @override
-  Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset}) => throw UnimplementedError();
+  Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset}) async {
+    requestedBookId = bookId;
+    requestedBookLimit = limit;
+    return [];
+  }
 
   @override
   Future<List<Word>> getRandomWords(int count, {int? excludeBookId}) => throw UnimplementedError();
@@ -60,6 +67,15 @@ void main() {
 
     expect(await reader.loadWords(), isEmpty);
     expect(wordRepository.requestedTexts, isNull);
+  });
+
+  test('词书读取器保留词书编号与列表加载上限', () async {
+    final wordRepository = _FakeWordRepository();
+    final reader = BookWordsReader(wordRepository: wordRepository);
+
+    expect(await reader.loadWords(42), isEmpty);
+    expect(wordRepository.requestedBookId, 42);
+    expect(wordRepository.requestedBookLimit, 1000);
   });
 
   test('已掌握标记通过单词仓储批量解析', () async {

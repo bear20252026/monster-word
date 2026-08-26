@@ -61,3 +61,10 @@
 `MasteredWordsReader` 组合 `MasteredRepository` 与 `WordRepository`，负责把手动掌握的字符串标记解析为完整单词模型。`MasteredWordsPage` 已通过该读取器加载数据，不再调用 `LearningState.getMasteredWords()`；单词仓储新增批量文本查询接口以隔离数据库细节。
 
 通用 `ListWordsPage` 新增上下文数据源扩展点，默认仍兼容其他词表页的 `LearningState` 读取；`MasteredWordsPage` 覆盖该扩展点并从根 `Provider` 获取读取器，因此页面不再依赖遗留状态或全局依赖容器。后续若迁移更多词表页，应继续替换各自的数据源，而不是将不同业务语义重新塞回通用页面基类。
+
+
+## 词书单词查询边界
+
+`BookWordsReader` 通过 `WordRepository` 加载指定词书的单词；`BookWordsPage` 已覆盖通用列表页的数据源扩展点并从根 `Provider` 获取该读取器，不再为列表查询读取 `LearningState`。开始学习和真题词组交互保持原实现，本轮不改变。
+
+`WordRepository.getWordsByBookId` 现在通过 `word_books` 关联表按既有顺序查询，并保留词书页面原有的 1000 条加载上限。该修正避免将词书关系错误地假设为 `words.book_id`，使页面迁移不会改变实际词书范围或排序。
