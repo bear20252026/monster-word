@@ -13,6 +13,7 @@ import '../engine/leitner_engine.dart';
 import '../features/learning/domain/choice_generator.dart';
 import '../models/bb_word_process.dart';
 import '../repositories/fav_repository.dart';
+import '../repositories/mastered_repository.dart';
 
 /// 学习状态（ChangeNotifier，供 UI 监听）
 class LearningState extends ChangeNotifier {
@@ -26,10 +27,9 @@ class LearningState extends ChangeNotifier {
   Map<String, FsrsCard> _cards = {};
   static const _cardsPrefKey = 'fsrs6_cards_v1';
 
-  // 掌握标记仍由遗留状态维护；单词收藏统一委托给 FavRepository。
+  // 单词收藏与掌握标记均委托给独立仓储。
   final FavRepository _favRepository;
-  final Set<String> _masteredWords = {};
-  static const _masteredPrefKey = 'mastered_words_v1';
+  final MasteredRepository _masteredRepository;
 
   // ========== 学习统计（每日计数 + 连续天数） ==========
   // 格式: { "2026-08-24": {"learn": 15, "review": 30}, ... }
@@ -117,10 +117,11 @@ class LearningState extends ChangeNotifier {
 
   /// 构造函数：加载遗留持久化数据。
   ///
-  /// 收藏列表由 [FavRepository] 负责加载和保存，因此不再在此重复维护。
-  LearningState({required FavRepository favRepository}) : _favRepository = favRepository {
+  /// 收藏和掌握标记分别由仓储负责加载和保存，因此不再在此重复维护。
+  LearningState({required FavRepository favRepository, required MasteredRepository masteredRepository})
+    : _favRepository = favRepository,
+      _masteredRepository = masteredRepository {
     _loadCards();
-    _loadMastered();
     _loadDailyStats();
     _loadActiveDates();
     _loadDailyNewWords();
@@ -163,23 +164,6 @@ class LearningState extends ChangeNotifier {
   }
 
   // ========== 收藏 & 标记已掌握 ==========
-
-  /// 从 SharedPreferences 加载已掌握列表
-  Future<void> _loadMastered() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getStringList(_masteredPrefKey);
-      if (raw != null) _masteredWords.addAll(raw);
-    } catch (e) {
-      debugPrint('Mastered words loading error: $e');
-    }
-  }
-
-  /// 保存已掌握列表到 SharedPreferences
-  Future<void> _saveMastered() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_masteredPrefKey, _masteredWords.toList());
-  }
 
   // ========== 每日学习统计 + 连续天数 ==========
 
@@ -279,8 +263,8 @@ class LearningState extends ChangeNotifier {
   /// 收藏的唯一事实来源是 [FavRepository]，与新学习状态及学习服务保持一致。
   bool isFavorite(String word) => _favRepository.isFavorite(word);
 
-  /// 单词是否已标记掌握
-  bool isMastered(String word) => _masteredWords.contains(word);
+  /// 单词是否已标记掌握。
+  bool isMastered(String word) => _masteredRepository.isMastered(word);
 
   /// 切换收藏状态（返回切换后的状态）。
   Future<bool> toggleFavorite(String word) async {
@@ -289,16 +273,11 @@ class LearningState extends ChangeNotifier {
     return _favRepository.isFavorite(word);
   }
 
-  /// 切换已掌握状态（返回切换后的状态）
+  /// 切换已掌握状态（返回切换后的状态）。
   Future<bool> toggleMastered(String word) async {
-    if (_masteredWords.contains(word)) {
-      _masteredWords.remove(word);
-    } else {
-      _masteredWords.add(word);
-    }
-    await _saveMastered();
+    await _masteredRepository.toggleMastered(word);
     notifyListeners();
-    return _masteredWords.contains(word);
+    return _masteredRepository.isMastered(word);
   }
 
   /// 获取收藏单词列表（从完整词库查询，不仅限当前队列）。
@@ -340,16 +319,17 @@ class LearningState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 获取已掌握单词列表
+  /// 获取已掌握单词列表。
   Future<List<Word>> getMasteredWords() async {
-    return _queue.where((w) => _masteredWords.contains(w.word)).toList();
+    final masteredWords = await _masteredRepository.getMasteredWords();
+    return _queue.where((word) => masteredWords.contains(word.word)).toList();
   }
 
   /// 收藏单词数量。
   int get favoriteCount => _favRepository.favoriteCount;
 
-  /// 已掌握单词数量
-  int get masteredCount => _masteredWords.length;
+  /// 已掌握单词数量。
+  int get masteredCount => _masteredRepository.masteredCount;
 
   /// 加载一本书进入学习队列（乱序版：单词顺序随机打乱）
   Future<void> loadBook(Book book, {int limit = 50, bool shuffle = true}) async {
@@ -597,7 +577,7 @@ class LearningState extends ChangeNotifier {
   // ========== 单词分类查询 ==========
 
   int get newWordNum => _queue.where((w) => !_cards.containsKey(w.word)).length;
-  int get masteredNum => _masteredWords.length;
+  int get masteredNum => _masteredRepository.masteredCount;
   int get notLearnedNum => _queue.length - learnedNum;
   int get reviewingNum => _fsrsEngine.getDueCards(_cards.values.toList()).length;
   int get totalLearnedDays => _activeDates.length;

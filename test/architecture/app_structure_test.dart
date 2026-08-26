@@ -36,6 +36,14 @@ void main() {
   });
 
   group('学习集合展示状态边界', () {
+    test('足迹页通过集合展示状态读取掌握数量', () {
+      final source = File('lib/pages/foot_mark_page.dart').readAsStringSync();
+
+      expect(source, contains('LearningCollectionsState'));
+      expect(source, contains('collections.masteredCount'));
+      expect(source, isNot(contains('count: state.masteredNum')));
+    });
+
     test('我的内容页只读取收藏集合展示状态', () {
       final source = File('lib/pages/my_content_page.dart').readAsStringSync();
 

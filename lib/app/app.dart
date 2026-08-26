@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../core/di/service_locator.dart';
 import '../core/router/app_router.dart';
 import '../repositories/fav_repository.dart';
+import '../repositories/mastered_repository.dart';
 import '../features/learning/presentation/learning_collections_state.dart';
 import '../features/learning/presentation/learning_statistics_state.dart';
 import '../pages/lib_select_page.dart';
@@ -35,7 +36,10 @@ class WordApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         // 兼容期内保留旧状态；学习模块迁移完成后应删除该 Provider。
-        ChangeNotifierProvider(create: (_) => LearningState(favRepository: sl<FavRepository>())),
+        ChangeNotifierProvider(
+          create: (_) =>
+              LearningState(favRepository: sl<FavRepository>(), masteredRepository: sl<MasteredRepository>()),
+        ),
         ChangeNotifierProxyProvider<LearningState, LearningStatisticsState>(
           create: (_) => LearningStatisticsState(),
           update: (_, legacy, statistics) => (statistics ?? LearningStatisticsState())..synchronizeFrom(legacy),

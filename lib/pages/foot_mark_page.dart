@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../features/learning/presentation/learning_collections_state.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -23,6 +24,7 @@ class FootMarkPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final state = context.watch<LearningState>();
+    final collections = context.watch<LearningCollectionsState>();
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
@@ -58,7 +60,7 @@ class FootMarkPage extends StatelessWidget {
                       skin: skin,
                       icon: Icons.check_circle_outline,
                       title: '已掌握单词',
-                      count: state.masteredNum,
+                      count: collections.masteredCount,
                       onTap: () => Navigator.pushNamed(context, MasteredWordsPage.routeName),
                     ),
                     const SizedBox(height: 12),
@@ -110,17 +112,12 @@ class FootMarkPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [MistralColors.cream, MistralColors.creamDeeper],
-        ),
+        gradient: LinearGradient(colors: [MistralColors.cream, MistralColors.creamDeeper]),
         borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Column(
         children: [
-          Text(
-            '${state.totalLearnedDays}',
-            style: MistralTypography.heading1.copyWith(color: MistralColors.primary),
-          ),
+          Text('${state.totalLearnedDays}', style: MistralTypography.heading1.copyWith(color: MistralColors.primary)),
           const SizedBox(height: 4),
           Text('累计学习天数', style: MistralTypography.body.copyWith(color: MistralColors.slate)),
         ],
@@ -149,10 +146,7 @@ class FootMarkPage extends StatelessWidget {
             Container(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(
-                color: MistralColors.cream,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
+              decoration: BoxDecoration(color: MistralColors.cream, borderRadius: BorderRadius.circular(AppRadius.md)),
               child: Icon(icon, color: MistralColors.primary, size: 24),
             ),
             const SizedBox(width: 16),
