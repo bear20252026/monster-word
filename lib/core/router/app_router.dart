@@ -56,7 +56,6 @@ import '../../pages/word_export_page.dart';
 import '../../pages/word_machine_page.dart';
 import '../../screens/home_screen.dart';
 import '../../screens/learn_session.dart';
-import '../../screens/profile_screen.dart';
 import '../../screens/review_session.dart';
 import '../../widgets/transition_widgets.dart';
 

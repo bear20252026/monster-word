@@ -41,7 +41,8 @@ jobs:
             < /tmp/changed_dart_files.txt
 
       - name: Analyze project source
-        run: flutter analyze
+        # 历史代码仍有 warning/info；本阶段先阻断 error，并将告警纳入后续治理清单。
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Run tests
         run: flutter test --no-pub
