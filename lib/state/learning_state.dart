@@ -411,7 +411,9 @@ class LearningState extends ChangeNotifier {
   /// 旧状态仍承担词书、统计和持久化职责；候选去重、中文优先与兜底策略
   /// 则统一委托给学习领域规则，避免继续与 [LearnState] 漂移。
   void _regenerateChoices() {
-    final current = _leitnerEngine.currentWord();
+    // 页面展示的当前词以队列索引为准；Leitner 引擎会随机组内顺序，
+    // 不能把引擎当前词作为正确答案，否则题干和候选正确项可能不一致。
+    final current = currentWord;
     if (current == null) {
       _choices = [];
       return;

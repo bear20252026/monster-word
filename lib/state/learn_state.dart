@@ -151,7 +151,9 @@ class LearnState extends ChangeNotifier {
   /// 候选去重、中文释义优先与兜底策略由领域层统一维护，状态层仅负责
   /// 将当前会话模型适配为 UI 使用的 [WordChoicePair]。
   void _regenerateChoices() {
-    final current = _leitnerEngine.currentWord();
+    // UI 展示的当前词来自队列索引；Leitner 引擎在初始化时会随机组内顺序，
+    // 因此不能把引擎当前词作为正确答案，否则题干和候选正确项可能不一致。
+    final current = currentWord;
     if (current == null) {
       _choices = [];
       return;
