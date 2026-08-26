@@ -135,7 +135,8 @@ class HomeScreen extends StatelessWidget {
 
   /// 直接开始背单词（加载第一本书并跳转到学习页）
   Future<void> _startLearning(BuildContext context) async {
-    final state = context.read<LearningState>();
+    // ✅ 修复：使用 LearnState（与 LearnPage 一致），而非 LearningState
+    final state = context.read<LearnState>();
     // 如果已有队列，直接开始学习
     if (state.queue.isNotEmpty) {
       if (context.mounted) {
