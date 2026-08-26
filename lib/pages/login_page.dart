@@ -64,15 +64,44 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
+  // ─── 登录频率限制（防止暴力破解）───────────────────────────────────
+  static final List<DateTime> _loginAttempts = [];
+  static const int _maxAttemptsPerMinute = 5;
+
+  bool _checkRateLimit() {
+    final now = DateTime.now();
+    // 清除 1 分钟前的记录
+    _loginAttempts.removeWhere(
+      (t) => now.difference(t).inSeconds > 60,
+    );
+    if (_loginAttempts.length >= _maxAttemptsPerMinute) {
+      _showToast('登录过于频繁，请稍后再试');
+      return false;
+    }
+    _loginAttempts.add(now);
+    return true;
+  }
+
   Future<void> _loginWithCoolID(String username, String password) async {
+    // ✅ 输入验证：长度限制
     if (username.isEmpty) {
       _showToast('用户名不能为空');
+      return;
+    }
+    if (username.length < 3 || username.length > 32) {
+      _showToast('用户名长度应为 3-32 个字符');
       return;
     }
     if (password.isEmpty) {
       _showToast('密码不能为空');
       return;
     }
+    if (password.length < 6 || password.length > 64) {
+      _showToast('密码长度应为 6-64 个字符');
+      return;
+    }
+    // ✅ 频率限制
+    if (!_checkRateLimit()) return;
 
     setState(() => _isLoading = true);
     try {
@@ -91,14 +120,25 @@ class _LoginPageState extends State<LoginPage>
   }
 
   Future<void> _loginWithPhone(String phone, String code) async {
+    // ✅ 输入验证：手机号格式
     if (phone.isEmpty) {
       _showToast('手机号不能为空');
+      return;
+    }
+    if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
+      _showToast('请输入有效的手机号');
       return;
     }
     if (code.isEmpty) {
       _showToast('验证码不能为空');
       return;
     }
+    if (code.length != 6 || !RegExp(r'^\d{6}$').hasMatch(code)) {
+      _showToast('验证码应为 6 位数字');
+      return;
+    }
+    // ✅ 频率限制
+    if (!_checkRateLimit()) return;
 
     setState(() => _isLoading = true);
     try {

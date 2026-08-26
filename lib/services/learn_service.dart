@@ -9,7 +9,7 @@ import '../../models/word.dart';
 /// UI 层通过此接口与学习引擎交互，不直接依赖 Fsrs6Engine 等具体实现。
 abstract class LearnService {
   /// 加载词书（准备学习队列）
-  Future<void> loadBook(int bookId, {bool shuffle = true});
+  Future<void> loadBook(int bookId, {int limit = 50, int offset = 0, bool shuffle = true});
 
   /// 获取当前单词
   Word? get currentWord;
@@ -40,4 +40,7 @@ abstract class LearnService {
 
   /// 获取收藏单词列表
   Future<List<String>> getFavoriteWords();
+
+  /// 获取当前学习队列（用于生成4选1选项）
+  List<Word> get queue;
 }

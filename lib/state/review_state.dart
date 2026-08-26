@@ -21,12 +21,21 @@ class ReviewState extends ChangeNotifier {
   bool _showAnswer = false;
   bool _initialized = false;
 
+  // ✅ 错误处理与加载状态
+  bool _isLoading = false;
+  String? _errorMessage;
+
   List<String> get words => _words;
   int get currentIndex => _currentIndex;
   int get total => _words.length;
   bool get showAnswer => _showAnswer;
   bool get initialized => _initialized;
   bool get isFinished => _currentIndex >= _words.length;
+
+  // ✅ 错误处理与加载状态 getters
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  bool get hasError => _errorMessage != null;
 
   String? get currentWord =>
       _words.isEmpty ? null : _words[_currentIndex.clamp(0, _words.length - 1)];
@@ -35,12 +44,29 @@ class ReviewState extends ChangeNotifier {
 
   /// 初始化复习队列
   Future<void> init(List<String> wordStrings) async {
-    _words = wordStrings;
-    _currentIndex = 0;
-    _showAnswer = false;
-    _initialized = true;
-    final processes = wordStrings.map((w) => BBWordProcess(word: w)).toList();
-    _reviewService.init(processes);
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _words = wordStrings;
+      _currentIndex = 0;
+      _showAnswer = false;
+      _initialized = true;
+      final processes = wordStrings.map((w) => BBWordProcess(word: w)).toList();
+      _reviewService.init(processes);
+    } catch (e) {
+      _errorMessage = '初始化复习失败：$e';
+      debugPrint('[ReviewState] init error: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// 清除错误状态
+  void clearError() {
+    _errorMessage = null;
     notifyListeners();
   }
 

@@ -1,9 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 // LearnServiceImpl — 学习流程服务实现
 
-import '../../engine/fsrs6_engine.dart';
 import '../../models/word.dart';
-import '../repositories/book_repository.dart';
 import '../repositories/fav_repository.dart';
 import '../repositories/word_repository.dart';
 import 'audio_service.dart';
@@ -14,7 +12,6 @@ import 'learn_service.dart';
 /// 通过 Repository 层访问数据，通过 AudioService 播放音频。
 /// 不直接依赖具体数据库或播放器实现。
 class LearnServiceImpl implements LearnService {
-  final BookRepository _bookRepo;
   final WordRepository _wordRepo;
   final AudioService _audioService;
   final FavRepository _favRepo;
@@ -23,18 +20,16 @@ class LearnServiceImpl implements LearnService {
   int _currentIndex = 0;
 
   LearnServiceImpl({
-    required BookRepository bookRepo,
     required WordRepository wordRepo,
     required AudioService audioService,
     required FavRepository favRepo,
-  })  : _bookRepo = bookRepo,
-        _wordRepo = wordRepo,
+  })  : _wordRepo = wordRepo,
         _audioService = audioService,
         _favRepo = favRepo;
 
   @override
-  Future<void> loadBook(int bookId, {bool shuffle = true}) async {
-    _queue = await _wordRepo.getWordsByBookId(bookId);
+  Future<void> loadBook(int bookId, {int limit = 50, int offset = 0, bool shuffle = true}) async {
+    _queue = await _wordRepo.getWordsByBookId(bookId, limit: limit, offset: offset);
     if (shuffle) {
       _queue.shuffle();
     }
@@ -72,7 +67,7 @@ class LearnServiceImpl implements LearnService {
     final word = currentWord;
     if (word == null) return;
     // TODO: 调用 SRS 引擎评分
-    await _wordRepo.updateWordStatus(word.id!, {'quality': quality});
+    await _wordRepo.updateWordStatus(word.id, {'quality': quality});
   }
 
   @override
@@ -100,4 +95,7 @@ class LearnServiceImpl implements LearnService {
     final favSet = await _favRepo.getFavoriteWords();
     return favSet.toList();
   }
+
+  @override
+  List<Word> get queue => _queue;
 }

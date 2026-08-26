@@ -108,7 +108,6 @@ Future<void> setupServiceLocator() async {
   if (!sl.isRegistered<LearnService>()) {
     sl.registerLazySingleton<LearnService>(
       () => LearnServiceImpl(
-        bookRepo: sl<BookRepository>(),
         wordRepo: sl<WordRepository>(),
         audioService: sl<AudioService>(),
         favRepo: sl<FavRepository>(),
@@ -148,7 +147,7 @@ Future<void> setupServiceLocator() async {
   // StatsService（学习统计）
   if (!sl.isRegistered<StatsService>()) {
     sl.registerLazySingleton<StatsService>(
-      () => StatsServiceImpl(),
+      () => StatsServiceImpl(userRepo: sl<UserRepository>()),
     );
   }
 
@@ -198,6 +197,14 @@ Future<void> setupServiceLocator() async {
       () => PlayerState(audioService: sl<AudioService>()),
     );
   }
+}
+
+/// 释放所有可释放资源（在应用退出时调用）
+Future<void> disposeServiceLocator() async {
+  if (sl.isRegistered<AudioService>()) {
+    sl<AudioService>().dispose();
+  }
+  await sl.reset();
 }
 
 /// 重置所有注册（用于测试）

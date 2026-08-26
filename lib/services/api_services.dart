@@ -93,11 +93,28 @@ class RequestParams {
 // ============================================================
 
 class CoolHttpClientV3 {
-  static const String baseUrl = 'https://api.beingfine.cn/';
-  static const String baseImgUrl = 'https://img.beingfine.cn/';
+  // ✅ 安全修复：所有敏感配置通过 --dart-define 注入，不再硬编码
+  // flutter run --dart-define=API_BASE_URL=https://api.beingfine.cn/ \
+  //              --dart-define=API_IMG_URL=https://img.beingfine.cn/ \
+  //              --dart-define=APP_ID=xxx \
+  //              --dart-define=USER_SECRET=xxx
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://api.beingfine.cn/',
+  );
+  static const String baseImgUrl = String.fromEnvironment(
+    'API_IMG_URL',
+    defaultValue: 'https://img.beingfine.cn/',
+  );
   static const String localFilePath = ''; // TODO: 本地文件缓存路径
-  static const String appId = '600000001';
-  static const String _userSecret = 'iscooler';
+  static const String appId = String.fromEnvironment(
+    'APP_ID',
+    defaultValue: '',
+  );
+  static const String _userSecret = String.fromEnvironment(
+    'USER_SECRET',
+    defaultValue: '',
+  );
 
   static int _timeoutMs = 30000; // 默认 30 秒
 

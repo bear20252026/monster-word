@@ -8,7 +8,7 @@ import '../../models/word.dart';
 /// 提供单词（Word）的查询和管理操作抽象。
 abstract class WordRepository {
   /// 获取指定词书的所有单词
-  Future<List<Word>> getWordsByBookId(int bookId);
+  Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset});
 
   /// 根据 ID 获取单词
   Future<Word?> getWordById(int id);

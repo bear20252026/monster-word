@@ -12,12 +12,14 @@ class WordRepositoryImpl implements WordRepository {
   WordRepositoryImpl(this._database);
 
   @override
-  Future<List<Word>> getWordsByBookId(int bookId) async {
+  Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset}) async {
     final db = _database.db;
     final maps = await db.query(
       'words',
       where: 'book_id = ?',
       whereArgs: [bookId],
+      limit: limit,
+      offset: offset,
     );
     return maps.map((m) => Word.fromMap(m)).toList();
   }

@@ -11,14 +11,18 @@ import 'review_service.dart';
 
 /// 复习流程服务实现
 class ReviewServiceImpl implements ReviewService {
-  final WordRepository _wordRepo;
-  final AudioService _audioService;
   final Fsrs6Engine _fsrsEngine = Fsrs6Engine();
 
   List<BBWordProcess> _dueWords = [];
   List<String> _queue = [];
   int _currentIndex = 0;
   bool _initialized = false;
+
+  // wordRepo 和 audioService 通过构造函数注入，供未来扩展使用
+  // ignore: unused_field
+  final WordRepository _wordRepo;
+  // ignore: unused_field
+  final AudioService _audioService;
 
   ReviewServiceImpl({
     required WordRepository wordRepo,

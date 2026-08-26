@@ -16,4 +16,7 @@ abstract class AudioService {
 
   /// 是否正在播放
   bool get isPlaying;
+
+  /// 释放所有音频资源（防止内存泄漏）
+  void dispose();
 }

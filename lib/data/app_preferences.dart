@@ -166,10 +166,14 @@ class AppPreferences extends BaseSharedPreferences {
   Future<bool> setBookGroupList(String value) =>
       setString(bookGroupList, value);
 
-  /// 用户 token（推荐使用 SecureTokenStorage.getToken() 异步版本）
+  /// 用户 token
+  /// ⚠️ 已废弃：请使用 SecureTokenStorage().getToken() 异步版本
+  @Deprecated('Use SecureTokenStorage().getToken() instead')
   String getUserToken() => getString(userToken);
 
-  /// 用户 secret（推荐使用 SecureTokenStorage.getSecret() 异步版本）
+  /// 用户 secret
+  /// ⚠️ 已废弃：请使用 SecureTokenStorage().getSecret() 异步版本
+  @Deprecated('Use SecureTokenStorage().getSecret() instead')
   String getUserSecret() => getString(userSecret);
 
   /// 用户 ID

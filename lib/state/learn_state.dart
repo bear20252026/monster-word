@@ -4,11 +4,12 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart' show WordChoicePair;
 import '../engine/fsrs6_engine.dart' show Fsrs6Engine, FsrsCard, FsrsRating;
 import '../engine/leitner_engine.dart';
 import '../models/bb_word_process.dart';
+import '../models/book.dart';
+import '../models/word.dart';
 import '../repositories/fav_repository.dart';
 import '../services/learn_service.dart';
 import '../services/audio_service.dart';
@@ -36,6 +37,10 @@ class LearnState extends ChangeNotifier {
   bool _showAnswer = false;
   List<WordChoicePair> _choices = [];
 
+  // ✅ 错误处理与加载状态
+  bool _isLoading = false;
+  String? _errorMessage;
+
   // Leitner 学习引擎（4选1选词）
   final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
   List<BBWordProcess> _processQueue = [];
@@ -56,6 +61,11 @@ class LearnState extends ChangeNotifier {
   bool get showAnswer => _showAnswer;
   List<WordChoicePair> get choices => _choices;
 
+  // ✅ 错误处理与加载状态 getters
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  bool get hasError => _errorMessage != null;
+
   Word? get currentWord =>
       _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
 
@@ -72,18 +82,34 @@ class LearnState extends ChangeNotifier {
 
   /// 加载词书进入学习队列
   Future<void> loadBook(Book book, {int limit = 50, bool shuffle = true}) async {
-    _currentBook = book;
-    _queue = await WordBookDatabase.instance
-        .getWordsByBook(book.id, limit: limit, offset: 0);
-    _currentIndex = 0;
-    _showAnswer = false;
-
-    if (shuffle) _queue.shuffle();
-
-    _initLeitnerEngine();
-    _regenerateChoices();
+    _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
-    _saveProgress();
+
+    try {
+      _currentBook = book;
+      // ✅ 架构修复：通过 Service 层加载，不再直接访问 Database
+      await _learnService.loadBook(book.id, limit: limit, shuffle: shuffle);
+      _queue = _learnService.queue;
+      _currentIndex = 0;
+      _showAnswer = false;
+
+      _initLeitnerEngine();
+      _regenerateChoices();
+      _saveProgress();
+    } catch (e) {
+      _errorMessage = '加载词书失败：$e';
+      debugPrint('[LearnState] loadBook error: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// 清除错误状态
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
   }
 
   /// 从收藏单词本开始学习

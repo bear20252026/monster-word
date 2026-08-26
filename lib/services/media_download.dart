@@ -500,8 +500,8 @@ abstract class DownloadResourceTask {
 // ============================================================
 // SentenceDownloadTask（翻译自 SentenceDownloadTask.java）
 // 例句音频下载任务
-// URL1: http://audio.beingfine.cn/{path}
-// URL2: http://7ncdn.beingfine.cn/{path}
+// URL1: https://audio.beingfine.cn/{path}
+// URL2: https://7ncdn.beingfine.cn/{path}
 // ============================================================
 
 /// 例句音频下载（原版 SentenceDownloadTask）
