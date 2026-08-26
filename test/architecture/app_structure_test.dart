@@ -35,6 +35,18 @@ void main() {
     });
   });
 
+  group('学习统计状态边界', () {
+    test('首页与仪表盘只读取学习统计状态', () {
+      const statisticsPages = ['lib/screens/home_screen.dart', 'lib/pages/dashboard_page.dart'];
+
+      for (final path in statisticsPages) {
+        final source = File(path).readAsStringSync();
+        expect(source, contains('LearningStatisticsState'), reason: '$path 应读取 LearningStatisticsState');
+        expect(source, isNot(contains('LearningState')), reason: '$path 不应直接读取遗留 LearningState');
+      }
+    });
+  });
+
   group('学习会话状态边界', () {
     test('学习会话页面统一读取 LearnState', () {
       const sessionPages = [

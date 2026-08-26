@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../core/di/service_locator.dart';
 import '../core/router/app_router.dart';
+import '../features/learning/presentation/learning_statistics_state.dart';
 import '../pages/lib_select_page.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
@@ -33,6 +34,10 @@ class WordApp extends StatelessWidget {
       providers: [
         // 兼容期内保留旧状态；学习模块迁移完成后应删除该 Provider。
         ChangeNotifierProvider(create: (_) => LearningState()),
+        ChangeNotifierProxyProvider<LearningState, LearningStatisticsState>(
+          create: (_) => LearningStatisticsState(),
+          update: (_, legacy, statistics) => (statistics ?? LearningStatisticsState())..synchronizeFrom(legacy),
+        ),
         ChangeNotifierProvider(create: (_) => sl<LearnState>()),
         ChangeNotifierProvider(create: (_) => sl<ReviewState>()),
         ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),

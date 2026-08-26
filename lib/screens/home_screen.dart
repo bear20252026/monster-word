@@ -10,7 +10,7 @@ import '../pages/learn_page.dart';
 import '../pages/lib_select_page.dart';
 import '../pages/search_page.dart';
 import '../pages/word_machine_page.dart';
-import '../state/learning_state.dart';
+import '../features/learning/presentation/learning_statistics_state.dart';
 import '../state/learn_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -47,96 +47,92 @@ class HomeScreen extends StatelessWidget {
         if (v > 160) Navigator.pushNamed(context, SearchPage.routeName);
       },
       child: Container(
-      color: skin.colors.pageBg,
-      child: Stack(
-        children: [
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
-                child: isLandscape
-                    ? _buildLandscapeLayout(context, skin, resp)
-                    : Column(
-                  children: [
-                    const Spacer(flex: 2),
-                    // 签到卡片（SbCard 白卡，替代毛玻璃）
-                    _EntranceIn(
-                      delayMs: 120,
-                      child: _buildCheckInCard(context, skin),
-                    ),
-                    const Spacer(flex: 2),
-                    // Learn / Review 入口卡（SbCard 替代 GlassEntryCard）
-                    _EntranceIn(
-                      delayMs: 260,
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
-                        // Selector 只订阅 total/dueCount，避免 LearningState
-                        // 其他字段变化导致整页 rebuild
-                        child: Selector<LearningState, ({int total, int dueCount})>(
-                          selector: (_, s) => (total: s.total, dueCount: s.dueCount),
-                          builder: (context, state, _) => Row(
-                            children: [
-                              Expanded(
-                                child: _EntryCard(
-                                  title: 'Learn',
-                                  count: state.total > 0 ? state.total : 0,
-                                  // 直接开始背单词（不再跳转到选书页）
-                                  onTap: () => _startLearning(context),
+        color: skin.colors.pageBg,
+        child: Stack(
+          children: [
+            SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
+                  child: isLandscape
+                      ? _buildLandscapeLayout(context, skin, resp)
+                      : Column(
+                          children: [
+                            const Spacer(flex: 2),
+                            // 签到卡片（SbCard 白卡，替代毛玻璃）
+                            _EntranceIn(delayMs: 120, child: _buildCheckInCard(context, skin)),
+                            const Spacer(flex: 2),
+                            // Learn / Review 入口卡（SbCard 替代 GlassEntryCard）
+                            _EntranceIn(
+                              delayMs: 260,
+                              child: Padding(
+                                padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
+                                // Selector 只订阅学习统计快照，避免会话状态变化导致整页 rebuild。
+                                child: Selector<LearningStatisticsState, ({int total, int dueCount})>(
+                                  selector: (_, s) => (total: s.total, dueCount: s.dueCount),
+                                  builder: (context, state, _) => Row(
+                                    children: [
+                                      Expanded(
+                                        child: _EntryCard(
+                                          title: 'Learn',
+                                          count: state.total > 0 ? state.total : 0,
+                                          // 直接开始背单词（不再跳转到选书页）
+                                          onTap: () => _startLearning(context),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _EntryCard(
+                                          title: 'Review',
+                                          count: state.dueCount,
+                                          onTap: () => showReviewDialog(context),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _EntryCard(
-                                  title: 'Review',
-                                  count: state.dueCount,
-                                  onTap: () => showReviewDialog(context),
+                            ),
+                            // 每日一句励志语轮播（testimonial-slider，自动轮播+弹性滑动）
+                            _EntranceIn(
+                              delayMs: 380,
+                              child: Padding(
+                                padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
+                                child: TestimonialSlider(
+                                  items: TestimonialData.defaults,
+                                  height: 120,
+                                  activeColor: skin.colors.accent,
+                                  inactiveColor: skin.colors.divider,
+                                  borderRadius: BorderRadius.circular(24),
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                            // 底部：选择词书区域（点击跳转到词书选择页）
+                            _EntranceIn(
+                              delayMs: 480,
+                              child: Padding(
+                                padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
+                                child: _buildBookSelector(context, skin, resp),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-                    // 每日一句励志语轮播（testimonial-slider，自动轮播+弹性滑动）
-                    _EntranceIn(
-                      delayMs: 380,
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
-                        child: TestimonialSlider(
-                          items: TestimonialData.defaults,
-                          height: 120,
-                          activeColor: skin.colors.accent,
-                          inactiveColor: skin.colors.divider,
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                      ),
-                    ),
-                    // 底部：选择词书区域（点击跳转到词书选择页）
-                    _EntranceIn(
-                      delayMs: 480,
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
-                        child: _buildBookSelector(context, skin, resp),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),
-          ),
-          // 右上角：单词机入口（GameBoy 风格保留，word_machine 豁免）
-          Positioned(top: 0, right: 0, child: _buildWordMachineButton(context, skin)),
-          // 左上角：查词入口（SbCard 风格圆形按钮）
-          Positioned(top: 0, left: 0, child: _buildSearchButton(context, skin)),
-        ],
-      ),
+            // 右上角：单词机入口（GameBoy 风格保留，word_machine 豁免）
+            Positioned(top: 0, right: 0, child: _buildWordMachineButton(context, skin)),
+            // 左上角：查词入口（SbCard 风格圆形按钮）
+            Positioned(top: 0, left: 0, child: _buildSearchButton(context, skin)),
+          ],
+        ),
       ),
     );
   }
 
   /// 直接开始背单词（加载第一本书并跳转到学习页）
   Future<void> _startLearning(BuildContext context) async {
-    // ✅ 修复：使用 LearnState（与 LearnPage 一致），而非 LearningState
+    // 学习会话由 LearnState 统一驱动，与 LearnPage 保持一致。
     final state = context.read<LearnState>();
     // 如果已有队列，直接开始学习
     if (state.queue.isNotEmpty) {
@@ -150,9 +146,7 @@ class HomeScreen extends StatelessWidget {
     final books = await bookRepo.getBooks();
     if (books.isEmpty) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('暂无词书，请先添加词书')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('暂无词书，请先添加词书')));
       }
       return;
     }
@@ -177,7 +171,10 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('选择词书', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1)),
+                  Text(
+                    '选择词书',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1),
+                  ),
                   const SizedBox(height: 2),
                   Text('点击切换不同的单词书', style: TextStyle(fontSize: 13, color: skin.colors.text3)),
                 ],
@@ -201,26 +198,35 @@ class HomeScreen extends StatelessWidget {
             children: [
               _EntranceIn(delayMs: 120, child: _buildCheckInCard(context, skin)),
               const SizedBox(height: 16),
-              _EntranceIn(delayMs: 200, child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
-                child: Selector<LearningState, ({int total, int dueCount})>(
-                  selector: (_, s) => (total: s.total, dueCount: s.dueCount),
-                  builder: (context, state, _) => Row(children: [
-                    Expanded(child: _EntryCard(
-                      title: 'Learn',
-                      count: state.total,
-                      // 横屏布局也直接开始背单词
-                      onTap: () => _startLearning(context),
-                    )),
-                    const SizedBox(width: 12),
-                    Expanded(child: _EntryCard(
-                      title: 'Review',
-                      count: state.dueCount,
-                      onTap: () => showReviewDialog(context),
-                    )),
-                  ]),
+              _EntranceIn(
+                delayMs: 200,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
+                  child: Selector<LearningStatisticsState, ({int total, int dueCount})>(
+                    selector: (_, s) => (total: s.total, dueCount: s.dueCount),
+                    builder: (context, state, _) => Row(
+                      children: [
+                        Expanded(
+                          child: _EntryCard(
+                            title: 'Learn',
+                            count: state.total,
+                            // 横屏布局也直接开始背单词
+                            onTap: () => _startLearning(context),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _EntryCard(
+                            title: 'Review',
+                            count: state.dueCount,
+                            onTap: () => showReviewDialog(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              )),
+              ),
             ],
           ),
         ),
@@ -268,7 +274,8 @@ class HomeScreen extends StatelessWidget {
         children: [
           TextRevealCard(
             title: '📅 签到 ${_formatDate()}',
-            revealText: '"The limits of my language mean the limits of my world." — Wittgenstein\n\n今天也要加油背单词！每一个单词都在拓展你的世界。',
+            revealText:
+                '"The limits of my language mean the limits of my world." — Wittgenstein\n\n今天也要加油背单词！每一个单词都在拓展你的世界。',
             icon: null,
             bgColor: skin.colors.cardBg,
             revealBgColor: skin.colors.cardBgAlt,
@@ -286,10 +293,7 @@ class HomeScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [
-                    AppColors.highlightOrange,
-                    MistralColors.sunshine500,
-                  ]),
+                  gradient: const LinearGradient(colors: [AppColors.highlightOrange, MistralColors.sunshine500]),
                   borderRadius: BorderRadius.circular(999),
                   boxShadow: [
                     BoxShadow(
@@ -304,11 +308,10 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     Icon(Icons.redeem_rounded, size: 14, color: AppColors.white100),
                     SizedBox(width: 4),
-                    Text('打卡 +10',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.white100)),
+                    Text(
+                      '打卡 +10',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white100),
+                    ),
                   ],
                 ),
               ),
@@ -326,16 +329,8 @@ class HomeScreen extends StatelessWidget {
                   color: skin.colors.cardBg,
                   shape: BoxShape.circle,
                   boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x23000000),
-                      blurRadius: 0.5,
-                      offset: Offset(0, 0),
-                    ),
-                    BoxShadow(
-                      color: Color(0x3D000000),
-                      blurRadius: 1.0,
-                      offset: Offset(0, 1),
-                    ),
+                    BoxShadow(color: Color(0x23000000), blurRadius: 0.5, offset: Offset(0, 0)),
+                    BoxShadow(color: Color(0x3D000000), blurRadius: 1.0, offset: Offset(0, 1)),
                   ],
                 ),
                 child: Icon(Icons.calendar_today, size: 16, color: skin.colors.accent),
@@ -354,12 +349,7 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (sheetCtx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 12,
-          bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 24,
-        ),
+        padding: EdgeInsets.only(left: 20, right: 20, top: 12, bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 24),
         child: const SpringCheckInCalendar(),
       ),
     );
@@ -378,13 +368,7 @@ class HomeScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF9BBC0F), // GameBoy 绿（豁免）
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: MistralColors.black26,
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: MistralColors.black26, blurRadius: 6, offset: const Offset(0, 2))],
             ),
             child: const Center(
               child: Text(
@@ -433,60 +417,69 @@ class HomeScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.pushNamed(context, SearchPage.routeName),
       child: SbCard(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('下滑查词',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1)),
-          const SizedBox(height: 16),
-          // 手机插图
-          Container(
-            width: 120,
-            height: 180,
-            decoration: BoxDecoration(
-              border: Border.all(color: skin.colors.divider, width: 2),
-              borderRadius: BorderRadius.circular(16),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '下滑查词',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1),
             ),
-            child: Stack(
-              children: [
-                // 模拟手机内容
-                Positioned(
-                  top: 20, left: 12, right: 12,
-                  child: Column(
-                    children: [
-                      Container(height: 6, width: double.infinity,
-                        decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(3))),
-                      const SizedBox(height: 8),
-                      Container(height: 6, width: double.infinity,
-                        decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(3))),
-                      const SizedBox(height: 8),
-                      Container(height: 6, width: 80,
-                        decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(3))),
-                    ],
-                  ),
-                ),
-                // 键盘模拟
-                Positioned(
-                  bottom: 10, left: 8, right: 8,
-                  child: Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: skin.colors.cardBgAlt,
-                      borderRadius: BorderRadius.circular(8),
+            const SizedBox(height: 16),
+            // 手机插图
+            Container(
+              width: 120,
+              height: 180,
+              decoration: BoxDecoration(
+                border: Border.all(color: skin.colors.divider, width: 2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Stack(
+                children: [
+                  // 模拟手机内容
+                  Positioned(
+                    top: 20,
+                    left: 12,
+                    right: 12,
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 6,
+                          width: double.infinity,
+                          decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(3)),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 6,
+                          width: double.infinity,
+                          decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(3)),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 6,
+                          width: 80,
+                          decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(3)),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                // 手指图标
-                Positioned(
-                  bottom: 60, right: 30,
-                  child: Icon(Icons.touch_app, color: skin.colors.accent, size: 40),
-                ),
-              ],
+                  // 键盘模拟
+                  Positioned(
+                    bottom: 10,
+                    left: 8,
+                    right: 8,
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                  // 手指图标
+                  Positioned(bottom: 60, right: 30, child: Icon(Icons.touch_app, color: skin.colors.accent, size: 40)),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -509,10 +502,7 @@ class _EntranceIn extends StatelessWidget {
       curve: Interval(delayMs / total, 1.0, curve: Curves.easeOutCubic),
       builder: (context, t, child) => Opacity(
         opacity: t.clamp(0.0, 1.0),
-        child: Transform.translate(
-          offset: Offset(0, 24 * (1 - t)),
-          child: child,
-        ),
+        child: Transform.translate(offset: Offset(0, 24 * (1 - t)), child: child),
       ),
       child: child,
     );
@@ -525,11 +515,7 @@ class _EntryCard extends StatelessWidget {
   final int count;
   final VoidCallback onTap;
 
-  const _EntryCard({
-    required this.title,
-    required this.count,
-    required this.onTap,
-  });
+  const _EntryCard({required this.title, required this.count, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -539,32 +525,24 @@ class _EntryCard extends StatelessWidget {
     return ScaleDownOnPress(
       onTap: onTap,
       child: SbCard(
-        padding: EdgeInsets.symmetric(
-          vertical: 20 * resp.scale,
-          horizontal: 16 * resp.scale,
-        ),
+        padding: EdgeInsets.symmetric(vertical: 20 * resp.scale, horizontal: 16 * resp.scale),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(title,
-              style: TextStyle(
-                fontSize: 18 * resp.fontScale,
-                fontWeight: FontWeight.w700,
-                color: skin.colors.text1,
-              )),
+            Text(
+              title,
+              style: TextStyle(fontSize: 18 * resp.fontScale, fontWeight: FontWeight.w700, color: skin.colors.text1),
+            ),
             const SizedBox(height: 8),
-            Text('$count',
-              style: TextStyle(
-                fontSize: 28 * resp.fontScale,
-                fontWeight: FontWeight.w300,
-                color: skin.colors.accent,
-              )),
+            Text(
+              '$count',
+              style: TextStyle(fontSize: 28 * resp.fontScale, fontWeight: FontWeight.w300, color: skin.colors.accent),
+            ),
             const SizedBox(height: 4),
-            Text(title == 'Learn' ? '待学' : '待复习',
-              style: TextStyle(
-                fontSize: 12 * resp.fontScale,
-                color: skin.colors.text3,
-              )),
+            Text(
+              title == 'Learn' ? '待学' : '待复习',
+              style: TextStyle(fontSize: 12 * resp.fontScale, color: skin.colors.text3),
+            ),
           ],
         ),
       ),
