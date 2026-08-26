@@ -5,20 +5,23 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/wordbook_database.dart';
-import '../engine/core_engine.dart';
+import '../core/di/service_locator.dart';
+import '../engine/core_engine.dart' show WordChoicePair;
 import '../engine/fsrs6_engine.dart' show FsrsRating;
-import '../pages/dictionary_page.dart';
+import '../services/audio_service.dart';
 import '../engine/srs_engine.dart';
 import '../engine/super_memory_engine.dart';
 import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
-import '../data/wallpaper_data.dart';
-import '../player/audio_players.dart';
+import '../models/word.dart';
+import '../pages/dictionary_page.dart';
+import '../repositories/word_repository.dart';
 import '../state/learning_state.dart';
+import '../data/wallpaper_data.dart' show WallpaperType;
 import '../state/wallpaper_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+import '../widgets/session_exit_guard.dart';
 
 class ReviewPage extends StatefulWidget {
   const ReviewPage({super.key});
@@ -91,9 +94,9 @@ class _ReviewPageState extends State<ReviewPage> {
 
   /// 获取备用单词（当没有到期词时）
   Future<List<Word>> _fallbackWords() async {
-    final sample = await WordBookDatabase.instance.searchWords('a', limit: 20);
+    final sample = await sl<WordRepository>().searchWords('a', limit: 20);
     if (sample.isNotEmpty) return sample;
-    return await WordBookDatabase.instance.searchWords('the', limit: 20);
+    return await sl<WordRepository>().searchWords('the', limit: 20);
   }
 
   /// 生成 4 选 1 选项（优先选择有中文释义的干扰项）
@@ -223,8 +226,8 @@ class _ReviewPageState extends State<ReviewPage> {
     // 横屏检测
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
-    return PopScope(
-      canPop: true,
+    return SessionExitGuard(
+      subject: '本次复习',
       child: Scaffold(
       body: word == null
           ? _buildReviewDone()
@@ -321,6 +324,7 @@ class _ReviewPageState extends State<ReviewPage> {
         children: [
           IconButton(
             icon: Icon(Icons.arrow_back_ios_new, size: 20, color: skin.onGlassText1),
+            tooltip: '返回',
             onPressed: () => Navigator.pop(context),
           ),
           Text(
@@ -544,6 +548,11 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   void _markAsKnown() {
+    // 保存当前状态到历史记录（用于撤销）
+    final currentWord = _engine.currentWord();
+    if (currentWord != null) {
+      _history.add(currentWord);
+    }
     _engine.iReallyKnow();
     _done++;
     _showAnswer = false;
@@ -632,8 +641,8 @@ class _ReviewPageState extends State<ReviewPage> {
     if (_audioLoading) return;
     setState(() => _audioLoading = true);
     try {
-      // 使用 PhoneticAudioPlayer（带缓存）
-      await playWordAudio(word.word);
+      // 使用 AudioService 播放单词发音
+      await sl<AudioService>().playWordAudio(word.word);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -3,16 +3,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/example_parser.dart';
+import '../core/di/service_locator.dart';
 import '../data/dictionary_extra.dart';
-import '../data/fav_sentence_dao.dart';
-import '../data/note_database.dart';
-import '../data/wordbook_database.dart' show Word;
-import '../engine/fsrs6_engine.dart' show FsrsRating;
+import '../data/example_parser.dart';
 import '../hooks/responsive.dart';
 import '../models/sentence_models.dart';
+import '../engine/fsrs6_engine.dart' show FsrsRating;
+import '../models/word.dart';
 import '../models/word_note.dart';
-import '../player/audio_players.dart';
+import '../player/audio_players.dart' show playWordAudio;
+import '../repositories/fav_repository.dart';
+import '../repositories/note_repository.dart';
+import '../services/audio_service.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -22,7 +24,8 @@ import '../widgets/box_reveal.dart';
 import '../widgets/definition_view.dart';
 
 class WordDetailPage extends StatefulWidget {
-  const WordDetailPage({super.key});
+  final bool fromLearn;
+  const WordDetailPage({super.key, this.fromLearn = false});
   static const routeName = '/word_detail';
 
   @override
@@ -32,6 +35,7 @@ class WordDetailPage extends StatefulWidget {
 class _WordDetailPageState extends State<WordDetailPage> {
   List<WordNote> _notes = [];
   bool _notesLoaded = false;
+  bool _isAudioLoading = false;
   DictionaryExtra? _extra; // 字典补充数据（派生词/近义词/真题）
 
   /// 解析要展示的单词：路由参数优先（从词书/收藏/列表点入时显示所点的词），
@@ -62,8 +66,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
     if (word == null) return;
 
     try {
-      await NoteDatabase.instance.initialize();
-      final notes = await NoteDatabase.instance.getNotesByWordId(word.id);
+      final notes = await sl<NoteRepository>().getNotesByWord(word.id);
       if (mounted) setState(() { _notes = notes; _notesLoaded = true; });
     } catch (e) {
       debugPrint('Notes loading error: $e');
@@ -86,7 +89,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
         word: word.word,
         content: result.trim(),
       );
-      await NoteDatabase.instance.insertNote(note);
+      await sl<NoteRepository>().insertNote(note);
       await _loadNotes();
     }
   }
@@ -98,7 +101,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       builder: (ctx) => _NoteDialog(controller: controller, title: '编辑笔记'),
     );
     if (result != null && result.trim().isNotEmpty) {
-      await NoteDatabase.instance.updateNote(
+      await sl<NoteRepository>().updateNote(
         note.copyWith(content: result.trim()),
       );
       await _loadNotes();
@@ -118,7 +121,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       ),
     );
     if (confirmed == true) {
-      await NoteDatabase.instance.deleteNote(note.id!);
+      await sl<NoteRepository>().deleteNote(note.id!);
       await _loadNotes();
     }
   }
@@ -161,6 +164,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new, size: 20),
                     color: skin.colors.text1,
+                    tooltip: '返回',
                     onPressed: () => Navigator.pop(context),
                   ),
                   Text('单词详情',
@@ -253,7 +257,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
   }
 
   /// 底部操作栏：下一词按钮（推进学习进度）
+  /// 仅从 LearnPage 进入时显示"下一词"，其他入口（收藏/搜索/字典）只显示"返回"
   Widget _buildBottomActionBar(BuildContext context, SkinSystem skin, AppResponsive resp, LearningState state) {
+    final fromLearnPage = widget.fromLearn;
     final isLastWord = state.currentIndex >= state.queue.length - 1;
     return Container(
       padding: EdgeInsets.symmetric(
@@ -271,18 +277,30 @@ class _WordDetailPageState extends State<WordDetailPage> {
           height: 48,
           child: ElevatedButton.icon(
             onPressed: () {
-              // 记录评分并推进到下一个单词
-              state.rate(FsrsRating.good);
-              if (isLastWord) {
-                // 最后一个单词：直接返回首页
-                Navigator.popUntil(context, (route) => route.isFirst);
+              if (fromLearnPage) {
+                // 从学习流程进入：记录评分并推进到下一个单词
+                state.rate(FsrsRating.good);
+                if (isLastWord) {
+                  Navigator.popUntil(context, (route) => route.isFirst);
+                } else {
+                  Navigator.pop(context);
+                }
               } else {
-                // 返回学习页面，自动显示下一个单词
+                // 从其他入口进入：仅返回
                 Navigator.pop(context);
               }
             },
-            icon: Icon(isLastWord ? Icons.check : Icons.arrow_forward, size: 20),
-            label: Text(isLastWord ? '完成学习' : '下一词'),
+            icon: Icon(
+              fromLearnPage
+                  ? (isLastWord ? Icons.check : Icons.arrow_forward)
+                  : Icons.arrow_back,
+              size: 20,
+            ),
+            label: Text(
+              fromLearnPage
+                  ? (isLastWord ? '完成学习' : '下一词')
+                  : '返回',
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: skin.colors.accent,
               foregroundColor: Colors.white,
@@ -769,21 +787,30 @@ class _WordDetailPageState extends State<WordDetailPage> {
               Text(word.word,
                 style: MistralTypography.heading1.copyWith(color: skin.colors.text1, fontSize: 40)),
               SizedBox(width: AppleSpacing.sm),
-              GestureDetector(
-                onTap: () async {
-                  try {
-                    // 使用 PhoneticAudioPlayer（带缓存）
-                    await playWordAudio(word.word);
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
-                      );
-                    }
-                  }
-                },
-                child: Icon(Icons.volume_up_outlined, color: skin.colors.accent, size: 28),
-              ),
+              _isAudioLoading
+                  ? SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: skin.colors.accent),
+                    )
+                  : GestureDetector(
+                      onTap: () async {
+                        if (_isAudioLoading) return;
+                        setState(() => _isAudioLoading = true);
+                        try {
+                          await sl<AudioService>().playWordAudio(word.word);
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
+                            );
+                          }
+                        } finally {
+                          if (mounted) setState(() => _isAudioLoading = false);
+                        }
+                      },
+                      child: Icon(Icons.volume_up_outlined, color: skin.colors.accent, size: 28),
+                    ),
             ],
           ),
           if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[
@@ -862,18 +889,18 @@ class _NoteCard extends StatelessWidget {
               const Spacer(),
               IconButton(
                 onPressed: onEdit,
-                icon: Icon(Icons.edit_outlined, size: 18, color: skin.colors.text3),
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                padding: const EdgeInsets.all(6),
-                splashRadius: 18,
+                icon: Icon(Icons.edit_outlined, size: 20, color: skin.colors.text3),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                padding: const EdgeInsets.all(12),
+                splashRadius: 24,
                 tooltip: '编辑',
               ),
               IconButton(
                 onPressed: onDelete,
-                icon: Icon(Icons.delete_outline, size: 18, color: skin.colors.danger),
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                padding: const EdgeInsets.all(6),
-                splashRadius: 18,
+                icon: Icon(Icons.delete_outline, size: 20, color: skin.colors.danger),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                padding: const EdgeInsets.all(12),
+                splashRadius: 24,
                 tooltip: '删除',
               ),
             ],
@@ -970,33 +997,26 @@ class _ExampleTileState extends State<_ExampleTile> {
   void _checkFavStatus() {
     // 使用句子的唯一标识（英文内容的hash）作为sentenceId
     final sentenceId = widget.example.en.hashCode.toString();
-    setState(() {
-      _isFav = FavSentenceDao.instance.isFavSentence(widget.wordId, sentenceId);
+    sl<FavRepository>().isFavoriteSentence(widget.wordId, sentenceId).then((v) {
+      if (mounted) setState(() => _isFav = v);
     });
   }
 
   Future<void> _toggleFav() async {
     final sentenceId = widget.example.en.hashCode.toString();
 
-    // 创建 SentenceData 对象
-    final sentenceData = SentenceData(
-      sid: sentenceId,
-      e: widget.example.en,
-      c: widget.example.cn,
-      b: widget.example.source,
-    );
-
-    await FavSentenceDao.instance.toggleFavSentence(
-      word: widget.word,
+    await sl<FavRepository>().toggleFavoriteSentence(
       wordId: widget.wordId,
       sentenceId: sentenceId,
-      sentenceData: sentenceData,
+      english: widget.example.en,
+      chinese: widget.example.cn,
+      source: widget.example.source,
     );
 
     if (mounted) {
-      setState(() {
-        _isFav = FavSentenceDao.instance.isFavSentence(widget.wordId, sentenceId);
-      });
+      // 直接获取新状态，不设中间值避免闪烁
+      final newStatus = await sl<FavRepository>().isFavoriteSentence(widget.wordId, sentenceId);
+      if (mounted) setState(() => _isFav = newStatus);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

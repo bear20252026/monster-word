@@ -42,6 +42,7 @@ dependencies:
   path: ^1.9.0
   archive: ^3.6.1          # 解压 gzip 词库
   provider: ^6.1.2         # 状态管理
+  get_it: ^8.0.2           # 依赖注入（服务定位器）
   shared_preferences: ^2.3.3  # 学习进度/设置持久化
   flutter_secure_storage: ^9.2.4  # Token/Secret 安全存储（替代 SharedPreferences 明文）
   audioplayers: ^6.1.0     # 跨平台音频播放（单词发音/例句）

@@ -79,7 +79,9 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
               icon: const Icon(Icons.settings, size: 20),
               color: skin.text1,
               onPressed: () {
-                // TODO: 班级设置
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('班级设置功能开发中...'), duration: Duration(seconds: 1)),
+                );
               },
             ),
         ],

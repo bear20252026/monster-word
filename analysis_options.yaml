@@ -18,6 +18,7 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    - lib/core/router/app_router.dart
 
 linter:
   # The lint rules applied to this project can be customized in the

@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../player/audio_players.dart';
-import '../state/learning_state.dart';
+import '../state/learn_state.dart';
+import '../state/player_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/session_exit_guard.dart';
@@ -45,27 +45,27 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
   }
 
   String get _currentWord {
-    final state = context.read<LearningState>();
+    final state = context.read<LearnState>();
     if (state.queue.isEmpty) return '';
     return state.queue[_currentIndex.clamp(0, state.queue.length - 1)].word;
   }
 
   String? get _currentPhonetic {
-    final state = context.read<LearningState>();
+    final state = context.read<LearnState>();
     if (state.queue.isEmpty) return null;
     final w = state.queue[_currentIndex.clamp(0, state.queue.length - 1)];
     return w.usPron.isNotEmpty ? w.usPron : (w.ukPron.isNotEmpty ? w.ukPron : null);
   }
 
   int get _totalWords {
-    final state = context.read<LearningState>();
+    final state = context.read<LearnState>();
     return state.queue.length;
   }
 
   Future<void> _playCurrentWord() async {
     if (_currentWord.isEmpty) return;
     try {
-      await playWordAudio(_currentWord);
+      await context.read<PlayerState>().playWord(_currentWord);
     } catch (e) {
       debugPrint('Audio playback error: $e');
     }
@@ -171,12 +171,12 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
         child: Column(
           children: [
             _buildNavBar(skin),
-            // 进度条
+            // 进度条（加粗到 4dp，更容易看到进度）
             LinearProgressIndicator(
               value: (_currentIndex + 1) / _totalWords,
               backgroundColor: skin.colors.divider,
               valueColor: AlwaysStoppedAnimation(skin.colors.accent),
-              minHeight: 3,
+              minHeight: 4,
             ),
             Expanded(
               child: Padding(

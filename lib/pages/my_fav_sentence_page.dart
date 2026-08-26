@@ -3,7 +3,8 @@
 // 移植自 v3.2 MyFavSentenceActivity
 import 'package:flutter/material.dart';
 
-import '../data/fav_sentence_dao.dart';
+import '../core/di/service_locator.dart';
+import '../repositories/fav_repository.dart';
 import '../models/sentence_models.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -32,7 +33,13 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final sentences = await FavSentenceDao.instance.loadAll();
+      final favRepo = sl<FavRepository>();
+      final sentencesData = await favRepo.getFavoriteSentences();
+      final sentences = sentencesData.map((s) => FavSentenceData(
+        wordId: s['wordId'] as int? ?? 0,
+        sentenceId: s['sentenceId'] as String? ?? '',
+        word: s['word'] as String? ?? '',
+      )).toList();
       if (mounted) {
         setState(() {
           _sentences = sentences;
@@ -368,7 +375,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     final sortedIndices = _selectedIndices.toList()..sort((a, b) => b.compareTo(a));
     for (final index in sortedIndices) {
       final favSentence = _sentences[index];
-      await FavSentenceDao.instance.removeFavSentence(
+      await sl<FavRepository>().removeFavoriteSentence(
         favSentence.wordId,
         favSentence.sentenceId,
       );

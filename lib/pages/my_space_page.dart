@@ -2,8 +2,9 @@
 // 已接入 SkinSystem 主题
 import 'package:flutter/material.dart';
 
-import '../data/app_preferences.dart';
+import '../core/di/service_locator.dart';
 import '../hooks/responsive.dart';
+import '../services/user_service.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import 'message_page.dart';
@@ -165,7 +166,7 @@ class MySpacePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppPreferences().getUserInfoSync().nickname,
+                    sl<UserService>().getUserInfoSyncBean().nickname,
                     style: MistralTypography.bodyMd.copyWith(color: skin.text2),
                   ),
                 ],
@@ -216,7 +217,7 @@ class MySpacePage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                AppPreferences().getUserInfoSync().nickname,
+                sl<UserService>().getUserInfoSyncBean().nickname,
                 style: MistralTypography.bodyMd.copyWith(color: skin.text2),
               ),
             ],
@@ -229,9 +230,27 @@ class MySpacePage extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: resp.isWide ? 24 : 20),
       children: [
-        _MenuItem(icon: Icons.palette_outlined, title: '外观 & 沉浸场景', subtitle: '主题、壁纸、字体', skin: skin),
-        _MenuItem(icon: Icons.school_outlined, title: '学习偏好', subtitle: '发音、节奏、题型', skin: skin),
-        _MenuItem(icon: Icons.tune, title: '更多设置', subtitle: '账号、通知、关于', skin: skin),
+        _MenuItem(
+          icon: Icons.palette_outlined,
+          title: '外观 & 沉浸场景',
+          subtitle: '主题、壁纸、字体',
+          skin: skin,
+          onTap: () => Navigator.pushNamed(context, '/appearance'),
+        ),
+        _MenuItem(
+          icon: Icons.school_outlined,
+          title: '学习偏好',
+          subtitle: '发音、节奏、题型',
+          skin: skin,
+          onTap: () => Navigator.pushNamed(context, '/settings'),
+        ),
+        _MenuItem(
+          icon: Icons.tune,
+          title: '更多设置',
+          subtitle: '账号、通知、关于',
+          skin: skin,
+          onTap: () => Navigator.pushNamed(context, '/more_settings'),
+        ),
       ],
     );
   }
@@ -243,7 +262,8 @@ class _MenuItem extends StatelessWidget {
   final String title;
   final String subtitle;
   final ThemeVars skin;
-  const _MenuItem({required this.icon, required this.title, required this.subtitle, required this.skin});
+  final VoidCallback? onTap;
+  const _MenuItem({required this.icon, required this.title, required this.subtitle, required this.skin, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -267,6 +287,7 @@ class _MenuItem extends StatelessWidget {
         title: Text(title, style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w500, color: skin.text1)),
         subtitle: Text(subtitle, style: MistralTypography.caption.copyWith(color: skin.text3)),
         trailing: Icon(Icons.chevron_right, color: skin.text3, size: 20),
+        onTap: onTap,
       ),
     );
   }

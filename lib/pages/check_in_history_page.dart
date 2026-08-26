@@ -2,9 +2,11 @@
 // 参考 Calendar Interactive UI Kit (Penpot) 设计模式
 // 路由：/check_in_history
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../core/di/service_locator.dart';
 import '../hooks/responsive.dart';
-import '../pages/scare_coin_history_page.dart' show ScareCoinLedger;
+import '../services/checkin_service.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/scale_down_on_press.dart';
@@ -67,8 +69,9 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
 
   Future<void> _refresh() async {
     try {
-      final dates = await ScareCoinLedger.checkinDates();
-      final streak = await ScareCoinLedger.streak();
+      final checkInService = sl<CheckInService>();
+      final dates = await checkInService.getCheckinDates();
+      final streak = await checkInService.getStreak();
       if (!mounted) return;
       setState(() {
         _checkedDates = dates;
@@ -665,7 +668,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '签到成功 +${ScareCoinLedger.checkInReward} 尖叫币',
+                            '签到成功 +${sl<CheckInService>().checkInReward} 尖叫币',
                             style: MistralTypography.caption.copyWith(color: skin.text3),
                           ),
                         ],
@@ -703,8 +706,8 @@ class _MonthSwitchArrow extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        width: 32,
-        height: 32,
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
           color: onTap != null
               ? skin.cardBgAlt

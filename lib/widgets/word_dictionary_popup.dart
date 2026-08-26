@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
-import '../data/wordbook_database.dart';
+import '../models/word.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -12,7 +12,7 @@ import '../tokens/func_colors.dart';
 
 /// 单词字典弹出框
 /// 显示：单词 + 音标 + 释义 + 例句 + 收藏按钮 + 查看详情入口
-class WordDictionaryPopup extends StatelessWidget {
+class WordDictionaryPopup extends StatefulWidget {
   final Word word;
   final VoidCallback? onViewDetail;
 
@@ -46,11 +46,18 @@ class WordDictionaryPopup extends StatelessWidget {
   }
 
   @override
+  State<WordDictionaryPopup> createState() => _WordDictionaryPopupState();
+}
+
+class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
+  bool _isExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final skin = context.skin;
     final state = context.watch<LearningState>();
-    final isFav = state.isFavorite(word.word);
-    final examples = ExampleParser.parse(word.example);
+    final isFav = state.isFavorite(widget.word.word);
+    final examples = ExampleParser.parse(widget.word.example);
 
     return GestureDetector(
       onTap: () {}, // 阻止点击穿透
@@ -74,8 +81,8 @@ class WordDictionaryPopup extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(state, isFav, skin),
-            if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) _buildPhonetics(skin),
-            if (word.interpret.isNotEmpty) _buildInterpret(skin),
+            if (widget.word.usPron.isNotEmpty || widget.word.ukPron.isNotEmpty) _buildPhonetics(skin),
+            if (widget.word.interpret.isNotEmpty) _buildInterpret(skin),
             if (examples.isNotEmpty) _buildExample(skin, examples.first),
             _buildDetailLink(context, skin),
           ],
@@ -93,7 +100,7 @@ class WordDictionaryPopup extends StatelessWidget {
           // 单词
           Expanded(
             child: Text(
-              word.word,
+              widget.word.word,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -110,7 +117,7 @@ class WordDictionaryPopup extends StatelessWidget {
             ),
             tooltip: isFav ? '取消收藏' : '收藏',
             onPressed: () async {
-              await state.toggleFavorite(word.word);
+              await state.toggleFavorite(widget.word.word);
             },
           ),
         ],
@@ -124,17 +131,17 @@ class WordDictionaryPopup extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
       child: Row(
         children: [
-          if (word.usPron.isNotEmpty) ...[
+          if (widget.word.usPron.isNotEmpty) ...[
             _PopupPhoneticPill(label: '美'),
             const SizedBox(width: 4),
-            Text('/${word.usPron}/',
+            Text('/${widget.word.usPron}/',
               style: TextStyle(fontSize: 13, color: skin.colors.text3)),
           ],
-          if (word.ukPron.isNotEmpty) ...[
+          if (widget.word.ukPron.isNotEmpty) ...[
             const SizedBox(width: 12),
             _PopupPhoneticPill(label: '英'),
             const SizedBox(width: 4),
-            Text('/${word.ukPron}/',
+            Text('/${widget.word.ukPron}/',
               style: TextStyle(fontSize: 13, color: skin.colors.text3)),
           ],
         ],
@@ -144,16 +151,32 @@ class WordDictionaryPopup extends StatelessWidget {
 
   /// 释义文本
   Widget _buildInterpret(dynamic skin) {
-    final meaningText = word.hasStructuredDefinitions
-        ? word.formattedDefinitions
-        : word.interpret;
+    final meaningText = widget.word.hasStructuredDefinitions
+        ? widget.word.formattedDefinitions
+        : widget.word.interpret;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-      child: Text(
-        meaningText,
-        style: TextStyle(fontSize: 15, color: skin.colors.text1, height: 1.5),
-        maxLines: 3,
-        overflow: TextOverflow.ellipsis,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            meaningText,
+            style: TextStyle(fontSize: 15, color: skin.colors.text1, height: 1.5),
+            maxLines: _isExpanded ? null : 3,
+            overflow: _isExpanded ? null : TextOverflow.ellipsis,
+          ),
+          if (meaningText.length > 80)
+            GestureDetector(
+              onTap: () => setState(() => _isExpanded = !_isExpanded),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  _isExpanded ? '收起' : '展开',
+                  style: TextStyle(fontSize: 13, color: skin.colors.accent),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -199,7 +222,7 @@ class WordDictionaryPopup extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pop(); // 先关闭弹窗
-        if (onViewDetail != null) onViewDetail!();
+        if (widget.onViewDetail != null) widget.onViewDetail!();
       },
       child: Container(
         width: double.infinity,

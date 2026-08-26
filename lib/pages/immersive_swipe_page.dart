@@ -2,9 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../engine/fsrs6_engine.dart';
+import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
-import '../state/learning_state.dart';
+import '../widgets/session_exit_guard.dart';
+import '../state/learn_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -25,7 +26,6 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
 
   int _knownCount = 0;
   int _unknownCount = 0;
-  bool _showingAnswer = false;
   bool _isDragging = false;
   double _dragOffset = 0;
 
@@ -62,7 +62,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
   }
 
   void _onVerticalDragEnd(DragEndDetails details) {
-    final state = context.read<LearningState>();
+    final state = context.read<LearnState>();
     final threshold = 100.0;
 
     if (_dragOffset < -threshold) {
@@ -70,7 +70,6 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
       _slideOut(Offset(0, -2), () {
         setState(() {
           _knownCount++;
-          _showingAnswer = false;
           _dragOffset = 0;
           _isDragging = false;
         });
@@ -81,7 +80,6 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
       _slideOut(Offset(0, 2), () {
         setState(() {
           _unknownCount++;
-          _showingAnswer = false;
           _dragOffset = 0;
           _isDragging = false;
         });
@@ -114,7 +112,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
   Widget build(BuildContext context) {
     final skin = context.skin;
     final resp = context.responsive;
-    final state = context.watch<LearningState>();
+    final state = context.watch<LearnState>();
     final word = state.currentWord;
 
     if (word == null) {
@@ -145,8 +143,8 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
       );
     }
 
-    return PopScope(
-      canPop: true,
+    return SessionExitGuard(
+      subject: '沉浸刷词',
       child: Scaffold(
       backgroundColor: skin.colors.pageBg,
       body: SafeArea(
@@ -180,7 +178,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
     );
   }
 
-  Widget _buildTopBar(SkinSystem skin, LearningState state) {
+  Widget _buildTopBar(SkinSystem skin, LearnState state) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -266,48 +264,23 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
                   style: MistralTypography.body.copyWith(color: skin.colors.text3),
                 ),
               const SizedBox(height: 24),
-              // 释义（点击显示/隐藏）
-              GestureDetector(
-                onTap: () => setState(() => _showingAnswer = !_showingAnswer),
-                child: AnimatedCrossFade(
-                  duration: const Duration(milliseconds: 200),
-                  firstChild: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: skin.colors.accent.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.touch_app, color: skin.colors.accent, size: 18),
-                        const SizedBox(width: 8),
-                        Text('点击查看释义',
-                          style: MistralTypography.body.copyWith(color: skin.colors.accent)),
-                      ],
-                    ),
+              // 释义（始终显示，不再需要点击揭示 — 避免破坏"认识/不认识"体验）
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: skin.colors.cardBgAlt,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  word.hasStructuredDefinitions
+                      ? word.formattedDefinitions
+                      : word.cleanInterpret,
+                  style: MistralTypography.body.copyWith(
+                    color: skin.colors.text1,
+                    height: 1.5,
                   ),
-                  secondChild: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: skin.colors.cardBgAlt,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      word.hasStructuredDefinitions
-                          ? word.formattedDefinitions
-                          : word.cleanInterpret,
-                      style: MistralTypography.body.copyWith(
-                        color: skin.colors.text1,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  crossFadeState: _showingAnswer
-                      ? CrossFadeState.showSecond
-                      : CrossFadeState.showFirst,
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],

@@ -4,7 +4,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import '../data/wordbook_database.dart';
+import '../core/di/service_locator.dart';
+import '../models/word.dart';
+import '../repositories/word_repository.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../tokens/func_colors.dart';
@@ -98,7 +100,8 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
     setState(() => _isLoading = true);
     try {
       // 加载高频词汇（按词频排序）
-      final words = await WordBookDatabase.instance.searchWords('', limit: 200);
+      final wordRepo = sl<WordRepository>();
+      final words = await wordRepo.searchWords('');
       // 按词频排序（模拟高频词优先）
       words.sort((a, b) => b.id.compareTo(a.id)); // 用ID模拟词频
       setState(() {

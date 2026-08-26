@@ -5,6 +5,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/di/service_locator.dart';
+import '../repositories/book_repository.dart';
 import '../state/learning_state.dart';
 import '../models/word.dart';
 import '../theme/skin_system.dart';
@@ -34,12 +36,22 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
   final List<ExamPhraseGroup> _phraseGroups = [];
   List<ExamPhraseGroup> _availableGroups = [];
 
-  /// 词书内容页主操作：直接开始学习当前词书
+  /// 词书内容页主操作：加载当前词书后开始学习
   @override
   Widget? get learningFab => SbFab(
         icon: Icons.play_arrow_rounded,
         label: '开始学习',
-        onTap: () => Navigator.pushNamed(context, LearnPage.routeName),
+        onTap: () async {
+          final state = context.read<LearningState>();
+          final bookRepo = sl<BookRepository>();
+          final books = await bookRepo.getBooks();
+          final book = books.where((b) => b.id == widget.bookId).firstOrNull;
+          if (book == null) return;
+          await state.loadBook(book, shuffle: true);
+          if (context.mounted) {
+            Navigator.pushNamed(context, LearnPage.routeName);
+          }
+        },
       );
 
   @override
@@ -184,58 +196,58 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
   }
 
   Widget _buildWordListSliver(SkinSystem skin) {
-    // 访问基类的 _words 列表
-    // 由于基类的 _words 是私有的，我们需要通过 loadWords 重新加载
-    return FutureBuilder<List<Word>>(
-      future: loadWords(context.read<LearningState>()),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-        final words = snapshot.data!;
-        if (words.isEmpty) {
-          return SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.inbox_outlined, size: 64, color: skin.colors.text3),
-                  const SizedBox(height: 16),
-                  Text('暂无单词', style: TextStyle(color: skin.colors.text3)),
-                ],
+    // 使用基类已加载的单词列表，避免重复加载
+    if (isLoading) {
+      return const SliverFillRemaining(
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    final words = this.words;
+    if (words.isEmpty) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.inbox_outlined, size: 64, color: skin.colors.text3),
+              const SizedBox(height: 16),
+              Text('暂无单词', style: TextStyle(color: skin.colors.text3)),
+              const SizedBox(height: 16),
+              TextButton.icon(
+                onPressed: () => refreshData(),
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('刷新'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final word = words[index];
+          return ListTile(
+            title: Text(
+              word.word,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: skin.colors.text1,
               ),
             ),
+            subtitle: word.usPron.isNotEmpty
+                ? Text(
+                    '/${word.usPron}/',
+                    style: TextStyle(fontSize: 13, color: skin.colors.text3),
+                  )
+                : null,
+            trailing: Icon(Icons.chevron_right, color: skin.colors.text3),
+            onTap: () => Navigator.pushNamed(context, '/word_detail', arguments: word),
           );
-        }
-        return SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final word = words[index];
-              return ListTile(
-                title: Text(
-                  word.word,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: skin.colors.text1,
-                  ),
-                ),
-                subtitle: word.usPron.isNotEmpty
-                    ? Text(
-                        '/${word.usPron}/',
-                        style: TextStyle(fontSize: 13, color: skin.colors.text3),
-                      )
-                    : null,
-                trailing: Icon(Icons.chevron_right, color: skin.colors.text3),
-                onTap: () => Navigator.pushNamed(context, '/word_detail', arguments: word),
-              );
-            },
-            childCount: words.length,
-          ),
-        );
-      },
+        },
+        childCount: words.length,
+      ),
     );
   }
 }

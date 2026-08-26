@@ -467,7 +467,9 @@ class _CreateActivityButton extends StatelessWidget {
       height: 52,
       child: ElevatedButton(
         onPressed: () {
-          // TODO: 创建班级活动
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('创建班级活动功能开发中...'), duration: Duration(seconds: 1)),
+          );
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: skin.accent,

@@ -4,7 +4,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../data/wordbook_database.dart';
+// wordbook_database.dart removed - not used in this file
+import '../models/word.dart';
 import '../hooks/responsive.dart';
 import '../player/system_tts.dart';
 import '../theme/skin_system.dart';

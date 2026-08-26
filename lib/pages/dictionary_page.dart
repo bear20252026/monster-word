@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
-import '../data/wordbook_database.dart';
-import '../player/audio_players.dart';
+import '../models/word.dart';
+import '../state/player_state.dart';
 import '../services/dictionary_service.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -153,11 +153,13 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
   }
 
   Widget _buildCETTags(ThemeVars skin) {
+    // 根据单词长度简单分类（后续可从 Word 模型获取真实等级）
+    final wordLen = widget.word.word?.length ?? 0;
+    final label = wordLen <= 4 ? '基础' : wordLen <= 8 ? '核心' : '进阶';
+    final color = wordLen <= 4 ? MistralColors.success : wordLen <= 8 ? skin.accent : MistralColors.warning;
     return Row(
       children: [
-        _buildTag('CET4', skin.accent, skin),
-        const SizedBox(width: AppSpacing.xs),
-        _buildTag('四级', MistralColors.success, skin),
+        _buildTag(label, color, skin),
       ],
     );
   }
@@ -294,8 +296,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        SizedBox(
-          height: 300,
+        Expanded(
           child: TabBarView(
             controller: _tabController,
             children: [
@@ -323,12 +324,23 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '柯林斯释义',
-            style: MistralTypography.bodyMd.copyWith(
-              color: skin.text1,
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '柯林斯释义',
+                  style: MistralTypography.bodyMd.copyWith(
+                    color: skin.text1,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.refresh, size: 18, color: skin.text3),
+                tooltip: '刷新',
+                onPressed: () => setState(() {}),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -430,6 +442,20 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
           );
         }
 
+        if (snapshot.hasError) {
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: skin.cardBg,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(color: skin.divider, width: 0.5),
+            ),
+            child: Center(
+              child: Text('加载失败', style: TextStyle(color: skin.text3)),
+            ),
+          );
+        }
+
         final derived = snapshot.data ?? [];
         if (derived.isEmpty) {
           return Container(
@@ -522,6 +548,20 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             ),
             child: const Center(
               child: CircularProgressIndicator(color: MistralColors.white54),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: skin.cardBg,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(color: skin.divider, width: 0.5),
+            ),
+            child: Center(
+              child: Text('加载失败', style: TextStyle(color: skin.text3)),
             ),
           );
         }
@@ -694,8 +734,8 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
 
   Future<void> _playAudio(String word) async {
     try {
-      // 使用 PhoneticAudioPlayer（带缓存）
-      await playWordAudio(word);
+      // 使用 PlayerState 播放音频
+      await context.read<PlayerState>().playWord(word);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

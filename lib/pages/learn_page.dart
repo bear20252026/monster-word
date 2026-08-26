@@ -6,11 +6,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../engine/fsrs6_engine.dart';
-
+import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
-import '../player/audio_players.dart';
-import '../state/learning_state.dart';
+import '../state/learn_state.dart';
+import '../state/player_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../tokens/star_gold.dart';
@@ -35,8 +34,8 @@ class _LearnPageState extends State<LearnPage> {
     if (_audioLoading) return;
     setState(() => _audioLoading = true);
     try {
-      // 使用 PhoneticAudioPlayer（带缓存）
-      await playWordAudio(word);
+      // 使用 PlayerState 播放音频
+      await context.read<PlayerState>().playWord(word);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -53,7 +52,7 @@ class _LearnPageState extends State<LearnPage> {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final resp = context.responsive;
-    final state = context.watch<LearningState>();
+    final state = context.watch<LearnState>();
     final word = state.currentWord;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -105,7 +104,7 @@ class _LearnPageState extends State<LearnPage> {
 /// 顶部导航栏（batch4c: 白色→token 颜色）
 class _TopBar extends StatelessWidget {
   final SkinSystem skin;
-  final LearningState state;
+  final LearnState state;
   const _TopBar({required this.skin, required this.state});
 
   @override
@@ -122,6 +121,7 @@ class _TopBar extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             color: colors.text1,
+            tooltip: '返回',
             onPressed: () => Navigator.pop(context),
           ),
           Text('${state.currentIndex + 1}/${state.total}',
@@ -370,7 +370,7 @@ class _WordArea extends StatelessWidget {
 /// 下半：4选1 选错标红重选，选对标绿进字典详情页（batch4c: 星巴克样式）
 class _QuizArea extends StatefulWidget {
   final dynamic word;
-  final LearningState state;
+  final LearnState state;
   final SkinSystem skin;
   const _QuizArea({required this.word, required this.state, required this.skin});
 
@@ -444,14 +444,15 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     if (isCorrect) {
       // P1b+P2b: 记录答对索引，驱动绿色确认态 + 弹跳 + 对勾
       // 注意：不调用 rate() 推进状态，等详情页"下一词"按钮推进
-      setState(() => _correctIndex = i);
+      setState(() {
+        _correctIndex = i;
+        _wrongIndex = -1; // 答对时清除错误标记
+      });
       _bounceController.forward(from: 0);
       _checkController.forward(from: 0);
       // 触发彩带庆祝效果
       _confettiController.play();
-      Future.delayed(const Duration(milliseconds: 400), () {
-        if (mounted) Navigator.pushNamed(context, '/word_detail');
-      });
+      // 不自动跳转，等用户点击"查看详解"按钮
     } else {
       // 选错：标红 + 抖动反馈，继续重选
       setState(() => _wrongIndex = i);

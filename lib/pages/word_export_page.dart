@@ -6,8 +6,10 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../data/wordbook_database.dart';
+import '../core/di/service_locator.dart';
 import '../hooks/responsive.dart';
+import '../models/word.dart';
+import '../repositories/word_repository.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';

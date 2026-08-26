@@ -7,9 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
-import '../engine/fsrs6_engine.dart';
+import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
-import '../state/learning_state.dart';
+import '../models/word.dart';
+import '../pages/word_detail_page.dart';
+import '../state/learn_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/animations.dart';
@@ -30,9 +32,6 @@ class _LearnSessionState extends State<LearnSession>
   int _selectedTab = 0;
 
   static const _tabs = ['派生', '词组搭配', '词根', '笔记', '近义'];
-
-  // FSRS-6 引擎（用于显示记忆状态）
-  final Fsrs6Engine _fsrsEngine = Fsrs6Engine();
 
   // Card page view (PageView with spring physics)
   late PageController _pageController;
@@ -71,7 +70,7 @@ class _LearnSessionState extends State<LearnSession>
   Widget build(BuildContext context) {
     final skin = context.skin;
     final resp = context.responsive;
-    final state = context.watch<LearningState>();
+    final state = context.watch<LearnState>();
     final word = state.currentWord;
 
     if (word == null) {
@@ -121,7 +120,9 @@ class _LearnSessionState extends State<LearnSession>
                                     context,
                                     w,
                                     onViewDetail: () {
-                                      Navigator.pushNamed(context, '/word_detail');
+                                      Navigator.push(context, MaterialPageRoute(
+                                        builder: (_) => WordDetailPage(fromLearn: true),
+                                      ));
                                     },
                                   );
                                 },
@@ -231,6 +232,8 @@ class _LearnSessionState extends State<LearnSession>
                   ),
                   // SegmentTabs（原版 派生/词组搭配/词根/近义）
                   _buildSegmentTabs(skin),
+                  // Tab 内容区域（根据选中 tab 显示不同内容）
+                  if (word != null) _buildTabContent(skin, word),
                   // 底部按钮（原版 下一词 + 记错了 + 重学）— 弹性滑入动画
                   SlideTransition(
                     position: _bottomBarAnim,
@@ -247,7 +250,7 @@ class _LearnSessionState extends State<LearnSession>
   }
 
   /// 透明导航栏（原版 nav_transparent）
-  Widget _buildNav(SkinSystem skin, LearningState state) {
+  Widget _buildNav(SkinSystem skin, LearnState state) {
     final word = state.currentWord;
     final isFav = word != null && state.isFavorite(word.word);
     final isMastered = word != null && state.isMastered(word.word);
@@ -290,21 +293,6 @@ class _LearnSessionState extends State<LearnSession>
                     if (mounted) setState(() {});
                   },
           ),
-          // abc 拼写按钮
-          IconButton(
-            icon: Text('abc',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: skin.colors.onGlassText2,
-              )),
-            tooltip: '拼写',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('拼写功能开发中...'), duration: Duration(seconds: 1)),
-              );
-            },
-          ),
           // 熟（标记已掌握）
           IconButton(
             icon: Text('熟',
@@ -324,16 +312,6 @@ class _LearnSessionState extends State<LearnSession>
           // FSRS 记忆状态指示器
           if (word != null)
             _buildFsrsIndicator(context, word.word, skin),
-          // 更多按钮
-          IconButton(
-            icon: Icon(Icons.more_horiz, color: skin.colors.onGlassText2, size: 20),
-            tooltip: '更多',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('更多操作开发中...'), duration: Duration(seconds: 1)),
-              );
-            },
-          ),
         ],
       ),
     );
@@ -428,8 +406,68 @@ class _LearnSessionState extends State<LearnSession>
     );
   }
 
+  /// Tab 内容区域（根据选中 tab 显示不同内容）
+  Widget _buildTabContent(SkinSystem skin, Word word) {
+    final content = switch (_selectedTab) {
+      0 => _buildDerivativeContent(skin, word),
+      1 => _buildPhraseContent(skin, word),
+      2 => _buildRootContent(skin, word),
+      3 => _buildSynonymContent(skin, word),
+      _ => const SizedBox.shrink(),
+    };
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      child: Padding(
+        key: ValueKey(_selectedTab),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+        child: content,
+      ),
+    );
+  }
+
+  Widget _buildDerivativeContent(SkinSystem skin, Word word) {
+    // TODO: 从词典数据库获取派生词
+    return _buildPlaceholderTab(skin, '派生词', '暂无派生词数据');
+  }
+
+  Widget _buildPhraseContent(SkinSystem skin, Word word) {
+    // TODO: 从词典数据库获取词组搭配
+    return _buildPlaceholderTab(skin, '词组搭配', '暂无词组数据');
+  }
+
+  Widget _buildRootContent(SkinSystem skin, Word word) {
+    // TODO: 从词典数据库获取词根信息
+    return _buildPlaceholderTab(skin, '词根词缀', '暂无词根数据');
+  }
+
+  Widget _buildSynonymContent(SkinSystem skin, Word word) {
+    // TODO: 从词典数据库获取近义词
+    return _buildPlaceholderTab(skin, '近义词', '暂无近义词数据');
+  }
+
+  Widget _buildPlaceholderTab(SkinSystem skin, String title, String message) {
+    return Container(
+      key: const ValueKey('tab_content'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: skin.colors.glassBg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(title, style: TextStyle(color: skin.colors.onGlassText2, fontSize: 12)),
+          const SizedBox(height: 8),
+          Text(message, style: TextStyle(color: skin.colors.onGlassText2.withValues(alpha: 0.6), fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
   /// 底部单按钮「下一词」+ 绿色下划线（原版样式）
-  Widget _buildBottomActions(SkinSystem skin, LearningState state) {
+  Widget _buildBottomActions(SkinSystem skin, LearnState state) {
     final resp = context.responsive;
     return SlideTransition(
       position: _bottomBarAnim,
@@ -440,42 +478,81 @@ class _LearnSessionState extends State<LearnSession>
           resp.horizontalPadding,
           16,
         ),
-        child: Center(
-          child: GestureDetector(
-            onTap: () {
-              state.rate(FsrsRating.good);
-              if (_pageController.hasClients) {
-                _pageController.animateToPage(
-                  state.currentIndex,
-                  duration: const Duration(milliseconds: 300),
-                  curve: standardCurve,
-                );
-              }
-              setState(() {});
-            },
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '下一词',
-                  style: AppTypography.body.copyWith(
-                    color: skin.colors.onGlassText1,
-                    fontSize: 18 * resp.fontScale,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // "不认识"按钮
+            GestureDetector(
+              onTap: () {
+                state.rate(FsrsRating.again);
+                if (_pageController.hasClients) {
+                  _pageController.animateToPage(
+                    state.currentIndex,
+                    duration: const Duration(milliseconds: 300),
+                    curve: standardCurve,
+                  );
+                }
+                setState(() {});
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '不认识',
+                    style: AppTypography.body.copyWith(
+                      color: MistralColors.danger.withValues(alpha: 0.8),
+                      fontSize: 16 * resp.fontScale,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                // 绿色下划线（原版签名元素）
-                Container(
-                  width: 32,
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: skin.colors.success,
-                    borderRadius: BorderRadius.circular(1.5),
+                  const SizedBox(height: 2),
+                  Text(
+                    '再次复习',
+                    style: AppTypography.caption.copyWith(
+                      color: skin.colors.onGlassText2,
+                      fontSize: 11 * resp.fontScale,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+            SizedBox(width: resp.isWide ? 48 : 32),
+            // "下一词"按钮（认识）
+            GestureDetector(
+              onTap: () {
+                state.rate(FsrsRating.good);
+                if (_pageController.hasClients) {
+                  _pageController.animateToPage(
+                    state.currentIndex,
+                    duration: const Duration(milliseconds: 300),
+                    curve: standardCurve,
+                  );
+                }
+                setState(() {});
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '认识',
+                    style: AppTypography.body.copyWith(
+                      color: skin.colors.onGlassText1,
+                      fontSize: 18 * resp.fontScale,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '已掌握',
+                    style: AppTypography.caption.copyWith(
+                      color: skin.colors.onGlassText2,
+                      fontSize: 11 * resp.fontScale,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -504,7 +581,7 @@ class _LearnSessionState extends State<LearnSession>
 
   /// FSRS 记忆状态指示器（显示当前单词的记忆状态）
   Widget _buildFsrsIndicator(BuildContext context, String word, SkinSystem skin) {
-    final state = context.read<LearningState>();
+    final state = context.read<LearnState>();
     final card = state.getCard(word);
     if (card == null || card.isNew) {
       return const SizedBox.shrink();
@@ -519,7 +596,7 @@ class _LearnSessionState extends State<LearnSession>
                 ? Colors.blue
                 : Colors.green;
     return Tooltip(
-      message: '记忆状态: ${_fsrsEngine.getStatusText(card)} · 难度: ${_fsrsEngine.getDifficultyText(card)}',
+      message: '记忆状态: ${state.getStatusText(card)} · 难度: ${state.getDifficultyText(card)}',
       child: Container(
         width: 8,
         height: 8,
@@ -748,10 +825,10 @@ class _DerivedWordItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 单词
-          SizedBox(
-            width: 100,
+          Flexible(
             child: Text(
               derivedWord.word,
+              overflow: TextOverflow.ellipsis,
               style: AppTypography.body.copyWith(
                 color: skin.colors.accent,
                 fontWeight: FontWeight.w500,

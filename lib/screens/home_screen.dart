@@ -3,7 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/wordbook_database.dart';
+import '../core/di/service_locator.dart';
+import '../repositories/book_repository.dart';
 import '../hooks/responsive.dart';
 import '../pages/learn_page.dart';
 import '../pages/lib_select_page.dart';
@@ -143,7 +144,8 @@ class HomeScreen extends StatelessWidget {
       return;
     }
     // 否则加载第一本书
-    final books = await WordBookDatabase.instance.getBooks();
+    final bookRepo = sl<BookRepository>();
+    final books = await bookRepo.getBooks();
     if (books.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -280,7 +282,7 @@ class HomeScreen extends StatelessWidget {
             child: ScaleDownOnPress(
               onTap: () => _showCheckInSheet(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(colors: [
                     AppColors.highlightOrange,

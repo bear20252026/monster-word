@@ -6,7 +6,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/wordbook_database.dart';
+import '../core/di/service_locator.dart';
+import '../models/book.dart';
+import '../repositories/book_repository.dart';
 import '../hooks/responsive.dart';
 import '../pages/dictation_session_page.dart';
 import '../pages/quick_spell_page.dart';
@@ -45,7 +47,8 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   Future<List<Book>> _load() async {
-    final books = await WordBookDatabase.instance.getBooks();
+    final bookRepo = sl<BookRepository>();
+    final books = await bookRepo.getBooks();
     _allBooks = books;
     return books;
   }
@@ -553,15 +556,21 @@ class _LibItem extends StatelessWidget {
 
     return GestureDetector(
       onTap: () async {
-        await state.loadBook(book, limit: 50);
-        if (context.mounted) {
-          // 选择词书后先展开词书内容（单词列表，带返回键），
-          // 由用户在列表页点「开始学习」进入学习流程
-          Navigator.pushNamed(
-            context,
-            BookWordsPage.routeName,
-            arguments: {'bookId': book.id, 'bookName': book.name},
-          );
+        try {
+          await state.loadBook(book, limit: 50);
+          if (context.mounted) {
+            Navigator.pushNamed(
+              context,
+              BookWordsPage.routeName,
+              arguments: {'bookId': book.id, 'bookName': book.name},
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('加载词书失败: $e')),
+            );
+          }
         }
       },
       child: Container(
@@ -678,7 +687,7 @@ class _BottomToolItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.skin.colors;
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),

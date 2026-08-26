@@ -5,20 +5,23 @@
 // 翻译自 Figma 03a-screens-learning.json review_session
 import 'package:flutter/material.dart';
 
+import '../core/di/service_locator.dart';
 import '../data/example_parser.dart';
-import '../data/wordbook_database.dart';
 import 'package:provider/provider.dart';
-import '../engine/core_engine.dart';
-import '../engine/fsrs6_engine.dart' show FsrsRating;
-import '../engine/srs_engine.dart';
+import '../engine/core_engine.dart' show WordChoicePair;
 import '../engine/super_memory_engine.dart';
+import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
+import '../repositories/word_repository.dart';
 import '../models/bb_word_process.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/scale_down_on_press.dart';
 import '../widgets/session_exit_guard.dart';
+
+/// 兼容性别名：RecallRating = FsrsRating
+typedef RecallRating = FsrsRating;
 
 class ReviewSession extends StatefulWidget {
   const ReviewSession({super.key});
@@ -45,7 +48,7 @@ class _ReviewSessionState extends State<ReviewSession> {
 
   Future<void> _initReview() async {
     final dueWords = <BBWordProcess>[];
-    final sample = await WordBookDatabase.instance.searchWords('a', limit: 20);
+    final sample = await sl<WordRepository>().searchWords('a', limit: 20);
     for (final w in sample) {
       dueWords.add(BBWordProcess(
         word: w.word, wordId: w.id, interpret: w.interpret,
@@ -144,8 +147,8 @@ class _ReviewSessionState extends State<ReviewSession> {
                       ? _buildAnswer(word, skin, resp)
                       : _buildQuiz(word, skin, resp),
                 ),
-                // 底部下划线三键
-                _buildVerdictRow(skin),
+                // 底部下划线三键（仅在显示答案后显示）
+                if (_showAnswer) _buildVerdictRow(skin),
               ],
             ),
           ),
@@ -292,6 +295,7 @@ class _ReviewSessionState extends State<ReviewSession> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(word.word,
+              overflow: TextOverflow.ellipsis,
               style: AppTypography.heroWord.copyWith(
                   fontSize: resp.heroFontSize, color: skin.colors.onGlassText1)),
           const SizedBox(height: 16),
@@ -320,11 +324,13 @@ class _ReviewSessionState extends State<ReviewSession> {
       ),
       child: Row(
         children: [
-          Expanded(child: _verdictBtn('认识', skin.colors.teal, () => _rate(RecallRating.good), skin)),
-          const SizedBox(width: 12), // P6: 触控审计 P0 三键间距
-          Expanded(child: _verdictBtn('模糊', skin.colors.accent, () => _rate(RecallRating.hard), skin)),
-          const SizedBox(width: 12), // P6: 触控审计 P0 三键间距
           Expanded(child: _verdictBtn('忘记了', skin.colors.danger, () => _rate(RecallRating.again), skin)),
+          const SizedBox(width: 8),
+          Expanded(child: _verdictBtn('模糊', skin.colors.accent, () => _rate(RecallRating.hard), skin)),
+          const SizedBox(width: 8),
+          Expanded(child: _verdictBtn('认识', skin.colors.teal, () => _rate(RecallRating.good), skin)),
+          const SizedBox(width: 8),
+          Expanded(child: _verdictBtn('太简单', skin.colors.success, () => _rate(RecallRating.easy), skin)),
         ],
       ),
     );

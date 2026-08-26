@@ -88,7 +88,30 @@ class _UserItemModifyPageState extends State<UserItemModifyPage> {
       child: Row(
         children: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () async {
+              // 如果有未保存的修改，弹出确认框
+              if (_controller.text.trim() != (widget.initialValue ?? '')) {
+                final discard = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('放弃修改？'),
+                    content: const Text('您有未保存的修改，确定要放弃吗？'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('继续编辑'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('放弃'),
+                      ),
+                    ],
+                  ),
+                );
+                if (discard != true) return;
+              }
+              if (context.mounted) Navigator.pop(context);
+            },
             child: Text('取消', style: TextStyle(color: skin.colors.text3)),
           ),
           const Spacer(),

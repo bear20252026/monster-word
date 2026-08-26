@@ -210,8 +210,9 @@ class _LearnReviewBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(AppDimens.radiusNormal),
       child: Container(
         height: 70,
         decoration: BoxDecoration(
@@ -263,7 +264,7 @@ class _HomeIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

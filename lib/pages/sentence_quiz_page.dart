@@ -52,6 +52,12 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
     if (_showAnswer) return;
     setState(() {
       _selectedIdx = idx;
+    });
+  }
+
+  void _confirmAnswer() {
+    if (_selectedIdx == null) return;
+    setState(() {
       _showAnswer = true;
     });
   }
@@ -395,7 +401,9 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
         width: double.infinity,
         height: 48,
         child: ElevatedButton(
-          onPressed: _showAnswer ? _next : null,
+          onPressed: _showAnswer
+              ? _next
+              : (_selectedIdx != null ? _confirmAnswer : null),
           style: ElevatedButton.styleFrom(
             backgroundColor: skin.colors.accent,
             foregroundColor: Colors.white,
@@ -405,7 +413,9 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
             elevation: 0,
           ),
           child: Text(
-            _currentIdx < _quizItems.length - 1 ? '下一题' : '完成测验',
+            _showAnswer
+                ? (_currentIdx < _quizItems.length - 1 ? '下一题' : '完成测验')
+                : '确认选择',
             style: MistralTypography.body.copyWith(color: Colors.white),
           ),
         ),

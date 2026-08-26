@@ -2,7 +2,8 @@
 // batch4a 改造：金色渐变→奶油纯色，硬编码→token，卡片→SbCard
 import 'package:flutter/material.dart';
 
-import '../data/app_preferences.dart';
+import '../core/di/service_locator.dart';
+import '../services/user_service.dart';
 import '../hooks/responsive.dart';
 import '../pages/appearance_page.dart';
 import '../pages/more_settings_page.dart';
@@ -110,7 +111,7 @@ class ProfileScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppPreferences().getUserInfoSync().nickname,
+                          sl<UserService>().getUserInfoSyncBean().nickname,
                           style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
                         ),
                         const SizedBox(height: 4),
@@ -129,7 +130,7 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     // 用户 ID（用户可自定义）
                     Text(
-                      AppPreferences().getUserInfoSync().nickname,
+                      sl<UserService>().getUserInfoSyncBean().nickname,
                       style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
                     ),
                   ],

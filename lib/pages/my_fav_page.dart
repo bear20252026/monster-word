@@ -35,7 +35,7 @@ class _MyFavPageState extends State<MyFavPage> {
     final words = await state.getFavoriteWords();
     if (mounted) {
       setState(() {
-        _words = words;
+        _words = words.cast<Word>();
         _isLoading = false;
       });
     }
@@ -140,6 +140,7 @@ class _MyFavPageState extends State<MyFavPage> {
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             color: skin.colors.text1,
+            tooltip: '返回',
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
@@ -203,6 +204,12 @@ class _MyFavPageState extends State<MyFavPage> {
           Text(
             '学习时点击 ❤️ 收藏单词',
             style: MistralTypography.body.copyWith(color: skin.colors.text3),
+          ),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: _loadData,
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text('刷新'),
           ),
         ],
       ),

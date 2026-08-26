@@ -1,30 +1,38 @@
-// 由账号4生成
-// Monster Word App 入口：接入新设计系统（SkinProvider + MainShell + 三主题）
+// 由账号4 生成 | Monster Word App 入口
+// 架构：AppRouter 集中路由 + DI (service_locator) + MultiProvider (ViewModels)
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
-import 'data/wordbook_database.dart';
+import 'core/di/service_locator.dart';
+import 'data/app_preferences.dart';
+import 'data/wordbook_database.dart' hide Book, Word;
 import 'data/user_database.dart';
-import 'player/audio_players.dart';
-import 'utils/screen_utils.dart';
+import 'models/book.dart';
+import 'models/word.dart';
 import 'pages/account_info_page.dart';
+import 'pages/appearance_page.dart';
+import 'pages/book_words_page.dart';
+import 'pages/check_in_history_page.dart';
+import 'pages/courses_page.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/dictation_session_page.dart';
 import 'pages/extensive_model_select_page.dart';
 import 'pages/feedback_page.dart';
 import 'pages/foot_mark_page.dart';
 import 'pages/help_page.dart';
+import 'pages/immersive_swipe_page.dart';
 import 'pages/learn_page.dart';
-import 'pages/lib_select_page.dart';
-import 'pages/listening_player_page.dart';
-import 'pages/book_words_page.dart';
 import 'pages/linked_me_middle_page.dart';
+import 'pages/lib_select_page.dart';
 import 'pages/list_word_listen_page.dart';
+import 'pages/listening_player_page.dart';
 import 'pages/login_page.dart';
 import 'pages/mastered_words_page.dart';
 import 'pages/message_page.dart';
+import 'pages/more_settings_page.dart';
+import 'pages/my_content_page.dart';
 import 'pages/my_equip_page.dart';
 import 'pages/my_fav_page.dart';
 import 'pages/my_fav_sentence_page.dart';
@@ -35,37 +43,38 @@ import 'pages/new_words_page.dart';
 import 'pages/not_learned_words_page.dart';
 import 'pages/personal_stereo_page.dart';
 import 'pages/play_order_page.dart';
+import 'pages/quick_spell_page.dart';
+import 'pages/redemption_center_page.dart';
 import 'pages/review_page.dart';
 import 'pages/reviewing_words_page.dart';
 import 'pages/scare_coin_history_page.dart';
 import 'pages/search_page.dart';
 import 'pages/sentence_detail_page.dart';
 import 'pages/sentence_quiz_page.dart';
-import 'pages/immersive_swipe_page.dart';
-import 'pages/appearance_page.dart';
-import 'pages/more_settings_page.dart';
-import 'pages/word_machine_page.dart';
-import 'pages/my_content_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/spell_check_page.dart';
 import 'pages/spell_session_page.dart';
-import 'pages/check_in_history_page.dart';
 import 'pages/splash_page.dart';
 import 'pages/ui_theme_select_page.dart';
 import 'pages/user_info_manage_page.dart';
 import 'pages/word_detail_page.dart';
 import 'pages/word_export_page.dart';
-import 'pages/quick_spell_page.dart';
-import 'pages/redemption_center_page.dart';
+import 'pages/word_machine_page.dart';
+import 'player/audio_players.dart';
 import 'screens/home_screen.dart';
 import 'screens/learn_session.dart';
 import 'screens/profile_screen.dart';
 import 'screens/review_session.dart';
 import 'shell/main_shell.dart';
+import 'state/learn_state.dart';
 import 'state/learning_state.dart';
+import 'state/player_state.dart';
+import 'state/review_state.dart';
+import 'state/settings_state.dart';
+import 'state/user_stats_state.dart';
 import 'state/wallpaper_state.dart';
 import 'theme/skin_system.dart';
-import 'data/app_preferences.dart';
+import 'utils/screen_utils.dart';
 import 'widgets/adaptive_scale.dart';
 import 'widgets/fluid_cursor.dart';
 import 'widgets/transition_widgets.dart';
@@ -103,6 +112,9 @@ Future<void> main() async {
 
   // 初始化移动端音频会话（确保手机发音功能正常）
   await initMobileAudioSession();
+
+  // 初始化依赖注入容器
+  setupServiceLocator();
 
   runApp(const WordApp());
 }
@@ -169,6 +181,8 @@ class _FriendlyErrorPage extends StatelessWidget {
   }
 }
 
+// _friendlyErrorPage 已迁移到 AppRouter
+
 class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
   @override
   void initState() {
@@ -198,7 +212,15 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // 旧状态（兼容期，逐步迁移到下方新 ViewModel）
         ChangeNotifierProvider(create: (_) => LearningState()),
+        // 新 ViewModel 层
+        ChangeNotifierProvider(create: (_) => sl<LearnState>()),
+        ChangeNotifierProvider(create: (_) => sl<ReviewState>()),
+        ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
+        ChangeNotifierProvider(create: (_) => sl<SettingsState>()),
+        ChangeNotifierProvider(create: (_) => sl<PlayerState>()),
+        // 主题与壁纸
         ChangeNotifierProvider(create: (_) => SkinSystem()),
         ChangeNotifierProvider(create: (_) => WallpaperState()),
       ],
@@ -279,23 +301,77 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
     );
   }
 
+  /// 默认 Tab 配置
+  static final List<TabDef> _defaultTabs = [
+    TabDef(id: 'home', label: '首页', icon: Icons.home_outlined, builder: (_) => const HomeScreen()),
+    TabDef(id: 'profile', label: '我的', icon: Icons.person_outline, builder: (_) => const ProfileScreen()),
+  ];
+
+  /// 路由参数缺失时返回友好的错误页，而非 SplashPage
+  static Widget _friendlyErrorPage(String routeName, String message) {
+    return Material(
+      color: const Color(0xFFF7F4EF),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.warning_amber_rounded, size: 56, color: Color(0xFFB0885A)),
+              const SizedBox(height: 16),
+              Text(
+                '无法打开 $routeName',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3D3630)),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, color: Color(0xFF8A8078)),
+              ),
+              const SizedBox(height: 24),
+              Builder(
+                builder: (ctx) => ElevatedButton.icon(
+                  onPressed: () {
+                    final nav = Navigator.of(ctx);
+                    if (nav.canPop()) {
+                      nav.pop();
+                    } else {
+                      nav.popUntil((r) => r.isFirst);
+                    }
+                  },
+                  icon: const Icon(Icons.home_outlined, size: 18),
+                  label: const Text('返回首页'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF006241),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   /// 根据路由名称构建页面
   static Widget? _buildPage(RouteSettings settings) {
     final name = settings.name;
     final args = settings.arguments;
     switch (name) {
+      case '/': return MainShell(tabs: _defaultTabs);
+      case '/home': return const HomeScreen();
       case '/learn': return const LearnPage();
       case '/lib_select': return const LibSelectPage();
       case '/book_words':
-        // 词书内容页：从路由参数取词书信息（选择词书后展开内容）
-        // 兼容两种传参：直接传 Book 对象，或 {bookId, bookName} Map
         final routeArgs = settings.arguments;
         if (routeArgs is Book) {
           return BookWordsPage(bookId: routeArgs.id, bookName: routeArgs.name);
         }
-        final map = routeArgs is Map<String, dynamic>
-            ? routeArgs
-            : const <String, dynamic>{};
+        final map = routeArgs is Map<String, dynamic> ? routeArgs : const <String, dynamic>{};
         return BookWordsPage(
           bookId: (map['bookId'] as num?)?.toInt() ?? 0,
           bookName: (map['bookName'] as String?) ?? '词书',
@@ -303,6 +379,7 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
       case '/review': return const ReviewPage();
       case '/review_session': return const ReviewSession();
       case '/learn_session': return const LearnSession();
+      case '/course': return const CoursesPage();
       case '/my_space': return const MySpacePage();
       case '/dashboard': return const DashboardPage();
       case '/settings': return const SettingsPage();
@@ -335,9 +412,9 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
       case '/word_listen': return const ListWordListenPage();
       case '/listen_mode_select':
         final a = args as Map<String, dynamic>?;
-        return a != null
-            ? ExtensiveModelSelectPage(bookId: a['bookId'] as int, bookName: a['bookName'] as String? ?? '')
-            : const SplashPage();
+        if (a == null) return _friendlyErrorPage('listen_mode_select', '缺少必要参数');
+        final bookId = (a['bookId'] as num?)?.toInt() ?? 0;
+        return ExtensiveModelSelectPage(bookId: bookId, bookName: a['bookName'] as String? ?? '');
       case '/sentence_quiz': return const SentenceQuizPage();
       case '/appearance': return const AppearancePage();
       case '/more_settings': return const MoreSettingsPage();
@@ -356,48 +433,37 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
         final a = args as Map<String, dynamic>?;
         return LinkedMeMiddlePage(word: a?['word'] ?? '', association: a?['association']);
       case '/word_detail': return const WordDetailPage();
-      // 新功能路由
       case '/listening_player':
         final a = args as Map<String, dynamic>?;
-        return a != null
-            ? ListeningPlayerPage(
-                words: (a['words'] as List).cast<Word>(),
-                mode: ListeningMode.values[a['mode'] as int? ?? 0],
-                bookName: a['bookName'] as String? ?? '',
-              )
-            : const SplashPage();
+        if (a == null) return _friendlyErrorPage('listening_player', '缺少必要参数');
+        final words = (a['words'] as List?)?.map((e) => e as Word).toList() ?? [];
+        final modeIdx = (a['mode'] as num?)?.toInt() ?? 0;
+        final mode = modeIdx >= 0 && modeIdx < ListeningMode.values.length
+            ? ListeningMode.values[modeIdx]
+            : ListeningMode.wordOnly;
+        return ListeningPlayerPage(words: words, mode: mode, bookName: a['bookName'] as String? ?? '');
       case '/dictation_session':
         final a = args as Map<String, dynamic>?;
-        return a != null
-            ? DictationSessionPage(
-                words: (a['words'] as List).cast<Word>(),
-                bookName: a['bookName'] as String? ?? '',
-              )
-            : const SplashPage();
+        if (a == null) return _friendlyErrorPage('dictation_session', '缺少必要参数');
+        final words = (a['words'] as List?)?.map((e) => e as Word).toList() ?? [];
+        return DictationSessionPage(words: words, bookName: a['bookName'] as String? ?? '');
       case '/quick_spell':
         final a = args as Map<String, dynamic>?;
-        return a != null
-            ? QuickSpellPage(
-                words: (a['words'] as List).cast<Word>(),
-                bookName: a['bookName'] as String? ?? '',
-              )
-            : const SplashPage();
+        if (a == null) return _friendlyErrorPage('quick_spell', '缺少必要参数');
+        final words = (a['words'] as List?)?.map((e) => e as Word).toList() ?? [];
+        return QuickSpellPage(words: words, bookName: a['bookName'] as String? ?? '');
       case '/word_export':
         final a = args as Map<String, dynamic>?;
-        return a != null
-            ? WordExportPage(
-                bookId: a['bookId'] as int,
-                bookName: a['bookName'] as String? ?? '',
-              )
-            : const SplashPage();
-      default: return null;
+        if (a == null) return _friendlyErrorPage('word_export', '缺少必要参数');
+        final bookId = (a['bookId'] as num?)?.toInt() ?? 0;
+        return WordExportPage(bookId: bookId, bookName: a['bookName'] as String? ?? '');
+      default: return _friendlyErrorPage(name ?? 'unknown', '页面不存在');
     }
   }
 
   /// 根据路由名称选择转场动画
   static Route<dynamic> _buildPageRoute(String? name, Widget page) {
     switch (name) {
-      // 上滑进入：设置/个人中心/仪表盘/外观
       case '/settings':
       case '/my_space':
       case '/dashboard':
@@ -410,19 +476,13 @@ class _WordAppState extends State<WordApp> with WidgetsBindingObserver {
       case '/net_diagnosis':
       case '/check_in_history':
         return SlideUpRoute(page: page) as Route<dynamic>;
-
-      // 渐变进入：学习会话/复习会话
       case '/learn_session':
       case '/review_session':
       case '/learn':
       case '/review':
         return FadeRoute(page: page) as Route<dynamic>;
-
-      // 缩放进入：搜索/弹窗类
       case '/search':
         return ScaleRoute(page: page) as Route<dynamic>;
-
-      // 默认水平滑动（标准 Android 转场）
       default:
         return MaterialPageRoute(builder: (_) => page);
     }

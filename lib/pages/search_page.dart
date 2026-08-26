@@ -7,8 +7,10 @@ import '../data/example_parser.dart';
 import '../hooks/responsive.dart';
 import 'package:provider/provider.dart';
 
-import '../data/wordbook_database.dart';
-import '../player/audio_players.dart';
+import '../core/di/service_locator.dart';
+import '../models/word.dart';
+import '../repositories/word_repository.dart';
+import '../state/player_state.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -68,7 +70,8 @@ class _SearchPageState extends State<SearchPage> {
       return;
     }
     setState(() => _isLoading = true);
-    final results = await WordBookDatabase.instance.searchWords(query.trim(), limit: 30);
+    final wordRepo = sl<WordRepository>();
+    final results = await wordRepo.searchWords(query.trim());
     if (mounted) {
       setState(() {
         _results = results;
@@ -230,6 +233,12 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           Row(
             children: [
+              // 返回按钮：关闭内嵌详情，回到搜索结果
+              IconButton(
+                icon: Icon(Icons.close, color: skin.text3, size: 22),
+                tooltip: '关闭',
+                onPressed: () => setState(() => _selectedWord = null),
+              ),
               Expanded(
                 child: Text(word.word,
                   style: MistralTypography.heading2.copyWith(
@@ -455,8 +464,8 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<void> _playAudio(String word) async {
     try {
-      // 使用 PhoneticAudioPlayer（带缓存）
-      await playWordAudio(word);
+      // 使用 PlayerState 播放音频
+      await context.read<PlayerState>().playWord(word);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

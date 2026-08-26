@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/wordbook_database.dart';
 import '../hooks/responsive.dart';
+import '../models/book.dart';
 import '../pages/scare_coin_history_page.dart';
 import '../services/share_image_service.dart';
 import '../state/learning_state.dart';

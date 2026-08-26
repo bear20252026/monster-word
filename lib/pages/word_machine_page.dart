@@ -8,9 +8,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../engine/fsrs6_engine.dart';
+import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
-import '../player/audio_players.dart';
+import '../player/audio_players.dart' show playWordAudio;
 import '../state/learning_state.dart';
 import '../tokens/gameboy.dart';
 import '../widgets/session_exit_guard.dart';

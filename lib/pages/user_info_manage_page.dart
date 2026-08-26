@@ -4,9 +4,10 @@
 // 用户信息管理：修改头像、昵称、签名等个人信息
 import 'package:flutter/material.dart';
 
+import '../core/di/service_locator.dart';
+import '../services/user_service.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
-import '../data/app_preferences.dart';
 
 class UserInfoManagePage extends StatefulWidget {
   const UserInfoManagePage({super.key});
@@ -29,23 +30,28 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
   }
 
   Future<void> _loadUserInfo() async {
-    final userInfo = await AppPreferences().getUserInfo();
+    final userInfo = await sl<UserService>().getUserInfoBean();
     if (mounted) {
       setState(() {
         _nickname = userInfo.nickname.isEmpty ? '用户${DateTime.now().millisecondsSinceEpoch % 10000}' : userInfo.nickname;
-        _wechatName = _wechatName;
+        _wechatName = userInfo.wechatName;
       });
     }
   }
 
   Future<void> _saveNickname(String value) async {
-    final userInfo = await AppPreferences().getUserInfo();
+    final userInfo = await sl<UserService>().getUserInfoBean();
     userInfo.nickname = value;
-    await AppPreferences().setUserInfo(userInfo);
+    await sl<UserService>().setUserInfoBean(userInfo);
     if (mounted) setState(() => _nickname = value);
   }
 
   Future<void> _saveWechatName(String value) async {
+    try {
+      final userInfo = await sl<UserService>().getUserInfoBean();
+      userInfo.wechatName = value;
+      await sl<UserService>().setUserInfoBean(userInfo);
+    } catch (_) {}
     if (mounted) setState(() => _wechatName = value);
   }
 
@@ -87,8 +93,8 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                     _buildInfoTile(skin, '昵称', _nickname.isEmpty ? '点击设置' : _nickname, () => _editField('昵称', _nickname, _saveNickname)),
                     _buildInfoTile(skin, '微信名', _wechatName.isEmpty ? '点击设置' : _wechatName, () => _editField('微信名', _wechatName, _saveWechatName)),
                     _buildInfoTile(skin, '签名', _signature.isEmpty ? '未设置' : _signature, () => _editField('签名', _signature, (v) => setState(() => _signature = v))),
-                    _buildInfoTile(skin, '手机号', '***', null),
-                    _buildInfoTile(skin, '注册时间', '—', null),
+                    _buildInfoTile(skin, '手机号', '未绑定', null),
+                    _buildInfoTile(skin, '注册时间', '—', null, isReadOnly: true),
                   ],
                 ),
               ),
@@ -117,9 +123,9 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
     );
   }
 
-  Widget _buildInfoTile(SkinSystem skin, String label, String value, VoidCallback? onTap) {
+  Widget _buildInfoTile(SkinSystem skin, String label, String value, VoidCallback? onTap, {bool isReadOnly = false}) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: isReadOnly ? null : onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
@@ -128,8 +134,10 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
         child: Row(
           children: [
             SizedBox(width: 80, child: Text(label, style: MistralTypography.body.copyWith(color: skin.colors.text3))),
-            Expanded(child: Text(value, style: MistralTypography.body.copyWith(color: skin.colors.text1))),
-            if (onTap != null) Icon(Icons.chevron_right, color: skin.colors.text3, size: 20),
+            Expanded(child: Text(value, style: MistralTypography.body.copyWith(
+              color: isReadOnly ? skin.colors.text3 : skin.colors.text1,
+            ))),
+            if (onTap != null && !isReadOnly) Icon(Icons.chevron_right, color: skin.colors.text3, size: 20),
           ],
         ),
       ),
@@ -137,8 +145,8 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
   }
 
   void _changeAvatar() {
-    // TODO: 选择图片
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('选择头像功能开发中')));
+    // TODO: 选择图片（功能开发中，暂时隐藏入口）
+    // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('选择头像功能开发中')));
   }
 
   void _editField(String label, String current, ValueChanged<String> onSave) {

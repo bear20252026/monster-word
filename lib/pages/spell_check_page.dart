@@ -3,8 +3,9 @@
 // 移植自 v3.2 spellcheck/SpellCheckFragment + SpellCheckPresenterImp
 // 拼写检查：播放音频 → 用户拼写 → 正确/错误反馈
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../player/audio_players.dart';
+import '../state/player_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -50,7 +51,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
   Future<void> _playAudio() async {
     if (widget.word.isEmpty) return;
     try {
-      await playWordAudio(widget.word);
+      await context.read<PlayerState>().playWord(widget.word);
     } catch (e) {
       debugPrint('Audio playback error: $e');
     }
@@ -259,7 +260,8 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
   String _buildHint() {
     final word = widget.word;
     if (word.isEmpty) return '';
-    if (word.length <= 2) return word;
+    // 短单词（≤4字母）只显示首字母，避免提示过于简单
+    if (word.length <= 4) return '${word[0]}${'_' * (word.length - 1)}';
     // 显示首尾字母，中间用下划线
     final middle = '_' * (word.length - 2);
     return '${word[0]}$middle${word[word.length - 1]}';

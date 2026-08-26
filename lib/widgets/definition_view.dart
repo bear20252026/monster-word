@@ -2,7 +2,7 @@
 // 将 JSON 解析后的 Definition 列表渲染为美观的释义卡片
 import 'package:flutter/material.dart';
 
-import '../data/wordbook_database.dart' show Definition;
+import '../models/definition.dart';
 import '../theme/skin_system.dart' show SkinProvider;
 import '../tokens/design_tokens.dart';
 

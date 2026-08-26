@@ -3,7 +3,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import '../data/wordbook_database.dart';
+// wordbook_database.dart removed - not used in this file
+import '../models/word.dart';
 import '../hooks/responsive.dart';
 import '../player/system_tts.dart';
 import '../theme/skin_system.dart';
@@ -82,8 +83,8 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
       if (_isCorrect) _correctCount++;
     });
 
-    // 2秒后自动下一题
-    _autoNextTimer = Timer(const Duration(seconds: 2), () {
+    // 4秒后自动下一题（给用户足够时间查看正确答案）
+    _autoNextTimer = Timer(const Duration(seconds: 4), () {
       if (mounted) _next();
     });
   }

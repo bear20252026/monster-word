@@ -4,7 +4,8 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-import '../data/wordbook_database.dart';
+// wordbook_database.dart removed - not used in this file
+import '../models/word.dart';
 import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -81,7 +82,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
       if (_isCorrect) _correctCount++;
     });
 
-    _autoNextTimer = Timer(const Duration(milliseconds: 1200), () {
+    _autoNextTimer = Timer(const Duration(seconds: 2), () {
       if (mounted) _next();
     });
   }

@@ -385,7 +385,8 @@ class _ListItem extends StatelessWidget {
             Text(value,
               style: TextStyle(fontSize: 14, color: skin.text3)),
             const SizedBox(width: 4),
-            Icon(Icons.chevron_right, size: 20, color: skin.text3),
+            if (onTap != null)
+              Icon(Icons.chevron_right, size: 20, color: skin.text3),
           ],
         ),
       ),

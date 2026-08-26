@@ -2,9 +2,10 @@
 // 包含：头像 + 相机图标、ID账号、账号、昵称、手机号、绑定平台
 import 'package:flutter/material.dart';
 
+import '../core/di/service_locator.dart';
+import '../services/user_service.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
-import '../data/app_preferences.dart';
 
 class AccountInfoPage extends StatefulWidget {
   const AccountInfoPage({super.key});
@@ -27,7 +28,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
   }
 
   Future<void> _loadUserInfo() async {
-    final userInfo = await AppPreferences().getUserInfo();
+    final userInfo = await sl<UserService>().getUserInfoBean();
     if (mounted) {
       setState(() {
         _nickname = userInfo.nickname;
@@ -56,9 +57,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       ),
     );
     if (result != null && result.isNotEmpty) {
-      final userInfo = await AppPreferences().getUserInfo();
+      final userInfo = await sl<UserService>().getUserInfoBean();
       userInfo.nickname = result;
-      await AppPreferences().setUserInfo(userInfo);
+      await sl<UserService>().setUserInfoBean(userInfo);
       if (mounted) setState(() => _nickname = result);
     }
   }
@@ -80,9 +81,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       ),
     );
     if (result != null) {
-      final userInfo = await AppPreferences().getUserInfo();
+      final userInfo = await sl<UserService>().getUserInfoBean();
       userInfo.wechatName = result;
-      await AppPreferences().setUserInfo(userInfo);
+      await sl<UserService>().setUserInfoBean(userInfo);
       if (mounted) setState(() => _wechatName = result);
     }
   }
@@ -104,9 +105,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       ),
     );
     if (result != null && result.isNotEmpty) {
-      final userInfo = await AppPreferences().getUserInfo();
+      final userInfo = await sl<UserService>().getUserInfoBean();
       userInfo.displayId = result;
-      await AppPreferences().setUserInfo(userInfo);
+      await sl<UserService>().setUserInfoBean(userInfo);
       if (mounted) setState(() => _userId = result);
     }
   }

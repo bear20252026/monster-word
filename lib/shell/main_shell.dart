@@ -68,7 +68,7 @@ class _MainShellState extends State<MainShell> {
           Positioned(
             left: 0,
             right: 0,
-            bottom: 0,
+            bottom: MediaQuery.of(context).padding.bottom,
             child: FloatingDock(
               items: widget.tabs
                   .map((t) => DockItem(

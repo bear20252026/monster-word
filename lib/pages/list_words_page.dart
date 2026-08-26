@@ -21,6 +21,15 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
   bool _isBatchEditMode = false;
   final Set<int> _selectedIndices = {};
 
+  /// 获取已加载的单词列表（子类可直接使用，避免重复加载）
+  List<Word> get words => _words;
+
+  /// 是否正在加载
+  bool get isLoading => _isLoading;
+
+  /// 刷新数据
+  Future<void> refreshData() => _loadData();
+
   String get pageTitle;
   Future<List<Word>> loadWords(LearningState state);
 
@@ -110,6 +119,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             color: skin.colors.text1,
+            tooltip: '返回',
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
@@ -152,6 +162,12 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
           Text(
             '暂无单词',
             style: MistralTypography.body.copyWith(color: skin.colors.text3),
+          ),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: () => _loadData(),
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text('刷新'),
           ),
         ],
       ),
