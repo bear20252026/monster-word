@@ -1,0 +1,220 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../core/di/service_locator.dart';
+import '../core/router/app_router.dart';
+import '../pages/lib_select_page.dart';
+import '../screens/home_screen.dart';
+import '../screens/profile_screen.dart';
+import '../shell/main_shell.dart';
+import '../state/learn_state.dart';
+import '../state/learning_state.dart';
+import '../state/player_state.dart';
+import '../state/review_state.dart';
+import '../state/settings_state.dart';
+import '../state/user_stats_state.dart';
+import '../state/wallpaper_state.dart';
+import '../theme/skin_system.dart';
+import '../utils/screen_utils.dart';
+import '../widgets/adaptive_scale.dart';
+import '../widgets/fluid_cursor.dart';
+
+/// 应用根组件。
+///
+/// 该组件只负责全局状态注入、主题、首页 Shell 与路由装配。
+/// 平台与基础设施初始化由 [bootstrapApp] 负责，页面构建由 [AppRouter] 负责。
+class WordApp extends StatelessWidget {
+  const WordApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        // 兼容期内保留旧状态；学习模块迁移完成后应删除该 Provider。
+        ChangeNotifierProvider(create: (_) => LearningState()),
+        ChangeNotifierProvider(create: (_) => sl<LearnState>()),
+        ChangeNotifierProvider(create: (_) => sl<ReviewState>()),
+        ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
+        ChangeNotifierProvider(create: (_) => sl<SettingsState>()),
+        ChangeNotifierProvider(create: (_) => sl<PlayerState>()),
+        ChangeNotifierProvider(create: (_) => SkinSystem()),
+        ChangeNotifierProvider(create: (_) => WallpaperState()),
+      ],
+      child: const _AppLifecycle(),
+    );
+  }
+}
+
+class _AppLifecycle extends StatefulWidget {
+  const _AppLifecycle();
+
+  @override
+  State<_AppLifecycle> createState() => _AppLifecycleState();
+}
+
+class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.platformDispatcher.onPlatformBrightnessChanged = _syncSystemBrightness;
+    ErrorWidget.builder = (details) {
+      debugPrint('[GlobalError] Widget build error: ${details.exception}');
+      return _AppBuildErrorPage(exception: details.exception);
+    };
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    _syncSystemBrightness();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance.platformDispatcher.onPlatformBrightnessChanged = null;
+    super.dispose();
+  }
+
+  void _syncSystemBrightness() {
+    context.read<SkinSystem>().updateSystemBrightness(
+          WidgetsBinding.instance.platformDispatcher.platformBrightness,
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<SkinSystem>(
+      builder: (context, skin, _) {
+        return MaterialApp(
+          title: 'Monster Word',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            brightness: skin.effectiveUiBrightness,
+            fontFamily: skin.effectiveFontFamily,
+            pageTransitionsTheme: const PageTransitionsTheme(
+              builders: {
+                TargetPlatform.android: ZoomPageTransitionsBuilder(),
+                TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+                TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+                TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+                TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
+              },
+            ),
+            scaffoldBackgroundColor: skin.colors.pageBg,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: skin.colors.accent,
+              brightness: skin.effectiveUiBrightness,
+            ),
+            useMaterial3: true,
+          ),
+          builder: (context, child) {
+            ScreenUtils.init(context);
+            return FluidCursorOverlay(
+              rippleColor: skin.colors.accent.withValues(alpha: 0.4),
+              maxRadius: 60,
+              enabled: false,
+              child: SkinProvider(skin: skin, child: child!),
+            );
+          },
+          home: const AdaptiveScale(child: _HomeShell()),
+          onGenerateRoute: _onGenerateRoute,
+        );
+      },
+    );
+  }
+
+  Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
+    final page = settings.name == '/' ? const _HomeShell() : AppRouter.buildPage(settings);
+    if (page == null) {
+      return null;
+    }
+    return AppRouter.buildPageRoute(settings.name, page);
+  }
+}
+
+class _HomeShell extends StatelessWidget {
+  const _HomeShell();
+
+  @override
+  Widget build(BuildContext context) {
+    return MainShell(
+      tabs: [
+        TabDef(
+          id: 'learn',
+          label: '学习',
+          icon: Icons.auto_stories_outlined,
+          builder: (_) => const HomeScreen(),
+        ),
+        TabDef(
+          id: 'course',
+          label: '课程',
+          icon: Icons.school_outlined,
+          builder: (_) => const LibSelectPage(),
+        ),
+        TabDef(
+          id: 'settings',
+          label: '设置',
+          icon: Icons.settings_outlined,
+          builder: (_) => const ProfileScreen(),
+        ),
+      ],
+    );
+  }
+}
+
+class _AppBuildErrorPage extends StatelessWidget {
+  const _AppBuildErrorPage({required this.exception});
+
+  final Object exception;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFF7F4EF),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 56, color: Color(0xFFB0885A)),
+              const SizedBox(height: 16),
+              const Text(
+                '页面出了一点小问题',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3D3630)),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                kDebugMode
+                    ? '我们已记录此问题，请尝试返回或重新进入该页面。\n(Debug: $exception)'
+                    : '我们已记录此问题，请尝试返回或重新进入该页面。',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, color: Color(0xFF8A8078)),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final navigator = Navigator.of(context);
+                  if (navigator.canPop()) {
+                    navigator.popUntil((route) => route.isFirst);
+                  }
+                },
+                icon: const Icon(Icons.home_outlined, size: 18),
+                label: const Text('返回首页'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF006241),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

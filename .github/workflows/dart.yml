@@ -25,10 +25,10 @@ jobs:
         run: mkdir -p assets/db && echo placeholder > assets/db/wordbook.db.gz
 
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed --line-length 120 lib/
+        run: dart format --output=none --set-exit-if-changed --line-length 120 lib/ test/
 
       - name: Analyze project source
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        run: flutter analyze
 
       - name: Run tests
         run: flutter test --no-pub
