@@ -22,12 +22,14 @@ void main() {
       expect(appSource, contains("import '../core/router/app_router.dart';"));
       expect(appSource, contains('AppRouter.buildPage(settings)'));
       expect(appSource, contains('AppRouter.buildPageRoute(settings.name, page)'));
+      expect(appSource, isNot(contains('ErrorWidget.builder')));
     });
 
     test('启动器不依赖页面展示层', () {
       final bootstrapSource = File('lib/app/app_bootstrap.dart').readAsStringSync();
 
       expect(bootstrapSource, contains('Future<void> bootstrapApp() async'));
+      expect(bootstrapSource, contains('ErrorWidget.builder'));
       expect(bootstrapSource, isNot(contains("import '../pages/")));
       expect(bootstrapSource, isNot(contains('MaterialApp')));
     });

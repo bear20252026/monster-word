@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_error_widget.dart';
 import '../core/di/service_locator.dart';
 import '../data/app_preferences.dart';
 import '../data/user_database.dart';
@@ -23,6 +24,11 @@ Future<void> bootstrapApp() async {
 }
 
 void _configureGlobalErrorHandling() {
+  ErrorWidget.builder = (details) {
+    debugPrint('[GlobalError] Widget build error: ${details.exception}');
+    return AppBuildErrorPage(exception: details.exception);
+  };
+
   FlutterError.onError = (details) {
     debugPrint('[GlobalError] FlutterError: ${details.exception}');
     if (details.stack != null) {

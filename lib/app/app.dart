@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -60,10 +59,6 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.platformDispatcher.onPlatformBrightnessChanged = _syncSystemBrightness;
-    ErrorWidget.builder = (details) {
-      debugPrint('[GlobalError] Widget build error: ${details.exception}');
-      return _AppBuildErrorPage(exception: details.exception);
-    };
   }
 
   @override
@@ -141,58 +136,6 @@ class _HomeShell extends StatelessWidget {
         TabDef(id: 'course', label: '课程', icon: Icons.school_outlined, builder: (_) => const LibSelectPage()),
         TabDef(id: 'settings', label: '设置', icon: Icons.settings_outlined, builder: (_) => const ProfileScreen()),
       ],
-    );
-  }
-}
-
-class _AppBuildErrorPage extends StatelessWidget {
-  const _AppBuildErrorPage({required this.exception});
-
-  final Object exception;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFFF7F4EF),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 56, color: Color(0xFFB0885A)),
-              const SizedBox(height: 16),
-              const Text(
-                '页面出了一点小问题',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3D3630)),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                kDebugMode ? '我们已记录此问题，请尝试返回或重新进入该页面。\n(Debug: $exception)' : '我们已记录此问题，请尝试返回或重新进入该页面。',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: Color(0xFF8A8078)),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () {
-                  final navigator = Navigator.of(context);
-                  if (navigator.canPop()) {
-                    navigator.popUntil((route) => route.isFirst);
-                  }
-                },
-                icon: const Icon(Icons.home_outlined, size: 18),
-                label: const Text('返回首页'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF006241),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

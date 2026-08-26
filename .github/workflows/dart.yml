@@ -23,8 +23,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Create placeholder assets
-        run: mkdir -p assets/db && echo placeholder > assets/db/wordbook.db.gz
+      - name: Verify wordbook asset
+        run: test -s assets/db/wordbook.db.gz
 
       - name: Verify changed Dart formatting
         shell: bash
