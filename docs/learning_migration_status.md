@@ -4,7 +4,7 @@
 
 学习域已不再存在或装配 `LearningState`。原先集中持有学习队列、会话推进、FSRS、收藏、手动掌握、账号占位、偏好持久化和展示数据的聚合状态已被物理删除；生产页面与功能域 Provider 均不得重新导入或创建它。
 
-目前的边界按业务事实拆分：可变学习会话由 `LearningSessionState` 唯一拥有，正式复习排程由 `ReviewScheduleRepository` 唯一拥有，收藏和手动掌握分别由独立状态与仓储拥有，账号与引导由账户功能域拥有。应用根只组合账户和学习功能域作用域，不感知学习域内部的具体状态类型。
+目前的边界按业务事实拆分：可变学习会话由 `LearningSessionState` 唯一拥有，正式复习排程由 `ReviewScheduleRepository` 唯一拥有，收藏和手动掌握分别由独立状态与仓储拥有，账号与引导由账户功能域拥有。所有词书、主学习、沉浸刷词、拼写、单词机和学习会话入口均使用专用会话；应用根只组合账户和学习功能域作用域，不感知学习域内部的具体状态类型。
 
 | 责任 | 当前唯一入口 | 说明 |
 |---|---|---|
@@ -39,11 +39,11 @@
 
 `LearningFavoritesState` 是字典、搜索和收藏词页面的收藏状态；它持久化后更新本地快照并通知订阅者。`LearningMasteredState` 是手动掌握词状态；它以 `MasteredRepository` 作为唯一持久化边界，并提供刷新、切换、集合查询和计数。`LearningCollectionsState` 不保存或写入任何集合，只从前两者组合展示数量。
 
-会话内/FSRS 的熟练度不等于 `mastered_words_v1`。特别地，`LearnState.isMastered` 表达会话中的 FSRS 卡片状态，而手动掌握是用户显式标记；二者不得共用同一字段、缓存或写入路径。按 `wordId` 的用户数据库收藏通道继续服务其自身的数据模型，在定义可靠映射与冲突策略前不与字符串收藏自动同步。
+FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.isMastered` 曾错误地将会话内临时卡片与手动掌握按钮耦合；现在该按钮只使用 `LearningMasteredState`，FSRS 指示器只从 `ReviewScheduleRepository` 读取。二者不得共用同一字段、缓存或写入路径。按 `wordId` 的用户数据库收藏通道继续服务其自身的数据模型，在定义可靠映射与冲突策略前不与字符串收藏自动同步。
 
 ## 词表、账户和展示迁移边界
 
-词典、搜索和收藏词页面已直接使用 `LearningFavoritesState`；词条详情和句子测验页直接使用 `LearningSessionState`；词书导出页、随身听页和词书列表查询直接使用 `LearningQueueRepository`。通用 `ListWordsPage` 不再提供遗留学习状态的默认数据源，子类必须显式采用所属的词书、掌握、生词或队列分类读取端口。
+词典、搜索和收藏词页面已直接使用 `LearningFavoritesState`；词条详情、句子测验、词书启动、主学习、沉浸刷词、拼写、单词机和学习会话页直接使用 `LearningSessionState`；词书导出页、随身听页和词书列表查询直接使用 `LearningQueueRepository`。通用 `ListWordsPage` 不再提供遗留学习状态的默认数据源，子类必须显式采用所属的词书、掌握、生词或队列分类读取端口。
 
 `MasteredWordsReader` 组合 `MasteredRepository` 与 `WordRepository`，将手动掌握的字符串标记解析为完整单词模型。`BookWordsReader` 使用既有 `word_books` 关联表读取词书范围和顺序。`NewWordsState` 和用户数据库 `new_words` 表仍独立承载生词本，不得将学习数量、收藏、手动掌握或未学习队列改名为“生词本”。
 
@@ -51,8 +51,8 @@
 
 ## 功能域装配与回归保护
 
-`learning_feature_providers.dart` 依赖顺序为：正式复习排程仓储和队列仓储先创建，随后创建收藏、手动掌握和学习会话状态；队列、统计、收藏/掌握数量、队列分类和正式复习状态均从这些专用依赖组合。`LearningCollectionsState` 使用 `ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>` 装配，不再依赖兼容代理。
+`learning_feature_providers.dart` 依赖顺序为：正式复习排程仓储和队列仓储先创建，随后创建收藏、手动掌握和学习会话状态；队列、统计、收藏/掌握数量、队列分类和正式复习状态均从这些专用依赖组合。`LearningCollectionsState` 使用 `ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>` 装配，不再依赖兼容代理。旧 `LearnState`、`LearnService`、其服务定位器注册和空学习模块均已删除，因此不会再形成第二套队列、FSRS 卡片或进度持久化。
 
-结构测试保留少量高价值负向门禁：应用根和生产 Provider/页面不得导入或创建 `LearningState`，遗留源文件不得恢复；正式复习页不得回流题目算法、会话状态或服务定位器；展示组件不得直接读取复习会话状态；历史深链不得重新创建旧 `ReviewSession`。学习状态测试覆盖专用会话加载与评分、队列快照隔离、空收藏队列保护、收藏状态和掌握状态的刷新/切换/计数。
+结构测试保留少量高价值负向门禁：应用根和生产 Provider/页面不得导入或创建 `LearningState` 或 `LearnState`，两类遗留源文件及 `LearnService` 均不得恢复；正式复习页不得回流题目算法、会话状态或服务定位器；展示组件不得直接读取复习会话状态；历史深链不得重新创建旧 `ReviewSession`。学习状态测试覆盖专用会话加载与评分、只读队列与快照隔离、退出清理、空收藏队列保护、收藏状态和掌握状态的刷新/切换/计数。
 
 后续新增需求应首先定位其事实模型，并在该功能域的仓储、应用服务或专用状态中实现。不得以“方便页面读取”为由重新创建跨域聚合状态，或将会话、FSRS、手动标记、收藏、账号和持久化职责重新塞入单一 `ChangeNotifier`。
