@@ -264,9 +264,11 @@ void main() {
   });
 
   group('复习评分写入边界', () {
-    test('正式会话通过评分写入端口提交 FSRS 评分', () {
+    test('评分执行器提交 FSRS 评分，会话保留实际词条捕获和进度编排', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final executorSource = File('lib/features/learning/application/review_session_rating_executor.dart')
+          .readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
       expect(appSource, contains('ProxyProvider<LearningState, ReviewRatingWriter>'));
@@ -274,9 +276,15 @@ void main() {
       expect(pageSource, contains('onSelectChoice: session.selectChoice'));
       expect(pageSource, contains('onContinueWithGoodRating: session.continueWithGoodRating'));
       expect(pageSource, isNot(contains('ReviewRatingWriter')));
-      expect(sessionSource, contains('ReviewRatingWriter'));
+      expect(sessionSource, contains('ReviewSessionRatingExecutor'));
       expect(sessionSource, contains('final reviewedWord = currentWord'));
-      expect(sessionSource, contains('_ratingWriter.rate(word: reviewedWord.word, rating: fsrsRating)'));
+      expect(sessionSource, contains('_ratingExecutor.rate(reviewedWord: reviewedWord, rating: rating)'));
+      expect(sessionSource, contains('_ratingExecutor.markAsKnown()'));
+      expect(sessionSource, isNot(contains('FsrsRating')));
+      expect(executorSource, contains('ReviewRatingWriter'));
+      expect(executorSource, contains('FsrsRating'));
+      expect(executorSource, contains('_ratingWriter.rate(word: reviewedWord.word, rating: _toFsrsRating(rating))'));
+      expect(executorSource, contains('_engine.iReallyKnow()'));
       expect(pageSource, isNot(contains('LearningState')));
     });
   });
