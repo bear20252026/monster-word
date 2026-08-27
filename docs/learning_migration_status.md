@@ -103,9 +103,15 @@
 
 ## 正式复习队列读取边界
 
-`ReviewPage` 现在通过 `ReviewQueueState` 读取由 `LearningState` 提供的不可变队列快照，并委托 `ReviewQueueReader` 决定候选词。读取器将既有优先级固定为“FSRS 到期词 → 当前学习队列 → `a` 样本 → `the` 样本”，因此本轮不改变用户在无到期词时仍可进入复习的行为。
+`ReviewPage` 现在通过 `ReviewQueueState` 读取不可变队列快照，并委托 `ReviewQueueReader` 决定候选词。读取器将既有优先级固定为“FSRS 到期词 → 当前学习队列 → `a` 样本 → `the` 样本”，因此本轮不改变用户在无到期词时仍可进入复习的行为。
 
-这是一次过渡性读取隔离：FSRS 到期判断和当前学习队列的事实来源仍是 `LearningState`，但页面不再同时负责读取旧状态、选择优先级和词库回退查询。评分写入边界已在后续阶段独立迁移，不能直接迁用仅维护内存状态的兼容 `ReviewService`。
+`ReviewScheduleRepository` 现为正式复习的 FSRS 卡片、到期判断、按词评分、每日统计和活跃日期的唯一事实来源，并继续使用既有 `fsrs6_cards_v1`、`daily_stats_v1` 与 `active_learn_dates_v1` 键。`ReviewQueueState` 仅接收遗留 `LearningState` 维护的当前学习队列，再交给该仓储计算到期词；这是一项刻意保留的兼容边界，而不是让正式页面重新依赖遗留聚合状态。待学习队列本身有独立来源后，只需替换这一输入，不改变正式复习页面或读取器的行为。
+
+## 学习功能域根装配边界
+
+学习功能的 Provider 现集中在 `learning_feature_providers.dart`。其中保留原有创建顺序：独立的复习调度仓储先于兼容 `LearningState`，评分写入端口先于正式 `ReviewSessionState`；音频状态仍为应用级 Provider，读取器仍以依赖容器中的既有实例提供。`WordApp` 只嵌套该功能域 Provider 作用域，再组合主题、壁纸、设置、播放和用户统计等全局状态。
+
+这项拆分不改变任何 Provider 的生命周期或服务定位器注册方式，也不把功能域依赖反向拉回页面。后续迁移某个学习状态时，应修改功能域装配文件及其契约测试，而不是再次向应用根增加具体学习实现类型。
 
 
 ## 正式复习词条操作边界
@@ -131,18 +137,36 @@
 
 收藏和手动掌握的页面副作用现由 `ReviewWordActionCoordinator` 统一协调。它以显式 `ReviewWordActionOutcome` 返回“已收藏、已取消收藏、已标记掌握、已存在、无当前词或持久化失败”等结果，保持旧有的操作顺序：收藏在持久化后更新展示快照；“熟”先推进会话，再写入幂等的手动掌握标记。`ReviewWordActionFeedback` 将结果映射为页面可展示的反馈文案与时长，`ReviewPage` 仅决定是否显示 Snackbar。这样不会把持久化调用、异常分支和用户提示再次混进路由页面，也不会混同 `favorite_words_v1`、`mastered_words_v1` 与 FSRS 卡片熟练度。
 
-正式复习已移除原有“撤销”入口：该入口仅减少展示计数，既不会回退 `SuperMemoryEngine`，也不会撤销已经发出的 FSRS 写入或手动掌握操作，继续保留会误导用户。兼容 `/review_session` 未改动。后续如需提供真实撤销，必须先定义可逆的题目推进、FSRS 持久化和手动标记事务合同，而不能重加仅修改计数的按钮。
+正式复习已移除原有“撤销”入口：该入口仅减少展示计数，既不会回退 `SuperMemoryEngine`，也不会撤销已经发出的 FSRS 写入或手动掌握操作，继续保留会误导用户。历史 `/review_session` 深链现在由路由层重定向至正式 `/review`，并且不可达的旧会话实现已删除。后续如需提供真实撤销，必须先定义可逆的题目推进、FSRS 持久化和手动标记事务合同，而不能重加仅修改计数的按钮。
 
 
 ## 正式复习评分写入边界
 
-`ReviewPage` 现在将评分提交给 `ReviewRatingWriter`，而不再直接依赖 `LearningState`。页面会在 `SuperMemoryEngine` 推进题目之前捕获实际作答词；应用根再将写入端口适配到 `LearningState.rateReviewWord`。该命令只更新该词的 FSRS 卡片并写入 `fsrs6_cards_v1`，记录每日学习或复习计数及活跃日期，然后通知展示状态，不会推进遗留学习队列。
+`ReviewPage` 现在将评分提交给 `ReviewRatingWriter`，而不再直接依赖 `LearningState`。页面会在 `SuperMemoryEngine` 推进题目之前捕获实际作答词；应用根将写入端口直接适配到 `ReviewScheduleRepository.rateWord`。该命令只更新该词的 FSRS 卡片并写入既有 `fsrs6_cards_v1`，记录每日学习或复习计数及活跃日期，然后通知依赖它的展示状态，不会推进遗留学习队列。
 
-这既是依赖反转，也是一次数据关联修正：原先页面在本地引擎推进后才由 `LearningState.rate` 推断当前词，可能把本题评分写到下一队列词，并在最后一题时遗漏写入。现在 `SuperMemoryEngine` 的推进顺序和 `FsrsRating` 映射保持不变，但持久化评分始终对应本题单词。遗留学习会话仍使用 `LearningState.rate`，保留其 Leitner 联动和队列推进；`/review_session` 仍为兼容路径，待两条会话的队列和交互合同统一后再另行迁移。
+这既是依赖反转，也是一次数据关联修正：原先页面在本地引擎推进后才由 `LearningState.rate` 推断当前词，可能把本题评分写到下一队列词，并在最后一题时遗漏写入。现在 `SuperMemoryEngine` 的推进顺序和 `FsrsRating` 映射保持不变，但持久化评分始终对应本题单词。遗留学习会话仍使用 `LearningState.rate`，保留其 Leitner 联动和队列推进；为兼容未迁出页面，`LearningState.rateReviewWord`、卡片读取和统计读取暂时仅委托调度仓储，不再维护第二份卡片或统计内存状态。历史 `/review_session` 已在路由层重定向，旧页面已在全仓引用审计后删除，不再承担兼容会话。
 
 
 ## 复习主入口边界
 
 回顾弹窗的“开始复习”已从 `/review_session` 改为主路由 `/review`。前者会直接以词库搜索样本初始化兼容会话，后者才读取当前 `LearningState` 的 FSRS 到期词，并仅在没有到期词时回退至当前学习队列或词库样本。因此用户从正常回顾入口启动复习时，现会进入已有的正式到期词流程。
 
-`/review_session` 路由仍保留用于兼容和后续审计，但不再是默认用户入口。正式 `/review` 已将队列读取与评分提交隔离为专用端口，同时保持原有评分和排程持久化语义；兼容路径的随机样本、直接评分调用及两条会话的交互合同仍待单独审计，不能在本轮强行合并。
+`/review_session` 的历史名称仍保留以兼容既有深链，但路由现在始终返回正式 `ReviewPage`，不再创建旧 `ReviewSession`。正式 `/review` 已将队列读取与评分提交隔离为专用端口，同时保持原有评分和排程持久化语义；旧页面的随机样本、直接评分调用及占位操作已随不可达源文件删除。
+
+## 路由功能域边界
+
+应用路由现由 `AppRouter` 作为薄协调器，依次委托 `LearningRoutes`、`ContentRoutes` 与 `AccountRoutes` 构建页面；稳定的深链字符串已移至独立的 `RouteNames`。学习域路由拥有正式 `/review`、历史 `/review_session` 重定向、学习会话和学习工具页的参数解析，因此正式复习的兼容规则不再散落在四百余行的总路由器中。
+
+总协调器继续保留转场策略以及未知路由的友好错误页。各功能域对不属于自身的名称返回空值，对本域必需参数缺失时继续返回相同的友好错误页；这保证了模块化不改变路由名称、默认参数、页面类型或历史复习深链的渐变转场语义。
+
+## 行为契约与结构门禁边界
+
+复习迁移的回归保护现优先使用可执行契约：路由测试覆盖学习、内容、账户、未知路由、历史复习重定向和缺参错误页；队列读取器覆盖既定的到期词与样本兜底优先级；评分执行器覆盖推进前捕获实际词和手动“熟”不写 FSRS；会话启动器、加载阶段映射、答题临时状态以及独立调度仓储均有专用测试。这样页面或模块移动时，业务行为不会再仅因源码字符串位置变化而失去保护。
+
+`app_structure_test.dart` 已从按类名、方法名和文件布局逐项匹配的长清单，收敛为少量高价值的架构负向检查：应用根不得重新导入具体学习实现，正式复习页不得回流到遗留 `LearningState`、题目算法或音频服务定位器，展示组件不得读取会话状态，历史深链不得重新创建 `ReviewSession`。这些约束保护依赖方向而不冻结功能域内部的实现组织。
+
+## 当前学习队列读取边界
+
+`LearningQueueState` 现以不可变 `LearningQueueSnapshot` 表达当前词书、词条队列、当前索引和已学计数。正式复习队列、学习统计以及队列分类词表均组合这一读取状态和 `ReviewScheduleRepository`，不再直接读取 `LearningState` 的队列、卡片或统计 getter。快照复制词条列表，防止展示侧因持有遗留可变队列而在一次刷新间隔内观察到未同步变更。
+
+当前学习会话的 `loadBook`、收藏词学习、Leitner 推进、四选一候选和队列写入仍保留在 `LearningState`，并通过单一 Proxy 同步到 `LearningQueueState`。这是刻意保留的迁移适配器：后续应提取队列写入命令和会话状态，而不是让新页面或正式复习重新读取该遗留聚合状态。

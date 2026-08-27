@@ -4,30 +4,12 @@ import 'package:provider/provider.dart';
 
 import '../core/di/service_locator.dart';
 import '../core/router/app_router.dart';
-import '../repositories/fav_repository.dart';
-import '../repositories/mastered_repository.dart';
-import '../features/learning/application/book_words_reader.dart';
-import '../features/learning/application/mastered_words_reader.dart';
-import '../features/learning/application/new_words_reader.dart';
-import '../features/learning/application/review_audio_player.dart';
-import '../features/learning/application/review_queue_reader.dart';
-import '../features/learning/application/review_rating_writer.dart';
-import '../features/learning/presentation/learning_collections_state.dart';
-import '../features/learning/presentation/learning_queue_word_lists_state.dart';
-import '../features/learning/presentation/learning_statistics_state.dart';
-import '../features/learning/presentation/new_words_state.dart';
-import '../features/learning/presentation/review_audio_state.dart';
-import '../features/learning/presentation/review_queue_state.dart';
-import '../features/learning/presentation/review_session_state.dart';
-import '../features/learning/presentation/review_word_actions_state.dart';
+import '../features/learning/presentation/learning_feature_providers.dart';
 import '../pages/lib_select_page.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
 import '../shell/main_shell.dart';
-import '../state/learn_state.dart';
-import '../state/learning_state.dart';
 import '../state/player_state.dart';
-import '../state/review_state.dart';
 import '../state/settings_state.dart';
 import '../state/user_stats_state.dart';
 import '../state/wallpaper_state.dart';
@@ -45,61 +27,17 @@ class WordApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        // 兼容期内保留旧状态；学习模块迁移完成后应删除该 Provider。
-        ChangeNotifierProvider(
-          create: (_) =>
-              LearningState(favRepository: sl<FavRepository>(), masteredRepository: sl<MasteredRepository>()),
-        ),
-        ChangeNotifierProxyProvider<LearningState, LearningStatisticsState>(
-          create: (_) => LearningStatisticsState(),
-          update: (_, legacy, statistics) => (statistics ?? LearningStatisticsState())..synchronizeFrom(legacy),
-        ),
-        ChangeNotifierProxyProvider<LearningState, LearningCollectionsState>(
-          create: (_) => LearningCollectionsState(),
-          update: (_, legacy, collections) => (collections ?? LearningCollectionsState())..synchronizeFrom(legacy),
-        ),
-        ChangeNotifierProxyProvider<LearningState, LearningQueueWordListsState>(
-          create: (_) => LearningQueueWordListsState(),
-          update: (_, legacy, wordLists) => (wordLists ?? LearningQueueWordListsState())..synchronizeFrom(legacy),
-        ),
-        ChangeNotifierProxyProvider<LearningState, ReviewQueueState>(
-          create: (_) => ReviewQueueState(),
-          update: (_, legacy, reviewQueue) => (reviewQueue ?? ReviewQueueState())..synchronizeFrom(legacy),
-        ),
-        ProxyProvider<LearningState, ReviewRatingWriter>(
-          update: (_, legacy, _) => ReviewRatingWriter(writeRating: legacy.rateReviewWord),
-        ),
-        ChangeNotifierProxyProvider<ReviewRatingWriter, ReviewSessionState>(
-          create: (context) => ReviewSessionState(
-            queueReader: sl<ReviewQueueReader>(),
-            ratingWriter: context.read<ReviewRatingWriter>(),
-          ),
-          update: (_, ratingWriter, session) =>
-              (session ?? ReviewSessionState(queueReader: sl<ReviewQueueReader>(), ratingWriter: ratingWriter))
-                ..updateRatingWriter(ratingWriter),
-        ),
-        ChangeNotifierProvider(
-          create: (_) =>
-              ReviewWordActionsState(favRepository: sl<FavRepository>(), masteredRepository: sl<MasteredRepository>())
-                ..initialize(),
-        ),
-        ChangeNotifierProvider(create: (_) => ReviewAudioState(audioPlayer: sl<ReviewAudioPlayer>())),
-        Provider<BookWordsReader>.value(value: sl<BookWordsReader>()),
-        Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),
-        Provider<NewWordsReader>.value(value: sl<NewWordsReader>()),
-        Provider<ReviewQueueReader>.value(value: sl<ReviewQueueReader>()),
-        ChangeNotifierProvider(create: (_) => sl<NewWordsState>()..initialize()),
-        ChangeNotifierProvider(create: (_) => sl<LearnState>()),
-        ChangeNotifierProvider(create: (_) => sl<ReviewState>()),
-        ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
-        ChangeNotifierProvider(create: (_) => sl<SettingsState>()..init()),
-        ChangeNotifierProvider(create: (_) => sl<PlayerState>()),
-        ChangeNotifierProvider(create: (_) => SkinSystem()),
-        ChangeNotifierProvider(create: (_) => WallpaperState()),
-      ],
-      child: const _AppLifecycle(),
+    return buildLearningFeatureScope(
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
+          ChangeNotifierProvider(create: (_) => sl<SettingsState>()..init()),
+          ChangeNotifierProvider(create: (_) => sl<PlayerState>()),
+          ChangeNotifierProvider(create: (_) => SkinSystem()),
+          ChangeNotifierProvider(create: (_) => WallpaperState()),
+        ],
+        child: const _AppLifecycle(),
+      ),
     );
   }
 }

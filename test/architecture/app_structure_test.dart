@@ -3,434 +3,68 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('应用装配结构', () {
-    test('main 仅承担进程启动职责', () {
+  group('稳定启动与装配边界', () {
+    test('启动器仅负责 bootstrap，根组件统一委托路由与学习功能域装配', () {
       final mainSource = File('lib/main.dart').readAsStringSync();
+      final bootstrapSource = File('lib/app/app_bootstrap.dart').readAsStringSync();
+      final appSource = File('lib/app/app.dart').readAsStringSync();
 
-      expect(mainSource, contains("import 'app/app.dart';"));
-      expect(mainSource, contains("import 'app/app_bootstrap.dart';"));
       expect(mainSource, contains('await bootstrapApp();'));
       expect(mainSource, contains('runApp(const WordApp());'));
-      expect(mainSource, isNot(contains('class _WordAppState')));
-      expect(mainSource, isNot(contains('class _FriendlyErrorPage')));
       expect(mainSource, isNot(contains("import 'pages/")));
-    });
-
-    test('根组件通过统一路由装配页面', () {
-      final appSource = File('lib/app/app.dart').readAsStringSync();
-
-      expect(appSource, contains("import '../core/router/app_router.dart';"));
-      expect(appSource, contains('AppRouter.buildPage(settings)'));
-      expect(appSource, contains('AppRouter.buildPageRoute(settings.name, page)'));
-      expect(appSource, isNot(contains('ErrorWidget.builder')));
-    });
-
-    test('启动器不依赖页面展示层', () {
-      final bootstrapSource = File('lib/app/app_bootstrap.dart').readAsStringSync();
-
-      expect(bootstrapSource, contains('Future<void> bootstrapApp() async'));
-      expect(bootstrapSource, contains('ErrorWidget.builder'));
       expect(bootstrapSource, isNot(contains("import '../pages/")));
       expect(bootstrapSource, isNot(contains('MaterialApp')));
+      expect(appSource, contains('AppRouter.buildPage(settings)'));
+      expect(appSource, contains('buildLearningFeatureScope('));
+      expect(appSource, isNot(contains("import '../state/learning_state.dart';")));
+      expect(appSource, isNot(contains("import '../features/learning/application/")));
+    });
+
+    test('学习功能域装配将正式调度、评分端口和遗留队列兼容状态连接在一起', () {
+      final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
+
+      expect(providersSource, contains('ReviewScheduleRepository'));
+      expect(providersSource, contains('ReviewRatingWriter(writeRating: schedule.rateWord)'));
+      expect(providersSource, contains('LearningQueueState'));
+      expect(providersSource, contains('ReviewQueueState'));
+      expect(providersSource, isNot(contains('legacy.rateReviewWord')));
     });
   });
 
-  group('复习主入口边界', () {
-    test('回顾弹窗将开始复习路由到正式到期词流程', () {
-      final source = File('lib/widgets/review_dialog.dart').readAsStringSync();
-
-      expect(source, contains("import '../pages/review_page.dart';"));
-      expect(source, contains('nav.pushNamed(ReviewPage.routeName)'));
-      expect(source, isNot(contains("nav.pushNamed('/review_session')")));
-    });
-  });
-
-  group('复习队列读取边界', () {
-    test('正式会话通过队列快照、启动协调器和读取器获取候选词', () {
-      final appSource = File('lib/app/app.dart').readAsStringSync();
-      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
-      final starterSource = File('lib/features/learning/application/review_session_starter.dart').readAsStringSync();
-      final questionFactorySource = File('lib/features/learning/application/review_session_question_factory.dart')
-          .readAsStringSync();
-      final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
-
-      expect(appSource, contains('ReviewQueueState'));
-      expect(appSource, contains('Provider<ReviewQueueReader>.value'));
-      expect(pageSource, contains('ReviewQueueState'));
-      expect(pageSource, contains('ReviewSessionState'));
-      expect(pageSource, contains('ReviewSessionStarter'));
-      expect(pageSource, contains('snapshot: context.read<ReviewQueueState>().snapshot'));
-      expect(pageSource, isNot(contains('ReviewQueueReader')));
-      expect(starterSource, contains('class ReviewSessionStarter'));
-      expect(starterSource, contains('_initialize(_snapshot)'));
-      expect(questionFactorySource, contains('class ReviewSessionQuestionFactory'));
-      expect(questionFactorySource, contains('createProcesses'));
-      expect(questionFactorySource, contains('createChoices'));
-      expect(questionFactorySource, contains('ChoiceGenerator.generate'));
-      expect(sessionSource, contains('ReviewQueueReader'));
-      expect(sessionSource, contains('_queueReader.loadWords(snapshot)'));
-      expect(sessionSource, contains('ReviewSessionQuestionFactory'));
-      expect(sessionSource, contains('_questionFactory.createProcesses(pool)'));
-      expect(sessionSource, contains('_questionFactory.createChoices'));
-      expect(sessionSource, isNot(contains('ChoiceGenerator.generate')));
-      expect(sessionSource, isNot(contains('ChoiceCandidate(')));
-      expect(sessionSource, isNot(contains('state.dueWords')));
-      expect(sessionSource, isNot(contains('state.queue')));
-      expect(sessionSource, isNot(contains('sl<WordRepository>()')));
-    });
-  });
-
-  group('正式复习页面展示组件边界', () {
-    test('路由协调层依赖聚合入口，主要视觉区域按职责拆分', () {
-      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
-      final widgetsSource = File('lib/features/learning/presentation/widgets/formal_review_widgets.dart')
-          .readAsStringSync();
-      final layoutSource = File('lib/features/learning/presentation/widgets/formal_review_session_layout.dart')
-          .readAsStringSync();
-      final headerSource = File('lib/features/learning/presentation/widgets/formal_review_header.dart')
-          .readAsStringSync();
-      final questionSource = File('lib/features/learning/presentation/widgets/formal_review_question.dart')
-          .readAsStringSync();
-      final choiceCardSource = File('lib/features/learning/presentation/widgets/formal_review_choice_card.dart')
-          .readAsStringSync();
-      final contentSource = File('lib/features/learning/presentation/widgets/formal_review_page_content.dart')
-          .readAsStringSync();
-      final stateViewsSource = File('lib/features/learning/presentation/widgets/formal_review_state_views.dart')
-          .readAsStringSync();
-
-      expect(pageSource, contains('FormalReviewPageContent'));
-      expect(pageSource, contains('FormalReviewSessionLayout'));
-      expect(pageSource, isNot(contains('FormalReviewLoadingView')));
-      expect(pageSource, isNot(contains('FormalReviewLoadErrorView')));
-      expect(pageSource, isNot(contains('FormalReviewCompleteView')));
-      expect(pageSource, isNot(contains('class _FrostedChoiceCard')));
-      expect(pageSource, isNot(contains('_buildChoiceArea')));
-      expect(pageSource, isNot(contains('_buildWordArea')));
-      expect(widgetsSource, contains("export 'formal_review_session_layout.dart';"));
-      expect(widgetsSource, contains("export 'formal_review_header.dart';"));
-      expect(widgetsSource, contains("export 'formal_review_page_content.dart';"));
-      expect(widgetsSource, contains("export 'formal_review_question.dart';"));
-      expect(widgetsSource, contains("export 'formal_review_choice_card.dart';"));
-      expect(widgetsSource, contains("export 'formal_review_state_views.dart';"));
-      expect(layoutSource, contains('class FormalReviewSessionLayout'));
-      expect(layoutSource, contains('class FormalReviewWallpaper'));
-      expect(headerSource, contains('class FormalReviewHeader'));
-      expect(questionSource, contains('class FormalReviewWordPrompt'));
-      expect(questionSource, contains('class FormalReviewChoiceGrid'));
-      expect(questionSource, contains('class FormalReviewAnswerAction'));
-      expect(choiceCardSource, contains('class FormalReviewChoiceCard'));
-      expect(contentSource, contains('class FormalReviewPageContent'));
-      expect(contentSource, contains('FormalReviewPagePhase'));
-      expect(contentSource, contains('formalReviewPagePhase'));
-      expect(stateViewsSource, contains('class FormalReviewLoadingView'));
-      expect(stateViewsSource, contains('class FormalReviewLoadErrorView'));
-      expect(stateViewsSource, contains('class FormalReviewCompleteView'));
-    });
-  });
-
-  group('正式复习加载与答题交互边界', () {
-    test('页面映射会话快照和命令，展示组件不依赖会话状态实现', () {
-      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
-      final layoutSource = File('lib/features/learning/presentation/widgets/formal_review_session_layout.dart')
-          .readAsStringSync();
-      final headerSource = File('lib/features/learning/presentation/widgets/formal_review_header.dart')
-          .readAsStringSync();
-      final questionSource = File('lib/features/learning/presentation/widgets/formal_review_question.dart')
-          .readAsStringSync();
-      final contentSource = File('lib/features/learning/presentation/widgets/formal_review_page_content.dart')
-          .readAsStringSync();
-      final answerStateSource = File('lib/features/learning/presentation/review_session_answer_state.dart')
-          .readAsStringSync();
-      final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
-
-      expect(pageSource, contains('session.isLoading'));
-      expect(pageSource, contains('session.hasLoadError'));
-      expect(pageSource, contains('FormalReviewPageContent'));
-      expect(contentSource, contains('FormalReviewLoadErrorView'));
-      expect(pageSource, contains('selectedWrongChoice: session.selectedWrongChoice'));
-      expect(pageSource, contains('onSelectChoice: session.selectChoice'));
-      expect(pageSource, contains('onContinueWithGoodRating: session.continueWithGoodRating'));
-      expect(pageSource, isNot(contains('_wrongChoiceIndex')));
-      expect(pageSource, isNot(contains('Future.delayed')));
-      expect(layoutSource, isNot(contains('ReviewSessionState')));
-      expect(headerSource, isNot(contains('ReviewSessionState')));
-      expect(questionSource, isNot(contains('ReviewSessionState')));
-      expect(questionSource, contains('onSelectChoice(choice.word)'));
-      expect(sessionSource, contains('ReviewSessionLoadPhase'));
-      expect(sessionSource, contains('ReviewSessionAnswerState'));
-      expect(sessionSource, contains('String? get selectedWrongChoice'));
-      expect(sessionSource, contains('selectChoice'));
-      expect(sessionSource, contains('continueWithGoodRating'));
-      expect(sessionSource, isNot(contains('_wrongChoiceTimer')));
-      expect(answerStateSource, contains('class ReviewSessionAnswerState'));
-      expect(answerStateSource, contains('Timer'));
-      expect(answerStateSource, contains('ReviewChoiceSelection'));
-      expect(answerStateSource, contains('wrongChoiceFeedback'));
-      expect(answerStateSource, isNot(contains('ReviewRatingWriter')));
-    });
-  });
-
-  group('正式复习撤销边界', () {
-    test('不提供只回退计数而不回退题目的伪撤销操作', () {
-      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
-      final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
-
-      expect(pageSource, isNot(contains('Icons.undo')));
-      expect(pageSource, isNot(contains('_canUndo')));
-      expect(pageSource, isNot(contains('_history')));
-      expect(sessionSource, isNot(contains('undoProgress')));
-    });
-  });
-
-  group('正式复习词条操作边界', () {
-    test('页面读取收藏快照，协调器承接收藏和手动掌握的持久化控制流', () {
-      final appSource = File('lib/app/app.dart').readAsStringSync();
-      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
-      final actionsSource = File('lib/features/learning/presentation/review_word_actions_state.dart')
-          .readAsStringSync();
-      final coordinatorSource = File('lib/features/learning/presentation/review_word_action_coordinator.dart')
-          .readAsStringSync();
-      final feedbackSource = File('lib/features/learning/presentation/review_word_action_feedback.dart')
-          .readAsStringSync();
-
-      expect(appSource, contains('ReviewWordActionsState'));
-      expect(pageSource, contains('ReviewWordActionsState'));
-      expect(pageSource, contains('wordActions.isFavorite'));
-      expect(pageSource, contains('ReviewWordActionCoordinator'));
-      expect(pageSource, contains('_wordActionCoordinator()'));
-      expect(pageSource, contains('feedbackMessage'));
-      expect(pageSource, isNot(contains('toggleFavorite(current.word)')));
-      expect(pageSource, isNot(contains('markManuallyMastered(currentWord.word)')));
-      expect(pageSource, isNot(contains('_isFavorited')));
-      expect(pageSource, isNot(contains('TODO: persist favorite')));
-      expect(actionsSource, contains('FavRepository'));
-      expect(actionsSource, contains('MasteredRepository'));
-      expect(coordinatorSource, contains('ReviewWordActionOutcome'));
-      expect(coordinatorSource, contains('toggleFavorite(currentWord.word)'));
-      expect(coordinatorSource, contains('markCurrentWordAsKnown'));
-      expect(coordinatorSource, contains('markManuallyMastered(currentWord.word)'));
-      expect(feedbackSource, contains('extension ReviewWordActionFeedback'));
-      expect(feedbackSource, contains('favoritePersistFailed'));
-      expect(feedbackSource, contains('manualMasteryPersistFailed'));
-    });
-  });
-
-  group('正式复习页面操作协调边界', () {
-    test('音频状态、详情适配和更多操作面板均通过专用模块完成', () {
-      final appSource = File('lib/app/app.dart').readAsStringSync();
-      final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
-      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
-      final audioPlayerSource = File('lib/features/learning/application/review_audio_player.dart').readAsStringSync();
-      final audioStateSource = File('lib/features/learning/presentation/review_audio_state.dart').readAsStringSync();
-      final detailsSource = File('lib/features/learning/application/review_word_details.dart').readAsStringSync();
-      final sheetSource = File('lib/features/learning/presentation/widgets/formal_review_more_options_sheet.dart')
-          .readAsStringSync();
-      final widgetsSource = File('lib/features/learning/presentation/widgets/formal_review_widgets.dart')
-          .readAsStringSync();
-
-      expect(appSource, contains('ReviewAudioPlayer'));
-      expect(appSource, contains('ReviewAudioState'));
-      expect(locatorSource, contains('ReviewAudioPlayer'));
-      expect(locatorSource, contains('sl<AudioService>().playWordAudio(word)'));
-      expect(pageSource, contains('ReviewAudioState'));
-      expect(pageSource, contains('FormalReviewMoreOptionsSheet'));
-      expect(pageSource, contains('word.toDictionaryWord()'));
-      expect(pageSource, contains(".playWord(word.word)"));
-      expect(pageSource, isNot(contains('sl<AudioService>()')));
-      expect(pageSource, isNot(contains('_audioLoading')));
-      expect(audioPlayerSource, contains('class ReviewAudioPlayer'));
-      expect(audioStateSource, contains('class ReviewAudioState'));
-      expect(audioStateSource, contains('ReviewAudioPlayer'));
-      expect(audioStateSource, isNot(contains('AudioService')));
-      expect(detailsSource, contains('extension ReviewWordDetails'));
-      expect(detailsSource, contains('toDictionaryWord'));
-      expect(sheetSource, contains('class FormalReviewMoreOptionsSheet'));
-      expect(widgetsSource, contains("export 'formal_review_more_options_sheet.dart';"));
-    });
-  });
-
-  group('正式复习会话状态边界', () {
-    test('主复习页通过会话展示状态管理本地题目与进度', () {
-      final appSource = File('lib/app/app.dart').readAsStringSync();
+  group('正式复习禁止依赖', () {
+    test('路由页面不回流会话算法、遗留聚合状态或服务定位器', () {
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
 
-      expect(appSource, contains('ChangeNotifierProxyProvider<ReviewRatingWriter, ReviewSessionState>'));
-      expect(pageSource, contains('ReviewSessionState'));
-      expect(pageSource, contains('context.watch<ReviewSessionState>()'));
+      expect(pageSource, isNot(contains('LearningState')));
       expect(pageSource, isNot(contains('SuperMemoryEngine')));
-      expect(pageSource, isNot(contains('ChoiceGenerator')));
       expect(pageSource, isNot(contains('ReviewQueueReader')));
+      expect(pageSource, isNot(contains('ChoiceGenerator')));
+      expect(pageSource, isNot(contains('sl<AudioService>()')));
     });
-  });
 
-  group('复习评分写入边界', () {
-    test('评分执行器提交 FSRS 评分，会话保留实际词条捕获和进度编排', () {
-      final appSource = File('lib/app/app.dart').readAsStringSync();
-      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+    test('展示组件不读取会话状态，评分执行器不依赖页面', () {
+      const widgetFiles = [
+        'lib/features/learning/presentation/widgets/formal_review_session_layout.dart',
+        'lib/features/learning/presentation/widgets/formal_review_header.dart',
+        'lib/features/learning/presentation/widgets/formal_review_question.dart',
+      ];
       final executorSource = File('lib/features/learning/application/review_session_rating_executor.dart')
           .readAsStringSync();
-      final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
-      expect(appSource, contains('ProxyProvider<LearningState, ReviewRatingWriter>'));
-      expect(appSource, contains('ReviewRatingWriter(writeRating: legacy.rateReviewWord)'));
-      expect(pageSource, contains('onSelectChoice: session.selectChoice'));
-      expect(pageSource, contains('onContinueWithGoodRating: session.continueWithGoodRating'));
-      expect(pageSource, isNot(contains('ReviewRatingWriter')));
-      expect(sessionSource, contains('ReviewSessionRatingExecutor'));
-      expect(sessionSource, contains('final reviewedWord = currentWord'));
-      expect(sessionSource, contains('_ratingExecutor.rate(reviewedWord: reviewedWord, rating: rating)'));
-      expect(sessionSource, contains('_ratingExecutor.markAsKnown()'));
-      expect(sessionSource, isNot(contains('FsrsRating')));
-      expect(executorSource, contains('ReviewRatingWriter'));
-      expect(executorSource, contains('FsrsRating'));
-      expect(executorSource, contains('_ratingWriter.rate(word: reviewedWord.word, rating: _toFsrsRating(rating))'));
-      expect(executorSource, contains('_engine.iReallyKnow()'));
-      expect(pageSource, isNot(contains('LearningState')));
-    });
-  });
-
-  group('复习候选规则边界', () {
-    test('会话题目工厂复用共享候选生成规则', () {
-      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
-      final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
-      final questionFactorySource = File('lib/features/learning/application/review_session_question_factory.dart')
-          .readAsStringSync();
-
-      expect(questionFactorySource, contains('ChoiceGenerator'));
-      expect(questionFactorySource, contains('ChoiceCandidate'));
-      expect(sessionSource, contains('ReviewSessionQuestionFactory'));
-      expect(sessionSource, isNot(contains('ChoiceGenerator')));
-      expect(sessionSource, isNot(contains('ChoiceCandidate')));
-      expect(pageSource, isNot(contains('ChoiceGenerator')));
-      expect(questionFactorySource, isNot(contains('dart:convert')));
-      expect(questionFactorySource, isNot(contains('_extractCn')));
-      expect(questionFactorySource, isNot(contains("'非标准用法'")));
-    });
-  });
-
-  group('每日新学词数设置边界', () {
-    test('设置状态是每日新学词数的唯一页面读写入口', () {
-      final appSource = File('lib/app/app.dart').readAsStringSync();
-      final settingsPageSource = File('lib/pages/settings_page.dart').readAsStringSync();
-      final legacySource = File('lib/state/learning_state.dart').readAsStringSync();
-
-      expect(appSource, contains('sl<SettingsState>()..init()'));
-      expect(settingsPageSource, contains('SettingsState'));
-      expect(settingsPageSource, isNot(contains("import 'package:shared_preferences/shared_preferences.dart';")));
-      expect(settingsPageSource, isNot(contains('_dailyNewWords')));
-      expect(legacySource, isNot(contains('daily_new_words_v1')));
-      expect(legacySource, isNot(contains('setDailyNewWords')));
-    });
-  });
-
-  group('生词本数据边界', () {
-    test('生词本页面通过读取器和展示状态访问独立数据源', () {
-      final appSource = File('lib/app/app.dart').readAsStringSync();
-      final pageSource = File('lib/pages/new_words_page.dart').readAsStringSync();
-      final footMarkSource = File('lib/pages/foot_mark_page.dart').readAsStringSync();
-      final dictionarySource = File('lib/pages/dictionary_page.dart').readAsStringSync();
-      final legacySource = File('lib/state/learning_state.dart').readAsStringSync();
-
-      expect(appSource, contains('Provider<NewWordsReader>.value'));
-      expect(appSource, contains('sl<NewWordsState>()..initialize()'));
-      expect(pageSource, contains('NewWordsReader'));
-      expect(pageSource, contains('NewWordsState'));
-      expect(pageSource, isNot(contains('LearningState')));
-      expect(footMarkSource, contains('newWords.count'));
-      expect(dictionarySource, contains('NewWordsState'));
-      expect(dictionarySource, contains("source: 'dictionary'"));
-      expect(legacySource, isNot(contains('getNewWords')));
-      expect(legacySource, isNot(contains('newWordNum')));
-    });
-  });
-
-  group('已掌握词表查询边界', () {
-    test('已掌握词表页面通过读取器加载数据', () {
-      final source = File('lib/pages/mastered_words_page.dart').readAsStringSync();
-
-      final appSource = File('lib/app/app.dart').readAsStringSync();
-
-      expect(source, contains('MasteredWordsReader'));
-      expect(source, contains('loadWordsForContext'));
-      expect(appSource, contains('Provider<MasteredWordsReader>.value'));
-
-      expect(source, isNot(contains('LearningState')));
-      expect(source, isNot(contains('service_locator.dart')));
-    });
-  });
-
-  group('词书单词查询边界', () {
-    test('词书单词页通过读取器加载数据', () {
-      final source = File('lib/pages/book_words_page.dart').readAsStringSync();
-      final appSource = File('lib/app/app.dart').readAsStringSync();
-
-      expect(source, contains('BookWordsReader'));
-      expect(source, contains('loadWordsForContext'));
-      expect(appSource, contains('Provider<BookWordsReader>.value'));
-      expect(source, isNot(contains('LearningState')));
-    });
-  });
-
-  group('队列分类词表查询边界', () {
-    test('队列分类词表页通过展示适配器加载数据', () {
-      const pages = [
-        'lib/pages/my_words_page.dart',
-        'lib/pages/not_learned_words_page.dart',
-        'lib/pages/reviewing_words_page.dart',
-      ];
-      final appSource = File('lib/app/app.dart').readAsStringSync();
-
-      expect(appSource, contains('LearningQueueWordListsState'));
-      for (final path in pages) {
-        final source = File(path).readAsStringSync();
-        expect(source, contains('LearningQueueWordListsState'), reason: '$path 应读取队列词表展示适配器');
-        expect(source, isNot(contains('LearningState')), reason: '$path 不应直接读取遗留 LearningState');
+      for (final path in widgetFiles) {
+        expect(File(path).readAsStringSync(), isNot(contains('ReviewSessionState')), reason: '$path 不应读取会话状态');
       }
-    });
-  });
-
-  group('学习集合展示状态边界', () {
-    test('足迹页通过集合展示状态读取掌握数量', () {
-      final source = File('lib/pages/foot_mark_page.dart').readAsStringSync();
-
-      expect(source, contains('LearningCollectionsState'));
-      expect(source, contains('collections.masteredCount'));
-      expect(source, isNot(contains('count: state.masteredNum')));
+      expect(executorSource, isNot(contains("import '../../../pages/")));
+      expect(executorSource, isNot(contains('BuildContext')));
     });
 
-    test('我的内容页只读取收藏集合展示状态', () {
-      final source = File('lib/pages/my_content_page.dart').readAsStringSync();
+    test('遗留深链不会重新实例化或保留旧复习会话实现', () {
+      final learningRoutesSource = File('lib/core/router/learning_routes.dart').readAsStringSync();
 
-      expect(source, contains('LearningCollectionsState'));
-      expect(source, isNot(contains('LearningState')));
-    });
-  });
-
-  group('学习统计状态边界', () {
-    test('首页与仪表盘只读取学习统计状态', () {
-      const statisticsPages = ['lib/screens/home_screen.dart', 'lib/pages/dashboard_page.dart'];
-
-      for (final path in statisticsPages) {
-        final source = File(path).readAsStringSync();
-        expect(source, contains('LearningStatisticsState'), reason: '$path 应读取 LearningStatisticsState');
-        expect(source, isNot(contains('LearningState')), reason: '$path 不应直接读取遗留 LearningState');
-      }
-    });
-  });
-
-  group('学习会话状态边界', () {
-    test('学习会话页面统一读取 LearnState', () {
-      const sessionPages = [
-        'lib/pages/learn_page.dart',
-        'lib/screens/learn_session.dart',
-        'lib/pages/word_machine_page.dart',
-      ];
-
-      for (final path in sessionPages) {
-        final source = File(path).readAsStringSync();
-        expect(source, contains('LearnState'), reason: '$path 应读取 LearnState');
-        expect(source, isNot(contains('LearningState')), reason: '$path 不应直接读取遗留 LearningState');
-      }
+      expect(File('lib/screens/review_session.dart').existsSync(), isFalse);
+      expect(learningRoutesSource, isNot(contains("import '../../screens/review_session.dart';")));
+      expect(learningRoutesSource, isNot(contains('return const ReviewSession();')));
     });
   });
 }

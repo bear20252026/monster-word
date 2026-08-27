@@ -25,9 +25,9 @@ void main() {
 
       executor.rate(reviewedWord: reviewedWord!, rating: RecallRating.good);
 
-      expect(persistedWord, 'first');
+      expect(persistedWord, reviewedWord.word);
       expect(persistedRating, FsrsRating.good);
-      expect(engine.currentWord()?.word, isNot('first'));
+      expect(engine.currentWord()?.word, isNot(reviewedWord.word));
     });
 
     test('将不同回忆等级映射为对应的 FSRS 等级', () async {

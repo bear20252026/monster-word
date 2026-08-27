@@ -10,6 +10,7 @@ import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart';
 import '../engine/fsrs6_engine.dart';
 import '../engine/leitner_engine.dart';
+import '../features/learning/data/review_schedule_repository.dart';
 import '../features/learning/domain/choice_generator.dart';
 import '../features/learning/domain/queue_word_lists.dart';
 import '../models/bb_word_process.dart';
@@ -23,22 +24,12 @@ class LearningState extends ChangeNotifier {
   int _currentIndex = 0;
   bool _showAnswer = false;
 
-  // FSRS-6 SRS 相关（升级自 FSRS-5，支持短时记忆模型和更精确的记忆预测）
-  final Fsrs6Engine _fsrsEngine = Fsrs6Engine();
-  Map<String, FsrsCard> _cards = {};
-  static const _cardsPrefKey = 'fsrs6_cards_v1';
+  // 正式复习的 FSRS 卡片和每日统计由独立调度仓储维护。
+  final ReviewScheduleRepository _reviewSchedule;
 
   // 单词收藏与掌握标记均委托给独立仓储。
   final FavRepository _favRepository;
   final MasteredRepository _masteredRepository;
-
-  // ========== 学习统计（每日计数 + 连续天数） ==========
-  // 格式: { "2026-08-24": {"learn": 15, "review": 30}, ... }
-  Map<String, Map<String, int>> _dailyStats = {};
-  // 有学习活动的日期集合，用于计算连续天数
-  Set<String> _activeDates = {};
-  static const _dailyStatsPrefKey = 'daily_stats_v1';
-  static const _activeDatesPrefKey = 'active_learn_dates_v1';
 
   // Leitner 学习引擎（4选1选词）
   final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
@@ -57,8 +48,10 @@ class LearningState extends ChangeNotifier {
   /// 当前 4 选 1 选项
   List<WordChoicePair> get choices => _choices;
 
-  /// 今日待复习数量
-  int get dueCount => _fsrsEngine.getDueCards(_cards.values.toList()).length;
+  /// 今日待复习数量。
+  ///
+  /// 兼容遗留统计页面；正式复习直接通过 [ReviewScheduleRepository] 获取调度数据。
+  int get dueCount => _reviewSchedule.dueCount;
 
   Word? get currentWord => _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
 
@@ -100,134 +93,36 @@ class LearningState extends ChangeNotifier {
     }
   }
 
-  /// 构造函数：加载遗留持久化数据。
+  /// 构造函数：保留遗留学习会话和页面的兼容入口。
   ///
-  /// 收藏和掌握标记分别由仓储负责加载和保存，因此不再在此重复维护。
-  LearningState({required FavRepository favRepository, required MasteredRepository masteredRepository})
-    : _favRepository = favRepository,
-      _masteredRepository = masteredRepository {
-    _loadCards();
-    _loadDailyStats();
-    _loadActiveDates();
-    _loadProgress();
+  /// 卡片、评分和每日统计的唯一事实来源是 [ReviewScheduleRepository]；此状态仅在
+  /// 调度变化后转发通知，使尚未迁出的学习统计页面维持实时更新。
+  LearningState({
+    required FavRepository favRepository,
+    required MasteredRepository masteredRepository,
+    ReviewScheduleRepository? reviewSchedule,
+  }) : _favRepository = favRepository,
+       _masteredRepository = masteredRepository,
+       _reviewSchedule = reviewSchedule ?? ReviewScheduleRepository() {
+    _reviewSchedule.addListener(_onReviewScheduleChanged);
+    unawaited(_reviewSchedule.initialize());
+    unawaited(_loadProgress());
   }
 
-  /// 从 shared_preferences 加载 FSRS-5 卡片
-  Future<void> _loadCards() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_cardsPrefKey);
-      if (raw != null && raw.isNotEmpty) {
-        final map = jsonDecode(raw) as Map<String, dynamic>;
-        _cards = map.map((k, v) => MapEntry(k, FsrsCard.fromJson(v as Map<String, dynamic>)));
-      }
-    } catch (e) {
-      debugPrint('FSRS-5 cards loading error: $e');
-      _cards = {};
-    }
-  }
-
-  /// 保存 FSRS-5 卡片到 shared_preferences
-  Future<void> _saveCards() async {
-    final prefs = await SharedPreferences.getInstance();
-    final map = _cards.map((k, v) => MapEntry(k, v.toJson()));
-    await prefs.setString(_cardsPrefKey, jsonEncode(map));
-  }
+  void _onReviewScheduleChanged() => notifyListeners();
 
   // ========== 收藏 & 标记已掌握 ==========
 
-  // ========== 每日学习统计 + 连续天数 ==========
+  // ========== 学习统计 Getter（兼容委托） ==========
 
-  /// 获取今天的日期字符串（YYYY-MM-DD）
-  String _todayStr() {
-    final now = DateTime.now();
-    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-  }
+  /// 今日学习单词数（首次学习的新词）。
+  int get todayLearnCount => _reviewSchedule.todayLearnCount;
 
-  /// 从 SharedPreferences 加载每日统计
-  Future<void> _loadDailyStats() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_dailyStatsPrefKey);
-      if (raw != null && raw.isNotEmpty) {
-        final map = jsonDecode(raw) as Map<String, dynamic>;
-        _dailyStats = map.map((date, counts) {
-          final m = counts as Map<String, dynamic>;
-          return MapEntry(date, {'learn': m['learn'] as int? ?? 0, 'review': m['review'] as int? ?? 0});
-        });
-      }
-    } catch (e) {
-      debugPrint('Daily stats loading error: $e');
-      _dailyStats = {};
-    }
-  }
+  /// 今日复习单词数（已有 SRS 卡片的词）。
+  int get todayReviewCount => _reviewSchedule.todayReviewCount;
 
-  /// 保存每日统计到 SharedPreferences
-  Future<void> _saveDailyStats() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_dailyStatsPrefKey, jsonEncode(_dailyStats));
-  }
-
-  /// 从 SharedPreferences 加载活跃日期集合
-  Future<void> _loadActiveDates() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getStringList(_activeDatesPrefKey);
-      if (raw != null) _activeDates = raw.toSet();
-    } catch (e) {
-      debugPrint('Active dates loading error: $e');
-      _activeDates = {};
-    }
-  }
-
-  /// 保存活跃日期集合到 SharedPreferences
-  Future<void> _saveActiveDates() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_activeDatesPrefKey, _activeDates.toList());
-  }
-
-  /// 记录一次学习活动（learn=true 为新学，learn=false 为复习）
-  Future<void> _recordActivity({required bool isLearn}) async {
-    final today = _todayStr();
-    _dailyStats.putIfAbsent(today, () => {'learn': 0, 'review': 0});
-    if (isLearn) {
-      _dailyStats[today]!['learn'] = (_dailyStats[today]!['learn'] ?? 0) + 1;
-    } else {
-      _dailyStats[today]!['review'] = (_dailyStats[today]!['review'] ?? 0) + 1;
-    }
-    _activeDates.add(today);
-    await _saveDailyStats();
-    await _saveActiveDates();
-  }
-
-  // ========== 学习统计 Getter ==========
-
-  /// 今日学习单词数（首次学习的新词）
-  int get todayLearnCount {
-    return _dailyStats[_todayStr()]?['learn'] ?? 0;
-  }
-
-  /// 今日复习单词数（已有 SRS 卡片的词）
-  int get todayReviewCount {
-    return _dailyStats[_todayStr()]?['review'] ?? 0;
-  }
-
-  /// 连续学习天数（从今天往回数，有学习活动的连续天数）
-  int get consecutiveDays {
-    if (_activeDates.isEmpty) return 0;
-    int count = 0;
-    var date = DateTime.now();
-    while (true) {
-      final ds = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-      if (_activeDates.contains(ds)) {
-        count++;
-        date = date.subtract(const Duration(days: 1));
-      } else {
-        break;
-      }
-    }
-    return count;
-  }
+  /// 连续学习天数（从今天往回数，有学习活动的连续天数）。
+  int get consecutiveDays => _reviewSchedule.consecutiveDays;
 
   /// 单词是否已收藏。
   ///
@@ -385,7 +280,7 @@ class LearningState extends ChangeNotifier {
         _leitnerEngine.tooEasy();
     }
 
-    await _persistFsrsRating(word: word.word, rating: rating);
+    await _reviewSchedule.rateWord(word: word.word, rating: rating);
 
     // 移动到下一个（引擎当前词已推进）
     _currentIndex++;
@@ -396,24 +291,12 @@ class LearningState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 持久化正式复习会话中实际作答单词的 FSRS 评分。
+  /// 兼容仍使用 [LearningState] 的调用方，委托到独立调度事实来源。
   ///
-  /// 不读取或推进当前学习队列，避免 [SuperMemoryEngine] 已推进后将评分写入
-  /// 另一单词；卡片序列化和每日统计则与 [rate] 使用完全相同的逻辑。
-  Future<void> rateReviewWord({required String word, required FsrsRating rating}) async {
-    await _persistFsrsRating(word: word, rating: rating);
-    notifyListeners();
-  }
-
-  Future<void> _persistFsrsRating({required String word, required FsrsRating rating}) async {
-    final existing = _cards[word];
-    final isLearn = existing == null; // 新词=learn，已有卡片=review
-    final updated = isLearn ? _fsrsEngine.learn(word, rating) : _fsrsEngine.review(existing, rating);
-    _cards[word] = updated;
-    await _saveCards();
-
-    // 记录每日学习统计
-    await _recordActivity(isLearn: isLearn);
+  /// 正式复习不再通过此状态写入评分，而是直接使用 [ReviewScheduleRepository]。
+  /// 这里不读取或推进当前学习队列，因此仍不会发生推进后给另一单词评分的问题。
+  Future<void> rateReviewWord({required String word, required FsrsRating rating}) {
+    return _reviewSchedule.rateWord(word: word, rating: rating);
   }
 
   /// 重学：将当前单词重新插入队列（当前位置之后），稍后再次出现
@@ -427,8 +310,8 @@ class LearningState extends ChangeNotifier {
     final insertAt = _currentIndex.clamp(0, _queue.length);
     _queue.insert(insertAt, word);
 
-    // 重置 SRS 卡片，让该词回到初始学习状态
-    _cards.remove(word.word);
+    // 重置 SRS 卡片，让该词回到初始学习状态。
+    unawaited(_reviewSchedule.forget(word.word));
 
     // 推进到下一个词
     if (_currentIndex >= _queue.length) {
@@ -473,39 +356,23 @@ class LearningState extends ChangeNotifier {
 
   // ========== FSRS-6 数据访问 ==========
 
-  /// 获取当前单词的 FSRS 卡片
+  /// 获取当前单词的 FSRS 卡片。
   FsrsCard? get currentCard {
     final word = currentWord;
-    if (word == null) return null;
-    return _cards[word.word];
+    return word == null ? null : _reviewSchedule.cardFor(word.word);
   }
 
-  /// 获取任意单词的 FSRS 卡片
-  FsrsCard? getCard(String word) => _cards[word];
+  /// 获取任意单词的 FSRS 卡片。
+  FsrsCard? getCard(String word) => _reviewSchedule.cardFor(word);
 
-  /// 获取当前单词的记忆预测信息
+  /// 获取当前单词的记忆预测信息。
   Map<String, dynamic>? get currentPrediction {
-    final card = currentCard;
-    if (card == null) return null;
-    return _fsrsEngine.getPrediction(card);
+    final word = currentWord;
+    return word == null ? null : _reviewSchedule.predictionFor(word.word);
   }
 
-  /// 获取记忆统计（用于仪表盘）
-  Map<String, int> get memoryStats {
-    int newCount = 0, dueCount = 0, learningCount = 0, matureCount = 0;
-    for (final card in _cards.values) {
-      if (card.isNew) {
-        newCount++;
-      } else if (card.isDue) {
-        dueCount++;
-      } else if (card.stability < 7) {
-        learningCount++;
-      } else {
-        matureCount++;
-      }
-    }
-    return {'new': newCount, 'due': dueCount, 'learning': learningCount, 'mature': matureCount, 'total': _cards.length};
-  }
+  /// 获取记忆统计（用于仪表盘）。
+  Map<String, int> get memoryStats => _reviewSchedule.memoryStats;
 
   /// 获取今日学习统计
   Map<String, int> get todayStats {
@@ -518,13 +385,8 @@ class LearningState extends ChangeNotifier {
     };
   }
 
-  /// 获取所有到期需要复习的单词
-  List<Word> get dueWords {
-    return _queue.where((w) {
-      final card = _cards[w.word];
-      return card != null && !card.isNew && card.isDue;
-    }).toList();
-  }
+  /// 获取所有到期需要复习的单词。
+  List<Word> get dueWords => _reviewSchedule.dueWordsFor(_queue);
 
   // ========== 登录状态 ==========
 
@@ -564,14 +426,14 @@ class LearningState extends ChangeNotifier {
 
   int get masteredNum => _masteredRepository.masteredCount;
   int get notLearnedNum => _queue.length - learnedNum;
-  int get reviewingNum => _fsrsEngine.getDueCards(_cards.values.toList()).length;
-  int get totalLearnedDays => _activeDates.length;
+  int get reviewingNum => _reviewSchedule.dueCount;
+  int get totalLearnedDays => _reviewSchedule.activeDateCount;
 
   QueueWordLists get queueWordLists => QueueWordLists.fromQueue(
     queue: _queue,
-    isLearned: (word) => _cards.containsKey(word.word),
+    isLearned: (word) => _reviewSchedule.cardFor(word.word) != null,
     isReviewing: (word) {
-      final card = _cards[word.word];
+      final card = _reviewSchedule.cardFor(word.word);
       return card != null && card.difficulty <= 5.0;
     },
   );
@@ -581,8 +443,8 @@ class LearningState extends ChangeNotifier {
   }
 
   Future<List<Word>> getMasteredWordsBySrs() async {
-    return _queue.where((w) {
-      final card = _cards[w.word];
+    return _queue.where((word) {
+      final card = _reviewSchedule.cardFor(word.word);
       return card != null && card.difficulty > 5.0;
     }).toList();
   }
@@ -598,5 +460,12 @@ class LearningState extends ChangeNotifier {
   Future<List<Word>> getWordsByBook(int bookId) async {
     // TODO: 从数据库查询指定词书的单词
     return await WordBookDatabase.instance.getWordsByBook(bookId, limit: 1000);
+  }
+
+  @override
+  void dispose() {
+    _reviewSchedule.removeListener(_onReviewScheduleChanged);
+    exitLearning();
+    super.dispose();
   }
 }

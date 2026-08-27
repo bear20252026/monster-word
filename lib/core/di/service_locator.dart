@@ -34,6 +34,7 @@ import '../../services/stats_service_impl.dart';
 import '../../repositories/stats_repository.dart';
 import '../../repositories/stats_repository_impl.dart';
 import '../../features/learning/application/book_words_reader.dart';
+import '../../features/learning/data/review_schedule_repository.dart';
 import '../../features/learning/application/mastered_words_reader.dart';
 import '../../features/learning/application/new_words_reader.dart';
 import '../../features/learning/application/review_audio_player.dart';
@@ -135,6 +136,11 @@ Future<void> setupServiceLocator() async {
   // ReviewQueueReader
   if (!sl.isRegistered<ReviewQueueReader>()) {
     sl.registerLazySingleton<ReviewQueueReader>(() => ReviewQueueReader(wordRepository: sl<WordRepository>()));
+  }
+
+  // ReviewScheduleRepository（正式复习 FSRS 调度与评分事实来源）
+  if (!sl.isRegistered<ReviewScheduleRepository>()) {
+    sl.registerLazySingleton<ReviewScheduleRepository>(() => ReviewScheduleRepository());
   }
 
   // ========== Service Layer（服务层）==========
