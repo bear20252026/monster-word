@@ -5,6 +5,7 @@ import 'package:word_app/features/learning/data/learning_progress_repository.dar
 import 'package:word_app/features/learning/data/learning_queue_repository.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
 import 'package:word_app/models/book.dart';
@@ -56,6 +57,23 @@ void main() {
     expect(statistics.total, 1);
     expect(statistics.dueCount, 0);
     expect(statistics.memoryStats['total'], 0);
+  });
+
+  test('专用收藏状态刷新并切换收藏时更新可订阅计数', () async {
+    final repository = _FakeFavRepository();
+    await repository.addFavorite('saved');
+    final favorites = LearningFavoritesState(
+      favoriteRepository: repository,
+      queueRepository: LearningQueueRepository(wordSource: _FakeWordSource(const []), favRepository: repository),
+    );
+
+    await favorites.refresh();
+    expect(favorites.favoriteCount, 1);
+    expect(favorites.isFavorite('saved'), isTrue);
+
+    final isFavorite = await favorites.toggle('saved');
+    expect(isFavorite, isFalse);
+    expect(favorites.favoriteCount, 0);
   });
 
   test('专用学习会话独立完成词书加载、候选生成与评分推进', () async {

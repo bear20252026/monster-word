@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../features/learning/presentation/learning_favorites_state.dart';
 import '../features/learning/presentation/learning_session_state.dart';
 import '../screens/learn_session.dart';
 import '../state/learning_state.dart';
@@ -32,8 +33,8 @@ class _MyFavPageState extends State<MyFavPage> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final state = context.read<LearningState>();
-    final words = await state.getFavoriteWords();
+    final favorites = context.read<LearningFavoritesState>();
+    final words = await favorites.loadFavoriteWords(currentQueue: context.read<LearningSessionState>().queue);
     if (mounted) {
       setState(() {
         _words = words.cast<Word>();
@@ -72,7 +73,7 @@ class _MyFavPageState extends State<MyFavPage> {
   /// 批量取消收藏
   Future<void> _batchRemoveFavorites() async {
     if (_selectedIndices.isEmpty) return;
-    final state = context.read<LearningState>();
+    final favorites = context.read<LearningFavoritesState>();
     final toRemove = _selectedIndices.map((i) => _words[i].word).toList();
 
     final confirmed = await showDialog<bool>(
@@ -89,7 +90,7 @@ class _MyFavPageState extends State<MyFavPage> {
 
     if (confirmed == true) {
       for (final word in toRemove) {
-        await state.toggleFavorite(word);
+        await favorites.toggle(word);
       }
       _toggleBatchEdit();
       await _loadData();
@@ -107,7 +108,7 @@ class _MyFavPageState extends State<MyFavPage> {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    final state = context.watch<LearningState>();
+    final favorites = context.watch<LearningFavoritesState>();
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
@@ -115,7 +116,7 @@ class _MyFavPageState extends State<MyFavPage> {
         child: Column(
           children: [
             // 导航栏
-            _buildNavBar(skin, state),
+            _buildNavBar(skin, favorites),
             Container(height: 1, color: skin.colors.divider),
             // 内容区
             Expanded(
@@ -131,7 +132,7 @@ class _MyFavPageState extends State<MyFavPage> {
     );
   }
 
-  Widget _buildNavBar(SkinSystem skin, LearningState state) {
+  Widget _buildNavBar(SkinSystem skin, LearningFavoritesState favorites) {
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -154,7 +155,7 @@ class _MyFavPageState extends State<MyFavPage> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
-              '${state.favoriteCount}',
+              '${favorites.favoriteCount}',
               style: MistralTypography.captionBold.copyWith(color: MistralColors.primary),
             ),
           ),
@@ -258,8 +259,8 @@ class _MyFavPageState extends State<MyFavPage> {
                   );
                 },
                 onDismissed: (direction) async {
-                  final state = context.read<LearningState>();
-                  await state.toggleFavorite(word.word);
+                  final favorites = context.read<LearningFavoritesState>();
+                  await favorites.toggle(word.word);
                   setState(() => _words.removeAt(index));
                 },
                 child: ListTile(

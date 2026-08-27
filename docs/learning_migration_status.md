@@ -194,3 +194,9 @@
 句子测验页、词条详情页、词书选择卡和收藏词“开始学习”入口现直接使用 `LearningSessionState` 完成当前词读取、词书/收藏队列加载与学习评分。词条详情页的 FSRS 预测改为直接读取 `ReviewScheduleRepository`，避免为了展示预测而重新经过遗留外观。
 
 词典、收藏批量管理、账号、引导及导出页面仍可暂时使用 `LearningState` 的收藏、账号或兼容读取 API；它们不应再调用加载、评分、索引或候选生成等学习会话命令。下一步迁移这些页面时，应按其实际职责分别接入收藏仓储、队列快照或账号状态，而不是继续扩展兼容外观。
+
+## 收藏单词状态边界
+
+`LearningFavoritesState` 现为词典、检索和收藏词页面的收藏单词读取与切换状态。它将持久化写入继续委托给既有 `FavRepository`，并通过 `LearningQueueRepository` 保留“收藏词优先从完整词库解析，未解析时回退当前学习队列”的读取语义。收藏页面不再依赖 `LearningState` 的收藏 API。
+
+`LearningCollectionsState` 暂时仍仅为“已掌握单词”数量提供兼容快照；它不与 `LearningFavoritesState` 共享或复制收藏持久化。后续迁移掌握标记时应建立同样独立的读写状态，再移除该兼容快照中的遗留依赖。

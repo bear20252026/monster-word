@@ -17,6 +17,7 @@ import '../data/learning_progress_repository.dart';
 import '../data/learning_queue_repository.dart';
 import '../data/review_schedule_repository.dart';
 import 'learning_collections_state.dart';
+import 'learning_favorites_state.dart';
 import 'learning_queue_state.dart';
 import 'learning_queue_word_lists_state.dart';
 import 'learning_session_state.dart';
@@ -37,6 +38,12 @@ Widget buildLearningFeatureScope({required Widget child}) {
     providers: [
       ChangeNotifierProvider<ReviewScheduleRepository>.value(value: sl<ReviewScheduleRepository>()),
       Provider<LearningQueueRepository>.value(value: sl<LearningQueueRepository>()),
+      ChangeNotifierProvider(
+        create: (_) => LearningFavoritesState(
+          favoriteRepository: sl<FavRepository>(),
+          queueRepository: sl<LearningQueueRepository>(),
+        ),
+      ),
       ChangeNotifierProvider(
         create: (_) => LearningSessionState(
           queueRepository: sl<LearningQueueRepository>(),
