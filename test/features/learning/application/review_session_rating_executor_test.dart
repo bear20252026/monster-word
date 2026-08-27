@@ -21,13 +21,13 @@ void main() {
           },
         ),
       );
-      final reviewedWord = engine.currentWord;
+      final reviewedWord = engine.currentWord();
 
       executor.rate(reviewedWord: reviewedWord!, rating: RecallRating.good);
 
       expect(persistedWord, 'first');
       expect(persistedRating, FsrsRating.good);
-      expect(engine.currentWord?.word, isNot('first'));
+      expect(engine.currentWord()?.word, isNot('first'));
     });
 
     test('将不同回忆等级映射为对应的 FSRS 等级', () async {
@@ -48,7 +48,7 @@ void main() {
           ),
         );
 
-        executor.rate(reviewedWord: engine.currentWord!, rating: expectation.recall);
+        executor.rate(reviewedWord: engine.currentWord()!, rating: expectation.recall);
 
         expect(persistedRating, expectation.fsrs);
       }
@@ -67,7 +67,7 @@ void main() {
         ReviewRatingWriter(writeRating: ({required word, required rating}) async => newWrites++),
       );
       executor.markAsKnown();
-      executor.rate(reviewedWord: engine.currentWord!, rating: RecallRating.good);
+      executor.rate(reviewedWord: engine.currentWord()!, rating: RecallRating.good);
 
       expect(oldWrites, 0);
       expect(newWrites, 1);
