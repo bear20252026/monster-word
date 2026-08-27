@@ -25,7 +25,8 @@ void main() {
       await state.initialize(ReviewQueueSnapshot(dueWords: words, queueWords: const []));
       final reviewedWord = state.currentWord;
 
-      expect(state.initialized, isTrue);
+      expect(state.loadPhase, ReviewSessionLoadPhase.ready);
+      expect(state.isReady, isTrue);
       expect(state.total, 2);
       expect(state.done, 0);
       expect(reviewedWord, isNotNull);
