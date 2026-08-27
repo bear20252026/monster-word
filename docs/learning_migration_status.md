@@ -98,7 +98,14 @@
 
 主路由 `/review` 对应的 `ReviewPage` 已改为复用 `ChoiceGenerator` 与 `ChoiceCandidate`。候选项继续遵循与学习流程一致的规则：释义去重、中文释义优先、最多三个干扰项、稳定兜底和随机展示。页面内原有的 JSON 中文释义解析、候选池筛选和兜底文字已删除。
 
-本轮不改变复习队列选择、FSRS 评分或持久化。`ReviewPage` 仍直接读取遗留学习状态以取得到期词，并保留自己的 `SuperMemoryEngine`；`ReviewSession` 仍是另一套兼容/演示会话实现。这两条流程的入口、队列和评分合同必须先统一，不能仅因候选生成规则已共享就强行将其合并。
+候选规则收敛时未改变复习队列选择、FSRS 评分或持久化。`ReviewPage` 保留自己的 `SuperMemoryEngine`；`ReviewSession` 仍是另一套兼容/演示会话实现。这两条流程的入口、队列和评分合同必须先统一，不能仅因候选生成规则已共享就强行将其合并。
+
+
+## 正式复习队列读取边界
+
+`ReviewPage` 现在通过 `ReviewQueueState` 读取由 `LearningState` 提供的不可变队列快照，并委托 `ReviewQueueReader` 决定候选词。读取器将既有优先级固定为“FSRS 到期词 → 当前学习队列 → `a` 样本 → `the` 样本”，因此本轮不改变用户在无到期词时仍可进入复习的行为。
+
+这是一次过渡性读取隔离：FSRS 到期判断和当前学习队列的事实来源仍是 `LearningState`，但页面不再同时负责读取旧状态、选择优先级和词库回退查询。评分继续由页面写回 `LearningState.rate`，以保持卡片持久化、每日统计和现有排程语义不变；评分写入边界将作为下一独立阶段审计，不能直接迁用仅维护内存状态的兼容 `ReviewService`。
 
 
 ## 复习主入口边界

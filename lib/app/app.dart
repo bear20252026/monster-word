@@ -9,10 +9,12 @@ import '../repositories/mastered_repository.dart';
 import '../features/learning/application/book_words_reader.dart';
 import '../features/learning/application/mastered_words_reader.dart';
 import '../features/learning/application/new_words_reader.dart';
+import '../features/learning/application/review_queue_reader.dart';
 import '../features/learning/presentation/learning_collections_state.dart';
 import '../features/learning/presentation/learning_queue_word_lists_state.dart';
 import '../features/learning/presentation/learning_statistics_state.dart';
 import '../features/learning/presentation/new_words_state.dart';
+import '../features/learning/presentation/review_queue_state.dart';
 import '../pages/lib_select_page.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
@@ -57,9 +59,14 @@ class WordApp extends StatelessWidget {
           create: (_) => LearningQueueWordListsState(),
           update: (_, legacy, wordLists) => (wordLists ?? LearningQueueWordListsState())..synchronizeFrom(legacy),
         ),
+        ChangeNotifierProxyProvider<LearningState, ReviewQueueState>(
+          create: (_) => ReviewQueueState(),
+          update: (_, legacy, reviewQueue) => (reviewQueue ?? ReviewQueueState())..synchronizeFrom(legacy),
+        ),
         Provider<BookWordsReader>.value(value: sl<BookWordsReader>()),
         Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),
         Provider<NewWordsReader>.value(value: sl<NewWordsReader>()),
+        Provider<ReviewQueueReader>.value(value: sl<ReviewQueueReader>()),
         ChangeNotifierProvider(create: (_) => sl<NewWordsState>()..initialize()),
         ChangeNotifierProvider(create: (_) => sl<LearnState>()),
         ChangeNotifierProvider(create: (_) => sl<ReviewState>()),

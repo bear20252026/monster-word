@@ -45,6 +45,22 @@ void main() {
     });
   });
 
+  group('复习队列读取边界', () {
+    test('主复习页通过队列快照和读取器获取候选词', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+
+      expect(appSource, contains('ReviewQueueState'));
+      expect(appSource, contains('Provider<ReviewQueueReader>.value'));
+      expect(pageSource, contains('ReviewQueueState'));
+      expect(pageSource, contains('ReviewQueueReader'));
+      expect(pageSource, contains('loadWords(reviewQueue.snapshot)'));
+      expect(pageSource, isNot(contains('state.dueWords')));
+      expect(pageSource, isNot(contains('state.queue')));
+      expect(pageSource, isNot(contains('sl<WordRepository>()')));
+    });
+  });
+
   group('复习候选规则边界', () {
     test('主复习页复用共享候选生成规则', () {
       final source = File('lib/pages/review_page.dart').readAsStringSync();
