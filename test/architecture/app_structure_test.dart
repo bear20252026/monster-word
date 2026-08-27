@@ -63,8 +63,12 @@ void main() {
           .readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
-      expect(appSource, contains('ReviewQueueState'));
-      expect(appSource, contains('Provider<ReviewQueueReader>.value'));
+      final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
+
+      expect(appSource, contains('...buildLearningFeatureProviders()'));
+      expect(providersSource, contains('ReviewQueueState'));
+      expect(providersSource, contains('Provider<ReviewQueueReader>.value'));
       expect(pageSource, contains('ReviewQueueState'));
       expect(pageSource, contains('ReviewSessionState'));
       expect(pageSource, contains('ReviewSessionStarter'));
@@ -194,6 +198,8 @@ void main() {
   group('正式复习词条操作边界', () {
     test('页面读取收藏快照，协调器承接收藏和手动掌握的持久化控制流', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
+      final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
       final actionsSource = File('lib/features/learning/presentation/review_word_actions_state.dart')
           .readAsStringSync();
@@ -202,7 +208,8 @@ void main() {
       final feedbackSource = File('lib/features/learning/presentation/review_word_action_feedback.dart')
           .readAsStringSync();
 
-      expect(appSource, contains('ReviewWordActionsState'));
+      expect(appSource, contains('...buildLearningFeatureProviders()'));
+      expect(providersSource, contains('ReviewWordActionsState'));
       expect(pageSource, contains('ReviewWordActionsState'));
       expect(pageSource, contains('wordActions.isFavorite'));
       expect(pageSource, contains('ReviewWordActionCoordinator'));
@@ -227,6 +234,8 @@ void main() {
   group('正式复习页面操作协调边界', () {
     test('音频状态、详情适配和更多操作面板均通过专用模块完成', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
+      final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
       final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
       final audioPlayerSource = File('lib/features/learning/application/review_audio_player.dart').readAsStringSync();
@@ -237,8 +246,9 @@ void main() {
       final widgetsSource = File('lib/features/learning/presentation/widgets/formal_review_widgets.dart')
           .readAsStringSync();
 
-      expect(appSource, contains('ReviewAudioPlayer'));
-      expect(appSource, contains('ReviewAudioState'));
+      expect(appSource, contains('...buildLearningFeatureProviders()'));
+      expect(providersSource, contains('ReviewAudioPlayer'));
+      expect(providersSource, contains('ReviewAudioState'));
       expect(locatorSource, contains('ReviewAudioPlayer'));
       expect(locatorSource, contains('sl<AudioService>().playWordAudio(word)'));
       expect(pageSource, contains('ReviewAudioState'));
@@ -260,10 +270,11 @@ void main() {
 
   group('正式复习会话状态边界', () {
     test('主复习页通过会话展示状态管理本地题目与进度', () {
-      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
 
-      expect(appSource, contains('ChangeNotifierProxyProvider<ReviewRatingWriter, ReviewSessionState>'));
+      expect(providersSource, contains('ChangeNotifierProxyProvider<ReviewRatingWriter, ReviewSessionState>'));
       expect(pageSource, contains('ReviewSessionState'));
       expect(pageSource, contains('context.watch<ReviewSessionState>()'));
       expect(pageSource, isNot(contains('SuperMemoryEngine')));
@@ -274,15 +285,16 @@ void main() {
 
   group('复习评分写入边界', () {
     test('评分执行器提交 FSRS 评分，会话保留实际词条捕获和进度编排', () {
-      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
       final executorSource = File('lib/features/learning/application/review_session_rating_executor.dart')
           .readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
-      expect(appSource, contains('ProxyProvider<ReviewScheduleRepository, ReviewRatingWriter>'));
-      expect(appSource, contains('ReviewRatingWriter(writeRating: schedule.rateWord)'));
-      expect(appSource, isNot(contains('ReviewRatingWriter(writeRating: legacy.rateReviewWord)')));
+      expect(providersSource, contains('ProxyProvider<ReviewScheduleRepository, ReviewRatingWriter>'));
+      expect(providersSource, contains('ReviewRatingWriter(writeRating: schedule.rateWord)'));
+      expect(providersSource, isNot(contains('ReviewRatingWriter(writeRating: legacy.rateReviewWord)')));
       expect(pageSource, contains('onSelectChoice: session.selectChoice'));
       expect(pageSource, contains('onContinueWithGoodRating: session.continueWithGoodRating'));
       expect(pageSource, isNot(contains('ReviewRatingWriter')));
@@ -335,14 +347,15 @@ void main() {
 
   group('生词本数据边界', () {
     test('生词本页面通过读取器和展示状态访问独立数据源', () {
-      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
       final pageSource = File('lib/pages/new_words_page.dart').readAsStringSync();
       final footMarkSource = File('lib/pages/foot_mark_page.dart').readAsStringSync();
       final dictionarySource = File('lib/pages/dictionary_page.dart').readAsStringSync();
       final legacySource = File('lib/state/learning_state.dart').readAsStringSync();
 
-      expect(appSource, contains('Provider<NewWordsReader>.value'));
-      expect(appSource, contains('sl<NewWordsState>()..initialize()'));
+      expect(providersSource, contains('Provider<NewWordsReader>.value'));
+      expect(providersSource, contains('sl<NewWordsState>()..initialize()'));
       expect(pageSource, contains('NewWordsReader'));
       expect(pageSource, contains('NewWordsState'));
       expect(pageSource, isNot(contains('LearningState')));
@@ -358,11 +371,12 @@ void main() {
     test('已掌握词表页面通过读取器加载数据', () {
       final source = File('lib/pages/mastered_words_page.dart').readAsStringSync();
 
-      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
 
       expect(source, contains('MasteredWordsReader'));
       expect(source, contains('loadWordsForContext'));
-      expect(appSource, contains('Provider<MasteredWordsReader>.value'));
+      expect(providersSource, contains('Provider<MasteredWordsReader>.value'));
 
       expect(source, isNot(contains('LearningState')));
       expect(source, isNot(contains('service_locator.dart')));
@@ -372,11 +386,12 @@ void main() {
   group('词书单词查询边界', () {
     test('词书单词页通过读取器加载数据', () {
       final source = File('lib/pages/book_words_page.dart').readAsStringSync();
-      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
 
       expect(source, contains('BookWordsReader'));
       expect(source, contains('loadWordsForContext'));
-      expect(appSource, contains('Provider<BookWordsReader>.value'));
+      expect(providersSource, contains('Provider<BookWordsReader>.value'));
       expect(source, isNot(contains('LearningState')));
     });
   });
@@ -388,9 +403,10 @@ void main() {
         'lib/pages/not_learned_words_page.dart',
         'lib/pages/reviewing_words_page.dart',
       ];
-      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
 
-      expect(appSource, contains('LearningQueueWordListsState'));
+      expect(providersSource, contains('LearningQueueWordListsState'));
       for (final path in pages) {
         final source = File(path).readAsStringSync();
         expect(source, contains('LearningQueueWordListsState'), reason: '$path 应读取队列词表展示适配器');

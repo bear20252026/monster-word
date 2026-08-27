@@ -107,6 +107,12 @@
 
 `ReviewScheduleRepository` 现为正式复习的 FSRS 卡片、到期判断、按词评分、每日统计和活跃日期的唯一事实来源，并继续使用既有 `fsrs6_cards_v1`、`daily_stats_v1` 与 `active_learn_dates_v1` 键。`ReviewQueueState` 仅接收遗留 `LearningState` 维护的当前学习队列，再交给该仓储计算到期词；这是一项刻意保留的兼容边界，而不是让正式页面重新依赖遗留聚合状态。待学习队列本身有独立来源后，只需替换这一输入，不改变正式复习页面或读取器的行为。
 
+## 学习功能域根装配边界
+
+学习功能的 Provider 现集中在 `learning_feature_providers.dart`。其中保留原有创建顺序：独立的复习调度仓储先于兼容 `LearningState`，评分写入端口先于正式 `ReviewSessionState`；音频状态仍为应用级 Provider，读取器仍以依赖容器中的既有实例提供。`WordApp` 只展开该功能域装配清单，再组合主题、壁纸、设置、播放和用户统计等全局状态。
+
+这项拆分不改变任何 Provider 的生命周期或服务定位器注册方式，也不把功能域依赖反向拉回页面。后续迁移某个学习状态时，应修改功能域装配文件及其契约测试，而不是再次向应用根增加具体学习实现类型。
+
 
 ## 正式复习词条操作边界
 
