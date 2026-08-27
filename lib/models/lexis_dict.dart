@@ -35,9 +35,7 @@ class LexisDict {
     // 解析 interpret_v2 或 interpret 字符串
     final interpretV2 = json['interpret_v2'];
     if (interpretV2 is List) {
-      dict.interpretList = interpretV2
-          .map((e) => Interpret.fromJson(e as Map<String, dynamic>))
-          .toList();
+      dict.interpretList = interpretV2.map((e) => Interpret.fromJson(e as Map<String, dynamic>)).toList();
     } else if (json['interpret'] != null) {
       dict.interpret = json['interpret'];
     }
@@ -68,8 +66,7 @@ class LexisDict {
   }
 
   /// 第一个释义
-  Interpret? get firstInterpret =>
-      interpretList.isEmpty ? null : interpretList.first;
+  Interpret? get firstInterpret => interpretList.isEmpty ? null : interpretList.first;
 }
 
 /// 释义项（翻译自 LexisDict.Interpret）
@@ -79,21 +76,11 @@ class Interpret {
   String ei; // 英文释义
   bool bCi; // 是否词组
 
-  Interpret({
-    this.p = '',
-    this.i = '',
-    this.ei = '',
-    this.bCi = false,
-  });
+  Interpret({this.p = '', this.i = '', this.ei = '', this.bCi = false});
 
-  factory Interpret.fromJson(Map<String, dynamic> json) => Interpret(
-        p: json['p'] ?? '',
-        i: json['i'] ?? '',
-        ei: json['ei'] ?? '',
-        bCi: json['bCi'] ?? false,
-      );
+  factory Interpret.fromJson(Map<String, dynamic> json) =>
+      Interpret(p: json['p'] ?? '', i: json['i'] ?? '', ei: json['ei'] ?? '', bCi: json['bCi'] ?? false);
 
   /// 完整释义字符串（原版 getInterpretCompleteString）
-  String get interpretComplete =>
-      p.isNotEmpty ? '$p  $i' : i;
+  String get interpretComplete => p.isNotEmpty ? '$p  $i' : i;
 }

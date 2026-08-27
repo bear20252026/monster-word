@@ -72,15 +72,15 @@ class AppDateUtils {
         while (s.length < 8) {
           s += '0';
         }
-        return DateTime.parse(
-            '${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6, 8)}');
+        return DateTime.parse('${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6, 8)}');
       }
       while (s.length < 14) {
         s += '0';
       }
       return DateTime.parse(
-          '${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6, 8)} '
-          '${s.substring(8, 10)}:${s.substring(10, 12)}:${s.substring(12, 14)}');
+        '${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6, 8)} '
+        '${s.substring(8, 10)}:${s.substring(10, 12)}:${s.substring(12, 14)}',
+      );
     } catch (e) {
       return null;
     }

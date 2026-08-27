@@ -37,23 +37,20 @@ class BreathingText extends StatefulWidget {
   State<BreathingText> createState() => _BreathingTextState();
 }
 
-class _BreathingTextState extends State<BreathingText>
-    with SingleTickerProviderStateMixin {
+class _BreathingTextState extends State<BreathingText> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
 
     // 使用 easeInOutSine 曲线模拟自然呼吸节奏
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
-    );
+    _animation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine));
 
     if (widget.repeat) {
       _controller.repeat(reverse: true);
@@ -74,22 +71,16 @@ class _BreathingTextState extends State<BreathingText>
       animation: _animation,
       builder: (context, child) {
         final value = _animation.value;
-        final scale = widget.enableScale
-            ? widget.minScale + (widget.maxScale - widget.minScale) * value
-            : 1.0;
+        final scale = widget.enableScale ? widget.minScale + (widget.maxScale - widget.minScale) * value : 1.0;
         final opacity = widget.enableOpacity
-            ? widget.minOpacity +
-                (widget.maxOpacity - widget.minOpacity) * value
+            ? widget.minOpacity + (widget.maxOpacity - widget.minOpacity) * value
             : 1.0;
 
         return Opacity(
           opacity: opacity.clamp(0.0, 1.0),
           child: Transform.scale(
             scale: scale,
-            child: Text(
-              widget.text,
-              style: widget.style,
-            ),
+            child: Text(widget.text, style: widget.style),
           ),
         );
       },
@@ -121,17 +112,13 @@ class BreathingTextWave extends StatefulWidget {
   State<BreathingTextWave> createState() => _BreathingTextWaveState();
 }
 
-class _BreathingTextWaveState extends State<BreathingTextWave>
-    with SingleTickerProviderStateMixin {
+class _BreathingTextWaveState extends State<BreathingTextWave> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    )..repeat(reverse: true);
+    _controller = AnimationController(vsync: this, duration: widget.duration)..repeat(reverse: true);
   }
 
   @override
@@ -156,8 +143,7 @@ class _BreathingTextWaveState extends State<BreathingTextWave>
             final t = (_controller.value + phase) % 1.0;
             // 正弦波动
             final wave = (1 + (t * 2 - 1).abs() * -1) * 0.5 + 0.5;
-            final scale =
-                widget.minScale + (widget.maxScale - widget.minScale) * wave;
+            final scale = widget.minScale + (widget.maxScale - widget.minScale) * wave;
 
             return Transform.scale(
               scale: scale,

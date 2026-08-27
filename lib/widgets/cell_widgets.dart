@@ -3,6 +3,7 @@
 // 由 Claude 团队生成 | 移植自 v3.2 widget/component/ 下的单元格类组件
 // 单元格与列表项组件集合
 import 'package:flutter/material.dart';
+
 import '../tokens/design_tokens.dart';
 import '../theme/skin_system.dart';
 import 'input_controls.dart';
@@ -33,25 +34,11 @@ class SwitchCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          if (leading != null) ...[
-            leading!,
-            const SizedBox(width: 12),
-          ],
+          if (leading != null) ...[leading!, const SizedBox(width: 12)],
           Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                color: enabled ? skin.colors.text1 : skin.colors.text3,
-              ),
-            ),
+            child: Text(title, style: TextStyle(fontSize: 16, color: enabled ? skin.colors.text1 : skin.colors.text3)),
           ),
-          FakeSwitch(
-            value: value,
-            onChanged: onChanged,
-            enabled: enabled,
-            activeColor: skin.colors.accent,
-          ),
+          FakeSwitch(value: value, onChanged: onChanged, enabled: enabled, activeColor: skin.colors.accent),
         ],
       ),
     );
@@ -68,14 +55,7 @@ class SelectedCell extends StatelessWidget {
   final Widget? leading;
   final Widget? trailing;
 
-  const SelectedCell({
-    super.key,
-    required this.title,
-    this.selected = false,
-    this.onTap,
-    this.leading,
-    this.trailing,
-  });
+  const SelectedCell({super.key, required this.title, this.selected = false, this.onTap, this.leading, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -86,16 +66,11 @@ class SelectedCell extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: selected ? skin.colors.accent.withAlpha(20) : null,
-          border: Border(
-            bottom: BorderSide(color: skin.colors.divider, width: 0.5),
-          ),
+          border: Border(bottom: BorderSide(color: skin.colors.divider, width: 0.5)),
         ),
         child: Row(
           children: [
-            if (leading != null) ...[
-              leading!,
-              const SizedBox(width: 12),
-            ],
+            if (leading != null) ...[leading!, const SizedBox(width: 12)],
             Expanded(
               child: Text(
                 title,
@@ -107,8 +82,7 @@ class SelectedCell extends StatelessWidget {
               ),
             ),
             ?trailing,
-            if (selected)
-              Icon(Icons.check, size: 20, color: skin.colors.accent),
+            if (selected) Icon(Icons.check, size: 20, color: skin.colors.accent),
           ],
         ),
       ),
@@ -126,14 +100,7 @@ class SelectCell2 extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget? leading;
 
-  const SelectCell2({
-    super.key,
-    required this.title,
-    this.subtitle,
-    this.selected = false,
-    this.onTap,
-    this.leading,
-  });
+  const SelectCell2({super.key, required this.title, this.subtitle, this.selected = false, this.onTap, this.leading});
 
   @override
   Widget build(BuildContext context) {
@@ -144,27 +111,15 @@ class SelectCell2 extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            if (leading != null) ...[
-              leading!,
-              const SizedBox(width: 12),
-            ],
+            if (leading != null) ...[leading!, const SizedBox(width: 12)],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: selected ? skin.colors.accent : skin.colors.text1,
-                    ),
-                  ),
+                  Text(title, style: TextStyle(fontSize: 16, color: selected ? skin.colors.accent : skin.colors.text1)),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
-                    Text(
-                      subtitle!,
-                      style: TextStyle(fontSize: 13, color: skin.colors.text3),
-                    ),
+                    Text(subtitle!, style: TextStyle(fontSize: 13, color: skin.colors.text3)),
                   ],
                 ],
               ),
@@ -190,14 +145,7 @@ class SubtitleCell extends StatelessWidget {
   final Widget? leading;
   final Widget? trailing;
 
-  const SubtitleCell({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    this.onTap,
-    this.leading,
-    this.trailing,
-  });
+  const SubtitleCell({super.key, required this.title, required this.subtitle, this.onTap, this.leading, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -207,27 +155,18 @@ class SubtitleCell extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: skin.colors.divider, width: 0.5),
-          ),
+          border: Border(bottom: BorderSide(color: skin.colors.divider, width: 0.5)),
         ),
         child: Row(
           children: [
-            if (leading != null) ...[
-              leading!,
-              const SizedBox(width: 12),
-            ],
+            if (leading != null) ...[leading!, const SizedBox(width: 12)],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: TextStyle(
-                          fontSize: 16, color: skin.colors.text1)),
+                  Text(title, style: TextStyle(fontSize: 16, color: skin.colors.text1)),
                   const SizedBox(height: 4),
-                  Text(subtitle,
-                      style: TextStyle(
-                          fontSize: 13, color: skin.colors.text3)),
+                  Text(subtitle, style: TextStyle(fontSize: 13, color: skin.colors.text3)),
                 ],
               ),
             ),
@@ -249,14 +188,7 @@ class IconCell extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? leftIconColor;
 
-  const IconCell({
-    super.key,
-    required this.title,
-    this.leftIcon,
-    this.rightIcon,
-    this.onTap,
-    this.leftIconColor,
-  });
+  const IconCell({super.key, required this.title, this.leftIcon, this.rightIcon, this.onTap, this.leftIconColor});
 
   @override
   Widget build(BuildContext context) {
@@ -266,9 +198,7 @@ class IconCell extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: skin.colors.divider, width: 0.5),
-          ),
+          border: Border(bottom: BorderSide(color: skin.colors.divider, width: 0.5)),
         ),
         child: Row(
           children: [
@@ -277,11 +207,9 @@ class IconCell extends StatelessWidget {
               const SizedBox(width: 12),
             ],
             Expanded(
-              child: Text(title,
-                  style: TextStyle(fontSize: 16, color: skin.colors.text1)),
+              child: Text(title, style: TextStyle(fontSize: 16, color: skin.colors.text1)),
             ),
-            if (rightIcon != null)
-              Icon(rightIcon, size: 18, color: skin.colors.text3),
+            if (rightIcon != null) Icon(rightIcon, size: 18, color: skin.colors.text3),
           ],
         ),
       ),
@@ -297,12 +225,7 @@ class PopFilterCell extends StatelessWidget {
   final bool selected;
   final VoidCallback? onTap;
 
-  const PopFilterCell({
-    super.key,
-    required this.title,
-    this.selected = false,
-    this.onTap,
-  });
+  const PopFilterCell({super.key, required this.title, this.selected = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -314,17 +237,9 @@ class PopFilterCell extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? skin.colors.accent : skin.colors.cardBg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: selected ? skin.colors.accent : skin.colors.divider,
-          ),
+          border: Border.all(color: selected ? skin.colors.accent : skin.colors.divider),
         ),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: 14,
-            color: selected ? AppColors.white100 : skin.colors.text2,
-          ),
-        ),
+        child: Text(title, style: TextStyle(fontSize: 14, color: selected ? AppColors.white100 : skin.colors.text2)),
       ),
     );
   }
@@ -338,12 +253,7 @@ class UrlCell extends StatelessWidget {
   final String url;
   final VoidCallback? onTap;
 
-  const UrlCell({
-    super.key,
-    required this.title,
-    required this.url,
-    this.onTap,
-  });
+  const UrlCell({super.key, required this.title, required this.url, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -353,9 +263,7 @@ class UrlCell extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: skin.colors.divider, width: 0.5),
-          ),
+          border: Border(bottom: BorderSide(color: skin.colors.divider, width: 0.5)),
         ),
         child: Row(
           children: [
@@ -363,13 +271,9 @@ class UrlCell extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: TextStyle(
-                          fontSize: 16, color: skin.colors.text1)),
+                  Text(title, style: TextStyle(fontSize: 16, color: skin.colors.text1)),
                   const SizedBox(height: 2),
-                  Text(url,
-                      style: TextStyle(
-                          fontSize: 13, color: skin.colors.accent)),
+                  Text(url, style: TextStyle(fontSize: 13, color: skin.colors.accent)),
                 ],
               ),
             ),
@@ -390,13 +294,7 @@ class UserBindItem extends StatelessWidget {
   final bool bound;
   final VoidCallback? onTap;
 
-  const UserBindItem({
-    super.key,
-    required this.platform,
-    this.account,
-    this.bound = false,
-    this.onTap,
-  });
+  const UserBindItem({super.key, required this.platform, this.account, this.bound = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -406,9 +304,7 @@ class UserBindItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: skin.colors.divider, width: 0.5),
-          ),
+          border: Border(bottom: BorderSide(color: skin.colors.divider, width: 0.5)),
         ),
         child: Row(
           children: [
@@ -418,22 +314,14 @@ class UserBindItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(platform,
-                      style: TextStyle(
-                          fontSize: 16, color: skin.colors.text1)),
-                  if (account != null)
-                    Text(account!,
-                        style: TextStyle(
-                            fontSize: 13, color: skin.colors.text3)),
+                  Text(platform, style: TextStyle(fontSize: 16, color: skin.colors.text1)),
+                  if (account != null) Text(account!, style: TextStyle(fontSize: 13, color: skin.colors.text3)),
                 ],
               ),
             ),
             Text(
               bound ? '已绑定' : '未绑定',
-              style: TextStyle(
-                fontSize: 14,
-                color: bound ? skin.colors.accent : skin.colors.text3,
-              ),
+              style: TextStyle(fontSize: 14, color: bound ? skin.colors.accent : skin.colors.text3),
             ),
             const SizedBox(width: 8),
             Icon(Icons.chevron_right, size: 18, color: skin.colors.text3),

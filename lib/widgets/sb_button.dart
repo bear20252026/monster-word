@@ -3,6 +3,7 @@
 // 50px 高度，全胶囊圆角，四变体，包装 ScaleDownOnPress 按压反馈
 
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import '../tokens/starbucks_tokens.dart';
 import 'scale_down_on_press.dart';
@@ -189,9 +190,7 @@ class SbButton extends StatelessWidget {
         opacity: _isInteractive ? 1.0 : 0.4,
         duration: MotionDurations.base,
         child: Container(
-          constraints: minWidth != null
-              ? BoxConstraints(minWidth: minWidth!)
-              : null,
+          constraints: minWidth != null ? BoxConstraints(minWidth: minWidth!) : null,
           decoration: ShapeDecoration(
             color: resolvedFill,
             shape: StadiumBorder(side: side),

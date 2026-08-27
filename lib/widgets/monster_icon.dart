@@ -1,6 +1,7 @@
 // 怪兽尖叫币图标 — CustomPainter 绘制
 // 基于用户提供的怪兽形象：圆润可爱的独角怪兽，青绿色皮肤，大眼睛小嘴巴
 import 'package:flutter/material.dart';
+
 import 'dart:math' as math;
 
 import '../theme/skin_system.dart';
@@ -28,15 +29,12 @@ class MonsterIcon extends StatelessWidget {
     final skin = SkinProvider.of(context);
     final body = bodyColor ?? skin.colors.accent; // 默认使用主题强调色（星巴克绿）
     final belly = bellyColor ?? const Color(0xFFB8E6E0); // 浅青色肚皮
-    
+
     Widget painter = SizedBox(
       width: size,
       height: size,
       child: CustomPaint(
-        painter: _MonsterPainter(
-          bodyColor: body,
-          bellyColor: belly,
-        ),
+        painter: _MonsterPainter(bodyColor: body, bellyColor: belly),
       ),
     );
 
@@ -44,10 +42,7 @@ class MonsterIcon extends StatelessWidget {
       return Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          color: circleColor ?? body.withValues(alpha: 0.15),
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: circleColor ?? body.withValues(alpha: 0.15), shape: BoxShape.circle),
         child: Center(child: painter),
       );
     }
@@ -60,10 +55,7 @@ class _MonsterPainter extends CustomPainter {
   final Color bodyColor;
   final Color bellyColor;
 
-  _MonsterPainter({
-    required this.bodyColor,
-    required this.bellyColor,
-  });
+  _MonsterPainter({required this.bodyColor, required this.bellyColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -75,32 +67,24 @@ class _MonsterPainter extends CustomPainter {
     final bodyPaint = Paint()
       ..color = bodyColor
       ..style = PaintingStyle.fill;
-    
+
     // 主体：略椭圆的圆润形状
-    final bodyRect = Rect.fromCenter(
-      center: Offset(cx, cy + r * 0.05),
-      width: r * 1.7,
-      height: r * 1.6,
-    );
+    final bodyRect = Rect.fromCenter(center: Offset(cx, cy + r * 0.05), width: r * 1.7, height: r * 1.6);
     canvas.drawOval(bodyRect, bodyPaint);
 
     // === 2. 肚皮（浅色椭圆）===
     final bellyPaint = Paint()
       ..color = bellyColor
       ..style = PaintingStyle.fill;
-    
-    final bellyRect = Rect.fromCenter(
-      center: Offset(cx, cy + r * 0.25),
-      width: r * 1.0,
-      height: r * 0.85,
-    );
+
+    final bellyRect = Rect.fromCenter(center: Offset(cx, cy + r * 0.25), width: r * 1.0, height: r * 0.85);
     canvas.drawOval(bellyRect, bellyPaint);
 
     // === 3. 角（头顶的小角）===
     final hornPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
-    
+
     final hornPath = Path();
     hornPath.moveTo(cx - r * 0.15, cy - r * 0.65);
     hornPath.quadraticBezierTo(cx - r * 0.05, cy - r * 1.05, cx + r * 0.05, cy - r * 0.7);
@@ -114,11 +98,7 @@ class _MonsterPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = r * 0.04
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(cx - r * 0.08, cy - r * 0.75),
-      Offset(cx + r * 0.0, cy - r * 0.68),
-      hornLinePaint,
-    );
+    canvas.drawLine(Offset(cx - r * 0.08, cy - r * 0.75), Offset(cx + r * 0.0, cy - r * 0.68), hornLinePaint);
 
     // === 4. 眼睛（大眼睛，左眼略大）===
     // 左眼白
@@ -129,7 +109,7 @@ class _MonsterPainter extends CustomPainter {
       Rect.fromCenter(center: Offset(cx - r * 0.28, cy - r * 0.15), width: r * 0.42, height: r * 0.48),
       eyeWhitePaint,
     );
-    
+
     // 右眼白
     canvas.drawOval(
       Rect.fromCenter(center: Offset(cx + r * 0.28, cy - r * 0.15), width: r * 0.38, height: r * 0.44),
@@ -140,7 +120,7 @@ class _MonsterPainter extends CustomPainter {
     final pupilPaint = Paint()
       ..color = const Color(0xFF2D2D2D)
       ..style = PaintingStyle.fill;
-    
+
     // 左瞳孔
     canvas.drawCircle(Offset(cx - r * 0.22, cy - r * 0.12), r * 0.13, pupilPaint);
     // 右瞳孔
@@ -159,7 +139,7 @@ class _MonsterPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = r * 0.05
       ..strokeCap = StrokeCap.round;
-    
+
     final mouthPath = Path();
     mouthPath.moveTo(cx - r * 0.12, cy + r * 0.18);
     mouthPath.quadraticBezierTo(cx, cy + r * 0.28, cx + r * 0.12, cy + r * 0.18);
@@ -176,7 +156,7 @@ class _MonsterPainter extends CustomPainter {
     final handPaint = Paint()
       ..color = bodyColor
       ..style = PaintingStyle.fill;
-    
+
     // 左手
     canvas.drawOval(
       Rect.fromCenter(center: Offset(cx - r * 0.75, cy + r * 0.1), width: r * 0.3, height: r * 0.25),
@@ -192,7 +172,7 @@ class _MonsterPainter extends CustomPainter {
     final footPaint = Paint()
       ..color = bodyColor
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawOval(
       Rect.fromCenter(center: Offset(cx - r * 0.25, cy + r * 0.75), width: r * 0.3, height: r * 0.2),
       footPaint,
@@ -214,11 +194,7 @@ class MonsterAvatar extends StatelessWidget {
   final double size;
   final Color? bgColor;
 
-  const MonsterAvatar({
-    super.key,
-    this.size = 52,
-    this.bgColor,
-  });
+  const MonsterAvatar({super.key, this.size = 52, this.bgColor});
 
   @override
   Widget build(BuildContext context) {
@@ -226,13 +202,8 @@ class MonsterAvatar extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: bgColor ?? skin.colors.accent.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: MonsterIcon(size: size * 0.72),
-      ),
+      decoration: BoxDecoration(color: bgColor ?? skin.colors.accent.withValues(alpha: 0.12), shape: BoxShape.circle),
+      child: Center(child: MonsterIcon(size: size * 0.72)),
     );
   }
 }

@@ -43,11 +43,7 @@ class LockExampleWebView extends StatefulWidget {
   final String htmlContent;
   final VoidCallback? onTap;
 
-  const LockExampleWebView({
-    super.key,
-    required this.htmlContent,
-    this.onTap,
-  });
+  const LockExampleWebView({super.key, required this.htmlContent, this.onTap});
 
   @override
   State<LockExampleWebView> createState() => _LockExampleWebViewState();

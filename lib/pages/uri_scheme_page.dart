@@ -24,9 +24,7 @@ class UriSchemePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: context.skin.colors.pageBg,
-      body: Center(
-        child: CircularProgressIndicator(color: MistralColors.primary),
-      ),
+      body: Center(child: CircularProgressIndicator(color: MistralColors.primary)),
     );
   }
 
@@ -39,10 +37,7 @@ class UriSchemePage extends StatelessWidget {
 
     // 处理不同 scheme
     if (uriObj.scheme == 'http' || uriObj.scheme == 'https') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => BaseWebPage(url: uri)),
-      );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => BaseWebPage(url: uri)));
     } else if (uriObj.scheme == 'monsterword') {
       // 自定义 scheme 处理
       final host = uriObj.host;

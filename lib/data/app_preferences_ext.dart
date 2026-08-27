@@ -8,7 +8,9 @@
 // 注意：由于父类使用 factory 单例，此处采用组合模式（持有实例引用）而非继承
 
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'app_preferences.dart';
 
 // ──────────────────────────────────────────────
@@ -38,28 +40,23 @@ class Privilege {
   int collinsUserType;
   int expireDate;
 
-  Privilege({
-    this.granted = 0,
-    this.userType = 0,
-    this.collinsUserType = 0,
-    this.expireDate = 0,
-  });
+  Privilege({this.granted = 0, this.userType = 0, this.collinsUserType = 0, this.expireDate = 0});
 
   bool get isGranted => granted == 1;
 
   factory Privilege.fromJson(Map<String, dynamic> json) => Privilege(
-        granted: (json['granted'] as num?)?.toInt() ?? 0,
-        userType: (json['user_type'] as num?)?.toInt() ?? 0,
-        collinsUserType: (json['collins_user_type'] as num?)?.toInt() ?? 0,
-        expireDate: (json['expire_date'] as num?)?.toInt() ?? 0,
-      );
+    granted: (json['granted'] as num?)?.toInt() ?? 0,
+    userType: (json['user_type'] as num?)?.toInt() ?? 0,
+    collinsUserType: (json['collins_user_type'] as num?)?.toInt() ?? 0,
+    expireDate: (json['expire_date'] as num?)?.toInt() ?? 0,
+  );
 
   Map<String, dynamic> toJson() => {
-        'granted': granted,
-        'user_type': userType,
-        'collins_user_type': collinsUserType,
-        'expire_date': expireDate,
-      };
+    'granted': granted,
+    'user_type': userType,
+    'collins_user_type': collinsUserType,
+    'expire_date': expireDate,
+  };
 }
 
 /// 权限集合（原版 Privileges.java）
@@ -78,18 +75,11 @@ class Privileges {
   int get wordRootExpireDate => wordroot?.expireDate ?? 0;
 
   factory Privileges.fromJson(Map<String, dynamic> json) => Privileges(
-        collins: json['collins'] != null
-            ? Privilege.fromJson(json['collins'] as Map<String, dynamic>)
-            : null,
-        wordroot: json['wordroot'] != null
-            ? Privilege.fromJson(json['wordroot'] as Map<String, dynamic>)
-            : null,
-      );
+    collins: json['collins'] != null ? Privilege.fromJson(json['collins'] as Map<String, dynamic>) : null,
+    wordroot: json['wordroot'] != null ? Privilege.fromJson(json['wordroot'] as Map<String, dynamic>) : null,
+  );
 
-  Map<String, dynamic> toJson() => {
-        'collins': collins?.toJson(),
-        'wordroot': wordroot?.toJson(),
-      };
+  Map<String, dynamic> toJson() => {'collins': collins?.toJson(), 'wordroot': wordroot?.toJson()};
 }
 
 // ──────────────────────────────────────────────
@@ -139,36 +129,33 @@ class UserInfoBeanFull {
 
   // ── JSON 序列化 ──
 
-  factory UserInfoBeanFull.fromJson(Map<String, dynamic> json) =>
-      UserInfoBeanFull(
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        name: json['name'] ?? '',
-        email: json['email'] ?? '',
-        phone: json['phone'] ?? '',
-        photo: json['photo'] ?? '',
-        quota: (json['quota'] as num?)?.toInt() ?? 0,
-        continueX: (json['continue'] as num?)?.toInt() ?? 0,
-        totalDays: (json['totalDays'] as num?)?.toInt() ?? 0,
-        max: (json['max'] as num?)?.toInt() ?? 0,
-        isNewUser: json['isNewUser'] ?? false,
-        privileges: json['privileges'] != null
-            ? Privileges.fromJson(json['privileges'] as Map<String, dynamic>)
-            : null,
-      );
+  factory UserInfoBeanFull.fromJson(Map<String, dynamic> json) => UserInfoBeanFull(
+    id: (json['id'] as num?)?.toInt() ?? 0,
+    name: json['name'] ?? '',
+    email: json['email'] ?? '',
+    phone: json['phone'] ?? '',
+    photo: json['photo'] ?? '',
+    quota: (json['quota'] as num?)?.toInt() ?? 0,
+    continueX: (json['continue'] as num?)?.toInt() ?? 0,
+    totalDays: (json['totalDays'] as num?)?.toInt() ?? 0,
+    max: (json['max'] as num?)?.toInt() ?? 0,
+    isNewUser: json['isNewUser'] ?? false,
+    privileges: json['privileges'] != null ? Privileges.fromJson(json['privileges'] as Map<String, dynamic>) : null,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'email': email,
-        'phone': phone,
-        'photo': photo,
-        'quota': quota,
-        'continue': continueX,
-        'totalDays': totalDays,
-        'max': max,
-        'isNewUser': isNewUser,
-        'privileges': privileges?.toJson(),
-      };
+    'id': id,
+    'name': name,
+    'email': email,
+    'phone': phone,
+    'photo': photo,
+    'quota': quota,
+    'continue': continueX,
+    'totalDays': totalDays,
+    'max': max,
+    'isNewUser': isNewUser,
+    'privileges': privileges?.toJson(),
+  };
 }
 
 // ──────────────────────────────────────────────
@@ -191,25 +178,19 @@ class AppPreferencesExt {
 
   // ── 便捷读写（委托 BaseSharedPreferences）──
 
-  String _getString(String key, [String defaultValue = '']) =>
-      _prefs.getString(key) ?? defaultValue;
+  String _getString(String key, [String defaultValue = '']) => _prefs.getString(key) ?? defaultValue;
 
-  Future<bool> _setString(String key, String value) =>
-      _prefs.setString(key, value);
+  Future<bool> _setString(String key, String value) => _prefs.setString(key, value);
 
-  int _getInt(String key, [int defaultValue = 0]) =>
-      _prefs.getInt(key) ?? defaultValue;
+  int _getInt(String key, [int defaultValue = 0]) => _prefs.getInt(key) ?? defaultValue;
 
   Future<bool> _setInt(String key, int value) => _prefs.setInt(key, value);
 
-  bool _getBool(String key, [bool defaultValue = false]) =>
-      _prefs.getBool(key) ?? defaultValue;
+  bool _getBool(String key, [bool defaultValue = false]) => _prefs.getBool(key) ?? defaultValue;
 
-  Future<bool> _setBool(String key, bool value) =>
-      _prefs.setBool(key, value);
+  Future<bool> _setBool(String key, bool value) => _prefs.setBool(key, value);
 
-  int _getLong(String key, [int defaultValue = 0]) =>
-      _prefs.getInt(key) ?? defaultValue;
+  int _getLong(String key, [int defaultValue = 0]) => _prefs.getInt(key) ?? defaultValue;
 
   Future<bool> _saveLong(String key, int value) => _prefs.setInt(key, value);
 
@@ -267,14 +248,12 @@ class AppPreferencesExt {
   // ── 登录账号信息 ──
 
   String getLastLoginAccountInfo() => _getString(AppPreferences.lastLoginInfo);
-  Future<bool> setLastLoginAccountInfo(String value) =>
-      _setString(AppPreferences.lastLoginInfo, value);
+  Future<bool> setLastLoginAccountInfo(String value) => _setString(AppPreferences.lastLoginInfo, value);
 
   // ── 历史查询 ──
 
   String getHistoryQueryList() => _getString(AppPreferences.historyQuery);
-  Future<bool> setHistoryQueryList(String value) =>
-      _setString(AppPreferences.historyQuery, value);
+  Future<bool> setHistoryQueryList(String value) => _setString(AppPreferences.historyQuery, value);
 
   // ── 书籍/句子点击计数 ──
 
@@ -282,8 +261,7 @@ class AppPreferencesExt {
   Future<bool> setBookClickCount(int value) => _setInt(keyClickBookCount, value);
 
   int getSentenceClickCount() => _getInt(keyClickSentenceCount);
-  Future<bool> setSentenceClickCount(int value) =>
-      _setInt(keyClickSentenceCount, value);
+  Future<bool> setSentenceClickCount(int value) => _setInt(keyClickSentenceCount, value);
 
   // ── 用户追踪 ──
 
@@ -291,42 +269,32 @@ class AppPreferencesExt {
 
   // ── 版本级启动计数（动态 key：后缀拼接 appVersion）──
 
-  int getVersionAppLaunchCount() =>
-      _getInt(keyVersionAppLaunchCountSuffix + PrefConfig.appVersion, 0);
+  int getVersionAppLaunchCount() => _getInt(keyVersionAppLaunchCountSuffix + PrefConfig.appVersion, 0);
 
   Future<void> increaseVersionAppLaunchCount() async {
     final count = getVersionAppLaunchCount();
     if (count < 1) {
-      await _saveLong(
-          keyVersionFirstLaunchTimeSuffix + PrefConfig.appVersion,
-          DateTime.now().millisecondsSinceEpoch);
+      await _saveLong(keyVersionFirstLaunchTimeSuffix + PrefConfig.appVersion, DateTime.now().millisecondsSinceEpoch);
     }
-    await _setInt(
-        keyVersionAppLaunchCountSuffix + PrefConfig.appVersion, count + 1);
+    await _setInt(keyVersionAppLaunchCountSuffix + PrefConfig.appVersion, count + 1);
   }
 
-  String getVersionOptionResult() =>
-      _getString(keyVersionRateOptionsSuffix + PrefConfig.appVersion);
+  String getVersionOptionResult() => _getString(keyVersionRateOptionsSuffix + PrefConfig.appVersion);
 
   Future<bool> saveVersionOptionResult(String value) =>
       _setString(keyVersionRateOptionsSuffix + PrefConfig.appVersion, value);
 
-  int getVersionAppFirstLaunchTime() =>
-      _getLong(keyVersionFirstLaunchTimeSuffix + PrefConfig.appVersion);
+  int getVersionAppFirstLaunchTime() => _getLong(keyVersionFirstLaunchTimeSuffix + PrefConfig.appVersion);
 
   // ── 用户消息（动态 key：后缀拼接 userId）──
 
-  Future<bool> saveMessageLastReviewTime(int time) =>
-      _saveLong(keyUserMessageSuffix + PrefConfig.userId, time);
+  Future<bool> saveMessageLastReviewTime(int time) => _saveLong(keyUserMessageSuffix + PrefConfig.userId, time);
 
-  int getMessageLastReviewTime() =>
-      _getLong(keyUserMessageSuffix + PrefConfig.userId);
+  int getMessageLastReviewTime() => _getLong(keyUserMessageSuffix + PrefConfig.userId);
 
-  Future<bool> saveLocalMessageUnread(int count) =>
-      _setInt(keyLocalMessageUnread + PrefConfig.userId, count);
+  Future<bool> saveLocalMessageUnread(int count) => _setInt(keyLocalMessageUnread + PrefConfig.userId, count);
 
-  int getLocalMessageUnread() =>
-      _getInt(keyLocalMessageUnread + PrefConfig.userId);
+  int getLocalMessageUnread() => _getInt(keyLocalMessageUnread + PrefConfig.userId);
 
   bool getLocalMessageHasNew() => getLocalMessageUnread() > 0;
 
@@ -336,190 +304,150 @@ class AppPreferencesExt {
 
   // ── 壁纸管理（动态 key：后缀拼接主题类型）──
 
-  String getCurrentLaunchImageId(int themeType) =>
-      _getString(currentWallpaperPre + themeType.toString());
+  String getCurrentLaunchImageId(int themeType) => _getString(currentWallpaperPre + themeType.toString());
 
   Future<bool> setCurrentLaunchImageId(String id, int themeType) =>
       _setString(currentWallpaperPre + themeType.toString(), id);
 
-  Future<bool> removeCurrentLaunchImageId(int themeType) =>
-      _remove(currentWallpaperPre + themeType.toString());
+  Future<bool> removeCurrentLaunchImageId(int themeType) => _remove(currentWallpaperPre + themeType.toString());
 
-  String getNextLaunchImageId(int themeType) =>
-      _getString(nextWallpaperPre + themeType.toString());
+  String getNextLaunchImageId(int themeType) => _getString(nextWallpaperPre + themeType.toString());
 
   Future<bool> setNextLaunchImageId(String id, int themeType) =>
       _setString(nextWallpaperPre + themeType.toString(), id);
 
-  Future<bool> removeNextLaunchImageId(int themeType) =>
-      _remove(nextWallpaperPre + themeType.toString());
+  Future<bool> removeNextLaunchImageId(int themeType) => _remove(nextWallpaperPre + themeType.toString());
 
   // ── 泛在播放 ──
 
   bool isExtensivePlaying() => _getBool(extensivePlaying);
-  Future<bool> setExtensivePlaying(bool value) =>
-      _setBool(extensivePlaying, value);
+  Future<bool> setExtensivePlaying(bool value) => _setBool(extensivePlaying, value);
 
   // ── 权限提示 ──
 
-  bool isAppPermissionGrantShow() =>
-      _getBool(AppPreferences.appPermissionGrantShow, true);
-  Future<bool> setAppPermissionGrantShow(bool value) =>
-      _setBool(AppPreferences.appPermissionGrantShow, value);
+  bool isAppPermissionGrantShow() => _getBool(AppPreferences.appPermissionGrantShow, true);
+  Future<bool> setAppPermissionGrantShow(bool value) => _setBool(AppPreferences.appPermissionGrantShow, value);
 
   // ── 用户规则同意 ──
 
-  bool isUserRuleAgreed() =>
-      _getBool(AppPreferences.appUserRulesAgree, true);
-  Future<bool> setUserRuleAgreed(bool value) =>
-      _setBool(AppPreferences.appUserRulesAgree, value);
+  bool isUserRuleAgreed() => _getBool(AppPreferences.appUserRulesAgree, true);
+  Future<bool> setUserRuleAgreed(bool value) => _setBool(AppPreferences.appUserRulesAgree, value);
 
   // ── 听力模式开关 ──
 
-  bool isListListenAdvPlayWordInterpret() =>
-      _getBool(keyListListenAdvWordInterpretSwitch, true);
-  Future<bool> setAdvPlayWordInterpret(bool value) =>
-      _setBool(keyListListenAdvWordInterpretSwitch, value);
+  bool isListListenAdvPlayWordInterpret() => _getBool(keyListListenAdvWordInterpretSwitch, true);
+  Future<bool> setAdvPlayWordInterpret(bool value) => _setBool(keyListListenAdvWordInterpretSwitch, value);
 
-  bool isListListenAdvPlaySentenceCh() =>
-      _getBool(keyListListenAdvExampleChSwitch, true);
-  Future<bool> setAdvPlaySentenceCh(bool value) =>
-      _setBool(keyListListenAdvExampleChSwitch, value);
+  bool isListListenAdvPlaySentenceCh() => _getBool(keyListListenAdvExampleChSwitch, true);
+  Future<bool> setAdvPlaySentenceCh(bool value) => _setBool(keyListListenAdvExampleChSwitch, value);
 
-  bool isListListenBasePlayWordSpell() =>
-      _getBool(keyListListenBaseSpellSwitch);
-  Future<bool> setBasePlayWordSpell(bool value) =>
-      _setBool(keyListListenBaseSpellSwitch, value);
+  bool isListListenBasePlayWordSpell() => _getBool(keyListListenBaseSpellSwitch);
+  Future<bool> setBasePlayWordSpell(bool value) => _setBool(keyListListenBaseSpellSwitch, value);
 
   // ── 听力播放配置 ──
 
   bool isListListenHasOpened() => _getBool(keyListListenHasOpened);
-  Future<bool> setListListenHasOpened(bool value) =>
-      _setBool(keyListListenHasOpened, value);
+  Future<bool> setListListenHasOpened(bool value) => _setBool(keyListListenHasOpened, value);
 
   int getListListenPlayCount() => _getInt(keyListListenPlayCount);
-  Future<bool> setListListenPlayCount(int value) =>
-      _setInt(keyListListenPlayCount, value);
+  Future<bool> setListListenPlayCount(int value) => _setInt(keyListListenPlayCount, value);
 
   int getListListenPlayInterval() => _getInt(keyListListenPlayInterval);
-  Future<bool> setListListenPlayInterval(int value) =>
-      _setInt(keyListListenPlayInterval, value);
+  Future<bool> setListListenPlayInterval(int value) => _setInt(keyListListenPlayInterval, value);
 
   bool isListListenPlayNextAuto() => _getBool(keyListListenPlayNextAuto);
-  Future<bool> setListListenPlayNextAuto(bool value) =>
-      _setBool(keyListListenPlayNextAuto, value);
+  Future<bool> setListListenPlayNextAuto(bool value) => _setBool(keyListListenPlayNextAuto, value);
 
   // ── Collins 点击标记 ──
 
   bool isHasClickCollins() => _getBool(keyHasClickCollins);
-  Future<bool> setHasClickCollins(bool value) =>
-      _setBool(keyHasClickCollins, value);
+  Future<bool> setHasClickCollins(bool value) => _setBool(keyHasClickCollins, value);
 
   // ── 历史登录标记 ──
 
   bool isHasHistoryLogined() => _getBool(keyHasHistoryLogined);
-  Future<bool> setHasHistoryLogined(bool value) =>
-      _setBool(keyHasHistoryLogined, value);
+  Future<bool> setHasHistoryLogined(bool value) => _setBool(keyHasHistoryLogined, value);
 
   // ── 旧单词进程同步标记 ──
 
   bool isOldWordProcessSynced() => _getBool(appOldWordProcessSynced);
-  Future<bool> setOldWordProcessSynced(bool value) =>
-      _setBool(appOldWordProcessSynced, value);
+  Future<bool> setOldWordProcessSynced(bool value) => _setBool(appOldWordProcessSynced, value);
 
   // ── 测试模式 ──
 
   bool isUserTestMode() => _getBool(appUserTestMode);
-  Future<bool> setUserTestMode(bool value) =>
-      _setBool(appUserTestMode, value);
+  Future<bool> setUserTestMode(bool value) => _setBool(appUserTestMode, value);
 
   // ── 日历权限 ──
 
   bool isCalendarPermissionHasApply() => _getBool(calendarPermissionHasApply);
-  Future<bool> setCalendarPermissionHasApply(bool value) =>
-      _setBool(calendarPermissionHasApply, value);
+  Future<bool> setCalendarPermissionHasApply(bool value) => _setBool(calendarPermissionHasApply, value);
 
   // ── 最后错误 URL ──
 
   String getLastErrorUrl() => _getString(keyLastErrorUrl);
-  Future<bool> setLastErrorUrl(String value) =>
-      _setString(keyLastErrorUrl, value);
+  Future<bool> setLastErrorUrl(String value) => _setString(keyLastErrorUrl, value);
 
   // ── 上次启动的版本号 ──
 
   int getLastStartAppVersionCode() => _getInt(keyLastStartAppVersionCode);
-  Future<bool> setLastStartAppVersionCode(int value) =>
-      _setInt(keyLastStartAppVersionCode, value);
+  Future<bool> setLastStartAppVersionCode(int value) => _setInt(keyLastStartAppVersionCode, value);
 
   // ── 学习卡片标题点击计数 ──
 
   int getLearnCardTitleClickCount() => _getInt(keyLearnCardTitleClickCount);
-  Future<bool> setLearnCardTitleClickCount(int value) =>
-      _setInt(keyLearnCardTitleClickCount, value);
+  Future<bool> setLearnCardTitleClickCount(int value) => _setInt(keyLearnCardTitleClickCount, value);
 
   // ── 浮窗按钮关闭 ──
 
-  bool isCloseFloatButton(String suffix) =>
-      _getBool(keyCloseFloatButtonPre + suffix);
-  Future<bool> setCloseFloatButton(String suffix, bool value) =>
-      _setBool(keyCloseFloatButtonPre + suffix, value);
+  bool isCloseFloatButton(String suffix) => _getBool(keyCloseFloatButtonPre + suffix);
+  Future<bool> setCloseFloatButton(String suffix, bool value) => _setBool(keyCloseFloatButtonPre + suffix, value);
 
   // ── 版本首次运行时间 ──
 
-  bool isCurVersionFirstRuntime() =>
-      _getBool(keyCurVersionFirstRuntimeSuffix + PrefConfig.appVersion);
+  bool isCurVersionFirstRuntime() => _getBool(keyCurVersionFirstRuntimeSuffix + PrefConfig.appVersion);
   Future<bool> setCurVersionFirstRuntime(bool value) =>
       _setBool(keyCurVersionFirstRuntimeSuffix + PrefConfig.appVersion, value);
 
   // ── 版本级 QT 展示标记 ──
 
-  bool isCurVersionHasShowQt() =>
-      _getBool(keyCurVersionHasShowQtSuffix + PrefConfig.appVersion);
+  bool isCurVersionHasShowQt() => _getBool(keyCurVersionHasShowQtSuffix + PrefConfig.appVersion);
   Future<bool> setCurVersionHasShowQt(bool value) =>
       _setBool(keyCurVersionHasShowQtSuffix + PrefConfig.appVersion, value);
 
   // ── 奖励完成标记 ──
 
   bool isRewardFinishFirstLearn() => _getBool(keyRewardFinishFirstLearn);
-  Future<bool> setRewardFinishFirstLearn(bool value) =>
-      _setBool(keyRewardFinishFirstLearn, value);
+  Future<bool> setRewardFinishFirstLearn(bool value) => _setBool(keyRewardFinishFirstLearn, value);
 
   bool isRewardFinishFirstSpell() => _getBool(keyRewardFinishFirstSpell);
-  Future<bool> setRewardFinishFirstSpell(bool value) =>
-      _setBool(keyRewardFinishFirstSpell, value);
+  Future<bool> setRewardFinishFirstSpell(bool value) => _setBool(keyRewardFinishFirstSpell, value);
 
   bool isRewardFinishTodayReview() => _getBool(keyRewardFinishTodayReview);
-  Future<bool> setRewardFinishTodayReview(bool value) =>
-      _setBool(keyRewardFinishTodayReview, value);
+  Future<bool> setRewardFinishTodayReview(bool value) => _setBool(keyRewardFinishTodayReview, value);
 
   // ── 依文点击标记 ──
 
   bool isYiwenHasClicked() => _getBool(yiwenHasClicked);
-  Future<bool> setYiwenHasClicked(bool value) =>
-      _setBool(yiwenHasClicked, value);
+  Future<bool> setYiwenHasClicked(bool value) => _setBool(yiwenHasClicked, value);
 
   // ── 背景图片查看标记 ──
 
-  bool isBgPicLooked(String suffix) =>
-      _getBool(keyBgPicLookedPre + suffix);
-  Future<bool> setBgPicLooked(String suffix, bool value) =>
-      _setBool(keyBgPicLookedPre + suffix, value);
+  bool isBgPicLooked(String suffix) => _getBool(keyBgPicLookedPre + suffix);
+  Future<bool> setBgPicLooked(String suffix, bool value) => _setBool(keyBgPicLookedPre + suffix, value);
 
   // ── 新用户 AB 测试 ──
 
   String getNewUserAbtestMap() => _getString(keyNewUserAbtestMap);
-  Future<bool> setNewUserAbtestMap(String value) =>
-      _setString(keyNewUserAbtestMap, value);
+  Future<bool> setNewUserAbtestMap(String value) => _setString(keyNewUserAbtestMap, value);
 
   // ── 新词周期数据 ──
 
   String getNewWordPeriodData() => _getString(newWordPeriodData);
-  Future<bool> setNewWordPeriodData(String value) =>
-      _setString(newWordPeriodData, value);
+  Future<bool> setNewWordPeriodData(String value) => _setString(newWordPeriodData, value);
 
   bool isNeedNewWordPeriodData() => _getBool(needNewWordPeriodData);
-  Future<bool> setNeedNewWordPeriodData(bool value) =>
-      _setBool(needNewWordPeriodData, value);
+  Future<bool> setNeedNewWordPeriodData(bool value) => _setBool(needNewWordPeriodData, value);
 }
 
 // ──────────────────────────────────────────────
@@ -542,22 +470,17 @@ class UserPreferencesExt {
 
   // ── 便捷读写 ──
 
-  String _getString(String key, [String defaultValue = '']) =>
-      _prefs.getString(key) ?? defaultValue;
+  String _getString(String key, [String defaultValue = '']) => _prefs.getString(key) ?? defaultValue;
 
-  Future<bool> _setString(String key, String value) =>
-      _prefs.setString(key, value);
+  Future<bool> _setString(String key, String value) => _prefs.setString(key, value);
 
-  int _getInt(String key, [int defaultValue = 0]) =>
-      _prefs.getInt(key) ?? defaultValue;
+  int _getInt(String key, [int defaultValue = 0]) => _prefs.getInt(key) ?? defaultValue;
 
   Future<bool> _setInt(String key, int value) => _prefs.setInt(key, value);
 
-  bool _getBool(String key, [bool defaultValue = false]) =>
-      _prefs.getBool(key) ?? defaultValue;
+  bool _getBool(String key, [bool defaultValue = false]) => _prefs.getBool(key) ?? defaultValue;
 
-  Future<bool> _setBool(String key, bool value) =>
-      _prefs.setBool(key, value);
+  Future<bool> _setBool(String key, bool value) => _prefs.setBool(key, value);
 
   Future<bool> _remove(String key) => _prefs.remove(key);
 
@@ -613,140 +536,106 @@ class UserPreferencesExt {
 
   // ── 用户级读写（自动加用户前缀）──
 
-  String getUserString(String key, {String defaultValue = ''}) =>
-      _prefs.getString(_userKey(key)) ?? defaultValue;
+  String getUserString(String key, {String defaultValue = ''}) => _prefs.getString(_userKey(key)) ?? defaultValue;
 
-  Future<bool> setUserString(String key, String value) =>
-      _prefs.setString(_userKey(key), value);
+  Future<bool> setUserString(String key, String value) => _prefs.setString(_userKey(key), value);
 
-  int getUserInt(String key, {int defaultValue = 0}) =>
-      _prefs.getInt(_userKey(key)) ?? defaultValue;
+  int getUserInt(String key, {int defaultValue = 0}) => _prefs.getInt(_userKey(key)) ?? defaultValue;
 
-  Future<bool> setUserInt(String key, int value) =>
-      _prefs.setInt(_userKey(key), value);
+  Future<bool> setUserInt(String key, int value) => _prefs.setInt(_userKey(key), value);
 
-  bool getUserBool(String key, {bool defaultValue = false}) =>
-      _prefs.getBool(_userKey(key)) ?? defaultValue;
+  bool getUserBool(String key, {bool defaultValue = false}) => _prefs.getBool(_userKey(key)) ?? defaultValue;
 
-  Future<bool> setUserBool(String key, bool value) =>
-      _prefs.setBool(_userKey(key), value);
+  Future<bool> setUserBool(String key, bool value) => _prefs.setBool(_userKey(key), value);
 
   Future<bool> removeUserKey(String key) => _prefs.remove(_userKey(key));
 
   // ── 例句显示译文 ──
 
   bool isExampleDisplayYiwen() => _getBool(exampleDisplayYiwen, true);
-  Future<bool> setExampleDisplayYiwen(bool value) =>
-      _setBool(exampleDisplayYiwen, value);
+  Future<bool> setExampleDisplayYiwen(bool value) => _setBool(exampleDisplayYiwen, value);
 
   // ── 词根展示 ──
 
-  bool isShowWordRoot() =>
-      _getBool(UserPreferences.defaultShowWordroot, true);
-  Future<bool> setShowWordRoot(bool value) =>
-      _setBool(UserPreferences.defaultShowWordroot, value);
+  bool isShowWordRoot() => _getBool(UserPreferences.defaultShowWordroot, true);
+  Future<bool> setShowWordRoot(bool value) => _setBool(UserPreferences.defaultShowWordroot, value);
 
   // ── 锁屏壁纸（动态 key：后缀拼接主题类型）──
 
-  bool isLockWallpaper(int themeType) =>
-      _getBool(lockWallpaperPre + themeType.toString());
-  Future<bool> setLockWallpaper(bool value, int themeType) =>
-      _setBool(lockWallpaperPre + themeType.toString(), value);
+  bool isLockWallpaper(int themeType) => _getBool(lockWallpaperPre + themeType.toString());
+  Future<bool> setLockWallpaper(bool value, int themeType) => _setBool(lockWallpaperPre + themeType.toString(), value);
 
   // ── Collins 过期提示 ──
 
   bool isCollinsExpireHasShowIntro() => _getBool(collinsExpireHasShowIntro);
-  Future<bool> setCollinsExpireHasShowIntro(bool value) =>
-      _setBool(collinsExpireHasShowIntro, value);
+  Future<bool> setCollinsExpireHasShowIntro(bool value) => _setBool(collinsExpireHasShowIntro, value);
 
   // ── 收藏句子位置 ──
 
   int getFavSentenceLastSentenceId() => _getInt(favSentenceLastSentenceId);
-  Future<bool> setFavSentenceLastSentenceId(int value) =>
-      _setInt(favSentenceLastSentenceId, value);
+  Future<bool> setFavSentenceLastSentenceId(int value) => _setInt(favSentenceLastSentenceId, value);
 
   int getFavSentenceLastWordId() => _getInt(favSentenceLastWordId);
-  Future<bool> setFavSentenceLastWordId(int value) =>
-      _setInt(favSentenceLastWordId, value);
+  Future<bool> setFavSentenceLastWordId(int value) => _setInt(favSentenceLastWordId, value);
 
   // ── 生词本最后点击 ──
 
   int getNewWordLastClickWordId() => _getInt(newWordLastClickWordId);
-  Future<bool> setNewWordLastClickWordId(int value) =>
-      _setInt(newWordLastClickWordId, value);
+  Future<bool> setNewWordLastClickWordId(int value) => _setInt(newWordLastClickWordId, value);
 
   // ── 学习首组完成数据 ──
 
-  String getLearnFirstGroupCompleteData() =>
-      _getString(learnFirstGroupCompleteData);
-  Future<bool> setLearnFirstGroupCompleteData(String value) =>
-      _setString(learnFirstGroupCompleteData, value);
+  String getLearnFirstGroupCompleteData() => _getString(learnFirstGroupCompleteData);
+  Future<bool> setLearnFirstGroupCompleteData(String value) => _setString(learnFirstGroupCompleteData, value);
 
-  String getLearnFirstGroupSpellCompleteData() =>
-      _getString(learnFirstGroupSpellCompleteData);
-  Future<bool> setLearnFirstGroupSpellCompleteData(String value) =>
-      _setString(learnFirstGroupSpellCompleteData, value);
+  String getLearnFirstGroupSpellCompleteData() => _getString(learnFirstGroupSpellCompleteData);
+  Future<bool> setLearnFirstGroupSpellCompleteData(String value) => _setString(learnFirstGroupSpellCompleteData, value);
 
   // ── 听力位置记录（动态 key）──
 
   int getListenPos(String suffix) => _getInt(listenPosPrefix + suffix);
-  Future<bool> setListenPos(String suffix, int value) =>
-      _setInt(listenPosPrefix + suffix, value);
+  Future<bool> setListenPos(String suffix, int value) => _setInt(listenPosPrefix + suffix, value);
 
   // ── 锁屏权限提示 ──
 
-  bool isNoMoreLockscreenPermissionTip() =>
-      _getBool(noMoreLockscreenPermissionTip);
-  Future<bool> setNoMoreLockscreenPermissionTip(bool value) =>
-      _setBool(noMoreLockscreenPermissionTip, value);
+  bool isNoMoreLockscreenPermissionTip() => _getBool(noMoreLockscreenPermissionTip);
+  Future<bool> setNoMoreLockscreenPermissionTip(bool value) => _setBool(noMoreLockscreenPermissionTip, value);
 
   // ── 学习策略人工触发标记（动态 key）──
 
   bool isSettingStrategyHasArtificiallyTriggered(String suffix) =>
       _getBool(settingStrategyHasArtificiallyTriggered + suffix);
-  Future<bool> setSettingStrategyHasArtificiallyTriggered(
-          String suffix, bool value) =>
+  Future<bool> setSettingStrategyHasArtificiallyTriggered(String suffix, bool value) =>
       _setBool(settingStrategyHasArtificiallyTriggered + suffix, value);
 
   // ── 用户配置（动态 key）──
 
   String getUserConfig(String suffix) => _getString(userConfigPre + suffix);
-  Future<bool> setUserConfig(String suffix, String value) =>
-      _setString(userConfigPre + suffix, value);
+  Future<bool> setUserConfig(String suffix, String value) => _setString(userConfigPre + suffix, value);
 
   // ── 周学习签到状态 ──
 
   String getWeekLearnSignStatus() => _getString(weekLearnSignStatus);
-  Future<bool> setWeekLearnSignStatus(String value) =>
-      _setString(weekLearnSignStatus, value);
+  Future<bool> setWeekLearnSignStatus(String value) => _setString(weekLearnSignStatus, value);
 
   // ── 单词学习完成计数 ──
 
   int getWordLearnCompleteCount() => _getInt(wordLearnCompleteCount);
-  Future<bool> setWordLearnCompleteCount(int value) =>
-      _setInt(wordLearnCompleteCount, value);
+  Future<bool> setWordLearnCompleteCount(int value) => _setInt(wordLearnCompleteCount, value);
 
   // ── 同步时间管理（原版静态方法，迁移至 DAO 层前的过渡方法）──
 
-  String getSynTimeLexisOld() =>
-      _getString(synTimeLexisOld, '1999-01-01 01:01:01');
-  Future<bool> setSynTimeLexisOld(String value) =>
-      _setString(synTimeLexisOld, value);
+  String getSynTimeLexisOld() => _getString(synTimeLexisOld, '1999-01-01 01:01:01');
+  Future<bool> setSynTimeLexisOld(String value) => _setString(synTimeLexisOld, value);
 
-  String getSynTimeWordOld() =>
-      _getString(synTimeWordOld, '1999-01-01 01:01:01');
-  Future<bool> setSynTimeWordOld(String value) =>
-      _setString(synTimeWordOld, value);
+  String getSynTimeWordOld() => _getString(synTimeWordOld, '1999-01-01 01:01:01');
+  Future<bool> setSynTimeWordOld(String value) => _setString(synTimeWordOld, value);
 
-  String getSynTimeWordProcess() =>
-      _getString(synTimeWordProcess, '1999-01-01 01:01:01');
-  Future<bool> setSynTimeWordProcess(String value) =>
-      _setString(synTimeWordProcess, value);
+  String getSynTimeWordProcess() => _getString(synTimeWordProcess, '1999-01-01 01:01:01');
+  Future<bool> setSynTimeWordProcess(String value) => _setString(synTimeWordProcess, value);
 
-  String getSynTimeNewword() =>
-      _getString(synTimeNewword, '1999-01-01 01:01:01');
-  Future<bool> setSynTimeNewword(String value) =>
-      _setString(synTimeNewword, value);
+  String getSynTimeNewword() => _getString(synTimeNewword, '1999-01-01 01:01:01');
+  Future<bool> setSynTimeNewword(String value) => _setString(synTimeNewword, value);
 
   /// 迁移旧版同步时间数据（原版 migrateOldSyncTimeData）
   Future<void> migrateOldSyncTimeData() async {
@@ -766,15 +655,13 @@ class UserPreferencesExt {
     final jsonStr = getUserString(userInfo);
     if (jsonStr.isEmpty) return null;
     try {
-      return UserInfoBeanFull.fromJson(
-          jsonDecode(jsonStr) as Map<String, dynamic>);
+      return UserInfoBeanFull.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
     } catch (_) {
       return null;
     }
   }
 
-  Future<bool> saveUserInfoBeanFull(UserInfoBeanFull bean) =>
-      setUserString(userInfo, jsonEncode(bean.toJson()));
+  Future<bool> saveUserInfoBeanFull(UserInfoBeanFull bean) => setUserString(userInfo, jsonEncode(bean.toJson()));
 }
 
 // ──────────────────────────────────────────────
@@ -797,22 +684,17 @@ class GuidePreferenceExt {
 
   // ── 便捷读写 ──
 
-  String _getString(String key, [String defaultValue = '']) =>
-      _prefs.getString(key) ?? defaultValue;
+  String _getString(String key, [String defaultValue = '']) => _prefs.getString(key) ?? defaultValue;
 
-  Future<bool> _setString(String key, String value) =>
-      _prefs.setString(key, value);
+  Future<bool> _setString(String key, String value) => _prefs.setString(key, value);
 
-  int _getInt(String key, [int defaultValue = 0]) =>
-      _prefs.getInt(key) ?? defaultValue;
+  int _getInt(String key, [int defaultValue = 0]) => _prefs.getInt(key) ?? defaultValue;
 
   Future<bool> _setInt(String key, int value) => _prefs.setInt(key, value);
 
-  bool _getBool(String key, [bool defaultValue = false]) =>
-      _prefs.getBool(key) ?? defaultValue;
+  bool _getBool(String key, [bool defaultValue = false]) => _prefs.getBool(key) ?? defaultValue;
 
-  Future<bool> _setBool(String key, bool value) =>
-      _prefs.setBool(key, value);
+  Future<bool> _setBool(String key, bool value) => _prefs.setBool(key, value);
 
   Future<bool> _remove(String key) => _prefs.remove(key);
 
@@ -869,34 +751,28 @@ class GuidePreferenceExt {
 
   bool isNeedShowRecallTips() => _getInt(guideRecallTipClickCount, 0) < 2;
   Future<void> increaseRecallTipClickCount() async {
-    await saveClickCount(
-        guideRecallTipClickCount, _getInt(guideRecallTipClickCount, 0) + 1);
+    await saveClickCount(guideRecallTipClickCount, _getInt(guideRecallTipClickCount, 0) + 1);
   }
 
   // ── 例句来源提示 ──
 
   bool isNeedShowExampleFromTip() => _getInt(guideExampleFromClick, 0) < 1;
   Future<void> increaseExampleFromClick() async {
-    await saveClickCount(
-        guideExampleFromClick, _getInt(guideExampleFromClick, 0) + 1);
+    await saveClickCount(guideExampleFromClick, _getInt(guideExampleFromClick, 0) + 1);
   }
 
   // ── 例句点击提示 ──
 
-  bool isNeedShowClickSentTip() =>
-      _getInt(guideExampleSentenceClick, 0) < 2;
+  bool isNeedShowClickSentTip() => _getInt(guideExampleSentenceClick, 0) < 2;
   Future<void> increaseExampleSentenceClick() async {
-    await saveClickCount(
-        guideExampleSentenceClick, _getInt(guideExampleSentenceClick, 0) + 1);
+    await saveClickCount(guideExampleSentenceClick, _getInt(guideExampleSentenceClick, 0) + 1);
   }
 
   // ── 例句长按提示 ──
 
-  bool isNeedShowExampleLongPressTip() =>
-      _getInt(guideExampleLongPress, 0) < 2;
+  bool isNeedShowExampleLongPressTip() => _getInt(guideExampleLongPress, 0) < 2;
   Future<void> increaseExampleLongPress() async {
-    await saveClickCount(
-        guideExampleLongPress, _getInt(guideExampleLongPress, 0) + 1);
+    await saveClickCount(guideExampleLongPress, _getInt(guideExampleLongPress, 0) + 1);
   }
 
   // ── 例句左滑提示 ──
@@ -906,8 +782,7 @@ class GuidePreferenceExt {
     return !_getBool(guideExampleLeftSlide);
   }
 
-  Future<void> setExampleLeftSlideShown(bool value) =>
-      _setBool(guideExampleLeftSlide, value);
+  Future<void> setExampleLeftSlideShown(bool value) => _setBool(guideExampleLeftSlide, value);
 
   // ── 手势查看例句提示 ──
 
@@ -917,14 +792,11 @@ class GuidePreferenceExt {
         _getInt(guideAppStartCount) >= 10;
   }
 
-  Future<void> setExampleGestureLookExampleShown(bool value) =>
-      _setBool(guideExampleGestureLookExample, value);
+  Future<void> setExampleGestureLookExampleShown(bool value) => _setBool(guideExampleGestureLookExample, value);
 
-  int getExampleClickLookExampleCount() =>
-      _getInt(guideExampleClickLookExample);
+  int getExampleClickLookExampleCount() => _getInt(guideExampleClickLookExample);
   Future<void> increaseExampleClickLookExample() async {
-    await saveClickCount(guideExampleClickLookExample,
-        _getInt(guideExampleClickLookExample) + 1);
+    await saveClickCount(guideExampleClickLookExample, _getInt(guideExampleClickLookExample) + 1);
   }
 
   int getAppStartCount() => _getInt(guideAppStartCount);
@@ -942,39 +814,33 @@ class GuidePreferenceExt {
   // ── 词根发音点击提示 ──
 
   bool isNeedShowRootSoundClickTip() {
-    return _getInt(guideRootExpandClickCount) >= 5 &&
-        _getInt(guideRootSoundClickCount, 0) < 2;
+    return _getInt(guideRootExpandClickCount) >= 5 && _getInt(guideRootSoundClickCount, 0) < 2;
   }
 
   Future<void> increaseRootSoundClickCount() async {
     if (_getInt(guideRootExpandClickCount) >= 5) {
-      await saveClickCount(
-          guideRootSoundClickCount, _getInt(guideRootSoundClickCount) + 1);
+      await saveClickCount(guideRootSoundClickCount, _getInt(guideRootSoundClickCount) + 1);
     }
   }
 
   Future<void> increaseRootExpandClickCount() async {
-    await saveClickCount(
-        guideRootExpandClickCount, _getInt(guideRootExpandClickCount) + 1);
+    await saveClickCount(guideRootExpandClickCount, _getInt(guideRootExpandClickCount) + 1);
   }
 
   // ── LR 设置提示 ──
 
   bool isNeedShowLRSettingTip() {
-    if (AppPreferencesExt().isOverlayInstallation() &&
-        _getInt(guideSwitchFromWordrootToSentence) >= 2) {
+    if (AppPreferencesExt().isOverlayInstallation() && _getInt(guideSwitchFromWordrootToSentence) >= 2) {
       return _getBool(guideShowLrSetting, true);
     }
     return false;
   }
 
-  Future<void> setNeedShowLRSettingTip(bool value) =>
-      _setBool(guideShowLrSetting, value);
+  Future<void> setNeedShowLRSettingTip(bool value) => _setBool(guideShowLrSetting, value);
 
   // ── 词根→例句切换计数 ──
 
-  int getSwitchFromWordRoot2SentenceCount() =>
-      _getInt(guideSwitchFromWordrootToSentence);
+  int getSwitchFromWordRoot2SentenceCount() => _getInt(guideSwitchFromWordrootToSentence);
 
   Future<void> increaseSwitchFromWordRoot2Sentence() async {
     final count = _getInt(guideSwitchFromWordrootToSentence);
@@ -982,8 +848,7 @@ class GuidePreferenceExt {
     await _setInt(guideSwitchFromWordrootToSentence, count + 1);
   }
 
-  bool isNeedIncreaseSwitchFromWordRoot2Sentence() =>
-      _getInt(guideSwitchFromWordrootToSentence) < 3;
+  bool isNeedIncreaseSwitchFromWordRoot2Sentence() => _getInt(guideSwitchFromWordrootToSentence) < 3;
 
   // ── 学习引导重置（原版 resetLearnGuide）──
 
@@ -1011,91 +876,63 @@ class GuidePreferenceExt {
   // ── v3 引导状态 ──
 
   bool isV3FirstLaunch() => _getBool(v3FirstLaunchTime);
-  Future<void> setV3FirstLaunch(bool value) =>
-      _setBool(v3FirstLaunchTime, value);
+  Future<void> setV3FirstLaunch(bool value) => _setBool(v3FirstLaunchTime, value);
 
-  bool isV3GuideAnytimeListenHasShow() =>
-      _getBool(v3GuideAnytimeListenHasShow);
-  Future<void> setV3GuideAnytimeListenHasShow(bool value) =>
-      _setBool(v3GuideAnytimeListenHasShow, value);
+  bool isV3GuideAnytimeListenHasShow() => _getBool(v3GuideAnytimeListenHasShow);
+  Future<void> setV3GuideAnytimeListenHasShow(bool value) => _setBool(v3GuideAnytimeListenHasShow, value);
 
-  bool isV3GuideChangeLibraryHasShow() =>
-      _getBool(v3GuideChangeLibraryHasShow);
-  Future<void> setV3GuideChangeLibraryHasShow(bool value) =>
-      _setBool(v3GuideChangeLibraryHasShow, value);
+  bool isV3GuideChangeLibraryHasShow() => _getBool(v3GuideChangeLibraryHasShow);
+  Future<void> setV3GuideChangeLibraryHasShow(bool value) => _setBool(v3GuideChangeLibraryHasShow, value);
 
   bool isV3GuideHasShowLearnTip() => _getBool(v3GuideHasShowLearnTip);
-  Future<void> setV3GuideHasShowLearnTip(bool value) =>
-      _setBool(v3GuideHasShowLearnTip, value);
+  Future<void> setV3GuideHasShowLearnTip(bool value) => _setBool(v3GuideHasShowLearnTip, value);
 
-  bool isV3GuideLookExampleTipHasShow() =>
-      _getBool(v3GuideLookExampleTipHasShow);
-  Future<void> setV3GuideLookExampleTipHasShow(bool value) =>
-      _setBool(v3GuideLookExampleTipHasShow, value);
+  bool isV3GuideLookExampleTipHasShow() => _getBool(v3GuideLookExampleTipHasShow);
+  Future<void> setV3GuideLookExampleTipHasShow(bool value) => _setBool(v3GuideLookExampleTipHasShow, value);
 
   bool isV3GuideReviewTipHasShow() => _getBool(v3GuideReviewTipHasShow);
-  Future<void> setV3GuideReviewTipHasShow(bool value) =>
-      _setBool(v3GuideReviewTipHasShow, value);
+  Future<void> setV3GuideReviewTipHasShow(bool value) => _setBool(v3GuideReviewTipHasShow, value);
 
-  bool isV3GuideShouldShowDictTip() =>
-      _getBool(v3GuideShouldShowDictTip, true);
-  Future<void> setV3GuideShouldShowDictTip(bool value) =>
-      _setBool(v3GuideShouldShowDictTip, value);
+  bool isV3GuideShouldShowDictTip() => _getBool(v3GuideShouldShowDictTip, true);
+  Future<void> setV3GuideShouldShowDictTip(bool value) => _setBool(v3GuideShouldShowDictTip, value);
 
-  bool isV3GuideExtensiveModeSelect() =>
-      _getBool(v3GuideExtensiveModeSelect);
-  Future<void> setV3GuideExtensiveModeSelect(bool value) =>
-      _setBool(v3GuideExtensiveModeSelect, value);
+  bool isV3GuideExtensiveModeSelect() => _getBool(v3GuideExtensiveModeSelect);
+  Future<void> setV3GuideExtensiveModeSelect(bool value) => _setBool(v3GuideExtensiveModeSelect, value);
 
   bool isV3GuideWrongTipHasShow() => _getBool(v3GuideWrongTipHasShow);
-  Future<void> setV3GuideWrongTipHasShow(bool value) =>
-      _setBool(v3GuideWrongTipHasShow, value);
+  Future<void> setV3GuideWrongTipHasShow(bool value) => _setBool(v3GuideWrongTipHasShow, value);
 
-  bool isV3HasShowInitGuideViewPager() =>
-      _getBool(v3HasShowInitGuideViewPager);
-  Future<void> setV3HasShowInitGuideViewPager(bool value) =>
-      _setBool(v3HasShowInitGuideViewPager, value);
+  bool isV3HasShowInitGuideViewPager() => _getBool(v3HasShowInitGuideViewPager);
+  Future<void> setV3HasShowInitGuideViewPager(bool value) => _setBool(v3HasShowInitGuideViewPager, value);
 
   int getV3GuideWordRightCount() => _getInt(v3GuideWordRightCount);
-  Future<void> setV3GuideWordRightCount(int value) =>
-      _setInt(v3GuideWordRightCount, value);
+  Future<void> setV3GuideWordRightCount(int value) => _setInt(v3GuideWordRightCount, value);
 
-  int getV3GuideFinishedLearnGroupCount() =>
-      _getInt(v3GuideFinishedLearnGroupCount);
-  Future<void> setV3GuideFinishedLearnGroupCount(int value) =>
-      _setInt(v3GuideFinishedLearnGroupCount, value);
+  int getV3GuideFinishedLearnGroupCount() => _getInt(v3GuideFinishedLearnGroupCount);
+  Future<void> setV3GuideFinishedLearnGroupCount(int value) => _setInt(v3GuideFinishedLearnGroupCount, value);
 
   String getV3GuideWordSelectChoice() => _getString(v3GuideWordSelectChoice);
-  Future<void> setV3GuideWordSelectChoice(String value) =>
-      _setString(v3GuideWordSelectChoice, value);
+  Future<void> setV3GuideWordSelectChoice(String value) => _setString(v3GuideWordSelectChoice, value);
 
   // ── 引导相关开关 ──
 
   bool isGuideClickSoundSwitch() => _getBool(guideClickSoundSwitch);
-  Future<void> setGuideClickSoundSwitch(bool value) =>
-      _setBool(guideClickSoundSwitch, value);
+  Future<void> setGuideClickSoundSwitch(bool value) => _setBool(guideClickSoundSwitch, value);
 
   bool isGuideClickFixWord() => _getBool(guideClickFixWord);
-  Future<void> setGuideClickFixWord(bool value) =>
-      _setBool(guideClickFixWord, value);
+  Future<void> setGuideClickFixWord(bool value) => _setBool(guideClickFixWord, value);
 
   bool isGuideLearnRecordMigrated() => _getBool(guideLearnRecordMigrated);
-  Future<void> setGuideLearnRecordMigrated(bool value) =>
-      _setBool(guideLearnRecordMigrated, value);
+  Future<void> setGuideLearnRecordMigrated(bool value) => _setBool(guideLearnRecordMigrated, value);
 
-  bool isGuideShareAchievementMigrated() =>
-      _getBool(guideShareAchievementMigrated);
-  Future<void> setGuideShareAchievementMigrated(bool value) =>
-      _setBool(guideShareAchievementMigrated, value);
+  bool isGuideShareAchievementMigrated() => _getBool(guideShareAchievementMigrated);
+  Future<void> setGuideShareAchievementMigrated(bool value) => _setBool(guideShareAchievementMigrated, value);
 
-  bool isGuideListWordListenSettingShowed() =>
-      _getBool(guideListWordListenSettingShowed);
-  Future<void> setGuideListWordListenSettingShowed(bool value) =>
-      _setBool(guideListWordListenSettingShowed, value);
+  bool isGuideListWordListenSettingShowed() => _getBool(guideListWordListenSettingShowed);
+  Future<void> setGuideListWordListenSettingShowed(bool value) => _setBool(guideListWordListenSettingShowed, value);
 
   bool isHeadsetOptionIntroduce() => _getBool(headsetOptionIntroduce);
-  Future<void> setHeadsetOptionIntroduce(bool value) =>
-      _setBool(headsetOptionIntroduce, value);
+  Future<void> setHeadsetOptionIntroduce(bool value) => _setBool(headsetOptionIntroduce, value);
 }
 
 // ──────────────────────────────────────────────
@@ -1154,23 +991,19 @@ class AuthDataPreferences extends BaseSharedPreferences {
 
   // ── 平台级授权数据（动态 key：platform + 后缀）──
 
-  Future<void> setUserId(String platform, String uid) =>
-      setString(platform + _uidSuffix, uid);
+  Future<void> setUserId(String platform, String uid) => setString(platform + _uidSuffix, uid);
 
   String getUserId(String platform) => getString(platform + _uidSuffix);
 
-  Future<void> setAccessToken(String platform, String token) =>
-      setString(platform + _atSuffix, token);
+  Future<void> setAccessToken(String platform, String token) => setString(platform + _atSuffix, token);
 
   String getAccessToken(String platform) => getString(platform + _atSuffix);
 
-  Future<void> setRefreshToken(String platform, String token) =>
-      setString(platform + _rtSuffix, token);
+  Future<void> setRefreshToken(String platform, String token) => setString(platform + _rtSuffix, token);
 
   String getRefreshToken(String platform) => getString(platform + _rtSuffix);
 
-  Future<void> setExpireIn(String platform, String expireIn) =>
-      setString(platform + _eiSuffix, expireIn);
+  Future<void> setExpireIn(String platform, String expireIn) => setString(platform + _eiSuffix, expireIn);
 
   String getExpireIn(String platform) => getString(platform + _eiSuffix);
 

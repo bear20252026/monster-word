@@ -2,6 +2,7 @@
 // 颜色可自定义，支持主题色适配
 // 适用于：搜索页顶部搜索框、全局搜索入口
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 class HaloSearchField extends StatefulWidget {
@@ -40,8 +41,7 @@ class HaloSearchField extends StatefulWidget {
   State<HaloSearchField> createState() => _HaloSearchFieldState();
 }
 
-class _HaloSearchFieldState extends State<HaloSearchField>
-    with TickerProviderStateMixin {
+class _HaloSearchFieldState extends State<HaloSearchField> with TickerProviderStateMixin {
   late AnimationController _focusController;
   late AnimationController _breathController;
   late Animation<double> _focusAnim;
@@ -52,21 +52,17 @@ class _HaloSearchFieldState extends State<HaloSearchField>
   @override
   void initState() {
     super.initState();
-    _focusController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _breathController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    );
+    _focusController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _breathController = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000));
 
-    _focusAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _focusController, curve: Curves.easeOutCubic),
-    );
-    _breathAnim = Tween<double>(begin: 0.8, end: 1.2).animate(
-      CurvedAnimation(parent: _breathController, curve: Curves.easeInOut),
-    );
+    _focusAnim = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _focusController, curve: Curves.easeOutCubic));
+    _breathAnim = Tween<double>(
+      begin: 0.8,
+      end: 1.2,
+    ).animate(CurvedAnimation(parent: _breathController, curve: Curves.easeInOut));
 
     _focusNode.addListener(() {
       setState(() {
@@ -109,10 +105,7 @@ class _HaloSearchFieldState extends State<HaloSearchField>
         );
       },
       child: Container(
-        decoration: BoxDecoration(
-          color: widget.bgColor,
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-        ),
+        decoration: BoxDecoration(color: widget.bgColor, borderRadius: BorderRadius.circular(widget.borderRadius)),
         child: TextField(
           controller: widget.controller,
           focusNode: _focusNode,
@@ -140,12 +133,7 @@ class _HaloPainter extends CustomPainter {
   final Color haloColor;
   final double borderRadius;
 
-  _HaloPainter({
-    required this.progress,
-    required this.breath,
-    required this.haloColor,
-    required this.borderRadius,
-  });
+  _HaloPainter({required this.progress, required this.breath, required this.haloColor, required this.borderRadius});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -199,27 +187,19 @@ class HaloSearchBackground extends StatefulWidget {
   final Widget child;
   final Color color;
 
-  const HaloSearchBackground({
-    super.key,
-    required this.child,
-    this.color = const Color(0xFF006241),
-  });
+  const HaloSearchBackground({super.key, required this.child, this.color = const Color(0xFF006241)});
 
   @override
   State<HaloSearchBackground> createState() => _HaloSearchBackgroundState();
 }
 
-class _HaloSearchBackgroundState extends State<HaloSearchBackground>
-    with SingleTickerProviderStateMixin {
+class _HaloSearchBackgroundState extends State<HaloSearchBackground> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    )..repeat();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat();
   }
 
   @override
@@ -234,10 +214,7 @@ class _HaloSearchBackgroundState extends State<HaloSearchBackground>
       animation: _controller,
       builder: (context, child) {
         return CustomPaint(
-          painter: _HaloBgPainter(
-            progress: _controller.value,
-            color: widget.color,
-          ),
+          painter: _HaloBgPainter(progress: _controller.value, color: widget.color),
           child: child,
         );
       },
@@ -264,18 +241,13 @@ class _HaloBgPainter extends CustomPainter {
       final radius = size.width * (0.25 + 0.05 * math.sin(phase * 2));
 
       final paint = Paint()
-        ..shader = RadialGradient(
-          colors: [
-            color.withValues(alpha: 0.06),
-            color.withValues(alpha: 0),
-          ],
-        ).createShader(Rect.fromCircle(center: Offset(x, y), radius: radius));
+        ..shader = RadialGradient(colors: [color.withValues(alpha: 0.06), color.withValues(alpha: 0)])
+            .createShader(Rect.fromCircle(center: Offset(x, y), radius: radius));
 
       canvas.drawCircle(Offset(x, y), radius, paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _HaloBgPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _HaloBgPainter oldDelegate) => oldDelegate.progress != progress;
 }

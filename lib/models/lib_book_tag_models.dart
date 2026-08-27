@@ -10,16 +10,10 @@ class LibBookLevel1Tag {
   final int id;
   final String name;
 
-  LibBookLevel1Tag({
-    this.id = 0,
-    this.name = '',
-  });
+  LibBookLevel1Tag({this.id = 0, this.name = ''});
 
   factory LibBookLevel1Tag.fromJson(Map<String, dynamic> json) =>
-      LibBookLevel1Tag(
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        name: json['name'] ?? '',
-      );
+      LibBookLevel1Tag(id: (json['id'] as num?)?.toInt() ?? 0, name: json['name'] ?? '');
 }
 
 /// 词书二级标签（翻译自 LibBookLevel2Tag.java）
@@ -29,22 +23,16 @@ class LibBookLevel2Tag {
   final int bookCount;
   final int bookDeletable;
 
-  LibBookLevel2Tag({
-    this.id = 0,
-    this.name = '',
-    this.bookCount = 0,
-    this.bookDeletable = 0,
-  });
+  LibBookLevel2Tag({this.id = 0, this.name = '', this.bookCount = 0, this.bookDeletable = 0});
 
   bool get isBookDeletable => bookDeletable == 1;
 
-  factory LibBookLevel2Tag.fromJson(Map<String, dynamic> json) =>
-      LibBookLevel2Tag(
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        name: json['name'] ?? '',
-        bookCount: (json['bookCount'] as num?)?.toInt() ?? 0,
-        bookDeletable: (json['bookDeletable'] as num?)?.toInt() ?? 0,
-      );
+  factory LibBookLevel2Tag.fromJson(Map<String, dynamic> json) => LibBookLevel2Tag(
+    id: (json['id'] as num?)?.toInt() ?? 0,
+    name: json['name'] ?? '',
+    bookCount: (json['bookCount'] as num?)?.toInt() ?? 0,
+    bookDeletable: (json['bookDeletable'] as num?)?.toInt() ?? 0,
+  );
 }
 
 /// 分类词书（翻译自 CategoryLibBooks.java）
@@ -53,12 +41,9 @@ class CategoryLibBooks {
   final List<LibBookLevel2Tag> lvl2Tags;
   final List<LibBook> books;
 
-  CategoryLibBooks({
-    this.lvl1Tag,
-    List<LibBookLevel2Tag>? lvl2Tags,
-    List<LibBook>? books,
-  })  : lvl2Tags = lvl2Tags ?? [],
-        books = books ?? [];
+  CategoryLibBooks({this.lvl1Tag, List<LibBookLevel2Tag>? lvl2Tags, List<LibBook>? books})
+    : lvl2Tags = lvl2Tags ?? [],
+      books = books ?? [];
 
   int get level1TagId => lvl1Tag?.id ?? -1;
 
@@ -81,27 +66,15 @@ class CategoryLibBooks {
     return null;
   }
 
-  factory CategoryLibBooks.fromJson(Map<String, dynamic> json) =>
-      CategoryLibBooks(
-        lvl1Tag: json['lvl1Tag'] != null
-            ? LibBookLevel1Tag.fromJson(
-                json['lvl1Tag'] as Map<String, dynamic>)
-            : null,
-        lvl2Tags: (json['lvl2Tags'] as List?)
-                ?.map((e) =>
-                    LibBookLevel2Tag.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-        books: (json['books'] as List?)
-                ?.map((e) => LibBook.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-      );
+  factory CategoryLibBooks.fromJson(Map<String, dynamic> json) => CategoryLibBooks(
+    lvl1Tag: json['lvl1Tag'] != null ? LibBookLevel1Tag.fromJson(json['lvl1Tag'] as Map<String, dynamic>) : null,
+    lvl2Tags:
+        (json['lvl2Tags'] as List?)?.map((e) => LibBookLevel2Tag.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+    books: (json['books'] as List?)?.map((e) => LibBook.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+  );
 
   static List<CategoryLibBooks> fromJsonArray(List<dynamic> arr) {
-    return arr
-        .map((e) => CategoryLibBooks.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return arr.map((e) => CategoryLibBooks.fromJson(e as Map<String, dynamic>)).toList();
   }
 }
 

@@ -23,17 +23,13 @@ abstract class BaseSharedPreferences {
   }
 
   // ── 读操作：未初始化（如测试环境 / 首帧前）时返回默认值，避免 UI 构建期抛 StateError ──
-  String getString(String key, {String defaultValue = ''}) =>
-      _prefs?.getString(key) ?? defaultValue;
+  String getString(String key, {String defaultValue = ''}) => _prefs?.getString(key) ?? defaultValue;
 
-  int getInt(String key, {int defaultValue = 0}) =>
-      _prefs?.getInt(key) ?? defaultValue;
+  int getInt(String key, {int defaultValue = 0}) => _prefs?.getInt(key) ?? defaultValue;
 
-  bool getBool(String key, {bool defaultValue = false}) =>
-      _prefs?.getBool(key) ?? defaultValue;
+  bool getBool(String key, {bool defaultValue = false}) => _prefs?.getBool(key) ?? defaultValue;
 
-  double getDouble(String key, {double defaultValue = 0.0}) =>
-      _prefs?.getDouble(key) ?? defaultValue;
+  double getDouble(String key, {double defaultValue = 0.0}) => _prefs?.getDouble(key) ?? defaultValue;
 
   List<String> getStringList(String key, {List<String>? defaultValue}) =>
       _prefs?.getStringList(key) ?? defaultValue ?? [];
@@ -42,14 +38,11 @@ abstract class BaseSharedPreferences {
   Set<String> getKeys() => _prefs?.getKeys() ?? const {};
 
   // ── 写操作：未初始化仍抛错，及时暴露初始化时序问题 ──
-  Future<bool> setString(String key, String value) =>
-      prefs.setString(key, value);
+  Future<bool> setString(String key, String value) => prefs.setString(key, value);
   Future<bool> setInt(String key, int value) => prefs.setInt(key, value);
   Future<bool> setBool(String key, bool value) => prefs.setBool(key, value);
-  Future<bool> setDouble(String key, double value) =>
-      prefs.setDouble(key, value);
-  Future<bool> setStringList(String key, List<String> value) =>
-      prefs.setStringList(key, value);
+  Future<bool> setDouble(String key, double value) => prefs.setDouble(key, value);
+  Future<bool> setStringList(String key, List<String> value) => prefs.setStringList(key, value);
 
   Future<bool> remove(String key) => prefs.remove(key);
   Future<bool> clear() => prefs.clear();
@@ -144,7 +137,7 @@ class AppPreferences extends BaseSharedPreferences {
   static const String keyUserTrackEnable = 'key_user_track_enable';
 
   // === 皮肤主题持久化（批1新增）===
-  static const String skinThemeId = 'skin_theme_id';           // 'bright'|'dark'|'pure_black'
+  static const String skinThemeId = 'skin_theme_id'; // 'bright'|'dark'|'pure_black'
   static const String skinFollowSystem = 'skin_follow_system'; // bool
 
   /// 获取皮肤主题 ID（空=未设置）
@@ -163,8 +156,7 @@ class AppPreferences extends BaseSharedPreferences {
 
   /// 词书分组列表
   String getBookGroupList() => getString(bookGroupList);
-  Future<bool> setBookGroupList(String value) =>
-      setString(bookGroupList, value);
+  Future<bool> setBookGroupList(String value) => setString(bookGroupList, value);
 
   /// 用户 token
   /// ⚠️ 已废弃：请使用 SecureTokenStorage().getToken() 异步版本
@@ -242,8 +234,7 @@ class UserPreferences extends BaseSharedPreferences {
 
   /// 已完成学习组列表（JSON 字符串）
   String getLearnedFinishedGroupList() => getString(learnedFinishedGroupList);
-  Future<bool> setLearnedFinishedGroupList(String value) =>
-      setString(learnedFinishedGroupList, value);
+  Future<bool> setLearnedFinishedGroupList(String value) => setString(learnedFinishedGroupList, value);
 
   /// 当前选择的词书（JSON 字符串）
   String getLexisBook() => getString(lexisBook);
@@ -255,8 +246,7 @@ class UserPreferences extends BaseSharedPreferences {
 
   /// 学习策略
   String getSettingLearnStrategy() => getString(settingLearnStrategy);
-  Future<bool> setSettingLearnStrategy(String value) =>
-      setString(settingLearnStrategy, value);
+  Future<bool> setSettingLearnStrategy(String value) => setString(settingLearnStrategy, value);
 
   /// 自动发音
   bool isAutoPlay() => getBool(autoPlay);
@@ -314,8 +304,8 @@ class UserInfoBean {
   String phone;
   String token;
   String secret;
-  String displayId;   // 用户自定义 ID（可自由设定）
-  String wechatName;  // 微信名
+  String displayId; // 用户自定义 ID（可自由设定）
+  String wechatName; // 微信名
 
   UserInfoBean({
     this.userId = 0,
@@ -329,26 +319,26 @@ class UserInfoBean {
   });
 
   factory UserInfoBean.fromJson(Map<String, dynamic> json) => UserInfoBean(
-        userId: (json['userId'] as num?)?.toInt() ?? 0,
-        nickname: json['nickname'] ?? '',
-        avatar: json['avatar'] ?? '',
-        phone: json['phone'] ?? '',
-        token: json['token'] ?? '',
-        secret: json['secret'] ?? '',
-        displayId: json['displayId'] ?? '',
-        wechatName: json['wechatName'] ?? '',
-      );
+    userId: (json['userId'] as num?)?.toInt() ?? 0,
+    nickname: json['nickname'] ?? '',
+    avatar: json['avatar'] ?? '',
+    phone: json['phone'] ?? '',
+    token: json['token'] ?? '',
+    secret: json['secret'] ?? '',
+    displayId: json['displayId'] ?? '',
+    wechatName: json['wechatName'] ?? '',
+  );
 
   Map<String, dynamic> toJson() => {
-        'userId': userId,
-        'nickname': nickname,
-        'avatar': avatar,
-        'phone': phone,
-        'token': token,
-        'secret': secret,
-        'displayId': displayId,
-        'wechatName': wechatName,
-      };
+    'userId': userId,
+    'nickname': nickname,
+    'avatar': avatar,
+    'phone': phone,
+    'token': token,
+    'secret': secret,
+    'displayId': displayId,
+    'wechatName': wechatName,
+  };
 }
 
 // ── 用户信息存取 ──
@@ -359,8 +349,7 @@ extension UserInfoPrefs on AppPreferences {
     final jsonStr = getString(_userInfoKey);
     if (jsonStr.isEmpty) return UserInfoBean();
     try {
-      return UserInfoBean.fromJson(
-          jsonDecode(jsonStr) as Map<String, dynamic>);
+      return UserInfoBean.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
     } catch (_) {
       return UserInfoBean();
     }
@@ -371,16 +360,14 @@ extension UserInfoPrefs on AppPreferences {
     final jsonStr = getString(_userInfoKey);
     if (jsonStr.isEmpty) return UserInfoBean();
     try {
-      return UserInfoBean.fromJson(
-          jsonDecode(jsonStr) as Map<String, dynamic>);
+      return UserInfoBean.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
     } catch (_) {
       return UserInfoBean();
     }
   }
 
   /// 保存用户信息
-  Future<bool> setUserInfo(UserInfoBean bean) =>
-      setString(_userInfoKey, jsonEncode(bean.toJson()));
+  Future<bool> setUserInfo(UserInfoBean bean) => setString(_userInfoKey, jsonEncode(bean.toJson()));
 }
 
 const String _userInfoKey = 'monster_word_user_info';

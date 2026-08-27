@@ -92,8 +92,7 @@ class LockPresenterImp implements LockPresenter {
 
     final time = '${NumberUtils.zeroAdd(hour)}:${NumberUtils.zeroAdd(minute)}';
     final dateCn = '$month月$day日 ${DateTimeConstants.weekdayCn[weekdayIndex]}';
-    final dateEn =
-        '${DateTimeConstants.monthEn[month - 1]} $day ${DateTimeConstants.weekdayEn[weekdayIndex]}';
+    final dateEn = '${DateTimeConstants.monthEn[month - 1]} $day ${DateTimeConstants.weekdayEn[weekdayIndex]}';
 
     try {
       (lockView as dynamic).updateDateTime(time, dateCn, dateEn);

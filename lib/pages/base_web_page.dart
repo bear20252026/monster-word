@@ -13,12 +13,7 @@ class BaseWebPage extends StatefulWidget {
   final String? title;
   final bool showAppBar;
 
-  const BaseWebPage({
-    super.key,
-    required this.url,
-    this.title,
-    this.showAppBar = true,
-  });
+  const BaseWebPage({super.key, required this.url, this.title, this.showAppBar = true});
 
   static const routeName = '/web';
 
@@ -33,10 +28,7 @@ class _BaseWebPageState extends State<BaseWebPage> {
   String _pageTitle = '';
 
   /// 允许的域名白名单
-  static const _allowedDomains = [
-    'beingfine.cn',
-    'www.beingfine.cn',
-  ];
+  static const _allowedDomains = ['beingfine.cn', 'www.beingfine.cn'];
 
   /// 检查 URL 是否在白名单内
   bool _isUrlAllowed(String url) {
@@ -54,8 +46,7 @@ class _BaseWebPageState extends State<BaseWebPage> {
       }
 
       // 检查域名白名单
-      return _allowedDomains.any((domain) =>
-          uri.host == domain || uri.host.endsWith('.$domain'));
+      return _allowedDomains.any((domain) => uri.host == domain || uri.host.endsWith('.$domain'));
     } catch (e) {
       return false;
     }
@@ -74,31 +65,33 @@ class _BaseWebPageState extends State<BaseWebPage> {
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.disabled)
-      ..setNavigationDelegate(NavigationDelegate(
-        onNavigationRequest: (request) {
-          if (!_isUrlAllowed(request.url)) {
-            return NavigationDecision.prevent;
-          }
-          return NavigationDecision.navigate;
-        },
-        onPageStarted: (_) => setState(() {
-          _isLoading = true;
-          _hasError = false;
-        }),
-        onPageFinished: (url) async {
-          final title = await _controller.getTitle();
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-              if (title != null && title.isNotEmpty) _pageTitle = title;
-            });
-          }
-        },
-        onWebResourceError: (_) => setState(() {
-          _hasError = true;
-          _isLoading = false;
-        }),
-      ));
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (request) {
+            if (!_isUrlAllowed(request.url)) {
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
+          onPageStarted: (_) => setState(() {
+            _isLoading = true;
+            _hasError = false;
+          }),
+          onPageFinished: (url) async {
+            final title = await _controller.getTitle();
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+                if (title != null && title.isNotEmpty) _pageTitle = title;
+              });
+            }
+          },
+          onWebResourceError: (_) => setState(() {
+            _hasError = true;
+            _isLoading = false;
+          }),
+        ),
+      );
     _controller.loadRequest(Uri.parse(widget.url));
   }
 
@@ -111,10 +104,7 @@ class _BaseWebPageState extends State<BaseWebPage> {
       body: SafeArea(
         child: Column(
           children: [
-            if (widget.showAppBar) ...[
-              _buildNavBar(skin),
-              Container(height: 1, color: skin.colors.divider),
-            ],
+            if (widget.showAppBar) ...[_buildNavBar(skin), Container(height: 1, color: skin.colors.divider)],
             Expanded(
               child: Stack(
                 children: [
@@ -140,8 +130,7 @@ class _BaseWebPageState extends State<BaseWebPage> {
                     )
                   else
                     WebViewWidget(controller: _controller),
-                  if (_isLoading)
-                    Center(child: CircularProgressIndicator(color: MistralColors.primary)),
+                  if (_isLoading) Center(child: CircularProgressIndicator(color: MistralColors.primary)),
                 ],
               ),
             ),

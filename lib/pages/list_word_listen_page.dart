@@ -77,8 +77,10 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
                 child: Column(
                   children: [
                     // 进度
-                    Text('$_correctCount / $_totalCount',
-                      style: MistralTypography.heading4.copyWith(color: MistralColors.primary)),
+                    Text(
+                      '$_correctCount / $_totalCount',
+                      style: MistralTypography.heading4.copyWith(color: MistralColors.primary),
+                    ),
                     const SizedBox(height: 32),
                     // 播放按钮
                     GestureDetector(
@@ -126,12 +128,12 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
                     const SizedBox(height: 16),
                     // 反馈
                     if (_showAnswer) ...[
-                      Text(_feedback,
+                      Text(
+                        _feedback,
                         style: MistralTypography.heading5.copyWith(
-                          color: _feedback.startsWith('✓')
-                              ? MistralColors.success
-                              : MistralColors.danger,
-                        )),
+                          color: _feedback.startsWith('✓') ? MistralColors.success : MistralColors.danger,
+                        ),
+                      ),
                       const SizedBox(height: 16),
                     ],
                     const Spacer(),
@@ -146,9 +148,7 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
                             },
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(color: skin.colors.divider),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppRadius.md),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: const Text('查看答案'),
@@ -161,9 +161,7 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: MistralColors.primary,
                               foregroundColor: AppColors.white100,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppRadius.md),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: Text(_showAnswer ? '下一个' : '确认'),

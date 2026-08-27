@@ -81,9 +81,7 @@ class WdTransAction {
   static Uint8List transfer(Uint8List data, String key, String ivStr) {
     final keyBytes = encrypt_lib.Key.fromUtf8(key);
     final iv = encrypt_lib.IV.fromUtf8(ivStr);
-    final encrypter = encrypt_lib.Encrypter(
-      encrypt_lib.AES(keyBytes, mode: encrypt_lib.AESMode.cbc, padding: 'PKCS7'),
-    );
+    final encrypter = encrypt_lib.Encrypter(encrypt_lib.AES(keyBytes, mode: encrypt_lib.AESMode.cbc, padding: 'PKCS7'));
     // encrypt/decrypt 操作
     final encrypted = encrypt_lib.Encrypted(data);
     return encrypter.decryptBytes(encrypted, iv: iv) as Uint8List;
@@ -93,9 +91,7 @@ class WdTransAction {
   static Uint8List trans(Uint8List data, String key, String ivStr) {
     final keyBytes = encrypt_lib.Key.fromUtf8(key);
     final iv = encrypt_lib.IV.fromUtf8(ivStr);
-    final encrypter = encrypt_lib.Encrypter(
-      encrypt_lib.AES(keyBytes, mode: encrypt_lib.AESMode.cbc, padding: 'PKCS7'),
-    );
+    final encrypter = encrypt_lib.Encrypter(encrypt_lib.AES(keyBytes, mode: encrypt_lib.AESMode.cbc, padding: 'PKCS7'));
     return encrypter.encryptBytes(data, iv: iv).bytes;
   }
 

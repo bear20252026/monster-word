@@ -5,6 +5,7 @@
 // 文件：SwitchCellView, UrlCellView, UserBindItemView, SubListView, MyExpandleListView
 
 import 'package:flutter/material.dart';
+
 import 'input_controls.dart';
 import '../tokens/design_tokens.dart';
 
@@ -36,17 +37,11 @@ class SwitchCellView extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            if (leading != null) ...[
-              leading!,
-              const SizedBox(width: 8),
-            ],
+            if (leading != null) ...[leading!, const SizedBox(width: 8)],
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: enabled ? MistralColors.charcoal : MistralColors.steel,
-                ),
+                style: TextStyle(fontSize: 16, color: enabled ? MistralColors.charcoal : MistralColors.steel),
               ),
             ),
             Switch(
@@ -91,23 +86,18 @@ class VerticalLevelBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isFull = currentLevel >= totalLevel;
-    final progressFraction =
-        totalLevel > 0 ? (currentLevel / totalLevel).clamp(0.0, 1.0) : 0.0;
+    final progressFraction = totalLevel > 0 ? (currentLevel / totalLevel).clamp(0.0, 1.0) : 0.0;
 
     return Container(
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: isFull ? null : bgColor,
-        borderRadius: BorderRadius.circular(radius),
-      ),
+      decoration: BoxDecoration(color: isFull ? null : bgColor, borderRadius: BorderRadius.circular(radius)),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
         child: Stack(
           children: [
             // 背景
-            if (!isFull)
-              Container(color: bgColor),
+            if (!isFull) Container(color: bgColor),
             // 进度（从底部向上）
             if (isFull)
               Container(color: fullProgressColor)
@@ -120,9 +110,7 @@ class VerticalLevelBar extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: progressColor,
-                    borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(radius),
-                    ),
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(radius)),
                   ),
                 ),
               ),
@@ -138,11 +126,7 @@ class UrlCellList extends StatelessWidget {
   final List<UrlCellItem> items;
   final ValueChanged<String>? onItemTap;
 
-  const UrlCellList({
-    super.key,
-    required this.items,
-    this.onItemTap,
-  });
+  const UrlCellList({super.key, required this.items, this.onItemTap});
 
   @override
   Widget build(BuildContext context) {
@@ -165,11 +149,7 @@ class UrlCellItem {
   final String subtitle;
   final String url;
 
-  const UrlCellItem({
-    required this.title,
-    this.subtitle = '',
-    required this.url,
-  });
+  const UrlCellItem({required this.title, this.subtitle = '', required this.url});
 }
 
 /// 用户绑定项（翻译自 UserBindItemView.dart）
@@ -179,13 +159,7 @@ class UserBindItem extends StatelessWidget {
   final String statusText;
   final VoidCallback? onTap;
 
-  const UserBindItem({
-    super.key,
-    required this.bindName,
-    required this.isBound,
-    this.statusText = '',
-    this.onTap,
-  });
+  const UserBindItem({super.key, required this.bindName, required this.isBound, this.statusText = '', this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -195,13 +169,8 @@ class UserBindItem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            statusText.isNotEmpty
-                ? statusText
-                : (isBound ? '已绑定' : '立即绑定'),
-            style: TextStyle(
-              color: isBound ? MistralColors.steel : MistralColors.link,
-              fontSize: 14,
-            ),
+            statusText.isNotEmpty ? statusText : (isBound ? '已绑定' : '立即绑定'),
+            style: TextStyle(color: isBound ? MistralColors.steel : MistralColors.link, fontSize: 14),
           ),
           const SizedBox(width: 4),
           const Icon(Icons.chevron_right, size: 20),
@@ -238,11 +207,7 @@ class ExpandableGroup {
   final List<Widget> items;
   final bool isExpanded;
 
-  const ExpandableGroup({
-    required this.title,
-    required this.items,
-    this.isExpanded = false,
-  });
+  const ExpandableGroup({required this.title, required this.items, this.isExpanded = false});
 }
 
 /// 子列表视图（翻译自 SubListView.dart）
@@ -252,12 +217,7 @@ class ExpandedListView extends StatelessWidget {
   final Axis scrollDirection;
   final EdgeInsetsGeometry? padding;
 
-  const ExpandedListView({
-    super.key,
-    required this.children,
-    this.scrollDirection = Axis.vertical,
-    this.padding,
-  });
+  const ExpandedListView({super.key, required this.children, this.scrollDirection = Axis.vertical, this.padding});
 
   @override
   Widget build(BuildContext context) {

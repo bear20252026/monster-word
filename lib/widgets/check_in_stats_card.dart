@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -28,16 +29,8 @@ class CheckInStatsCard extends StatelessWidget {
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(AppRadius.xl),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0x23000000),
-            blurRadius: 0.5,
-            offset: Offset(0, 0),
-          ),
-          BoxShadow(
-            color: Color(0x3D000000),
-            blurRadius: 1.0,
-            offset: Offset(0, 1),
-          ),
+          BoxShadow(color: Color(0x23000000), blurRadius: 0.5, offset: Offset(0, 0)),
+          BoxShadow(color: Color(0x3D000000), blurRadius: 1.0, offset: Offset(0, 1)),
         ],
       ),
       child: Row(
@@ -48,29 +41,15 @@ class CheckInStatsCard extends StatelessWidget {
               children: [
                 Text(
                   '$totalCheckIns',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: skin.accent,
-                  ),
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: skin.accent),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  '累计天数',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: skin.text3,
-                  ),
-                ),
+                Text('累计天数', style: TextStyle(fontSize: 13, color: skin.text3)),
               ],
             ),
           ),
           // 分割线
-          Container(
-            width: 1,
-            height: 40,
-            color: skin.divider,
-          ),
+          Container(width: 1, height: 40, color: skin.divider),
           // 连续天数
           Expanded(
             child: Column(
@@ -84,40 +63,23 @@ class CheckInStatsCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
-                        color: currentStreak > 0
-                            ? const Color(0xFFE8913A)
-                            : skin.text3,
+                        color: currentStreak > 0 ? const Color(0xFFE8913A) : skin.text3,
                       ),
                     ),
                     if (currentStreak > 0)
                       Padding(
                         padding: const EdgeInsets.only(left: 2, bottom: 4),
-                        child: Text(
-                          '🔥',
-                          style: TextStyle(
-                            fontSize: currentStreak >= 7 ? 20 : 16,
-                          ),
-                        ),
+                        child: Text('🔥', style: TextStyle(fontSize: currentStreak >= 7 ? 20 : 16)),
                       ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  '连续天数',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: skin.text3,
-                  ),
-                ),
+                Text('连续天数', style: TextStyle(fontSize: 13, color: skin.text3)),
               ],
             ),
           ),
           // 分割线
-          Container(
-            width: 1,
-            height: 40,
-            color: skin.divider,
-          ),
+          Container(width: 1, height: 40, color: skin.divider),
           // 本月进度环
           Expanded(
             child: Column(
@@ -129,11 +91,7 @@ class CheckInStatsCard extends StatelessWidget {
                     alignment: Alignment.center,
                     children: [
                       // 背景环
-                      CircularProgressIndicator(
-                        value: 1.0,
-                        strokeWidth: 5,
-                        color: skin.divider,
-                      ),
+                      CircularProgressIndicator(value: 1.0, strokeWidth: 5, color: skin.divider),
                       // 进度环
                       CircularProgressIndicator(
                         value: monthlyProgress.clamp(0.0, 1.0),
@@ -144,23 +102,13 @@ class CheckInStatsCard extends StatelessWidget {
                       // 中心文字
                       Text(
                         '${(monthlyProgress * 100).round()}%',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: skin.text1,
-                        ),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: skin.text1),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  '本月进度',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: skin.text3,
-                  ),
-                ),
+                Text('本月进度', style: TextStyle(fontSize: 13, color: skin.text3)),
               ],
             ),
           ),

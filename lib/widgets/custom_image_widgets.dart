@@ -29,15 +29,8 @@ class CustomClipImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: isCircle
-          ? BorderRadius.circular(999)
-          : BorderRadius.circular(radius),
-      child: Image(
-        image: image,
-        width: width,
-        height: height,
-        fit: fit,
-      ),
+      borderRadius: isCircle ? BorderRadius.circular(999) : BorderRadius.circular(radius),
+      child: Image(image: image, width: width, height: height, fit: fit),
     );
   }
 }
@@ -79,21 +72,16 @@ class RatioImageView extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: _borderRadius(),
-          border: showBorder
-              ? Border.all(color: borderColor, width: borderWidth)
-              : null,
+          border: showBorder ? Border.all(color: borderColor, width: borderWidth) : null,
         ),
         child: ClipRRect(
           borderRadius: _borderRadius(),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              if (image != null)
-                Image(image: image!, fit: fit),
-              if (enableMask)
-                Container(color: maskColor),
-              if (topOverlay != null)
-                Positioned.fill(child: topOverlay!),
+              if (image != null) Image(image: image!, fit: fit),
+              if (enableMask) Container(color: maskColor),
+              if (topOverlay != null) Positioned.fill(child: topOverlay!),
             ],
           ),
         ),
@@ -103,10 +91,7 @@ class RatioImageView extends StatelessWidget {
 
   BorderRadius _borderRadius() {
     if (cornerType == 1) {
-      return BorderRadius.only(
-        topLeft: Radius.circular(radius),
-        topRight: Radius.circular(radius),
-      );
+      return BorderRadius.only(topLeft: Radius.circular(radius), topRight: Radius.circular(radius));
     }
     return BorderRadius.circular(radius);
   }
@@ -145,12 +130,7 @@ class RoundCornerImage extends StatelessWidget {
         bottomLeft: Radius.circular(bottomLeft),
         bottomRight: Radius.circular(bottomRight),
       ),
-      child: Image(
-        image: image,
-        width: width,
-        height: height,
-        fit: fit,
-      ),
+      child: Image(image: image, width: width, height: height, fit: fit),
     );
   }
 }
@@ -161,11 +141,7 @@ class FullScreenImageView extends StatelessWidget {
   final ImageProvider image;
   final double parallaxFactor;
 
-  const FullScreenImageView({
-    super.key,
-    required this.image,
-    this.parallaxFactor = 0.0,
-  });
+  const FullScreenImageView({super.key, required this.image, this.parallaxFactor = 0.0});
 
   @override
   Widget build(BuildContext context) {
@@ -185,22 +161,13 @@ class ClipParallaxImage extends StatelessWidget {
   final double parallaxFactor;
   final BorderRadius? borderRadius;
 
-  const ClipParallaxImage({
-    super.key,
-    required this.image,
-    this.parallaxFactor = 0.0,
-    this.borderRadius,
-  });
+  const ClipParallaxImage({super.key, required this.image, this.parallaxFactor = 0.0, this.borderRadius});
 
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.zero,
-      child: Image(
-        image: image,
-        fit: BoxFit.cover,
-        alignment: Alignment(0, parallaxFactor),
-      ),
+      child: Image(image: image, fit: BoxFit.cover, alignment: Alignment(0, parallaxFactor)),
     );
   }
 }

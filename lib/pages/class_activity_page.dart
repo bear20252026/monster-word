@@ -88,10 +88,7 @@ class ClassActivityPage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text(
-            '班级活动',
-            style: MistralTypography.heading5.copyWith(color: skin.text1),
-          ),
+          Text('班级活动', style: MistralTypography.heading5.copyWith(color: skin.text1)),
           const Spacer(),
         ],
       ),
@@ -116,10 +113,7 @@ class _ActivityBanner extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            skin.accent,
-            skin.accent,
-          ],
+          colors: [skin.accent, skin.accent],
         ),
       ),
       child: Stack(
@@ -131,10 +125,7 @@ class _ActivityBanner extends StatelessWidget {
             child: Container(
               width: 100,
               height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.white100.withValues(alpha: 0.1),
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.white100.withValues(alpha: 0.1)),
             ),
           ),
           Positioned(
@@ -143,10 +134,7 @@ class _ActivityBanner extends StatelessWidget {
             child: Container(
               width: 60,
               height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.white100.withValues(alpha: 0.08),
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.white100.withValues(alpha: 0.08)),
             ),
           ),
           // 文字内容
@@ -158,34 +146,23 @@ class _ActivityBanner extends StatelessWidget {
               children: [
                 Text(
                   '全班一起学',
-                  style: MistralTypography.heading2.copyWith(
-                    color: AppColors.white100,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: MistralTypography.heading2.copyWith(color: AppColors.white100, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   '刷词不掉队',
-                  style: MistralTypography.heading4.copyWith(
-                    color: AppColors.white100.withValues(alpha: 0.9),
-                  ),
+                  style: MistralTypography.heading4.copyWith(color: AppColors.white100.withValues(alpha: 0.9)),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.xs,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
                   decoration: BoxDecoration(
                     color: AppColors.white100.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
                     '立即参与 →',
-                    style: MistralTypography.bodySm.copyWith(
-                      color: AppColors.white100,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: MistralTypography.bodySm.copyWith(color: AppColors.white100, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -202,13 +179,7 @@ class _ActivityBanner extends StatelessWidget {
                 color: AppColors.white100.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppRadius.xl),
               ),
-              child: const Center(
-                child: Icon(
-                  Icons.people,
-                  size: 48,
-                  color: AppColors.white100,
-                ),
-              ),
+              child: const Center(child: Icon(Icons.people, size: 48, color: AppColors.white100)),
             ),
           ),
         ],
@@ -237,36 +208,15 @@ class _ActivityGuide extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '班级活动指引',
-            style: MistralTypography.heading5.copyWith(color: skin.text1),
-          ),
+          Text('班级活动指引', style: MistralTypography.heading5.copyWith(color: skin.text1)),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              _GuideStep(
-                number: '1',
-                title: '创建活动',
-                desc: '设定学习目标',
-                color: skin.accent,
-                skin: skin,
-              ),
+              _GuideStep(number: '1', title: '创建活动', desc: '设定学习目标', color: skin.accent, skin: skin),
               _GuideArrow(skin: skin),
-              _GuideStep(
-                number: '2',
-                title: '邀请同学',
-                desc: '一起加入',
-                color: skin.teal,
-                skin: skin,
-              ),
+              _GuideStep(number: '2', title: '邀请同学', desc: '一起加入', color: skin.teal, skin: skin),
               _GuideArrow(skin: skin),
-              _GuideStep(
-                number: '3',
-                title: '打卡学习',
-                desc: '互相监督',
-                color: skin.accent,
-                skin: skin,
-              ),
+              _GuideStep(number: '3', title: '打卡学习', desc: '互相监督', color: skin.accent, skin: skin),
             ],
           ),
         ],
@@ -298,32 +248,20 @@ class _GuideStep extends StatelessWidget {
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
             child: Center(
               child: Text(
                 number,
-                style: MistralTypography.bodyMd.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: MistralTypography.bodyMd.copyWith(color: color, fontWeight: FontWeight.bold),
               ),
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             title,
-            style: MistralTypography.bodySm.copyWith(
-              color: skin.text1,
-              fontWeight: FontWeight.w600,
-            ),
+            style: MistralTypography.bodySm.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
           ),
-          Text(
-            desc,
-            style: MistralTypography.micro.copyWith(color: skin.text3),
-          ),
+          Text(desc, style: MistralTypography.micro.copyWith(color: skin.text3)),
         ],
       ),
     );
@@ -354,30 +292,10 @@ class _FunctionCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cards = [
-      _FunctionCardData(
-        icon: Icons.task_alt,
-        title: '设定任务',
-        desc: '制定学习计划',
-        color: skin.accent,
-      ),
-      _FunctionCardData(
-        icon: Icons.leaderboard,
-        title: '班级排名',
-        desc: '查看学习排名',
-        color: skin.teal,
-      ),
-      _FunctionCardData(
-        icon: Icons.notifications_active,
-        title: '互相提醒',
-        desc: '督促学习',
-        color: skin.accent,
-      ),
-      _FunctionCardData(
-        icon: Icons.campaign,
-        title: '公告通知',
-        desc: '班级动态',
-        color: skin.danger,
-      ),
+      _FunctionCardData(icon: Icons.task_alt, title: '设定任务', desc: '制定学习计划', color: skin.accent),
+      _FunctionCardData(icon: Icons.leaderboard, title: '班级排名', desc: '查看学习排名', color: skin.teal),
+      _FunctionCardData(icon: Icons.notifications_active, title: '互相提醒', desc: '督促学习', color: skin.accent),
+      _FunctionCardData(icon: Icons.campaign, title: '公告通知', desc: '班级动态', color: skin.danger),
     ];
 
     return GridView.count(
@@ -423,15 +341,9 @@ class _FunctionCardTile extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             data.title,
-            style: MistralTypography.bodySm.copyWith(
-              color: skin.text1,
-              fontWeight: FontWeight.w600,
-            ),
+            style: MistralTypography.bodySm.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
           ),
-          Text(
-            data.desc,
-            style: MistralTypography.micro.copyWith(color: skin.text3),
-          ),
+          Text(data.desc, style: MistralTypography.micro.copyWith(color: skin.text3)),
         ],
       ),
     );
@@ -444,12 +356,7 @@ class _FunctionCardData {
   final String desc;
   final Color color;
 
-  const _FunctionCardData({
-    required this.icon,
-    required this.title,
-    required this.desc,
-    required this.color,
-  });
+  const _FunctionCardData({required this.icon, required this.title, required this.desc, required this.color});
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -467,16 +374,13 @@ class _CreateActivityButton extends StatelessWidget {
       height: 52,
       child: ElevatedButton(
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('创建班级活动功能开发中...'), duration: Duration(seconds: 1)),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('创建班级活动功能开发中...'), duration: Duration(seconds: 1)));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: skin.accent,
           foregroundColor: skin.cardBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.xl),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
           elevation: 0,
         ),
         child: Row(
@@ -486,10 +390,7 @@ class _CreateActivityButton extends StatelessWidget {
             const SizedBox(width: AppSpacing.xs),
             Text(
               '创建班级活动',
-              style: MistralTypography.bodyMd.copyWith(
-                color: skin.cardBg,
-                fontWeight: FontWeight.w600,
-              ),
+              style: MistralTypography.bodyMd.copyWith(color: skin.cardBg, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -521,48 +422,24 @@ class _UpgradeSection extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
                 decoration: BoxDecoration(
                   color: skin.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: Text(
                   'NEW',
-                  style: MistralTypography.micro.copyWith(
-                    color: skin.accent,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: MistralTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
-              Text(
-                '功能全新升级',
-                style: MistralTypography.heading5.copyWith(color: skin.text1),
-              ),
+              Text('功能全新升级', style: MistralTypography.heading5.copyWith(color: skin.text1)),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          _UpgradeItem(
-            icon: Icons.speed,
-            title: '学习效率提升',
-            desc: '全新学习算法，刷词更高效',
-            skin: skin,
-          ),
-          _UpgradeItem(
-            icon: Icons.group_add,
-            title: '班级互动增强',
-            desc: '新增实时互动功能',
-            skin: skin,
-          ),
-          _UpgradeItem(
-            icon: Icons.bar_chart,
-            title: '数据统计升级',
-            desc: '更详细的学习数据分析',
-            skin: skin,
-          ),
+          _UpgradeItem(icon: Icons.speed, title: '学习效率提升', desc: '全新学习算法，刷词更高效', skin: skin),
+          _UpgradeItem(icon: Icons.group_add, title: '班级互动增强', desc: '新增实时互动功能', skin: skin),
+          _UpgradeItem(icon: Icons.bar_chart, title: '数据统计升级', desc: '更详细的学习数据分析', skin: skin),
         ],
       ),
     );
@@ -575,12 +452,7 @@ class _UpgradeItem extends StatelessWidget {
   final String desc;
   final ThemeVars skin;
 
-  const _UpgradeItem({
-    required this.icon,
-    required this.title,
-    required this.desc,
-    required this.skin,
-  });
+  const _UpgradeItem({required this.icon, required this.title, required this.desc, required this.skin});
 
   @override
   Widget build(BuildContext context) {
@@ -596,15 +468,9 @@ class _UpgradeItem extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: MistralTypography.bodySm.copyWith(
-                    color: skin.text1,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: MistralTypography.bodySm.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
-                Text(
-                  desc,
-                  style: MistralTypography.micro.copyWith(color: skin.text3),
-                ),
+                Text(desc, style: MistralTypography.micro.copyWith(color: skin.text3)),
               ],
             ),
           ),
@@ -625,18 +491,8 @@ class _AnnouncementSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final announcements = [
-      _AnnouncementData(
-        title: '本周学习任务',
-        content: '请各位同学完成四级核心词汇 Unit 3-4 的学习',
-        time: '2小时前',
-        isTop: true,
-      ),
-      _AnnouncementData(
-        title: '活动通知',
-        content: '班级打卡活动开始啦！连续打卡7天可获得奖励',
-        time: '昨天',
-        isTop: false,
-      ),
+      _AnnouncementData(title: '本周学习任务', content: '请各位同学完成四级核心词汇 Unit 3-4 的学习', time: '2小时前', isTop: true),
+      _AnnouncementData(title: '活动通知', content: '班级打卡活动开始啦！连续打卡7天可获得奖励', time: '昨天', isTop: false),
     ];
 
     return Container(
@@ -654,10 +510,7 @@ class _AnnouncementSection extends StatelessWidget {
               children: [
                 Icon(Icons.campaign, size: 18, color: skin.accent),
                 const SizedBox(width: AppSpacing.xs),
-                Text(
-                  '班级公告',
-                  style: MistralTypography.heading5.copyWith(color: skin.text1),
-                ),
+                Text('班级公告', style: MistralTypography.heading5.copyWith(color: skin.text1)),
               ],
             ),
           ),
@@ -693,10 +546,7 @@ class _AnnouncementTile extends StatelessWidget {
                   ),
                   child: Text(
                     '置顶',
-                    style: MistralTypography.micro.copyWith(
-                      color: skin.accent,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: MistralTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
@@ -704,16 +554,10 @@ class _AnnouncementTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   data.title,
-                  style: MistralTypography.bodyMd.copyWith(
-                    color: skin.text1,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
               ),
-              Text(
-                data.time,
-                style: MistralTypography.micro.copyWith(color: skin.text3),
-              ),
+              Text(data.time, style: MistralTypography.micro.copyWith(color: skin.text3)),
             ],
           ),
           const SizedBox(height: 4),
@@ -735,12 +579,7 @@ class _AnnouncementData {
   final String time;
   final bool isTop;
 
-  const _AnnouncementData({
-    required this.title,
-    required this.content,
-    required this.time,
-    required this.isTop,
-  });
+  const _AnnouncementData({required this.title, required this.content, required this.time, required this.isTop});
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -754,34 +593,10 @@ class _CommentSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final comments = [
-      _CommentData(
-        avatar: '小',
-        name: '小明同学',
-        content: '班级活动真的很棒，大家一起学习更有动力！',
-        likes: 12,
-        time: '3小时前',
-      ),
-      _CommentData(
-        avatar: '学',
-        name: '学霸小李',
-        content: '打卡第7天，坚持就是胜利 💪',
-        likes: 8,
-        time: '5小时前',
-      ),
-      _CommentData(
-        avatar: '英',
-        name: '英语达人',
-        content: '推荐大家一起参加，互相监督效果很好',
-        likes: 5,
-        time: '昨天',
-      ),
-      _CommentData(
-        avatar: '勤',
-        name: '勤奋小白',
-        content: '刚开始加入，希望能坚持下去！',
-        likes: 3,
-        time: '2天前',
-      ),
+      _CommentData(avatar: '小', name: '小明同学', content: '班级活动真的很棒，大家一起学习更有动力！', likes: 12, time: '3小时前'),
+      _CommentData(avatar: '学', name: '学霸小李', content: '打卡第7天，坚持就是胜利 💪', likes: 8, time: '5小时前'),
+      _CommentData(avatar: '英', name: '英语达人', content: '推荐大家一起参加，互相监督效果很好', likes: 5, time: '昨天'),
+      _CommentData(avatar: '勤', name: '勤奋小白', content: '刚开始加入，希望能坚持下去！', likes: 3, time: '2天前'),
     ];
 
     return Container(
@@ -799,15 +614,9 @@ class _CommentSection extends StatelessWidget {
               children: [
                 Icon(Icons.comment, size: 18, color: skin.accent),
                 const SizedBox(width: AppSpacing.xs),
-                Text(
-                  '用户评论',
-                  style: MistralTypography.heading5.copyWith(color: skin.text1),
-                ),
+                Text('用户评论', style: MistralTypography.heading5.copyWith(color: skin.text1)),
                 const Spacer(),
-                Text(
-                  '${comments.length} 条',
-                  style: MistralTypography.bodySm.copyWith(color: skin.text3),
-                ),
+                Text('${comments.length} 条', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
               ],
             ),
           ),
@@ -838,10 +647,7 @@ class _CommentTile extends StatelessWidget {
             backgroundColor: skin.accent.withValues(alpha: 0.12),
             child: Text(
               data.avatar,
-              style: MistralTypography.bodySm.copyWith(
-                color: skin.accent,
-                fontWeight: FontWeight.bold,
-              ),
+              style: MistralTypography.bodySm.copyWith(color: skin.accent, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -854,33 +660,21 @@ class _CommentTile extends StatelessWidget {
                   children: [
                     Text(
                       data.name,
-                      style: MistralTypography.bodySm.copyWith(
-                        color: skin.text1,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: MistralTypography.bodySm.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                     ),
                     const Spacer(),
-                    Text(
-                      data.time,
-                      style: MistralTypography.micro.copyWith(color: skin.text3),
-                    ),
+                    Text(data.time, style: MistralTypography.micro.copyWith(color: skin.text3)),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  data.content,
-                  style: MistralTypography.bodySm.copyWith(color: skin.text2),
-                ),
+                Text(data.content, style: MistralTypography.bodySm.copyWith(color: skin.text2)),
                 const SizedBox(height: AppSpacing.xs),
                 // 点赞
                 Row(
                   children: [
                     Icon(Icons.thumb_up_outlined, size: 14, color: skin.text3),
                     const SizedBox(width: 4),
-                    Text(
-                      '${data.likes}',
-                      style: MistralTypography.micro.copyWith(color: skin.text3),
-                    ),
+                    Text('${data.likes}', style: MistralTypography.micro.copyWith(color: skin.text3)),
                   ],
                 ),
               ],

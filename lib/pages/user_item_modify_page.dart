@@ -12,12 +12,7 @@ class UserItemModifyPage extends StatefulWidget {
   final String initialValue;
   final String? hintText;
 
-  const UserItemModifyPage({
-    super.key,
-    required this.title,
-    required this.initialValue,
-    this.hintText,
-  });
+  const UserItemModifyPage({super.key, required this.title, required this.initialValue, this.hintText});
 
   static const routeName = '/user_item_modify';
 
@@ -68,10 +63,7 @@ class _UserItemModifyPageState extends State<UserItemModifyPage> {
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     borderSide: BorderSide(color: MistralColors.primary, width: 2),
                   ),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear, size: 20),
-                    onPressed: () => _controller.clear(),
-                  ),
+                  suffixIcon: IconButton(icon: const Icon(Icons.clear, size: 20), onPressed: () => _controller.clear()),
                 ),
               ),
             ),
@@ -97,14 +89,8 @@ class _UserItemModifyPageState extends State<UserItemModifyPage> {
                     title: const Text('放弃修改？'),
                     content: const Text('您有未保存的修改，确定要放弃吗？'),
                     actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('继续编辑'),
-                      ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('放弃'),
-                      ),
+                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('继续编辑')),
+                      FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('放弃')),
                     ],
                   ),
                 );

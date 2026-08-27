@@ -1,6 +1,7 @@
 // 星巴克下拉菜单组件（component_spec.md §7）
 // 使用 ThemeVars 语义 token，支持深色模式
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 
 /// 显示星巴克风格下拉菜单
@@ -31,11 +32,7 @@ Future<T?> showSbDropdown<T>({
         height: 40,
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: colors.text2,
-          ),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.text2),
         ),
       ),
     );
@@ -50,10 +47,7 @@ Future<T?> showSbDropdown<T>({
         height: 44,
         child: Container(
           decoration: isSelected
-              ? BoxDecoration(
-                  color: colors.accent.withValues(alpha: 0.33),
-                  borderRadius: BorderRadius.circular(8),
-                )
+              ? BoxDecoration(color: colors.accent.withValues(alpha: 0.33), borderRadius: BorderRadius.circular(8))
               : null,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Text(
@@ -72,15 +66,12 @@ Future<T?> showSbDropdown<T>({
   return showMenu<T>(
     context: context,
     position: RelativeRect.fromRect(
-      anchor.localToGlobal(Offset(0, anchor.size.height)) &
-          Size(anchor.size.width, 0),
+      anchor.localToGlobal(Offset(0, anchor.size.height)) & Size(anchor.size.width, 0),
       Offset.zero & size,
     ),
     color: colors.cardBg,
     elevation: 4,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     constraints: BoxConstraints(minWidth: anchor.size.width),
     items: menuItems,
   );

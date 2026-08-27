@@ -13,13 +13,7 @@ class SentenceDetailPage extends StatelessWidget {
   final String? translation;
   final String? source;
 
-  const SentenceDetailPage({
-    super.key,
-    required this.word,
-    required this.sentence,
-    this.translation,
-    this.source,
-  });
+  const SentenceDetailPage({super.key, required this.word, required this.sentence, this.translation, this.source});
 
   static const routeName = '/sentence_detail';
 
@@ -41,12 +35,7 @@ class SentenceDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 单词标题
-                    Text(
-                      word,
-                      style: MistralTypography.heading3.copyWith(
-                        color: skin.colors.text1,
-                      ),
-                    ),
+                    Text(word, style: MistralTypography.heading3.copyWith(color: skin.colors.text1)),
                     const SizedBox(height: 24),
                     // 例句
                     Container(
@@ -62,36 +51,18 @@ class SentenceDetailPage extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              Icon(
-                                Icons.format_quote,
-                                size: 20,
-                                color: MistralColors.primary,
-                              ),
+                              Icon(Icons.format_quote, size: 20, color: MistralColors.primary),
                               const SizedBox(width: 8),
-                              Text(
-                                '例句',
-                                style: MistralTypography.bodyBold.copyWith(
-                                  color: skin.colors.text1,
-                                ),
-                              ),
+                              Text('例句', style: MistralTypography.bodyBold.copyWith(color: skin.colors.text1)),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          Text(
-                            sentence,
-                            style: MistralTypography.body.copyWith(
-                              color: skin.colors.text1,
-                              height: 1.6,
-                            ),
-                          ),
+                          Text(sentence, style: MistralTypography.body.copyWith(color: skin.colors.text1, height: 1.6)),
                           if (translation != null) ...[
                             const SizedBox(height: 12),
                             Text(
                               translation!,
-                              style: MistralTypography.body.copyWith(
-                                color: skin.colors.text3,
-                                height: 1.6,
-                              ),
+                              style: MistralTypography.body.copyWith(color: skin.colors.text3, height: 1.6),
                             ),
                           ],
                         ],
@@ -103,12 +74,7 @@ class SentenceDetailPage extends StatelessWidget {
                         children: [
                           Icon(Icons.source, size: 16, color: skin.colors.text3),
                           const SizedBox(width: 8),
-                          Text(
-                            '来源：$source',
-                            style: MistralTypography.micro.copyWith(
-                              color: skin.colors.text3,
-                            ),
-                          ),
+                          Text('来源：$source', style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
                         ],
                       ),
                     ],
@@ -134,12 +100,7 @@ class SentenceDetailPage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text(
-            '例句详情',
-            style: MistralTypography.heading5.copyWith(
-              color: skin.colors.text1,
-            ),
-          ),
+          Text('例句详情', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           IconButton(
             icon: Icon(Icons.volume_up_outlined, color: skin.colors.text1, size: 22),

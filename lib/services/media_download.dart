@@ -154,8 +154,8 @@ class MediaButtonManager {
     if (action != 1) return;
 
     switch (keyCode) {
-      case 79:  // KEYCODE_HEADSETHOOK
-      case 85:  // KEYCODE_MEDIA_PLAY_PAUSE
+      case 79: // KEYCODE_HEADSETHOOK
+      case 85: // KEYCODE_MEDIA_PLAY_PAUSE
       case 126: // KEYCODE_MEDIA_PLAY
       case 127: // KEYCODE_MEDIA_PAUSE
         if (!_hasProcessDown) {
@@ -163,11 +163,11 @@ class MediaButtonManager {
         }
         setHasProcessDown(false);
         break;
-      case 87:  // KEYCODE_MEDIA_NEXT
+      case 87: // KEYCODE_MEDIA_NEXT
         _clickNum = 2;
         _fireClickAction();
         break;
-      case 88:  // KEYCODE_MEDIA_PREVIOUS
+      case 88: // KEYCODE_MEDIA_PREVIOUS
         _clickNum = 3;
         _fireClickAction();
         break;
@@ -251,11 +251,11 @@ class MediaButtonManager {
 
 /// 播放状态枚举（原版 PlaybackState 状态码）
 enum MediaPlayState {
-  none,       // 0
-  stopped,    // 1
-  paused,     // PlaybackState.STATE_PAUSED = 2
-  playing,    // PlaybackState.STATE_PLAYING = 3
-  buffering,  // PlaybackState.STATE_BUFFERING = 6
+  none, // 0
+  stopped, // 1
+  paused, // PlaybackState.STATE_PAUSED = 2
+  playing, // PlaybackState.STATE_PLAYING = 3
+  buffering, // PlaybackState.STATE_BUFFERING = 6
 }
 
 /// MediaSession 管理器（原版 MediaSessionManager 单例）
@@ -315,19 +315,14 @@ class MediaSessionManager {
   /// [album] 专辑/分类名，[title] 标题/单词
   Future<void> setTitle(String album, String title) async {
     try {
-      await _channel.invokeMethod('setMetadata', {
-        'album': album,
-        'title': title,
-      });
+      await _channel.invokeMethod('setMetadata', {'album': album, 'title': title});
     } catch (_) {}
   }
 
   /// 设置封面图片（原版 setCover）
   Future<void> setCover(Uint8List imageBytes) async {
     try {
-      await _channel.invokeMethod('setCover', {
-        'imageBytes': imageBytes,
-      });
+      await _channel.invokeMethod('setCover', {'imageBytes': imageBytes});
     } catch (_) {}
   }
 
@@ -434,9 +429,7 @@ abstract class DownloadResourceTask {
     }
 
     // 选择 URL（首次用 URL1，重试用 URL2）
-    final downloadUrlStr = _isFirstDownload
-        ? getDownloadUrlPath1()
-        : getDownloadUrlPath2();
+    final downloadUrlStr = _isFirstDownload ? getDownloadUrlPath1() : getDownloadUrlPath2();
 
     _log('downloading: $downloadUrlStr');
 
@@ -445,8 +438,7 @@ abstract class DownloadResourceTask {
       await Directory(await getSaveFilePath()).create(recursive: true);
 
       // HTTP GET 下载
-      final response = await http.get(Uri.parse(downloadUrlStr))
-          .timeout(const Duration(seconds: 30));
+      final response = await http.get(Uri.parse(downloadUrlStr)).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         // 写入临时文件
@@ -545,10 +537,12 @@ class SentenceDownloadTask extends DownloadResourceTask {
   static Future<File?> download(String url) async {
     final task = SentenceDownloadTask(url);
     final completer = Completer<File?>();
-    task.setCallback(_SimpleCallback(
-      onSuccess: (file) => completer.complete(file),
-      onFailure: (msg, code) => completer.complete(null),
-    ));
+    task.setCallback(
+      _SimpleCallback(
+        onSuccess: (file) => completer.complete(file),
+        onFailure: (msg, code) => completer.complete(null),
+      ),
+    );
     task.execute();
     return completer.future;
   }
@@ -650,14 +644,12 @@ class TextSpeechDownloadTask extends DownloadResourceTask {
     try {
       // 原版 API: GetAudioWithTextService
       // POST 请求，参数: text, type, word
-      final response = await http.post(
-        Uri.parse('${_kBaseAudioUrl}getAudioWithText'),
-        body: {
-          'text': text,
-          'type': type.toString(),
-          'word': word,
-        },
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .post(
+            Uri.parse('${_kBaseAudioUrl}getAudioWithText'),
+            body: {'text': text, 'type': type.toString(), 'word': word},
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         // 原版解析: data_body.path
@@ -693,10 +685,12 @@ class TextSpeechDownloadTask extends DownloadResourceTask {
   static Future<File?> download(String text, int type, String word) async {
     final task = TextSpeechDownloadTask(text, type, word);
     final completer = Completer<File?>();
-    task.setCallback(_SimpleCallback(
-      onSuccess: (file) => completer.complete(file),
-      onFailure: (msg, code) => completer.complete(null),
-    ));
+    task.setCallback(
+      _SimpleCallback(
+        onSuccess: (file) => completer.complete(file),
+        onFailure: (msg, code) => completer.complete(null),
+      ),
+    );
     task.execute();
     return completer.future;
   }
@@ -736,8 +730,7 @@ class _SimpleCallback implements FileDownloadCallback {
   final void Function(File file) _onSuccess;
   final void Function(String message, int errorCode) _onFailure;
 
-  _SimpleCallback({required this._onSuccess,
-      required this._onFailure});
+  _SimpleCallback({required this._onSuccess, required this._onFailure});
 
   @override
   void onSuccess(File file) => _onSuccess(file);

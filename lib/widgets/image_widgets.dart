@@ -3,8 +3,10 @@
 // 由 Claude 团队生成 | 移植自 v3.2 widget/CircularImageView.java, RoundImageView.java, ClipParallaxImageView.java, FullScreenImageView.java, CustomImageView.java, MyRatioImageView.java
 // 图片类组件集合
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+
 // ─────────────────────────────────────────────────────────────
 // CircularImage — 圆形头像图片（移植自 CircularImageView.java）
 // ─────────────────────────────────────────────────────────────
@@ -32,20 +34,10 @@ class CircularImage extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: borderWidth > 0
-            ? Border.all(
-                color: borderColor ?? skin.colors.divider,
-                width: borderWidth,
-              )
-            : null,
-        image: image != null
-            ? DecorationImage(image: image!, fit: BoxFit.cover)
-            : null,
+        border: borderWidth > 0 ? Border.all(color: borderColor ?? skin.colors.divider, width: borderWidth) : null,
+        image: image != null ? DecorationImage(image: image!, fit: BoxFit.cover) : null,
       ),
-      child: image == null
-          ? placeholder ??
-              Icon(Icons.person, size: size * 0.5, color: skin.colors.text3)
-          : null,
+      child: image == null ? placeholder ?? Icon(Icons.person, size: size * 0.5, color: skin.colors.text3) : null,
     );
   }
 }
@@ -77,12 +69,7 @@ class RoundImage extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: image != null
-          ? Image(
-              image: image!,
-              width: width,
-              height: height,
-              fit: fit,
-            )
+          ? Image(image: image!, width: width, height: height, fit: fit)
           : Container(
               width: width,
               height: height,
@@ -102,13 +89,7 @@ class RatioImage extends StatelessWidget {
   final double borderRadius;
   final BoxFit fit;
 
-  const RatioImage({
-    super.key,
-    this.image,
-    this.aspectRatio = 16 / 9,
-    this.borderRadius = 0,
-    this.fit = BoxFit.cover,
-  });
+  const RatioImage({super.key, this.image, this.aspectRatio = 16 / 9, this.borderRadius = 0, this.fit = BoxFit.cover});
 
   @override
   Widget build(BuildContext context) {
@@ -149,12 +130,7 @@ class ParallaxImage extends StatelessWidget {
       height: height,
       child: OverflowBox(
         maxHeight: height * (1 + parallaxFactor),
-        child: Image(
-          image: image,
-          fit: fit,
-          width: double.infinity,
-          height: double.infinity,
-        ),
+        child: Image(image: image, fit: fit, width: double.infinity, height: double.infinity),
       ),
     );
   }
@@ -167,11 +143,7 @@ class FullScreenImageViewer extends StatelessWidget {
   final ImageProvider image;
   final String? heroTag;
 
-  const FullScreenImageViewer({
-    super.key,
-    required this.image,
-    this.heroTag,
-  });
+  const FullScreenImageViewer({super.key, required this.image, this.heroTag});
 
   static void show(BuildContext context, ImageProvider image, {String? heroTag}) {
     Navigator.of(context).push(
@@ -194,7 +166,10 @@ class FullScreenImageViewer extends StatelessWidget {
         body: Center(
           child: InteractiveViewer(
             child: heroTag != null
-                ? Hero(tag: heroTag!, child: Image(image: image))
+                ? Hero(
+                    tag: heroTag!,
+                    child: Image(image: image),
+                  )
                 : Image(image: image),
           ),
         ),
@@ -212,23 +187,12 @@ class CustomIcon extends StatelessWidget {
   final double size;
   final Color? color;
 
-  const CustomIcon({
-    super.key,
-    this.icon,
-    this.assetPath,
-    this.size = 24,
-    this.color,
-  });
+  const CustomIcon({super.key, this.icon, this.assetPath, this.size = 24, this.color});
 
   @override
   Widget build(BuildContext context) {
     if (assetPath != null) {
-      return Image.asset(
-        assetPath!,
-        width: size,
-        height: size,
-        color: color,
-      );
+      return Image.asset(assetPath!, width: size, height: size, color: color);
     }
     return Icon(icon ?? Icons.help_outline, size: size, color: color);
   }

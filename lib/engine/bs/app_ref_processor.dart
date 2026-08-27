@@ -14,8 +14,7 @@ import '../../services/api_services.dart';
 /// 提供图标加载、打开应用、跳转下载等功能。
 class AppRefProcessor {
   static const _qtListenPkgName = 'com.qingting.listening';
-  static const _appQListenUrl =
-      'https://a.app.qq.com/o/simple.jsp?pkgname=$_qtListenPkgName';
+  static const _appQListenUrl = 'https://a.app.qq.com/o/simple.jsp?pkgname=$_qtListenPkgName';
 
   /// 公共常量（原版 PublicConstants）
   static String localFilePath = ''; // 需在应用启动时设置
@@ -26,8 +25,7 @@ class AppRefProcessor {
 
   final AppRec _appRec;
 
-  AppRefProcessor({bool forceFirst = false})
-      : _appRec = _selectAppRec(forceFirst);
+  AppRefProcessor({bool forceFirst = false}) : _appRec = _selectAppRec(forceFirst);
 
   /// 从推荐列表中选择合适的推荐应用
   static AppRec _selectAppRec(bool forceFirst) {
@@ -146,8 +144,7 @@ class AppRefProcessor {
         final request = await client.getUrl(Uri.parse(url));
         final response = await request.close();
         if (response.statusCode == 200) {
-          final bytes = await response.fold<List<int>>(
-              [], (prev, chunk) => prev..addAll(chunk));
+          final bytes = await response.fold<List<int>>([], (prev, chunk) => prev..addAll(chunk));
           await file.parent.create(recursive: true);
           await file.writeAsBytes(bytes);
         }

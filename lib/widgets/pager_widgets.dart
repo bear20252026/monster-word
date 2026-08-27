@@ -5,6 +5,7 @@
 // 文件：InfinitePagerAdapter, InfiniteViewPager, ViewPagerFixed, MyViewPager, PageNumView
 
 import 'package:flutter/material.dart';
+
 import 'animations.dart';
 
 /// 无限循环翻页视图（翻译自 InfiniteViewPager + InfinitePagerAdapter.dart）
@@ -44,8 +45,7 @@ class _InfinitePageViewState extends State<InfinitePageView> {
   @override
   void initState() {
     super.initState();
-    final initialPage =
-        widget.enableInfiniteScroll ? widget.itemCount * 500 : 0;
+    final initialPage = widget.enableInfiniteScroll ? widget.itemCount * 500 : 0;
     _controller = PageController(initialPage: initialPage);
     if (widget.autoPlay) {
       _startAutoPlay();
@@ -66,11 +66,7 @@ class _InfinitePageViewState extends State<InfinitePageView> {
       if (!_isAutoPlaying || !mounted) return false;
       if (_controller.hasClients) {
         final nextPage = _controller.page!.toInt() + 1;
-        _controller.animateToPage(
-          nextPage,
-          duration: widget.autoPlayAnimationDuration,
-          curve: standardCurve,
-        );
+        _controller.animateToPage(nextPage, duration: widget.autoPlayAnimationDuration, curve: standardCurve);
       }
       return _isAutoPlaying;
     });

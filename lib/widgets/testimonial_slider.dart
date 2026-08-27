@@ -13,13 +13,7 @@ class TestimonialItem {
   final IconData? icon;
   final Color? color;
 
-  const TestimonialItem({
-    required this.text,
-    this.author,
-    this.source,
-    this.icon,
-    this.color,
-  });
+  const TestimonialItem({required this.text, this.author, this.source, this.icon, this.color});
 }
 
 class TestimonialSlider extends StatefulWidget {
@@ -71,11 +65,7 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
     _autoPlayTimer = Timer(widget.autoPlayInterval, () {
       if (!mounted) return;
       final nextPage = (_currentPage + 1) % widget.items.length;
-      _pageController.animateToPage(
-        nextPage,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
+      _pageController.animateToPage(nextPage, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
       _startAutoPlay();
     });
   }
@@ -112,10 +102,7 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOut,
-                  child: Transform.scale(
-                    scale: scale,
-                    child: _buildCard(item, activeColor),
-                  ),
+                  child: Transform.scale(scale: scale, child: _buildCard(item, activeColor)),
                 );
               },
             ),
@@ -158,9 +145,7 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
           ],
         ),
         borderRadius: widget.borderRadius ?? BorderRadius.circular(16),
-        border: Border.all(
-          color: (item.color ?? activeColor).withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: (item.color ?? activeColor).withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,12 +158,7 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
           Expanded(
             child: Text(
               item.text,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                height: 1.5,
-                color: Colors.black87,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.5, color: Colors.black87),
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
@@ -187,10 +167,7 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
             const SizedBox(height: 4),
             Text(
               '— ${item.author}${item.source != null ? ' · ${item.source}' : ''}',
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 11, color: Colors.grey),
             ),
           ],
         ],
@@ -202,28 +179,15 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
 /// 内置励志语数据
 class TestimonialData {
   static const List<TestimonialItem> defaults = [
-    TestimonialItem(
-      text: '学习改变命运，每一天的积累都是未来的基石。',
-      author: 'Monster Word',
-      icon: Icons.auto_stories,
-    ),
+    TestimonialItem(text: '学习改变命运，每一天的积累都是未来的基石。', author: 'Monster Word', icon: Icons.auto_stories),
     TestimonialItem(
       text: 'The limits of my language mean the limits of my world.',
       author: 'Ludwig Wittgenstein',
       source: '哲学家',
       icon: Icons.format_quote,
     ),
-    TestimonialItem(
-      text: '背单词不是一场苦旅，而是一次次征服的成就感。',
-      author: 'Monster Word',
-      icon: Icons.emoji_events,
-    ),
-    TestimonialItem(
-      text: '千里之行，始于足下。每天进步一点点，终将抵达远方。',
-      author: '老子',
-      source: '《道德经》',
-      icon: Icons.landscape,
-    ),
+    TestimonialItem(text: '背单词不是一场苦旅，而是一次次征服的成就感。', author: 'Monster Word', icon: Icons.emoji_events),
+    TestimonialItem(text: '千里之行，始于足下。每天进步一点点，终将抵达远方。', author: '老子', source: '《道德经》', icon: Icons.landscape),
     TestimonialItem(
       text: 'Consistency is what transforms average into excellence.',
       source: 'Unknown',

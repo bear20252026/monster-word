@@ -26,10 +26,7 @@ class CheckInServiceImpl implements CheckInService {
   Future<bool> hasCheckedInToday() async {
     final records = await _userRepo.getCheckInRecords();
     final today = DateTime.now();
-    return records.any((r) =>
-        r.year == today.year &&
-        r.month == today.month &&
-        r.day == today.day);
+    return records.any((r) => r.year == today.year && r.month == today.month && r.day == today.day);
   }
 
   @override

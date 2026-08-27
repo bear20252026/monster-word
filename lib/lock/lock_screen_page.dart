@@ -2,6 +2,7 @@
 // 锁屏学习主界面 - Flutter 实现
 
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../tokens/design_tokens.dart';
@@ -53,9 +54,7 @@ class LockScreenPage extends StatefulWidget {
   State<LockScreenPage> createState() => _LockScreenPageState();
 }
 
-class _LockScreenPageState extends State<LockScreenPage>
-    with TickerProviderStateMixin
-    implements LockView {
+class _LockScreenPageState extends State<LockScreenPage> with TickerProviderStateMixin implements LockView {
   // === Presenter ===
   late LockPresenter _presenter;
 
@@ -113,25 +112,18 @@ class _LockScreenPageState extends State<LockScreenPage>
   }
 
   void _initAnimations() {
-    _slideUpController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-    _slideDownController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-    _chargingController = AnimationController(
-      duration: const Duration(milliseconds: 3000),
-      vsync: this,
-    );
+    _slideUpController = AnimationController(duration: const Duration(milliseconds: 1000), vsync: this);
+    _slideDownController = AnimationController(duration: const Duration(milliseconds: 1000), vsync: this);
+    _chargingController = AnimationController(duration: const Duration(milliseconds: 3000), vsync: this);
 
-    _slideUpAnimation = Tween<double>(begin: 0.0, end: -50.0).animate(
-      CurvedAnimation(parent: _slideUpController, curve: Curves.linear),
-    );
-    _slideDownAnimation = Tween<double>(begin: -50.0, end: 0.0).animate(
-      CurvedAnimation(parent: _slideDownController, curve: Curves.linear),
-    );
+    _slideUpAnimation = Tween<double>(
+      begin: 0.0,
+      end: -50.0,
+    ).animate(CurvedAnimation(parent: _slideUpController, curve: Curves.linear));
+    _slideDownAnimation = Tween<double>(
+      begin: -50.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _slideDownController, curve: Curves.linear));
 
     _slideUpController.addStatusListener((status) {
       if (status == AnimationStatus.completed && !_cancelAnimation) {
@@ -185,6 +177,7 @@ class _LockScreenPageState extends State<LockScreenPage>
     void refresh() {
       if (mounted) setState(() {});
     }
+
     _timeDirection.onUpdate = refresh;
     _wordDirection.onUpdate = refresh;
     _bottomDirection.onUpdate = refresh;
@@ -210,12 +203,8 @@ class _LockScreenPageState extends State<LockScreenPage>
       // 解析音标
       final isUK = wordProcess['pronounceType'] == 'UK';
       _phoneticType = isUK ? 'UK' : 'US';
-      final pron = isUK
-          ? (wordProcess['uk_pron'] ?? '')
-          : (wordProcess['us_pron'] ?? '');
-      _phonetic = pron.isNotEmpty
-          ? (isUK ? '[ $pron ]' : '/ $pron /')
-          : '';
+      final pron = isUK ? (wordProcess['uk_pron'] ?? '') : (wordProcess['us_pron'] ?? '');
+      _phonetic = pron.isNotEmpty ? (isUK ? '[ $pron ]' : '/ $pron /') : '';
 
       // 解析释义
       final interpret = wordProcess['interpret'] ?? '';
@@ -293,10 +282,7 @@ class _LockScreenPageState extends State<LockScreenPage>
     for (final line in lines) {
       final dotIndex = line.indexOf('.');
       if (dotIndex >= 0) {
-        result.add({
-          'type': line.substring(0, dotIndex + 1),
-          'meaning': line.substring(dotIndex + 1),
-        });
+        result.add({'type': line.substring(0, dotIndex + 1), 'meaning': line.substring(dotIndex + 1)});
       } else {
         result.add({'type': '', 'meaning': line});
       }
@@ -359,9 +345,7 @@ class _LockScreenPageState extends State<LockScreenPage>
                   // 顶部区域：时间 + 电量
                   _buildTopBar(),
                   // 中间区域：单词 + 音标 + 释义
-                  Expanded(
-                    child: _buildWordSection(),
-                  ),
+                  Expanded(child: _buildWordSection()),
                   // 底部区域：例句指示器 + 滑动提示
                   _buildBottomBar(),
                 ],
@@ -384,11 +368,7 @@ class _LockScreenPageState extends State<LockScreenPage>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              LockScreenColors.gradientTop,
-              LockScreenColors.gradientMid,
-              LockScreenColors.gradientBottom,
-            ],
+            colors: [LockScreenColors.gradientTop, LockScreenColors.gradientMid, LockScreenColors.gradientBottom],
           ),
         ),
       ),
@@ -408,11 +388,7 @@ class _LockScreenPageState extends State<LockScreenPage>
               // 时间
               Text(
                 _time,
-                style: const TextStyle(
-                  color: LockScreenColors.textPrimary,
-                  fontSize: 48,
-                  fontWeight: FontWeight.w200,
-                ),
+                style: const TextStyle(color: LockScreenColors.textPrimary, fontSize: 48, fontWeight: FontWeight.w200),
               ),
               // 电量
               _buildPowerIndicator(),
@@ -430,20 +406,10 @@ class _LockScreenPageState extends State<LockScreenPage>
         if (_isCharging)
           FadeTransition(
             opacity: _chargingController,
-            child: const Icon(
-              Icons.battery_charging_full,
-              color: LockScreenColors.chargingIcon,
-              size: 20,
-            ),
+            child: const Icon(Icons.battery_charging_full, color: LockScreenColors.chargingIcon, size: 20),
           ),
         const SizedBox(width: 4),
-        Text(
-          '$_powerPercent%',
-          style: const TextStyle(
-            color: LockScreenColors.textSecondary,
-            fontSize: 14,
-          ),
-        ),
+        Text('$_powerPercent%', style: const TextStyle(color: LockScreenColors.textSecondary, fontSize: 14)),
       ],
     );
   }
@@ -454,79 +420,61 @@ class _LockScreenPageState extends State<LockScreenPage>
       child: Opacity(
         opacity: _wordDirection.alpha,
         child: GestureDetector(
-      onTap: _playWordAudio,
-      onVerticalDragEnd: (details) {
-        if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
-          _togglePhoneticType();
-        }
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 日期
-            Text(
-              _dateEn,
-              style: const TextStyle(
-                color: LockScreenColors.textMuted,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 24),
-            // 单词
-            Text(
-              _word,
-              style: const TextStyle(
-                color: LockScreenColors.textPrimary,
-                fontSize: 36,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            // 音标
-            GestureDetector(
-              onTap: _togglePhoneticType,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: LockScreenColors.borderLight),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      _phoneticType,
-                      style: const TextStyle(
-                        color: LockScreenColors.textSecondary,
-                        fontSize: 12,
+          onTap: _playWordAudio,
+          onVerticalDragEnd: (details) {
+            if (details.primaryVelocity != null && details.primaryVelocity! > 0) {
+              _togglePhoneticType();
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 日期
+                Text(_dateEn, style: const TextStyle(color: LockScreenColors.textMuted, fontSize: 14)),
+                const SizedBox(height: 24),
+                // 单词
+                Text(
+                  _word,
+                  style: const TextStyle(
+                    color: LockScreenColors.textPrimary,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                // 音标
+                GestureDetector(
+                  onTap: _togglePhoneticType,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: LockScreenColors.borderLight),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _phoneticType,
+                          style: const TextStyle(color: LockScreenColors.textSecondary, fontSize: 12),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Text(_phonetic, style: const TextStyle(color: LockScreenColors.textSecondary, fontSize: 16)),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _phonetic,
-                    style: const TextStyle(
-                      color: LockScreenColors.textSecondary,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 24),
+                // 释义
+                if (_showExplanation) _buildInterpretations(),
+              ],
             ),
-            const SizedBox(height: 24),
-            // 释义
-            if (_showExplanation) _buildInterpretations(),
-          ],
+          ),
         ),
       ),
-      ),
-    ),
     );
   }
 
@@ -547,19 +495,13 @@ class _LockScreenPageState extends State<LockScreenPage>
                     width: 50,
                     child: Text(
                       interp['type'] ?? '',
-                      style: const TextStyle(
-                        color: LockScreenColors.textTertiary,
-                        fontSize: 14,
-                      ),
+                      style: const TextStyle(color: LockScreenColors.textTertiary, fontSize: 14),
                     ),
                   ),
                 Expanded(
                   child: Text(
                     interp['meaning'] ?? '',
-                    style: const TextStyle(
-                      color: LockScreenColors.textPrimary,
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(color: LockScreenColors.textPrimary, fontSize: 16),
                   ),
                 ),
               ],
@@ -576,67 +518,47 @@ class _LockScreenPageState extends State<LockScreenPage>
       child: Opacity(
         opacity: _bottomDirection.alpha,
         child: Padding(
-      padding: const EdgeInsets.only(bottom: 32),
-      child: Column(
-        children: [
-          // 例句指示器
-          if (_examples.isNotEmpty)
-            LineIndicator(
-              count: _examples.length,
-              selectedIndex: _currentExampleIndex % _examples.length,
-            ),
-          const SizedBox(height: 16),
-          // 滑动提示
-          AnimatedBuilder(
-            animation: _slideUpAnimation,
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(0, _slideUpAnimation.value),
-                child: Opacity(
-                  opacity: (_slideUpAnimation.value.abs() / 50).clamp(0.0, 1.0),
-                  child: const Icon(
-                    Icons.keyboard_arrow_up,
-                    color: LockScreenColors.iconDim,
-                    size: 32,
+          padding: const EdgeInsets.only(bottom: 32),
+          child: Column(
+            children: [
+              // 例句指示器
+              if (_examples.isNotEmpty)
+                LineIndicator(count: _examples.length, selectedIndex: _currentExampleIndex % _examples.length),
+              const SizedBox(height: 16),
+              // 滑动提示
+              AnimatedBuilder(
+                animation: _slideUpAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _slideUpAnimation.value),
+                    child: Opacity(
+                      opacity: (_slideUpAnimation.value.abs() / 50).clamp(0.0, 1.0),
+                      child: const Icon(Icons.keyboard_arrow_up, color: LockScreenColors.iconDim, size: 32),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              // "左滑学习"提示
+              GestureDetector(
+                onTap: _unlockToLearn,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(color: LockScreenColors.pillBg, borderRadius: BorderRadius.circular(24)),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('左滑进入学习', style: TextStyle(color: LockScreenColors.textPrimary, fontSize: 14)),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_ios, color: LockScreenColors.textPrimary, size: 14),
+                    ],
                   ),
                 ),
-              );
-            },
-          ),
-          const SizedBox(height: 8),
-          // "左滑学习"提示
-          GestureDetector(
-            onTap: _unlockToLearn,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                color: LockScreenColors.pillBg,
-                borderRadius: BorderRadius.circular(24),
               ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '左滑进入学习',
-                    style: TextStyle(
-                      color: LockScreenColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: LockScreenColors.textPrimary,
-                    size: 14,
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
-      ),
-    ),
     );
   }
 
@@ -652,8 +574,7 @@ class _LockScreenPageState extends State<LockScreenPage>
       height: screenSize.height,
       child: GestureDetector(
         onVerticalDragEnd: (details) {
-          if (details.primaryVelocity != null &&
-              details.primaryVelocity! > 300) {
+          if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
             setState(() => _showExplanation = false);
             _onSlideDownToHideExamples();
           }
@@ -663,14 +584,9 @@ class _LockScreenPageState extends State<LockScreenPage>
           child: Column(
             children: [
               // 顶部区域：单词 + 释义
-              SizedBox(
-                height: topHeight,
-                child: _buildWordSection(),
-              ),
+              SizedBox(height: topHeight, child: _buildWordSection()),
               // 例句区域
-              Expanded(
-                child: _buildExamplePager(),
-              ),
+              Expanded(child: _buildExamplePager()),
             ],
           ),
         ),
@@ -680,17 +596,12 @@ class _LockScreenPageState extends State<LockScreenPage>
 
   Widget _buildExamplePager() {
     if (_isProcessingExample) {
-      return const Center(
-        child: CircularProgressIndicator(color: LockScreenColors.textMuted),
-      );
+      return const Center(child: CircularProgressIndicator(color: LockScreenColors.textMuted));
     }
 
     if (_examples.isEmpty) {
       return const Center(
-        child: Text(
-          '暂无例句',
-          style: TextStyle(color: LockScreenColors.textMuted),
-        ),
+        child: Text('暂无例句', style: TextStyle(color: LockScreenColors.textMuted)),
       );
     }
 
@@ -701,11 +612,7 @@ class _LockScreenPageState extends State<LockScreenPage>
         onPageChanged: (index) {
           final realIndex = index % _examples.length;
           setState(() => _currentExampleIndex = realIndex);
-          _presenter.autoPlayExample(
-            realIndex,
-            false,
-            _mp3Paths[realIndex],
-          );
+          _presenter.autoPlayExample(realIndex, false, _mp3Paths[realIndex]);
         },
         itemBuilder: (context, index) {
           final realIndex = index % _examples.length;
@@ -717,22 +624,14 @@ class _LockScreenPageState extends State<LockScreenPage>
                 // 英文例句
                 Text(
                   _examples[realIndex],
-                  style: const TextStyle(
-                    color: LockScreenColors.textPrimary,
-                    fontSize: 18,
-                    height: 1.5,
-                  ),
+                  style: const TextStyle(color: LockScreenColors.textPrimary, fontSize: 18, height: 1.5),
                 ),
                 const SizedBox(height: 12),
                 // 中文翻译
                 if (realIndex < _sentences.length)
                   Text(
                     _sentences[realIndex]['cn'] ?? '',
-                    style: const TextStyle(
-                      color: LockScreenColors.textTertiary,
-                      fontSize: 14,
-                      height: 1.5,
-                    ),
+                    style: const TextStyle(color: LockScreenColors.textTertiary, fontSize: 14, height: 1.5),
                   ),
               ],
             ),
@@ -756,11 +655,7 @@ class _LockScreenPageState extends State<LockScreenPage>
             offset: Offset(0, _slideDownAnimation.value),
             child: Opacity(
               opacity: (_slideDownAnimation.value.abs() / 50).clamp(0.0, 1.0),
-              child: const Icon(
-                Icons.keyboard_arrow_down,
-                color: LockScreenColors.iconDim,
-                size: 32,
-              ),
+              child: const Icon(Icons.keyboard_arrow_down, color: LockScreenColors.iconDim, size: 32),
             ),
           );
         },
@@ -807,9 +702,12 @@ class _LockScreenPageState extends State<LockScreenPage>
     if (-scrollDelta > threshold || velocity < -800) {
       // 解锁动画
       final speedY = (-velocity).toInt().abs().clamp(1, 5000);
-      _elementAnimator?.finishAnimate(speedY, onUnlock: () {
-        _unlockToLearn();
-      });
+      _elementAnimator?.finishAnimate(
+        speedY,
+        onUnlock: () {
+          _unlockToLearn();
+        },
+      );
     } else {
       // 回弹动画
       final speedY = velocity.toInt().abs().clamp(1, 5000);

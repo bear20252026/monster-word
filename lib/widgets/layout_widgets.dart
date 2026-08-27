@@ -5,6 +5,7 @@
 // 文件：ShadowLinearLayout, NewLinearLayout, SwipeLinearLayout, DragDownFrameLayout, SimpleSlidingDownView
 
 import 'package:flutter/material.dart';
+
 import '../tokens/design_tokens.dart';
 import 'animations.dart';
 
@@ -33,18 +34,10 @@ class ShadowContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: margin,
-      padding: padding ?? EdgeInsets.only(
-        bottom: shadowOffsetY.abs() + shadowRadius,
-      ),
+      padding: padding ?? EdgeInsets.only(bottom: shadowOffsetY.abs() + shadowRadius),
       decoration: BoxDecoration(
         color: bgColor,
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor,
-            blurRadius: shadowRadius,
-            offset: Offset(0, shadowOffsetY),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: shadowColor, blurRadius: shadowRadius, offset: Offset(0, shadowOffsetY))],
       ),
       child: child,
     );
@@ -122,20 +115,13 @@ class DragDownContainer extends StatefulWidget {
   final double maxDrag;
   final double threshold;
 
-  const DragDownContainer({
-    super.key,
-    required this.child,
-    this.onOverMax,
-    this.maxDrag = 180.0,
-    this.threshold = 0.3,
-  });
+  const DragDownContainer({super.key, required this.child, this.onOverMax, this.maxDrag = 180.0, this.threshold = 0.3});
 
   @override
   State<DragDownContainer> createState() => _DragDownContainerState();
 }
 
-class _DragDownContainerState extends State<DragDownContainer>
-    with SingleTickerProviderStateMixin {
+class _DragDownContainerState extends State<DragDownContainer> with SingleTickerProviderStateMixin {
   double _translateY = 0;
   double _startY = 0;
   bool _dragging = false;
@@ -144,10 +130,7 @@ class _DragDownContainerState extends State<DragDownContainer>
   @override
   void initState() {
     super.initState();
-    _resetController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 195),
-    );
+    _resetController = AnimationController(vsync: this, duration: const Duration(milliseconds: 195));
   }
 
   @override
@@ -157,9 +140,10 @@ class _DragDownContainerState extends State<DragDownContainer>
   }
 
   void _resetPosition() {
-    final anim = Tween<double>(begin: _translateY, end: 0).animate(
-      CurvedAnimation(parent: _resetController, curve: SpringCurve()),
-    );
+    final anim = Tween<double>(
+      begin: _translateY,
+      end: 0,
+    ).animate(CurvedAnimation(parent: _resetController, curve: SpringCurve()));
     _resetController.forward(from: 0);
     anim.addListener(() {
       if (mounted) setState(() => _translateY = anim.value);
@@ -193,10 +177,7 @@ class _DragDownContainerState extends State<DragDownContainer>
           }
         }
       },
-      child: Transform.translate(
-        offset: Offset(0, _translateY),
-        child: widget.child,
-      ),
+      child: Transform.translate(offset: Offset(0, _translateY), child: widget.child),
     );
   }
 }
@@ -208,19 +189,13 @@ class SlidingDownDismissView extends StatefulWidget {
   final VoidCallback? onDismissed;
   final double dismissThreshold;
 
-  const SlidingDownDismissView({
-    super.key,
-    required this.child,
-    this.onDismissed,
-    this.dismissThreshold = 0.5,
-  });
+  const SlidingDownDismissView({super.key, required this.child, this.onDismissed, this.dismissThreshold = 0.5});
 
   @override
   State<SlidingDownDismissView> createState() => _SlidingDownDismissViewState();
 }
 
-class _SlidingDownDismissViewState extends State<SlidingDownDismissView>
-    with SingleTickerProviderStateMixin {
+class _SlidingDownDismissViewState extends State<SlidingDownDismissView> with SingleTickerProviderStateMixin {
   double _translateY = 0;
   double _startY = 0;
   bool _isDragging = false;
@@ -229,10 +204,7 @@ class _SlidingDownDismissViewState extends State<SlidingDownDismissView>
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
+    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
   }
 
   @override
@@ -262,8 +234,10 @@ class _SlidingDownDismissViewState extends State<SlidingDownDismissView>
         final screenHeight = MediaQuery.of(context).size.height;
         if (_translateY > screenHeight * widget.dismissThreshold) {
           // dismiss
-          final anim = Tween<double>(begin: _translateY, end: screenHeight)
-              .animate(CurvedAnimation(parent: _animController, curve: standardCurve));
+          final anim = Tween<double>(
+            begin: _translateY,
+            end: screenHeight,
+          ).animate(CurvedAnimation(parent: _animController, curve: standardCurve));
           _animController.forward(from: 0);
           anim.addListener(() {
             setState(() => _translateY = anim.value);
@@ -275,18 +249,17 @@ class _SlidingDownDismissViewState extends State<SlidingDownDismissView>
           });
         } else {
           // reset
-          final anim = Tween<double>(begin: _translateY, end: 0)
-              .animate(CurvedAnimation(parent: _animController, curve: standardCurve));
+          final anim = Tween<double>(
+            begin: _translateY,
+            end: 0,
+          ).animate(CurvedAnimation(parent: _animController, curve: standardCurve));
           _animController.forward(from: 0);
           anim.addListener(() {
             setState(() => _translateY = anim.value);
           });
         }
       },
-      child: Transform.translate(
-        offset: Offset(0, _translateY),
-        child: widget.child,
-      ),
+      child: Transform.translate(offset: Offset(0, _translateY), child: widget.child),
     );
   }
 }

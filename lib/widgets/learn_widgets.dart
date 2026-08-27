@@ -5,6 +5,7 @@
 // 文件：LearnView, LearnReviewHelper, LoadInfoHelper
 
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import 'animations.dart';
 
@@ -41,8 +42,7 @@ class LearnMainView extends StatefulWidget {
   State<LearnMainView> createState() => _LearnMainViewState();
 }
 
-class _LearnMainViewState extends State<LearnMainView>
-    with TickerProviderStateMixin {
+class _LearnMainViewState extends State<LearnMainView> with TickerProviderStateMixin {
   late AnimationController _rightPanelController;
   late AnimationController _leftPanelController;
   final LearnPanelState _rightPanelState = LearnPanelState.collapsed;
@@ -52,14 +52,8 @@ class _LearnMainViewState extends State<LearnMainView>
   @override
   void initState() {
     super.initState();
-    _rightPanelController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _leftPanelController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
+    _rightPanelController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _leftPanelController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
   }
 
   @override
@@ -81,9 +75,7 @@ class _LearnMainViewState extends State<LearnMainView>
             // 顶部信息栏
             widget.topInfoView,
             // 卡片区域
-            Expanded(
-              child: widget.cardView,
-            ),
+            Expanded(child: widget.cardView),
             // 底部操作栏
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -97,9 +89,7 @@ class _LearnMainViewState extends State<LearnMainView>
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             curve: fataleCurve,
-            left: _rightPanelState == LearnPanelState.expanded
-                ? 0
-                : MediaQuery.of(context).size.width,
+            left: _rightPanelState == LearnPanelState.expanded ? 0 : MediaQuery.of(context).size.width,
             top: statusBarHeight + 16,
             bottom: 0,
             width: MediaQuery.of(context).size.width,
@@ -110,9 +100,7 @@ class _LearnMainViewState extends State<LearnMainView>
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             curve: fataleCurve,
-            right: _leftPanelState == LearnPanelState.expanded
-                ? 0
-                : MediaQuery.of(context).size.width,
+            right: _leftPanelState == LearnPanelState.expanded ? 0 : MediaQuery.of(context).size.width,
             top: statusBarHeight + 16,
             bottom: 0,
             width: MediaQuery.of(context).size.width,
@@ -150,10 +138,7 @@ class LoadInfoWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (emoji != null) ...[
-            Icon(emoji, size: 48, color: context.skin.colors.text3),
-            const SizedBox(height: 12),
-          ],
+          if (emoji != null) ...[Icon(emoji, size: 48, color: context.skin.colors.text3), const SizedBox(height: 12)],
           Text(
             message,
             style: TextStyle(fontSize: 14, color: context.skin.colors.text3),
@@ -161,10 +146,7 @@ class LoadInfoWidget extends StatelessWidget {
           ),
           if (actionText != null) ...[
             const SizedBox(height: 12),
-            TextButton(
-              onPressed: onAction,
-              child: Text(actionText!),
-            ),
+            TextButton(onPressed: onAction, child: Text(actionText!)),
           ],
         ],
       ),
@@ -176,11 +158,7 @@ class LoadInfoWidget extends StatelessWidget {
 /// WebView 池管理 — Flutter 中使用 WebView widget 直接管理
 class WebViewPool {
   /// 获取 WebView 实例（Flutter 中直接创建 widget 即可）
-  static Widget getWebView({
-    required String url,
-    ValueChanged<String>? onPageFinished,
-    bool enableJavaScript = true,
-  }) {
+  static Widget getWebView({required String url, ValueChanged<String>? onPageFinished, bool enableJavaScript = true}) {
     // 实际使用时引入 webview_flutter
     return Container(
       color: Colors.transparent,

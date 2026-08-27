@@ -64,10 +64,10 @@ class MediaPlayStateListener {
     void Function(String url)? onPlayPause,
     void Function(String url)? onPlayComplete,
     void Function(String url)? onPlayError,
-  })  : onPlayStartCb = onPlayStart,
-        onPlayPauseCb = onPlayPause,
-        onPlayCompleteCb = onPlayComplete,
-        onPlayErrorCb = onPlayError;
+  }) : onPlayStartCb = onPlayStart,
+       onPlayPauseCb = onPlayPause,
+       onPlayCompleteCb = onPlayComplete,
+       onPlayErrorCb = onPlayError;
 
   void onPlayStart(String url) => onPlayStartCb?.call(url);
   void onPlayPause(String url) => onPlayPauseCb?.call(url);
@@ -261,11 +261,7 @@ class _AudioDownloader {
   static const int _readTimeout = 10;
 
   /// 下载文件到本地路径，支持主/备 URL 切换
-  static Future<_DownloadResult> downloadFile(
-    String localPath,
-    String primaryUrl, {
-    String? fallbackUrl,
-  }) async {
+  static Future<_DownloadResult> downloadFile(String localPath, String primaryUrl, {String? fallbackUrl}) async {
     // 确保目录存在
     final dir = Directory(p.dirname(localPath));
     if (!dir.existsSync()) {
@@ -283,12 +279,9 @@ class _AudioDownloader {
     return result;
   }
 
-  static Future<_DownloadResult> _tryDownload(
-      String localPath, String url) async {
+  static Future<_DownloadResult> _tryDownload(String localPath, String url) async {
     try {
-      final response = await http
-          .get(Uri.parse(url))
-          .timeout(const Duration(seconds: _connectTimeout + _readTimeout));
+      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: _connectTimeout + _readTimeout));
       if (response.statusCode == 200) {
         final file = File(localPath);
         await file.writeAsBytes(response.bodyBytes);
@@ -384,12 +377,14 @@ class PhoneticAudioPlayer {
   static final PhoneticAudioPlayer _instance = PhoneticAudioPlayer._();
   factory PhoneticAudioPlayer() => _instance;
   PhoneticAudioPlayer._() {
-    _audioPlayer.setPlayStateListener(MediaPlayStateListener(
-      onPlayStart: (url) => playStateListener?.onPlayStart(),
-      onPlayPause: (url) => playStateListener?.onPlayPause(),
-      onPlayComplete: (url) => playStateListener?.onPlayComplete(),
-      onPlayError: (url) => playStateListener?.onPlayError(),
-    ));
+    _audioPlayer.setPlayStateListener(
+      MediaPlayStateListener(
+        onPlayStart: (url) => playStateListener?.onPlayStart(),
+        onPlayPause: (url) => playStateListener?.onPlayPause(),
+        onPlayComplete: (url) => playStateListener?.onPlayComplete(),
+        onPlayError: (url) => playStateListener?.onPlayError(),
+      ),
+    );
   }
 
   final BBAudioPlayer _audioPlayer = BBAudioPlayer();
@@ -413,9 +408,7 @@ class PhoneticAudioPlayer {
     }
 
     // 检查本地缓存
-    final localPath = isUK
-        ? await _AudioCacheDir.wordUkSpeechPath(word)
-        : await _AudioCacheDir.wordUsSpeechPath(word);
+    final localPath = isUK ? await _AudioCacheDir.wordUkSpeechPath(word) : await _AudioCacheDir.wordUsSpeechPath(word);
 
     final file = File(localPath);
     if (file.existsSync()) {
@@ -489,22 +482,24 @@ class SentenceAudioPlayer {
   static final SentenceAudioPlayer _instance = SentenceAudioPlayer._();
   factory SentenceAudioPlayer() => _instance;
   SentenceAudioPlayer._() {
-    _audioPlayer.setPlayStateListener(MediaPlayStateListener(
-      onPlayStart: (url) {
-        playStateListener?.onPlayStart();
-      },
-      onPlayPause: (url) {
-        playStateListener?.onPlayPause();
-      },
-      onPlayComplete: (url) {
-        final fullUrl = _getCompleteAudioUrl(url);
-        playStateListener?.onPlayComplete();
-        _sentenceListener?.onPlayComplete(fullUrl);
-      },
-      onPlayError: (url) {
-        playStateListener?.onPlayError();
-      },
-    ));
+    _audioPlayer.setPlayStateListener(
+      MediaPlayStateListener(
+        onPlayStart: (url) {
+          playStateListener?.onPlayStart();
+        },
+        onPlayPause: (url) {
+          playStateListener?.onPlayPause();
+        },
+        onPlayComplete: (url) {
+          final fullUrl = _getCompleteAudioUrl(url);
+          playStateListener?.onPlayComplete();
+          _sentenceListener?.onPlayComplete(fullUrl);
+        },
+        onPlayError: (url) {
+          playStateListener?.onPlayError();
+        },
+      ),
+    );
   }
 
   final BBAudioPlayer _audioPlayer = BBAudioPlayer();
@@ -567,7 +562,8 @@ class SentenceAudioPlayer {
         return;
       }
       // 有 listener 时检查是否应该播放
-      if (_sentenceListener?.checkWhetherPlay(_currentUrl) ?? true) { // null 时默认播放（原行为）
+      if (_sentenceListener?.checkWhetherPlay(_currentUrl) ?? true) {
+        // null 时默认播放（原行为）
         _audioPlayer.stop();
         _audioPlayer.playFile(file, speed: speed);
       }
@@ -578,8 +574,7 @@ class SentenceAudioPlayer {
   }
 
   /// 下载并播放（原版 downloadAudioAndPlay_internal）
-  Future<void> _downloadAndPlay(
-      String fullUrl, String localPath, double speed) async {
+  Future<void> _downloadAndPlay(String fullUrl, String localPath, double speed) async {
     playStateListener?.onLoadStart(fullUrl);
 
     final result = await _AudioDownloader.downloadFile(
@@ -600,8 +595,7 @@ class SentenceAudioPlayer {
   static SentenceAudioPlayer getInstance() => _instance;
 
   /// 获取监听（原版 getListener）
-  static SentencePlayListener? getListener() =>
-      getInstance()._sentenceListener;
+  static SentencePlayListener? getListener() => getInstance()._sentenceListener;
 
   /// 设置监听（原版 setListener）
   static void setListener(SentencePlayListener? listener) {
@@ -637,12 +631,14 @@ class TextAudioPlayer {
   static final TextAudioPlayer _instance = TextAudioPlayer._();
   factory TextAudioPlayer() => _instance;
   TextAudioPlayer._() {
-    _audioPlayer.setPlayStateListener(MediaPlayStateListener(
-      onPlayStart: (url) => playStateListener?.onPlayStart(),
-      onPlayPause: (url) => playStateListener?.onPlayPause(),
-      onPlayComplete: (url) => playStateListener?.onPlayComplete(),
-      onPlayError: (url) => playStateListener?.onPlayError(),
-    ));
+    _audioPlayer.setPlayStateListener(
+      MediaPlayStateListener(
+        onPlayStart: (url) => playStateListener?.onPlayStart(),
+        onPlayPause: (url) => playStateListener?.onPlayPause(),
+        onPlayComplete: (url) => playStateListener?.onPlayComplete(),
+        onPlayError: (url) => playStateListener?.onPlayError(),
+      ),
+    );
   }
 
   final BBAudioPlayer _audioPlayer = BBAudioPlayer();
@@ -698,18 +694,13 @@ class TextAudioPlayer {
   }
 
   /// 下载并播放（原版 downLoadTextAudioPlay_internal）
-  Future<void> _downloadAndPlay(
-      String audioUrl, String localPath, double speed) async {
+  Future<void> _downloadAndPlay(String audioUrl, String localPath, double speed) async {
     // 主 URL：beingfine
     final primaryUrl = '$_baseAudioUrl$audioUrl';
     // 备用 URL：七牛
     final fallbackUrl = '$_qiniuResourceUrl$audioUrl';
 
-    final result = await _AudioDownloader.downloadFile(
-      localPath,
-      primaryUrl,
-      fallbackUrl: fallbackUrl,
-    );
+    final result = await _AudioDownloader.downloadFile(localPath, primaryUrl, fallbackUrl: fallbackUrl);
 
     if (result.success && result.file != null) {
       playStateListener?.onLoadSuc(audioUrl);

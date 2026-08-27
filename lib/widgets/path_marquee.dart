@@ -3,25 +3,26 @@
 // 适用于：品牌展示、空状态装饰、首页装饰文字、数据展示
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import '../tokens/design_tokens.dart';
 
 /// 路径类型枚举
 enum MarqueePathType {
-  sine,      // 正弦波
-  circle,    // 圆形
-  ellipse,   // 椭圆
-  arc,       // 弧形
-  figure8,   // 8 字形
-  custom,    // 自定义路径
+  sine, // 正弦波
+  circle, // 圆形
+  ellipse, // 椭圆
+  arc, // 弧形
+  figure8, // 8 字形
+  custom, // 自定义路径
 }
 
 /// 滚动方向
 enum MarqueeDirection {
-  forward,    // 正向
-  backward,   // 反向
-  alternate,  // 来回
+  forward, // 正向
+  backward, // 反向
+  alternate, // 来回
 }
 
 /// 路径滚动文字
@@ -33,10 +34,10 @@ class PathMarquee extends StatefulWidget {
   final Color? pathColor;
   final double pathWidth;
   final double pathHeight;
-  final double speed;          // 滚动速度 (0.1 - 3.0)
+  final double speed; // 滚动速度 (0.1 - 3.0)
   final Duration loopDuration; // 循环周期
-  final bool showPath;         // 是否显示路径线
-  final bool repeat;           // 是否循环
+  final bool showPath; // 是否显示路径线
+  final bool repeat; // 是否循环
   final Path Function(Size)? customPathBuilder;
 
   const PathMarquee({
@@ -59,8 +60,7 @@ class PathMarquee extends StatefulWidget {
   State<PathMarquee> createState() => _PathMarqueeState();
 }
 
-class _PathMarqueeState extends State<PathMarquee>
-    with SingleTickerProviderStateMixin {
+class _PathMarqueeState extends State<PathMarquee> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   bool _reversed = false;
 
@@ -72,10 +72,7 @@ class _PathMarqueeState extends State<PathMarquee>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.loopDuration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.loopDuration);
 
     if (widget.repeat) {
       _controller.repeat();
@@ -169,11 +166,7 @@ class _PathMarqueeState extends State<PathMarquee>
   Path _buildArcPath(Size size) {
     final center = Offset(size.width / 2, size.height);
     final radius = size.width * 0.45;
-    return Path()..addArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -math.pi * 0.8,
-      math.pi * 1.6,
-    );
+    return Path()..addArc(Rect.fromCircle(center: center, radius: radius), -math.pi * 0.8, math.pi * 1.6);
   }
 
   Path _buildFigure8Path(Size size) {
@@ -265,11 +258,13 @@ class _PathMarqueePainter extends CustomPainter {
     final textLength = metrics.length;
 
     // 使用缓存的 TextPainter（避免每帧重新 layout）
-    final tp = textPainter ??
-        TextPainter(
-          text: TextSpan(text: text, style: textStyle),
-          textDirection: TextDirection.ltr,
-        )..layout();
+    final tp =
+        textPainter ??
+              TextPainter(
+                text: TextSpan(text: text, style: textStyle),
+                textDirection: TextDirection.ltr,
+              )
+          ..layout();
 
     // 沿路径偏移量
     final textWidth = tp.width;
@@ -359,14 +354,8 @@ class MultiPathMarquee extends StatelessWidget {
             pathType: pathType,
             pathHeight: height / texts.length - 8,
             speed: speed * (1 + i * 0.2),
-            direction: i % 2 == 0
-                ? MarqueeDirection.forward
-                : MarqueeDirection.backward,
-            textStyle: TextStyle(
-              fontSize: 14 + i * 2,
-              fontWeight: FontWeight.w600,
-              color: colors[i % colors.length],
-            ),
+            direction: i % 2 == 0 ? MarqueeDirection.forward : MarqueeDirection.backward,
+            textStyle: TextStyle(fontSize: 14 + i * 2, fontWeight: FontWeight.w600, color: colors[i % colors.length]),
             showPath: false,
           );
         }),

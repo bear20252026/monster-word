@@ -2,6 +2,7 @@
 // 看中文释义快速拼写单词，限时挑战模式
 import 'dart:async';
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 // wordbook_database.dart removed - not used in this file
@@ -14,11 +15,7 @@ class QuickSpellPage extends StatefulWidget {
   final List<Word> words;
   final String bookName;
 
-  const QuickSpellPage({
-    super.key,
-    required this.words,
-    this.bookName = '',
-  });
+  const QuickSpellPage({super.key, required this.words, this.bookName = ''});
 
   static const routeName = '/quick_spell';
 
@@ -63,11 +60,19 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
     super.dispose();
   }
 
-  Word get _currentWord =>
-      _shuffledWords.isNotEmpty ? _shuffledWords[_currentIndex] : Word(
-        id: 0, word: '', mainWord: '', interpret: '', ukPron: '', usPron: '',
-        phrase: '', example: '', confuse: '',
-      );
+  Word get _currentWord => _shuffledWords.isNotEmpty
+      ? _shuffledWords[_currentIndex]
+      : Word(
+          id: 0,
+          word: '',
+          mainWord: '',
+          interpret: '',
+          ukPron: '',
+          usPron: '',
+          phrase: '',
+          example: '',
+          confuse: '',
+        );
 
   void _checkAnswer() {
     if (_answered || _shuffledWords.isEmpty) return;
@@ -169,7 +174,9 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
       return Scaffold(
         backgroundColor: skin.colors.pageBg,
         appBar: AppBar(backgroundColor: skin.colors.pageBg, elevation: 0),
-        body: Center(child: Text('暂无单词', style: MistralTypography.body.copyWith(color: skin.colors.text3))),
+        body: Center(
+          child: Text('暂无单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+        ),
       );
     }
 
@@ -284,7 +291,10 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
             const SizedBox(width: 16),
             Icon(Icons.cancel, size: 16, color: MistralColors.error),
             const SizedBox(width: 4),
-            Text('${_totalAttempted - _correctCount}', style: MistralTypography.body.copyWith(color: MistralColors.error)),
+            Text(
+              '${_totalAttempted - _correctCount}',
+              style: MistralTypography.body.copyWith(color: MistralColors.error),
+            ),
           ],
         ),
       ],
@@ -304,9 +314,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
       child: Column(
         children: [
           Text(
-            _currentWord.hasStructuredDefinitions
-                ? _currentWord.formattedDefinitions
-                : _currentWord.cleanInterpret,
+            _currentWord.hasStructuredDefinitions ? _currentWord.formattedDefinitions : _currentWord.cleanInterpret,
             style: MistralTypography.heading4.copyWith(
               color: skin.colors.text1,
               fontSize: 24 * resp.fontScale,
@@ -324,10 +332,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
               ),
               child: Text(
                 _currentWord.example,
-                style: MistralTypography.bodySm.copyWith(
-                  color: skin.colors.text2,
-                  fontStyle: FontStyle.italic,
-                ),
+                style: MistralTypography.bodySm.copyWith(color: skin.colors.text2, fontStyle: FontStyle.italic),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -401,10 +406,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  _currentWord.word,
-                  style: MistralTypography.heading4.copyWith(color: MistralColors.primary),
-                ),
+                Text(_currentWord.word, style: MistralTypography.heading4.copyWith(color: MistralColors.primary)),
               ],
             ),
     );

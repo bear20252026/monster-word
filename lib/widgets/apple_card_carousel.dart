@@ -35,9 +35,7 @@ class _AppleCardCarouselState extends State<AppleCardCarousel> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(
-      viewportFraction: widget.viewportFraction,
-    );
+    _pageController = PageController(viewportFraction: widget.viewportFraction);
     _pageController.addListener(() {
       setState(() {
         _currentPage = _pageController.page ?? 0;
@@ -69,10 +67,7 @@ class _AppleCardCarouselState extends State<AppleCardCarousel> {
             curve: Curves.easeOutCubic,
             child: Transform.scale(
               scale: scale,
-              child: Opacity(
-                opacity: opacity,
-                child: widget.children[index],
-              ),
+              child: Opacity(opacity: opacity, child: widget.children[index]),
             ),
           );
         },
@@ -112,19 +107,10 @@ class BookCarouselCard extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              color,
-              color.withValues(alpha: 0.8),
-            ],
+            colors: [color, color.withValues(alpha: 0.8)],
           ),
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 8))],
         ),
         child: Stack(
           children: [
@@ -135,10 +121,7 @@ class BookCarouselCard extends StatelessWidget {
               child: Container(
                 width: 100,
                 height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.white100.withValues(alpha: 0.1),
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.white100.withValues(alpha: 0.1)),
               ),
             ),
             Positioned(
@@ -147,10 +130,7 @@ class BookCarouselCard extends StatelessWidget {
               child: Container(
                 width: 60,
                 height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.white100.withValues(alpha: 0.08),
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.white100.withValues(alpha: 0.08)),
               ),
             ),
             // 内容
@@ -163,30 +143,17 @@ class BookCarouselCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: AppColors.white100,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: const TextStyle(color: AppColors.white100, fontSize: 20, fontWeight: FontWeight.w700),
                   ),
                   if (subtitle.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: AppColors.white100.withValues(alpha: 0.8),
-                        fontSize: 13,
-                      ),
-                    ),
+                    Text(subtitle, style: TextStyle(color: AppColors.white100.withValues(alpha: 0.8), fontSize: 13)),
                   ],
                   const Spacer(),
                   if (wordCount > 0) ...[
                     Text(
                       '$wordCount words',
-                      style: TextStyle(
-                        color: AppColors.white100.withValues(alpha: 0.7),
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: AppColors.white100.withValues(alpha: 0.7), fontSize: 12),
                     ),
                     const SizedBox(height: 6),
                     ClipRRect(

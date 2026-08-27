@@ -4,6 +4,7 @@
 // 按压反馈：包装 ScaleDownOnPress（scale 0.95 / 200ms easeOut）
 
 import 'package:flutter/material.dart';
+
 import 'scale_down_on_press.dart';
 
 /// 星巴克 Frap 悬浮按钮
@@ -77,12 +78,7 @@ class SbFab extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             label!,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: iconColor,
-              letterSpacing: -0.16,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: iconColor, letterSpacing: -0.16),
           ),
         ],
       );
@@ -94,16 +90,9 @@ class SbFab extends StatelessWidget {
     // 双层阴影（docs/component_spec.md §3）
     const shadows = <BoxShadow>[
       // 基础光环：0 0 6px rgba(0,0,0,.24)
-      BoxShadow(
-        blurRadius: 6,
-        color: Color(0x3D000000),
-      ),
+      BoxShadow(blurRadius: 6, color: Color(0x3D000000)),
       // 环境投影：0 8px 12px rgba(0,0,0,.14)
-      BoxShadow(
-        offset: Offset(0, 8),
-        blurRadius: 12,
-        color: Color(0x24000000),
-      ),
+      BoxShadow(offset: Offset(0, 8), blurRadius: 12, color: Color(0x24000000)),
     ];
 
     // 触控外扩 8px（docs/component_spec.md §3）
@@ -123,18 +112,13 @@ class SbFab extends StatelessWidget {
           child: Material(
             color: fillColor,
             shape: hasLabel
-                ? RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(size / 2),
-                  )
+                ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(size / 2))
                 : const CircleBorder(),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onTap,
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: hasLabel ? 20 : 0,
-                  vertical: 0,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: hasLabel ? 20 : 0, vertical: 0),
                 child: Center(child: buttonContent),
               ),
             ),

@@ -12,11 +12,7 @@ class AddCalendarEvent {
   final Object? extraData;
   final Object? extraData2;
 
-  const AddCalendarEvent({
-    required this.events,
-    this.extraData,
-    this.extraData2,
-  });
+  const AddCalendarEvent({required this.events, this.extraData, this.extraData2});
 }
 
 /// 日历事件数据（对应原版 CalendarPresenter.CalendarEvent）

@@ -28,28 +28,28 @@ class Background {
   });
 
   factory Background.fromJson(Map<String, dynamic> json) => Background(
-        id: json['id'] ?? '',
-        src: json['src'] ?? '',
-        dimSrc: json['dimSrc'] ?? '',
-        type: json['type'] ?? '',
-        word: json['word'] ?? '',
-        phonetic: json['phonetic'] ?? '',
-        url: json['url'] ?? '',
-        sharePhonetic: json['sharePhonetic'] ?? '',
-        shareInterpret: json['shareInterpret'] ?? '',
-      );
+    id: json['id'] ?? '',
+    src: json['src'] ?? '',
+    dimSrc: json['dimSrc'] ?? '',
+    type: json['type'] ?? '',
+    word: json['word'] ?? '',
+    phonetic: json['phonetic'] ?? '',
+    url: json['url'] ?? '',
+    sharePhonetic: json['sharePhonetic'] ?? '',
+    shareInterpret: json['shareInterpret'] ?? '',
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'src': src,
-        'dimSrc': dimSrc,
-        'type': type,
-        'word': word,
-        'phonetic': phonetic,
-        'url': url,
-        'sharePhonetic': sharePhonetic,
-        'shareInterpret': shareInterpret,
-      };
+    'id': id,
+    'src': src,
+    'dimSrc': dimSrc,
+    'type': type,
+    'word': word,
+    'phonetic': phonetic,
+    'url': url,
+    'sharePhonetic': sharePhonetic,
+    'shareInterpret': shareInterpret,
+  };
 
   @override
   bool operator ==(Object other) =>
@@ -83,24 +83,23 @@ class SplashAdConfig {
     this.intentParam = '',
   });
 
-  factory SplashAdConfig.fromJson(Map<String, dynamic> json) =>
-      SplashAdConfig(
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        name: json['name'] ?? '',
-        imageUrl: json['image_url'] ?? '',
-        countdown: (json['countdown'] as num?)?.toInt() ?? 0,
-        intentType: (json['intent_type'] as num?)?.toInt() ?? 0,
-        intentParam: json['intent_param'] ?? '',
-      );
+  factory SplashAdConfig.fromJson(Map<String, dynamic> json) => SplashAdConfig(
+    id: (json['id'] as num?)?.toInt() ?? 0,
+    name: json['name'] ?? '',
+    imageUrl: json['image_url'] ?? '',
+    countdown: (json['countdown'] as num?)?.toInt() ?? 0,
+    intentType: (json['intent_type'] as num?)?.toInt() ?? 0,
+    intentParam: json['intent_param'] ?? '',
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'image_url': imageUrl,
-        'countdown': countdown,
-        'intent_type': intentType,
-        'intent_param': intentParam,
-      };
+    'id': id,
+    'name': name,
+    'image_url': imageUrl,
+    'countdown': countdown,
+    'intent_type': intentType,
+    'intent_param': intentParam,
+  };
 }
 
 /// UI 主题类型（翻译自 CustomeUITheme.java，仅保留类型常量）

@@ -5,6 +5,7 @@
 // 文件：CircleProgressBar, VerticalLevelView
 
 import 'package:flutter/material.dart';
+
 import 'dart:math' as math;
 
 import '../tokens/design_tokens.dart';
@@ -51,11 +52,7 @@ class CircleProgressBar extends StatelessWidget {
           if (showPercentage && child == null)
             Text(
               '${(progress * 100).toInt()}%',
-              style: TextStyle(
-                fontSize: size * 0.2,
-                fontWeight: FontWeight.bold,
-                color: progressColor,
-              ),
+              style: TextStyle(fontSize: size * 0.2, fontWeight: FontWeight.bold, color: progressColor),
             ),
         ],
       ),
@@ -105,8 +102,7 @@ class _CircleProgressPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CircleProgressPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.progressColor != progressColor;
+    return oldDelegate.progress != progress || oldDelegate.progressColor != progressColor;
   }
 }
 
@@ -116,30 +112,19 @@ class IndeterminateCircleProgress extends StatefulWidget {
   final double strokeWidth;
   final Color color;
 
-  const IndeterminateCircleProgress({
-    super.key,
-    this.size = 40,
-    this.strokeWidth = 3,
-    this.color = AppColors.primary,
-  });
+  const IndeterminateCircleProgress({super.key, this.size = 40, this.strokeWidth = 3, this.color = AppColors.primary});
 
   @override
-  State<IndeterminateCircleProgress> createState() =>
-      _IndeterminateCircleProgressState();
+  State<IndeterminateCircleProgress> createState() => _IndeterminateCircleProgressState();
 }
 
-class _IndeterminateCircleProgressState
-    extends State<IndeterminateCircleProgress>
-    with SingleTickerProviderStateMixin {
+class _IndeterminateCircleProgressState extends State<IndeterminateCircleProgress> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500))..repeat();
   }
 
   @override
@@ -171,11 +156,7 @@ class _IndeterminatePainter extends CustomPainter {
   final double strokeWidth;
   final Color color;
 
-  _IndeterminatePainter({
-    required this.progress,
-    required this.strokeWidth,
-    required this.color,
-  });
+  _IndeterminatePainter({required this.progress, required this.strokeWidth, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -189,16 +170,9 @@ class _IndeterminatePainter extends CustomPainter {
 
     final startAngle = -math.pi / 2 + progress * 2 * math.pi;
     const sweepAngle = math.pi * 1.5;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      sweepAngle,
-      false,
-      paint,
-    );
+    canvas.drawArc(Rect.fromCircle(center: center, radius: radius), startAngle, sweepAngle, false, paint);
   }
 
   @override
-  bool shouldRepaint(_IndeterminatePainter oldDelegate) =>
-      oldDelegate.progress != progress;
+  bool shouldRepaint(_IndeterminatePainter oldDelegate) => oldDelegate.progress != progress;
 }

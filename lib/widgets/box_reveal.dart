@@ -27,8 +27,7 @@ class BoxReveal extends StatefulWidget {
 
 enum BoxRevealDirection { top, bottom, left, right }
 
-class _BoxRevealState extends State<BoxReveal>
-    with SingleTickerProviderStateMixin {
+class _BoxRevealState extends State<BoxReveal> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _sizeAnimation;
   late Animation<double> _opacityAnimation;
@@ -36,17 +35,15 @@ class _BoxRevealState extends State<BoxReveal>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
 
-    _sizeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve),
-    );
+    _sizeAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
 
     _opacityAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
+      ),
     );
 
     if (widget.reveal) {
@@ -86,18 +83,13 @@ class _BoxRevealState extends State<BoxReveal>
         return ClipRect(
           child: Align(
             alignment: _getAlignment(),
-            heightFactor: widget.direction == BoxRevealDirection.left ||
-                    widget.direction == BoxRevealDirection.right
+            heightFactor: widget.direction == BoxRevealDirection.left || widget.direction == BoxRevealDirection.right
                 ? 1.0
                 : _sizeAnimation.value,
-            widthFactor: widget.direction == BoxRevealDirection.left ||
-                    widget.direction == BoxRevealDirection.right
+            widthFactor: widget.direction == BoxRevealDirection.left || widget.direction == BoxRevealDirection.right
                 ? _sizeAnimation.value
                 : 1.0,
-            child: Opacity(
-              opacity: _opacityAnimation.value.clamp(0.0, 1.0),
-              child: child,
-            ),
+            child: Opacity(opacity: _opacityAnimation.value.clamp(0.0, 1.0), child: child),
           ),
         );
       },
@@ -141,8 +133,7 @@ class FlipCard extends StatefulWidget {
   State<FlipCard> createState() => _FlipCardState();
 }
 
-class _FlipCardState extends State<FlipCard>
-    with SingleTickerProviderStateMixin {
+class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
   bool _isFront = true;
@@ -150,13 +141,8 @@ class _FlipCardState extends State<FlipCard>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
-    _animation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    _animation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

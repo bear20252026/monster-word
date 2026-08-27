@@ -11,11 +11,7 @@ class LinkedMeMiddlePage extends StatelessWidget {
   final String word;
   final String? association;
 
-  const LinkedMeMiddlePage({
-    super.key,
-    required this.word,
-    this.association,
-  });
+  const LinkedMeMiddlePage({super.key, required this.word, this.association});
 
   static const routeName = '/linked_me';
 
@@ -46,11 +42,9 @@ class LinkedMeMiddlePage extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
-                          Text(word,
-                            style: MistralTypography.heading2.copyWith(color: MistralColors.ink)),
+                          Text(word, style: MistralTypography.heading2.copyWith(color: MistralColors.ink)),
                           const SizedBox(height: 8),
-                          Text('联想记忆',
-                            style: MistralTypography.body.copyWith(color: MistralColors.slate)),
+                          Text('联想记忆', style: MistralTypography.body.copyWith(color: MistralColors.slate)),
                         ],
                       ),
                     ),
@@ -67,11 +61,10 @@ class LinkedMeMiddlePage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(AppRadius.lg),
                           border: Border.all(color: skin.colors.divider),
                         ),
-                        child: Text(association!,
-                          style: MistralTypography.body.copyWith(
-                            color: skin.colors.text1,
-                            height: 1.8,
-                          )),
+                        child: Text(
+                          association!,
+                          style: MistralTypography.body.copyWith(color: skin.colors.text1, height: 1.8),
+                        ),
                       ),
                     ] else ...[
                       Center(
@@ -80,8 +73,7 @@ class LinkedMeMiddlePage extends StatelessWidget {
                             const SizedBox(height: 80),
                             Icon(Icons.lightbulb_outline, size: 64, color: skin.colors.text3),
                             const SizedBox(height: 16),
-                            Text('暂无联想记忆',
-                              style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+                            Text('暂无联想记忆', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
                           ],
                         ),
                       ),

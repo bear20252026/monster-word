@@ -5,6 +5,7 @@
 // 文件：MyBadgeView, ThirdPartIconView, TipLabelDynamicView, LableClassifyView
 
 import 'package:flutter/material.dart';
+
 import '../tokens/design_tokens.dart';
 
 /// 角标视图（翻译自 MyBadgeView.dart）
@@ -39,18 +40,11 @@ class BadgeView extends StatelessWidget {
     return Container(
       width: w,
       height: h,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(h / 2),
-      ),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(h / 2)),
       alignment: Alignment.center,
       child: Text(
         text,
-        style: TextStyle(
-          color: textColor,
-          fontSize: fontSize,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: textColor, fontSize: fontSize, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -64,13 +58,7 @@ class ThirdPartyIconContainer extends StatelessWidget {
   final Color? backgroundColor;
   final VoidCallback? onTap;
 
-  const ThirdPartyIconContainer({
-    super.key,
-    required this.icon,
-    this.size = 44,
-    this.backgroundColor,
-    this.onTap,
-  });
+  const ThirdPartyIconContainer({super.key, required this.icon, this.size = 44, this.backgroundColor, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -79,10 +67,7 @@ class ThirdPartyIconContainer extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: backgroundColor, shape: BoxShape.circle),
         child: Center(child: icon),
       ),
     );
@@ -111,8 +96,7 @@ class AnimatedTipLabel extends StatefulWidget {
 
 enum TipArrowDirection { left, up, down, downShort }
 
-class _AnimatedTipLabelState extends State<AnimatedTipLabel>
-    with SingleTickerProviderStateMixin {
+class _AnimatedTipLabelState extends State<AnimatedTipLabel> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _arrowAlpha;
   late Animation<Offset> _arrowSlide;
@@ -120,10 +104,7 @@ class _AnimatedTipLabelState extends State<AnimatedTipLabel>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
     _arrowAlpha = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0, end: 1), weight: 30),
       TweenSequenceItem(tween: Tween(begin: 1, end: 1), weight: 40),
@@ -163,19 +144,11 @@ class _AnimatedTipLabelState extends State<AnimatedTipLabel>
           position: _arrowSlide,
           child: FadeTransition(
             opacity: _arrowAlpha,
-            child: Icon(
-              _getArrowIcon(),
-              color: AppColors.white100,
-              size: 24,
-            ),
+            child: Icon(_getArrowIcon(), color: AppColors.white100, size: 24),
           ),
         ),
         const SizedBox(width: 4),
-        Text(
-          widget.text,
-          style: widget.textStyle ??
-              const TextStyle(color: AppColors.white100, fontSize: 14),
-        ),
+        Text(widget.text, style: widget.textStyle ?? const TextStyle(color: AppColors.white100, fontSize: 14)),
       ],
     );
   }
@@ -238,18 +211,10 @@ class TagClassifyView extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected ? selectedColor : null,
               borderRadius: BorderRadius.circular(tagRadius),
-              border: isSelected
-                  ? null
-                  : Border.all(color: normalColor, width: 1),
+              border: isSelected ? null : Border.all(color: normalColor, width: 1),
             ),
             alignment: Alignment.center,
-            child: Text(
-              tag,
-              style: TextStyle(
-                color: isSelected ? selectedTextColor : normalTextColor,
-                fontSize: 14,
-              ),
-            ),
+            child: Text(tag, style: TextStyle(color: isSelected ? selectedTextColor : normalTextColor, fontSize: 14)),
           ),
         );
       }).toList(),

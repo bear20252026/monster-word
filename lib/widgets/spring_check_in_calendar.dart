@@ -28,8 +28,7 @@ class SpringCheckInCalendar extends StatefulWidget {
   State<SpringCheckInCalendar> createState() => _SpringCheckInCalendarState();
 }
 
-class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
-    with TickerProviderStateMixin {
+class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with TickerProviderStateMixin {
   DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
   Set<String> _checkedDates = {};
   int _streak = 0;
@@ -37,11 +36,17 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
   bool _justChecked = false; // 本次会话内刚完成签到（触发连击特效）
 
   late final AnimationController _entranceCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1100));
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
   late final AnimationController _bounceCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 900));
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
   late final AnimationController _comboCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1400));
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
 
   @override
   void initState() {
@@ -71,8 +76,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
     }
   }
 
-  String _iso(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  String _iso(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   Future<void> _onCheckIn() async {
     if (_todayChecked) return;
@@ -127,8 +131,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
                     Row(
                       children: [
                         for (var col = 0; col < 7; col++)
-                          Expanded(child: _buildCellOrNull(row, col, leadingBlanks,
-                              daysInMonth, todayIso, skin)),
+                          Expanded(child: _buildCellOrNull(row, col, leadingBlanks, daysInMonth, todayIso, skin)),
                       ],
                     ),
                 ],
@@ -146,9 +149,10 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
   Widget _buildHeader(dynamic skin) {
     return Row(
       children: [
-        Text('${_month.year}年${_month.month}月',
-            style: TextStyle(
-                fontSize: 17, fontWeight: FontWeight.w700, color: skin.text1)),
+        Text(
+          '${_month.year}年${_month.month}月',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: skin.text1),
+        ),
         const Spacer(),
         // 连击特效徽章
         AnimatedBuilder(
@@ -163,13 +167,14 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
               child: Opacity(
                 opacity: opacity,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [
-                      AppColors.highlightOrange.withValues(alpha: 0.9),
-                      MistralColors.sunshine500.withValues(alpha: 0.9),
-                    ]),
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.highlightOrange.withValues(alpha: 0.9),
+                        MistralColors.sunshine500.withValues(alpha: 0.9),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Row(
@@ -177,11 +182,10 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
                     children: [
                       const Text('🔥', style: TextStyle(fontSize: 13)),
                       const SizedBox(width: 4),
-                      Text('连击 $_streak',
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.white100)),
+                      Text(
+                        '连击 $_streak',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white100),
+                      ),
                     ],
                   ),
                 ),
@@ -200,19 +204,19 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
     const labels = ['一', '二', '三', '四', '五', '六', '日'];
     return Row(
       children: labels
-          .map((l) => Expanded(
-                child: Center(
-                  child: Text(l,
-                      style: TextStyle(fontSize: 12, color: skin.text3)),
-                ),
-              ))
+          .map(
+            (l) => Expanded(
+              child: Center(
+                child: Text(l, style: TextStyle(fontSize: 12, color: skin.text3)),
+              ),
+            ),
+          )
           .toList(),
     );
   }
 
   /// 单个日期格；越界处返回占位
-  Widget _buildCellOrNull(int row, int col, int leadingBlanks, int daysInMonth,
-      String todayIso, dynamic skin) {
+  Widget _buildCellOrNull(int row, int col, int leadingBlanks, int daysInMonth, String todayIso, dynamic skin) {
     final index = row * 7 + col - leadingBlanks;
     if (index < 0 || index >= daysInMonth) {
       return const SizedBox(height: 44);
@@ -228,8 +232,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
     final start = (index / cellCount) * 0.55;
     final entrance = CurvedAnimation(
       parent: _entranceCtrl,
-      curve: Interval(start, (start + 0.45).clamp(0.0, 1.0),
-          curve: Curves.elasticOut),
+      curve: Interval(start, (start + 0.45).clamp(0.0, 1.0), curve: Curves.elasticOut),
     );
 
     // 今日刚签到的弹跳标记
@@ -256,27 +259,22 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
                     color: isChecked
                         ? (isToday ? skin.success : skin.success.withValues(alpha: 0.75))
                         : isToday
-                            ? skin.accent.withValues(alpha: 0.15)
-                            : skin.pageBg,
+                        ? skin.accent.withValues(alpha: 0.15)
+                        : skin.pageBg,
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isToday && !isChecked ? skin.accent : Colors.transparent,
-                      width: 1.6,
-                    ),
+                    border: Border.all(color: isToday && !isChecked ? skin.accent : Colors.transparent, width: 1.6),
                   ),
                   child: Center(
                     child: isChecked
-                        ? const Icon(Icons.check_rounded,
-                            size: 18, color: AppColors.white100)
-                        : Text('${index + 1}',
+                        ? const Icon(Icons.check_rounded, size: 18, color: AppColors.white100)
+                        : Text(
+                            '${index + 1}',
                             style: TextStyle(
                               fontSize: 13,
-                              fontWeight:
-                                  isToday ? FontWeight.w800 : FontWeight.w500,
-                              color: isFuture
-                                  ? skin.text3.withValues(alpha: 0.45)
-                                  : skin.text1,
-                            )),
+                              fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
+                              color: isFuture ? skin.text3.withValues(alpha: 0.45) : skin.text1,
+                            ),
+                          ),
                   ),
                 ),
                 // 已签到的小星星角标（弹跳标记的余韵）
@@ -284,9 +282,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
                   Positioned(
                     top: -2,
                     right: -2,
-                    child: Icon(Icons.star_rounded,
-                        size: 11,
-                        color: AppColors.highlightOrange.withValues(alpha: 0.9)),
+                    child: Icon(Icons.star_rounded, size: 11, color: AppColors.highlightOrange.withValues(alpha: 0.9)),
                   ),
               ],
             ),
@@ -307,12 +303,10 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
             style: FilledButton.styleFrom(
               backgroundColor: _todayChecked ? skin.divider : skin.accent,
               foregroundColor: _todayChecked ? skin.text3 : AppColors.white100,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.lg)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
             ),
             onPressed: _todayChecked ? null : _onCheckIn,
-            icon: Icon(_todayChecked ? Icons.check_circle_outline : Icons.redeem,
-                size: 20),
+            icon: Icon(_todayChecked ? Icons.check_circle_outline : Icons.redeem, size: 20),
             label: Text(
               _todayChecked ? '今日已签到，明天再来～' : '签到领 ${ScareCoinLedger.checkInReward} 尖叫币',
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
@@ -334,11 +328,10 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('+${ScareCoinLedger.checkInReward}',
-                        style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: skin.success)),
+                    Text(
+                      '+${ScareCoinLedger.checkInReward}',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: skin.success),
+                    ),
                     const SizedBox(width: 4),
                     MonsterIcon(size: 24, bodyColor: skin.success),
                   ],

@@ -17,8 +17,8 @@ class WordNote {
     required this.content,
     String? createdAt,
     String? updatedAt,
-  })  : createdAt = createdAt ?? _now(),
-        updatedAt = updatedAt ?? _now();
+  }) : createdAt = createdAt ?? _now(),
+       updatedAt = updatedAt ?? _now();
 
   static String _now() {
     final d = DateTime.now();
@@ -26,14 +26,7 @@ class WordNote {
         '${d.hour.toString().padLeft(2, '0')}${d.minute.toString().padLeft(2, '0')}${d.second.toString().padLeft(2, '0')}';
   }
 
-  WordNote copyWith({
-    int? id,
-    int? wordId,
-    String? word,
-    String? content,
-    String? createdAt,
-    String? updatedAt,
-  }) {
+  WordNote copyWith({int? id, int? wordId, String? word, String? content, String? createdAt, String? updatedAt}) {
     return WordNote(
       id: id ?? this.id,
       wordId: wordId ?? this.wordId,
@@ -45,20 +38,20 @@ class WordNote {
   }
 
   factory WordNote.fromMap(Map<String, dynamic> map) => WordNote(
-        id: map['id'] as int?,
-        wordId: map['word_id'] as int,
-        word: (map['word'] as String?) ?? '',
-        content: (map['content'] as String?) ?? '',
-        createdAt: (map['created_at'] as String?) ?? '',
-        updatedAt: (map['updated_at'] as String?) ?? '',
-      );
+    id: map['id'] as int?,
+    wordId: map['word_id'] as int,
+    word: (map['word'] as String?) ?? '',
+    content: (map['content'] as String?) ?? '',
+    createdAt: (map['created_at'] as String?) ?? '',
+    updatedAt: (map['updated_at'] as String?) ?? '',
+  );
 
   Map<String, dynamic> toMap() => {
-        if (id != null) 'id': id,
-        'word_id': wordId,
-        'word': word,
-        'content': content,
-        'created_at': createdAt,
-        'updated_at': updatedAt,
-      };
+    if (id != null) 'id': id,
+    'word_id': wordId,
+    'word': word,
+    'content': content,
+    'created_at': createdAt,
+    'updated_at': updatedAt,
+  };
 }

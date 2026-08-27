@@ -56,28 +56,20 @@ class _BooksPageState extends State<BooksPage> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.white100.withValues(alpha: 0.35),
-                          border: Border.all(
-                            color: AppColors.white100.withValues(alpha: 0.5),
-                          ),
+                          border: Border.all(color: AppColors.white100.withValues(alpha: 0.5)),
                         ),
                         child: Icon(Icons.person, color: AppColors.white100, size: 26),
                       ),
                       const SizedBox(width: 16),
-                      Text(
-                        '数据同步中',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.white100.withValues(alpha: 0.8),
-                        ),
-                      ),
+                      Text('数据同步中', style: TextStyle(fontSize: 12, color: AppColors.white100.withValues(alpha: 0.8))),
                       const Spacer(),
                       IconButton(
                         icon: Icon(Icons.more_horiz, color: AppColors.white100),
                         tooltip: '更多',
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('更多操作开发中...'), duration: Duration(seconds: 1)),
-                          );
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(const SnackBar(content: Text('更多操作开发中...'), duration: Duration(seconds: 1)));
                         },
                       ),
                     ],
@@ -128,17 +120,18 @@ class _BooksPageState extends State<BooksPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _HomeIcon(Icons.video_library_outlined, '课堂',
-                        onTap: () => _openLearn()),
-                    _HomeIcon(Icons.favorite_border, '收藏',
-                        onTap: () =>
-                            Navigator.pushNamed(context, MySpacePage.routeName)),
-                    _HomeIcon(Icons.headphones, '听力',
-                        onTap: () =>
-                            Navigator.pushNamed(context, ReviewPage.routeName)),
-                    _HomeIcon(Icons.dashboard_outlined, '统计',
-                        onTap: () =>
-                            Navigator.pushNamed(context, DashboardPage.routeName)),
+                    _HomeIcon(Icons.video_library_outlined, '课堂', onTap: () => _openLearn()),
+                    _HomeIcon(
+                      Icons.favorite_border,
+                      '收藏',
+                      onTap: () => Navigator.pushNamed(context, MySpacePage.routeName),
+                    ),
+                    _HomeIcon(Icons.headphones, '听力', onTap: () => Navigator.pushNamed(context, ReviewPage.routeName)),
+                    _HomeIcon(
+                      Icons.dashboard_outlined,
+                      '统计',
+                      onTap: () => Navigator.pushNamed(context, DashboardPage.routeName),
+                    ),
                   ],
                 ),
               ),
@@ -170,10 +163,7 @@ class _CheckInBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.checkInBg,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: AppColors.white100.withValues(alpha: 0.5),
-          width: 1.5,
-        ),
+        border: Border.all(color: AppColors.white100.withValues(alpha: 0.5), width: 1.5),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -201,12 +191,7 @@ class _LearnReviewBand extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _LearnReviewBand({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.onTap,
-  });
+  const _LearnReviewBand({required this.title, required this.subtitle, required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -238,13 +223,7 @@ class _LearnReviewBand extends StatelessWidget {
                     letterSpacing: 0.5,
                   ),
                 ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.white100.withValues(alpha: 0.8),
-                  ),
-                ),
+                Text(subtitle, style: TextStyle(fontSize: 11, color: AppColors.white100.withValues(alpha: 0.8))),
               ],
             ),
           ],
@@ -271,10 +250,7 @@ class _HomeIcon extends StatelessWidget {
         children: [
           Icon(icon, color: AppColors.white100, size: 26),
           SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(fontSize: 10, color: AppColors.white100.withValues(alpha: 0.85)),
-          ),
+          Text(label, style: TextStyle(fontSize: 10, color: AppColors.white100.withValues(alpha: 0.85))),
         ],
       ),
     );

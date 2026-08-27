@@ -39,8 +39,7 @@ class ScrollTopBottomLayout extends StatefulWidget {
   State<ScrollTopBottomLayout> createState() => _ScrollTopBottomLayoutState();
 }
 
-class _ScrollTopBottomLayoutState extends State<ScrollTopBottomLayout>
-    with SingleTickerProviderStateMixin {
+class _ScrollTopBottomLayoutState extends State<ScrollTopBottomLayout> with SingleTickerProviderStateMixin {
   late ScrollController _scrollController;
   bool _showTop = true;
   bool _isScrolling = false;
@@ -55,9 +54,7 @@ class _ScrollTopBottomLayoutState extends State<ScrollTopBottomLayout>
   void initState() {
     super.initState();
     _showTop = widget.initialShowTop;
-    _scrollController = ScrollController(
-      initialScrollOffset: _showTop ? 0 : widget.topHeight,
-    );
+    _scrollController = ScrollController(initialScrollOffset: _showTop ? 0 : widget.topHeight);
   }
 
   @override
@@ -85,9 +82,7 @@ class _ScrollTopBottomLayoutState extends State<ScrollTopBottomLayout>
   Future<void> animateShowTop(bool show) async {
     final target = show ? 0.0 : widget.topHeight;
     final distance = (target - _scrollController.offset).abs();
-    final duration = Duration(
-      milliseconds: (distance / 2000.0 * 1000).toInt().clamp(100, 500),
-    );
+    final duration = Duration(milliseconds: (distance / 2000.0 * 1000).toInt().clamp(100, 500));
 
     if (show) {
       _showTop = true;
@@ -97,11 +92,7 @@ class _ScrollTopBottomLayoutState extends State<ScrollTopBottomLayout>
       widget.topShowCallback?.onTopHide();
     }
 
-    await _scrollController.animateTo(
-      target,
-      duration: duration,
-      curve: Curves.decelerate,
-    );
+    await _scrollController.animateTo(target, duration: duration, curve: Curves.decelerate);
   }
 
   bool get isShowTop => _showTop;
@@ -121,10 +112,7 @@ class _ScrollTopBottomLayoutState extends State<ScrollTopBottomLayout>
         physics: const NeverScrollableScrollPhysics(),
         child: Column(
           children: [
-            SizedBox(
-              height: widget.topHeight,
-              child: widget.topChild,
-            ),
+            SizedBox(height: widget.topHeight, child: widget.topChild),
             widget.bottomChild,
           ],
         ),

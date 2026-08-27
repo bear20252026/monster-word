@@ -67,9 +67,7 @@ class ScareCoinLedger {
     final raw = prefs.getString(_kHistory);
     if (raw == null || raw.isEmpty) return [];
     try {
-      final list = (jsonDecode(raw) as List)
-          .map((e) => ScareCoinEntry.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final list = (jsonDecode(raw) as List).map((e) => ScareCoinEntry.fromJson(e as Map<String, dynamic>)).toList();
       list.sort((a, b) => b.time.compareTo(a.time));
       return list;
     } catch (_) {
@@ -94,8 +92,7 @@ class ScareCoinLedger {
     // 记入签到日历集合（弹性签到日历渲染用）
     try {
       final prefs = await SharedPreferences.getInstance();
-      final dates = (prefs.getStringList(_kCheckinDates) ?? const <String>[]).toSet()
-        ..add(iso);
+      final dates = (prefs.getStringList(_kCheckinDates) ?? const <String>[]).toSet()..add(iso);
       await prefs.setStringList(_kCheckinDates, dates.toList()..sort());
     } catch (_) {
       // 日历集合写入失败不阻断主签到流程
@@ -104,14 +101,9 @@ class ScareCoinLedger {
   }
 
   /// 发放奖励（供学习/复习结算等场景调用）
-  static Future<int> grant({required int delta, required String reason}) =>
-      _apply(delta: delta, reason: reason);
+  static Future<int> grant({required int delta, required String reason}) => _apply(delta: delta, reason: reason);
 
-  static Future<int> _apply({
-    required int delta,
-    required String reason,
-    String? lastCheckInIso,
-  }) async {
+  static Future<int> _apply({required int delta, required String reason, String? lastCheckInIso}) async {
     final prefs = await SharedPreferences.getInstance();
     final newBalance = (prefs.getInt(_kBalance) ?? 0) + delta;
     await prefs.setInt(_kBalance, newBalance);
@@ -121,8 +113,7 @@ class ScareCoinLedger {
     final entries = await history();
     entries.insert(0, ScareCoinEntry(time: DateTime.now(), delta: delta, reason: reason));
     // 只保留最近 200 条，避免无限增长
-    await prefs.setString(
-        _kHistory, jsonEncode(entries.take(200).map((e) => e.toJson()).toList()));
+    await prefs.setString(_kHistory, jsonEncode(entries.take(200).map((e) => e.toJson()).toList()));
     return newBalance;
   }
 }
@@ -134,13 +125,12 @@ class ScareCoinEntry {
   final String reason;
   ScareCoinEntry({required this.time, required this.delta, required this.reason});
 
-  Map<String, dynamic> toJson() =>
-      {'t': time.millisecondsSinceEpoch, 'd': delta, 'r': reason};
+  Map<String, dynamic> toJson() => {'t': time.millisecondsSinceEpoch, 'd': delta, 'r': reason};
   factory ScareCoinEntry.fromJson(Map<String, dynamic> json) => ScareCoinEntry(
-        time: DateTime.fromMillisecondsSinceEpoch(json['t'] as int),
-        delta: json['d'] as int,
-        reason: json['r'] as String,
-      );
+    time: DateTime.fromMillisecondsSinceEpoch(json['t'] as int),
+    delta: json['d'] as int,
+    reason: json['r'] as String,
+  );
 }
 
 class ScareCoinHistoryPage extends StatefulWidget {
@@ -177,14 +167,11 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
     final newBalance = await ScareCoinLedger.checkIn();
     if (!mounted) return;
     if (newBalance == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('今天已经签到过啦，明天再来～')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('今天已经签到过啦，明天再来～')));
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('签到成功！尖叫币 +${ScareCoinLedger.checkInReward} 👹')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('签到成功！尖叫币 +${ScareCoinLedger.checkInReward} 👹')));
     await _refresh();
   }
 
@@ -200,7 +187,10 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
           icon: Icon(Icons.arrow_back_ios_new, size: 20, color: skin.text1),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('尖叫币', style: TextStyle(color: skin.text1, fontWeight: FontWeight.w600)),
+        title: Text(
+          '尖叫币',
+          style: TextStyle(color: skin.text1, fontWeight: FontWeight.w600),
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -223,13 +213,11 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('我的尖叫币',
-                            style: TextStyle(fontSize: 13, color: skin.text3)),
-                        Text('$_balance',
-                            style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                color: skin.text1)),
+                        Text('我的尖叫币', style: TextStyle(fontSize: 13, color: skin.text3)),
+                        Text(
+                          '$_balance',
+                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: skin.text1),
+                        ),
                       ],
                     ),
                     const Spacer(),
@@ -252,19 +240,20 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
               padding: EdgeInsets.symmetric(horizontal: context.responsive.pageMargin),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('获取记录',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: skin.text1)),
+                child: Text(
+                  '获取记录',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: skin.text1),
+                ),
               ),
             ),
             const SizedBox(height: 8),
             Expanded(
               child: _entries.isEmpty
                   ? Center(
-                      child: Text('还没有记录，先去签到吧～',
-                          style: TextStyle(fontSize: 14, color: skin.text3)))
+                      child: Text('还没有记录，先去签到吧～', style: TextStyle(fontSize: 14, color: skin.text3)),
+                    )
                   : ListView.separated(
-                      padding: EdgeInsets.fromLTRB(context.responsive.pageMargin, 0,
-                          context.responsive.pageMargin, 8),
+                      padding: EdgeInsets.fromLTRB(context.responsive.pageMargin, 0, context.responsive.pageMargin, 8),
                       itemCount: _entries.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (context, i) {
@@ -288,12 +277,9 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(e.reason,
-                                        style: TextStyle(
-                                            fontSize: 14, color: skin.text1)),
+                                    Text(e.reason, style: TextStyle(fontSize: 14, color: skin.text1)),
                                     const SizedBox(height: 2),
-                                    Text(_formatTime(e.time),
-                                        style: TextStyle(fontSize: 12, color: skin.text3)),
+                                    Text(_formatTime(e.time), style: TextStyle(fontSize: 12, color: skin.text3)),
                                   ],
                                 ),
                               ),
@@ -314,13 +300,9 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
             // ===== 电影渊源说明 =====
             Container(
               width: double.infinity,
-              margin: EdgeInsets.fromLTRB(context.responsive.pageMargin, 4,
-                  context.responsive.pageMargin, 16),
+              margin: EdgeInsets.fromLTRB(context.responsive.pageMargin, 4, context.responsive.pageMargin, 16),
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: skin.cardBgAlt,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-              ),
+              decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(AppRadius.lg)),
               child: Text(
                 '🎬 关于「尖叫币」\n\n'
                 '设定致敬皮克斯经典动画《怪兽电力公司》（Monsters, Inc., 2001）：'

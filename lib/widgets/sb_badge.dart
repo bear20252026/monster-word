@@ -3,6 +3,7 @@
 // 使用纪律：金色仅限成就/星标/奖励场景，禁止作通用强调色
 
 import 'package:flutter/material.dart';
+
 import 'scale_down_on_press.dart';
 
 /// 星巴克金色胶囊徽章
@@ -28,26 +29,16 @@ class SbBadge extends StatelessWidget {
   /// 点击回调。null 时不可点击（纯展示）。
   final VoidCallback? onTap;
 
-  const SbBadge({
-    super.key,
-    required this.text,
-    this.icon,
-    this.onTap,
-  });
+  const SbBadge({super.key, required this.text, this.icon, this.onTap});
 
   static const Color _gold = Color(0xFFCBA258);
-  static const EdgeInsets _padding = EdgeInsets.symmetric(
-    vertical: 4,
-    horizontal: 12,
-  );
+  static const EdgeInsets _padding = EdgeInsets.symmetric(vertical: 4, horizontal: 12);
 
   @override
   Widget build(BuildContext context) {
     final badge = Material(
       color: Colors.transparent,
-      shape: const StadiumBorder(
-        side: BorderSide(width: 1, color: _gold),
-      ),
+      shape: const StadiumBorder(side: BorderSide(width: 1, color: _gold)),
       child: InkWell(
         customBorder: const StadiumBorder(),
         onTap: onTap,
@@ -56,17 +47,10 @@ class SbBadge extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) ...[
-                Icon(icon, size: 14, color: _gold),
-                const SizedBox(width: 4),
-              ],
+              if (icon != null) ...[Icon(icon, size: 14, color: _gold), const SizedBox(width: 4)],
               Text(
                 text,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: _gold,
-                ),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _gold),
               ),
             ],
           ),

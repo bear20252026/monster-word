@@ -11,12 +11,7 @@ class DockItem {
   final String label;
   final Color? color;
 
-  const DockItem({
-    required this.icon,
-    this.activeIcon,
-    required this.label,
-    this.color,
-  });
+  const DockItem({required this.icon, this.activeIcon, required this.label, this.color});
 }
 
 class AppDock extends StatefulWidget {
@@ -60,15 +55,13 @@ class _AppDockState extends State<AppDock> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _scaleControllers = List.generate(widget.items.length, (i) {
-      return AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 200),
-      );
+      return AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
     });
     _scaleAnims = _scaleControllers.map((c) {
-      return Tween<double>(begin: 1.0, end: widget.magnification).animate(
-        CurvedAnimation(parent: c, curve: Curves.easeOutBack),
-      );
+      return Tween<double>(
+        begin: 1.0,
+        end: widget.magnification,
+      ).animate(CurvedAnimation(parent: c, curve: Curves.easeOutBack));
     }).toList();
   }
 
@@ -115,17 +108,8 @@ class _AppDockState extends State<AppDock> with TickerProviderStateMixin {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(widget.borderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.black12,
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-          border: Border.all(
-            color: AppColors.white100.withValues(alpha: 0.3),
-            width: 1,
-          ),
+          boxShadow: [BoxShadow(color: AppColors.black12, blurRadius: 20, offset: const Offset(0, 4))],
+          border: Border.all(color: AppColors.white100.withValues(alpha: 0.3), width: 1),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -143,10 +127,7 @@ class _AppDockState extends State<AppDock> with TickerProviderStateMixin {
                   animation: _scaleAnims[i],
                   builder: (context, child) {
                     final scale = isHovered ? _scaleAnims[i].value : 1.0;
-                    return Transform.scale(
-                      scale: scale,
-                      child: child,
-                    );
+                    return Transform.scale(scale: scale, child: child);
                   },
                   child: Container(
                     padding: widget.padding,
@@ -209,13 +190,7 @@ class FloatingDock extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.white100.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black12,
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: AppColors.black12, blurRadius: 24, offset: const Offset(0, 8))],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -230,10 +205,7 @@ class FloatingDock extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOutCubic,
-              padding: EdgeInsets.symmetric(
-                horizontal: isActive ? 16 : 12,
-                vertical: 10,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: isActive ? 16 : 12, vertical: 10),
               decoration: BoxDecoration(
                 color: isActive ? active.withValues(alpha: 0.1) : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
@@ -250,11 +222,7 @@ class FloatingDock extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       item.label,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: active,
-                      ),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: active),
                     ),
                   ],
                 ],

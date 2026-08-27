@@ -30,12 +30,7 @@ class LexisFileSystem {
   /// 初始化目录
   static Future<void> initDir() async {
     final basePath = await getLocalFilePath();
-    final dirs = [
-      '$basePath$_usPath',
-      '$basePath$_ukPath',
-      '$basePath$_zpkPath',
-      '$basePath$_ttsPath',
-    ];
+    final dirs = ['$basePath$_usPath', '$basePath$_ukPath', '$basePath$_zpkPath', '$basePath$_ttsPath'];
     for (final dir in dirs) {
       await Directory(dir).create(recursive: true);
     }
@@ -104,11 +99,7 @@ class LexisFileSystem {
     try {
       final parts = name.split('/').last.split('_');
       if (parts.length != 4) return null;
-      return ZpkIntroInfo(
-        bid: int.parse(parts[0]),
-        wid: int.parse(parts[1]),
-        ver: int.parse(parts[2]),
-      );
+      return ZpkIntroInfo(bid: int.parse(parts[0]), wid: int.parse(parts[1]), ver: int.parse(parts[2]));
     } catch (_) {
       return null;
     }

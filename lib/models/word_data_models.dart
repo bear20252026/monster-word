@@ -32,12 +32,12 @@ class BBListWord {
   bool get isSystemMarkFinished => duration > 90;
 
   factory BBListWord.fromJson(Map<String, dynamic> json) => BBListWord(
-        word: json['word'] ?? '',
-        wordId: (json['wordId'] as num?)?.toInt() ?? 0,
-        duration: (json['duration'] as num?)?.toInt() ?? 0,
-        updateTime: json['updateTime'] ?? '',
-        zpkName: json['zpkName'] ?? '',
-      );
+    word: json['word'] ?? '',
+    wordId: (json['wordId'] as num?)?.toInt() ?? 0,
+    duration: (json['duration'] as num?)?.toInt() ?? 0,
+    updateTime: json['updateTime'] ?? '',
+    zpkName: json['zpkName'] ?? '',
+  );
 }
 
 /// 用户生词（翻译自 BBUserNewWord.java）
@@ -61,20 +61,14 @@ class BBUserNewWord {
   });
 
   factory BBUserNewWord.fromJson(Map<String, dynamic> json) => BBUserNewWord(
-        newword: json['word'] ?? '',
-        opcode: json['oc'] ?? '1',
-        updatetime: json['ut'] ?? '20990101010101',
-        wordId: (json['wi'] as num?)?.toInt() ?? 0,
-        zpk: json['zu'] ?? '',
-      );
+    newword: json['word'] ?? '',
+    opcode: json['oc'] ?? '1',
+    updatetime: json['ut'] ?? '20990101010101',
+    wordId: (json['wi'] as num?)?.toInt() ?? 0,
+    zpk: json['zu'] ?? '',
+  );
 
-  Map<String, dynamic> toJson() => {
-        'word': newword,
-        'oc': opcode,
-        'ut': updatetime,
-        'wi': wordId,
-        'zu': zpk,
-      };
+  Map<String, dynamic> toJson() => {'word': newword, 'oc': opcode, 'ut': updatetime, 'wi': wordId, 'zu': zpk};
 }
 
 /// 拼写数据（翻译自 SpellBean.java）
@@ -85,24 +79,16 @@ class SpellBean {
   String ukPron;
   List<String> spells;
 
-  SpellBean({
-    this.word = '',
-    this.interpret = '',
-    this.usPron = '',
-    this.ukPron = '',
-    List<String>? spells,
-  }) : spells = spells ?? [];
+  SpellBean({this.word = '', this.interpret = '', this.usPron = '', this.ukPron = '', List<String>? spells})
+    : spells = spells ?? [];
 
   factory SpellBean.fromJson(Map<String, dynamic> json) => SpellBean(
-        word: json['word'] ?? '',
-        interpret: json['interpret'] ?? '',
-        usPron: json['us_pron'] ?? '',
-        ukPron: json['uk_pron'] ?? '',
-        spells: (json['spells'] as List?)
-                ?.map((e) => e.toString())
-                .toList() ??
-            [],
-      );
+    word: json['word'] ?? '',
+    interpret: json['interpret'] ?? '',
+    usPron: json['us_pron'] ?? '',
+    ukPron: json['uk_pron'] ?? '',
+    spells: (json['spells'] as List?)?.map((e) => e.toString()).toList() ?? [],
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -123,23 +109,15 @@ class CollinsDetail {
   String interpret;
   int dType;
 
-  CollinsDetail({
-    this.word = '',
-    this.interpret = '',
-    this.dType = 0,
-  });
+  CollinsDetail({this.word = '', this.interpret = '', this.dType = 0});
 
   factory CollinsDetail.fromJson(Map<String, dynamic> json) => CollinsDetail(
-        word: json['word'] ?? '',
-        interpret: json['interpret'] ?? '',
-        dType: (json['d_type'] as num?)?.toInt() ?? 0,
-      );
+    word: json['word'] ?? '',
+    interpret: json['interpret'] ?? '',
+    dType: (json['d_type'] as num?)?.toInt() ?? 0,
+  );
 
-  Map<String, dynamic> toJson() => {
-        'word': word,
-        'interpret': interpret,
-        'd_type': dType,
-      };
+  Map<String, dynamic> toJson() => {'word': word, 'interpret': interpret, 'd_type': dType};
 }
 
 /// 柯林斯词典释义详情（富格式）
@@ -192,16 +170,14 @@ class SentenceWordInfo {
   /// 获取课程ID
   String get courseID {
     if (courseId.isNotEmpty && courseId != '*') return courseId;
-    final baseName =
-        sentenceID.isNotEmpty && sentenceID != '*' ? sentenceID : audioUrl;
+    final baseName = sentenceID.isNotEmpty && sentenceID != '*' ? sentenceID : audioUrl;
     if (baseName.isEmpty || baseName.length < 5) return '';
     return baseName.substring(0, baseName.length - 5);
   }
 
   /// 获取行号
   int get rowNum {
-    final baseName =
-        sentenceID.isNotEmpty && sentenceID != '*' ? sentenceID : audioUrl;
+    final baseName = sentenceID.isNotEmpty && sentenceID != '*' ? sentenceID : audioUrl;
     if (baseName.isEmpty || baseName.length < 5) return 0;
     return int.tryParse(baseName.substring(baseName.length - 5)) ?? 0;
   }
@@ -212,14 +188,12 @@ class SentenceWordInfo {
     return n > 0 ? '$n' : '';
   }
 
-  factory SentenceWordInfo.fromJson(Map<String, dynamic> json) =>
-      SentenceWordInfo(
-        word: json['word'] ?? '',
-        enSentence: json['enSentence'] ?? '',
-        sentenceID: json['sentenceID'] ?? '*',
-        audioUrl: json['audioUrl'] ?? '',
-        courseId: json['courseId'] ?? '*',
-        spanId: json['spanId'] ?? '*',
-      );
+  factory SentenceWordInfo.fromJson(Map<String, dynamic> json) => SentenceWordInfo(
+    word: json['word'] ?? '',
+    enSentence: json['enSentence'] ?? '',
+    sentenceID: json['sentenceID'] ?? '*',
+    audioUrl: json['audioUrl'] ?? '',
+    courseId: json['courseId'] ?? '*',
+    spanId: json['spanId'] ?? '*',
+  );
 }
-

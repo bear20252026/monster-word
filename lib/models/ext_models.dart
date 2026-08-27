@@ -55,25 +55,10 @@ class LoadDataErrorEvent extends BaseEvent {
   final int resultCode;
   final String errorMsg;
 
-  LoadDataErrorEvent({
-    required super.eventKey,
-    required this.loadType,
-    required this.resultCode,
-    this.errorMsg = '',
-  });
+  LoadDataErrorEvent({required super.eventKey, required this.loadType, required this.resultCode, this.errorMsg = ''});
 
-  factory LoadDataErrorEvent.build(
-    String eventKey,
-    int loadType,
-    int resultCode,
-    String errorMsg,
-  ) =>
-      LoadDataErrorEvent(
-        eventKey: eventKey,
-        loadType: loadType,
-        resultCode: resultCode,
-        errorMsg: errorMsg,
-      );
+  factory LoadDataErrorEvent.build(String eventKey, int loadType, int resultCode, String errorMsg) =>
+      LoadDataErrorEvent(eventKey: eventKey, loadType: loadType, resultCode: resultCode, errorMsg: errorMsg);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -91,8 +76,7 @@ class RequestParams {
   Map<String, String> toMap() => Map.unmodifiable(_params);
 
   /// 拼接为 URL 查询字符串
-  String toQueryString() =>
-      _params.entries.map((e) => '${e.key}=${e.value}').join('&');
+  String toQueryString() => _params.entries.map((e) => '${e.key}=${e.value}').join('&');
 }
 
 /// 列表数据模型基类（翻译自 BaseListModel.java）
@@ -278,10 +262,7 @@ class LibraryModel {
     await _startDownloadLibrary(libData, isUpdate);
   }
 
-  Future<void> _startDownloadLibrary(
-    Map<String, dynamic> libData,
-    bool isUpdate,
-  ) async {
+  Future<void> _startDownloadLibrary(Map<String, dynamic> libData, bool isUpdate) async {
     if (libData.isEmpty) return;
 
     // 通知 UI 开始下载
@@ -298,10 +279,7 @@ class LibraryModel {
   }
 
   /// 检查词书是否已存在本地
-  static bool isLibraryExistInLocal(
-    String dbDir,
-    Map<String, dynamic> libData,
-  ) {
+  static bool isLibraryExistInLocal(String dbDir, Map<String, dynamic> libData) {
     final code = libData['code'] as String? ?? '';
     if (code.isEmpty) return false;
     // 实际检查需要 path_provider，这里保留接口
@@ -339,8 +317,7 @@ class ListWordLearnModel {
   int _preIndex = 0;
   int _nexIndex = 0;
 
-  ListWordLearnModel(this.originalWordList, int startIndex)
-      : _curIndex = startIndex;
+  ListWordLearnModel(this.originalWordList, int startIndex) : _curIndex = startIndex;
 
   int get curIndex => _curIndex;
   int get totalCount => originalWordList.length;
@@ -349,8 +326,7 @@ class ListWordLearnModel {
   /// 设置是否循环翻页
   set loop(bool value) => _loop = value;
 
-  bool get isEndPos =>
-      originalWordList.isEmpty || _curIndex >= originalWordList.length - 1;
+  bool get isEndPos => originalWordList.isEmpty || _curIndex >= originalWordList.length - 1;
 
   bool get isStartPos => _curIndex == 0;
 
@@ -409,9 +385,7 @@ class ListWordLearnModel {
   }
 
   void _loadData(int index) {
-    if (originalWordList.isEmpty ||
-        index < 0 ||
-        index >= originalWordList.length) {
+    if (originalWordList.isEmpty || index < 0 || index >= originalWordList.length) {
       return;
     }
 
@@ -423,9 +397,7 @@ class ListWordLearnModel {
       _preWordData = word;
       // 异步加载前一词的 zpk 数据
       _updateWordBaseInfo(word);
-      final prevIdx = _preIndex > 0
-          ? _preIndex - 1
-          : originalWordList.length - 1;
+      final prevIdx = _preIndex > 0 ? _preIndex - 1 : originalWordList.length - 1;
       _updateWordBaseInfo(originalWordList[prevIdx]);
     } else if (_nexIndex == index) {
       _nextWordData = word;
@@ -466,10 +438,8 @@ class MessageData {
 
   MessageData({this.time = '', this.raw = const {}});
 
-  factory MessageData.fromJson(Map<String, dynamic> json) => MessageData(
-        time: json['time']?.toString() ?? '',
-        raw: json,
-      );
+  factory MessageData.fromJson(Map<String, dynamic> json) =>
+      MessageData(time: json['time']?.toString() ?? '', raw: json);
 }
 
 /// 消息数据集（简化版，原版依赖 MessageSetData bean）
@@ -497,11 +467,7 @@ class MessageSetData {
 
   factory MessageSetData.fromJson(Map<String, dynamic> json) {
     final list = json['data'] as List? ?? [];
-    return MessageSetData(
-      items: list
-          .map((e) => MessageData.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
+    return MessageSetData(items: list.map((e) => MessageData.fromJson(e as Map<String, dynamic>)).toList());
   }
 }
 
@@ -610,10 +576,7 @@ class ZpkDownLoadManager {
   ///
   /// [zpkNames] 待下载的 zpk 文件名列表
   /// [listener] 下载进度回调
-  Future<void> downloadZpks(
-    List<String> zpkNames,
-    ZpkListDownLoadListener listener,
-  ) async {
+  Future<void> downloadZpks(List<String> zpkNames, ZpkListDownLoadListener listener) async {
     if (zpkNames.isEmpty) {
       listener.onDownloadComplete();
       return;
@@ -627,9 +590,7 @@ class ZpkDownLoadManager {
     listener.onDownloadStart();
 
     // 启动最多 maxConcurrent 个并发任务
-    final initialBatch = _maxConcurrent < _totalCount
-        ? _maxConcurrent
-        : _totalCount;
+    final initialBatch = _maxConcurrent < _totalCount ? _maxConcurrent : _totalCount;
     for (var i = 0; i < initialBatch; i++) {
       _startNextDownload();
     }

@@ -5,6 +5,7 @@
 // 文件：VerticalDotLine, WalkmanWaveSurfaceView, MainView, MyWebView, NewLinearLayout, ThirdPartIconView
 
 import 'package:flutter/material.dart';
+
 import 'dart:math' as math;
 
 import '../tokens/design_tokens.dart';
@@ -30,11 +31,7 @@ class VerticalDotLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomPaint(
       size: Size(width, height),
-      painter: _VerticalDotLinePainter(
-        color: color,
-        dashWidth: dashWidth,
-        dashSpace: dashSpace,
-      ),
+      painter: _VerticalDotLinePainter(color: color, dashWidth: dashWidth, dashSpace: dashSpace),
     );
   }
 }
@@ -44,11 +41,7 @@ class _VerticalDotLinePainter extends CustomPainter {
   final double dashWidth;
   final double dashSpace;
 
-  _VerticalDotLinePainter({
-    required this.color,
-    required this.dashWidth,
-    required this.dashSpace,
-  });
+  _VerticalDotLinePainter({required this.color, required this.dashWidth, required this.dashSpace});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -59,11 +52,7 @@ class _VerticalDotLinePainter extends CustomPainter {
 
     double y = 0;
     while (y < size.height) {
-      canvas.drawLine(
-        Offset(size.width / 2, y),
-        Offset(size.width / 2, y + dashWidth),
-        paint,
-      );
+      canvas.drawLine(Offset(size.width / 2, y), Offset(size.width / 2, y + dashWidth), paint);
       y += dashWidth + dashSpace;
     }
   }
@@ -79,12 +68,7 @@ class MainScrollView extends StatefulWidget {
   final ValueChanged<double>? onScrollY;
   final VoidCallback? onScrollEnd;
 
-  const MainScrollView({
-    super.key,
-    required this.child,
-    this.onScrollY,
-    this.onScrollEnd,
-  });
+  const MainScrollView({super.key, required this.child, this.onScrollY, this.onScrollEnd});
 
   @override
   State<MainScrollView> createState() => _MainScrollViewState();
@@ -146,9 +130,7 @@ class CustomWebView extends StatelessWidget {
     // 这里提供基础结构，实际使用时需补充 WebView 实现
     return Container(
       color: Colors.transparent,
-      child: const Center(
-        child: Text('WebView placeholder - requires webview_flutter'),
-      ),
+      child: const Center(child: Text('WebView placeholder - requires webview_flutter')),
     );
   }
 }
@@ -191,14 +173,7 @@ class ThirdPartyIcon extends StatelessWidget {
   final Color? color;
   final VoidCallback? onTap;
 
-  const ThirdPartyIcon({
-    super.key,
-    this.icon,
-    this.child,
-    this.size = 44,
-    this.color,
-    this.onTap,
-  });
+  const ThirdPartyIcon({super.key, this.icon, this.child, this.size = 44, this.color, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -207,13 +182,9 @@ class ThirdPartyIcon extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color?.withValues(alpha: 0.1),
-        ),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: color?.withValues(alpha: 0.1)),
         child: Center(
-          child: child ??
-              (icon != null ? Icon(icon, size: size * 0.5, color: color) : null),
+          child: child ?? (icon != null ? Icon(icon, size: size * 0.5, color: color) : null),
         ),
       ),
     );
@@ -240,22 +211,15 @@ class WalkmanWaveAnimation extends StatefulWidget {
   State<WalkmanWaveAnimation> createState() => _WalkmanWaveAnimationState();
 }
 
-class _WalkmanWaveAnimationState extends State<WalkmanWaveAnimation>
-    with TickerProviderStateMixin {
+class _WalkmanWaveAnimationState extends State<WalkmanWaveAnimation> with TickerProviderStateMixin {
   late AnimationController _waveController;
   late AnimationController _logoController;
 
   @override
   void initState() {
     super.initState();
-    _waveController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-    _logoController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 15),
-    );
+    _waveController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+    _logoController = AnimationController(vsync: this, duration: const Duration(seconds: 15));
     if (widget.isPlaying) {
       _waveController.repeat();
       _logoController.repeat();
@@ -348,6 +312,5 @@ class _WavePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_WavePainter oldDelegate) =>
-      oldDelegate.waveProgress != waveProgress ||
-      oldDelegate.isPlaying != isPlaying;
+      oldDelegate.waveProgress != waveProgress || oldDelegate.isPlaying != isPlaying;
 }

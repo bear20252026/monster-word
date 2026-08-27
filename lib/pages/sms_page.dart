@@ -75,31 +75,19 @@ class _SmsPageState extends State<SmsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 32),
-                    Text(
-                      '验证码已发送至',
-                      style: MistralTypography.body.copyWith(color: skin.colors.text3),
-                    ),
+                    Text('验证码已发送至', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
                     const SizedBox(height: 8),
-                    Text(
-                      widget.phoneNumber,
-                      style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
-                    ),
+                    Text(widget.phoneNumber, style: MistralTypography.heading4.copyWith(color: skin.colors.text1)),
                     const SizedBox(height: 32),
                     TextField(
                       controller: _codeController,
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
-                      style: MistralTypography.heading3.copyWith(
-                        color: skin.colors.text1,
-                        letterSpacing: 8,
-                      ),
+                      style: MistralTypography.heading3.copyWith(color: skin.colors.text1, letterSpacing: 8),
                       maxLength: 6,
                       decoration: InputDecoration(
                         hintText: '请输入验证码',
-                        hintStyle: MistralTypography.body.copyWith(
-                          color: skin.colors.text3,
-                          letterSpacing: 0,
-                        ),
+                        hintStyle: MistralTypography.body.copyWith(color: skin.colors.text3, letterSpacing: 0),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppRadius.lg),
                           borderSide: BorderSide(color: skin.colors.divider),
@@ -116,8 +104,7 @@ class _SmsPageState extends State<SmsPage> {
                       child: _canResend
                           ? TextButton(
                               onPressed: _resendCode,
-                              child: Text('重新发送',
-                                style: TextStyle(color: MistralColors.primary)),
+                              child: Text('重新发送', style: TextStyle(color: MistralColors.primary)),
                             )
                           : Text(
                               '${_countdown}s 后可重新发送',
@@ -136,9 +123,7 @@ class _SmsPageState extends State<SmsPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: MistralColors.primary,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
                         ),
                         child: const Text('确认'),
                       ),

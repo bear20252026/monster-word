@@ -7,14 +7,12 @@ import 'package:flutter/material.dart';
 
 import '../models/word_root_model.dart';
 import '../theme/skin_system.dart';
+
 /// 词根词缀Tab组件
 class WordRootTab extends StatelessWidget {
   final String wordRootJson;
 
-  const WordRootTab({
-    super.key,
-    required this.wordRootJson,
-  });
+  const WordRootTab({super.key, required this.wordRootJson});
 
   @override
   Widget build(BuildContext context) {
@@ -28,10 +26,7 @@ class WordRootTab extends StatelessWidget {
           children: [
             Icon(Icons.info_outline, size: 48, color: skin.text3),
             const SizedBox(height: 12),
-            Text(
-              '暂无词根数据',
-              style: TextStyle(fontSize: 16, color: skin.text3),
-            ),
+            Text('暂无词根数据', style: TextStyle(fontSize: 16, color: skin.text3)),
           ],
         ),
       );
@@ -64,24 +59,14 @@ class WordRootTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '词根结构',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: skin.text1,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -93,28 +78,18 @@ class WordRootTab extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Color(component.colorValue).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Color(component.colorValue).withValues(alpha: 0.3),
-                  ),
+                  border: Border.all(color: Color(component.colorValue).withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   children: [
                     Text(
                       component.typeName,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(component.colorValue),
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(fontSize: 12, color: Color(component.colorValue), fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       component.text,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: skin.text1,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(fontSize: 14, color: skin.text1, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -133,24 +108,14 @@ class WordRootTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '词根解释',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: skin.text1,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
           ),
           const SizedBox(height: 12),
 
@@ -169,9 +134,7 @@ class WordRootTab extends StatelessWidget {
           }),
 
           // 后缀
-          if (wordRoot.suffix.isNotEmpty) ...[
-            _buildDetailItem('后缀', wordRoot.suffix, skin.accent, skin),
-          ],
+          if (wordRoot.suffix.isNotEmpty) ...[_buildDetailItem('后缀', wordRoot.suffix, skin.accent, skin)],
         ],
       ),
     );
@@ -184,29 +147,15 @@ class WordRootTab extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(4),
-          ),
+          decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
           child: Text(
             type,
-            style: TextStyle(
-              fontSize: 12,
-              color: color,
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(
-            content,
-            style: TextStyle(
-              fontSize: 14,
-              color: skin.text1,
-              height: 1.5,
-            ),
-          ),
+          child: Text(content, style: TextStyle(fontSize: 14, color: skin.text1, height: 1.5)),
         ),
       ],
     );
@@ -222,13 +171,7 @@ class WordRootTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,11 +182,7 @@ class WordRootTab extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 '记忆技巧',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: skin.text1,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
               ),
             ],
           ),
@@ -257,14 +196,7 @@ class WordRootTab extends StatelessWidget {
                   Icon(Icons.check_circle, size: 16, color: skin.accent),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      tip,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: skin.text1,
-                        height: 1.5,
-                      ),
-                    ),
+                    child: Text(tip, style: TextStyle(fontSize: 14, color: skin.text1, height: 1.5)),
                   ),
                 ],
               ),

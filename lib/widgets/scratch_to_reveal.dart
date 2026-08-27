@@ -3,10 +3,11 @@
 // 颜色/阈值均可自定义
 // 适用于：单词释义揭示、隐藏答案揭示、每日奖励揭示
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 class ScratchToReveal extends StatefulWidget {
-  final Widget child;           // 被遮盖的内容（揭示后显示）
+  final Widget child; // 被遮盖的内容（揭示后显示）
   final double width;
   final double height;
   final Color? coverColor;
@@ -35,8 +36,7 @@ class ScratchToReveal extends StatefulWidget {
   State<ScratchToReveal> createState() => _ScratchToRevealState();
 }
 
-class _ScratchToRevealState extends State<ScratchToReveal>
-    with SingleTickerProviderStateMixin {
+class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProviderStateMixin {
   final List<Offset> _points = [];
   bool _revealed = false;
   late AnimationController _revealController;
@@ -46,13 +46,11 @@ class _ScratchToRevealState extends State<ScratchToReveal>
   @override
   void initState() {
     super.initState();
-    _revealController = AnimationController(
-      vsync: this,
-      duration: widget.animDuration,
-    );
-    _revealAnim = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _revealController, curve: Curves.easeOutCubic),
-    );
+    _revealController = AnimationController(vsync: this, duration: widget.animDuration);
+    _revealAnim = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _revealController, curve: Curves.easeOutCubic));
     _revealController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         widget.onReveal?.call();
@@ -133,18 +131,15 @@ class _ScratchToRevealState extends State<ScratchToReveal>
                             child: widget.coverText != null
                                 ? Text(
                                     widget.coverText!,
-                                    style: widget.coverTextStyle ??
+                                    style:
+                                        widget.coverTextStyle ??
                                         TextStyle(
                                           color: Colors.white.withValues(alpha: 0.8),
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                         ),
                                   )
-                                : Icon(
-                                    Icons.touch_app,
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                    size: 32,
-                                  ),
+                                : Icon(Icons.touch_app, color: Colors.white.withValues(alpha: 0.7), size: 32),
                           ),
                         ),
                       ),
@@ -166,12 +161,7 @@ class _ScratchPainter extends CustomPainter {
   final double opacity;
   final Color color;
 
-  _ScratchPainter({
-    required this.points,
-    required this.strokeWidth,
-    required this.opacity,
-    required this.color,
-  });
+  _ScratchPainter({required this.points, required this.strokeWidth, required this.opacity, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -219,8 +209,7 @@ class WordScratchCard extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(word,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        Text(word, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         ScratchToReveal(
           width: width,
@@ -228,18 +217,11 @@ class WordScratchCard extends StatelessWidget {
           coverColor: c,
           coverText: '👆 刮开查看释义',
           child: Container(
-            decoration: BoxDecoration(
-              color: c.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
+            decoration: BoxDecoration(color: c.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
             alignment: Alignment.center,
             child: Text(
               meaning,
-              style: TextStyle(
-                fontSize: 16,
-                color: c,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, color: c, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
           ),

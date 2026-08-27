@@ -16,9 +16,8 @@ class PersonalStereoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin;
     void showDevToast() {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('随身听功能开发中...'), duration: Duration(seconds: 1)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('随身听功能开发中...'), duration: Duration(seconds: 1)));
     }
 
     return Scaffold(
@@ -105,9 +104,7 @@ class PersonalStereoPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [MistralColors.cream, MistralColors.creamDeeper],
-        ),
+        gradient: LinearGradient(colors: [MistralColors.cream, MistralColors.creamDeeper]),
         borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Column(
@@ -116,10 +113,7 @@ class PersonalStereoPage extends StatelessWidget {
           const SizedBox(height: 16),
           Text('随身听模式', style: MistralTypography.heading4.copyWith(color: MistralColors.ink)),
           const SizedBox(height: 8),
-          Text(
-            '碎片时间也能听记单词',
-            style: MistralTypography.body.copyWith(color: MistralColors.slate),
-          ),
+          Text('碎片时间也能听记单词', style: MistralTypography.body.copyWith(color: MistralColors.slate)),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -133,10 +127,7 @@ class PersonalStereoPage extends StatelessWidget {
               Container(
                 width: 56,
                 height: 56,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: MistralColors.primary,
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: MistralColors.primary),
                 child: IconButton(
                   icon: const Icon(Icons.play_arrow, color: Colors.white, size: 32),
                   tooltip: '播放',
@@ -177,10 +168,7 @@ class PersonalStereoPage extends StatelessWidget {
             Container(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(
-                color: MistralColors.cream,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
+              decoration: BoxDecoration(color: MistralColors.cream, borderRadius: BorderRadius.circular(AppRadius.md)),
               child: Icon(icon, color: MistralColors.primary, size: 24),
             ),
             const SizedBox(width: 16),

@@ -11,27 +11,19 @@ class CardAction {
   String image;
   List<CardButton> buttons;
 
-  CardAction({
-    this.id = 0,
-    this.enable = 0,
-    this.hideclose = 0,
-    this.image = '',
-    List<CardButton>? buttons,
-  }) : buttons = buttons ?? [];
+  CardAction({this.id = 0, this.enable = 0, this.hideclose = 0, this.image = '', List<CardButton>? buttons})
+    : buttons = buttons ?? [];
 
   int get cardId => id;
   bool get isHideClose => hideclose == 1;
 
   factory CardAction.fromJson(Map<String, dynamic> json) => CardAction(
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        enable: (json['enable'] as num?)?.toInt() ?? 0,
-        hideclose: (json['hideclose'] as num?)?.toInt() ?? 0,
-        image: json['image'] ?? '',
-        buttons: (json['buttons'] as List?)
-                ?.map((e) => CardButton.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-      );
+    id: (json['id'] as num?)?.toInt() ?? 0,
+    enable: (json['enable'] as num?)?.toInt() ?? 0,
+    hideclose: (json['hideclose'] as num?)?.toInt() ?? 0,
+    image: json['image'] ?? '',
+    buttons: (json['buttons'] as List?)?.map((e) => CardButton.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+  );
 }
 
 /// 卡片按钮（翻译自 CardAction.CardButton）
@@ -40,17 +32,10 @@ class CardButton {
   String data;
   int type;
 
-  CardButton({
-    this.name = '',
-    this.data = '',
-    this.type = 0,
-  });
+  CardButton({this.name = '', this.data = '', this.type = 0});
 
-  factory CardButton.fromJson(Map<String, dynamic> json) => CardButton(
-        name: json['name'] ?? '',
-        data: json['data'] ?? '',
-        type: (json['type'] as num?)?.toInt() ?? 0,
-      );
+  factory CardButton.fromJson(Map<String, dynamic> json) =>
+      CardButton(name: json['name'] ?? '', data: json['data'] ?? '', type: (json['type'] as num?)?.toInt() ?? 0);
 }
 
 /// 悬浮按钮动作（翻译自 FloatButtonAction.java）
@@ -83,19 +68,18 @@ class FloatButtonAction {
   bool get isHideClose => hideclose == 1;
   bool get isReopen => reopen == 1;
 
-  factory FloatButtonAction.fromJson(Map<String, dynamic> json) =>
-      FloatButtonAction(
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        enable: (json['enable'] as num?)?.toInt() ?? 0,
-        hideclose: (json['hideclose'] as num?)?.toInt() ?? 0,
-        reopen: (json['reopen'] as num?)?.toInt() ?? 0,
-        top: (json['top'] as num?)?.toInt() ?? 0,
-        right: (json['right'] as num?)?.toInt() ?? 0,
-        width: (json['width'] as num?)?.toInt() ?? 0,
-        height: (json['height'] as num?)?.toInt() ?? 0,
-        image: json['image'] ?? '',
-        url: json['url'] ?? '',
-      );
+  factory FloatButtonAction.fromJson(Map<String, dynamic> json) => FloatButtonAction(
+    id: (json['id'] as num?)?.toInt() ?? 0,
+    enable: (json['enable'] as num?)?.toInt() ?? 0,
+    hideclose: (json['hideclose'] as num?)?.toInt() ?? 0,
+    reopen: (json['reopen'] as num?)?.toInt() ?? 0,
+    top: (json['top'] as num?)?.toInt() ?? 0,
+    right: (json['right'] as num?)?.toInt() ?? 0,
+    width: (json['width'] as num?)?.toInt() ?? 0,
+    height: (json['height'] as num?)?.toInt() ?? 0,
+    image: json['image'] ?? '',
+    url: json['url'] ?? '',
+  );
 }
 
 /// 掌握筛选数据（翻译自 MasterFilterData.java）

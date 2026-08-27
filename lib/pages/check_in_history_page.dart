@@ -20,8 +20,7 @@ class CheckInHistoryPage extends StatefulWidget {
   State<CheckInHistoryPage> createState() => _CheckInHistoryPageState();
 }
 
-class _CheckInHistoryPageState extends State<CheckInHistoryPage>
-    with SingleTickerProviderStateMixin {
+class _CheckInHistoryPageState extends State<CheckInHistoryPage> with SingleTickerProviderStateMixin {
   DateTime _currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
   Set<String> _checkedDates = {};
   int _streak = 0;
@@ -37,26 +36,20 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
   @override
   void initState() {
     super.initState();
-    _monthAnimCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-    _monthFadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _monthAnimCtrl, curve: Curves.easeOut),
-    );
+    _monthAnimCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _monthFadeAnim = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _monthAnimCtrl, curve: Curves.easeOut));
     _monthSlideAnim = Tween<Offset>(
       begin: const Offset(0.3, 0),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _monthAnimCtrl, curve: Curves.easeOutCubic),
-    );
-    _progressAnimCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _progressAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _progressAnimCtrl, curve: Curves.easeOutCubic),
-    );
+    ).animate(CurvedAnimation(parent: _monthAnimCtrl, curve: Curves.easeOutCubic));
+    _progressAnimCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _progressAnim = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _progressAnimCtrl, curve: Curves.easeOutCubic));
     _refresh();
   }
 
@@ -87,9 +80,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
       debugPrint('[CheckInHistory] refresh error: $e');
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('加载签到数据失败，请重试')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('加载签到数据失败，请重试')));
       }
     }
   }
@@ -101,20 +92,16 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
     _monthAnimCtrl.forward(from: 0);
   }
 
-  String _iso(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  String _iso(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   int get _currentMonthCheckedCount {
-    final prefix =
-        '${_currentMonth.year}-${_currentMonth.month.toString().padLeft(2, '0')}';
+    final prefix = '${_currentMonth.year}-${_currentMonth.month.toString().padLeft(2, '0')}';
     return _checkedDates.where((d) => d.startsWith(prefix)).length;
   }
 
-  int get _daysInCurrentMonth =>
-      DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
+  int get _daysInCurrentMonth => DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
 
-  double get _monthlyProgress =>
-      _daysInCurrentMonth > 0 ? _currentMonthCheckedCount / _daysInCurrentMonth : 0.0;
+  double get _monthlyProgress => _daysInCurrentMonth > 0 ? _currentMonthCheckedCount / _daysInCurrentMonth : 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -127,8 +114,8 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
         child: _isLoading
             ? Center(child: CircularProgressIndicator(color: skin.accent))
             : _totalDays == 0
-                ? _buildEmptyState(skin, resp)
-                : _buildContent(skin, resp),
+            ? _buildEmptyState(skin, resp)
+            : _buildContent(skin, resp),
       ),
     );
   }
@@ -145,10 +132,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
             Container(
               width: 160,
               height: 160,
-              decoration: BoxDecoration(
-                color: skin.cardBgAlt,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: skin.cardBgAlt, shape: BoxShape.circle),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
@@ -158,10 +142,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                     right: 30,
                     child: Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: skin.accent,
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: BoxDecoration(color: skin.accent, shape: BoxShape.circle),
                       child: const Icon(Icons.add, size: 18, color: Colors.white),
                     ),
                   ),
@@ -169,11 +150,9 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
               ),
             ),
             const SizedBox(height: 32),
-            Text('还没有签到记录',
-              style: MistralTypography.heading5.copyWith(color: skin.text1)),
+            Text('还没有签到记录', style: MistralTypography.heading5.copyWith(color: skin.text1)),
             const SizedBox(height: 8),
-            Text('每天签到，养成学习好习惯',
-              style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+            Text('每天签到，养成学习好习惯', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
             const SizedBox(height: 32),
             SizedBox(
               width: 200,
@@ -182,9 +161,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                 style: FilledButton.styleFrom(
                   backgroundColor: skin.accent,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
                 ),
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.redeem, size: 20),
@@ -202,23 +179,16 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
     return CustomScrollView(
       slivers: [
         // 顶部导航栏
-        SliverToBoxAdapter(
-          child: _buildNavBar(skin, resp),
-        ),
+        SliverToBoxAdapter(child: _buildNavBar(skin, resp)),
         // 概览卡片
-        SliverToBoxAdapter(
-          child: _buildSummaryCard(skin, resp),
-        ),
+        SliverToBoxAdapter(child: _buildSummaryCard(skin, resp)),
         // 双月日历
-        SliverToBoxAdapter(
-          child: _buildDualMonthCalendar(skin, resp),
-        ),
+        SliverToBoxAdapter(child: _buildDualMonthCalendar(skin, resp)),
         // 签到详情列表标题
         SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.fromLTRB(resp.pageMargin, 24, resp.pageMargin, 8),
-            child: Text('签到详情',
-              style: MistralTypography.heading5.copyWith(color: skin.text1)),
+            child: Text('签到详情', style: MistralTypography.heading5.copyWith(color: skin.text1)),
           ),
         ),
         // 签到详情列表
@@ -242,8 +212,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('签到历史',
-            style: MistralTypography.heading5.copyWith(color: skin.text1)),
+          Text('签到历史', style: MistralTypography.heading5.copyWith(color: skin.text1)),
         ],
       ),
     );
@@ -269,15 +238,12 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
             Expanded(
               child: Column(
                 children: [
-                  Text('$_totalDays',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: skin.accent,
-                    )),
+                  Text(
+                    '$_totalDays',
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: skin.accent),
+                  ),
                   const SizedBox(height: 4),
-                  Text('累计天数',
-                    style: MistralTypography.caption.copyWith(color: skin.text3)),
+                  Text('累计天数', style: MistralTypography.caption.copyWith(color: skin.text3)),
                 ],
               ),
             ),
@@ -291,14 +257,14 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('$_streak',
+                      Text(
+                        '$_streak',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w800,
-                          color: _streak > 0
-                              ? const Color(0xFFE8913A)
-                              : skin.text3,
-                        )),
+                          color: _streak > 0 ? const Color(0xFFE8913A) : skin.text3,
+                        ),
+                      ),
                       if (_streak > 0)
                         Padding(
                           padding: const EdgeInsets.only(left: 2, bottom: 4),
@@ -307,8 +273,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text('连续天数',
-                    style: MistralTypography.caption.copyWith(color: skin.text3)),
+                  Text('连续天数', style: MistralTypography.caption.copyWith(color: skin.text3)),
                 ],
               ),
             ),
@@ -325,11 +290,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                       alignment: Alignment.center,
                       children: [
                         // 背景环
-                        CircularProgressIndicator(
-                          value: 1.0,
-                          strokeWidth: 5,
-                          color: skin.divider,
-                        ),
+                        CircularProgressIndicator(value: 1.0, strokeWidth: 5, color: skin.divider),
                         // 进度环（带入场动画）
                         AnimatedBuilder(
                           animation: _progressAnim,
@@ -348,11 +309,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                           builder: (context, child) {
                             return Text(
                               '${(_monthlyProgress * _progressAnim.value * 100).round()}%',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: skin.text1,
-                              ),
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: skin.text1),
                             );
                           },
                         ),
@@ -360,8 +317,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text('本月进度',
-                    style: MistralTypography.caption.copyWith(color: skin.text3)),
+                  Text('本月进度', style: MistralTypography.caption.copyWith(color: skin.text3)),
                 ],
               ),
             ),
@@ -383,11 +339,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
           Row(
             children: [
               const Spacer(),
-              _MonthSwitchArrow(
-                icon: Icons.chevron_left,
-                onTap: () => _shiftMonth(-1),
-                skin: skin,
-              ),
+              _MonthSwitchArrow(icon: Icons.chevron_left, onTap: () => _shiftMonth(-1), skin: skin),
               const SizedBox(width: 8),
               // 月份标签
               Text(
@@ -397,8 +349,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
               const SizedBox(width: 8),
               _MonthSwitchArrow(
                 icon: Icons.chevron_right,
-                onTap: _currentMonth.month == DateTime.now().month &&
-                        _currentMonth.year == DateTime.now().year
+                onTap: _currentMonth.month == DateTime.now().month && _currentMonth.year == DateTime.now().year
                     ? null
                     : () => _shiftMonth(1),
                 skin: skin,
@@ -408,10 +359,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
           ),
           const SizedBox(height: 12),
           // 上月日历（始终半透明的辅助视图）
-          Opacity(
-            opacity: 0.45,
-            child: _buildMonthGrid(prevMonth, skin, isPrevious: true),
-          ),
+          Opacity(opacity: 0.45, child: _buildMonthGrid(prevMonth, skin, isPrevious: true)),
           const SizedBox(height: 8),
           // 当月日历（主视图，带弹性入场动画）
           FadeTransition(
@@ -449,12 +397,13 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
           // 星期标签
           Row(
             children: ['一', '二', '三', '四', '五', '六', '日']
-                .map((l) => Expanded(
-                      child: Center(
-                        child: Text(l,
-                          style: TextStyle(fontSize: 12, color: skin.text3)),
-                      ),
-                    ))
+                .map(
+                  (l) => Expanded(
+                    child: Center(
+                      child: Text(l, style: TextStyle(fontSize: 12, color: skin.text3)),
+                    ),
+                  ),
+                )
                 .toList(),
           ),
           const SizedBox(height: 6),
@@ -464,10 +413,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
               children: [
                 for (var col = 0; col < 7; col++)
                   Expanded(
-                    child: _buildDayCell(
-                      row, col, leadingBlanks, daysInMonth,
-                      month, todayIso, skin, isPrevious,
-                    ),
+                    child: _buildDayCell(row, col, leadingBlanks, daysInMonth, month, todayIso, skin, isPrevious),
                   ),
               ],
             ),
@@ -478,8 +424,14 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
 
   // ── 单个日期单元格 ──
   Widget _buildDayCell(
-    int row, int col, int leadingBlanks, int daysInMonth,
-    DateTime month, String todayIso, ThemeVars skin, bool isPrevious,
+    int row,
+    int col,
+    int leadingBlanks,
+    int daysInMonth,
+    DateTime month,
+    String todayIso,
+    ThemeVars skin,
+    bool isPrevious,
   ) {
     final index = row * 7 + col - leadingBlanks;
     if (index < 0 || index >= daysInMonth) {
@@ -504,23 +456,12 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
             color: isChecked
                 ? skin.success
                 : isToday
-                    ? skin.accent.withValues(alpha: 0.12)
-                    : Colors.transparent,
+                ? skin.accent.withValues(alpha: 0.12)
+                : Colors.transparent,
             shape: BoxShape.circle,
-            border: isToday
-                ? Border.all(
-                    color: skin.vipGoldBg,
-                    width: 2,
-                  )
-                : null,
+            border: isToday ? Border.all(color: skin.vipGoldBg, width: 2) : null,
             boxShadow: isChecked
-                ? [
-                    BoxShadow(
-                      color: skin.success.withValues(alpha: 0.3),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
+                ? [BoxShadow(color: skin.success.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 1))]
                 : null,
           ),
           child: Stack(
@@ -538,17 +479,12 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
                         color: isFuture
                             ? skin.text3.withValues(alpha: 0.4)
                             : isPrevious
-                                ? skin.text3
-                                : skin.text1,
+                            ? skin.text3
+                            : skin.text1,
                       ),
                     ),
               // 🔥 连续签到标记
-              if (isConsecutive)
-                Positioned(
-                  top: -3,
-                  right: -3,
-                  child: Text('🔥', style: TextStyle(fontSize: 10)),
-                ),
+              if (isConsecutive) Positioned(top: -3, right: -3, child: Text('🔥', style: TextStyle(fontSize: 10))),
             ],
           ),
         ),
@@ -566,12 +502,8 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
   // ── 签到详情列表（按日期分组） ──
   Widget _buildDetailList(ThemeVars skin, AppResponsive resp) {
     // 按日期分组（取当月）
-    final prefix =
-        '${_currentMonth.year}-${_currentMonth.month.toString().padLeft(2, '0')}';
-    final monthDates = _checkedDates
-        .where((d) => d.startsWith(prefix))
-        .toList()
-      ..sort((a, b) => b.compareTo(a));
+    final prefix = '${_currentMonth.year}-${_currentMonth.month.toString().padLeft(2, '0')}';
+    final monthDates = _checkedDates.where((d) => d.startsWith(prefix)).toList()..sort((a, b) => b.compareTo(a));
 
     if (monthDates.isEmpty) {
       return SliverToBoxAdapter(
@@ -579,15 +511,9 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
           padding: EdgeInsets.all(resp.pageMargin),
           child: Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: skin.cardBgAlt,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-            ),
+            decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(AppRadius.lg)),
             child: Center(
-              child: Text(
-                '本月还没有签到记录',
-                style: MistralTypography.bodyMd.copyWith(color: skin.text3),
-              ),
+              child: Text('本月还没有签到记录', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
             ),
           ),
         ),
@@ -597,92 +523,79 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage>
     return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final iso = monthDates[index];
-            final parts = iso.split('-');
-            final month = int.parse(parts[1]);
-            final day = int.parse(parts[2]);
-            final weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-            final date = DateTime(int.parse(parts[0]), month, day);
-            final weekday = weekdays[(date.weekday - 1) % 7];
-            final isToday = iso == _iso(DateTime.now());
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final iso = monthDates[index];
+          final parts = iso.split('-');
+          final month = int.parse(parts[1]);
+          final day = int.parse(parts[2]);
+          final weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+          final date = DateTime(int.parse(parts[0]), month, day);
+          final weekday = weekdays[(date.weekday - 1) % 7];
+          final isToday = iso == _iso(DateTime.now());
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: skin.cardBg,
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  border: Border.all(
-                    color: isToday ? skin.accent.withValues(alpha: 0.3) : skin.divider,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // 签到状态图标
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: skin.success.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.check_circle, size: 20, color: skin.success),
-                    ),
-                    const SizedBox(width: 12),
-                    // 日期信息
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                '$month月$day日',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: skin.text1,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                weekday,
-                                style: MistralTypography.caption.copyWith(color: skin.text3),
-                              ),
-                              if (isToday) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: skin.accent.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text('今天',
-                                    style: TextStyle(fontSize: 11, color: skin.accent, fontWeight: FontWeight.w600)),
-                                ),
-                              ],
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '签到成功 +${sl<CheckInService>().checkInReward} 尖叫币',
-                            style: MistralTypography.caption.copyWith(color: skin.text3),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // 尖叫币图标
-                    MonsterIcon(size: 20, showCircle: true, circleColor: skin.vipGoldBg.withValues(alpha: 0.15)),
-                  ],
-                ),
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: skin.cardBg,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: isToday ? skin.accent.withValues(alpha: 0.3) : skin.divider),
               ),
-            );
-          },
-          childCount: monthDates.length,
-        ),
+              child: Row(
+                children: [
+                  // 签到状态图标
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(color: skin.success.withValues(alpha: 0.12), shape: BoxShape.circle),
+                    child: Icon(Icons.check_circle, size: 20, color: skin.success),
+                  ),
+                  const SizedBox(width: 12),
+                  // 日期信息
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '$month月$day日',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: skin.text1),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(weekday, style: MistralTypography.caption.copyWith(color: skin.text3)),
+                            if (isToday) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: skin.accent.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '今天',
+                                  style: TextStyle(fontSize: 11, color: skin.accent, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '签到成功 +${sl<CheckInService>().checkInReward} 尖叫币',
+                          style: MistralTypography.caption.copyWith(color: skin.text3),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // 尖叫币图标
+                  MonsterIcon(size: 20, showCircle: true, circleColor: skin.vipGoldBg.withValues(alpha: 0.15)),
+                ],
+              ),
+            ),
+          );
+        }, childCount: monthDates.length),
       ),
     );
   }
@@ -694,11 +607,7 @@ class _MonthSwitchArrow extends StatelessWidget {
   final VoidCallback? onTap;
   final ThemeVars skin;
 
-  const _MonthSwitchArrow({
-    required this.icon,
-    required this.onTap,
-    required this.skin,
-  });
+  const _MonthSwitchArrow({required this.icon, required this.onTap, required this.skin});
 
   @override
   Widget build(BuildContext context) {
@@ -709,16 +618,10 @@ class _MonthSwitchArrow extends StatelessWidget {
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: onTap != null
-              ? skin.cardBgAlt
-              : skin.divider.withValues(alpha: 0.3),
+          color: onTap != null ? skin.cardBgAlt : skin.divider.withValues(alpha: 0.3),
           shape: BoxShape.circle,
         ),
-        child: Icon(
-          icon,
-          size: 18,
-          color: onTap != null ? skin.text1 : skin.text3,
-        ),
+        child: Icon(icon, size: 18, color: onTap != null ? skin.text1 : skin.text3),
       ),
     );
   }

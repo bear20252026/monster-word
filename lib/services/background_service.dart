@@ -87,33 +87,20 @@ class _SyncListenerImpl implements SyncListener {
 /// 通知服务（翻译自 NotiService.java）
 /// Android 原版是前台 Service，Flutter 用 flutter_local_notifications 替代
 class NotiService {
-  static const String actionNoti =
-      'cn.com.langeasy.LangEasyLexis.Notification';
+  static const String actionNoti = 'cn.com.langeasy.LangEasyLexis.Notification';
   static const int notifyId = 10;
   static const String channelId = 'bbdc';
   static const String channelName = '不背单词通知';
 
   /// 创建通知 Intent 数据（原版 createIntent）
   /// 返回通知所需的数据 Map
-  static Map<String, String> createNotificationData(
-    String title,
-    String content,
-    String ticker,
-  ) {
-    return {
-      'title': title,
-      'content': content,
-      'ticker': ticker,
-    };
+  static Map<String, String> createNotificationData(String title, String content, String ticker) {
+    return {'title': title, 'content': content, 'ticker': ticker};
   }
 
   /// 显示通知（原版 onStartCommand 逻辑）
   /// 需要 flutter_local_notifications 包
-  static Future<void> showNotification({
-    required String title,
-    required String content,
-    String? ticker,
-  }) async {
+  static Future<void> showNotification({required String title, required String content, String? ticker}) async {
     // TODO: 需要 flutter_local_notifications 集成
     // final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
     // const androidDetails = AndroidNotificationDetails(
@@ -329,7 +316,8 @@ class NetDiagnosisUtil {
   static bool _isProxyEnabled() {
     // Flutter 无法直接检测系统代理
     // 可以通过检查 http.proxyFromEnvironment 间接判断
-    final proxy = Platform.environment['http_proxy'] ??
+    final proxy =
+        Platform.environment['http_proxy'] ??
         Platform.environment['HTTP_PROXY'] ??
         Platform.environment['https_proxy'] ??
         Platform.environment['HTTPS_PROXY'];
@@ -338,7 +326,8 @@ class NetDiagnosisUtil {
 
   /// 获取代理信息
   static String _getProxyInfo() {
-    final proxy = Platform.environment['http_proxy'] ??
+    final proxy =
+        Platform.environment['http_proxy'] ??
         Platform.environment['HTTP_PROXY'] ??
         Platform.environment['https_proxy'] ??
         Platform.environment['HTTPS_PROXY'];
@@ -348,10 +337,7 @@ class NetDiagnosisUtil {
   /// 获取设备 IP（原版 getDeviceIp）
   static Future<String> getDeviceIp() async {
     try {
-      final interfaces = await NetworkInterface.list(
-        type: InternetAddressType.IPv4,
-        includeLinkLocal: false,
-      );
+      final interfaces = await NetworkInterface.list(type: InternetAddressType.IPv4, includeLinkLocal: false);
       for (final interface in interfaces) {
         for (final addr in interface.addresses) {
           if (!addr.isLoopback) {
@@ -386,10 +372,7 @@ class DimImage {
   /// 生成模糊背景图（原版 createBackgroundBlurImage）
   /// 在后台 Isolate 中执行，避免阻塞 UI
   static Future<void> createBackgroundBlurImage(String imagePath) async {
-    final dimPath = imagePath.replaceAll(
-      RegExp(r'\.(jpg|jpeg|png)$'),
-      '_dim.jpg',
-    );
+    final dimPath = imagePath.replaceAll(RegExp(r'\.(jpg|jpeg|png)$'), '_dim.jpg');
     final dimFile = File(dimPath);
 
     if (await dimFile.exists()) {
@@ -411,10 +394,7 @@ class DimImage {
   /// 生成模糊背景图 2（原版 createBgBlurImage2）
   /// 轻度模糊（radius=20 vs 60）
   static Future<void> createBgBlurImage2(String imagePath) async {
-    final dimPath = imagePath.replaceAll(
-      RegExp(r'\.(jpg|jpeg|png)$'),
-      '_dim2.jpg',
-    );
+    final dimPath = imagePath.replaceAll(RegExp(r'\.(jpg|jpeg|png)$'), '_dim2.jpg');
     final dimFile = File(dimPath);
 
     if (await dimFile.exists()) {
@@ -467,19 +447,11 @@ class Unzip {
 
   /// 解压文件（原版 unzipFile，带回调）
   /// 在后台 Isolate 中执行
-  static Future<void> unzipFile(
-    String zipPath,
-    String destDir,
-    String? suffix,
-    UnzipCallback? callback,
-  ) async {
+  static Future<void> unzipFile(String zipPath, String destDir, String? suffix, UnzipCallback? callback) async {
     debugPrint('$_logTag: 开始解压: $zipPath');
 
     try {
-      final result = await compute(
-        _unzipIsolate,
-        _UnzipParams(zipPath, destDir, suffix),
-      );
+      final result = await compute(_unzipIsolate, _UnzipParams(zipPath, destDir, suffix));
 
       if (result) {
         debugPrint('$_logTag: 解压成功: $zipPath');
@@ -495,22 +467,13 @@ class Unzip {
   }
 
   /// 解压文件（无回调版本）
-  static Future<void> unzipFileSimple(
-    String zipPath,
-    String destDir,
-    String? suffix,
-    UnzipCallback? callback,
-  ) async {
+  static Future<void> unzipFileSimple(String zipPath, String destDir, String? suffix, UnzipCallback? callback) async {
     unzipFile(zipPath, destDir, suffix, callback);
   }
 
   /// 同步解压（原版 unzip）
   /// 在当前 Isolate 中执行
-  static Future<bool> unzip(
-    String zipPath,
-    String destDir,
-    String? suffix,
-  ) async {
+  static Future<bool> unzip(String zipPath, String destDir, String? suffix) async {
     try {
       final file = File(zipPath);
       if (!await file.exists()) {

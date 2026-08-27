@@ -153,10 +153,7 @@ class ISKRuntimeWatch {
 
   void _remove(String? name) {
     if (name == null) {
-      developer.log(
-        "\n----- ISKRuntimeWatch:The items doesn't include the item !!! name = null",
-        name: _logTag,
-      );
+      developer.log("\n----- ISKRuntimeWatch:The items doesn't include the item !!! name = null", name: _logTag);
       return;
     }
     _items.remove(name);
@@ -164,10 +161,7 @@ class ISKRuntimeWatch {
 
   ISKRuntimeWatchItem? _get(String? name) {
     if (name == null) {
-      developer.log(
-        '\n ----- ISKRuntimeWatch:The name is null, return null !!! ',
-        name: _logTag,
-      );
+      developer.log('\n ----- ISKRuntimeWatch:The name is null, return null !!! ', name: _logTag);
       return null;
     }
     return _items[name];
@@ -177,22 +171,13 @@ class ISKRuntimeWatch {
   void print(String name) {
     final item = _getInstance._get(name);
     if (item == null) {
-      developer.log(
-        '\n----- ISKRuntimeWatch:Not watch the 【$name】event !!! ',
-        name: _logTag,
-      );
+      developer.log('\n----- ISKRuntimeWatch:Not watch the 【$name】event !!! ', name: _logTag);
       return;
     }
     if (item.getStopped() == 0) {
-      developer.log(
-        '\n----- item is running :${item.toString()}',
-        name: _logTag,
-      );
+      developer.log('\n----- item is running :${item.toString()}', name: _logTag);
     } else {
-      developer.log(
-        '\n----- item :${item.toString()}',
-        name: _logTag,
-      );
+      developer.log('\n----- item :${item.toString()}', name: _logTag);
     }
   }
 }
@@ -253,10 +238,7 @@ class BBStatisticianExt {
   /// Java 原版会检查 userId 并初始化 LexisDaily
   void startTrackingApp() {
     if (_isUserIdEmpty?.call() ?? true) {
-      developer.log(
-        "\n----- startTrackingApp:Can't start! user is null !!! ",
-        name: _logTag,
-      );
+      developer.log("\n----- startTrackingApp:Can't start! user is null !!! ", name: _logTag);
       return;
     }
     _onTrackingAppStart?.call();
@@ -323,10 +305,7 @@ class BBStatisticianExt {
 
   void _startTracking(String? name) {
     if (name == null) {
-      developer.log(
-        "\n----- BBStatistician:The name is null !!! ",
-        name: _logTag,
-      );
+      developer.log("\n----- BBStatistician:The name is null !!! ", name: _logTag);
       return;
     }
     if (_items.contains(name)) return;
@@ -336,10 +315,7 @@ class BBStatisticianExt {
 
   void _endTracing(String? name) {
     if (name == null) {
-      developer.log(
-        "\n----- BBStatistician:Are you kidding me! The name is null !!! ",
-        name: _logTag,
-      );
+      developer.log("\n----- BBStatistician:Are you kidding me! The name is null !!! ", name: _logTag);
       return;
     }
     _items.remove(name);

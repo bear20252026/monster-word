@@ -11,11 +11,7 @@ class DefinitionView extends StatelessWidget {
   final List<Definition> definitions;
   final bool compact;
 
-  const DefinitionView({
-    super.key,
-    required this.definitions,
-    this.compact = false,
-  });
+  const DefinitionView({super.key, required this.definitions, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -49,10 +45,7 @@ class DefinitionView extends StatelessWidget {
                 ),
                 child: Text(
                   entry.key,
-                  style: MistralTypography.caption.copyWith(
-                    color: skin.colors.accent,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: MistralTypography.caption.copyWith(color: skin.colors.accent, fontWeight: FontWeight.w600),
                 ),
               ),
               const SizedBox(height: 6),
@@ -70,17 +63,12 @@ class DefinitionView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (!compact) ...[
-                            Text('$idx. ',
-                              style: MistralTypography.bodySm.copyWith(
-                                color: skin.colors.text3,
-                              )),
+                            Text('$idx. ', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
                           ],
                           Expanded(
                             child: RichText(
                               text: TextSpan(
-                                style: MistralTypography.body.copyWith(
-                                  color: skin.colors.text1,
-                                ),
+                                style: MistralTypography.body.copyWith(color: skin.colors.text1),
                                 children: [
                                   if (def.cnDef.isNotEmpty)
                                     TextSpan(
@@ -95,10 +83,7 @@ class DefinitionView extends StatelessWidget {
                                   if (def.enDef.isNotEmpty)
                                     TextSpan(
                                       text: def.enDef,
-                                      style: TextStyle(
-                                        color: skin.colors.text2,
-                                        fontStyle: FontStyle.italic,
-                                      ),
+                                      style: TextStyle(color: skin.colors.text2, fontStyle: FontStyle.italic),
                                     ),
                                 ],
                               ),
@@ -109,39 +94,34 @@ class DefinitionView extends StatelessWidget {
                       // 例句
                       if (!compact && def.examples.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        ...def.examples.take(2).map((ex) => Padding(
-                          padding: const EdgeInsets.only(left: 16, bottom: 2),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('• ',
-                                style: MistralTypography.caption.copyWith(
-                                  color: skin.colors.text3,
-                                ),
-                              ),
-                              Expanded(
-                                child: RichText(
-                                  text: TextSpan(
-                                    style: MistralTypography.caption.copyWith(
-                                      color: skin.colors.text2,
-                                    ),
-                                    children: [
-                                      TextSpan(text: ex.en),
-                                      if (ex.en.isNotEmpty && ex.cn.isNotEmpty)
-                                        const TextSpan(text: '  '),
-                                      TextSpan(
-                                        text: ex.cn,
-                                        style: TextStyle(
-                                          color: skin.colors.text3,
+                        ...def.examples
+                            .take(2)
+                            .map(
+                              (ex) => Padding(
+                                padding: const EdgeInsets.only(left: 16, bottom: 2),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('• ', style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
+                                    Expanded(
+                                      child: RichText(
+                                        text: TextSpan(
+                                          style: MistralTypography.caption.copyWith(color: skin.colors.text2),
+                                          children: [
+                                            TextSpan(text: ex.en),
+                                            if (ex.en.isNotEmpty && ex.cn.isNotEmpty) const TextSpan(text: '  '),
+                                            TextSpan(
+                                              text: ex.cn,
+                                              style: TextStyle(color: skin.colors.text3),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                        )),
+                            ),
                       ],
                     ],
                   ),

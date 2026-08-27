@@ -81,36 +81,23 @@ class BBWordProcess {
     List<String>? confusedWordList,
     List<String>? confusedWordExpList,
     List<String>? spells,
-  })  : confusedWordList = confusedWordList ?? [],
-        confusedWordExpList = confusedWordExpList ?? [],
-        spells = spells ?? [];
+  }) : confusedWordList = confusedWordList ?? [],
+       confusedWordExpList = confusedWordExpList ?? [],
+       spells = spells ?? [];
 
   /// 从词库 JSON（zpk 词条）初始化
-  factory BBWordProcess.fromWordJson(
-    String word,
-    Map<String, dynamic> json, {
-    String? zpk,
-  }) {
+  factory BBWordProcess.fromWordJson(String word, Map<String, dynamic> json, {String? zpk}) {
     return BBWordProcess(
       word: word,
       wordId: (json['word_id'] as num?)?.toInt() ?? 0,
       interpret: json['interpret'] ?? '',
       usPron: json['us_pron'] ?? '',
       ukPron: json['uk_pron'] ?? '',
-      example: json['example'] != null
-          ? json['example'].toString()
-          : '',
+      example: json['example'] != null ? json['example'].toString() : '',
       zpk: zpk ?? '',
-      confusedWordList: (json['confuse'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
-      confusedWordExpList: (json['confuse_exps'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
-      spells: (json['spell'] as List?)?.map((e) => e.toString()).toList() ??
-          [],
+      confusedWordList: (json['confuse'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      confusedWordExpList: (json['confuse_exps'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      spells: (json['spell'] as List?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
 
@@ -193,29 +180,29 @@ class BBWordProcess {
   List<String> get confusedWordListSafe => confusedWordList;
 
   factory BBWordProcess.fromMap(Map<String, dynamic> map) => BBWordProcess(
-        id: (map['id'] as num?)?.toInt() ?? 0,
-        word: map['word'] ?? '',
-        wordId: (map['word_id'] as num?)?.toInt() ?? 0,
-        freq: (map['freq'] as num?)?.toInt() ?? 0,
-        state: (map['state'] as num?)?.toInt() ?? 0,
-        level: (map['level'] as num?)?.toInt() ?? 0,
-        position: (map['position'] as num?)?.toInt() ?? 0,
-        reviewDate: map['reviewdate'] ?? '',
-        process: (map['process'] as num?)?.toInt() ?? 0,
-        success: (map['success'] as num?)?.toInt() ?? 0,
-        fail: (map['fail'] as num?)?.toInt() ?? 0,
-        duration: (map['duration'] as num?)?.toInt() ?? 0,
-        eFactor: (map['efactor'] as num?)?.toDouble() ?? 2.5,
-        reFail: (map['reFail'] as num?)?.toInt() ?? 0,
-        reSuccess: (map['reSuccess'] as num?)?.toInt() ?? 0,
-        comeFrom: (map['comeFrom'] as num?)?.toInt() ?? 0,
-        interpret: map['interpret'] ?? '',
-        usPron: map['us_pron'] ?? '',
-        ukPron: map['uk_pron'] ?? '',
-        example: map['example'] ?? '',
-        updateTime: map['updatetime'] ?? '',
-        syncTime: map['synTime'] ?? '',
-        zpk: map['zpk'] ?? '',
-        oldZpk: map['old_zpk'] ?? '',
-      );
+    id: (map['id'] as num?)?.toInt() ?? 0,
+    word: map['word'] ?? '',
+    wordId: (map['word_id'] as num?)?.toInt() ?? 0,
+    freq: (map['freq'] as num?)?.toInt() ?? 0,
+    state: (map['state'] as num?)?.toInt() ?? 0,
+    level: (map['level'] as num?)?.toInt() ?? 0,
+    position: (map['position'] as num?)?.toInt() ?? 0,
+    reviewDate: map['reviewdate'] ?? '',
+    process: (map['process'] as num?)?.toInt() ?? 0,
+    success: (map['success'] as num?)?.toInt() ?? 0,
+    fail: (map['fail'] as num?)?.toInt() ?? 0,
+    duration: (map['duration'] as num?)?.toInt() ?? 0,
+    eFactor: (map['efactor'] as num?)?.toDouble() ?? 2.5,
+    reFail: (map['reFail'] as num?)?.toInt() ?? 0,
+    reSuccess: (map['reSuccess'] as num?)?.toInt() ?? 0,
+    comeFrom: (map['comeFrom'] as num?)?.toInt() ?? 0,
+    interpret: map['interpret'] ?? '',
+    usPron: map['us_pron'] ?? '',
+    ukPron: map['uk_pron'] ?? '',
+    example: map['example'] ?? '',
+    updateTime: map['updatetime'] ?? '',
+    syncTime: map['synTime'] ?? '',
+    zpk: map['zpk'] ?? '',
+    oldZpk: map['old_zpk'] ?? '',
+  );
 }

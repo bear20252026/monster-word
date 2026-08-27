@@ -82,8 +82,10 @@ class _AppearancePageState extends State<AppearancePage> {
           ),
           Expanded(
             child: Center(
-              child: Text('外观 & 沉浸场景',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1)),
+              child: Text(
+                '外观 & 沉浸场景',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1),
+              ),
             ),
           ),
           const SizedBox(width: 48),
@@ -112,40 +114,54 @@ class _AppearancePageState extends State<AppearancePage> {
               children: [
                 // 模拟壁纸内容
                 Positioned(
-                  top: 40, left: 20, right: 20,
+                  top: 40,
+                  left: 20,
+                  right: 20,
                   child: Container(
-                    height: 30, decoration: BoxDecoration(
+                    height: 30,
+                    decoration: BoxDecoration(
                       color: AppColors.white100.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                   ),
                 ),
                 Positioned(
-                  bottom: 30, left: 16, right: 16,
+                  bottom: 30,
+                  left: 16,
+                  right: 16,
                   child: Row(
                     children: [
-                      Expanded(child: Container(
-                        height: 24, decoration: BoxDecoration(
-                          color: AppColors.white100.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                      Expanded(
+                        child: Container(
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: AppColors.white100.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                          ),
                         ),
-                      )),
+                      ),
                       const SizedBox(width: AppleSpacing.xs),
-                      Expanded(child: Container(
-                        height: 24, decoration: BoxDecoration(
-                          color: AppColors.white100.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                      Expanded(
+                        child: Container(
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: AppColors.white100.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                          ),
                         ),
-                      )),
+                      ),
                     ],
                   ),
                 ),
                 // 锁图标
                 Positioned(
-                  top: 80, left: 0, right: 0,
+                  top: 80,
+                  left: 0,
+                  right: 0,
                   child: Center(
                     child: Container(
-                      width: 36, height: 36,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: AppColors.white100.withValues(alpha: 0.6),
                         shape: BoxShape.circle,
@@ -163,30 +179,35 @@ class _AppearancePageState extends State<AppearancePage> {
         Expanded(
           child: Container(
             height: 220,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.xl),
-              color: skin.colors.cardBgAlt,
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppRadius.xl), color: skin.colors.cardBgAlt),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(width: 60, height: 10, decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(AppRadius.xs),
-                  )),
+                  Container(
+                    width: 60,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                    ),
+                  ),
                   const SizedBox(height: AppleSpacing.sm),
-                  ...List.generate(4, (i) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Container(
-                      height: 10,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: AppColors.white100.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(AppRadius.xs),
+                  ...List.generate(
+                    4,
+                    (i) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Container(
+                        height: 10,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppColors.white100.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(AppRadius.xs),
+                        ),
                       ),
                     ),
-                  )),
+                  ),
                 ],
               ),
             ),
@@ -200,10 +221,7 @@ class _AppearancePageState extends State<AppearancePage> {
   Widget _buildThemeCircles(SkinSystem skin) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-      ),
+      decoration: BoxDecoration(color: skin.colors.cardBg, borderRadius: BorderRadius.circular(AppRadius.xl)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: themes.values.map((preset) {
@@ -223,19 +241,17 @@ class _AppearancePageState extends State<AppearancePage> {
                       width: isSelected ? 3 : 1,
                     ),
                   ),
-                  child: isSelected
-                      ? Center(
-                          child: Icon(Icons.check, color: skin.colors.accent, size: 20),
-                        )
-                      : null,
+                  child: isSelected ? Center(child: Icon(Icons.check, color: skin.colors.accent, size: 20)) : null,
                 ),
                 const SizedBox(height: AppleSpacing.xs),
-                Text(preset.name,
+                Text(
+                  preset.name,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                     color: isSelected ? skin.colors.text1 : skin.colors.text3,
-                  )),
+                  ),
+                ),
               ],
             ),
           );
@@ -248,10 +264,7 @@ class _AppearancePageState extends State<AppearancePage> {
   Widget _buildFollowSystemRow(SkinSystem skin) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-      ),
+      decoration: BoxDecoration(color: skin.colors.cardBg, borderRadius: BorderRadius.circular(AppRadius.xl)),
       child: Row(
         children: [
           Expanded(
@@ -280,18 +293,14 @@ class _AppearancePageState extends State<AppearancePage> {
   Widget _buildFontRow(SkinSystem skin) {
     final current = skin.fontFamilyOverride;
     final currentLabel = _fontChoices.entries
-        .firstWhere((e) => e.value == current,
-            orElse: () => _fontChoices.entries.first)
+        .firstWhere((e) => e.value == current, orElse: () => _fontChoices.entries.first)
         .key;
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadius.xl),
       onTap: () => _showFontDialog(context, skin),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: skin.colors.cardBg,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-        ),
+        decoration: BoxDecoration(color: skin.colors.cardBg, borderRadius: BorderRadius.circular(AppRadius.xl)),
         child: Row(
           children: [
             Expanded(
@@ -335,10 +344,7 @@ class _AppearancePageState extends State<AppearancePage> {
       onTap: () => _showImmersiveSheet(skin),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: skin.colors.cardBg,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-        ),
+        decoration: BoxDecoration(color: skin.colors.cardBg, borderRadius: BorderRadius.circular(AppRadius.xl)),
         child: Row(
           children: [
             Expanded(
@@ -357,9 +363,7 @@ class _AppearancePageState extends State<AppearancePage> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: skin.colors.cardBg,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -367,11 +371,10 @@ class _AppearancePageState extends State<AppearancePage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('沉浸场景',
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: skin.colors.text1)),
+              Text(
+                '沉浸场景',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: skin.colors.text1),
+              ),
               const SizedBox(height: 12),
               Text(
                 '全屏滑动式背单词模式：整词卡片左右滑动作答，无界面干扰，'

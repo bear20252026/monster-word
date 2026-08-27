@@ -3,6 +3,7 @@
 // 使用 ThemeVars 语义 token，支持深色模式
 
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import '../tokens/motion_tokens.dart';
 
@@ -35,12 +36,7 @@ class SbSegmented<T> extends StatelessWidget {
   /// 选中项变化回调
   final ValueChanged<T> onChanged;
 
-  const SbSegmented({
-    super.key,
-    required this.segments,
-    required this.value,
-    required this.onChanged,
-  });
+  const SbSegmented({super.key, required this.segments, required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -49,69 +45,62 @@ class SbSegmented<T> extends StatelessWidget {
     final colors = context.skin.colors;
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: colors.cardBgAlt,
-        borderRadius: BorderRadius.circular(50),
-      ),
-      child: LayoutBuilder(builder: (context, c) {
-        final w = (c.maxWidth - 8) / keys.length;
-        return Stack(children: [
-          // 选中滑块：cardBg 小卡浮起 + 双层阴影
-          AnimatedAlign(
-            alignment: Alignment(i * 2 / (keys.length - 1) - 1, 0),
-            duration: MotionDurations.base,
-            curve: Curves.ease, // motion_tokens: Curves.easeOut 可替代，保留 ease 匹配星巴克原规格
-            child: SizedBox(
-              width: w,
-              height: 44,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.cardBg,
-                  borderRadius: BorderRadius.circular(50),
-                  boxShadow: const [
-                    // 双层阴影（同 §2 ContentCard）
-                    BoxShadow(
-                      offset: Offset.zero,
-                      blurRadius: 0.5,
-                      color: Color(0x24000000),
-                    ),
-                    BoxShadow(
-                      offset: Offset(0, 1),
-                      blurRadius: 1,
-                      color: Color(0x3D000000),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // 分段文字
-          Row(children: [
-            for (final k in keys)
-              Expanded(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(50),
-                  onTap: () => onChanged(k),
-                  child: SizedBox(
-                    height: 44,
-                    child: Center(
-                      child: Text(
-                        segments[k]!,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: k == value
-                              ? FontWeight.w600
-                              : FontWeight.w400,
-                          color: k == value ? colors.accent : colors.text1,
-                        ),
-                      ),
+      decoration: BoxDecoration(color: colors.cardBgAlt, borderRadius: BorderRadius.circular(50)),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final w = (c.maxWidth - 8) / keys.length;
+          return Stack(
+            children: [
+              // 选中滑块：cardBg 小卡浮起 + 双层阴影
+              AnimatedAlign(
+                alignment: Alignment(i * 2 / (keys.length - 1) - 1, 0),
+                duration: MotionDurations.base,
+                curve: Curves.ease, // motion_tokens: Curves.easeOut 可替代，保留 ease 匹配星巴克原规格
+                child: SizedBox(
+                  width: w,
+                  height: 44,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.cardBg,
+                      borderRadius: BorderRadius.circular(50),
+                      boxShadow: const [
+                        // 双层阴影（同 §2 ContentCard）
+                        BoxShadow(offset: Offset.zero, blurRadius: 0.5, color: Color(0x24000000)),
+                        BoxShadow(offset: Offset(0, 1), blurRadius: 1, color: Color(0x3D000000)),
+                      ],
                     ),
                   ),
                 ),
               ),
-          ]),
-        ]);
-      }),
+              // 分段文字
+              Row(
+                children: [
+                  for (final k in keys)
+                    Expanded(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(50),
+                        onTap: () => onChanged(k),
+                        child: SizedBox(
+                          height: 44,
+                          child: Center(
+                            child: Text(
+                              segments[k]!,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: k == value ? FontWeight.w600 : FontWeight.w400,
+                                color: k == value ? colors.accent : colors.text1,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

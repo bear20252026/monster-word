@@ -2,6 +2,7 @@
 // 样式：圆角 + 阴影 + 半透明背景
 // 点击可进入字典详情页
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../core/di/service_locator.dart';
@@ -23,18 +24,11 @@ class WordLookupPopup extends StatelessWidget {
   final String word;
   final Widget child;
 
-  const WordLookupPopup({
-    super.key,
-    required this.word,
-    required this.child,
-  });
+  const WordLookupPopup({super.key, required this.word, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onLongPressStart: (details) => _showPopup(context, details.globalPosition),
-      child: child,
-    );
+    return GestureDetector(onLongPressStart: (details) => _showPopup(context, details.globalPosition), child: child);
   }
 
   void _showPopup(BuildContext context, Offset position) async {
@@ -119,11 +113,7 @@ class _PopupCard extends StatelessWidget {
   final Word? wordData;
   final VoidCallback onTap;
 
-  const _PopupCard({
-    required this.word,
-    required this.wordData,
-    required this.onTap,
-  });
+  const _PopupCard({required this.word, required this.wordData, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -136,11 +126,7 @@ class _PopupCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.xl),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 16, offset: const Offset(0, 4)),
           ],
         ),
         child: ClipRRect(
@@ -151,15 +137,10 @@ class _PopupCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: skin.cardBg.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(AppRadius.xl),
-                border: Border.all(
-                  color: skin.divider.withValues(alpha: 0.5),
-                  width: 0.5,
-                ),
+                border: Border.all(color: skin.divider.withValues(alpha: 0.5), width: 0.5),
               ),
               padding: const EdgeInsets.all(16),
-              child: wordData != null
-                  ? _buildContent(skin)
-                  : _buildNotFound(skin),
+              child: wordData != null ? _buildContent(skin) : _buildNotFound(skin),
             ),
           ),
         ),
@@ -169,9 +150,7 @@ class _PopupCard extends StatelessWidget {
 
   Widget _buildContent(ThemeVars skin) {
     final w = wordData!;
-    final meaningText = w.hasStructuredDefinitions
-        ? w.formattedDefinitions
-        : w.interpret;
+    final meaningText = w.hasStructuredDefinitions ? w.formattedDefinitions : w.interpret;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -181,20 +160,11 @@ class _PopupCard extends StatelessWidget {
           children: [
             Text(
               w.word,
-              style: MistralTypography.heading5.copyWith(
-                color: skin.text1,
-                fontWeight: FontWeight.w700,
-              ),
+              style: MistralTypography.heading5.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
             ),
             if (w.usPron.isNotEmpty) ...[
               const SizedBox(width: 8),
-              Text(
-                '/${w.usPron}/',
-                style: MistralTypography.body.copyWith(
-                  color: skin.text3,
-                  fontSize: 13,
-                ),
-              ),
+              Text('/${w.usPron}/', style: MistralTypography.body.copyWith(color: skin.text3, fontSize: 13)),
             ],
           ],
         ),
@@ -203,11 +173,7 @@ class _PopupCard extends StatelessWidget {
         if (meaningText.isNotEmpty)
           Text(
             meaningText,
-            style: MistralTypography.body.copyWith(
-              color: skin.text2,
-              fontSize: 14,
-              height: 1.5,
-            ),
+            style: MistralTypography.body.copyWith(color: skin.text2, fontSize: 14, height: 1.5),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
           ),
@@ -217,10 +183,7 @@ class _PopupCard extends StatelessWidget {
           children: [
             Icon(Icons.touch_app, size: 14, color: skin.text3),
             const SizedBox(width: 4),
-            Text(
-              '点击查看详情',
-              style: MistralTypography.micro.copyWith(color: skin.text3),
-            ),
+            Text('点击查看详情', style: MistralTypography.micro.copyWith(color: skin.text3)),
             const Spacer(),
             Icon(Icons.arrow_forward_ios, size: 12, color: skin.text3),
           ],
@@ -236,16 +199,10 @@ class _PopupCard extends StatelessWidget {
       children: [
         Text(
           word,
-          style: MistralTypography.heading5.copyWith(
-            color: skin.text1,
-            fontWeight: FontWeight.w700,
-          ),
+          style: MistralTypography.heading5.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
-        Text(
-          '未找到该单词',
-          style: MistralTypography.body.copyWith(color: skin.text3),
-        ),
+        Text('未找到该单词', style: MistralTypography.body.copyWith(color: skin.text3)),
       ],
     );
   }

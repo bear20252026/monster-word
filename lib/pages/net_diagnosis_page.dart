@@ -3,6 +3,7 @@
 // 移植自 v3.2 NetDiagnosisActivity
 // 网络诊断：检测网络连接状态和 API 可达性
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../theme/skin_system.dart';
@@ -13,11 +14,7 @@ class DiagnosisResult {
   final bool success;
   final String detail;
 
-  const DiagnosisResult({
-    required this.name,
-    required this.success,
-    required this.detail,
-  });
+  const DiagnosisResult({required this.name, required this.success, required this.detail});
 }
 
 class NetDiagnosisPage extends StatefulWidget {
@@ -40,22 +37,13 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
     });
 
     // 模拟网络诊断步骤
-    final steps = [
-      ('网络连接', true, '已连接'),
-      ('DNS 解析', true, '解析成功'),
-      ('API 服务器', true, '可达'),
-      ('数据同步', true, '正常'),
-    ];
+    final steps = [('网络连接', true, '已连接'), ('DNS 解析', true, '解析成功'), ('API 服务器', true, '可达'), ('数据同步', true, '正常')];
 
     for (final step in steps) {
       await Future.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
       setState(() {
-        _results.add(DiagnosisResult(
-          name: step.$1,
-          success: step.$2,
-          detail: step.$3,
-        ));
+        _results.add(DiagnosisResult(name: step.$1, success: step.$2, detail: step.$3));
       });
     }
 
@@ -82,10 +70,7 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.only(top: 80),
-                        child: Text(
-                          '点击"开始诊断"检测网络状态',
-                          style: MistralTypography.body.copyWith(color: skin.colors.text3),
-                        ),
+                        child: Text('点击"开始诊断"检测网络状态', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
                       ),
                     ),
                 ],
@@ -101,13 +86,12 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MistralColors.primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
                   ),
                   child: _isRunning
                       ? const SizedBox(
-                          width: 20, height: 20,
+                          width: 20,
+                          height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
                       : const Text('开始诊断'),

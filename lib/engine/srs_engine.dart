@@ -44,27 +44,26 @@ class SrsCard {
 
   /// 序列化（存 shared_preferences）
   Map<String, dynamic> toJson() => {
-        'word': word,
-        'repetitions': repetitions,
-        'interval': interval,
-        'easeFactor': easeFactor,
-        'dueDays': dueDays,
-        'dueDate': dueDate.toIso8601String(),
-        'isNew': isNew,
-        'reviewCount': reviewCount,
-      };
+    'word': word,
+    'repetitions': repetitions,
+    'interval': interval,
+    'easeFactor': easeFactor,
+    'dueDays': dueDays,
+    'dueDate': dueDate.toIso8601String(),
+    'isNew': isNew,
+    'reviewCount': reviewCount,
+  };
 
   factory SrsCard.fromJson(Map<String, dynamic> json) => SrsCard(
-        word: json['word'] as String,
-        repetitions: (json['repetitions'] as num?)?.toInt() ?? 0,
-        interval: (json['interval'] as num?)?.toInt() ?? 0,
-        easeFactor: (json['easeFactor'] as num?)?.toDouble() ?? 2.5,
-        dueDays: (json['dueDays'] as num?)?.toInt() ?? 0,
-        dueDate:
-            DateTime.parse(json['dueDate'] as String? ?? DateTime.now().toIso8601String()),
-        isNew: (json['isNew'] as bool?) ?? true,
-        reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
-      );
+    word: json['word'] as String,
+    repetitions: (json['repetitions'] as num?)?.toInt() ?? 0,
+    interval: (json['interval'] as num?)?.toInt() ?? 0,
+    easeFactor: (json['easeFactor'] as num?)?.toDouble() ?? 2.5,
+    dueDays: (json['dueDays'] as num?)?.toInt() ?? 0,
+    dueDate: DateTime.parse(json['dueDate'] as String? ?? DateTime.now().toIso8601String()),
+    isNew: (json['isNew'] as bool?) ?? true,
+    reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
+  );
 
   /// 克隆（不可变更新）
   SrsCard copy() => SrsCard.fromJson(toJson());
@@ -100,11 +99,7 @@ class SrsEngine {
     }
 
     // 易度因子更新（SM-2 公式）
-    updated.easeFactor = max(
-      1.3,
-      updated.easeFactor +
-          (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)),
-    );
+    updated.easeFactor = max(1.3, updated.easeFactor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
 
     updated.dueDate = now.add(Duration(days: updated.interval));
     updated.isNew = false;

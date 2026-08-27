@@ -89,13 +89,16 @@ class WordBookDatabase {
 
   /// 按词书 ID 取单词（分页）
   Future<List<Word>> getWordsByBook(int bookId, {int limit = 50, int offset = 0}) async {
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT w.* FROM words w
       JOIN word_books wb ON wb.word_id = w.id
       WHERE wb.book_id = ?
       ORDER BY wb.rowid
       LIMIT ? OFFSET ?
-    ''', [bookId, limit, offset]);
+    ''',
+      [bookId, limit, offset],
+    );
     return rows.map(Word.fromMap).toList();
   }
 
@@ -115,10 +118,7 @@ class WordBookDatabase {
     for (var i = 0; i < wordList.length; i += 500) {
       final batch = wordList.sublist(i, (i + 500).clamp(0, wordList.length));
       final placeholders = batch.map((_) => '?').join(',');
-      final rows = await db.rawQuery(
-        'SELECT * FROM words WHERE word IN ($placeholders)',
-        batch,
-      );
+      final rows = await db.rawQuery('SELECT * FROM words WHERE word IN ($placeholders)', batch);
       result.addAll(rows.map(Word.fromMap));
     }
     return result;
@@ -126,24 +126,21 @@ class WordBookDatabase {
 
   /// 模糊搜索（前缀匹配）
   Future<List<Word>> searchWords(String prefix, {int limit = 20}) async {
-    final rows = await db.query(
-      'words',
-      where: 'word LIKE ?',
-      whereArgs: ['$prefix%'],
-      orderBy: 'word',
-      limit: limit,
-    );
+    final rows = await db.query('words', where: 'word LIKE ?', whereArgs: ['$prefix%'], orderBy: 'word', limit: limit);
     return rows.map(Word.fromMap).toList();
   }
 
   /// 单词所属词书
   Future<List<Book>> getBooksOfWord(String word) async {
-    final rows = await db.rawQuery('''
+    final rows = await db.rawQuery(
+      '''
       SELECT b.* FROM books b
       JOIN word_books wb ON wb.book_id = b.id
       JOIN words w ON w.id = wb.word_id
       WHERE w.word = ?
-    ''', [word]);
+    ''',
+      [word],
+    );
     return rows.map(Book.fromMap).toList();
   }
 

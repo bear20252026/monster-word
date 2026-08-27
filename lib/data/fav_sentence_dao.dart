@@ -3,6 +3,7 @@
 // 使用 SharedPreferences 存储（轻量级，无需额外数据库表）
 
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/sentence_models.dart';
@@ -31,9 +32,7 @@ class FavSentenceDao {
 
     try {
       final List<dynamic> jsonList = jsonDecode(jsonStr);
-      _cache = jsonList
-          .map((e) => FavSentenceData.fromJson(e as Map<String, dynamic>))
-          .toList();
+      _cache = jsonList.map((e) => FavSentenceData.fromJson(e as Map<String, dynamic>)).toList();
       // 按更新时间倒序排列
       _cache.sort((a, b) => b.updateTime.compareTo(a.updateTime));
     } catch (e) {
@@ -68,7 +67,8 @@ class FavSentenceDao {
     }
 
     final now = DateTime.now();
-    final updateTime = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
+    final updateTime =
+        '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
 
     final favData = FavSentenceData(
       word: word,
@@ -89,9 +89,7 @@ class FavSentenceDao {
   Future<bool> removeFavSentence(int wordId, String sentenceId) async {
     await loadAll();
 
-    final index = _cache.indexWhere(
-      (e) => e.wordId == wordId && e.sentenceId == sentenceId,
-    );
+    final index = _cache.indexWhere((e) => e.wordId == wordId && e.sentenceId == sentenceId);
 
     if (index == -1) return false;
 
@@ -125,9 +123,7 @@ class FavSentenceDao {
 
   /// 检查是否已收藏
   bool isFavSentence(int wordId, String sentenceId) {
-    return _cache.any(
-      (e) => e.wordId == wordId && e.sentenceId == sentenceId,
-    );
+    return _cache.any((e) => e.wordId == wordId && e.sentenceId == sentenceId);
   }
 
   /// 获取收藏例句数量

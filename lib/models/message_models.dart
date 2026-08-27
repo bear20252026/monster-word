@@ -37,34 +37,34 @@ class MessageData {
   void markHasRead() => read = 1;
 
   factory MessageData.fromJson(Map<String, dynamic> json) => MessageData(
-        newsId: (json['news_id'] as num?)?.toInt() ?? 0,
-        label: json['label'] ?? '',
-        title: json['title'] ?? '',
-        content: json['content'] ?? '',
-        icon: json['icon'] ?? '',
-        image: json['image'] ?? '',
-        clickTip: json['click_tip'] ?? '',
-        actionType: (json['action_type'] as num?)?.toInt() ?? 0,
-        actionData: json['action_data'] ?? '',
-        dataType: (json['data_type'] as num?)?.toInt() ?? 0,
-        read: (json['read'] as num?)?.toInt() ?? 0,
-        time: (json['time'] as num?)?.toInt() ?? 0,
-      );
+    newsId: (json['news_id'] as num?)?.toInt() ?? 0,
+    label: json['label'] ?? '',
+    title: json['title'] ?? '',
+    content: json['content'] ?? '',
+    icon: json['icon'] ?? '',
+    image: json['image'] ?? '',
+    clickTip: json['click_tip'] ?? '',
+    actionType: (json['action_type'] as num?)?.toInt() ?? 0,
+    actionData: json['action_data'] ?? '',
+    dataType: (json['data_type'] as num?)?.toInt() ?? 0,
+    read: (json['read'] as num?)?.toInt() ?? 0,
+    time: (json['time'] as num?)?.toInt() ?? 0,
+  );
 
   Map<String, dynamic> toJson() => {
-        'news_id': newsId,
-        'label': label,
-        'title': title,
-        'content': content,
-        'icon': icon,
-        'image': image,
-        'click_tip': clickTip,
-        'action_type': actionType,
-        'action_data': actionData,
-        'data_type': dataType,
-        'read': read,
-        'time': time,
-      };
+    'news_id': newsId,
+    'label': label,
+    'title': title,
+    'content': content,
+    'icon': icon,
+    'image': image,
+    'click_tip': clickTip,
+    'action_type': actionType,
+    'action_data': actionData,
+    'data_type': dataType,
+    'read': read,
+    'time': time,
+  };
 }
 
 /// 消息集合数据（翻译自 MessageSetData.java）
@@ -93,11 +93,7 @@ class MessageSetData {
     }
   }
 
-  factory MessageSetData.fromJson(Map<String, dynamic> json) =>
-      MessageSetData(
-        (json['list'] as List?)
-                ?.map((e) => MessageData.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-      );
+  factory MessageSetData.fromJson(Map<String, dynamic> json) => MessageSetData(
+    (json['list'] as List?)?.map((e) => MessageData.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+  );
 }

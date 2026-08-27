@@ -3,7 +3,9 @@
 // 由 Claude 团队生成 | 移植自 v3.2 widget/SlideBar.java, SegmentedGroup.java, VerticalDotLine.java, MyBadgeView.java, GuideView2.java, LabGuideView.java, MiddleToast.java, MyCustomeDialog.java, BottomInformationDialog.java, MyWebView.java
 // 特殊功能组件集合
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
+
 // ─────────────────────────────────────────────────────────────
 // SlideBar — 字母索引滑动条（移植自 SlideBar.java）
 // ─────────────────────────────────────────────────────────────
@@ -29,8 +31,32 @@ class SlideBar extends StatefulWidget {
 
 class _SlideBarState extends State<SlideBar> {
   static const _letters = [
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
   ];
   int _choose = -1;
 
@@ -122,9 +148,7 @@ class SegmentedSelector extends StatelessWidget {
                   color: isSelected ? sColor : uColor,
                   borderRadius: BorderRadius.horizontal(
                     left: i == 0 ? const Radius.circular(7) : Radius.zero,
-                    right: i == segments.length - 1
-                        ? const Radius.circular(7)
-                        : Radius.zero,
+                    right: i == segments.length - 1 ? const Radius.circular(7) : Radius.zero,
                   ),
                 ),
                 alignment: Alignment.center,
@@ -154,13 +178,7 @@ class VerticalDotLine extends StatelessWidget {
   final double dashGap;
   final Color? color;
 
-  const VerticalDotLine({
-    super.key,
-    this.width = 1,
-    this.dashHeight = 2,
-    this.dashGap = 4,
-    this.color,
-  });
+  const VerticalDotLine({super.key, this.width = 1, this.dashHeight = 2, this.dashGap = 4, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -183,12 +201,7 @@ class _DotLinePainter extends CustomPainter {
   final double dashGap;
   final double strokeWidth;
 
-  _DotLinePainter({
-    required this.color,
-    required this.dashHeight,
-    required this.dashGap,
-    required this.strokeWidth,
-  });
+  _DotLinePainter({required this.color, required this.dashHeight, required this.dashGap, required this.strokeWidth});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -198,11 +211,7 @@ class _DotLinePainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     double y = 0;
     while (y < size.height) {
-      canvas.drawLine(
-        Offset(size.width / 2, y),
-        Offset(size.width / 2, y + dashHeight),
-        paint,
-      );
+      canvas.drawLine(Offset(size.width / 2, y), Offset(size.width / 2, y + dashHeight), paint);
       y += dashHeight + dashGap;
     }
   }
@@ -220,26 +229,13 @@ class GuideOverlay extends StatelessWidget {
   final VoidCallback? onNext;
   final VoidCallback? onSkip;
 
-  const GuideOverlay({
-    super.key,
-    required this.steps,
-    this.currentStep = 0,
-    this.onNext,
-    this.onSkip,
-  });
+  const GuideOverlay({super.key, required this.steps, this.currentStep = 0, this.onNext, this.onSkip});
 
-  static void show(
-    BuildContext context, {
-    required List<GuideStep> steps,
-    VoidCallback? onComplete,
-  }) {
+  static void show(BuildContext context, {required List<GuideStep> steps, VoidCallback? onComplete}) {
     showDialog(
       context: context,
       barrierColor: Colors.black54,
-      builder: (context) => _GuideOverlayDialog(
-        steps: steps,
-        onComplete: onComplete,
-      ),
+      builder: (context) => _GuideOverlayDialog(steps: steps, onComplete: onComplete),
     );
   }
 
@@ -333,15 +329,13 @@ class _GuideOverlayDialogState extends State<_GuideOverlayDialog> {
                     children: [
                       Text(
                         step.message!,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 18),
+                        style: const TextStyle(color: Colors.white, fontSize: 18),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
                       Text(
                         '${_currentStep + 1}/${widget.steps.length}  点击继续',
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 14),
+                        style: const TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                     ],
                   ),
@@ -355,8 +349,7 @@ class _GuideOverlayDialogState extends State<_GuideOverlayDialog> {
                   Navigator.of(context).pop();
                   widget.onComplete?.call();
                 },
-                child: const Text('跳过',
-                    style: TextStyle(color: Colors.white70)),
+                child: const Text('跳过', style: TextStyle(color: Colors.white70)),
               ),
             ),
           ],
@@ -387,10 +380,7 @@ class AppDialog {
           child: Container(
             width: width ?? MediaQuery.of(context).size.width * 0.85,
             constraints: const BoxConstraints(maxHeight: 500),
-            decoration: BoxDecoration(
-              color: skin.colors.cardBg,
-              borderRadius: BorderRadius.circular(borderRadius),
-            ),
+            decoration: BoxDecoration(color: skin.colors.cardBg, borderRadius: BorderRadius.circular(borderRadius)),
             padding: const EdgeInsets.all(20),
             child: child,
           ),
@@ -399,11 +389,7 @@ class AppDialog {
     );
   }
 
-  static Future<T?> showBottom<T>(
-    BuildContext context, {
-    required Widget child,
-    bool barrierDismissible = true,
-  }) {
+  static Future<T?> showBottom<T>(BuildContext context, {required Widget child, bool barrierDismissible = true}) {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
@@ -460,8 +446,7 @@ class CustomWebView extends StatelessWidget {
           const SizedBox(height: 8),
           Text('WebView: $url', style: const TextStyle(color: Colors.grey)),
           const SizedBox(height: 4),
-          const Text('需要添加 webview_flutter 依赖',
-              style: TextStyle(color: Colors.grey, fontSize: 12)),
+          const Text('需要添加 webview_flutter 依赖', style: TextStyle(color: Colors.grey, fontSize: 12)),
         ],
       ),
     );
@@ -470,7 +455,4 @@ class CustomWebView extends StatelessWidget {
 
 // 需要导入 WebView 相关
 // import 'package:webview_flutter/webview_flutter.dart';
-enum JavaScriptMode {
-  unrestricted,
-  disabled,
-}
+enum JavaScriptMode { unrestricted, disabled }

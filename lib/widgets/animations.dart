@@ -1,6 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 /// Spring animation curve matching Android's SpringInterpolator.
@@ -60,35 +61,27 @@ const Cubic splashExitCurve = Cubic(0.4, 0.0, 0.5, 0.8);
 class ShakeWidget extends AnimatedWidget {
   final Widget child;
 
-  const ShakeWidget({
-    super.key,
-    required AnimationController controller,
-    required this.child,
-  }) : super(listenable: controller);
+  const ShakeWidget({super.key, required AnimationController controller, required this.child})
+    : super(listenable: controller);
 
-  Animation<double> get _offset =>
-      listenable as Animation<double>;
+  Animation<double> get _offset => listenable as Animation<double>;
 
   @override
   Widget build(BuildContext context) {
-    return Transform.translate(
-      offset: Offset(_offset.value, 0),
-      child: child,
-    );
+    return Transform.translate(offset: Offset(_offset.value, 0), child: child);
   }
 }
 
 /// Builds the horizontal shake tween (left-right oscillation).
 /// [amplitude] 抖动幅度（像素），[cycles] 周期数
-Animation<double> buildShakeAnim(
-  AnimationController controller, {
-  double amplitude = 6.0,
-  int cycles = 5,
-}) {
+Animation<double> buildShakeAnim(AnimationController controller, {double amplitude = 6.0, int cycles = 5}) {
   return TweenSequence<double>([
     for (int i = 0; i < cycles; i++) ...[
       TweenSequenceItem(tween: Tween(begin: 0.0, end: -amplitude), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -amplitude, end: amplitude), weight: 2),
+      TweenSequenceItem(
+        tween: Tween(begin: -amplitude, end: amplitude),
+        weight: 2,
+      ),
       TweenSequenceItem(tween: Tween(begin: amplitude, end: 0.0), weight: 1),
     ],
   ]).animate(CurvedAnimation(parent: controller, curve: Curves.linear));
@@ -108,20 +101,14 @@ double computeShakeOffset(double t, {double amplitude = 3.0, int cycles = 1}) {
 class BounceWidget extends AnimatedWidget {
   final Widget child;
 
-  const BounceWidget({
-    super.key,
-    required AnimationController controller,
-    required this.child,
-  }) : super(listenable: controller);
+  const BounceWidget({super.key, required AnimationController controller, required this.child})
+    : super(listenable: controller);
 
   Animation<double> get _scale => listenable as Animation<double>;
 
   @override
   Widget build(BuildContext context) {
-    return Transform.scale(
-      scale: _scale.value,
-      child: child,
-    );
+    return Transform.scale(scale: _scale.value, child: child);
   }
 }
 

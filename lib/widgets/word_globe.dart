@@ -2,11 +2,12 @@
 // 颜色可自定义（默认绿色主题），支持自动旋转和触摸交互
 // 适用于：单词起源展示、关于页背景、启动页装饰、全球用户分布
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 class GlobePoint {
-  final double lat;    // 纬度 (-90 to 90)
-  final double lon;    // 经度 (-180 to 180)
+  final double lat; // 纬度 (-90 to 90)
+  final double lon; // 经度 (-180 to 180)
   final double size;
   final Color color;
   final String? label;
@@ -72,8 +73,7 @@ class WordGlobe extends StatefulWidget {
   State<WordGlobe> createState() => _WordGlobeState();
 }
 
-class _WordGlobeState extends State<WordGlobe>
-    with SingleTickerProviderStateMixin {
+class _WordGlobeState extends State<WordGlobe> with SingleTickerProviderStateMixin {
   late AnimationController _rotationController;
   double _rotationY = 0;
   double _rotationX = 0.3;
@@ -82,10 +82,7 @@ class _WordGlobeState extends State<WordGlobe>
   @override
   void initState() {
     super.initState();
-    _rotationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 20),
-    );
+    _rotationController = AnimationController(vsync: this, duration: const Duration(seconds: 20));
 
     if (widget.autoRotate) {
       _rotationController.addListener(() {
@@ -197,11 +194,7 @@ class _GlobePainter extends CustomPainter {
     // 大气层光晕
     final atmospherePaint = Paint()
       ..shader = RadialGradient(
-        colors: [
-          atmosphereColor.withValues(alpha: 0.15),
-          atmosphereColor.withValues(alpha: 0.05),
-          Colors.transparent,
-        ],
+        colors: [atmosphereColor.withValues(alpha: 0.15), atmosphereColor.withValues(alpha: 0.05), Colors.transparent],
         stops: const [0.7, 0.85, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: radius * 1.2));
     canvas.drawCircle(center, radius * 1.2, atmospherePaint);
@@ -210,11 +203,7 @@ class _GlobePainter extends CustomPainter {
     final globePaint = Paint()
       ..shader = RadialGradient(
         center: const Alignment(-0.3, -0.3),
-        colors: [
-          globeColor.withValues(alpha: 0.9),
-          globeColor,
-          globeColor.withValues(alpha: 0.7),
-        ],
+        colors: [globeColor.withValues(alpha: 0.9), globeColor, globeColor.withValues(alpha: 0.7)],
         stops: const [0.0, 0.6, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
     canvas.drawCircle(center, radius, globePaint);
@@ -236,20 +225,10 @@ class _GlobePainter extends CustomPainter {
     final highlightPaint = Paint()
       ..shader = RadialGradient(
         center: const Alignment(-0.4, -0.4),
-        colors: [
-          Colors.white.withValues(alpha: 0.25),
-          Colors.white.withValues(alpha: 0),
-        ],
+        colors: [Colors.white.withValues(alpha: 0.25), Colors.white.withValues(alpha: 0)],
         stops: const [0.0, 0.5],
-      ).createShader(Rect.fromCircle(
-        center: center + Offset(-radius * 0.25, -radius * 0.25),
-        radius: radius * 0.5,
-      ));
-    canvas.drawCircle(
-      center + Offset(-radius * 0.25, -radius * 0.25),
-      radius * 0.5,
-      highlightPaint,
-    );
+      ).createShader(Rect.fromCircle(center: center + Offset(-radius * 0.25, -radius * 0.25), radius: radius * 0.5));
+    canvas.drawCircle(center + Offset(-radius * 0.25, -radius * 0.25), radius * 0.5, highlightPaint);
   }
 
   void _drawGrid(Canvas canvas, Offset center, double radius) {
@@ -263,10 +242,7 @@ class _GlobePainter extends CustomPainter {
       final lat = i * 30 * math.pi / 180;
       final y = center.dy + radius * math.sin(lat);
       final r = radius * math.cos(lat);
-      canvas.drawOval(
-        Rect.fromCenter(center: Offset(center.dx, y), width: r * 2, height: r * 0.3),
-        gridPaint,
-      );
+      canvas.drawOval(Rect.fromCenter(center: Offset(center.dx, y), width: r * 2, height: r * 0.3), gridPaint);
     }
 
     // 经线（部分可见）
@@ -306,8 +282,7 @@ class _GlobePainter extends CustomPainter {
     canvas.drawCircle(pos, point.size, pointPaint);
 
     // 白色中心
-    final corePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.8);
+    final corePaint = Paint()..color = Colors.white.withValues(alpha: 0.8);
     canvas.drawCircle(pos, point.size * 0.4, corePaint);
   }
 
@@ -328,11 +303,7 @@ class _GlobePainter extends CustomPainter {
 
     final arcPaint = Paint()
       ..shader = LinearGradient(
-        colors: [
-          arc.color.withValues(alpha: 0.2),
-          arc.color.withValues(alpha: 0.8),
-          arc.color.withValues(alpha: 0.2),
-        ],
+        colors: [arc.color.withValues(alpha: 0.2), arc.color.withValues(alpha: 0.8), arc.color.withValues(alpha: 0.2)],
       ).createShader(Rect.fromPoints(from, to))
       ..style = PaintingStyle.stroke
       ..strokeWidth = arc.width;
@@ -360,20 +331,18 @@ class _GlobePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GlobePainter oldDelegate) =>
-      oldDelegate.rotationY != rotationY ||
-      oldDelegate.rotationX != rotationX ||
-      oldDelegate.scale != scale;
+      oldDelegate.rotationY != rotationY || oldDelegate.rotationX != rotationX || oldDelegate.scale != scale;
 }
 
 /// 预设数据：单词起源地
 class WordOriginData {
   static const List<GlobePoint> origins = [
-    GlobePoint(lat: 41.9, lon: 12.5, label: 'Latin', color: Color(0xFFcba258), size: 6),    // 罗马 - 拉丁语
-    GlobePoint(lat: 37.98, lon: 23.72, label: 'Greek', color: Color(0xFF00754A), size: 6),  // 雅典 - 希腊语
-    GlobePoint(lat: 48.85, lon: 2.35, label: 'French', color: Color(0xFF4D96FF), size: 5),  // 巴黎 - 法语
-    GlobePoint(lat: 51.5, lon: -0.12, label: 'English', color: Color(0xFF006241), size: 5),  // 伦敦 - 英语
-    GlobePoint(lat: 52.5, lon: 13.4, label: 'German', color: Color(0xFF6BCB77), size: 4),   // 柏林 - 德语
-    GlobePoint(lat: 36.7, lon: 3.0, label: 'Arabic', color: Color(0xFFFF6B6B), size: 4),     // 阿尔及尔 - 阿拉伯语
+    GlobePoint(lat: 41.9, lon: 12.5, label: 'Latin', color: Color(0xFFcba258), size: 6), // 罗马 - 拉丁语
+    GlobePoint(lat: 37.98, lon: 23.72, label: 'Greek', color: Color(0xFF00754A), size: 6), // 雅典 - 希腊语
+    GlobePoint(lat: 48.85, lon: 2.35, label: 'French', color: Color(0xFF4D96FF), size: 5), // 巴黎 - 法语
+    GlobePoint(lat: 51.5, lon: -0.12, label: 'English', color: Color(0xFF006241), size: 5), // 伦敦 - 英语
+    GlobePoint(lat: 52.5, lon: 13.4, label: 'German', color: Color(0xFF6BCB77), size: 4), // 柏林 - 德语
+    GlobePoint(lat: 36.7, lon: 3.0, label: 'Arabic', color: Color(0xFFFF6B6B), size: 4), // 阿尔及尔 - 阿拉伯语
   ];
 
   static const List<GlobeArc> connections = [

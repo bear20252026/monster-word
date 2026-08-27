@@ -27,9 +27,8 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   bool _wallpaperParallax = true;
 
   void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature 功能即将上线'), duration: const Duration(seconds: 1)),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('$feature 功能即将上线'), duration: const Duration(seconds: 1)));
   }
 
   /// 评价应用弹窗（5星评分）
@@ -40,24 +39,18 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: context.skin.colors.cardBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Column(
             children: [
               const Text('⭐', style: TextStyle(fontSize: 36)),
               const SizedBox(height: 8),
-              Text('给个好评吧！',
-                  style: MistralTypography.heading5
-                      .copyWith(color: context.skin.colors.text1)),
+              Text('给个好评吧！', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('您的支持是我们前进的动力',
-                  style: MistralTypography.body
-                      .copyWith(color: context.skin.colors.text2)),
+              Text('您的支持是我们前进的动力', style: MistralTypography.body.copyWith(color: context.skin.colors.text2)),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -80,26 +73,20 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('取消',
-                  style: TextStyle(color: context.skin.colors.text3)),
+              child: Text('取消', style: TextStyle(color: context.skin.colors.text3)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.skin.colors.accent,
                 foregroundColor: context.skin.colors.onGlassAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
               onPressed: rating == 0
                   ? null
                   : () {
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('感谢您的 $rating 星好评！⭐'),
-                          backgroundColor: context.skin.colors.success,
-                        ),
+                        SnackBar(content: Text('感谢您的 $rating 星好评！⭐'), backgroundColor: context.skin.colors.success),
                       );
                     },
               child: const Text('提交'),
@@ -121,22 +108,20 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           children: [
             const Text('🎉', style: TextStyle(fontSize: 36)),
             const SizedBox(height: 8),
-            Text('已是最新版本',
-                style: MistralTypography.heading5
-                    .copyWith(color: context.skin.colors.text1)),
+            Text('已是最新版本', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
           ],
         ),
-        content: Text('当前版本 v5.11.1 已是最新，无需更新',
-            style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
-            textAlign: TextAlign.center),
+        content: Text(
+          '当前版本 v5.11.1 已是最新，无需更新',
+          style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
+          textAlign: TextAlign.center,
+        ),
         actions: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: context.skin.colors.accent,
               foregroundColor: context.skin.colors.onGlassAccent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             ),
             onPressed: () => Navigator.pop(ctx),
             child: const Text('知道了'),
@@ -162,10 +147,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
               height: 280,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    context.skin.colors.accent,
-                    context.skin.colors.accent.withOpacity(0.7),
-                  ],
+                  colors: [context.skin.colors.accent, context.skin.colors.accent.withOpacity(0.7)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -176,13 +158,15 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                 children: [
                   const Text('👹', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 12),
-                  Text('Monster Word',
-                      style: MistralTypography.heading5
-                          .copyWith(color: context.skin.colors.onGlassAccent)),
+                  Text(
+                    'Monster Word',
+                    style: MistralTypography.heading5.copyWith(color: context.skin.colors.onGlassAccent),
+                  ),
                   const SizedBox(height: 4),
-                  Text('背单词，so easy！',
-                      style: MistralTypography.bodySm
-                          .copyWith(color: context.skin.colors.onGlassAccent.withOpacity(0.9))),
+                  Text(
+                    '背单词，so easy！',
+                    style: MistralTypography.bodySm.copyWith(color: context.skin.colors.onGlassAccent.withOpacity(0.9)),
+                  ),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -190,16 +174,13 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       color: context.skin.colors.onGlassAccent,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text('扫码下载',
-                        style: MistralTypography.micro.copyWith(
-                            color: context.skin.colors.accent)),
+                    child: Text('扫码下载', style: MistralTypography.micro.copyWith(color: context.skin.colors.accent)),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            Text('扫码下载 Monster Word',
-                style: MistralTypography.body.copyWith(color: context.skin.colors.text2)),
+            Text('扫码下载 Monster Word', style: MistralTypography.body.copyWith(color: context.skin.colors.text2)),
           ],
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -226,8 +207,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             _buildNav(skin),
             Expanded(
               child: ListView(
-                padding: EdgeInsets.symmetric(
-                    horizontal: resp.pageMargin, vertical: AppleSpacing.md),
+                padding: EdgeInsets.symmetric(horizontal: resp.pageMargin, vertical: AppleSpacing.md),
                 children: [
                   // 账号信息
                   _SettingGroup([
@@ -249,8 +229,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       title: '主页壁纸随动',
                       subtitle: '壁纸随设备陀螺仪轻微移动',
                       value: _wallpaperParallax,
-                      onChanged: (v) =>
-                          setState(() => _wallpaperParallax = v),
+                      onChanged: (v) => setState(() => _wallpaperParallax = v),
                     ),
                   ]),
                   const SizedBox(height: AppleSpacing.md),
@@ -308,19 +287,9 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
 
                   // 服务条款 / 隐私协议
                   _SettingGroup([
-                    _Cell(
-                      icon: Icons.description_outlined,
-                      iconColor: skin.colors.text3,
-                      title: '服务条款',
-                      onTap: () {},
-                    ),
+                    _Cell(icon: Icons.description_outlined, iconColor: skin.colors.text3, title: '服务条款', onTap: () {}),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
-                    _Cell(
-                      icon: Icons.privacy_tip_outlined,
-                      iconColor: skin.colors.text3,
-                      title: '隐私协议',
-                      onTap: () {},
-                    ),
+                    _Cell(icon: Icons.privacy_tip_outlined, iconColor: skin.colors.text3, title: '隐私协议', onTap: () {}),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
                       icon: Icons.info_outline,
@@ -360,15 +329,10 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       title: '退出登录',
       child: Text(
         '确定要退出登录吗？退出后学习数据将保留在本地，但同步功能将不可用。',
-        style: MistralTypography.bodyMd.copyWith(
-          color: context.skin.colors.text2,
-        ),
+        style: MistralTypography.bodyMd.copyWith(color: context.skin.colors.text2),
       ),
       actions: [
-        SbButton.outlined(
-          label: '取消',
-          onTap: () => Navigator.pop(context),
-        ),
+        SbButton.outlined(label: '取消', onTap: () => Navigator.pop(context)),
         SbButton(
           label: '退出',
           onTap: () {
@@ -387,8 +351,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: skin.colors.cardBg,
-        border: Border(
-            bottom: BorderSide(color: skin.colors.divider, width: 0.5)),
+        border: Border(bottom: BorderSide(color: skin.colors.divider, width: 0.5)),
       ),
       child: Row(
         children: [
@@ -398,9 +361,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('更多设置',
-              style: MistralTypography.heading5
-                  .copyWith(color: skin.colors.text1)),
+          Text('更多设置', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );
@@ -441,13 +402,7 @@ class _Cell extends StatelessWidget {
   final String? subtitle;
   final VoidCallback? onTap;
 
-  const _Cell({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    this.subtitle,
-    this.onTap,
-  });
+  const _Cell({required this.icon, required this.iconColor, required this.title, this.subtitle, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -462,16 +417,12 @@ class _Cell extends StatelessWidget {
             Icon(icon, color: iconColor, size: 22),
             const SizedBox(width: AppleSpacing.sm),
             Expanded(
-              child: Text(title,
-                  style:
-                      MistralTypography.bodyMd.copyWith(color: skin.text1)),
+              child: Text(title, style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
             ),
             if (subtitle != null)
               Padding(
                 padding: const EdgeInsets.only(right: AppleSpacing.xs),
-                child: Text(subtitle!,
-                    style: MistralTypography.bodySm
-                        .copyWith(color: skin.text3)),
+                child: Text(subtitle!, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
               ),
             Icon(Icons.chevron_right, size: 18, color: skin.text3),
           ],
@@ -514,13 +465,8 @@ class _SwitchCell extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: MistralTypography.bodyMd
-                        .copyWith(color: skin.text1)),
-                if (subtitle != null)
-                  Text(subtitle!,
-                      style: MistralTypography.micro
-                          .copyWith(color: skin.text3)),
+                Text(title, style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
+                if (subtitle != null) Text(subtitle!, style: MistralTypography.micro.copyWith(color: skin.text3)),
               ],
             ),
           ),

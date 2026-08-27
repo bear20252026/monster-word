@@ -21,11 +21,8 @@ class MyElementAnimator {
 
   AnimationController? _animController;
 
-  MyElementAnimator({
-    required this.screenHeight,
-    required this.directions,
-    required this.vsync,
-  }) : alphaHeight = screenHeight * 0.125;
+  MyElementAnimator({required this.screenHeight, required this.directions, required this.vsync})
+    : alphaHeight = screenHeight * 0.125;
 
   /// 处理滚动事件
   /// [delta] 垂直滚动偏移量（负值表示上滑）
@@ -36,8 +33,7 @@ class MyElementAnimator {
 
     for (final direction in directions) {
       final translateY = (absDelta * direction.speedFactor).toDouble();
-      final alpha =
-          (1.0 - (translateY.abs() / alphaHeight)).clamp(0.0, 1.0);
+      final alpha = (1.0 - (translateY.abs() / alphaHeight)).clamp(0.0, 1.0);
       direction.update(translateY, alpha);
     }
   }
@@ -47,10 +43,7 @@ class MyElementAnimator {
   /// 动画结束后调用 [onUnlock] 并在 200ms 延迟后重置所有元素
   void finishAnimate(int speedY, {VoidCallback? onUnlock}) {
     if (speedY <= 0) speedY = 1;
-    final durationMs =
-        (((_scrollDelta + screenHeight) / speedY) * 1000)
-            .toInt()
-            .clamp(100, 1000);
+    final durationMs = (((_scrollDelta + screenHeight) / speedY) * 1000).toInt().clamp(100, 1000);
 
     _animController?.dispose();
     _animController = AnimationController(
@@ -58,8 +51,7 @@ class MyElementAnimator {
       vsync: vsync,
     );
 
-    final animation = IntTween(begin: _scrollDelta, end: -screenHeight.toInt())
-        .animate(_animController!);
+    final animation = IntTween(begin: _scrollDelta, end: -screenHeight.toInt()).animate(_animController!);
 
     animation.addListener(() {
       onScroll(animation.value);
@@ -83,8 +75,7 @@ class MyElementAnimator {
   /// 原版：ValueAnimator.ofInt(scrollDelta, 0)
   void rollbackAnimate(int speedY) {
     if (speedY <= 0) speedY = 1;
-    final durationMs =
-        ((-_scrollDelta / speedY) * 1000).toInt().clamp(100, 1000);
+    final durationMs = ((-_scrollDelta / speedY) * 1000).toInt().clamp(100, 1000);
 
     _animController?.dispose();
     _animController = AnimationController(
@@ -92,8 +83,7 @@ class MyElementAnimator {
       vsync: vsync,
     );
 
-    final animation =
-        IntTween(begin: _scrollDelta, end: 0).animate(_animController!);
+    final animation = IntTween(begin: _scrollDelta, end: 0).animate(_animController!);
 
     animation.addListener(() {
       onScroll(animation.value);
@@ -121,8 +111,7 @@ class MyElementAnimator {
   int get scrollDelta => _scrollDelta;
 
   /// 是否正在播放动画
-  bool get isAnimating =>
-      _animController?.isAnimating ?? false;
+  bool get isAnimating => _animController?.isAnimating ?? false;
 
   /// 释放资源
   void dispose() {

@@ -136,10 +136,7 @@ class SuperMemoryEngine extends BBCoreEngine {
 
     // 如果干扰项不足3个，用通用释义填充
     while (distractors.length < 3) {
-      distractors.add(WordChoicePair(
-        'option_${distractors.length}',
-        '释义 ${distractors.length + 1}',
-      ));
+      distractors.add(WordChoicePair('option_${distractors.length}', '释义 ${distractors.length + 1}'));
     }
 
     // 组合4个选项并随机打乱顺序
@@ -194,8 +191,7 @@ class SuperMemoryEngine extends BBCoreEngine {
     _afterReview(w, TestResult.bingo, removeFromList: false);
   }
 
-  void _afterReview(BBWordProcess w, TestResult result,
-      {bool removeFromList = true}) {
+  void _afterReview(BBWordProcess w, TestResult result, {bool removeFromList = true}) {
     if (removeFromList) {
       alreadyReviewed.add(w);
       if (_currentIndex < reviewList.length) {
@@ -238,10 +234,12 @@ class SuperMemoryEngine extends BBCoreEngine {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return allProcess
-        .where((w) =>
-            w.reviewDate.isNotEmpty &&
-            DateTime.tryParse(w.reviewDate) != null &&
-            !DateTime.parse(w.reviewDate).isBefore(today))
+        .where(
+          (w) =>
+              w.reviewDate.isNotEmpty &&
+              DateTime.tryParse(w.reviewDate) != null &&
+              !DateTime.parse(w.reviewDate).isBefore(today),
+        )
         .length;
   }
 

@@ -30,15 +30,9 @@ class MyEquipPage extends StatelessWidget {
                   children: [
                     Icon(Icons.inventory_2_outlined, size: 64, color: skin.colors.text3),
                     const SizedBox(height: 16),
-                    Text(
-                      '暂无装备',
-                      style: MistralTypography.body.copyWith(color: skin.colors.text3),
-                    ),
+                    Text('暂无装备', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
                     const SizedBox(height: 8),
-                    Text(
-                      '完成学习任务解锁装备',
-                      style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
-                    ),
+                    Text('完成学习任务解锁装备', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
                   ],
                 ),
               ),

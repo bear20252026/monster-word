@@ -5,6 +5,7 @@
 // 文件：ScaleDownOnPressOnTouchListener, OnScrollLoadMoreListener, TextViewUtils, FlingUtils, IScrollFling, ScrollStateListener
 
 import 'package:flutter/material.dart';
+
 import 'animations.dart';
 
 /// 按压缩放动画包装器（翻译自 ScaleDownOnPressOnTouchListener.java）
@@ -27,8 +28,7 @@ class ScaleDownOnPress extends StatefulWidget {
   State<ScaleDownOnPress> createState() => _ScaleDownOnPressState();
 }
 
-class _ScaleDownOnPressState extends State<ScaleDownOnPress>
-    with SingleTickerProviderStateMixin {
+class _ScaleDownOnPressState extends State<ScaleDownOnPress> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
   bool _hasGivenUp = false;
@@ -37,9 +37,10 @@ class _ScaleDownOnPressState extends State<ScaleDownOnPress>
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration);
-    _animation = Tween<double>(begin: 1.0, end: widget.scale).animate(
-      CurvedAnimation(parent: _controller, curve: standardCurve),
-    );
+    _animation = Tween<double>(
+      begin: 1.0,
+      end: widget.scale,
+    ).animate(CurvedAnimation(parent: _controller, curve: standardCurve));
   }
 
   @override
@@ -86,11 +87,7 @@ class _ScaleDownOnPressState extends State<ScaleDownOnPress>
 /// 与 NotificationListener<ScrollNotification> 配合使用
 class OnScrollLoadMoreNotification extends ScrollNotification {
   final VoidCallback onLoad;
-  OnScrollLoadMoreNotification({
-    required this.onLoad,
-    required super.metrics,
-    required BuildContext super.context,
-  });
+  OnScrollLoadMoreNotification({required this.onLoad, required super.metrics, required BuildContext super.context});
 }
 
 /// 可自动加载更多的滚动视图包装
@@ -118,8 +115,7 @@ class _LoadMoreScrollViewState extends State<LoadMoreScrollView> {
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification is ScrollUpdateNotification &&
-            notification.metrics.pixels >=
-                notification.metrics.maxScrollExtent - widget.threshold &&
+            notification.metrics.pixels >= notification.metrics.maxScrollExtent - widget.threshold &&
             !widget.isLoading) {
           widget.onLoadMore();
         }
@@ -137,12 +133,7 @@ class ClickableImageWidget extends StatelessWidget {
   final VoidCallback? onTap;
   final Alignment alignment;
 
-  const ClickableImageWidget({
-    super.key,
-    required this.image,
-    this.onTap,
-    this.alignment = Alignment.center,
-  });
+  const ClickableImageWidget({super.key, required this.image, this.onTap, this.alignment = Alignment.center});
 
   @override
   Widget build(BuildContext context) {

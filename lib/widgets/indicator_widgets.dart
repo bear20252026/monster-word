@@ -5,6 +5,7 @@
 // 文件：DotIndicator, SquareIndicator, CircleIndicator, PageNumView
 
 import 'package:flutter/material.dart';
+
 import '../tokens/design_tokens.dart';
 import 'animations.dart';
 
@@ -37,10 +38,7 @@ class DotIndicator extends StatelessWidget {
           width: dotRadius * 2,
           height: dotRadius * 2,
           margin: EdgeInsets.symmetric(horizontal: gap / 2),
-          decoration: BoxDecoration(
-            color: isActive ? activeColor : normalColor,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: isActive ? activeColor : normalColor, shape: BoxShape.circle),
         );
       }),
     );
@@ -79,10 +77,7 @@ class SquareIndicator extends StatelessWidget {
           width: size,
           height: size,
           margin: EdgeInsets.symmetric(horizontal: gap / 2),
-          decoration: BoxDecoration(
-            color: isSelected ? selectedColor : normalColor,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: isSelected ? selectedColor : normalColor, shape: BoxShape.circle),
         );
       }),
     );
@@ -125,10 +120,7 @@ class CircleIndicator extends StatelessWidget {
           width: size,
           height: size,
           margin: const EdgeInsets.symmetric(horizontal: 3),
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         );
       }),
     );
@@ -172,10 +164,7 @@ class PageNumIndicator extends StatelessWidget {
             bottom: 0,
             width: itemWidth * MediaQuery.of(context).size.width,
             child: Container(
-              decoration: BoxDecoration(
-                color: cursorColor,
-                borderRadius: BorderRadius.circular(cursorWidth),
-              ),
+              decoration: BoxDecoration(color: cursorColor, borderRadius: BorderRadius.circular(cursorWidth)),
             ),
           ),
         ],

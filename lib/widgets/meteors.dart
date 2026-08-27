@@ -2,6 +2,7 @@
 // 颜色/速度/密度/角度均可自定义
 // 适用于：极夜主题背景、启动页、加载页、装饰背景
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../tokens/design_tokens.dart';
@@ -49,13 +50,7 @@ class MeteorShower extends StatefulWidget {
     super.key,
     this.child,
     this.count = 12,
-    this.colors = const [
-      Color(0xFF006241),
-      Color(0xFF00754A),
-      Color(0xFFcba258),
-      Color(0xFF4D96FF),
-      Color(0xFFC77DFF),
-    ],
+    this.colors = const [Color(0xFF006241), Color(0xFF00754A), Color(0xFFcba258), Color(0xFF4D96FF), Color(0xFFC77DFF)],
     this.speed = 1.0,
     this.minLength = 40,
     this.maxLength = 120,
@@ -71,8 +66,7 @@ class MeteorShower extends StatefulWidget {
   State<MeteorShower> createState() => _MeteorShowerState();
 }
 
-class _MeteorShowerState extends State<MeteorShower>
-    with SingleTickerProviderStateMixin {
+class _MeteorShowerState extends State<MeteorShower> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   final List<Meteor> _meteors = [];
   final List<_Star> _stars = [];
@@ -81,10 +75,7 @@ class _MeteorShowerState extends State<MeteorShower>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1));
 
     if (widget.autoPlay) {
       _controller.repeat();
@@ -105,16 +96,15 @@ class _MeteorShowerState extends State<MeteorShower>
   void _initStars() {
     _stars.clear();
     for (int i = 0; i < 60; i++) {
-      _stars.add(_Star(
-        position: Offset(
-          _random.nextDouble() * 400,
-          _random.nextDouble() * 600,
+      _stars.add(
+        _Star(
+          position: Offset(_random.nextDouble() * 400, _random.nextDouble() * 600),
+          size: 0.5 + _random.nextDouble() * 2,
+          opacity: 0.3 + _random.nextDouble() * 0.7,
+          twinkleSpeed: 0.5 + _random.nextDouble() * 2,
+          twinklePhase: _random.nextDouble() * 2 * math.pi,
         ),
-        size: 0.5 + _random.nextDouble() * 2,
-        opacity: 0.3 + _random.nextDouble() * 0.7,
-        twinkleSpeed: 0.5 + _random.nextDouble() * 2,
-        twinklePhase: _random.nextDouble() * 2 * math.pi,
-      ));
+      );
     }
   }
 
@@ -130,10 +120,7 @@ class _MeteorShowerState extends State<MeteorShower>
       // 更新流星
       for (int i = _meteors.length - 1; i >= 0; i--) {
         final m = _meteors[i];
-        m.position = Offset(
-          m.position.dx + m.velocity.dx * widget.speed,
-          m.position.dy + m.velocity.dy * widget.speed,
-        );
+        m.position = Offset(m.position.dx + m.velocity.dx * widget.speed, m.position.dy + m.velocity.dy * widget.speed);
         m.life += 0.016;
 
         // 淡出
@@ -164,14 +151,8 @@ class _MeteorShowerState extends State<MeteorShower>
     final color = widget.colors[_random.nextInt(widget.colors.length)];
 
     return Meteor(
-      position: Offset(
-        _random.nextDouble() * 400 - 50,
-        -20 - _random.nextDouble() * 100,
-      ),
-      velocity: Offset(
-        math.cos(angle) * speed,
-        math.sin(angle) * speed,
-      ),
+      position: Offset(_random.nextDouble() * 400 - 50, -20 - _random.nextDouble() * 100),
+      velocity: Offset(math.cos(angle) * speed, math.sin(angle) * speed),
       length: length,
       width: widget.width + _random.nextDouble(),
       opacity: 0.6 + _random.nextDouble() * 0.4,
@@ -194,10 +175,7 @@ class _MeteorShowerState extends State<MeteorShower>
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [
-                        const Color(0xFF0A0F0D),
-                        const Color(0xFF1E3932).withValues(alpha: 0.8),
-                      ],
+                      colors: [const Color(0xFF0A0F0D), const Color(0xFF1E3932).withValues(alpha: 0.8)],
                     ),
                   )
                 : null,
@@ -241,11 +219,7 @@ class _MeteorPainter extends CustomPainter {
   final List<_Star> stars;
   final bool enableBlink;
 
-  _MeteorPainter({
-    required this.meteors,
-    required this.stars,
-    required this.enableBlink,
-  });
+  _MeteorPainter({required this.meteors, required this.stars, required this.enableBlink});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -290,20 +264,16 @@ class _MeteorPainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(-meteor.length, -meteor.width / 2, meteor.length, meteor.width));
 
       // 绘制尾迹
-      canvas.drawRect(
-        Rect.fromLTWH(-meteor.length, -meteor.width / 2, meteor.length, meteor.width),
-        tailPaint,
-      );
+      canvas.drawRect(Rect.fromLTWH(-meteor.length, -meteor.width / 2, meteor.length, meteor.width), tailPaint);
 
-    // 流星头部（更亮）
+      // 流星头部（更亮）
       final headPaint = Paint()
         ..color = AppColors.white100.withValues(alpha: meteor.opacity)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
       canvas.drawCircle(Offset.zero, meteor.width * 0.8, headPaint);
 
       // 头部核心
-      final corePaint = Paint()
-        ..color = meteor.color.withValues(alpha: meteor.opacity);
+      final corePaint = Paint()..color = meteor.color.withValues(alpha: meteor.opacity);
       canvas.drawCircle(Offset.zero, meteor.width * 0.5, corePaint);
 
       canvas.restore();
@@ -324,23 +294,14 @@ class MeteorBackground extends StatelessWidget {
     super.key,
     required this.child,
     this.meteorCount = 8,
-    this.colors = const [
-      Color(0xFF006241),
-      Color(0xFF00754A),
-      Color(0xFFcba258),
-    ],
+    this.colors = const [Color(0xFF006241), Color(0xFF00754A), Color(0xFFcba258)],
   });
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        MeteorShower(
-          count: meteorCount,
-          colors: colors,
-          enableStars: false,
-          child: const SizedBox.expand(),
-        ),
+        MeteorShower(count: meteorCount, colors: colors, enableStars: false, child: const SizedBox.expand()),
         child,
       ],
     );
