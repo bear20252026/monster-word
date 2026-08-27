@@ -26,6 +26,7 @@ void main() {
 
       expect(providersSource, contains('ReviewScheduleRepository'));
       expect(providersSource, contains('ReviewRatingWriter(writeRating: schedule.rateWord)'));
+      expect(providersSource, contains('LearningSessionState'));
       expect(providersSource, contains('LearningQueueState'));
       expect(providersSource, contains('ReviewQueueState'));
       expect(providersSource, isNot(contains('legacy.rateReviewWord')));
