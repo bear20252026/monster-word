@@ -30,8 +30,6 @@ class ReviewPage extends StatefulWidget {
 
 class _ReviewPageState extends State<ReviewPage> {
   int _wrongChoiceIndex = -1;
-  bool _canUndo = false;
-  final List<BBWordProcess> _history = [];
 
   @override
   void initState() {
@@ -170,12 +168,7 @@ class _ReviewPageState extends State<ReviewPage> {
             '${session.done}/${session.total}',
             style: TextStyle(fontSize: 16 * resp.fontScale, fontWeight: FontWeight.w600, color: skin.onGlassText1),
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: Icon(Icons.undo, size: 22, color: skin.onGlassText2),
-            tooltip: '撤销',
-            onPressed: _canUndo ? _undo : null,
-          ),
+
           IconButton(
             icon: Icon(
               wordActions.isFavorite(session.currentWord?.word ?? '') ? Icons.star : Icons.star_border,
@@ -351,14 +344,6 @@ class _ReviewPageState extends State<ReviewPage> {
     );
   }
 
-  void _undo() {
-    if (_history.isNotEmpty && context.read<ReviewSessionState>().undoProgress()) {
-      _history.removeLast();
-      _wrongChoiceIndex = -1;
-      if (mounted) setState(() {});
-    }
-  }
-
   Future<void> _toggleFavorite() async {
     final current = context.read<ReviewSessionState>().currentWord;
     if (current == null) return;
@@ -378,7 +363,6 @@ class _ReviewPageState extends State<ReviewPage> {
 
   void _revealAnswer() {
     context.read<ReviewSessionState>().revealAnswer();
-    setState(() => _canUndo = true);
   }
 
   Future<void> _markAsKnown() async {
@@ -387,10 +371,7 @@ class _ReviewPageState extends State<ReviewPage> {
     final currentWord = session.currentWord;
     if (currentWord == null || !session.markAsKnown()) return;
 
-    _history.add(currentWord);
     _wrongChoiceIndex = -1;
-    _canUndo = true;
-    if (mounted) setState(() {});
 
     try {
       final marked = await context.read<ReviewWordActionsState>().markManuallyMastered(currentWord.word);
