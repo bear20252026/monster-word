@@ -208,3 +208,7 @@
 ## 只读词表页面边界
 
 词表导出页与随身听模式页现直接通过 `LearningQueueRepository` 查询指定词书；通用 `ListWordsPage` 不再提供 `LearningState` 默认读取入口，所有子页必须显式使用其所属的词书、掌握、生词或队列分类读取端口。该调整未改变词书查询的 `limit: 1000` 和 `offset: 0` 兼容行为。
+
+## 通用弹窗消费边界
+
+回顾弹窗已直接组合 `LearningSessionState` 与 `ReviewScheduleRepository` 显示学习进度和每日复习统计；单词词典弹窗已使用 `LearningFavoritesState` 显示和切换收藏。二者不再依赖 `LearningState`，且路由跳转、统计文本和收藏持久化语义保持不变。

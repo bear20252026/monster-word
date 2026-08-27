@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
 import '../models/word.dart';
-import '../state/learning_state.dart';
+import '../features/learning/presentation/learning_favorites_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../tokens/func_colors.dart';
@@ -16,11 +16,7 @@ class WordDictionaryPopup extends StatefulWidget {
   final Word word;
   final VoidCallback? onViewDetail;
 
-  const WordDictionaryPopup({
-    super.key,
-    required this.word,
-    this.onViewDetail,
-  });
+  const WordDictionaryPopup({super.key, required this.word, this.onViewDetail});
 
   /// 显示弹出框（静态方法，方便调用）
   static Future<void> show(BuildContext context, Word word, {VoidCallback? onViewDetail}) async {
@@ -55,8 +51,8 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    final state = context.watch<LearningState>();
-    final isFav = state.isFavorite(widget.word.word);
+    final favorites = context.watch<LearningFavoritesState>();
+    final isFav = favorites.isFavorite(widget.word.word);
     final examples = ExampleParser.parse(widget.word.example);
 
     return GestureDetector(
@@ -68,19 +64,13 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
         decoration: BoxDecoration(
           color: skin.colors.cardBg,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: MistralColors.black15,
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: MistralColors.black15, blurRadius: 24, offset: const Offset(0, 8))],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(state, isFav, skin),
+            _buildHeader(favorites, isFav, skin),
             if (widget.word.usPron.isNotEmpty || widget.word.ukPron.isNotEmpty) _buildPhonetics(skin),
             if (widget.word.interpret.isNotEmpty) _buildInterpret(skin),
             if (examples.isNotEmpty) _buildExample(skin, examples.first),
@@ -92,7 +82,7 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
   }
 
   /// 顶部：单词 + 收藏按钮
-  Widget _buildHeader(LearningState state, bool isFav, dynamic skin) {
+  Widget _buildHeader(LearningFavoritesState favorites, bool isFav, dynamic skin) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
       child: Row(
@@ -101,11 +91,7 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
           Expanded(
             child: Text(
               widget.word.word,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: skin.colors.text1,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: skin.colors.text1),
             ),
           ),
           // 收藏按钮
@@ -117,7 +103,7 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
             ),
             tooltip: isFav ? '取消收藏' : '收藏',
             onPressed: () async {
-              await state.toggleFavorite(widget.word.word);
+              await favorites.toggle(widget.word.word);
             },
           ),
         ],
@@ -134,15 +120,13 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
           if (widget.word.usPron.isNotEmpty) ...[
             _PopupPhoneticPill(label: '美'),
             const SizedBox(width: 4),
-            Text('/${widget.word.usPron}/',
-              style: TextStyle(fontSize: 13, color: skin.colors.text3)),
+            Text('/${widget.word.usPron}/', style: TextStyle(fontSize: 13, color: skin.colors.text3)),
           ],
           if (widget.word.ukPron.isNotEmpty) ...[
             const SizedBox(width: 12),
             _PopupPhoneticPill(label: '英'),
             const SizedBox(width: 4),
-            Text('/${widget.word.ukPron}/',
-              style: TextStyle(fontSize: 13, color: skin.colors.text3)),
+            Text('/${widget.word.ukPron}/', style: TextStyle(fontSize: 13, color: skin.colors.text3)),
           ],
         ],
       ),
@@ -151,9 +135,7 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
 
   /// 释义文本
   Widget _buildInterpret(dynamic skin) {
-    final meaningText = widget.word.hasStructuredDefinitions
-        ? widget.word.formattedDefinitions
-        : widget.word.interpret;
+    final meaningText = widget.word.hasStructuredDefinitions ? widget.word.formattedDefinitions : widget.word.interpret;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
       child: Column(
@@ -170,10 +152,7 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
               onTap: () => setState(() => _isExpanded = !_isExpanded),
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  _isExpanded ? '收起' : '展开',
-                  style: TextStyle(fontSize: 13, color: skin.colors.accent),
-                ),
+                child: Text(_isExpanded ? '收起' : '展开', style: TextStyle(fontSize: 13, color: skin.colors.accent)),
               ),
             ),
         ],
@@ -186,10 +165,7 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: skin.colors.cardBgAlt,
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(10)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -200,8 +176,7 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
                   .map(
                     (p) => TextSpan(
                       text: p.text,
-                      style:
-                          p.highlight ? const TextStyle(fontWeight: FontWeight.bold) : null,
+                      style: p.highlight ? const TextStyle(fontWeight: FontWeight.bold) : null,
                     ),
                   )
                   .toList(),
@@ -209,8 +184,7 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
           ),
           if (example.cn.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(example.cn,
-              style: TextStyle(fontSize: 12, color: skin.colors.text3)),
+            Text(example.cn, style: TextStyle(fontSize: 12, color: skin.colors.text3)),
           ],
         ],
       ),
@@ -228,19 +202,15 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(color: skin.colors.divider, width: 0.5),
-          ),
+          border: Border(top: BorderSide(color: skin.colors.divider, width: 0.5)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('查看详细释义',
-              style: TextStyle(
-                fontSize: 14,
-                color: skin.colors.accent,
-                fontWeight: FontWeight.w500,
-              )),
+            Text(
+              '查看详细释义',
+              style: TextStyle(fontSize: 14, color: skin.colors.accent, fontWeight: FontWeight.w500),
+            ),
             const SizedBox(width: 4),
             Icon(Icons.arrow_forward_ios, size: 12, color: skin.colors.accent),
           ],
@@ -260,14 +230,8 @@ class _PopupPhoneticPill extends StatelessWidget {
     final skin = context.skin;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: skin.colors.cardBgAlt,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(fontSize: 11, color: skin.colors.text3),
-      ),
+      decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(4)),
+      child: Text(label, style: TextStyle(fontSize: 11, color: skin.colors.text3)),
     );
   }
 }
