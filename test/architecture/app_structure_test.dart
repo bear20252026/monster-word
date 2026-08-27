@@ -65,6 +65,25 @@ void main() {
     });
   });
 
+  group('正式复习加载与答题交互边界', () {
+    test('页面渲染会话加载状态，候选反馈和推进由会话状态管理', () {
+      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
+
+      expect(pageSource, contains('session.isLoading'));
+      expect(pageSource, contains('session.hasLoadError'));
+      expect(pageSource, contains('_buildLoadError(session)'));
+      expect(pageSource, contains('session.selectChoice(c.word)'));
+      expect(pageSource, contains('session.continueWithGoodRating()'));
+      expect(pageSource, isNot(contains('_wrongChoiceIndex')));
+      expect(pageSource, isNot(contains('Future.delayed')));
+      expect(sessionSource, contains('ReviewSessionLoadPhase'));
+      expect(sessionSource, contains('Timer'));
+      expect(sessionSource, contains('selectChoice'));
+      expect(sessionSource, contains('continueWithGoodRating'));
+    });
+  });
+
   group('正式复习撤销边界', () {
     test('不提供只回退计数而不回退题目的伪撤销操作', () {
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
@@ -118,7 +137,8 @@ void main() {
 
       expect(appSource, contains('ProxyProvider<LearningState, ReviewRatingWriter>'));
       expect(appSource, contains('ReviewRatingWriter(writeRating: legacy.rateReviewWord)'));
-      expect(pageSource, contains('context.read<ReviewSessionState>().rate(rating)'));
+      expect(pageSource, contains('session.selectChoice(c.word)'));
+      expect(pageSource, contains('session.continueWithGoodRating()'));
       expect(pageSource, isNot(contains('ReviewRatingWriter')));
       expect(sessionSource, contains('ReviewRatingWriter'));
       expect(sessionSource, contains('final reviewedWord = currentWord'));

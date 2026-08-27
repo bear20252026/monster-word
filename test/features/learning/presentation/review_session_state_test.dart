@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/engine/fsrs6_engine.dart';
-import 'package:word_app/engine/srs_engine.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
 import 'package:word_app/features/learning/presentation/review_session_state.dart';
@@ -26,7 +25,8 @@ void main() {
       await state.initialize(ReviewQueueSnapshot(dueWords: words, queueWords: const []));
       final reviewedWord = state.currentWord;
 
-      expect(state.initialized, isTrue);
+      expect(state.loadPhase, ReviewSessionLoadPhase.ready);
+      expect(state.isReady, isTrue);
       expect(state.total, 2);
       expect(state.done, 0);
       expect(reviewedWord, isNotNull);
@@ -34,8 +34,15 @@ void main() {
       expect(state.choices, hasLength(4));
       expect(state.choices.where((choice) => choice.word == reviewedWordText), hasLength(1));
 
+      final wrongChoice = state.choices.firstWhere((choice) => choice.word != reviewedWordText);
+      state.selectChoice(wrongChoice.word);
+      expect(state.isWrongChoiceSelected(wrongChoice.word), isTrue);
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      expect(state.isWrongChoiceSelected(wrongChoice.word), isFalse);
+
       state.revealAnswer();
-      state.rate(RecallRating.good);
+      expect(state.showAnswer, isTrue);
+      state.continueWithGoodRating();
 
       expect(persistedWord, reviewedWordText);
       expect(persistedRating, FsrsRating.good);
@@ -43,7 +50,32 @@ void main() {
       expect(state.showAnswer, isFalse);
       expect(state.currentWord?.word, isNot(reviewedWordText));
     });
+
+    test('初始化读取失败后保留错误状态而不是把页面当作复习完成', () async {
+      final state = ReviewSessionState(
+        queueReader: ReviewQueueReader(wordRepository: _ThrowingWordRepository()),
+        ratingWriter: ReviewRatingWriter(writeRating: ({required word, required rating}) async {}),
+      );
+
+      await expectLater(
+        state.initialize(const ReviewQueueSnapshot(dueWords: [], queueWords: [])),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(state.loadPhase, ReviewSessionLoadPhase.failed);
+      expect(state.hasLoadError, isTrue);
+      expect(state.loadError, isA<StateError>());
+      expect(state.currentWord, isNull);
+      expect(state.done, 0);
+    });
   });
+}
+
+class _ThrowingWordRepository extends _UnusedWordRepository {
+  @override
+  Future<List<Word>> searchWords(String query, {int? limit}) async {
+    throw StateError('word source unavailable');
+  }
 }
 
 class _UnusedWordRepository implements WordRepository {

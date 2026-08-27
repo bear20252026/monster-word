@@ -8,7 +8,6 @@ import '../features/learning/presentation/review_queue_state.dart';
 import '../features/learning/presentation/review_session_state.dart';
 import '../features/learning/presentation/review_word_actions_state.dart';
 import '../services/audio_service.dart';
-import '../engine/srs_engine.dart';
 import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
 import '../models/word.dart';
@@ -29,45 +28,31 @@ class ReviewPage extends StatefulWidget {
 }
 
 class _ReviewPageState extends State<ReviewPage> {
-  int _wrongChoiceIndex = -1;
-
   @override
   void initState() {
     super.initState();
     _initReview();
   }
 
-  /// 初始化正式复习会话，队列读取与本地引擎推进由展示状态负责。
+  /// 初始化正式复习会话；加载阶段和错误结果由展示状态提供给页面渲染。
   Future<void> _initReview() async {
     try {
       final reviewQueue = context.read<ReviewQueueState>();
       await context.read<ReviewSessionState>().initialize(reviewQueue.snapshot);
-    } catch (e) {
-      debugPrint('[ReviewPage] init error: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('加载复习数据失败: $e'),
-            action: SnackBarAction(label: '重试', onPressed: _initReview),
-          ),
-        );
-      }
+    } catch (_) {
+      // 会话状态保存错误对象，页面在下一次构建时显示可重试的错误界面。
     }
-  }
-
-  /// 提交本题评分；会话状态保留本地引擎推进与按词 FSRS 写入顺序。
-  void _rate(RecallRating rating) {
-    context.read<ReviewSessionState>().rate(rating);
-    _wrongChoiceIndex = -1;
-    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final session = context.watch<ReviewSessionState>();
     final wordActions = context.watch<ReviewWordActionsState>();
-    if (!session.initialized) {
+    if (session.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (session.hasLoadError) {
+      return _buildLoadError(session);
     }
     final word = session.currentWord;
     final skin = context.skin.colors;
@@ -180,7 +165,7 @@ class _ReviewPageState extends State<ReviewPage> {
           ),
           // abc button - 显示答案
           GestureDetector(
-            onTap: _revealAnswer,
+            onTap: session.revealAnswer,
             child: Text(
               'abc',
               style: TextStyle(fontSize: 16 * resp.fontScale, fontWeight: FontWeight.w700, color: skin.onGlassText1),
@@ -288,20 +273,11 @@ class _ReviewPageState extends State<ReviewPage> {
               (c) => _FrostedChoiceCard(
                 pair: c,
                 isCorrect: c.word == word.word,
-                isSelectedWrong: _wrongChoiceIndex == session.choices.indexOf(c),
+                isSelectedWrong: session.isWrongChoiceSelected(c.word),
                 showAnswer: session.showAnswer,
                 skin: skin,
                 resp: resp,
-                onTap: () {
-                  if (c.word == word.word) {
-                    _rate(RecallRating.good);
-                  } else {
-                    setState(() => _wrongChoiceIndex = session.choices.indexOf(c));
-                    Future.delayed(const Duration(milliseconds: 300), () {
-                      if (mounted) setState(() => _wrongChoiceIndex = -1);
-                    });
-                  }
-                },
+                onTap: () => session.selectChoice(c.word),
               ),
             ),
         ],
@@ -316,9 +292,9 @@ class _ReviewPageState extends State<ReviewPage> {
       child: GestureDetector(
         onTap: () {
           if (!session.showAnswer) {
-            _revealAnswer();
+            session.revealAnswer();
           } else {
-            _rate(RecallRating.good);
+            session.continueWithGoodRating();
           }
         },
         child: Column(
@@ -361,17 +337,11 @@ class _ReviewPageState extends State<ReviewPage> {
     }
   }
 
-  void _revealAnswer() {
-    context.read<ReviewSessionState>().revealAnswer();
-  }
-
   Future<void> _markAsKnown() async {
     // 保留既有会话推进，再为本题补齐独立的手动掌握持久化标记。
     final session = context.read<ReviewSessionState>();
     final currentWord = session.currentWord;
     if (currentWord == null || !session.markAsKnown()) return;
-
-    _wrongChoiceIndex = -1;
 
     try {
       final marked = await context.read<ReviewWordActionsState>().markManuallyMastered(currentWord.word);
@@ -431,6 +401,34 @@ class _ReviewPageState extends State<ReviewPage> {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadError(ReviewSessionState session) {
+    final skin = context.skin.colors;
+    return Scaffold(
+      backgroundColor: skin.pageBg,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, color: skin.quizWrongText, size: 56),
+              const SizedBox(height: 16),
+              Text('复习数据加载失败', style: MistralTypography.heading3.copyWith(color: skin.text1)),
+              const SizedBox(height: 8),
+              Text(
+                '${session.loadError}',
+                textAlign: TextAlign.center,
+                style: MistralTypography.bodySm.copyWith(color: skin.text3),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(onPressed: _initReview, icon: const Icon(Icons.refresh), label: const Text('重试')),
+            ],
+          ),
         ),
       ),
     );
