@@ -11,12 +11,11 @@ import '../models/sentence_models.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../features/learning/data/review_schedule_repository.dart';
 import '../features/learning/presentation/learning_session_state.dart';
+import '../features/player/presentation/audio_playback_state.dart';
 import '../models/word.dart';
 import '../models/word_note.dart';
-import '../player/audio_players.dart' show playWordAudio;
 import '../repositories/fav_repository.dart';
 import '../repositories/note_repository.dart';
-import '../services/audio_service.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/sb_card.dart';
@@ -36,7 +35,6 @@ class WordDetailPage extends StatefulWidget {
 class _WordDetailPageState extends State<WordDetailPage> {
   List<WordNote> _notes = [];
   bool _notesLoaded = false;
-  bool _isAudioLoading = false;
   DictionaryExtra? _extra; // 字典补充数据（派生词/近义词/真题）
 
   /// 解析要展示的单词：路由参数优先（从词书/收藏/列表点入时显示所点的词），
@@ -789,34 +787,33 @@ class _WordDetailPageState extends State<WordDetailPage> {
             children: [
               Text(word.word, style: MistralTypography.heading1.copyWith(color: skin.colors.text1, fontSize: 40)),
               SizedBox(width: AppleSpacing.sm),
-              _isAudioLoading
-                  ? SizedBox(
+              Consumer<AudioPlaybackState>(
+                builder: (context, player, _) {
+                  if (player.isLoading && player.currentWord == word.word) {
+                    return SizedBox(
                       width: 28,
                       height: 28,
                       child: CircularProgressIndicator(strokeWidth: 2, color: skin.colors.accent),
-                    )
-                  : GestureDetector(
-                      onTap: () async {
-                        if (_isAudioLoading) return;
-                        setState(() => _isAudioLoading = true);
-                        try {
-                          // ✅ 修复：优先使用第三方服务器提供的音频 URL
-                          await sl<AudioService>().playWordAudio(
-                            word.word,
-                            audioUrl: word.audioUrls.isNotEmpty ? word.audioUrls : null,
-                          );
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
-                            );
-                          }
-                        } finally {
-                          if (mounted) setState(() => _isAudioLoading = false);
+                    );
+                  }
+                  return GestureDetector(
+                    onTap: () async {
+                      if (player.isLoading) return;
+                      try {
+                        // 优先使用第三方服务器提供的音频 URL。
+                        await player.playWord(word.word, audioUrl: word.audioUrls.isNotEmpty ? word.audioUrls : null);
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
                         }
-                      },
-                      child: Icon(Icons.volume_up_outlined, color: skin.colors.accent, size: 28),
-                    ),
+                      }
+                    },
+                    child: Icon(Icons.volume_up_outlined, color: skin.colors.accent, size: 28),
+                  );
+                },
+              ),
             ],
           ),
           if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[

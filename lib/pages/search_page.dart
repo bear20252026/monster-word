@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 import '../core/di/service_locator.dart';
 import '../models/word.dart';
 import '../repositories/word_repository.dart';
-import '../state/player_state.dart';
+import '../features/player/presentation/audio_playback_state.dart';
 import '../features/learning/presentation/learning_favorites_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -427,8 +427,8 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<void> _playAudio(String word) async {
     try {
-      // 使用 PlayerState 播放音频
-      await context.read<PlayerState>().playWord(word);
+      // 通过播放器功能域播放音频
+      await context.read<AudioPlaybackState>().playWord(word);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)

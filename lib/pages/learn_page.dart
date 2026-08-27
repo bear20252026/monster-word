@@ -9,8 +9,8 @@ import 'package:provider/provider.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../features/learning/presentation/learning_favorites_state.dart';
 import '../features/learning/presentation/learning_session_state.dart';
+import '../features/player/presentation/audio_playback_state.dart';
 import '../hooks/responsive.dart';
-import '../state/player_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../tokens/star_gold.dart';
@@ -29,21 +29,17 @@ class LearnPage extends StatefulWidget {
 }
 
 class _LearnPageState extends State<LearnPage> {
-  bool _audioLoading = false;
-
   Future<void> _playAudio(String word, {String? audioUrl}) async {
-    if (_audioLoading) return;
-    setState(() => _audioLoading = true);
+    final player = context.read<AudioPlaybackState>();
+    if (player.isLoading) return;
     try {
-      // ✅ 修复：优先使用第三方服务器提供的音频 URL
-      await context.read<PlayerState>().playWord(word, audioUrl: audioUrl);
+      // 优先使用第三方服务器提供的音频 URL。
+      await player.playWord(word, audioUrl: audioUrl);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
       }
-    } finally {
-      if (mounted) setState(() => _audioLoading = false);
     }
   }
 
@@ -52,6 +48,7 @@ class _LearnPageState extends State<LearnPage> {
     final skin = context.skin;
     final resp = context.responsive;
     final state = context.watch<LearningSessionState>();
+    final player = context.watch<AudioPlaybackState>();
     final word = state.currentWord;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -78,7 +75,7 @@ class _LearnPageState extends State<LearnPage> {
                                   word: word,
                                   skin: skin,
                                   resp: resp,
-                                  audioLoading: _audioLoading,
+                                  audioLoading: player.isLoading && player.currentWord == word.word,
                                   onPlayAudio: _playAudio,
                                 ),
                               ),
@@ -96,7 +93,7 @@ class _LearnPageState extends State<LearnPage> {
                                   word: word,
                                   skin: skin,
                                   resp: resp,
-                                  audioLoading: _audioLoading,
+                                  audioLoading: player.isLoading && player.currentWord == word.word,
                                   onPlayAudio: _playAudio,
                                 ),
                               ),

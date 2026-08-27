@@ -18,6 +18,7 @@ void main() {
       expect(appSource, contains('buildAccountFeatureScope('));
       expect(appSource, contains('buildLearningFeatureScope('));
       expect(appSource, contains('buildSettingsFeatureScope('));
+      expect(appSource, contains('buildPlayerFeatureScope('));
       expect(appSource, isNot(contains("import '../state/learning_state.dart';")));
       expect(appSource, isNot(contains("import '../features/learning/application/")));
     });
@@ -88,6 +89,42 @@ void main() {
         expect(source, isNot(contains('sl<UserService>')), reason: '$path 不应直连用户服务定位器');
         expect(source, isNot(contains('getUserInfoSyncBean')), reason: '$path 不应读取同步默认资料');
       }
+    });
+
+    test('播放器功能域拥有播放状态，页面不再使用旧状态或直连音频服务', () {
+      const audioConsumers = [
+        'lib/pages/dictionary_page.dart',
+        'lib/pages/learn_page.dart',
+        'lib/pages/search_page.dart',
+        'lib/pages/spell_check_page.dart',
+        'lib/pages/spell_session_page.dart',
+        'lib/pages/word_detail_page.dart',
+      ];
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
+
+      expect(File('lib/state/player_state.dart').existsSync(), isFalse);
+      expect(appSource, contains('buildPlayerFeatureScope('));
+      expect(locatorSource, isNot(contains('PlayerState')));
+      for (final path in audioConsumers) {
+        final source = File(path).readAsStringSync();
+        expect(source, contains('AudioPlaybackState'), reason: '$path 应使用专用播放器状态');
+        expect(source, isNot(contains('sl<AudioService>')), reason: '$path 不应直连音频服务');
+      }
+    });
+
+    test('无消费者的统计栈已删除，应用根不再装配平行统计状态', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
+
+      expect(File('lib/state/user_stats_state.dart').existsSync(), isFalse);
+      expect(File('lib/services/stats_service.dart').existsSync(), isFalse);
+      expect(File('lib/services/stats_service_impl.dart').existsSync(), isFalse);
+      expect(File('lib/repositories/stats_repository.dart').existsSync(), isFalse);
+      expect(File('lib/repositories/stats_repository_impl.dart').existsSync(), isFalse);
+      expect(appSource, isNot(contains('UserStatsState')));
+      expect(locatorSource, isNot(contains('StatsService')));
+      expect(locatorSource, isNot(contains('StatsRepository')));
     });
 
     test('设置功能域拥有学习偏好，设置页不再保留可丢失的本地偏好副本', () {
