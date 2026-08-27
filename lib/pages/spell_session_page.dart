@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../features/learning/presentation/learning_session_state.dart';
-import '../state/player_state.dart';
+import '../features/player/presentation/audio_playback_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/session_exit_guard.dart';
@@ -65,7 +65,7 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
   Future<void> _playCurrentWord() async {
     if (_currentWord.isEmpty) return;
     try {
-      await context.read<PlayerState>().playWord(_currentWord);
+      await context.read<AudioPlaybackState>().playWord(_currentWord);
     } catch (e) {
       debugPrint('Audio playback error: $e');
     }

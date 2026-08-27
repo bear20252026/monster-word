@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../state/player_state.dart';
+import '../features/player/presentation/audio_playback_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -13,11 +13,7 @@ class SpellCheckPage extends StatefulWidget {
   final String word;
   final String? phonetic;
 
-  const SpellCheckPage({
-    super.key,
-    required this.word,
-    this.phonetic,
-  });
+  const SpellCheckPage({super.key, required this.word, this.phonetic});
 
   static const routeName = '/spell_check';
 
@@ -51,7 +47,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
   Future<void> _playAudio() async {
     if (widget.word.isEmpty) return;
     try {
-      await context.read<PlayerState>().playWord(widget.word);
+      await context.read<AudioPlaybackState>().playWord(widget.word);
     } catch (e) {
       debugPrint('Audio playback error: $e');
     }
@@ -112,10 +108,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                         children: [
                           Text(
                             _buildHint(),
-                            style: MistralTypography.heading2.copyWith(
-                              color: MistralColors.ink,
-                              letterSpacing: 4,
-                            ),
+                            style: MistralTypography.heading2.copyWith(color: MistralColors.ink, letterSpacing: 4),
                           ),
                           if (widget.phonetic != null) ...[
                             const SizedBox(height: 8),
@@ -139,11 +132,13 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                                 children: [
                                   Icon(Icons.volume_up, color: MistralColors.primary, size: 20),
                                   const SizedBox(width: 6),
-                                  Text('播放发音',
+                                  Text(
+                                    '播放发音',
                                     style: MistralTypography.caption.copyWith(
                                       color: MistralColors.primary,
                                       fontWeight: FontWeight.w500,
-                                    )),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -152,8 +147,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text('尝试次数: $_attemptCount',
-                      style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
+                    Text('尝试次数: $_attemptCount', style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
                     const SizedBox(height: 32),
                     // 输入框
                     TextField(
@@ -187,9 +181,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                               ? MistralColors.success.withValues(alpha: 0.1)
                               : MistralColors.danger.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(AppRadius.md),
-                          border: Border.all(
-                            color: _isCorrect ? MistralColors.success : MistralColors.danger,
-                          ),
+                          border: Border.all(color: _isCorrect ? MistralColors.success : MistralColors.danger),
                         ),
                         child: Row(
                           children: [
@@ -199,10 +191,12 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(_result,
+                              child: Text(
+                                _result,
                                 style: MistralTypography.bodyBold.copyWith(
                                   color: _isCorrect ? MistralColors.success : MistralColors.danger,
-                                )),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -222,9 +216,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                             },
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(color: skin.colors.divider),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppRadius.md),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: const Text('查看答案'),
@@ -237,9 +229,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: MistralColors.primary,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppRadius.md),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: Text(_hasChecked ? '再试一次' : '检查'),

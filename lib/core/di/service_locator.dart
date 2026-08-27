@@ -25,10 +25,6 @@ import '../../services/checkin_service.dart';
 import '../../services/checkin_service_impl.dart';
 import '../../services/user_service.dart';
 import '../../services/user_service_impl.dart';
-import '../../services/stats_service.dart';
-import '../../services/stats_service_impl.dart';
-import '../../repositories/stats_repository.dart';
-import '../../repositories/stats_repository_impl.dart';
 import '../../features/learning/application/book_words_reader.dart';
 import '../../features/learning/data/learning_progress_repository.dart';
 import '../../features/learning/data/learning_queue_repository.dart';
@@ -38,8 +34,6 @@ import '../../features/learning/application/new_words_reader.dart';
 import '../../features/learning/application/review_audio_player.dart';
 import '../../features/learning/application/review_queue_reader.dart';
 import '../../features/learning/presentation/new_words_state.dart';
-import '../../state/user_stats_state.dart';
-import '../../state/player_state.dart';
 
 /// 全局服务定位器实例
 final GetIt sl = GetIt.instance;
@@ -178,27 +172,6 @@ Future<void> setupServiceLocator() async {
     sl.registerLazySingleton<UserService>(
       () => UserServiceImpl(userRepo: sl<UserRepository>(), noteRepo: sl<NoteRepository>()),
     );
-  }
-
-  // StatsService（学习统计）
-  if (!sl.isRegistered<StatsService>()) {
-    sl.registerLazySingleton<StatsService>(() => StatsServiceImpl(userRepo: sl<UserRepository>()));
-  }
-
-  // StatsRepository（统计数据仓库）
-  if (!sl.isRegistered<StatsRepository>()) {
-    sl.registerLazySingleton<StatsRepository>(() => StatsRepositoryImpl(statsService: sl<StatsService>()));
-  }
-
-  // ========== ViewModel Layer（视图模型层）==========
-  // UserStatsState（用户统计状态）
-  if (!sl.isRegistered<UserStatsState>()) {
-    sl.registerLazySingleton<UserStatsState>(() => UserStatsState(statsService: sl<StatsService>()));
-  }
-
-  // PlayerState（播放状态）
-  if (!sl.isRegistered<PlayerState>()) {
-    sl.registerLazySingleton<PlayerState>(() => PlayerState(audioService: sl<AudioService>()));
   }
 }
 
