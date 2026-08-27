@@ -47,6 +47,7 @@ class ReviewSessionState extends ChangeNotifier {
   bool get hasLoadError => _loadPhase == ReviewSessionLoadPhase.failed;
   Object? get loadError => _loadError;
   bool get showAnswer => _showAnswer;
+  String? get selectedWrongChoice => _wrongChoiceWord;
   List<WordChoicePair> get choices => _choices;
   int get total => _total;
   int get done => _done;
