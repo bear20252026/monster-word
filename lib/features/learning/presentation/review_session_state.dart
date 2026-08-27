@@ -7,7 +7,7 @@ import '../../../engine/super_memory_engine.dart';
 import '../../../models/bb_word_process.dart';
 import '../application/review_queue_reader.dart';
 import '../application/review_rating_writer.dart';
-import '../domain/choice_generator.dart';
+import '../application/review_session_question_factory.dart';
 import 'review_session_answer_state.dart';
 
 /// 正式复习队列加载的当前阶段。
@@ -23,13 +23,16 @@ class ReviewSessionState extends ChangeNotifier {
     required ReviewQueueReader queueReader,
     required ReviewRatingWriter ratingWriter,
     SuperMemoryEngine? engine,
+    ReviewSessionQuestionFactory? questionFactory,
   }) : _queueReader = queueReader,
        _ratingWriter = ratingWriter,
-       _engine = engine ?? SuperMemoryEngine();
+       _engine = engine ?? SuperMemoryEngine(),
+       _questionFactory = questionFactory ?? const ReviewSessionQuestionFactory();
 
   final ReviewQueueReader _queueReader;
   ReviewRatingWriter _ratingWriter;
   final SuperMemoryEngine _engine;
+  final ReviewSessionQuestionFactory _questionFactory;
 
   ReviewSessionLoadPhase _loadPhase = ReviewSessionLoadPhase.idle;
   Object? _loadError;
@@ -66,18 +69,7 @@ class ReviewSessionState extends ChangeNotifier {
 
     try {
       final pool = await _queueReader.loadWords(snapshot);
-      final processes = pool
-          .map(
-            (word) => BBWordProcess(
-              word: word.word,
-              wordId: word.id,
-              interpret: word.interpret,
-              usPron: word.usPron,
-              ukPron: word.ukPron,
-              example: word.example,
-            ),
-          )
-          .toList();
+      final processes = _questionFactory.createProcesses(pool);
       _engine.init(processes);
       _total = _engine.totalNum;
       _loadPhase = ReviewSessionLoadPhase.ready;
@@ -157,11 +149,7 @@ class ReviewSessionState extends ChangeNotifier {
       return;
     }
 
-    final choices = ChoiceGenerator.generate(
-      correct: ChoiceCandidate(word: current.word, interpret: current.interpret),
-      candidates: _engine.reviewList.map((word) => ChoiceCandidate(word: word.word, interpret: word.interpret)),
-    );
-    _choices = choices.map((choice) => WordChoicePair(choice.word, choice.interpret)).toList();
+    _choices = _questionFactory.createChoices(currentWord: current, reviewWords: _engine.reviewList);
   }
 
   @override
