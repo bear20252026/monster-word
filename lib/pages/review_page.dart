@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../features/learning/application/review_word_details.dart';
 import '../features/learning/presentation/review_audio_state.dart';
 import '../features/learning/presentation/review_queue_state.dart';
+import '../features/learning/presentation/review_word_action_coordinator.dart';
+import '../features/learning/presentation/review_word_action_feedback.dart';
 import '../features/learning/presentation/review_session_state.dart';
 import '../features/learning/presentation/review_word_actions_state.dart';
 import '../features/learning/presentation/widgets/formal_review_widgets.dart';
@@ -86,38 +88,29 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   Future<void> _toggleFavorite() async {
-    final current = context.read<ReviewSessionState>().currentWord;
-    if (current == null) return;
-
-    try {
-      final isFavorite = await context.read<ReviewWordActionsState>().toggleFavorite(current.word);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isFavorite ? '已收藏 ${current.word}' : '已取消收藏'), duration: const Duration(seconds: 1)),
-      );
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('收藏状态保存失败，请重试')));
-      }
-    }
+    final result = await _wordActionCoordinator().toggleFavorite();
+    _showWordActionFeedback(result);
   }
 
   Future<void> _markAsKnown() async {
-    final session = context.read<ReviewSessionState>();
-    final currentWord = session.currentWord;
-    if (currentWord == null || !session.markAsKnown()) return;
+    final result = await _wordActionCoordinator().markCurrentWordAsKnown();
+    _showWordActionFeedback(result);
+  }
 
-    try {
-      final marked = await context.read<ReviewWordActionsState>().markManuallyMastered(currentWord.word);
-      if (mounted && marked) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('已标记掌握 ${currentWord.word}'), duration: const Duration(seconds: 1)));
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('掌握标记保存失败，请重试')));
-      }
-    }
+  ReviewWordActionCoordinator _wordActionCoordinator() {
+    final session = context.read<ReviewSessionState>();
+    return ReviewWordActionCoordinator(
+      wordActions: context.read<ReviewWordActionsState>(),
+      currentWord: () => session.currentWord,
+      markCurrentWordAsKnown: session.markAsKnown,
+    );
+  }
+
+  void _showWordActionFeedback(ReviewWordActionResult result) {
+    final message = result.feedbackMessage;
+    if (!mounted || message == null) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), duration: result.feedbackDuration));
   }
 
   void _showMoreOptions(BuildContext context) {
