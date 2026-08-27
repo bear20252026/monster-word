@@ -56,7 +56,6 @@ import '../../pages/word_export_page.dart';
 import '../../pages/word_machine_page.dart';
 import '../../screens/home_screen.dart';
 import '../../screens/learn_session.dart';
-import '../../screens/review_session.dart';
 import '../../widgets/transition_widgets.dart';
 
 /// 路由名称常量
@@ -66,6 +65,9 @@ class RouteNames {
   static const String libSelect = '/lib_select';
   static const String bookWords = '/book_words';
   static const String review = '/review';
+
+  /// 兼容历史深链；会被重定向到唯一的正式复习流程 [review]。
+  @Deprecated('Use RouteNames.review. The legacy route redirects to the formal review flow.')
   static const String reviewSession = '/review_session';
   static const String learnSession = '/learn_session';
   static const String course = '/course';
@@ -138,8 +140,9 @@ class AppRouter {
         return _buildBookWordsPage(args);
       case RouteNames.review:
         return const ReviewPage();
+      // 保留历史深链，但不再允许它进入独立的旧会话实现。
       case RouteNames.reviewSession:
-        return const ReviewSession();
+        return const ReviewPage();
       case RouteNames.learnSession:
         return const LearnSession();
       case RouteNames.course:

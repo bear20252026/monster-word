@@ -43,6 +43,15 @@ void main() {
       expect(source, contains('nav.pushNamed(ReviewPage.routeName)'));
       expect(source, isNot(contains("nav.pushNamed('/review_session')")));
     });
+
+    test('历史复习深链保留名称但重定向到正式复习页面', () {
+      final routerSource = File('lib/core/router/app_router.dart').readAsStringSync();
+
+      expect(routerSource, contains("static const String reviewSession = '/review_session';"));
+      expect(routerSource, contains('case RouteNames.reviewSession:\n        return const ReviewPage();'));
+      expect(routerSource, isNot(contains("import '../../screens/review_session.dart';")));
+      expect(routerSource, isNot(contains('return const ReviewSession();')));
+    });
   });
 
   group('复习队列读取边界', () {
