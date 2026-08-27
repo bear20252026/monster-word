@@ -89,13 +89,15 @@ void main() {
   group('正式复习加载与答题交互边界', () {
     test('页面渲染会话加载状态，候选反馈和推进由会话状态管理', () {
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final widgetsSource = File('lib/features/learning/presentation/widgets/formal_review_widgets.dart')
+          .readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
       expect(pageSource, contains('session.isLoading'));
       expect(pageSource, contains('session.hasLoadError'));
-      expect(pageSource, contains('_buildLoadError(session)'));
-      expect(pageSource, contains('session.selectChoice(c.word)'));
-      expect(pageSource, contains('session.continueWithGoodRating()'));
+      expect(pageSource, contains('FormalReviewLoadErrorView'));
+      expect(widgetsSource, contains('session.selectChoice(choice.word)'));
+      expect(widgetsSource, contains('session.continueWithGoodRating'));
       expect(pageSource, isNot(contains('_wrongChoiceIndex')));
       expect(pageSource, isNot(contains('Future.delayed')));
       expect(sessionSource, contains('ReviewSessionLoadPhase'));
@@ -154,12 +156,14 @@ void main() {
     test('正式会话通过评分写入端口提交 FSRS 评分', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final widgetsSource = File('lib/features/learning/presentation/widgets/formal_review_widgets.dart')
+          .readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
       expect(appSource, contains('ProxyProvider<LearningState, ReviewRatingWriter>'));
       expect(appSource, contains('ReviewRatingWriter(writeRating: legacy.rateReviewWord)'));
-      expect(pageSource, contains('session.selectChoice(c.word)'));
-      expect(pageSource, contains('session.continueWithGoodRating()'));
+      expect(widgetsSource, contains('session.selectChoice(choice.word)'));
+      expect(widgetsSource, contains('session.continueWithGoodRating'));
       expect(pageSource, isNot(contains('ReviewRatingWriter')));
       expect(sessionSource, contains('ReviewRatingWriter'));
       expect(sessionSource, contains('final reviewedWord = currentWord'));
