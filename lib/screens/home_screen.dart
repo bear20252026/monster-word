@@ -10,8 +10,8 @@ import '../pages/learn_page.dart';
 import '../pages/lib_select_page.dart';
 import '../pages/search_page.dart';
 import '../pages/word_machine_page.dart';
+import '../features/learning/presentation/learning_session_state.dart';
 import '../features/learning/presentation/learning_statistics_state.dart';
-import '../state/learn_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/sb_card.dart';
@@ -132,8 +132,8 @@ class HomeScreen extends StatelessWidget {
 
   /// 直接开始背单词（加载第一本书并跳转到学习页）
   Future<void> _startLearning(BuildContext context) async {
-    // 学习会话由 LearnState 统一驱动，与 LearnPage 保持一致。
-    final state = context.read<LearnState>();
+    // 学习会话由 LearningSessionState 统一驱动，与 LearnPage 保持一致。
+    final state = context.read<LearningSessionState>();
     // 如果已有队列，直接开始学习
     if (state.queue.isNotEmpty) {
       if (context.mounted) {

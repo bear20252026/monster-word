@@ -43,6 +43,31 @@ void main() {
       expect(sessionSource, contains('LeitnerCardEngine'));
       expect(sessionSource, contains('Future<void> rate(FsrsRating rating)'));
     });
+
+    test('旧练习会话栈已删除，学习页面只依赖专用会话与各自的事实状态', () {
+      const migratedPages = [
+        'lib/pages/book_words_page.dart',
+        'lib/pages/immersive_swipe_page.dart',
+        'lib/pages/learn_page.dart',
+        'lib/pages/spell_session_page.dart',
+        'lib/pages/word_machine_page.dart',
+        'lib/screens/home_screen.dart',
+        'lib/screens/learn_session.dart',
+      ];
+      final sessionSource = File('lib/features/learning/presentation/learning_session_state.dart').readAsStringSync();
+
+      expect(File('lib/state/learn_state.dart').existsSync(), isFalse);
+      expect(File('lib/services/learn_service.dart').existsSync(), isFalse);
+      expect(File('lib/services/learn_service_impl.dart').existsSync(), isFalse);
+      expect(File('lib/modules/learn/learn_module.dart').existsSync(), isFalse);
+      for (final path in migratedPages) {
+        final source = File(path).readAsStringSync();
+        expect(source, contains('LearningSessionState'), reason: '$path 应使用专用学习会话');
+        expect(source, isNot(contains('LearnState')), reason: '$path 不应回流旧练习状态');
+      }
+      expect(sessionSource, contains('List.unmodifiable(_queue)'));
+      expect(sessionSource, contains('void exitLearning()'));
+    });
   });
 
   group('正式复习禁止依赖', () {

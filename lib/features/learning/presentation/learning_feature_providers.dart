@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../repositories/fav_repository.dart';
 import '../../../repositories/mastered_repository.dart';
-import '../../../state/learn_state.dart';
 import '../../../state/review_state.dart';
 import '../application/book_words_reader.dart';
 import '../application/mastered_words_reader.dart';
@@ -97,7 +96,6 @@ Widget buildLearningFeatureScope({required Widget child}) {
       Provider<NewWordsReader>.value(value: sl<NewWordsReader>()),
       Provider<ReviewQueueReader>.value(value: sl<ReviewQueueReader>()),
       ChangeNotifierProvider(create: (_) => sl<NewWordsState>()..initialize()),
-      ChangeNotifierProvider(create: (_) => sl<LearnState>()),
       ChangeNotifierProvider(create: (_) => sl<ReviewState>()),
     ],
     child: child,

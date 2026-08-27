@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../state/learn_state.dart';
+import '../features/learning/presentation/learning_session_state.dart';
 import '../state/player_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -45,20 +45,20 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
   }
 
   String get _currentWord {
-    final state = context.read<LearnState>();
+    final state = context.read<LearningSessionState>();
     if (state.queue.isEmpty) return '';
     return state.queue[_currentIndex.clamp(0, state.queue.length - 1)].word;
   }
 
   String? get _currentPhonetic {
-    final state = context.read<LearnState>();
+    final state = context.read<LearningSessionState>();
     if (state.queue.isEmpty) return null;
     final w = state.queue[_currentIndex.clamp(0, state.queue.length - 1)];
     return w.usPron.isNotEmpty ? w.usPron : (w.ukPron.isNotEmpty ? w.ukPron : null);
   }
 
   int get _totalWords {
-    final state = context.read<LearnState>();
+    final state = context.read<LearningSessionState>();
     return state.queue.length;
   }
 
@@ -111,8 +111,10 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('听写完成'),
-        content: Text('正确率：$_correctCount / $_totalCount\n'
-            '${_totalCount > 0 ? (_correctCount / _totalCount * 100).toStringAsFixed(0) : 0}%'),
+        content: Text(
+          '正确率：$_correctCount / $_totalCount\n'
+          '${_totalCount > 0 ? (_correctCount / _totalCount * 100).toStringAsFixed(0) : 0}%',
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -166,132 +168,128 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
     return SessionExitGuard(
       subject: '拼写练习',
       child: Scaffold(
-      backgroundColor: skin.colors.pageBg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildNavBar(skin),
-            // 进度条（加粗到 4dp，更容易看到进度）
-            LinearProgressIndicator(
-              value: (_currentIndex + 1) / _totalWords,
-              backgroundColor: skin.colors.divider,
-              valueColor: AlwaysStoppedAnimation(skin.colors.accent),
-              minHeight: 4,
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    // 进度文字
-                    Text('${_currentIndex + 1} / $_totalWords',
-                        style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
-                    const SizedBox(height: 16),
-                    // 播放按钮
-                    GestureDetector(
-                      onTap: _playCurrentWord,
-                      child: Container(
-                        width: 80, height: 80,
-                        decoration: BoxDecoration(
-                          color: skin.colors.accent.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(Icons.volume_up, color: skin.colors.accent, size: 40),
+        backgroundColor: skin.colors.pageBg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildNavBar(skin),
+              // 进度条（加粗到 4dp，更容易看到进度）
+              LinearProgressIndicator(
+                value: (_currentIndex + 1) / _totalWords,
+                backgroundColor: skin.colors.divider,
+                valueColor: AlwaysStoppedAnimation(skin.colors.accent),
+                minHeight: 4,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      // 进度文字
+                      Text(
+                        '${_currentIndex + 1} / $_totalWords',
+                        style: MistralTypography.caption.copyWith(color: skin.colors.text3),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (_currentPhonetic != null)
-                      Text('/$_currentPhonetic/',
-                          style: MistralTypography.body.copyWith(color: skin.colors.text3)),
-                    const SizedBox(height: 32),
-                    // 输入框
-                    TextField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      textAlign: TextAlign.center,
-                      style: MistralTypography.heading3.copyWith(color: skin.colors.text1),
-                      textCapitalization: TextCapitalization.none,
-                      decoration: InputDecoration(
-                        hintText: '输入听到的单词',
-                        hintStyle: MistralTypography.body.copyWith(color: skin.colors.text3),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.lg),
-                          borderSide: BorderSide(color: skin.colors.divider),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.lg),
-                          borderSide: BorderSide(color: skin.colors.accent, width: 2),
+                      const SizedBox(height: 16),
+                      // 播放按钮
+                      GestureDetector(
+                        onTap: _playCurrentWord,
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: skin.colors.accent.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.volume_up, color: skin.colors.accent, size: 40),
                         ),
                       ),
-                      onSubmitted: (_) => _check(),
-                    ),
-                    const SizedBox(height: 16),
-                    // 反馈
-                    if (_hasChecked) ...[
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: (_isCorrect ? Colors.green : Colors.red).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          border: Border.all(
-                            color: _isCorrect ? Colors.green : Colors.red,
+                      const SizedBox(height: 8),
+                      if (_currentPhonetic != null)
+                        Text('/$_currentPhonetic/', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+                      const SizedBox(height: 32),
+                      // 输入框
+                      TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        textAlign: TextAlign.center,
+                        style: MistralTypography.heading3.copyWith(color: skin.colors.text1),
+                        textCapitalization: TextCapitalization.none,
+                        decoration: InputDecoration(
+                          hintText: '输入听到的单词',
+                          hintStyle: MistralTypography.body.copyWith(color: skin.colors.text3),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                            borderSide: BorderSide(color: skin.colors.divider),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                            borderSide: BorderSide(color: skin.colors.accent, width: 2),
                           ),
                         ),
-                        child: Text(_result,
+                        onSubmitted: (_) => _check(),
+                      ),
+                      const SizedBox(height: 16),
+                      // 反馈
+                      if (_hasChecked) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: (_isCorrect ? Colors.green : Colors.red).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(color: _isCorrect ? Colors.green : Colors.red),
+                          ),
+                          child: Text(
+                            _result,
                             textAlign: TextAlign.center,
-                            style: MistralTypography.bodyBold.copyWith(
-                              color: _isCorrect ? Colors.green : Colors.red,
-                            )),
-                      ),
-                    ],
-                    const Spacer(),
-                    // 按钮组
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              setState(() {
-                                _totalCount++;
-                                _hasChecked = true;
-                                _result = '答案：$_currentWord';
-                              });
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: skin.colors.divider),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppRadius.md),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: const Text('跳过'),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _hasChecked ? _nextWord : _check,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: skin.colors.accent,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppRadius.md),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: Text(_hasChecked ? '下一词' : '检查'),
+                            style: MistralTypography.bodyBold.copyWith(color: _isCorrect ? Colors.green : Colors.red),
                           ),
                         ),
                       ],
-                    ),
-                  ],
+                      const Spacer(),
+                      // 按钮组
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _totalCount++;
+                                  _hasChecked = true;
+                                  _result = '答案：$_currentWord';
+                                });
+                              },
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: skin.colors.divider),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: const Text('跳过'),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: _hasChecked ? _nextWord : _check,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: skin.colors.accent,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              child: Text(_hasChecked ? '下一词' : '检查'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -310,8 +308,7 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
           const SizedBox(width: 4),
           Text('听写测试', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
-          Text('正确 $_correctCount',
-              style: MistralTypography.caption.copyWith(color: Colors.green)),
+          Text('正确 $_correctCount', style: MistralTypography.caption.copyWith(color: Colors.green)),
           const SizedBox(width: 16),
         ],
       ),

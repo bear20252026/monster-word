@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
 import '../player/audio_players.dart' show playWordAudio;
-import '../state/learn_state.dart';
+import '../features/learning/presentation/learning_session_state.dart';
 import '../tokens/gameboy.dart';
 import '../widgets/session_exit_guard.dart';
 import '../widgets/text_generate_effect.dart';
@@ -63,7 +63,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
 
   /// 切换到上一个单词
   void _previousWord() {
-    final state = context.read<LearnState>();
+    final state = context.read<LearningSessionState>();
     if (state.currentIndex > 0) {
       state.jumpTo(state.currentIndex - 1);
       setState(() {
@@ -77,7 +77,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
 
   /// 切换到下一个单词
   void _nextWordManual() {
-    final state = context.read<LearnState>();
+    final state = context.read<LearningSessionState>();
     if (state.currentIndex < state.total - 1) {
       state.jumpTo(state.currentIndex + 1);
       setState(() {
@@ -106,7 +106,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
   void _onChoice(int index) {
     if (_showResult) return;
 
-    final state = context.read<LearnState>();
+    final state = context.read<LearningSessionState>();
     final word = state.currentWord;
     if (word == null) return;
 
@@ -153,7 +153,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
   }
 
   void _nextWord() {
-    final state = context.read<LearnState>();
+    final state = context.read<LearningSessionState>();
     setState(() {
       _selectedChoice = -1;
       _showResult = false;
@@ -364,7 +364,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
 
   /// 游戏画面
   Widget _buildGameScreen() {
-    final state = context.watch<LearnState>();
+    final state = context.watch<LearningSessionState>();
     final word = state.currentWord;
 
     if (word == null) {
@@ -492,7 +492,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
   }
 
   /// 4 个选项
-  Widget _buildChoiceGrid(LearnState state) {
+  Widget _buildChoiceGrid(LearningSessionState state) {
     final choices = state.choices;
     return Padding(
       padding: const EdgeInsets.all(8),
@@ -510,7 +510,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
   }
 
   /// 单个选项按钮
-  Widget _buildChoiceButton(int index, dynamic choice, LearnState state) {
+  Widget _buildChoiceButton(int index, dynamic choice, LearningSessionState state) {
     final word = state.currentWord;
     final isCorrectChoice = choice.word == word?.word;
     final isSelected = _selectedChoice == index;
@@ -574,7 +574,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
 
   /// 播放发音
   void _playPronunciation() {
-    final state = context.read<LearnState>();
+    final state = context.read<LearningSessionState>();
     final word = state.currentWord;
     if (word == null) return;
     // 使用 TTS 或在线音频播放
@@ -596,7 +596,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
 
   /// 构建单词详情面板（BoxReveal 动画展开/收起）
   Widget _buildWordDetails() {
-    final state = context.read<LearnState>();
+    final state = context.read<LearningSessionState>();
     final word = state.currentWord;
     if (word == null) return const SizedBox.shrink();
 

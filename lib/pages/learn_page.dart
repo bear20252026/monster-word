@@ -7,8 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../engine/fsrs6_engine.dart' show FsrsRating;
+import '../features/learning/presentation/learning_favorites_state.dart';
+import '../features/learning/presentation/learning_session_state.dart';
 import '../hooks/responsive.dart';
-import '../state/learn_state.dart';
 import '../state/player_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -38,10 +39,8 @@ class _LearnPageState extends State<LearnPage> {
       await context.read<PlayerState>().playWord(word, audioUrl: audioUrl);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('发音加载失败，请检查网络'),
-            duration: Duration(seconds: 2)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
       }
     } finally {
       if (mounted) setState(() => _audioLoading = false);
@@ -52,7 +51,7 @@ class _LearnPageState extends State<LearnPage> {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final resp = context.responsive;
-    final state = context.watch<LearnState>();
+    final state = context.watch<LearningSessionState>();
     final word = state.currentWord;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -64,39 +63,53 @@ class _LearnPageState extends State<LearnPage> {
         state.exitLearning();
       },
       child: Scaffold(
-      backgroundColor: skin.colors.pageBg, // 奶油画布（batch4c: 壁纸→cream canvas）
-      body: word == null
-          ? _CompletionScreen(skin: skin)
-          : SafeArea(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
-                  child: isLandscape
-                      ? Row(
-                          children: [
-                            Expanded(child: _WordArea(
-                              word: word, skin: skin, resp: resp,
-                              audioLoading: _audioLoading,
-                              onPlayAudio: _playAudio,
-                            )),
-                            Expanded(child: _QuizArea(word: word, state: state, skin: skin)),
-                          ],
-                        )
-                      : Column(
-                    children: [
-                      _TopBar(skin: skin, state: state),
-                      Expanded(flex: 4, child: _WordArea(
-                        word: word, skin: skin, resp: resp,
-                        audioLoading: _audioLoading,
-                        onPlayAudio: _playAudio,
-                      )),
-                      Expanded(flex: 6, child: _QuizArea(word: word, state: state, skin: skin)),
-                    ],
+        backgroundColor: skin.colors.pageBg, // 奶油画布（batch4c: 壁纸→cream canvas）
+        body: word == null
+            ? _CompletionScreen(skin: skin)
+            : SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
+                    child: isLandscape
+                        ? Row(
+                            children: [
+                              Expanded(
+                                child: _WordArea(
+                                  word: word,
+                                  skin: skin,
+                                  resp: resp,
+                                  audioLoading: _audioLoading,
+                                  onPlayAudio: _playAudio,
+                                ),
+                              ),
+                              Expanded(
+                                child: _QuizArea(word: word, state: state, skin: skin),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              _TopBar(skin: skin, state: state),
+                              Expanded(
+                                flex: 4,
+                                child: _WordArea(
+                                  word: word,
+                                  skin: skin,
+                                  resp: resp,
+                                  audioLoading: _audioLoading,
+                                  onPlayAudio: _playAudio,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 6,
+                                child: _QuizArea(word: word, state: state, skin: skin),
+                              ),
+                            ],
+                          ),
                   ),
                 ),
               ),
-            ),
-    ),
+      ),
     );
   }
 }
@@ -104,13 +117,14 @@ class _LearnPageState extends State<LearnPage> {
 /// 顶部导航栏（batch4c: 白色→token 颜色）
 class _TopBar extends StatelessWidget {
   final SkinSystem skin;
-  final LearnState state;
+  final LearningSessionState state;
   const _TopBar({required this.skin, required this.state});
 
   @override
   Widget build(BuildContext context) {
     final word = state.currentWord;
-    final isFav = word != null && state.isFavorite(word.word);
+    final favorites = context.watch<LearningFavoritesState>();
+    final isFav = word != null && favorites.isFavorite(word.word);
     final colors = skin.colors;
 
     return Container(
@@ -124,14 +138,14 @@ class _TopBar extends StatelessWidget {
             tooltip: '返回',
             onPressed: () => Navigator.pop(context),
           ),
-          Text('${state.currentIndex + 1}/${state.total}',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1)),
+          Text(
+            '${state.currentIndex + 1}/${state.total}',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: TweenAnimationBuilder<double>(
-              tween: Tween(
-                end: state.total == 0 ? 0.0 : (state.currentIndex + 1) / state.total,
-              ),
+              tween: Tween(end: state.total == 0 ? 0.0 : (state.currentIndex + 1) / state.total),
               duration: const Duration(milliseconds: 400),
               curve: standardCurve,
               builder: (context, value, _) => ClipRRect(
@@ -153,9 +167,7 @@ class _TopBar extends StatelessWidget {
               size: 22,
             ),
             tooltip: isFav ? '取消收藏' : '收藏',
-            onPressed: word == null
-                ? null
-                : () => state.toggleFavorite(word.word),
+            onPressed: word == null ? null : () => favorites.toggle(word.word),
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_horiz, size: 22),
@@ -167,7 +179,7 @@ class _TopBar extends StatelessWidget {
                   state.rate(FsrsRating.again);
                   break;
                 case 'favorite':
-                  if (word != null) state.toggleFavorite(word.word);
+                  if (word != null) favorites.toggle(word.word);
                   break;
               }
             },
@@ -217,17 +229,10 @@ class _CompletionScreen extends StatelessWidget {
               const SizedBox(height: 24),
               Text(
                 '🎉 今日学习完成！',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: colors.text1,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colors.text1),
               ),
               const SizedBox(height: 12),
-              Text(
-                '你已经完成了今天的所有单词',
-                style: TextStyle(fontSize: 16, color: colors.text2),
-              ),
+              Text('你已经完成了今天的所有单词', style: TextStyle(fontSize: 16, color: colors.text2)),
               const SizedBox(height: 32),
               Container(
                 padding: const EdgeInsets.all(20),
@@ -237,12 +242,7 @@ class _CompletionScreen extends StatelessWidget {
                   border: Border.all(color: colors.divider),
                 ),
                 child: Column(
-                  children: [
-                    Text(
-                      '继续加油，每天进步一点点！',
-                      style: TextStyle(fontSize: 14, color: colors.text2),
-                    ),
-                  ],
+                  children: [Text('继续加油，每天进步一点点！', style: TextStyle(fontSize: 14, color: colors.text2))],
                 ),
               ),
               const SizedBox(height: 32),
@@ -253,15 +253,10 @@ class _CompletionScreen extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.accent,
                     foregroundColor: colors.onGlassAccent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    '返回首页',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
+                  child: const Text('返回首页', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
               ),
             ],
@@ -322,24 +317,30 @@ class _WordArea extends StatelessWidget {
               children: [
                 WordLookupPopup(
                   word: word.word,
-                  child: Text(word.word,
+                  child: Text(
+                    word.word,
                     style: TextStyle(
                       fontSize: 40 * resp.fontScale,
                       fontWeight: FontWeight.w800,
                       color: colors.text1,
                       height: 1.1,
-                    )),
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
                   // ✅ 修复：优先使用第三方服务器提供的音频 URL
                   onTap: () => onPlayAudio(word.word, audioUrl: word.audioUrls.isNotEmpty ? word.audioUrls : null),
                   child: SizedBox(
-                    width: 44, height: 44,
+                    width: 44,
+                    height: 44,
                     child: Center(
                       child: audioLoading
-                          ? SizedBox(width: 20, height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: colors.text2))
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: colors.text2),
+                            )
                           : Icon(Icons.volume_up_outlined, color: colors.text2, size: 28),
                     ),
                   ),
@@ -348,19 +349,14 @@ class _WordArea extends StatelessWidget {
             ),
             if (word.usPron.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text('/${word.usPron}/',
-                style: TextStyle(
-                  fontSize: 14 * resp.fontScale,
-                  color: colors.text3,
-                )),
+              Text(
+                '/${word.usPron}/',
+                style: TextStyle(fontSize: 14 * resp.fontScale, color: colors.text3),
+              ),
             ],
             // 刮刮揭示：刮开查看词义提示（scratch-to-reveal 微交互）
             const SizedBox(height: 18),
-            WordScratchCard(
-              word: '刮开看提示',
-              meaning: _hintText(word),
-              color: colors.accent,
-            ),
+            WordScratchCard(word: '刮开看提示', meaning: _hintText(word), color: colors.accent),
           ],
         ),
       ),
@@ -371,7 +367,7 @@ class _WordArea extends StatelessWidget {
 /// 下半：4选1 选错标红重选，选对标绿进字典详情页（batch4c: 星巴克样式）
 class _QuizArea extends StatefulWidget {
   final dynamic word;
-  final LearnState state;
+  final LearningSessionState state;
   final SkinSystem skin;
   const _QuizArea({required this.word, required this.state, required this.skin});
 
@@ -403,10 +399,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       vsync: this,
     );
 
-    _bounceController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
+    _bounceController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
 
     _checkController = AnimationController(
       duration: const Duration(milliseconds: 200), // base 档
@@ -472,31 +465,18 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       particleCount: 30,
       direction: ConfettiDirection.down,
       duration: const Duration(seconds: 2),
-      colors: const [
-        Color(0xFF006241),
-        Color(0xFF00754A),
-        Color(0xFFcba258),
-        Color(0xFFFFD93D),
-        Color(0xFF6BCB77),
-      ],
+      colors: const [Color(0xFF006241), Color(0xFF00754A), Color(0xFFcba258), Color(0xFFFFD93D), Color(0xFF6BCB77)],
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: resp.pageMargin),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            resp.horizontalPadding * 0.5,
-            20,
-            resp.horizontalPadding * 0.5,
-            20,
-          ),
+          padding: EdgeInsets.fromLTRB(resp.horizontalPadding * 0.5, 20, resp.horizontalPadding * 0.5, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(_wrongIndex >= 0 ? '请再选出正确答案' : '请选择正确释义',
-                style: TextStyle(
-                  fontSize: 13 * resp.fontScale,
-                  fontWeight: FontWeight.w600,
-                  color: colors.text2,
-                )),
+              Text(
+                _wrongIndex >= 0 ? '请再选出正确答案' : '请选择正确释义',
+                style: TextStyle(fontSize: 13 * resp.fontScale, fontWeight: FontWeight.w600, color: colors.text2),
+              ),
               const SizedBox(height: 12),
               for (int i = 0; i < state.choices.length && i < 4; i++)
                 BoxReveal(
@@ -577,13 +557,12 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
                     ],
             ),
             child: Center(
-              child: Text(interpret,
-                style: TextStyle(
-                  fontSize: 16 * resp.fontScale,
-                  color: textColor,
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 2, overflow: TextOverflow.ellipsis),
+              child: Text(
+                interpret,
+                style: TextStyle(fontSize: 16 * resp.fontScale, color: textColor, fontWeight: FontWeight.w500),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
           // P2c: 对勾图标 springPop 弹入
@@ -599,11 +578,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
                 ),
                 child: FadeTransition(
                   opacity: _checkController,
-                  child: Icon(
-                    Icons.check_circle_outline,
-                    color: colors.quizCorrectText,
-                    size: 24,
-                  ),
+                  child: Icon(Icons.check_circle_outline, color: colors.quizCorrectText, size: 24),
                 ),
               ),
             ),
@@ -613,10 +588,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
 
     // P1e: 答对项接入 BounceWidget
     if (isCorrect) {
-      tile = ScaleTransition(
-        scale: buildBounceAnim(_bounceController),
-        child: tile,
-      );
+      tile = ScaleTransition(scale: buildBounceAnim(_bounceController), child: tile);
     }
 
     // P3c: 收敛抖动 ±3px/300ms 单周期（AnimatedBuilder 替代 ShakeWidget）
