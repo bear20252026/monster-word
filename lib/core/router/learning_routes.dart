@@ -7,6 +7,7 @@ import '../../pages/courses_page.dart';
 import '../../pages/dictation_session_page.dart';
 import '../../pages/extensive_model_select_page.dart';
 import '../../pages/learn_page.dart';
+import '../../pages/lib_select_page.dart';
 import '../../pages/list_word_listen_page.dart';
 import '../../pages/listening_player_page.dart';
 import '../../pages/mastered_words_page.dart';
