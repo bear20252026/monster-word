@@ -16,6 +16,7 @@ import '../features/learning/presentation/learning_queue_word_lists_state.dart';
 import '../features/learning/presentation/learning_statistics_state.dart';
 import '../features/learning/presentation/new_words_state.dart';
 import '../features/learning/presentation/review_queue_state.dart';
+import '../features/learning/presentation/review_session_state.dart';
 import '../pages/lib_select_page.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
@@ -66,6 +67,15 @@ class WordApp extends StatelessWidget {
         ),
         ProxyProvider<LearningState, ReviewRatingWriter>(
           update: (_, legacy, _) => ReviewRatingWriter(writeRating: legacy.rateReviewWord),
+        ),
+        ChangeNotifierProxyProvider<ReviewRatingWriter, ReviewSessionState>(
+          create: (context) => ReviewSessionState(
+            queueReader: sl<ReviewQueueReader>(),
+            ratingWriter: context.read<ReviewRatingWriter>(),
+          ),
+          update: (_, ratingWriter, session) =>
+              (session ?? ReviewSessionState(queueReader: sl<ReviewQueueReader>(), ratingWriter: ratingWriter))
+                ..updateRatingWriter(ratingWriter),
         ),
         Provider<BookWordsReader>.value(value: sl<BookWordsReader>()),
         Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),
