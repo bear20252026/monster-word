@@ -60,6 +60,24 @@ class WordRepositoryImpl implements WordRepository {
   }
 
   @override
+  Future<List<Word>> getWordsByIds(Iterable<int> ids) async {
+    final uniqueIds = ids.where((id) => id > 0).toSet().toList(growable: false);
+    if (uniqueIds.isEmpty) return [];
+
+    final db = _database.db;
+    final words = <Word>[];
+    const chunkSize = 900;
+    for (var start = 0; start < uniqueIds.length; start += chunkSize) {
+      final end = start + chunkSize < uniqueIds.length ? start + chunkSize : uniqueIds.length;
+      final chunk = uniqueIds.sublist(start, end);
+      final placeholders = List.filled(chunk.length, '?').join(', ');
+      final maps = await db.query('words', where: 'id IN ($placeholders)', whereArgs: chunk);
+      words.addAll(maps.map(Word.fromMap));
+    }
+    return words;
+  }
+
+  @override
   Future<List<Word>> searchWords(String query, {int? limit}) async {
     final db = _database.db;
     final maps = await db.query('words', where: 'word LIKE ?', whereArgs: ['%$query%'], limit: limit ?? 50);

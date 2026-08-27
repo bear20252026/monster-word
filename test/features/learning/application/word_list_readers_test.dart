@@ -1,8 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/learning/application/book_words_reader.dart';
 import 'package:word_app/features/learning/application/mastered_words_reader.dart';
+import 'package:word_app/features/learning/application/new_words_reader.dart';
+import 'package:word_app/models/new_word_record.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/repositories/mastered_repository.dart';
+import 'package:word_app/repositories/new_word_repository.dart';
 import 'package:word_app/repositories/word_repository.dart';
 
 class _FakeMasteredRepository implements MasteredRepository {
@@ -25,6 +28,8 @@ class _FakeMasteredRepository implements MasteredRepository {
 
 class _FakeWordRepository implements WordRepository {
   Iterable<String>? requestedTexts;
+  Iterable<int>? requestedIds;
+  List<Word> wordsById = [];
   int? requestedBookId;
   int? requestedBookLimit;
 
@@ -48,6 +53,12 @@ class _FakeWordRepository implements WordRepository {
   }
 
   @override
+  Future<List<Word>> getWordsByIds(Iterable<int> ids) async {
+    requestedIds = ids.toList();
+    return wordsById;
+  }
+
+  @override
   Future<List<Word>> getRandomWords(int count, {int? excludeBookId}) => throw UnimplementedError();
 
   @override
@@ -58,6 +69,30 @@ class _FakeWordRepository implements WordRepository {
 
   @override
   Future<int> updateWordStatus(int wordId, Map<String, dynamic> status) => throw UnimplementedError();
+}
+
+class _FakeNewWordRepository implements NewWordRepository {
+  _FakeNewWordRepository(this.records);
+
+  final List<NewWordRecord> records;
+
+  @override
+  Future<bool> addNewWord(Word word, {String source = 'manual'}) => throw UnimplementedError();
+
+  @override
+  Future<List<NewWordRecord>> getNewWords({int? limit, int? offset}) async => records;
+
+  @override
+  Future<int> getNewWordCount() async => records.length;
+
+  @override
+  Future<bool> isNewWord(int wordId) async => records.any((record) => record.wordId == wordId);
+
+  @override
+  Future<bool> removeNewWord(int wordId) => throw UnimplementedError();
+
+  @override
+  Future<bool> toggleNewWord(Word word, {String source = 'manual'}) => throw UnimplementedError();
 }
 
 void main() {
@@ -76,6 +111,22 @@ void main() {
     expect(await reader.loadWords(42), isEmpty);
     expect(wordRepository.requestedBookId, 42);
     expect(wordRepository.requestedBookLimit, 1000);
+  });
+
+  test('生词读取器按加入顺序解析可用词条', () async {
+    final wordRepository = _FakeWordRepository()..wordsById = [Word(id: 5, word: 'banana'), Word(id: 2, word: 'apple')];
+    final reader = NewWordsReader(
+      newWordRepository: _FakeNewWordRepository([
+        const NewWordRecord(wordId: 2, wordText: 'apple', source: 'dictionary', createdAt: 2),
+        const NewWordRecord(wordId: 5, wordText: 'banana', source: 'dictionary', createdAt: 1),
+      ]),
+      wordRepository: wordRepository,
+    );
+
+    final words = await reader.loadWords();
+
+    expect(wordRepository.requestedIds, [2, 5]);
+    expect(words.map((word) => word.id), [2, 5]);
   });
 
   test('已掌握标记通过单词仓储批量解析', () async {

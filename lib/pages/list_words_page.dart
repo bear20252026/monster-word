@@ -42,6 +42,9 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
     return loadWords(context.read<LearningState>());
   }
 
+  /// 子类可覆盖以持久化移除当前词条；默认保持既有仅移除页面列表的行为。
+  Future<bool> removeWord(Word word) async => true;
+
   /// 子类可提供的主操作按钮（如「开始学习」FAB）；默认无
   Widget? get learningFab => null;
 
@@ -190,7 +193,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
             child: const Icon(Icons.delete, color: AppColors.white100),
           ),
           confirmDismiss: (direction) async {
-            return await showDialog<bool>(
+            final confirmed = await showDialog<bool>(
               context: context,
               builder: (ctx) => AlertDialog(
                 title: const Text('确认删除'),
@@ -201,10 +204,11 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
                 ],
               ),
             );
+            if (confirmed != true) return false;
+            return removeWord(word);
           },
           onDismissed: (direction) {
-            setState(() => _words.removeAt(index));
-            // TODO: 从数据库删除
+            setState(() => _words.remove(word));
           },
           child: ListTile(
             onTap: _isBatchEditMode ? () => _toggleSelect(index) : () => _openWordDetail(word),

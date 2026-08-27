@@ -547,7 +547,6 @@ class LearningState extends ChangeNotifier {
 
   // ========== 单词分类查询 ==========
 
-  int get newWordNum => _queue.where((w) => !_cards.containsKey(w.word)).length;
   int get masteredNum => _masteredRepository.masteredCount;
   int get notLearnedNum => _queue.length - learnedNum;
   int get reviewingNum => _fsrsEngine.getDueCards(_cards.values.toList()).length;
@@ -564,11 +563,6 @@ class LearningState extends ChangeNotifier {
 
   Future<List<Word>> getLearnedWords() async {
     return queueWordLists.learnedWords;
-  }
-
-  Future<List<Word>> getNewWords() async {
-    // TODO: 从数据库查询生词本
-    return [];
   }
 
   Future<List<Word>> getMasteredWordsBySrs() async {

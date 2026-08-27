@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
+import '../features/learning/presentation/new_words_state.dart';
 import '../models/word.dart';
 import '../state/player_state.dart';
 import '../services/dictionary_service.dart';
@@ -92,23 +93,42 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
           Expanded(
             child: Text(
               '字典',
-              style: MistralTypography.heading5.copyWith(
-                color: skin.text1,
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-              ),
+              style: MistralTypography.heading5.copyWith(color: skin.text1, fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
-          Consumer<LearningState>(
-            builder: (context, state, _) {
-              final isFav = state.isFavorite(widget.word.word);
-              return IconButton(
-                icon: Icon(
-                  isFav ? Icons.star : Icons.star_border,
-                  color: isFav ? MistralColors.primary : skin.text3,
-                  size: 24,
-                ),
-                onPressed: () => state.toggleFavorite(widget.word.word),
+          Consumer2<LearningState, NewWordsState>(
+            builder: (context, learningState, newWords, _) {
+              final isFav = learningState.isFavorite(word.word);
+              final isNewWord = newWords.isNewWord(word.id);
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      isNewWord ? Icons.bookmark_added : Icons.bookmark_add_outlined,
+                      color: isNewWord ? MistralColors.primary : skin.text3,
+                      size: 24,
+                    ),
+                    tooltip: isNewWord ? '移出生词本' : '加入生词本',
+                    onPressed: word.id <= 0
+                        ? null
+                        : () async {
+                            final isAdded = await newWords.toggleNewWord(word, source: 'dictionary');
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(content: Text(isAdded ? '已加入生词本' : '已移出生词本')));
+                            }
+                          },
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      isFav ? Icons.star : Icons.star_border,
+                      color: isFav ? MistralColors.primary : skin.text3,
+                      size: 24,
+                    ),
+                    onPressed: () => learningState.toggleFavorite(word.word),
+                  ),
+                ],
               );
             },
           ),
@@ -127,10 +147,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             children: [
               Text(
                 word.word,
-                style: MistralTypography.heading2.copyWith(
-                  color: skin.text1,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: MistralTypography.heading2.copyWith(color: skin.text1, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: AppSpacing.xs),
               _buildCETTags(skin),
@@ -141,10 +158,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
           onTap: () => _playAudio(word.word),
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: skin.cardBgAlt,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-            ),
+            decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(AppRadius.lg)),
             child: Icon(Icons.volume_up, color: skin.accent, size: 24),
           ),
         ),
@@ -155,13 +169,17 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
   Widget _buildCETTags(ThemeVars skin) {
     // 根据单词长度简单分类（后续可从 Word 模型获取真实等级）
     final wordLen = widget.word.word?.length ?? 0;
-    final label = wordLen <= 4 ? '基础' : wordLen <= 8 ? '核心' : '进阶';
-    final color = wordLen <= 4 ? MistralColors.success : wordLen <= 8 ? skin.accent : MistralColors.warning;
-    return Row(
-      children: [
-        _buildTag(label, color, skin),
-      ],
-    );
+    final label = wordLen <= 4
+        ? '基础'
+        : wordLen <= 8
+        ? '核心'
+        : '进阶';
+    final color = wordLen <= 4
+        ? MistralColors.success
+        : wordLen <= 8
+        ? skin.accent
+        : MistralColors.warning;
+    return Row(children: [_buildTag(label, color, skin)]);
   }
 
   Widget _buildTag(String text, Color color, ThemeVars skin) {
@@ -173,11 +191,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
       ),
       child: Text(
         text,
-        style: MistralTypography.micro.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-          fontSize: 11,
-        ),
+        style: MistralTypography.micro.copyWith(color: color, fontWeight: FontWeight.w600, fontSize: 11),
       ),
     );
   }
@@ -193,8 +207,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (word.usPron.isNotEmpty)
-            _buildPronunciationRow('美式', '/${word.usPron}/', skin),
+          if (word.usPron.isNotEmpty) _buildPronunciationRow('美式', '/${word.usPron}/', skin),
           if (word.ukPron.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.sm),
             _buildPronunciationRow('英式', '/${word.ukPron}/', skin),
@@ -209,26 +222,17 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
       children: [
         Text(
           label,
-          style: MistralTypography.bodySm.copyWith(
-            color: skin.text3,
-            fontWeight: FontWeight.w500,
-          ),
+          style: MistralTypography.bodySm.copyWith(color: skin.text3, fontWeight: FontWeight.w500),
         ),
         const SizedBox(width: AppSpacing.sm),
-        Text(
-          phonetic,
-          style: MistralTypography.bodyMd.copyWith(color: skin.text1),
-        ),
+        Text(phonetic, style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
       ],
     );
   }
 
   Widget _buildInterpretation(ThemeVars skin, Word word) {
     final lines = word.hasStructuredDefinitions
-        ? word.formattedDefinitions
-            .split('\n')
-            .where((l) => l.trim().isNotEmpty)
-            .toList()
+        ? word.formattedDefinitions.split('\n').where((l) => l.trim().isNotEmpty).toList()
         : word.interpretLines;
     return Container(
       width: double.infinity,
@@ -243,22 +247,15 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
         children: [
           Text(
             '释义',
-            style: MistralTypography.bodyMd.copyWith(
-              color: skin.text1,
-              fontWeight: FontWeight.w600,
-            ),
+            style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppSpacing.sm),
-          ...lines.map((line) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-            child: Text(
-              line,
-              style: MistralTypography.bodyMd.copyWith(
-                color: skin.text1,
-                height: 1.5,
-              ),
+          ...lines.map(
+            (line) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Text(line, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -281,9 +278,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             indicatorColor: skin.accent,
             indicatorWeight: 2,
             indicatorSize: TabBarIndicatorSize.label,
-            labelStyle: MistralTypography.bodySm.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            labelStyle: MistralTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
             unselectedLabelStyle: MistralTypography.bodySm,
             tabs: const [
               Tab(text: '柯林斯'),
@@ -329,10 +324,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
               Expanded(
                 child: Text(
                   '柯林斯释义',
-                  style: MistralTypography.bodyMd.copyWith(
-                    color: skin.text1,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
               ),
               IconButton(
@@ -343,10 +335,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            '暂无柯林斯释义数据',
-            style: MistralTypography.bodyMd.copyWith(color: skin.text3),
-          ),
+          Text('暂无柯林斯释义数据', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
         ],
       ),
     );
@@ -363,10 +352,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
           border: Border.all(color: skin.divider, width: 0.5),
         ),
         child: Center(
-          child: Text(
-            '暂无例句数据',
-            style: MistralTypography.bodyMd.copyWith(color: skin.text3),
-          ),
+          child: Text('暂无例句数据', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
         ),
       );
     }
@@ -390,34 +376,24 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             children: [
               RichText(
                 text: TextSpan(
-                  style: MistralTypography.bodyMd.copyWith(
-                    color: skin.text1,
-                    height: 1.5,
-                  ),
-                  children: ex.highlightedParts.map((p) => TextSpan(
-                    text: p.text,
-                    style: p.highlight
-                        ? TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: skin.accent,
-                          )
-                        : null,
-                  )).toList(),
+                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5),
+                  children: ex.highlightedParts
+                      .map(
+                        (p) => TextSpan(
+                          text: p.text,
+                          style: p.highlight ? TextStyle(fontWeight: FontWeight.bold, color: skin.accent) : null,
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
               if (ex.cn.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.xs),
-                Text(
-                  ex.cn,
-                  style: MistralTypography.bodySm.copyWith(color: skin.text3),
-                ),
+                Text(ex.cn, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
               ],
               if (ex.source.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.xs),
-                Text(
-                  ex.source,
-                  style: MistralTypography.micro.copyWith(color: skin.text3),
-                ),
+                Text(ex.source, style: MistralTypography.micro.copyWith(color: skin.text3)),
               ],
             ],
           ),
@@ -468,9 +444,10 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('派生词', style: MistralTypography.bodyMd.copyWith(
-                  color: skin.text1, fontWeight: FontWeight.w600,
-                )),
+                Text(
+                  '派生词',
+                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Text('暂无派生词', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
               ],
@@ -487,9 +464,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             final firstInterp = w.firstInterpretLine;
             return GestureDetector(
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (_) => DictionaryPage(word: w),
-                ));
+                Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: w)));
               },
               child: Container(
                 margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -501,24 +476,30 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
                 ),
                 child: Row(
                   children: [
-                    Expanded(child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(w.word, style: MistralTypography.bodyMd.copyWith(
-                          color: skin.text1, fontWeight: FontWeight.w600,
-                        )),
-                        if (w.usPron.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(w.usPron, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            w.word,
+                            style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                          ),
+                          if (w.usPron.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(w.usPron, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                          ],
+                          if (firstInterp.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              firstInterp,
+                              style: MistralTypography.bodySm.copyWith(color: skin.text3),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ],
-                        if (firstInterp.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(firstInterp, style: MistralTypography.bodySm.copyWith(
-                            color: skin.text3,
-                          ), maxLines: 2, overflow: TextOverflow.ellipsis),
-                        ],
-                      ],
-                    )),
+                      ),
+                    ),
                     Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
                   ],
                 ),
@@ -546,9 +527,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
               borderRadius: BorderRadius.circular(AppRadius.xl),
               border: Border.all(color: skin.divider, width: 0.5),
             ),
-            child: const Center(
-              child: CircularProgressIndicator(color: MistralColors.white54),
-            ),
+            child: const Center(child: CircularProgressIndicator(color: MistralColors.white54)),
           );
         }
 
@@ -580,16 +559,10 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
               children: [
                 Text(
                   '近义词',
-                  style: MistralTypography.bodyMd.copyWith(
-                    color: skin.text1,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Text(
-                  '暂无近义词数据',
-                  style: MistralTypography.bodyMd.copyWith(color: skin.text3),
-                ),
+                Text('暂无近义词数据', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
               ],
             ),
           );
@@ -604,12 +577,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             final firstInterpret = synonym.firstInterpretLine;
             return GestureDetector(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DictionaryPage(word: synonym),
-                  ),
-                );
+                Navigator.push(context, MaterialPageRoute(builder: (context) => DictionaryPage(word: synonym)));
               },
               child: Container(
                 margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -627,18 +595,13 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
                         children: [
                           Text(
                             synonym.word,
-                            style: MistralTypography.bodyMd.copyWith(
-                              color: skin.text1,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                           ),
                           if (firstInterpret.isNotEmpty) ...[
                             const SizedBox(height: AppSpacing.xs),
                             Text(
                               firstInterpret,
-                              style: MistralTypography.bodySm.copyWith(
-                                color: skin.text3,
-                              ),
+                              style: MistralTypography.bodySm.copyWith(color: skin.text3),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -646,11 +609,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
                         ],
                       ),
                     ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: skin.text3,
-                      size: 14,
-                    ),
+                    Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
                   ],
                 ),
               ),
@@ -689,9 +648,10 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('真题例句', style: MistralTypography.bodyMd.copyWith(
-                  color: skin.text1, fontWeight: FontWeight.w600,
-                )),
+                Text(
+                  '真题例句',
+                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Text('暂无真题例句', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
               ],
@@ -716,9 +676,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(ex['sentence'] ?? '', style: MistralTypography.bodyMd.copyWith(
-                    color: skin.text1, height: 1.5,
-                  )),
+                  Text(ex['sentence'] ?? '', style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
                   if ((ex['translation'] ?? '').isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.xs),
                     Text(ex['translation']!, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
@@ -738,9 +696,8 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
       await context.read<PlayerState>().playWord(word);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
       }
     }
   }
