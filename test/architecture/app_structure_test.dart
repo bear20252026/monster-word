@@ -46,17 +46,21 @@ void main() {
   });
 
   group('复习队列读取边界', () {
-    test('正式会话通过队列快照和读取器获取候选词', () {
+    test('正式会话通过队列快照、启动协调器和读取器获取候选词', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final starterSource = File('lib/features/learning/application/review_session_starter.dart').readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
       expect(appSource, contains('ReviewQueueState'));
       expect(appSource, contains('Provider<ReviewQueueReader>.value'));
       expect(pageSource, contains('ReviewQueueState'));
       expect(pageSource, contains('ReviewSessionState'));
-      expect(pageSource, contains('initialize(reviewQueue.snapshot)'));
+      expect(pageSource, contains('ReviewSessionStarter'));
+      expect(pageSource, contains('snapshot: context.read<ReviewQueueState>().snapshot'));
       expect(pageSource, isNot(contains('ReviewQueueReader')));
+      expect(starterSource, contains('class ReviewSessionStarter'));
+      expect(starterSource, contains('_initialize(_snapshot)'));
       expect(sessionSource, contains('ReviewQueueReader'));
       expect(sessionSource, contains('_queueReader.loadWords(snapshot)'));
       expect(sessionSource, isNot(contains('state.dueWords')));
@@ -78,18 +82,22 @@ void main() {
           .readAsStringSync();
       final choiceCardSource = File('lib/features/learning/presentation/widgets/formal_review_choice_card.dart')
           .readAsStringSync();
+      final contentSource = File('lib/features/learning/presentation/widgets/formal_review_page_content.dart')
+          .readAsStringSync();
       final stateViewsSource = File('lib/features/learning/presentation/widgets/formal_review_state_views.dart')
           .readAsStringSync();
 
+      expect(pageSource, contains('FormalReviewPageContent'));
       expect(pageSource, contains('FormalReviewSessionLayout'));
-      expect(pageSource, contains('FormalReviewLoadingView'));
-      expect(pageSource, contains('FormalReviewLoadErrorView'));
-      expect(pageSource, contains('FormalReviewCompleteView'));
+      expect(pageSource, isNot(contains('FormalReviewLoadingView')));
+      expect(pageSource, isNot(contains('FormalReviewLoadErrorView')));
+      expect(pageSource, isNot(contains('FormalReviewCompleteView')));
       expect(pageSource, isNot(contains('class _FrostedChoiceCard')));
       expect(pageSource, isNot(contains('_buildChoiceArea')));
       expect(pageSource, isNot(contains('_buildWordArea')));
       expect(widgetsSource, contains("export 'formal_review_session_layout.dart';"));
       expect(widgetsSource, contains("export 'formal_review_header.dart';"));
+      expect(widgetsSource, contains("export 'formal_review_page_content.dart';"));
       expect(widgetsSource, contains("export 'formal_review_question.dart';"));
       expect(widgetsSource, contains("export 'formal_review_choice_card.dart';"));
       expect(widgetsSource, contains("export 'formal_review_state_views.dart';"));
@@ -100,6 +108,9 @@ void main() {
       expect(questionSource, contains('class FormalReviewChoiceGrid'));
       expect(questionSource, contains('class FormalReviewAnswerAction'));
       expect(choiceCardSource, contains('class FormalReviewChoiceCard'));
+      expect(contentSource, contains('class FormalReviewPageContent'));
+      expect(contentSource, contains('FormalReviewPagePhase'));
+      expect(contentSource, contains('formalReviewPagePhase'));
       expect(stateViewsSource, contains('class FormalReviewLoadingView'));
       expect(stateViewsSource, contains('class FormalReviewLoadErrorView'));
       expect(stateViewsSource, contains('class FormalReviewCompleteView'));
@@ -115,11 +126,14 @@ void main() {
           .readAsStringSync();
       final questionSource = File('lib/features/learning/presentation/widgets/formal_review_question.dart')
           .readAsStringSync();
+      final contentSource = File('lib/features/learning/presentation/widgets/formal_review_page_content.dart')
+          .readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
       expect(pageSource, contains('session.isLoading'));
       expect(pageSource, contains('session.hasLoadError'));
-      expect(pageSource, contains('FormalReviewLoadErrorView'));
+      expect(pageSource, contains('FormalReviewPageContent'));
+      expect(contentSource, contains('FormalReviewLoadErrorView'));
       expect(pageSource, contains('selectedWrongChoice: session.selectedWrongChoice'));
       expect(pageSource, contains('onSelectChoice: session.selectChoice'));
       expect(pageSource, contains('onContinueWithGoodRating: session.continueWithGoodRating'));
