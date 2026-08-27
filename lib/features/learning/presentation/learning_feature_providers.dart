@@ -15,6 +15,7 @@ import '../application/review_queue_reader.dart';
 import '../application/review_rating_writer.dart';
 import '../data/review_schedule_repository.dart';
 import 'learning_collections_state.dart';
+import 'learning_queue_state.dart';
 import 'learning_queue_word_lists_state.dart';
 import 'learning_statistics_state.dart';
 import 'new_words_state.dart';
@@ -39,22 +40,28 @@ Widget buildLearningFeatureScope({required Widget child}) {
           reviewSchedule: sl<ReviewScheduleRepository>(),
         ),
       ),
-      ChangeNotifierProxyProvider<LearningState, LearningStatisticsState>(
+      ChangeNotifierProxyProvider<LearningState, LearningQueueState>(
+        create: (_) => LearningQueueState(),
+        update: (_, legacy, queue) => (queue ?? LearningQueueState())..synchronizeFrom(legacy),
+      ),
+      ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, LearningStatisticsState>(
         create: (_) => LearningStatisticsState(),
-        update: (_, legacy, statistics) => (statistics ?? LearningStatisticsState())..synchronizeFrom(legacy),
+        update: (_, queue, schedule, statistics) =>
+            (statistics ?? LearningStatisticsState())..synchronize(queue: queue, schedule: schedule),
       ),
       ChangeNotifierProxyProvider<LearningState, LearningCollectionsState>(
         create: (_) => LearningCollectionsState(),
         update: (_, legacy, collections) => (collections ?? LearningCollectionsState())..synchronizeFrom(legacy),
       ),
-      ChangeNotifierProxyProvider<LearningState, LearningQueueWordListsState>(
+      ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, LearningQueueWordListsState>(
         create: (_) => LearningQueueWordListsState(),
-        update: (_, legacy, wordLists) => (wordLists ?? LearningQueueWordListsState())..synchronizeFrom(legacy),
+        update: (_, queue, schedule, wordLists) =>
+            (wordLists ?? LearningQueueWordListsState())..synchronize(queue: queue, schedule: schedule),
       ),
-      ChangeNotifierProxyProvider2<LearningState, ReviewScheduleRepository, ReviewQueueState>(
+      ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, ReviewQueueState>(
         create: (_) => ReviewQueueState(),
-        update: (_, legacy, schedule, reviewQueue) =>
-            (reviewQueue ?? ReviewQueueState())..synchronize(queue: legacy.queue, schedule: schedule),
+        update: (_, queue, schedule, reviewQueue) =>
+            (reviewQueue ?? ReviewQueueState())..synchronize(queue: queue, schedule: schedule),
       ),
       ProxyProvider<ReviewScheduleRepository, ReviewRatingWriter>(
         update: (_, schedule, _) => ReviewRatingWriter(writeRating: schedule.rateWord),

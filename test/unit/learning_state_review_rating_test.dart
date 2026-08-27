@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/engine/fsrs6_engine.dart';
+import 'package:word_app/features/learning/data/review_schedule_repository.dart';
+import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
+import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/repositories/fav_repository.dart';
 import 'package:word_app/repositories/mastered_repository.dart';
@@ -29,6 +32,26 @@ void main() {
 
     expect(state.todayLearnCount, 1);
     expect(state.todayReviewCount, 1);
+  });
+
+  test('队列与统计读取快照隔离遗留可变队列并组合独立复习调度', () async {
+    final schedule = ReviewScheduleRepository();
+    await schedule.initialize();
+    final legacy = LearningState(
+      favRepository: _FakeFavRepository(),
+      masteredRepository: _FakeMasteredRepository(),
+      reviewSchedule: schedule,
+    );
+    legacy.queue.add(Word(word: 'first'));
+
+    final queue = LearningQueueState()..synchronizeFrom(legacy);
+    legacy.queue.add(Word(word: 'later'));
+    final statistics = LearningStatisticsState()..synchronize(queue: queue, schedule: schedule);
+
+    expect(queue.words.map((word) => word.word), ['first']);
+    expect(statistics.total, 1);
+    expect(statistics.dueCount, 0);
+    expect(statistics.memoryStats['total'], 0);
   });
 }
 

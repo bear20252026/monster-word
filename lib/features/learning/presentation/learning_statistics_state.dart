@@ -3,7 +3,8 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
 import '../../../data/wordbook_database.dart' show Book;
-import '../../../state/learning_state.dart';
+import '../data/review_schedule_repository.dart';
+import 'learning_queue_state.dart';
 
 /// 学习展示层使用的不可变统计快照。
 ///
@@ -30,14 +31,23 @@ class LearningStatisticsSnapshot {
     );
   }
 
-  factory LearningStatisticsSnapshot.fromLegacy(LearningState legacy) {
+  factory LearningStatisticsSnapshot.fromSources({
+    required LearningQueueState queue,
+    required ReviewScheduleRepository schedule,
+  }) {
+    final memoryStats = schedule.memoryStats;
     return LearningStatisticsSnapshot(
-      currentBook: legacy.currentBook,
-      total: legacy.total,
-      dueCount: legacy.dueCount,
-      learnedCount: legacy.learnedNum,
-      memoryStats: UnmodifiableMapView(Map<String, int>.from(legacy.memoryStats)),
-      todayStats: UnmodifiableMapView(Map<String, int>.from(legacy.todayStats)),
+      currentBook: queue.currentBook,
+      total: queue.total,
+      dueCount: schedule.dueCount,
+      learnedCount: queue.learnedCount,
+      memoryStats: UnmodifiableMapView(Map<String, int>.from(memoryStats)),
+      todayStats: UnmodifiableMapView({
+        'learned': queue.total - (memoryStats['new'] ?? 0),
+        'due': memoryStats['due'] ?? 0,
+        'total': memoryStats['total'] ?? 0,
+        'mature': memoryStats['mature'] ?? 0,
+      }),
     );
   }
 
@@ -55,9 +65,9 @@ class LearningStatisticsSnapshot {
 
 /// 学习统计的过渡展示状态。
 ///
-/// 当前由 [LearningState] 同步，以确保页面迁移不会改变既有统计来源。
-/// 当统计持久化与查询服务完成迁移后，只替换该类的同步实现即可，页面
-/// 无需再次依赖遗留状态。
+/// 当前由 [LearningQueueState] 与 [ReviewScheduleRepository] 同步：前者提供当前
+/// 队列与词书，后者提供 FSRS 卡片和统计。当队列写入完成迁移后，只替换队列状态
+/// 的同步来源即可，页面无需再次依赖遗留状态。
 class LearningStatisticsState extends ChangeNotifier {
   LearningStatisticsSnapshot _snapshot = LearningStatisticsSnapshot.empty();
 
@@ -75,8 +85,8 @@ class LearningStatisticsState extends ChangeNotifier {
 
   Map<String, int> get todayStats => _snapshot.todayStats;
 
-  void synchronizeFrom(LearningState legacy) {
-    _snapshot = LearningStatisticsSnapshot.fromLegacy(legacy);
+  void synchronize({required LearningQueueState queue, required ReviewScheduleRepository schedule}) {
+    _snapshot = LearningStatisticsSnapshot.fromSources(queue: queue, schedule: schedule);
     notifyListeners();
   }
 }
