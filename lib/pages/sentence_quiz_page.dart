@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
 import '../hooks/responsive.dart';
-import '../state/learning_state.dart';
+import '../features/learning/presentation/learning_session_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -30,7 +30,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
   }
 
   void _buildQuizItems() {
-    final state = context.read<LearningState>();
+    final state = context.read<LearningSessionState>();
     final word = state.currentWord;
     if (word == null) {
       _quizItems = [];
@@ -38,9 +38,13 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
     }
 
     final examples = ExampleParser.parse(word.example);
-    _quizItems = examples.map((ex) {
-      return _QuizItem.fromExample(ex, word.word, state.queue);
-    }).where((q) => q != null).cast<_QuizItem>().toList();
+    _quizItems = examples
+        .map((ex) {
+          return _QuizItem.fromExample(ex, word.word, state.queue);
+        })
+        .where((q) => q != null)
+        .cast<_QuizItem>()
+        .toList();
 
     // 如果没有足够例句，用单词释义生成备选
     if (_quizItems.isEmpty) {
@@ -79,7 +83,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final resp = context.responsive;
-    final state = context.watch<LearningState>();
+    context.watch<LearningSessionState>();
 
     if (_quizItems.isEmpty) {
       return Scaffold(
@@ -110,7 +114,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
             constraints: BoxConstraints(maxWidth: resp.contentWidth),
             child: Column(
               children: [
-                _buildTopBar(skin, state),
+                _buildTopBar(skin),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
@@ -121,10 +125,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
                         _buildSentenceCard(quiz, skin),
                         const SizedBox(height: 24),
                         _buildOptions(quiz, skin),
-                        if (_showAnswer) ...[
-                          const SizedBox(height: 20),
-                          _buildAnswerCard(quiz, isCorrect, skin),
-                        ],
+                        if (_showAnswer) ...[const SizedBox(height: 20), _buildAnswerCard(quiz, isCorrect, skin)],
                       ],
                     ),
                   ),
@@ -138,7 +139,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
     );
   }
 
-  Widget _buildTopBar(SkinSystem skin, LearningState state) {
+  Widget _buildTopBar(SkinSystem skin) {
     return Container(
       height: AppSpacing.navH,
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -156,8 +157,10 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
           const SizedBox(width: 4),
           Text('例句测验', style: MistralTypography.captionBold.copyWith(color: skin.colors.text1)),
           const Spacer(),
-          Text('${_currentIdx + 1}/${_quizItems.length}',
-            style: MistralTypography.captionBold.copyWith(color: skin.colors.accent)),
+          Text(
+            '${_currentIdx + 1}/${_quizItems.length}',
+            style: MistralTypography.captionBold.copyWith(color: skin.colors.accent),
+          ),
           const SizedBox(width: 8),
           SizedBox(
             width: 80,
@@ -193,26 +196,20 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
             children: [
               Icon(Icons.format_quote, color: skin.colors.accent, size: 20),
               const SizedBox(width: 6),
-              Text('请选出填入空白处的单词',
-                style: MistralTypography.captionBold.copyWith(color: skin.colors.text3)),
+              Text('请选出填入空白处的单词', style: MistralTypography.captionBold.copyWith(color: skin.colors.text3)),
             ],
           ),
           const SizedBox(height: 16),
           // 例句文本，空白处用下划线标记
           RichText(
             text: TextSpan(
-              style: MistralTypography.bodyMd.copyWith(
-                color: skin.colors.text1,
-                height: 1.6,
-                fontSize: 17,
-              ),
+              style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.6, fontSize: 17),
               children: _buildSentenceSpans(quiz, skin),
             ),
           ),
           if (quiz.source.isNotEmpty) ...[
             const SizedBox(height: 10),
-            Text(quiz.source,
-              style: AppTypography.footnote.copyWith(color: skin.colors.text3)),
+            Text(quiz.source, style: AppTypography.footnote.copyWith(color: skin.colors.text3)),
           ],
         ],
       ),
@@ -230,19 +227,21 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
         spans.add(TextSpan(text: parts[i]));
       }
       if (i < parts.length - 1) {
-        spans.add(TextSpan(
-          text: '______',
-          style: TextStyle(
-            color: _showAnswer
-                ? (_selectedIdx == quiz.correctIdx ? skin.colors.success : skin.colors.danger)
-                : skin.colors.accent,
-            fontWeight: FontWeight.bold,
-            decoration: TextDecoration.underline,
-            decorationColor: _showAnswer
-                ? (_selectedIdx == quiz.correctIdx ? skin.colors.success : skin.colors.danger)
-                : skin.colors.accent,
+        spans.add(
+          TextSpan(
+            text: '______',
+            style: TextStyle(
+              color: _showAnswer
+                  ? (_selectedIdx == quiz.correctIdx ? skin.colors.success : skin.colors.danger)
+                  : skin.colors.accent,
+              fontWeight: FontWeight.bold,
+              decoration: TextDecoration.underline,
+              decorationColor: _showAnswer
+                  ? (_selectedIdx == quiz.correctIdx ? skin.colors.success : skin.colors.danger)
+                  : skin.colors.accent,
+            ),
           ),
-        ));
+        );
       }
     }
     return spans;
@@ -296,8 +295,8 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
                     color: showResult && isCorrectOption
                         ? skin.colors.success
                         : showResult && isSelected
-                            ? skin.colors.danger
-                            : skin.colors.accent,
+                        ? skin.colors.danger
+                        : skin.colors.accent,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -309,13 +308,9 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    quiz.options[i],
-                    style: MistralTypography.bodyMd.copyWith(color: textColor),
-                  ),
+                  child: Text(quiz.options[i], style: MistralTypography.bodyMd.copyWith(color: textColor)),
                 ),
-                if (showResult && isCorrectOption)
-                  Icon(Icons.check_circle, color: skin.colors.success, size: 20),
+                if (showResult && isCorrectOption) Icon(Icons.check_circle, color: skin.colors.success, size: 20),
                 if (showResult && isSelected && !isCorrectOption)
                   Icon(Icons.cancel, color: skin.colors.danger, size: 20),
               ],
@@ -333,9 +328,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
       decoration: BoxDecoration(
         color: (isCorrect ? skin.colors.success : skin.colors.danger).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: (isCorrect ? skin.colors.success : skin.colors.danger).withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: (isCorrect ? skin.colors.success : skin.colors.danger).withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,36 +351,21 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
           ),
           const SizedBox(height: 10),
           // 完整句子
-          Text(
-            '完整句子：',
-            style: MistralTypography.captionBold.copyWith(color: skin.colors.text3),
-          ),
+          Text('完整句子：', style: MistralTypography.captionBold.copyWith(color: skin.colors.text3)),
           const SizedBox(height: 4),
-          Text(
-            quiz.fullSentence,
-            style: MistralTypography.body.copyWith(color: skin.colors.text1, height: 1.5),
-          ),
+          Text(quiz.fullSentence, style: MistralTypography.body.copyWith(color: skin.colors.text1, height: 1.5)),
           // 中文翻译
           if (quiz.translation.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(
-              '中文释义：',
-              style: MistralTypography.captionBold.copyWith(color: skin.colors.text3),
-            ),
+            Text('中文释义：', style: MistralTypography.captionBold.copyWith(color: skin.colors.text3)),
             const SizedBox(height: 4),
-            Text(
-              quiz.translation,
-              style: MistralTypography.body.copyWith(color: skin.colors.text2),
-            ),
+            Text(quiz.translation, style: MistralTypography.body.copyWith(color: skin.colors.text2)),
           ],
           // 正确答案
           const SizedBox(height: 8),
           Text(
             '正确答案：${quiz.options[quiz.correctIdx]}',
-            style: MistralTypography.body.copyWith(
-              color: skin.colors.accent,
-              fontWeight: FontWeight.w600,
-            ),
+            style: MistralTypography.body.copyWith(color: skin.colors.accent, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -401,21 +379,15 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
         width: double.infinity,
         height: 48,
         child: ElevatedButton(
-          onPressed: _showAnswer
-              ? _next
-              : (_selectedIdx != null ? _confirmAnswer : null),
+          onPressed: _showAnswer ? _next : (_selectedIdx != null ? _confirmAnswer : null),
           style: ElevatedButton.styleFrom(
             backgroundColor: skin.colors.accent,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
             elevation: 0,
           ),
           child: Text(
-            _showAnswer
-                ? (_currentIdx < _quizItems.length - 1 ? '下一题' : '完成测验')
-                : '确认选择',
+            _showAnswer ? (_currentIdx < _quizItems.length - 1 ? '下一题' : '完成测验') : '确认选择',
             style: MistralTypography.body.copyWith(color: Colors.white),
           ),
         ),
@@ -473,7 +445,9 @@ class _QuizItem {
     }
 
     // 生成干扰选项
-    final correctWord = wordIdx >= 0 ? targetWord : RegExp(r'<b>(.*?)</b>').firstMatch(example.en)?.group(1) ?? targetWord;
+    final correctWord = wordIdx >= 0
+        ? targetWord
+        : RegExp(r'<b>(.*?)</b>').firstMatch(example.en)?.group(1) ?? targetWord;
     final options = _generateOptions(correctWord, allWords);
 
     return _QuizItem(
