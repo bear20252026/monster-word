@@ -37,8 +37,10 @@ void main() {
       final wrongChoice = state.choices.firstWhere((choice) => choice.word != reviewedWordText);
       state.selectChoice(wrongChoice.word);
       expect(state.isWrongChoiceSelected(wrongChoice.word), isTrue);
+      expect(state.selectedWrongChoice, wrongChoice.word);
       await Future<void>.delayed(const Duration(milliseconds: 350));
       expect(state.isWrongChoiceSelected(wrongChoice.word), isFalse);
+      expect(state.selectedWrongChoice, isNull);
 
       state.revealAnswer();
       expect(state.showAnswer, isTrue);

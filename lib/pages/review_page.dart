@@ -62,7 +62,11 @@ class _ReviewPageState extends State<ReviewPage> {
       child: Scaffold(
         body: FormalReviewSessionLayout(
           word: word,
-          session: session,
+          choices: session.choices,
+          done: session.done,
+          total: session.total,
+          selectedWrongChoice: session.selectedWrongChoice,
+          showAnswer: session.showAnswer,
           wallpaper: context.watch<WallpaperState>().current,
           isFavorite: wordActions.isFavorite(word.word),
           onBack: () => Navigator.pop(context),
@@ -74,6 +78,9 @@ class _ReviewPageState extends State<ReviewPage> {
           },
           onShowMore: () => _showMoreOptions(context),
           onPlayAudio: _playWordAudio,
+          onSelectChoice: session.selectChoice,
+          onRevealAnswer: session.revealAnswer,
+          onContinueWithGoodRating: session.continueWithGoodRating,
           audioLoading: _audioLoading,
         ),
       ),

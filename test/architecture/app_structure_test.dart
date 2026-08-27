@@ -66,9 +66,19 @@ void main() {
   });
 
   group('正式复习页面展示组件边界', () {
-    test('路由协调层委托独立组件渲染主要视觉区域', () {
+    test('路由协调层依赖聚合入口，主要视觉区域按职责拆分', () {
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
       final widgetsSource = File('lib/features/learning/presentation/widgets/formal_review_widgets.dart')
+          .readAsStringSync();
+      final layoutSource = File('lib/features/learning/presentation/widgets/formal_review_session_layout.dart')
+          .readAsStringSync();
+      final headerSource = File('lib/features/learning/presentation/widgets/formal_review_header.dart')
+          .readAsStringSync();
+      final questionSource = File('lib/features/learning/presentation/widgets/formal_review_question.dart')
+          .readAsStringSync();
+      final choiceCardSource = File('lib/features/learning/presentation/widgets/formal_review_choice_card.dart')
+          .readAsStringSync();
+      final stateViewsSource = File('lib/features/learning/presentation/widgets/formal_review_state_views.dart')
           .readAsStringSync();
 
       expect(pageSource, contains('FormalReviewSessionLayout'));
@@ -78,30 +88,50 @@ void main() {
       expect(pageSource, isNot(contains('class _FrostedChoiceCard')));
       expect(pageSource, isNot(contains('_buildChoiceArea')));
       expect(pageSource, isNot(contains('_buildWordArea')));
-      expect(widgetsSource, contains('class FormalReviewHeader'));
-      expect(widgetsSource, contains('class FormalReviewWordPrompt'));
-      expect(widgetsSource, contains('class FormalReviewChoiceGrid'));
-      expect(widgetsSource, contains('class FormalReviewAnswerAction'));
-      expect(widgetsSource, contains('class FormalReviewChoiceCard'));
+      expect(widgetsSource, contains("export 'formal_review_session_layout.dart';"));
+      expect(widgetsSource, contains("export 'formal_review_header.dart';"));
+      expect(widgetsSource, contains("export 'formal_review_question.dart';"));
+      expect(widgetsSource, contains("export 'formal_review_choice_card.dart';"));
+      expect(widgetsSource, contains("export 'formal_review_state_views.dart';"));
+      expect(layoutSource, contains('class FormalReviewSessionLayout'));
+      expect(layoutSource, contains('class FormalReviewWallpaper'));
+      expect(headerSource, contains('class FormalReviewHeader'));
+      expect(questionSource, contains('class FormalReviewWordPrompt'));
+      expect(questionSource, contains('class FormalReviewChoiceGrid'));
+      expect(questionSource, contains('class FormalReviewAnswerAction'));
+      expect(choiceCardSource, contains('class FormalReviewChoiceCard'));
+      expect(stateViewsSource, contains('class FormalReviewLoadingView'));
+      expect(stateViewsSource, contains('class FormalReviewLoadErrorView'));
+      expect(stateViewsSource, contains('class FormalReviewCompleteView'));
     });
   });
 
   group('正式复习加载与答题交互边界', () {
-    test('页面渲染会话加载状态，候选反馈和推进由会话状态管理', () {
+    test('页面映射会话快照和命令，展示组件不依赖会话状态实现', () {
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
-      final widgetsSource = File('lib/features/learning/presentation/widgets/formal_review_widgets.dart')
+      final layoutSource = File('lib/features/learning/presentation/widgets/formal_review_session_layout.dart')
+          .readAsStringSync();
+      final headerSource = File('lib/features/learning/presentation/widgets/formal_review_header.dart')
+          .readAsStringSync();
+      final questionSource = File('lib/features/learning/presentation/widgets/formal_review_question.dart')
           .readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
       expect(pageSource, contains('session.isLoading'));
       expect(pageSource, contains('session.hasLoadError'));
       expect(pageSource, contains('FormalReviewLoadErrorView'));
-      expect(widgetsSource, contains('session.selectChoice(choice.word)'));
-      expect(widgetsSource, contains('session.continueWithGoodRating'));
+      expect(pageSource, contains('selectedWrongChoice: session.selectedWrongChoice'));
+      expect(pageSource, contains('onSelectChoice: session.selectChoice'));
+      expect(pageSource, contains('onContinueWithGoodRating: session.continueWithGoodRating'));
       expect(pageSource, isNot(contains('_wrongChoiceIndex')));
       expect(pageSource, isNot(contains('Future.delayed')));
+      expect(layoutSource, isNot(contains('ReviewSessionState')));
+      expect(headerSource, isNot(contains('ReviewSessionState')));
+      expect(questionSource, isNot(contains('ReviewSessionState')));
+      expect(questionSource, contains('onSelectChoice(choice.word)'));
       expect(sessionSource, contains('ReviewSessionLoadPhase'));
       expect(sessionSource, contains('Timer'));
+      expect(sessionSource, contains('String? get selectedWrongChoice'));
       expect(sessionSource, contains('selectChoice'));
       expect(sessionSource, contains('continueWithGoodRating'));
     });
@@ -156,14 +186,12 @@ void main() {
     test('正式会话通过评分写入端口提交 FSRS 评分', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
-      final widgetsSource = File('lib/features/learning/presentation/widgets/formal_review_widgets.dart')
-          .readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
       expect(appSource, contains('ProxyProvider<LearningState, ReviewRatingWriter>'));
       expect(appSource, contains('ReviewRatingWriter(writeRating: legacy.rateReviewWord)'));
-      expect(widgetsSource, contains('session.selectChoice(choice.word)'));
-      expect(widgetsSource, contains('session.continueWithGoodRating'));
+      expect(pageSource, contains('onSelectChoice: session.selectChoice'));
+      expect(pageSource, contains('onContinueWithGoodRating: session.continueWithGoodRating'));
       expect(pageSource, isNot(contains('ReviewRatingWriter')));
       expect(sessionSource, contains('ReviewRatingWriter'));
       expect(sessionSource, contains('final reviewedWord = currentWord'));
