@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../features/learning/presentation/learning_session_state.dart';
 import '../screens/learn_session.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
@@ -97,8 +98,7 @@ class _MyFavPageState extends State<MyFavPage> {
 
   /// 开始学习收藏单词
   Future<void> _startLearning() async {
-    final state = context.read<LearningState>();
-    await state.loadFavoritesForLearning(limit: 50);
+    await context.read<LearningSessionState>().loadFavorites(limit: 50);
     if (mounted) {
       Navigator.pushNamed(context, LearnSession.routeName);
     }
@@ -122,8 +122,8 @@ class _MyFavPageState extends State<MyFavPage> {
               child: _isLoading
                   ? Center(child: CircularProgressIndicator(color: MistralColors.primary))
                   : _words.isEmpty
-                      ? _buildEmptyView(skin)
-                      : _buildWordList(skin),
+                  ? _buildEmptyView(skin)
+                  : _buildWordList(skin),
             ),
           ],
         ),
@@ -144,10 +144,7 @@ class _MyFavPageState extends State<MyFavPage> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text(
-            '单词本',
-            style: MistralTypography.heading5.copyWith(color: skin.colors.text1),
-          ),
+          Text('单词本', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
           const SizedBox(width: 8),
           // 收藏数量徽章
           Container(
@@ -196,21 +193,11 @@ class _MyFavPageState extends State<MyFavPage> {
         children: [
           Icon(Icons.book_outlined, size: 64, color: skin.colors.text3),
           const SizedBox(height: 16),
-          Text(
-            '单词本为空',
-            style: MistralTypography.heading5.copyWith(color: skin.colors.text1),
-          ),
+          Text('单词本为空', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
           const SizedBox(height: 8),
-          Text(
-            '学习时点击 ❤️ 收藏单词',
-            style: MistralTypography.body.copyWith(color: skin.colors.text3),
-          ),
+          Text('学习时点击 ❤️ 收藏单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
           const SizedBox(height: 16),
-          TextButton.icon(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('刷新'),
-          ),
+          TextButton.icon(onPressed: _loadData, icon: const Icon(Icons.refresh, size: 18), label: const Text('刷新')),
         ],
       ),
     );
@@ -233,9 +220,7 @@ class _MyFavPageState extends State<MyFavPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: MistralColors.primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppleRadius.lg),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppleRadius.lg)),
                   elevation: 0,
                 ),
               ),
@@ -252,9 +237,7 @@ class _MyFavPageState extends State<MyFavPage> {
 
               return Dismissible(
                 key: ValueKey(word.id),
-                direction: _isBatchEditMode
-                    ? DismissDirection.none
-                    : DismissDirection.endToStart,
+                direction: _isBatchEditMode ? DismissDirection.none : DismissDirection.endToStart,
                 background: Container(
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 20),
@@ -268,14 +251,8 @@ class _MyFavPageState extends State<MyFavPage> {
                       title: const Text('确认移除'),
                       content: Text('确定要将 "${word.word}" 从单词本移除吗？'),
                       actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('取消'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text('移除'),
-                        ),
+                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+                        TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('移除')),
                       ],
                     ),
                   );
@@ -296,10 +273,7 @@ class _MyFavPageState extends State<MyFavPage> {
                           activeColor: MistralColors.primary,
                         )
                       : null,
-                  title: Text(
-                    word.word,
-                    style: MistralTypography.heading5.copyWith(color: skin.colors.text1),
-                  ),
+                  title: Text(word.word, style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
                   subtitle: word.firstInterpretLine.isNotEmpty
                       ? Text(
                           word.firstInterpretLine,
@@ -308,14 +282,12 @@ class _MyFavPageState extends State<MyFavPage> {
                           overflow: TextOverflow.ellipsis,
                         )
                       : (word.usPron.isNotEmpty
-                          ? Text(
-                              '/${word.usPron}/',
-                              style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
-                            )
-                          : null),
-                  trailing: _isBatchEditMode
-                      ? null
-                      : Icon(Icons.chevron_right, color: skin.colors.text3),
+                            ? Text(
+                                '/${word.usPron}/',
+                                style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
+                              )
+                            : null),
+                  trailing: _isBatchEditMode ? null : Icon(Icons.chevron_right, color: skin.colors.text3),
                 ),
               );
             },
