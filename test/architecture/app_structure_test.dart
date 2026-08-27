@@ -65,6 +65,27 @@ void main() {
     });
   });
 
+  group('正式复习页面展示组件边界', () {
+    test('路由协调层委托独立组件渲染主要视觉区域', () {
+      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final widgetsSource = File('lib/features/learning/presentation/widgets/formal_review_widgets.dart')
+          .readAsStringSync();
+
+      expect(pageSource, contains('FormalReviewSessionLayout'));
+      expect(pageSource, contains('FormalReviewLoadingView'));
+      expect(pageSource, contains('FormalReviewLoadErrorView'));
+      expect(pageSource, contains('FormalReviewCompleteView'));
+      expect(pageSource, isNot(contains('class _FrostedChoiceCard')));
+      expect(pageSource, isNot(contains('_buildChoiceArea')));
+      expect(pageSource, isNot(contains('_buildWordArea')));
+      expect(widgetsSource, contains('class FormalReviewHeader'));
+      expect(widgetsSource, contains('class FormalReviewWordPrompt'));
+      expect(widgetsSource, contains('class FormalReviewChoiceGrid'));
+      expect(widgetsSource, contains('class FormalReviewAnswerAction'));
+      expect(widgetsSource, contains('class FormalReviewChoiceCard'));
+    });
+  });
+
   group('正式复习加载与答题交互边界', () {
     test('页面渲染会话加载状态，候选反馈和推进由会话状态管理', () {
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
