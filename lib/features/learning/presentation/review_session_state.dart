@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../engine/core_engine.dart' show WordChoicePair;
-import '../../../engine/fsrs6_engine.dart' show FsrsRating;
 import '../../../engine/srs_engine.dart' show RecallRating;
 import '../../../engine/super_memory_engine.dart';
 import '../../../models/bb_word_process.dart';
 import '../application/review_queue_reader.dart';
 import '../application/review_rating_writer.dart';
 import '../application/review_session_question_factory.dart';
+import '../application/review_session_rating_executor.dart';
 import 'review_session_answer_state.dart';
 
 /// 正式复习队列加载的当前阶段。
@@ -25,14 +25,15 @@ class ReviewSessionState extends ChangeNotifier {
     SuperMemoryEngine? engine,
     ReviewSessionQuestionFactory? questionFactory,
   }) : _queueReader = queueReader,
-       _ratingWriter = ratingWriter,
        _engine = engine ?? SuperMemoryEngine(),
-       _questionFactory = questionFactory ?? const ReviewSessionQuestionFactory();
+       _questionFactory = questionFactory ?? const ReviewSessionQuestionFactory() {
+    _ratingExecutor = ReviewSessionRatingExecutor(engine: _engine, ratingWriter: ratingWriter);
+  }
 
   final ReviewQueueReader _queueReader;
-  ReviewRatingWriter _ratingWriter;
   final SuperMemoryEngine _engine;
   final ReviewSessionQuestionFactory _questionFactory;
+  late final ReviewSessionRatingExecutor _ratingExecutor;
 
   ReviewSessionLoadPhase _loadPhase = ReviewSessionLoadPhase.idle;
   Object? _loadError;
@@ -54,7 +55,7 @@ class ReviewSessionState extends ChangeNotifier {
   BBWordProcess? get currentWord => _engine.currentWord();
 
   void updateRatingWriter(ReviewRatingWriter ratingWriter) {
-    _ratingWriter = ratingWriter;
+    _ratingExecutor.updateRatingWriter(ratingWriter);
   }
 
   /// 按既有正式复习队列优先级初始化本地会话。
@@ -102,23 +103,7 @@ class ReviewSessionState extends ChangeNotifier {
     if (reviewedWord == null) return;
 
     _answerState.reset();
-    switch (rating) {
-      case RecallRating.again:
-        _engine.iDontKnow();
-      case RecallRating.hard:
-        _engine.iMayKnow();
-      case RecallRating.good:
-        _engine.iReallyKnow();
-      case RecallRating.easy:
-        _engine.tooEasy();
-    }
-    final fsrsRating = switch (rating) {
-      RecallRating.again => FsrsRating.again,
-      RecallRating.hard => FsrsRating.hard,
-      RecallRating.good => FsrsRating.good,
-      RecallRating.easy => FsrsRating.easy,
-    };
-    _ratingWriter.rate(word: reviewedWord.word, rating: fsrsRating);
+    _ratingExecutor.rate(reviewedWord: reviewedWord, rating: rating);
     _done++;
     _regenerateChoices();
     notifyListeners();
@@ -135,7 +120,7 @@ class ReviewSessionState extends ChangeNotifier {
   bool markAsKnown() {
     if (currentWord == null) return false;
     _answerState.reset();
-    _engine.iReallyKnow();
+    _ratingExecutor.markAsKnown();
     _done++;
     _regenerateChoices();
     notifyListeners();
