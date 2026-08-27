@@ -46,7 +46,7 @@ void main() {
 
     final queue = LearningQueueState()..synchronizeFrom(legacy);
     legacy.queue.add(Word(word: 'later'));
-    final statistics = LearningStatisticsState()..synchronize(queue: queue, schedule: schedule);
+    final statistics = LearningStatisticsState()..synchronize(queue: queue.snapshot, schedule: schedule);
 
     expect(queue.words.map((word) => word.word), ['first']);
     expect(statistics.total, 1);

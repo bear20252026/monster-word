@@ -32,7 +32,7 @@ class LearningStatisticsSnapshot {
   }
 
   factory LearningStatisticsSnapshot.fromSources({
-    required LearningQueueState queue,
+    required LearningQueueSnapshot queue,
     required ReviewScheduleRepository schedule,
   }) {
     final memoryStats = schedule.memoryStats;
@@ -65,9 +65,9 @@ class LearningStatisticsSnapshot {
 
 /// 学习统计的过渡展示状态。
 ///
-/// 当前由 [LearningQueueState] 与 [ReviewScheduleRepository] 同步：前者提供当前
-/// 队列与词书，后者提供 FSRS 卡片和统计。当队列写入完成迁移后，只替换队列状态
-/// 的同步来源即可，页面无需再次依赖遗留状态。
+/// 当前由 [LearningQueueSnapshot] 与 [ReviewScheduleRepository] 同步：前者提供当前
+/// 队列与词书，后者提供 FSRS 卡片和统计。当队列写入完成迁移后，只替换快照来源即可，
+/// 页面无需再次依赖遗留状态。
 class LearningStatisticsState extends ChangeNotifier {
   LearningStatisticsSnapshot _snapshot = LearningStatisticsSnapshot.empty();
 
@@ -85,7 +85,7 @@ class LearningStatisticsState extends ChangeNotifier {
 
   Map<String, int> get todayStats => _snapshot.todayStats;
 
-  void synchronize({required LearningQueueState queue, required ReviewScheduleRepository schedule}) {
+  void synchronize({required LearningQueueSnapshot queue, required ReviewScheduleRepository schedule}) {
     _snapshot = LearningStatisticsSnapshot.fromSources(queue: queue, schedule: schedule);
     notifyListeners();
   }

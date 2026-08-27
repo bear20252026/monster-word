@@ -47,7 +47,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
       ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, LearningStatisticsState>(
         create: (_) => LearningStatisticsState(),
         update: (_, queue, schedule, statistics) =>
-            (statistics ?? LearningStatisticsState())..synchronize(queue: queue, schedule: schedule),
+            (statistics ?? LearningStatisticsState())..synchronize(queue: queue.snapshot, schedule: schedule),
       ),
       ChangeNotifierProxyProvider<LearningState, LearningCollectionsState>(
         create: (_) => LearningCollectionsState(),
@@ -56,12 +56,12 @@ Widget buildLearningFeatureScope({required Widget child}) {
       ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, LearningQueueWordListsState>(
         create: (_) => LearningQueueWordListsState(),
         update: (_, queue, schedule, wordLists) =>
-            (wordLists ?? LearningQueueWordListsState())..synchronize(queue: queue, schedule: schedule),
+            (wordLists ?? LearningQueueWordListsState())..synchronize(queue: queue.snapshot, schedule: schedule),
       ),
       ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, ReviewQueueState>(
         create: (_) => ReviewQueueState(),
         update: (_, queue, schedule, reviewQueue) =>
-            (reviewQueue ?? ReviewQueueState())..synchronize(queue: queue, schedule: schedule),
+            (reviewQueue ?? ReviewQueueState())..synchronize(queue: queue.snapshot, schedule: schedule),
       ),
       ProxyProvider<ReviewScheduleRepository, ReviewRatingWriter>(
         update: (_, schedule, _) => ReviewRatingWriter(writeRating: schedule.rateWord),

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
+import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 import 'package:word_app/features/learning/presentation/review_queue_state.dart';
 import 'package:word_app/models/word.dart';
 
@@ -50,10 +51,15 @@ void main() {
     final state = ReviewQueueState();
     state.synchronize(
       schedule: schedule,
-      queue: [
-        Word(word: 'queue-only'),
-        Word(word: 'due-word'),
-      ],
+      queue: LearningQueueSnapshot(
+        currentBook: null,
+        currentIndex: 0,
+        learnedCount: 0,
+        words: [
+          Word(word: 'queue-only'),
+          Word(word: 'due-word'),
+        ],
+      ),
     );
 
     expect(state.snapshot.queueWords.map((word) => word.word), ['queue-only', 'due-word']);
