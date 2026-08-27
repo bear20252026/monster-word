@@ -182,3 +182,9 @@
 `LearningQueueRepository` 与 `LearningQueueWordSource` 现集中词书加载、收藏词解析、当前队列回退和可选乱序规则。生产实现仍适配既有 `WordBookDatabase` 与 `FavRepository`，因此词书查询上限、起始偏移、收藏词优先从完整词库解析、无法解析时回退当前队列的行为均保持不变。
 
 `LearningState` 已不再直接调用词库数据库来加载队列或解析收藏词；它暂时仍负责将新队列初始化为 Leitner 会话、维护当前索引、生成候选、接收会话评分并通知遗留页面。后续会话状态迁移必须整体转移这组可变行为，避免新增第二套队列或评分推进。
+
+## 学习会话编排边界
+
+`LearningSessionState` 现拥有当前学习队列、当前索引、翻卡状态、四选一候选、Leitner 推进以及学习会话评分后的索引推进。它组合 `LearningQueueRepository`、`LearningProgressRepository` 与 `ReviewScheduleRepository`，因此词书加载、进度保存和按实际当前词写入 FSRS 不再散落在遗留状态实现中。
+
+`LearningState` 已收敛为兼容外观：它监听同一个 `LearningSessionState` 并转发仍被未迁出页面使用的旧 API，同时继续承担收藏/掌握标记和占位账号状态。新读取层 `LearningQueueState` 已直接监听专用会话状态，不再经由兼容外观复制队列。后续页面迁移应优先直接消费 `LearningSessionState` 的会话读写能力，再逐步删除对应的外观转发方法。

@@ -19,6 +19,7 @@ import '../data/review_schedule_repository.dart';
 import 'learning_collections_state.dart';
 import 'learning_queue_state.dart';
 import 'learning_queue_word_lists_state.dart';
+import 'learning_session_state.dart';
 import 'learning_statistics_state.dart';
 import 'new_words_state.dart';
 import 'review_audio_state.dart';
@@ -36,17 +37,25 @@ Widget buildLearningFeatureScope({required Widget child}) {
     providers: [
       ChangeNotifierProvider<ReviewScheduleRepository>.value(value: sl<ReviewScheduleRepository>()),
       ChangeNotifierProvider(
-        create: (_) => LearningState(
+        create: (_) => LearningSessionState(
+          queueRepository: sl<LearningQueueRepository>(),
+          progressRepository: sl<LearningProgressRepository>(),
+          reviewSchedule: sl<ReviewScheduleRepository>(),
+        ),
+      ),
+      ChangeNotifierProvider(
+        create: (context) => LearningState(
           favRepository: sl<FavRepository>(),
           masteredRepository: sl<MasteredRepository>(),
           reviewSchedule: sl<ReviewScheduleRepository>(),
           progressRepository: sl<LearningProgressRepository>(),
           queueRepository: sl<LearningQueueRepository>(),
+          session: context.read<LearningSessionState>(),
         ),
       ),
-      ChangeNotifierProxyProvider<LearningState, LearningQueueState>(
+      ChangeNotifierProxyProvider<LearningSessionState, LearningQueueState>(
         create: (_) => LearningQueueState(),
-        update: (_, legacy, queue) => (queue ?? LearningQueueState())..synchronizeFrom(legacy),
+        update: (_, session, queue) => (queue ?? LearningQueueState())..synchronizeFrom(session),
       ),
       ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, LearningStatisticsState>(
         create: (_) => LearningStatisticsState(),
