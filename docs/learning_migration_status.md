@@ -117,7 +117,7 @@
 
 ## 正式复习会话状态边界
 
-`ReviewSessionState` 现在承接正式 `/review` 的本地题目队列初始化、`SuperMemoryEngine` 推进、会话进度和已捕获实际作答词的 FSRS 评分编排。它依赖 `ReviewQueueReader` 取得候选词、依赖 `ReviewSessionQuestionFactory` 将读取层 `Word` 转为过程模型并构造四选一候选项、依赖 `ReviewRatingWriter` 提交评分；三者均不在会话状态中重复实现。页面不再同时持有引擎、候选项、初始化和评分推进逻辑。
+`ReviewSessionState` 现在承接正式 `/review` 的本地题目队列初始化、会话进度和实际作答词捕获。它依赖 `ReviewQueueReader` 取得候选词、依赖 `ReviewSessionQuestionFactory` 将读取层 `Word` 转为过程模型并构造四选一候选项、依赖 `ReviewSessionRatingExecutor` 执行回忆等级到引擎命令及 FSRS 写入的映射；这些职责均不在会话状态中重复实现。`ReviewSessionRatingExecutor` 在推进 `SuperMemoryEngine` 前接收已捕获的实际词条，并通过 `ReviewRatingWriter` 提交对应 FSRS 等级；手动“熟”仍只推进本地引擎而不写入 FSRS。页面不再同时持有引擎、候选项、初始化和评分推进逻辑。
 
 `ReviewSessionState` 还统一了加载与答题交互：它显式区分 loading、ready 和 failed 阶段，保存加载异常供页面显示可重试的错误界面；“看答案后继续”的 good 评分命令仍由该状态编排。错误候选的 300 毫秒反馈定时器、答案揭示、错误选择快照和销毁清理已提取到 `ReviewSessionAnswerState`，使其可以独立测试而不接触 `SuperMemoryEngine` 或 `ReviewRatingWriter`。会话状态只在正确选择后决定 good 评分，并在评分推进、手动掌握或重新初始化前重置交互快照，因此加载失败不会被误渲染为“今日复习完成”，旧题的错误提示也会在题目推进或状态销毁时取消。
 
