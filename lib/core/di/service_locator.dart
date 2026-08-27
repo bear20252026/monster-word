@@ -36,6 +36,7 @@ import '../../repositories/stats_repository_impl.dart';
 import '../../features/learning/application/book_words_reader.dart';
 import '../../features/learning/application/mastered_words_reader.dart';
 import '../../features/learning/application/new_words_reader.dart';
+import '../../features/learning/application/review_queue_reader.dart';
 import '../../features/learning/presentation/new_words_state.dart';
 import '../../state/learn_state.dart';
 import '../../state/review_state.dart';
@@ -128,6 +129,11 @@ Future<void> setupServiceLocator() async {
   // NewWordsState
   if (!sl.isRegistered<NewWordsState>()) {
     sl.registerLazySingleton<NewWordsState>(() => NewWordsState(newWordRepository: sl<NewWordRepository>()));
+  }
+
+  // ReviewQueueReader
+  if (!sl.isRegistered<ReviewQueueReader>()) {
+    sl.registerLazySingleton<ReviewQueueReader>(() => ReviewQueueReader(wordRepository: sl<WordRepository>()));
   }
 
   // ========== Service Layer（服务层）==========

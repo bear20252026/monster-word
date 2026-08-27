@@ -5,7 +5,10 @@ import 'package:provider/provider.dart';
 
 import '../core/di/service_locator.dart';
 import '../engine/core_engine.dart' show WordChoicePair;
+import '../features/learning/application/review_queue_reader.dart';
+import '../features/learning/application/review_rating_writer.dart';
 import '../features/learning/domain/choice_generator.dart';
+import '../features/learning/presentation/review_queue_state.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../services/audio_service.dart';
 import '../engine/srs_engine.dart';
@@ -14,8 +17,6 @@ import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
 import '../models/word.dart';
 import '../pages/dictionary_page.dart';
-import '../repositories/word_repository.dart';
-import '../state/learning_state.dart';
 import '../data/wallpaper_data.dart' show WallpaperType;
 import '../state/wallpaper_state.dart';
 import '../theme/skin_system.dart';
@@ -52,10 +53,8 @@ class _ReviewPageState extends State<ReviewPage> {
   /// 初始化复习（使用 FSRS-6 到期调度）
   Future<void> _initReview() async {
     try {
-      final state = context.read<LearningState>();
-      // 使用 FSRS-6 的到期单词（基于记忆曲线精确预测）
-      final dueWords = state.dueWords;
-      final pool = dueWords.isNotEmpty ? dueWords : (state.queue.isNotEmpty ? state.queue : await _fallbackWords());
+      final reviewQueue = context.read<ReviewQueueState>();
+      final pool = await context.read<ReviewQueueReader>().loadWords(reviewQueue.snapshot);
       final processes = pool
           .map(
             (w) => BBWordProcess(
@@ -95,13 +94,6 @@ class _ReviewPageState extends State<ReviewPage> {
     }
   }
 
-  /// 获取备用单词（当没有到期词时）
-  Future<List<Word>> _fallbackWords() async {
-    final sample = await sl<WordRepository>().searchWords('a', limit: 20);
-    if (sample.isNotEmpty) return sample;
-    return await sl<WordRepository>().searchWords('the', limit: 20);
-  }
-
   /// 通过共享规则生成四选一候选：释义去重、中文优先和稳定兜底与学习流程保持一致。
   void _regenerateChoices() {
     final current = _engine.currentWord();
@@ -136,7 +128,7 @@ class _ReviewPageState extends State<ReviewPage> {
     };
     final currentWord = _engine.currentWord();
     if (currentWord != null) {
-      context.read<LearningState>().rate(fsrsRating);
+      context.read<ReviewRatingWriter>().rate(fsrsRating);
     }
     _done++;
     _showAnswer = false;
