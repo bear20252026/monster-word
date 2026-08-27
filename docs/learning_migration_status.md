@@ -117,15 +117,15 @@
 
 ## 正式复习会话状态边界
 
-`ReviewSessionState` 现在承接正式 `/review` 的本地题目队列初始化、`SuperMemoryEngine` 推进、共享候选项生成、显示答案状态和会话进度。它依赖 `ReviewQueueReader` 取得候选词，并依赖 `ReviewRatingWriter` 提交已捕获的实际作答词；页面不再同时持有引擎、候选项、初始化和评分推进逻辑。
+`ReviewSessionState` 现在承接正式 `/review` 的本地题目队列初始化、`SuperMemoryEngine` 推进、会话进度和已捕获实际作答词的 FSRS 评分编排。它依赖 `ReviewQueueReader` 取得候选词、依赖 `ReviewSessionQuestionFactory` 将读取层 `Word` 转为过程模型并构造四选一候选项、依赖 `ReviewRatingWriter` 提交评分；三者均不在会话状态中重复实现。页面不再同时持有引擎、候选项、初始化和评分推进逻辑。
 
 `ReviewSessionState` 还统一了加载与答题交互：它显式区分 loading、ready 和 failed 阶段，保存加载异常供页面显示可重试的错误界面；“看答案后继续”的 good 评分命令仍由该状态编排。错误候选的 300 毫秒反馈定时器、答案揭示、错误选择快照和销毁清理已提取到 `ReviewSessionAnswerState`，使其可以独立测试而不接触 `SuperMemoryEngine` 或 `ReviewRatingWriter`。会话状态只在正确选择后决定 good 评分，并在评分推进、手动掌握或重新初始化前重置交互快照，因此加载失败不会被误渲染为“今日复习完成”，旧题的错误提示也会在题目推进或状态销毁时取消。
 
-`ReviewSessionStarter` 将页面提供的 `ReviewQueueSnapshot` 与 `ReviewSessionState.initialize` 命令组合为专用启动协调器。它不重新实现队列优先级、加载阶段或异常保存：读取规则仍由 `ReviewQueueReader` 决定，成功/失败视图仍由会话状态和 `FormalReviewPageContent` 的快照映射渲染。这样 `ReviewPage` 无需再维护仅用于吞掉已处理加载异常的 `try/catch`，重试入口仍调用同一启动路径。
+`ReviewSessionStarter` 将页面提供的 `ReviewQueueSnapshot` 与 `ReviewSessionState.initialize` 命令组合为专用启动协调器。它不重新实现队列优先级、加载阶段或异常保存：读取规则仍由 `ReviewQueueReader` 决定，`ReviewSessionQuestionFactory` 只负责词条转换和候选构建，成功/失败视图仍由会话状态和 `FormalReviewPageContent` 的快照映射渲染。这样 `ReviewPage` 无需再维护仅用于吞掉已处理加载异常的 `try/catch`，重试入口仍调用同一启动路径。
 
 正式复习的视觉区域已进一步拆分至 `formal_review_widgets.dart`：该文件现在是稳定的聚合导出入口，具体实现按 `formal_review_session_layout.dart`（沉浸式背景与响应式布局）、`formal_review_header.dart`（顶部进度/操作栏）、`formal_review_question.dart`（单词提示、四选一与底部答案动作）、`formal_review_choice_card.dart`（候选卡片）和 `formal_review_state_views.dart`（加载、失败和完成视图）分离。`FormalReviewPageContent` 进一步集中页面级的加载、失败、完成和答题内容分支；`ReviewPage` 只保留路由生命周期、状态组合、回调与导航反馈等协调职责，避免再次演变为包含业务状态与大量视觉细节的超长文件。
 
-展示组件不再导入或直接读取 `ReviewSessionState`。页面把会话的只读快照（进度、候选项、答案显示和错误候选文本）及命令回调映射给布局组件；`ReviewSessionState.selectedWrongChoice` 是为此暴露的只读反馈快照，原有 300 毫秒定时器、题目推进和 FSRS 评分职责仍只留在会话状态中。该调整只改变展示层的依赖方向，不改变横竖屏布局、壁纸、候选反馈、评分、收藏或手动掌握语义。
+展示组件不再导入或直接读取 `ReviewSessionState`。页面把会话的只读快照（进度、候选项、答案显示和错误候选文本）及命令回调映射给布局组件；`ReviewSessionState.selectedWrongChoice` 是来自 `ReviewSessionAnswerState` 的只读反馈快照，题目推进和 FSRS 评分职责仍只留在会话状态中。该调整只改变展示层的依赖方向，不改变横竖屏布局、壁纸、候选反馈、评分、收藏或手动掌握语义。
 
 正式复习页面的其余操作协调也已拆分：`ReviewAudioPlayer` 是正式复习发音的应用端口，根组合层将其适配为既有 `AudioService.playWordAudio`；`ReviewAudioState` 维护播放请求的加载快照并向页面转交失败，页面不再直接通过服务定位器调用音频服务。`ReviewWordDetails` 集中 `BBWordProcess` 到词典页面 `Word` 的字段映射；`FormalReviewMoreOptionsSheet` 则只发出“播放发音/查看详情”意图。页面仍负责路由、SnackBar 和 Navigator 协调，因此没有将 UI 副作用下沉到展示组件或基础设施层。
 
