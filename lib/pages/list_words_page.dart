@@ -5,12 +5,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../models/word.dart';
 
-/// 单词列表页基类，具体子类通过 [loadWords] 提供数据
+/// 单词列表页基类，具体子类通过 [loadWordsForContext] 提供数据
 abstract class ListWordsPage extends StatefulWidget {
   const ListWordsPage({super.key});
 }
@@ -32,15 +31,11 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
 
   String get pageTitle;
 
-  /// 兼容既有词表页的遗留状态读取入口。
-  Future<List<Word>> loadWords(LearningState _) {
-    throw UnimplementedError('子类应覆盖 loadWords 或 loadWordsForContext');
-  }
-
-  /// 允许页面从应用层数据源加载词表；默认复用遗留状态读取入口。
-  Future<List<Word>> loadWordsForContext(BuildContext context) {
-    return loadWords(context.read<LearningState>());
-  }
+  /// 从功能域读取边界加载词表。
+  ///
+  /// 子类必须显式选择词书、收藏、掌握、生词或队列分类的读取端口，避免通用页面
+  /// 重新依赖遗留学习兼容外观。
+  Future<List<Word>> loadWordsForContext(BuildContext context);
 
   /// 子类可覆盖以持久化移除当前词条；默认保持既有仅移除页面列表的行为。
   Future<bool> removeWord(Word word) async => true;

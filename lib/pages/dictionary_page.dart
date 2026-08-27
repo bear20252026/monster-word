@@ -10,7 +10,7 @@ import '../features/learning/presentation/new_words_state.dart';
 import '../models/word.dart';
 import '../state/player_state.dart';
 import '../services/dictionary_service.dart';
-import '../state/learning_state.dart';
+import '../features/learning/presentation/learning_favorites_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/word_root_tab.dart';
@@ -96,9 +96,9 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
               style: MistralTypography.heading5.copyWith(color: skin.text1, fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
-          Consumer2<LearningState, NewWordsState>(
-            builder: (context, learningState, newWords, _) {
-              final isFav = learningState.isFavorite(word.word);
+          Consumer2<LearningFavoritesState, NewWordsState>(
+            builder: (context, favorites, newWords, _) {
+              final isFav = favorites.isFavorite(word.word);
               final isNewWord = newWords.isNewWord(word.id);
               return Row(
                 mainAxisSize: MainAxisSize.min,
@@ -126,7 +126,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
                       color: isFav ? MistralColors.primary : skin.text3,
                       size: 24,
                     ),
-                    onPressed: () => learningState.toggleFavorite(word.word),
+                    onPressed: () => favorites.toggle(word.word),
                   ),
                 ],
               );

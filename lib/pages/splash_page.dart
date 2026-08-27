@@ -3,10 +3,11 @@
 // 移植自 v3.2 SplashActivity
 // 启动页：品牌动画 → 检查登录状态 → 跳转首页或登录页
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../state/learning_state.dart';
+import '../features/account/presentation/app_session_state.dart';
 import '../theme/skin_system.dart';
 import '../widgets/animations.dart';
 import '../widgets/liquid_logo.dart';
@@ -24,8 +25,7 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
-    with SingleTickerProviderStateMixin {
+class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
@@ -43,19 +43,15 @@ class _SplashPageState extends State<SplashPage>
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animController, curve: const Interval(0.0, 0.6)),
-    );
+    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+    _fadeAnim = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animController, curve: const Interval(0.0, 0.6)));
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.1),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _animController, curve: standardCurve),
-    );
+    ).animate(CurvedAnimation(parent: _animController, curve: standardCurve));
     _animController.forward();
     _checkLoginAndNavigate();
   }
@@ -65,15 +61,15 @@ class _SplashPageState extends State<SplashPage>
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    final state = context.read<LearningState>();
-    final isLoggedIn = state.isLoggedIn;
+    final session = context.read<AppSessionState>();
+    final isLoggedIn = session.isLoggedIn;
 
     if (isLoggedIn) {
       // 已登录 → 检查是否首次启动（显示引导页）
-      final hasShownGuide = state.hasShownInitGuide;
+      final hasShownGuide = session.hasShownInitGuide;
       if (!hasShownGuide) {
         setState(() => _showGuide = true);
-        await state.setHasShownInitGuide(true);
+        await session.setHasShownInitGuide(true);
       } else {
         _goToMain();
       }
@@ -118,12 +114,7 @@ class _SplashPageState extends State<SplashPage>
               child: MeteorShower(
                 count: 15,
                 enableStars: true,
-                colors: [
-                  Color(0xFF006241),
-                  Color(0xFF00754A),
-                  Color(0xFFcba258),
-                  Color(0xFF4D96FF),
-                ],
+                colors: [Color(0xFF006241), Color(0xFF00754A), Color(0xFFcba258), Color(0xFF4D96FF)],
               ),
             ),
           Center(
@@ -134,65 +125,54 @@ class _SplashPageState extends State<SplashPage>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                // 液态 Logo 动画
-                LiquidLogo(
-                  size: 100,
-                  colors: [
-                    skin.colors.accent,
-                    skin.colors.accent.withValues(alpha: 0.8),
-                    const Color(0xFF1E3932),
-                    const Color(0xFFcba258),
-                  ],
-                  child: const Text(
-                    '怪',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      height: 1.0,
+                    // 液态 Logo 动画
+                    LiquidLogo(
+                      size: 100,
+                      colors: [
+                        skin.colors.accent,
+                        skin.colors.accent.withValues(alpha: 0.8),
+                        const Color(0xFF1E3932),
+                        const Color(0xFFcba258),
+                      ],
+                      child: const Text(
+                        '怪',
+                        style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white, height: 1.0),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    // 品牌名
+                    Text(
+                      'Monster Word',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: skin.colors.text1,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text('背单词 · 从未如此有趣', style: TextStyle(fontSize: 13, color: skin.colors.text3)),
+                    const SizedBox(height: 24),
+                    // 波浪滚动文字装饰
+                    PathMarquee(
+                      text: 'Monster Word · 背单词 · 从未如此有趣 · ',
+                      pathType: MarqueePathType.sine,
+                      pathWidth: 280,
+                      pathHeight: 30,
+                      speed: 0.6,
+                      loopDuration: const Duration(seconds: 5),
+                      textStyle: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: skin.colors.text3.withValues(alpha: 0.7),
+                      ),
+                      showPath: false,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                // 品牌名
-                Text(
-                  'Monster Word',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: skin.colors.text1,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '背单词 · 从未如此有趣',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: skin.colors.text3,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // 波浪滚动文字装饰
-                PathMarquee(
-                  text: 'Monster Word · 背单词 · 从未如此有趣 · ',
-                  pathType: MarqueePathType.sine,
-                  pathWidth: 280,
-                  pathHeight: 30,
-                  speed: 0.6,
-                  loopDuration: const Duration(seconds: 5),
-                  textStyle: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: skin.colors.text3.withValues(alpha: 0.7),
-                  ),
-                  showPath: false,
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-        ),
         ],
       ),
     );
@@ -222,29 +202,19 @@ class _SplashPageState extends State<SplashPage>
                               borderRadius: BorderRadius.circular(16),
                               color: skin.colors.pageBg,
                             ),
-                            child: Center(
-                              child: Icon(
-                                _getGuideIcon(index),
-                                size: 120,
-                                color: skin.colors.accent,
-                              ),
-                            ),
+                            child: Center(child: Icon(_getGuideIcon(index), size: 120, color: skin.colors.accent)),
                           ),
                         ),
                         const SizedBox(height: 24),
                         Text(
                           _getGuideTitle(index),
-                          style: MistralTypography.heading4.copyWith(
-                            color: skin.colors.text1,
-                          ),
+                          style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           _getGuideDesc(index),
                           textAlign: TextAlign.center,
-                          style: MistralTypography.body.copyWith(
-                            color: skin.colors.text3,
-                          ),
+                          style: MistralTypography.body.copyWith(color: skin.colors.text3),
                         ),
                       ],
                     ),
@@ -266,9 +236,7 @@ class _SplashPageState extends State<SplashPage>
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: i == _currentPage
-                              ? skin.colors.accent
-                              : skin.colors.divider,
+                          color: i == _currentPage ? skin.colors.accent : skin.colors.divider,
                         ),
                       );
                     }),
@@ -283,9 +251,7 @@ class _SplashPageState extends State<SplashPage>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: skin.colors.accent,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.pill),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
                         ),
                         child: const Text('开始使用'),
                       ),
@@ -301,28 +267,40 @@ class _SplashPageState extends State<SplashPage>
 
   IconData _getGuideIcon(int index) {
     switch (index) {
-      case 0: return Icons.school;
-      case 1: return Icons.psychology;
-      case 2: return Icons.trending_up;
-      default: return Icons.menu_book;
+      case 0:
+        return Icons.school;
+      case 1:
+        return Icons.psychology;
+      case 2:
+        return Icons.trending_up;
+      default:
+        return Icons.menu_book;
     }
   }
 
   String _getGuideTitle(int index) {
     switch (index) {
-      case 0: return '科学记忆';
-      case 1: return '沉浸学习';
-      case 2: return '持续进步';
-      default: return '';
+      case 0:
+        return '科学记忆';
+      case 1:
+        return '沉浸学习';
+      case 2:
+        return '持续进步';
+      default:
+        return '';
     }
   }
 
   String _getGuideDesc(int index) {
     switch (index) {
-      case 0: return '基于艾宾浩斯遗忘曲线，智能安排复习时间';
-      case 1: return '真实语境例句，让单词记忆更深刻';
-      case 2: return '每日打卡，见证词汇量飞速增长';
-      default: return '';
+      case 0:
+        return '基于艾宾浩斯遗忘曲线，智能安排复习时间';
+      case 1:
+        return '真实语境例句，让单词记忆更深刻';
+      case 2:
+        return '每日打卡，见证词汇量飞速增长';
+      default:
+        return '';
     }
   }
 }

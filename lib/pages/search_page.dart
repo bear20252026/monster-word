@@ -5,13 +5,14 @@ import 'package:flutter/material.dart';
 import '../data/app_preferences.dart';
 import '../data/example_parser.dart';
 import '../hooks/responsive.dart';
+
 import 'package:provider/provider.dart';
 
 import '../core/di/service_locator.dart';
 import '../models/word.dart';
 import '../repositories/word_repository.dart';
 import '../state/player_state.dart';
-import '../state/learning_state.dart';
+import '../features/learning/presentation/learning_favorites_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/scale_down_on_press.dart';
@@ -66,7 +67,12 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<void> _search(String query) async {
     if (query.trim().isEmpty) {
-      setState(() { _results = []; _selectedWord = null; _hasSearched = false; _lastQuery = ''; });
+      setState(() {
+        _results = [];
+        _selectedWord = null;
+        _hasSearched = false;
+        _lastQuery = '';
+      });
       return;
     }
     setState(() => _isLoading = true);
@@ -112,14 +118,14 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                           )
                         : _selectedWord != null
-                            ? _buildWordDetail(_selectedWord!, skin)
-                            : _results.isNotEmpty
-                                ? _buildResultList(skin)
-                                : _hasSearched
-                                    ? _buildNoResults(skin)
-                                    : _searchHistory.isNotEmpty
-                                        ? _buildHistory(skin)
-                                        : _buildEmpty(skin),
+                        ? _buildWordDetail(_selectedWord!, skin)
+                        : _results.isNotEmpty
+                        ? _buildResultList(skin)
+                        : _hasSearched
+                        ? _buildNoResults(skin)
+                        : _searchHistory.isNotEmpty
+                        ? _buildHistory(skin)
+                        : _buildEmpty(skin),
                   ),
                 ],
               ),
@@ -133,12 +139,7 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildSearchBar(ThemeVars skin) {
     final resp = context.responsive;
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        resp.horizontalPadding,
-        12,
-        resp.horizontalPadding,
-        8,
-      ),
+      padding: EdgeInsets.fromLTRB(resp.horizontalPadding, 12, resp.horizontalPadding, 8),
       decoration: BoxDecoration(
         color: skin.cardBg,
         border: Border(bottom: BorderSide(color: skin.divider)),
@@ -152,10 +153,7 @@ class _SearchPageState extends State<SearchPage> {
               haloColor: skin.accent,
               bgColor: skin.cardBgAlt,
               textStyle: MistralTypography.bodyMd.copyWith(color: skin.text1),
-              hintStyle: MistralTypography.bodyMd.copyWith(
-                color: MistralColors.muted,
-                fontSize: 15 * resp.fontScale,
-              ),
+              hintStyle: MistralTypography.bodyMd.copyWith(color: MistralColors.muted, fontSize: 15 * resp.fontScale),
               onChanged: _search,
               onSubmitted: _search,
               autoFocus: true,
@@ -173,11 +171,10 @@ class _SearchPageState extends State<SearchPage> {
           const SizedBox(width: 12),
           ScaleDownOnPress(
             onTap: () => Navigator.pop(context),
-            child: Text('取消',
-              style: TextStyle(
-                fontSize: 16 * resp.fontScale,
-                color: skin.text1,
-              )),
+            child: Text(
+              '取消',
+              style: TextStyle(fontSize: 16 * resp.fontScale, color: skin.text1),
+            ),
           ),
         ],
       ),
@@ -194,19 +191,13 @@ class _SearchPageState extends State<SearchPage> {
         return ScaleDownOnPress(
           onTap: () {
             _saveToHistory(w.word);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DictionaryPage(word: w),
-              ),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: w)));
           },
           child: ListTile(
-            title: Text(w.word,
-              style: MistralTypography.bodyMd.copyWith(
-                fontWeight: FontWeight.w600,
-                color: skin.text1,
-              )),
+            title: Text(
+              w.word,
+              style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
+            ),
             subtitle: Text(
               w.firstInterpretLine,
               maxLines: 1,
@@ -223,8 +214,8 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildWordDetail(Word word, ThemeVars skin) {
     final examples = ExampleParser.parse(word.example);
-    final state = context.watch<LearningState>();
-    final isFav = state.isFavorite(word.word);
+    final favorites = context.watch<LearningFavoritesState>();
+    final isFav = favorites.isFavorite(word.word);
     final resp = context.responsive;
     return SingleChildScrollView(
       padding: EdgeInsets.all(resp.horizontalPadding),
@@ -240,11 +231,10 @@ class _SearchPageState extends State<SearchPage> {
                 onPressed: () => setState(() => _selectedWord = null),
               ),
               Expanded(
-                child: Text(word.word,
-                  style: MistralTypography.heading2.copyWith(
-                    color: skin.text1,
-                    fontWeight: FontWeight.bold,
-                  )),
+                child: Text(
+                  word.word,
+                  style: MistralTypography.heading2.copyWith(color: skin.text1, fontWeight: FontWeight.bold),
+                ),
               ),
               IconButton(
                 icon: Icon(
@@ -252,7 +242,7 @@ class _SearchPageState extends State<SearchPage> {
                   color: isFav ? MistralColors.warning : skin.text3,
                   size: 24,
                 ),
-                onPressed: () => state.toggleFavorite(word.word),
+                onPressed: () => favorites.toggle(word.word),
               ),
             ],
           ),
@@ -261,11 +251,9 @@ class _SearchPageState extends State<SearchPage> {
             Row(
               children: [
                 if (word.usPron.isNotEmpty)
-                  Text('美 /${word.usPron}/  ',
-                    style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+                  Text('美 /${word.usPron}/  ', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
                 if (word.ukPron.isNotEmpty)
-                  Text('英 /${word.ukPron}/',
-                    style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+                  Text('英 /${word.ukPron}/', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () => _playAudio(word.word),
@@ -275,80 +263,71 @@ class _SearchPageState extends State<SearchPage> {
             ),
           Divider(height: 32, color: skin.divider),
           ...(word.hasStructuredDefinitions
-                  ? word.formattedDefinitions
-                      .split('\n')
-                      .where((l) => l.trim().isNotEmpty)
-                      .toList()
+                  ? word.formattedDefinitions.split('\n').where((l) => l.trim().isNotEmpty).toList()
                   : word.interpretLines)
-              .map((line) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(line,
-              style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
-          )),
+              .map(
+                (line) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(line, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
+                ),
+              ),
           if (examples.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('例句',
-              style: MistralTypography.bodyMd.copyWith(
-                fontWeight: FontWeight.w600,
-                color: skin.text1,
-              )),
+            Text(
+              '例句',
+              style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
+            ),
             const SizedBox(height: 8),
-            ...examples.take(3).map((ex) => Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: skin.cardBgAlt,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: MistralTypography.bodySm.copyWith(color: skin.text1, height: 1.4),
-                      children: ex.highlightedParts.map((p) => TextSpan(
-                        text: p.text,
-                        style: p.highlight
-                            ? TextStyle(fontWeight: FontWeight.bold, color: skin.accent)
-                            : null,
-                      )).toList(),
+            ...examples
+                .take(3)
+                .map(
+                  (ex) => Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(AppRadius.md)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        RichText(
+                          text: TextSpan(
+                            style: MistralTypography.bodySm.copyWith(color: skin.text1, height: 1.4),
+                            children: ex.highlightedParts
+                                .map(
+                                  (p) => TextSpan(
+                                    text: p.text,
+                                    style: p.highlight
+                                        ? TextStyle(fontWeight: FontWeight.bold, color: skin.accent)
+                                        : null,
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                        if (ex.cn.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(ex.cn, style: MistralTypography.caption.copyWith(color: skin.text3)),
+                        ],
+                      ],
                     ),
                   ),
-                  if (ex.cn.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(ex.cn,
-                      style: MistralTypography.caption.copyWith(color: skin.text3)),
-                  ],
-                ],
-              ),
-            )),
+                ),
           ],
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DictionaryPage(word: word),
-                  ),
-                );
+                Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: word)));
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: skin.accent,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
               ),
               child: Text(
                 '查看完整字典',
-                style: MistralTypography.bodyMd.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: MistralTypography.bodyMd.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -363,24 +342,17 @@ class _SearchPageState extends State<SearchPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(
-            resp.horizontalPadding,
-            16,
-            resp.horizontalPadding,
-            8,
-          ),
+          padding: EdgeInsets.fromLTRB(resp.horizontalPadding, 16, resp.horizontalPadding, 8),
           child: Row(
             children: [
-              Text('最近搜索',
-                style: MistralTypography.bodyMd.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: skin.text1,
-                )),
+              Text(
+                '最近搜索',
+                style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
+              ),
               const Spacer(),
               ScaleDownOnPress(
                 onTap: _clearHistory,
-                child: Text('清除',
-                  style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                child: Text('清除', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
               ),
             ],
           ),
@@ -397,8 +369,7 @@ class _SearchPageState extends State<SearchPage> {
                 },
                 child: ListTile(
                   leading: Icon(Icons.history, color: skin.text3, size: 20),
-                  title: Text(word,
-                    style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
+                  title: Text(word, style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
                 ),
               );
             },
@@ -415,18 +386,15 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           Icon(Icons.search_off, size: 64, color: skin.divider),
           const SizedBox(height: 16),
-          Text('未找到匹配的单词',
-            style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+          Text('未找到匹配的单词', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
           const SizedBox(height: 8),
-          Text('请检查拼写，或尝试搜索其他关键词',
-            style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+          Text('请检查拼写，或尝试搜索其他关键词', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
           if (_lastQuery.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('搜索词: "$_lastQuery"',
-              style: MistralTypography.bodySm.copyWith(
-                color: MistralColors.muted,
-                fontStyle: FontStyle.italic,
-              )),
+            Text(
+              '搜索词: "$_lastQuery"',
+              style: MistralTypography.bodySm.copyWith(color: MistralColors.muted, fontStyle: FontStyle.italic),
+            ),
           ],
         ],
       ),
@@ -440,8 +408,7 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           Icon(Icons.search, size: 64, color: skin.divider),
           const SizedBox(height: 16),
-          Text('输入单词开始查询',
-            style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+          Text('输入单词开始查询', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
           const SizedBox(height: 24),
           // 波浪滚动装饰文字
           PathMarquee(
@@ -451,11 +418,7 @@ class _SearchPageState extends State<SearchPage> {
             pathHeight: 24,
             speed: 0.5,
             loopDuration: const Duration(seconds: 6),
-            textStyle: TextStyle(
-              fontSize: 12,
-              color: skin.text3.withValues(alpha: 0.5),
-              letterSpacing: 1,
-            ),
+            textStyle: TextStyle(fontSize: 12, color: skin.text3.withValues(alpha: 0.5), letterSpacing: 1),
           ),
         ],
       ),
@@ -468,9 +431,8 @@ class _SearchPageState extends State<SearchPage> {
       await context.read<PlayerState>().playWord(word);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
       }
     }
   }

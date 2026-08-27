@@ -9,7 +9,7 @@ import '../../../models/word.dart';
 
 /// 正式复习的 FSRS 调度与统计事实来源。
 ///
-/// 持久化键与遗留 [LearningState] 完全一致，以保留既有用户卡片与每日统计数据。
+/// 保留既有 FSRS 持久化键，以兼容用户已有卡片与每日统计数据。
 /// 该仓储不持有当前学习队列，也不推进任何会话引擎；调用方必须显式提供需筛选的
 /// 词条或要评分的实际词条。
 class ReviewScheduleRepository extends ChangeNotifier {

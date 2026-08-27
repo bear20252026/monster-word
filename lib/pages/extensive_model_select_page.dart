@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../state/learning_state.dart';
+import '../features/learning/data/learning_queue_repository.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import 'listening_player_page.dart';
@@ -16,23 +16,14 @@ class ListenMode {
   final IconData icon;
   final ListeningMode playerMode;
 
-  const ListenMode({
-    required this.name,
-    required this.description,
-    required this.icon,
-    required this.playerMode,
-  });
+  const ListenMode({required this.name, required this.description, required this.icon, required this.playerMode});
 }
 
 class ExtensiveModelSelectPage extends StatefulWidget {
   final int bookId;
   final String bookName;
 
-  const ExtensiveModelSelectPage({
-    super.key,
-    required this.bookId,
-    this.bookName = '',
-  });
+  const ExtensiveModelSelectPage({super.key, required this.bookId, this.bookName = ''});
 
   static const routeName = '/listen_mode_select';
 
@@ -48,12 +39,7 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
       icon: Icons.translate,
       playerMode: ListeningMode.wordMeaning,
     ),
-    ListenMode(
-      name: '仅单词',
-      description: '只播放单词发音',
-      icon: Icons.hearing,
-      playerMode: ListeningMode.wordOnly,
-    ),
+    ListenMode(name: '仅单词', description: '只播放单词发音', icon: Icons.hearing, playerMode: ListeningMode.wordOnly),
     ListenMode(
       name: '单词+例句',
       description: '播放单词后播放例句',
@@ -105,7 +91,8 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
                       child: Row(
                         children: [
                           Container(
-                            width: 44, height: 44,
+                            width: 44,
+                            height: 44,
                             decoration: BoxDecoration(
                               color: MistralColors.cream,
                               borderRadius: BorderRadius.circular(AppRadius.md),
@@ -117,17 +104,15 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(mode.name, style: MistralTypography.bodyBold.copyWith(
-                                  color: skin.colors.text1,
-                                )),
-                                Text(mode.description, style: MistralTypography.bodySm.copyWith(
-                                  color: skin.colors.text3,
-                                )),
+                                Text(mode.name, style: MistralTypography.bodyBold.copyWith(color: skin.colors.text1)),
+                                Text(
+                                  mode.description,
+                                  style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
+                                ),
                               ],
                             ),
                           ),
-                          if (isSelected)
-                            Icon(Icons.check_circle, color: MistralColors.primary, size: 24),
+                          if (isSelected) Icon(Icons.check_circle, color: MistralColors.primary, size: 24),
                         ],
                       ),
                     ),
@@ -160,18 +145,14 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: MistralColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
               elevation: 0,
             ),
             child: _loading
                 ? const SizedBox(
-                    width: 22, height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
                 : const Text('开始播放', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           ),
@@ -183,30 +164,22 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
   Future<void> _onConfirm() async {
     setState(() => _loading = true);
     try {
-      final learningState = context.read<LearningState>();
-      final words = await learningState.getWordsByBook(widget.bookId);
+      final words = await context.read<LearningQueueRepository>().loadWordsByBook(widget.bookId);
       if (!mounted) return;
       if (words.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('该词书暂无单词')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));
         return;
       }
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ListeningPlayerPage(
-            words: words,
-            mode: _modes[_selectedIndex].playerMode,
-            bookName: widget.bookName,
-          ),
+          builder: (_) =>
+              ListeningPlayerPage(words: words, mode: _modes[_selectedIndex].playerMode, bookName: widget.bookName),
         ),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('加载单词失败: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('加载单词失败: $e')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

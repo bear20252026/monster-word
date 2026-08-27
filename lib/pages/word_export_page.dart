@@ -1,6 +1,7 @@
 // 词表导出页面
 // 支持导出为 TXT / CSV / 分享文本
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -10,7 +11,7 @@ import '../core/di/service_locator.dart';
 import '../hooks/responsive.dart';
 import '../models/word.dart';
 import '../repositories/word_repository.dart';
-import '../state/learning_state.dart';
+import '../features/learning/data/learning_queue_repository.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -20,11 +21,7 @@ class WordExportPage extends StatefulWidget {
   final int bookId;
   final String bookName;
 
-  const WordExportPage({
-    super.key,
-    required this.bookId,
-    this.bookName = '',
-  });
+  const WordExportPage({super.key, required this.bookId, this.bookName = ''});
 
   static const routeName = '/word_export';
 
@@ -59,10 +56,7 @@ class _WordExportPageState extends State<WordExportPage> {
                     child: ListView(
                       children: [
                         const SizedBox(height: 16),
-                        Text(
-                          '导出词表',
-                          style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
-                        ),
+                        Text('导出词表', style: MistralTypography.heading4.copyWith(color: skin.colors.text1)),
                         const SizedBox(height: 8),
                         Text(
                           widget.bookName.isNotEmpty ? widget.bookName : '当前词书',
@@ -112,10 +106,7 @@ class _WordExportPageState extends State<WordExportPage> {
   }
 
   Widget _buildSectionTitle(String title, SkinSystem skin) {
-    return Text(
-      title,
-      style: MistralTypography.bodyBold.copyWith(color: skin.colors.text1),
-    );
+    return Text(title, style: MistralTypography.bodyBold.copyWith(color: skin.colors.text1));
   }
 
   Widget _buildFormatSelector(SkinSystem skin) {
@@ -136,9 +127,7 @@ class _WordExportPageState extends State<WordExportPage> {
       selected: selected,
       onSelected: (_) => setState(() => _format = format),
       selectedColor: MistralColors.primary,
-      labelStyle: MistralTypography.bodySm.copyWith(
-        color: selected ? Colors.white : skin.colors.text1,
-      ),
+      labelStyle: MistralTypography.bodySm.copyWith(color: selected ? Colors.white : skin.colors.text1),
       backgroundColor: skin.colors.cardBgAlt,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -176,7 +165,11 @@ class _WordExportPageState extends State<WordExportPage> {
           child: OutlinedButton.icon(
             onPressed: _exporting ? null : _exportAsFile,
             icon: _exporting
-                ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: skin.colors.text2))
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: skin.colors.text2),
+                  )
                 : const Icon(Icons.download, size: 18),
             label: Text(_exporting ? '导出中...' : '保存文件'),
             style: OutlinedButton.styleFrom(
@@ -205,9 +198,8 @@ class _WordExportPageState extends State<WordExportPage> {
     );
   }
 
-  Future<List<Word>> _loadWords() async {
-    final learningState = context.read<LearningState>();
-    return learningState.getWordsByBook(widget.bookId);
+  Future<List<Word>> _loadWords() {
+    return context.read<LearningQueueRepository>().loadWordsByBook(widget.bookId);
   }
 
   String _generateContent(List<Word> words) {
@@ -258,9 +250,12 @@ class _WordExportPageState extends State<WordExportPage> {
 
   String _getExtension() {
     switch (_format) {
-      case ExportFormat.txt: return 'txt';
-      case ExportFormat.csv: return 'csv';
-      case ExportFormat.markdown: return 'md';
+      case ExportFormat.txt:
+        return 'txt';
+      case ExportFormat.csv:
+        return 'csv';
+      case ExportFormat.markdown:
+        return 'md';
     }
   }
 
@@ -276,9 +271,7 @@ class _WordExportPageState extends State<WordExportPage> {
       final words = await _loadWords();
       if (words.isEmpty) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('该词书暂无单词可导出')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词可导出')));
         }
         return;
       }
@@ -296,18 +289,13 @@ class _WordExportPageState extends State<WordExportPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('已导出 ${words.length} 个单词到文档目录'),
-            action: SnackBarAction(
-              label: '分享',
-              onPressed: () => Share.shareXFiles([XFile(filePath)]),
-            ),
+            action: SnackBarAction(label: '分享', onPressed: () => Share.shareXFiles([XFile(filePath)])),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('导出失败: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导出失败: $e')));
       }
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -320,9 +308,7 @@ class _WordExportPageState extends State<WordExportPage> {
       final words = await _loadWords();
       if (words.isEmpty) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('该词书暂无单词可导出')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词可导出')));
         }
         return;
       }
@@ -335,15 +321,10 @@ class _WordExportPageState extends State<WordExportPage> {
       final file = File('${tempDir.path}${Platform.pathSeparator}$fileName');
       await file.writeAsString(content);
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: '${widget.bookName.isNotEmpty ? widget.bookName : "词表"}导出',
-      );
+      await Share.shareXFiles([XFile(file.path)], subject: '${widget.bookName.isNotEmpty ? widget.bookName : "词表"}导出');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('分享失败: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('分享失败: $e')));
       }
     } finally {
       if (mounted) setState(() => _exporting = false);

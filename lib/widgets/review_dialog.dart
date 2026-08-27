@@ -2,8 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../features/learning/data/review_schedule_repository.dart';
+import '../features/learning/presentation/learning_session_state.dart';
 import '../pages/review_page.dart';
-import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -23,7 +24,8 @@ class _ReviewDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
-    final state = context.read<LearningState>();
+    final session = context.watch<LearningSessionState>();
+    final schedule = context.watch<ReviewScheduleRepository>();
 
     return Container(
       decoration: BoxDecoration(
@@ -65,7 +67,7 @@ class _ReviewDialog extends StatelessWidget {
                   Expanded(
                     child: _StatCard(
                       label: '今日已学',
-                      value: '${state.todayLearnCount}',
+                      value: '${schedule.todayLearnCount}',
                       unit: '词',
                       icon: Icons.school_outlined,
                       color: skin.accent,
@@ -76,7 +78,7 @@ class _ReviewDialog extends StatelessWidget {
                   Expanded(
                     child: _StatCard(
                       label: '今日复习',
-                      value: '${state.todayReviewCount}',
+                      value: '${schedule.todayReviewCount}',
                       unit: '词',
                       icon: Icons.replay_outlined,
                       color: skin.success,
@@ -98,7 +100,7 @@ class _ReviewDialog extends StatelessWidget {
                     children: [
                       Text('学习进度', style: MistralTypography.caption.copyWith(color: skin.text3)),
                       Text(
-                        state.total > 0 ? '${((state.learnedNum / state.total) * 100).toInt()}%' : '0%',
+                        session.total > 0 ? '${((session.learnedNum / session.total) * 100).toInt()}%' : '0%',
                         style: MistralTypography.captionBold.copyWith(color: skin.accent),
                       ),
                     ],
@@ -107,7 +109,7 @@ class _ReviewDialog extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: LinearProgressIndicator(
-                      value: state.total > 0 ? state.learnedNum / state.total : 0,
+                      value: session.total > 0 ? session.learnedNum / session.total : 0,
                       minHeight: 8,
                       backgroundColor: skin.divider,
                       valueColor: AlwaysStoppedAnimation(skin.accent),
