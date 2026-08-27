@@ -36,6 +36,7 @@ import '../../repositories/stats_repository_impl.dart';
 import '../../features/learning/application/book_words_reader.dart';
 import '../../features/learning/application/mastered_words_reader.dart';
 import '../../features/learning/application/new_words_reader.dart';
+import '../../features/learning/application/review_audio_player.dart';
 import '../../features/learning/application/review_queue_reader.dart';
 import '../../features/learning/presentation/new_words_state.dart';
 import '../../state/learn_state.dart';
@@ -140,6 +141,13 @@ Future<void> setupServiceLocator() async {
   // AudioService（音频播放）
   if (!sl.isRegistered<AudioService>()) {
     sl.registerLazySingleton<AudioService>(() => AudioServiceImpl());
+  }
+
+  // ReviewAudioPlayer / ReviewAudioState（正式复习发音边界）
+  if (!sl.isRegistered<ReviewAudioPlayer>()) {
+    sl.registerLazySingleton<ReviewAudioPlayer>(
+      () => ReviewAudioPlayer(playAudio: (word) => sl<AudioService>().playWordAudio(word)),
+    );
   }
 
   // LearnService（学习流程）

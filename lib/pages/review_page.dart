@@ -2,15 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
+import '../features/learning/application/review_word_details.dart';
+import '../features/learning/presentation/review_audio_state.dart';
 import '../features/learning/presentation/review_queue_state.dart';
 import '../features/learning/presentation/review_session_state.dart';
 import '../features/learning/presentation/review_word_actions_state.dart';
 import '../features/learning/presentation/widgets/formal_review_widgets.dart';
 import '../models/bb_word_process.dart';
-import '../models/word.dart';
 import '../pages/dictionary_page.dart';
-import '../services/audio_service.dart';
 import '../state/wallpaper_state.dart';
 import '../widgets/session_exit_guard.dart';
 
@@ -24,8 +23,6 @@ class ReviewPage extends StatefulWidget {
 }
 
 class _ReviewPageState extends State<ReviewPage> {
-  bool _audioLoading = false;
-
   @override
   void initState() {
     super.initState();
@@ -45,6 +42,7 @@ class _ReviewPageState extends State<ReviewPage> {
   Widget build(BuildContext context) {
     final session = context.watch<ReviewSessionState>();
     final wordActions = context.watch<ReviewWordActionsState>();
+    final reviewAudio = context.watch<ReviewAudioState>();
 
     if (session.isLoading) return const FormalReviewLoadingView();
     if (session.hasLoadError) return FormalReviewLoadErrorView(error: session.loadError, onRetry: _initReview);
@@ -81,7 +79,7 @@ class _ReviewPageState extends State<ReviewPage> {
           onSelectChoice: session.selectChoice,
           onRevealAnswer: session.revealAnswer,
           onContinueWithGoodRating: session.continueWithGoodRating,
-          audioLoading: _audioLoading,
+          audioLoading: reviewAudio.isLoading,
         ),
       ),
     );
@@ -123,67 +121,36 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   void _showMoreOptions(BuildContext context) {
+    final word = context.read<ReviewSessionState>().currentWord;
+    if (word == null) return;
+
     showModalBottomSheet(
       context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.volume_up),
-              title: const Text('播放发音'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                final word = context.read<ReviewSessionState>().currentWord;
-                if (word != null) _playWordAudio(word);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('查看详情'),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                final word = context.read<ReviewSessionState>().currentWord;
-                if (word != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => DictionaryPage(
-                        word: Word(
-                          id: word.wordId,
-                          word: word.word,
-                          mainWord: word.word,
-                          interpret: word.interpret,
-                          usPron: word.usPron,
-                          ukPron: word.ukPron,
-                          example: word.example,
-                          phrase: '',
-                          confuse: '',
-                        ),
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
-        ),
+      builder: (sheetContext) => FormalReviewMoreOptionsSheet(
+        onPlayAudio: () {
+          Navigator.pop(sheetContext);
+          _playWordAudio(word);
+        },
+        onShowDetails: () {
+          Navigator.pop(sheetContext);
+          _openWordDetails(word);
+        },
       ),
     );
   }
 
+  void _openWordDetails(BBWordProcess word) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: word.toDictionaryWord())));
+  }
+
   Future<void> _playWordAudio(BBWordProcess word) async {
-    if (_audioLoading) return;
-    setState(() => _audioLoading = true);
     try {
-      await sl<AudioService>().playWordAudio(word.word);
+      await context.read<ReviewAudioState>().playWord(word.word);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
       }
-    } finally {
-      if (mounted) setState(() => _audioLoading = false);
     }
   }
 }

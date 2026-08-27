@@ -9,12 +9,14 @@ import '../repositories/mastered_repository.dart';
 import '../features/learning/application/book_words_reader.dart';
 import '../features/learning/application/mastered_words_reader.dart';
 import '../features/learning/application/new_words_reader.dart';
+import '../features/learning/application/review_audio_player.dart';
 import '../features/learning/application/review_queue_reader.dart';
 import '../features/learning/application/review_rating_writer.dart';
 import '../features/learning/presentation/learning_collections_state.dart';
 import '../features/learning/presentation/learning_queue_word_lists_state.dart';
 import '../features/learning/presentation/learning_statistics_state.dart';
 import '../features/learning/presentation/new_words_state.dart';
+import '../features/learning/presentation/review_audio_state.dart';
 import '../features/learning/presentation/review_queue_state.dart';
 import '../features/learning/presentation/review_session_state.dart';
 import '../features/learning/presentation/review_word_actions_state.dart';
@@ -83,6 +85,7 @@ class WordApp extends StatelessWidget {
               ReviewWordActionsState(favRepository: sl<FavRepository>(), masteredRepository: sl<MasteredRepository>())
                 ..initialize(),
         ),
+        ChangeNotifierProvider(create: (_) => ReviewAudioState(audioPlayer: sl<ReviewAudioPlayer>())),
         Provider<BookWordsReader>.value(value: sl<BookWordsReader>()),
         Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),
         Provider<NewWordsReader>.value(value: sl<NewWordsReader>()),
