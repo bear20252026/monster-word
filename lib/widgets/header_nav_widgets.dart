@@ -5,6 +5,7 @@
 // 文件：CustomHeadView, SegmentedGroup, SlideBar
 
 import 'package:flutter/material.dart';
+
 import '../tokens/design_tokens.dart';
 
 /// 自定义头部栏（翻译自 CustomHeadView.dart）
@@ -44,28 +45,17 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: backgroundColor,
-      leading: leftButton != null
-          ? GestureDetector(onTap: onLeftTap, child: leftButton)
-          : null,
-      title: showTwoTitles
-          ? _buildTwoTitleSelector()
-          : Text(title, style: const TextStyle(fontSize: 18)),
+      leading: leftButton != null ? GestureDetector(onTap: onLeftTap, child: leftButton) : null,
+      title: showTwoTitles ? _buildTwoTitleSelector() : Text(title, style: const TextStyle(fontSize: 18)),
       centerTitle: true,
-      actions: [
-        if (rightButton != null)
-          GestureDetector(onTap: onRightTap, child: rightButton!),
-      ],
+      actions: [if (rightButton != null) GestureDetector(onTap: onRightTap, child: rightButton!)],
     );
   }
 
   Widget _buildTwoTitleSelector() {
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildTitleItem(leftTitle ?? '', 0),
-        const SizedBox(width: 20),
-        _buildTitleItem(rightTitle ?? '', 1),
-      ],
+      children: [_buildTitleItem(leftTitle ?? '', 0), const SizedBox(width: 20), _buildTitleItem(rightTitle ?? '', 1)],
     );
   }
 
@@ -141,9 +131,7 @@ class SegmentedSelector extends StatelessWidget {
                 color: isSelected ? selectedColor : unselectedColor,
                 borderRadius: BorderRadius.horizontal(
                   left: index == 0 ? const Radius.circular(7) : Radius.zero,
-                  right: index == segments.length - 1
-                      ? const Radius.circular(7)
-                      : Radius.zero,
+                  right: index == segments.length - 1 ? const Radius.circular(7) : Radius.zero,
                 ),
               ),
               child: Text(
@@ -169,8 +157,32 @@ class AlphabetSlideBar extends StatelessWidget {
   final Color activeColor;
 
   static const List<String> _letters = [
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
   ];
 
   const AlphabetSlideBar({
@@ -186,9 +198,7 @@ class AlphabetSlideBar extends StatelessWidget {
       onVerticalDragUpdate: (details) {
         final RenderBox box = context.findRenderObject() as RenderBox;
         final localPos = box.globalToLocal(details.globalPosition);
-        final index = (localPos.dy / box.size.height * _letters.length)
-            .clamp(0, _letters.length - 1)
-            .toInt();
+        final index = (localPos.dy / box.size.height * _letters.length).clamp(0, _letters.length - 1).toInt();
         onLetterChanged?.call(_letters[index]);
       },
       child: Column(
@@ -198,11 +208,7 @@ class AlphabetSlideBar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 1),
             child: Text(
               letter,
-              style: TextStyle(
-                fontSize: 11,
-                color: textColor,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: 11, color: textColor, fontWeight: FontWeight.w500),
             ),
           );
         }).toList(),

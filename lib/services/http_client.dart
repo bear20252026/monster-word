@@ -20,6 +20,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' show MediaType;
@@ -153,9 +154,11 @@ class CoolHttpResponse {
 
   /// 失败日志（原版 failTrace）
   void failTrace() {
-    _log('CoolHttpResponse FAIL: data_kind=$_dataKind, '
-        'data_version=$_dataVersion, result_code=$_resultCode, '
-        'error_info=$_errorInfo, error_message=$_errorMessage');
+    _log(
+      'CoolHttpResponse FAIL: data_kind=$_dataKind, '
+      'data_version=$_dataVersion, result_code=$_resultCode, '
+      'error_info=$_errorInfo, error_message=$_errorMessage',
+    );
   }
 }
 
@@ -293,10 +296,7 @@ class CoolHttpClient {
   }
 
   /// GET 请求（原版 get(RequestParams, handler)）
-  static Future<void> get(
-    RequestParams requestParams,
-    CoolJsonHttpResponseHandler handler,
-  ) {
+  static Future<void> get(RequestParams requestParams, CoolJsonHttpResponseHandler handler) {
     return getWithSuffix(requestParams, handler, null);
   }
 
@@ -311,9 +311,7 @@ class CoolHttpClient {
     _log('$_logTag request: $uri');
 
     try {
-      final response = await http.get(uri).timeout(
-        Duration(seconds: _timeoutSeconds),
-      );
+      final response = await http.get(uri).timeout(Duration(seconds: _timeoutSeconds));
       _handleResponse(response, handler);
     } catch (e) {
       _log('$_logTag IOException: $e');
@@ -322,10 +320,7 @@ class CoolHttpClient {
   }
 
   /// POST 请求（原版 post）
-  static Future<void> post(
-    RequestParams requestParams,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<void> post(RequestParams requestParams, CoolJsonHttpResponseHandler handler) async {
     final uri = Uri.parse(_getAbsoluteUrl(null));
     _log('$_logTag post request: $uri');
 
@@ -339,11 +334,7 @@ class CoolHttpClient {
       } else {
         // 普通表单
         response = await http
-            .post(
-              uri,
-              body: requestParams.getParams(),
-              headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            )
+            .post(uri, body: requestParams.getParams(), headers: {'Content-Type': 'application/x-www-form-urlencoded'})
             .timeout(Duration(seconds: _timeoutSeconds));
       }
       _handleResponse(response, handler);
@@ -354,10 +345,7 @@ class CoolHttpClient {
   }
 
   /// 带签名的 POST（原版 postAppendSign）
-  static Future<void> postAppendSign(
-    CoolParams coolParams,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<void> postAppendSign(CoolParams coolParams, CoolJsonHttpResponseHandler handler) async {
     coolParams.put('sign', coolParams.getParamsSign());
     return post(coolParams, handler);
   }
@@ -392,19 +380,12 @@ class CoolHttpClient {
     }
     final uri = Uri.parse(url);
     if (params != null) {
-      return uri.replace(
-        queryParameters: params.getParams().map(
-              (k, v) => MapEntry(k, Uri.encodeComponent(v)),
-            ),
-      );
+      return uri.replace(queryParameters: params.getParams().map((k, v) => MapEntry(k, Uri.encodeComponent(v))));
     }
     return uri;
   }
 
-  static void _handleResponse(
-    http.Response response,
-    CoolJsonHttpResponseHandler handler,
-  ) {
+  static void _handleResponse(http.Response response, CoolJsonHttpResponseHandler handler) {
     if (response.statusCode == 200) {
       try {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -425,10 +406,7 @@ class CoolHttpClient {
     }
   }
 
-  static Future<http.Response> _sendMultipartPost(
-    Uri uri,
-    CoolParams params,
-  ) async {
+  static Future<http.Response> _sendMultipartPost(Uri uri, CoolParams params) async {
     final request = http.MultipartRequest('POST', uri);
     // 添加文本参数
     params.getParams().forEach((key, value) {
@@ -443,31 +421,25 @@ class CoolHttpClient {
         } else if (value.path.endsWith('.syn')) {
           contentType = 'application/json';
         }
-        request.files.add(http.MultipartFile.fromBytes(
-          key,
-          value.readAsBytesSync(),
-          filename: value.uri.pathSegments.last,
-          contentType: contentType != null ? MediaType.parse(contentType) : null,
-        ));
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            key,
+            value.readAsBytesSync(),
+            filename: value.uri.pathSegments.last,
+            contentType: contentType != null ? MediaType.parse(contentType) : null,
+          ),
+        );
       }
     });
-    final streamed = await request.send().timeout(
-      Duration(seconds: _timeoutSeconds),
-    );
+    final streamed = await request.send().timeout(Duration(seconds: _timeoutSeconds));
     return http.Response.fromStream(streamed);
   }
 
-  static void _notifyError(
-    CoolJsonHttpResponseHandler handler,
-    CoolHttpResponse response,
-  ) {
+  static void _notifyError(CoolJsonHttpResponseHandler handler, CoolHttpResponse response) {
     handler.onFailure(response);
   }
 
-  static void _notifySucc(
-    CoolJsonHttpResponseHandler handler,
-    CoolHttpResponse response,
-  ) {
+  static void _notifySucc(CoolJsonHttpResponseHandler handler, CoolHttpResponse response) {
     handler.onSuccess(response);
   }
 
@@ -516,17 +488,11 @@ class CoolHttpClientV3 {
   /// 追加签名（原版 appendParamSign）
   static void appendParamSign(RequestParams requestParams) {
     final secret = _getSecret();
-    requestParams.put(
-      'sign',
-      WdTransAction.generateSign(requestParams.getParams(), secret, '1pat2rqs'),
-    );
+    requestParams.put('sign', WdTransAction.generateSign(requestParams.getParams(), secret, '1pat2rqs'));
   }
 
   /// GET 请求（原版 get(RequestParams, handler)）
-  static Future<void> get(
-    RequestParams requestParams,
-    CoolJsonHttpResponseHandler handler,
-  ) {
+  static Future<void> get(RequestParams requestParams, CoolJsonHttpResponseHandler handler) {
     return getWithSuffix(requestParams, handler, null);
   }
 
@@ -541,9 +507,7 @@ class CoolHttpClientV3 {
     _log('$_logTag request: $uri');
 
     try {
-      final response = await http.get(uri).timeout(
-        Duration(seconds: _timeoutSeconds),
-      );
+      final response = await http.get(uri).timeout(Duration(seconds: _timeoutSeconds));
       _handleV3Response(response, handler);
     } catch (e) {
       _log('$_logTag IOException: $e');
@@ -552,10 +516,7 @@ class CoolHttpClientV3 {
   }
 
   /// POST 请求（原版 post）
-  static Future<void> post(
-    RequestParams requestParams,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<void> post(RequestParams requestParams, CoolJsonHttpResponseHandler handler) async {
     final uri = Uri.parse(_getAbsoluteUrl(null));
     _log('$_logTag post request: $uri');
 
@@ -567,11 +528,7 @@ class CoolHttpClientV3 {
         response = await _sendMultipartPost(uri, coolParams);
       } else {
         response = await http
-            .post(
-              uri,
-              body: requestParams.getParams(),
-              headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            )
+            .post(uri, body: requestParams.getParams(), headers: {'Content-Type': 'application/x-www-form-urlencoded'})
             .timeout(Duration(seconds: _timeoutSeconds));
       }
       _handleV3Response(response, handler);
@@ -582,17 +539,12 @@ class CoolHttpClientV3 {
   }
 
   /// 登录检查专用（原版 checkLogin）
-  static Future<void> checkLogin(
-    RequestParams requestParams,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<void> checkLogin(RequestParams requestParams, CoolJsonHttpResponseHandler handler) async {
     final uri = _buildGetUri(requestParams as CoolParams?, null);
     _log('$_logTag request: $uri');
 
     try {
-      final response = await http.get(uri).timeout(
-        const Duration(seconds: 2),
-      );
+      final response = await http.get(uri).timeout(const Duration(seconds: 2));
       if (response.statusCode == 200) {
         try {
           final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -627,28 +579,20 @@ class CoolHttpClientV3 {
     }
     final uri = Uri.parse(url);
     if (params != null) {
-      return uri.replace(
-        queryParameters: params.getParams().map(
-              (k, v) => MapEntry(k, Uri.encodeComponent(v)),
-            ),
-      );
+      return uri.replace(queryParameters: params.getParams().map((k, v) => MapEntry(k, Uri.encodeComponent(v))));
     }
     return uri;
   }
 
   /// 处理 v3 响应（原版 onResponse 逻辑）
-  static void _handleV3Response(
-    http.Response response,
-    CoolJsonHttpResponseHandler handler,
-  ) {
+  static void _handleV3Response(http.Response response, CoolJsonHttpResponseHandler handler) {
     if (response.statusCode == 200) {
       try {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         final coolResponse = CoolHttpResponse.fromJsonV3(json);
 
         // 检查账号过期
-        if (coolResponse.resultCode == resultAccountExpire ||
-            coolResponse.resultCode == resultAccountExpire2) {
+        if (coolResponse.resultCode == resultAccountExpire || coolResponse.resultCode == resultAccountExpire2) {
           Future.delayed(const Duration(milliseconds: 200), () {
             _dealAccountExpire();
           });
@@ -716,10 +660,7 @@ class CoolHttpClientV3 {
   }
 
   /// multipart POST（原版 multipart 上传逻辑）
-  static Future<http.Response> _sendMultipartPost(
-    Uri uri,
-    CoolParams params,
-  ) async {
+  static Future<http.Response> _sendMultipartPost(Uri uri, CoolParams params) async {
     final request = http.MultipartRequest('POST', uri);
     params.getParams().forEach((key, value) {
       request.fields[key] = value;
@@ -732,31 +673,25 @@ class CoolHttpClientV3 {
         } else if (value.path.endsWith('.syn')) {
           contentType = 'application/json';
         }
-        request.files.add(http.MultipartFile.fromBytes(
-          key,
-          value.readAsBytesSync(),
-          filename: value.uri.pathSegments.last,
-          contentType: contentType != null ? MediaType.parse(contentType) : null,
-        ));
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            key,
+            value.readAsBytesSync(),
+            filename: value.uri.pathSegments.last,
+            contentType: contentType != null ? MediaType.parse(contentType) : null,
+          ),
+        );
       }
     });
-    final streamed = await request.send().timeout(
-      Duration(seconds: _timeoutSeconds),
-    );
+    final streamed = await request.send().timeout(Duration(seconds: _timeoutSeconds));
     return http.Response.fromStream(streamed);
   }
 
-  static void _notifyError(
-    CoolJsonHttpResponseHandler handler,
-    CoolHttpResponse response,
-  ) {
+  static void _notifyError(CoolJsonHttpResponseHandler handler, CoolHttpResponse response) {
     handler.onFailure(response);
   }
 
-  static void _notifySucc(
-    CoolJsonHttpResponseHandler handler,
-    CoolHttpResponse response,
-  ) {
+  static void _notifySucc(CoolJsonHttpResponseHandler handler, CoolHttpResponse response) {
     handler.onSuccess(response);
   }
 
@@ -789,24 +724,16 @@ class DownloadHttpClient {
   /// 读取超时（秒）
   int get readTimeout => _readTimeout;
 
-  DownloadHttpClient()
-      : _connectTimeout = 10,
-        _readTimeout = 120;
+  DownloadHttpClient() : _connectTimeout = 10, _readTimeout = 120;
 
   DownloadHttpClient.withTimeout(this._connectTimeout, this._readTimeout);
 
   /// 异步下载文件（原版 asyncDownloadFile(String, String, handler)）
-  Future<void> asyncDownloadFile(
-    String savePath,
-    String url,
-    FileHttpResponseHandler handler,
-  ) async {
+  Future<void> asyncDownloadFile(String savePath, String url, FileHttpResponseHandler handler) async {
     _log('$_logTag asyncDownloadFile: $url');
     try {
       final request = http.Request('GET', Uri.parse(url));
-      final streamed = await http.Client().send(request).timeout(
-        Duration(seconds: _readTimeout),
-      );
+      final streamed = await http.Client().send(request).timeout(Duration(seconds: _readTimeout));
 
       if (streamed.statusCode == 200) {
         final file = File(savePath);
@@ -847,34 +774,21 @@ class DownloadHttpClient {
   }
 
   /// 异步下载到文件对象（原版 asyncDownloadFile(File, String, handler)）
-  Future<void> asyncDownloadToFile(
-    File file,
-    String url,
-    FileHttpResponseHandler handler,
-  ) {
+  Future<void> asyncDownloadToFile(File file, String url, FileHttpResponseHandler handler) {
     _bSupportResume = false;
     _startRange = 0;
     return _downloadToFile(file, url, handler);
   }
 
   /// 异步下载到文件对象（带断点续传，原版 asyncDownloadFile(File, String, handler, range)）
-  Future<void> asyncDownloadToFileResume(
-    File file,
-    String url,
-    FileHttpResponseHandler handler,
-    int startRange,
-  ) {
+  Future<void> asyncDownloadToFileResume(File file, String url, FileHttpResponseHandler handler, int startRange) {
     _startRange = startRange;
     _bSupportResume = true;
     return _downloadToFile(file, url, handler);
   }
 
   /// 同步下载（原版 syncDownloadFile）
-  Future<void> syncDownloadFile(
-    String savePath,
-    String url,
-    FileHttpResponseHandler handler,
-  ) async {
+  Future<void> syncDownloadFile(String savePath, String url, FileHttpResponseHandler handler) async {
     try {
       final request = http.Request('GET', Uri.parse(url));
       final streamed = await http.Client().send(request);
@@ -924,11 +838,7 @@ class DownloadHttpClient {
 
   // === 内部方法 ===
 
-  Future<void> _downloadToFile(
-    File file,
-    String url,
-    FileHttpResponseHandler handler,
-  ) async {
+  Future<void> _downloadToFile(File file, String url, FileHttpResponseHandler handler) async {
     _log('$_logTag asyncDownloadFile: ${file.path}');
     _log('$_logTag url: $url');
 
@@ -941,9 +851,7 @@ class DownloadHttpClient {
 
       final request = http.Request('GET', uri);
       request.headers.addAll(headers);
-      final streamed = await http.Client().send(request).timeout(
-        Duration(seconds: _readTimeout),
-      );
+      final streamed = await http.Client().send(request).timeout(Duration(seconds: _readTimeout));
 
       if (streamed.statusCode == 200 || streamed.statusCode == 206) {
         if (!file.existsSync()) {
@@ -1037,4 +945,3 @@ class CoolHttpDnsManager {
     return false;
   }
 }
-

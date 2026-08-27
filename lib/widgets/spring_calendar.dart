@@ -3,6 +3,7 @@
 // 颜色可自定义，跟随主题系统
 // 适用于：签到页面、学习打卡页面
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// 单日签到数据
@@ -51,8 +52,7 @@ class SpringCalendar extends StatefulWidget {
   State<SpringCalendar> createState() => _SpringCalendarState();
 }
 
-class _SpringCalendarState extends State<SpringCalendar>
-    with TickerProviderStateMixin {
+class _SpringCalendarState extends State<SpringCalendar> with TickerProviderStateMixin {
   late List<AnimationController> _controllers;
   late List<Animation<double>> _animations;
   late AnimationController _comboController;
@@ -62,24 +62,17 @@ class _SpringCalendarState extends State<SpringCalendar>
   void initState() {
     super.initState();
     _controllers = List.generate(widget.days.length, (i) {
-      return AnimationController(
-        vsync: this,
-        duration: widget.animDuration,
-      );
+      return AnimationController(vsync: this, duration: widget.animDuration);
     });
     _animations = _controllers.map((c) {
-      return Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: c, curve: Curves.elasticOut),
-      );
+      return Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: c, curve: Curves.elasticOut));
     }).toList();
 
-    _comboController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _comboAnim = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _comboController, curve: Curves.easeOut),
-    );
+    _comboController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _comboAnim = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _comboController, curve: Curves.easeOut));
 
     // 依次弹跳出现
     _startStaggered();
@@ -136,12 +129,14 @@ class _SpringCalendarState extends State<SpringCalendar>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: const ['日', '一', '二', '三', '四', '五', '六']
-                  .map((d) => SizedBox(
-                        width: 44,
-                        child: Center(
-                          child: Text(d, style: TextStyle(fontSize: 12, color: Colors.grey)),
-                        ),
-                      ))
+                  .map(
+                    (d) => SizedBox(
+                      width: 44,
+                      child: Center(
+                        child: Text(d, style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      ),
+                    ),
+                  )
                   .toList(),
             ),
           ),
@@ -167,8 +162,7 @@ class _SpringCalendarState extends State<SpringCalendar>
     );
   }
 
-  Widget _buildDayCell(CalendarDay day, Color activeColor, Color inactiveColor,
-      Color todayColor, int index) {
+  Widget _buildDayCell(CalendarDay day, Color activeColor, Color inactiveColor, Color todayColor, int index) {
     final isCombo = day.isCheckedIn && index >= widget.days.length - 3;
 
     return GestureDetector(
@@ -187,17 +181,9 @@ class _SpringCalendarState extends State<SpringCalendar>
                     ? activeColor
                     : (day.isToday ? todayColor.withValues(alpha: 0.1) : inactiveColor),
                 borderRadius: BorderRadius.circular(12),
-                border: day.isToday
-                    ? Border.all(color: todayColor, width: 2)
-                    : null,
+                border: day.isToday ? Border.all(color: todayColor, width: 2) : null,
                 boxShadow: day.isCheckedIn
-                    ? [
-                        BoxShadow(
-                          color: activeColor.withValues(alpha: 0.4),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
+                    ? [BoxShadow(color: activeColor.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 2))]
                     : null,
               ),
               child: Column(
@@ -208,19 +194,13 @@ class _SpringCalendarState extends State<SpringCalendar>
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: day.isCheckedIn ? FontWeight.w700 : FontWeight.w400,
-                      color: day.isCheckedIn
-                          ? Colors.white
-                          : (day.isCurrentMonth ? Colors.black87 : Colors.grey),
+                      color: day.isCheckedIn ? Colors.white : (day.isCurrentMonth ? Colors.black87 : Colors.grey),
                     ),
                   ),
                   if (day.isCheckedIn && day.scareCoins > 0)
                     Text(
                       '+${day.scareCoins}',
-                      style: const TextStyle(
-                        fontSize: 9,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w600),
                     ),
                 ],
               ),
@@ -238,50 +218,35 @@ class MiniSpringCalendar extends StatelessWidget {
   final Color? activeColor;
   final double size;
 
-  const MiniSpringCalendar({
-    super.key,
-    required this.checkInHistory,
-    this.activeColor,
-    this.size = 36,
-  });
+  const MiniSpringCalendar({super.key, required this.checkInHistory, this.activeColor, this.size = 36});
 
   @override
   Widget build(BuildContext context) {
     final active = activeColor ?? const Color(0xFFcba258);
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: List.generate(
-        math.min(checkInHistory.length, 7),
-        (i) {
-          final checked = checkInHistory[i];
-          return AnimatedContainer(
-            duration: Duration(milliseconds: 300 + i * 50),
-            curve: Curves.elasticOut,
-            width: size,
-            height: size,
-            margin: const EdgeInsets.symmetric(horizontal: 2),
-            decoration: BoxDecoration(
-              color: checked ? active : Colors.grey.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: checked
-                  ? [
-                      BoxShadow(
-                        color: active.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                      ),
-                    ]
-                  : null,
+      children: List.generate(math.min(checkInHistory.length, 7), (i) {
+        final checked = checkInHistory[i];
+        return AnimatedContainer(
+          duration: Duration(milliseconds: 300 + i * 50),
+          curve: Curves.elasticOut,
+          width: size,
+          height: size,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: checked ? active : Colors.grey.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: checked ? [BoxShadow(color: active.withValues(alpha: 0.3), blurRadius: 4)] : null,
+          ),
+          child: Center(
+            child: Icon(
+              checked ? Icons.check : Icons.circle_outlined,
+              size: size * 0.5,
+              color: checked ? Colors.white : Colors.grey.withValues(alpha: 0.5),
             ),
-            child: Center(
-              child: Icon(
-                checked ? Icons.check : Icons.circle_outlined,
-                size: size * 0.5,
-                color: checked ? Colors.white : Colors.grey.withValues(alpha: 0.5),
-              ),
-            ),
-          );
-        },
-      ),
+          ),
+        );
+      }),
     );
   }
 }

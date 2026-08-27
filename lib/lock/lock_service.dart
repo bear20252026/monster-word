@@ -7,13 +7,9 @@ import 'package:flutter/foundation.dart';
 /// 锁屏服务，通过 Platform Channel 与原生 Android 通信
 /// 实现锁屏显示、解锁、Activity 管理等功能
 class LockService {
-  static const MethodChannel _channel = MethodChannel(
-    'cn.com.langeasy.lock/service',
-  );
+  static const MethodChannel _channel = MethodChannel('cn.com.langeasy.lock/service');
 
-  static const EventChannel _eventChannel = EventChannel(
-    'cn.com.langeasy.lock/events',
-  );
+  static const EventChannel _eventChannel = EventChannel('cn.com.langeasy.lock/events');
 
   // === 锁屏控制 ===
 
@@ -51,21 +47,14 @@ class LockService {
   /// 将指定任务移到前台
   static Future<void> bringTaskToFront(int taskId, String className) async {
     try {
-      await _channel.invokeMethod('bringTaskToFront', {
-        'taskId': taskId,
-        'className': className,
-      });
+      await _channel.invokeMethod('bringTaskToFront', {'taskId': taskId, 'className': className});
     } on PlatformException catch (e) {
       debugPrint('LockService.bringTaskToFront error: ${e.message}');
     }
   }
 
   /// 确保启动指定 Activity
-  static Future<void> ensureLaunchActivity(
-    String packageName,
-    String className,
-    int flags,
-  ) async {
+  static Future<void> ensureLaunchActivity(String packageName, String className, int flags) async {
     try {
       await _channel.invokeMethod('ensureLaunchActivity', {
         'packageName': packageName,
@@ -137,8 +126,6 @@ class LockService {
   /// 监听锁屏状态变化事件
   /// 事件类型：'screenOn', 'screenOff', 'unlock', 'wordChanged'
   static Stream<Map<String, dynamic>> get lockEventStream {
-    return _eventChannel.receiveBroadcastStream().map(
-          (event) => Map<String, dynamic>.from(event),
-        );
+    return _eventChannel.receiveBroadcastStream().map((event) => Map<String, dynamic>.from(event));
   }
 }

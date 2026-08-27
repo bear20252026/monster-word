@@ -2,7 +2,7 @@
 // AudioService — 音频播放控制
 
 /// 音频播放服务接口
-/// 
+///
 /// 抽象音频播放功能，UI 层不直接依赖 AudioPlayers 具体实现。
 abstract class AudioService {
   /// 播放单词发音

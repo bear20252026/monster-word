@@ -35,11 +35,15 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     try {
       final favRepo = sl<FavRepository>();
       final sentencesData = await favRepo.getFavoriteSentences();
-      final sentences = sentencesData.map((s) => FavSentenceData(
-        wordId: s['wordId'] as int? ?? 0,
-        sentenceId: s['sentenceId'] as String? ?? '',
-        word: s['word'] as String? ?? '',
-      )).toList();
+      final sentences = sentencesData
+          .map(
+            (s) => FavSentenceData(
+              wordId: s['wordId'] as int? ?? 0,
+              sentenceId: s['sentenceId'] as String? ?? '',
+              word: s['word'] as String? ?? '',
+            ),
+          )
+          .toList();
       if (mounted) {
         setState(() {
           _sentences = sentences;
@@ -73,8 +77,8 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
               child: _isLoading
                   ? Center(child: CircularProgressIndicator(color: MistralColors.primary))
                   : _sentences.isEmpty
-                      ? _buildEmptyView(skin)
-                      : _buildList(skin),
+                  ? _buildEmptyView(skin)
+                  : _buildList(skin),
             ),
             if (_isEditMode) _buildEditModeBar(skin),
           ],
@@ -95,10 +99,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text(
-            '句库',
-            style: MistralTypography.heading5.copyWith(color: skin.colors.text1),
-          ),
+          Text('句库', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           // 编辑按钮
           if (_sentences.isNotEmpty)
@@ -111,9 +112,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
               },
               child: Text(
                 _isEditMode ? '完成' : '编辑',
-                style: MistralTypography.bodySm.copyWith(
-                  color: MistralColors.primary,
-                ),
+                style: MistralTypography.bodySm.copyWith(color: MistralColors.primary),
               ),
             ),
         ],
@@ -128,10 +127,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
         children: [
           Icon(Icons.format_quote, size: 18, color: skin.colors.text3),
           const SizedBox(width: 8),
-          Text(
-            '共 ${_sentences.length} 个例句',
-            style: MistralTypography.bodySm.copyWith(color: skin.colors.text2),
-          ),
+          Text('共 ${_sentences.length} 个例句', style: MistralTypography.bodySm.copyWith(color: skin.colors.text2)),
           const Spacer(),
           // 学习按钮
           if (_sentences.isNotEmpty && !_isEditMode)
@@ -148,10 +144,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                   children: [
                     const Icon(Icons.play_arrow, size: 16, color: Colors.white),
                     const SizedBox(width: 4),
-                    Text(
-                      '开始学习',
-                      style: MistralTypography.micro.copyWith(color: Colors.white),
-                    ),
+                    Text('开始学习', style: MistralTypography.micro.copyWith(color: Colors.white)),
                   ],
                 ),
               ),
@@ -168,15 +161,9 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
         children: [
           Icon(Icons.format_quote, size: 64, color: skin.colors.text3),
           const SizedBox(height: 16),
-          Text(
-            '暂无收藏例句',
-            style: MistralTypography.body.copyWith(color: skin.colors.text3),
-          ),
+          Text('暂无收藏例句', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
           const SizedBox(height: 8),
-          Text(
-            '在单词详情页点击 ♡ 收藏例句',
-            style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
-          ),
+          Text('在单词详情页点击 ♡ 收藏例句', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
         ],
       ),
     );
@@ -253,30 +240,18 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                 ),
                 const SizedBox(height: 12),
                 // 英文例句
-                Text(
-                  sentenceData.e,
-                  style: MistralTypography.body.copyWith(
-                    color: skin.colors.text1,
-                    height: 1.5,
-                  ),
-                ),
+                Text(sentenceData.e, style: MistralTypography.body.copyWith(color: skin.colors.text1, height: 1.5)),
                 // 中文翻译
                 if (sentenceData.c.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Text(
-                    sentenceData.c,
-                    style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
-                  ),
+                  Text(sentenceData.c, style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
                 ],
                 // 来源
                 if (sentenceData.b.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
                     '— ${sentenceData.b}',
-                    style: MistralTypography.micro.copyWith(
-                      color: skin.colors.text3,
-                      fontStyle: FontStyle.italic,
-                    ),
+                    style: MistralTypography.micro.copyWith(color: skin.colors.text3, fontStyle: FontStyle.italic),
                   ),
                 ],
               ],
@@ -303,9 +278,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                 if (_selectedIndices.length == _sentences.length) {
                   _selectedIndices.clear();
                 } else {
-                  _selectedIndices = Set.from(
-                    List.generate(_sentences.length, (i) => i),
-                  );
+                  _selectedIndices = Set.from(List.generate(_sentences.length, (i) => i));
                 }
               });
             },
@@ -321,9 +294,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
             ),
             child: Text('删除 (${_selectedIndices.length})'),
           ),
@@ -345,9 +316,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
 
   void _startLearning() {
     // TODO: 实现从句库学习功能
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('句库学习功能开发中...')),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('句库学习功能开发中...')));
   }
 
   Future<void> _deleteSelected() async {
@@ -357,10 +326,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
         title: const Text('确认删除'),
         content: Text('确定要删除选中的 ${_selectedIndices.length} 个例句吗？'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('删除', style: TextStyle(color: Colors.red)),
@@ -375,10 +341,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     final sortedIndices = _selectedIndices.toList()..sort((a, b) => b.compareTo(a));
     for (final index in sortedIndices) {
       final favSentence = _sentences[index];
-      await sl<FavRepository>().removeFavoriteSentence(
-        favSentence.wordId,
-        favSentence.sentenceId,
-      );
+      await sl<FavRepository>().removeFavoriteSentence(favSentence.wordId, favSentence.sentenceId);
     }
 
     setState(() {
@@ -389,9 +352,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     await _loadData();
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已删除选中的例句')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已删除选中的例句')));
     }
   }
 }

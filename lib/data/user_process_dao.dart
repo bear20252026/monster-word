@@ -54,36 +54,31 @@ class BBWordProcessDao {
   final String userId;
   final String tableName;
 
-  BBWordProcessDao(this.db, this.userId)
-      : tableName = UserProcessDatabase.tableName;
+  BBWordProcessDao(this.db, this.userId) : tableName = UserProcessDatabase.tableName;
 
   /// 插入用户进度（原版 insertUserProcess）
   Future<void> insertUserProcess(BBWordProcess w) async {
-    await db.insert(
-      tableName,
-      {
-        'user_id': userId,
-        'word': w.word,
-        'state': w.state,
-        'level': w.level,
-        'position': w.position,
-        'reviewdate': w.reviewDate,
-        'process': w.process,
-        'success': w.success,
-        'fail': w.fail,
-        'duration': w.duration,
-        'efactor': w.eFactor,
-        'r1': w.r1,
-        'r2': w.r2,
-        'reFail': w.reFail,
-        'reSuccess': w.reSuccess,
-        'comeFrom': w.comeFrom,
-        'learnFrom': w.learnFrom,
-        'zpk': w.zpk,
-        'word_id': w.wordId,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(tableName, {
+      'user_id': userId,
+      'word': w.word,
+      'state': w.state,
+      'level': w.level,
+      'position': w.position,
+      'reviewdate': w.reviewDate,
+      'process': w.process,
+      'success': w.success,
+      'fail': w.fail,
+      'duration': w.duration,
+      'efactor': w.eFactor,
+      'r1': w.r1,
+      'r2': w.r2,
+      'reFail': w.reFail,
+      'reSuccess': w.reSuccess,
+      'comeFrom': w.comeFrom,
+      'learnFrom': w.learnFrom,
+      'zpk': w.zpk,
+      'word_id': w.wordId,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// 更新进度（原版 processUpdate）
@@ -160,7 +155,8 @@ class BBWordProcessDao {
     final today = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     final rows = await db.query(
       tableName,
-      where: 'user_id = ? AND reviewdate IS NOT NULL AND reviewdate != "" '
+      where:
+          'user_id = ? AND reviewdate IS NOT NULL AND reviewdate != "" '
           'AND date(reviewdate) <= date(?)',
       whereArgs: [userId, today],
       orderBy: 'reviewdate ASC',
@@ -209,18 +205,11 @@ class BBWordProcessDao {
 
   /// 重置学习等级（原版 resetLearningWordLevel）
   Future<void> resetLearningWordLevel() async {
-    await db.rawUpdate(
-      'UPDATE $tableName SET level = 0 WHERE user_id = ?',
-      [userId],
-    );
+    await db.rawUpdate('UPDATE $tableName SET level = 0 WHERE user_id = ?', [userId]);
   }
 
   /// 删除单词进度
   Future<void> deleteWord(String word) async {
-    await db.delete(
-      tableName,
-      where: 'user_id = ? AND word = ?',
-      whereArgs: [userId, word],
-    );
+    await db.delete(tableName, where: 'user_id = ? AND word = ?', whereArgs: [userId, word]);
   }
 }

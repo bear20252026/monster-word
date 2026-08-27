@@ -30,13 +30,7 @@ class BBCheckIn extends StatelessWidget {
   final String description;
   final VoidCallback? onTap;
 
-  const BBCheckIn({
-    super.key,
-    this.state = CheckInState.no,
-    this.title = '签到',
-    this.description = '',
-    this.onTap,
-  });
+  const BBCheckIn({super.key, this.state = CheckInState.no, this.title = '签到', this.description = '', this.onTap});
 
   /// 格式化日期为 "08/19 Wed." 格式
   static String formatDate() {
@@ -62,10 +56,7 @@ class BBCheckIn extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.white100.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.white100.withValues(alpha: 0.5),
-                width: 1.5,
-              ),
+              border: Border.all(color: AppColors.white100.withValues(alpha: 0.5), width: 1.5),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -76,20 +67,13 @@ class BBCheckIn extends StatelessWidget {
                 // 标题（原版 tv_signin_title）
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF1A1A1A),
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontSize: 16, color: Color(0xFF1A1A1A), fontWeight: FontWeight.bold),
                 ),
                 // 日期（原版 tv_signin_des：08/19 Wed.）
                 const SizedBox(height: 4),
                 Text(
                   description.isNotEmpty ? description : formatDate(),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF666666),
-                  ),
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF666666)),
                 ),
               ],
             ),
@@ -134,33 +118,21 @@ class LearnButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 64,
-        margin: const EdgeInsets.symmetric(
-          horizontal: AppDimens.bottomBarBtnMargin,
-        ),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(AppDimens.radiusNormal),
-        ),
+        margin: const EdgeInsets.symmetric(horizontal: AppDimens.bottomBarBtnMargin),
+        decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(AppDimens.radiusNormal)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               text,
-              style: TextStyle(
-                fontSize: AppDimens.learnBtnTextSize,
-                color: textColor,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: AppDimens.learnBtnTextSize, color: textColor, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 4),
             // 圆点指示器（原版 onDraw 画的小圆）
             Container(
               width: 5,
               height: 5,
-              decoration: BoxDecoration(
-                color: indicatorColor,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: indicatorColor, shape: BoxShape.circle),
             ),
           ],
         ),

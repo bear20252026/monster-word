@@ -5,10 +5,10 @@ import 'dart:math';
 
 /// FSRS-5 评分等级
 enum FsrsRating {
-  again(1, '不认识'),   // 完全忘记
-  hard(2, '模糊'),      // 勉强想起
-  good(3, '认识'),      // 正常记忆
-  easy(4, '熟练');      // 非常熟练
+  again(1, '不认识'), // 完全忘记
+  hard(2, '模糊'), // 勉强想起
+  good(3, '认识'), // 正常记忆
+  easy(4, '熟练'); // 非常熟练
 
   const FsrsRating(this.value, this.label);
   final int value;
@@ -18,15 +18,15 @@ enum FsrsRating {
 /// FSRS-5 卡片状态
 class FsrsCard {
   final String word;
-  double stability;      // 记忆稳定性（天）
-  double difficulty;     // 难度 (1-10)
-  int elapsedDays;       // 距上次复习的天数
-  int scheduledDays;     // 计划间隔天数
-  DateTime lastReview;   // 上次复习日期
-  DateTime dueDate;      // 下次复习日期
-  int repetitions;       // 连续答对次数
-  int reviewCount;       // 复习总次数
-  bool isNew;            // 是否新词
+  double stability; // 记忆稳定性（天）
+  double difficulty; // 难度 (1-10)
+  int elapsedDays; // 距上次复习的天数
+  int scheduledDays; // 计划间隔天数
+  DateTime lastReview; // 上次复习日期
+  DateTime dueDate; // 下次复习日期
+  int repetitions; // 连续答对次数
+  int reviewCount; // 复习总次数
+  bool isNew; // 是否新词
 
   FsrsCard({
     required this.word,
@@ -44,32 +44,30 @@ class FsrsCard {
   bool get isDue => !isNew && dueDate.isBefore(DateTime.now());
 
   Map<String, dynamic> toJson() => {
-        'word': word,
-        'stability': stability,
-        'difficulty': difficulty,
-        'elapsedDays': elapsedDays,
-        'scheduledDays': scheduledDays,
-        'lastReview': lastReview.toIso8601String(),
-        'dueDate': dueDate.toIso8601String(),
-        'repetitions': repetitions,
-        'reviewCount': reviewCount,
-        'isNew': isNew,
-      };
+    'word': word,
+    'stability': stability,
+    'difficulty': difficulty,
+    'elapsedDays': elapsedDays,
+    'scheduledDays': scheduledDays,
+    'lastReview': lastReview.toIso8601String(),
+    'dueDate': dueDate.toIso8601String(),
+    'repetitions': repetitions,
+    'reviewCount': reviewCount,
+    'isNew': isNew,
+  };
 
   factory FsrsCard.fromJson(Map<String, dynamic> json) => FsrsCard(
-        word: json['word'] as String,
-        stability: (json['stability'] as num?)?.toDouble() ?? 0,
-        difficulty: (json['difficulty'] as num?)?.toDouble() ?? 0,
-        elapsedDays: (json['elapsedDays'] as num?)?.toInt() ?? 0,
-        scheduledDays: (json['scheduledDays'] as num?)?.toInt() ?? 0,
-        lastReview: DateTime.parse(
-            json['lastReview'] as String? ?? DateTime.now().toIso8601String()),
-        dueDate: DateTime.parse(
-            json['dueDate'] as String? ?? DateTime.now().toIso8601String()),
-        repetitions: (json['repetitions'] as num?)?.toInt() ?? 0,
-        reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
-        isNew: (json['isNew'] as bool?) ?? true,
-      );
+    word: json['word'] as String,
+    stability: (json['stability'] as num?)?.toDouble() ?? 0,
+    difficulty: (json['difficulty'] as num?)?.toDouble() ?? 0,
+    elapsedDays: (json['elapsedDays'] as num?)?.toInt() ?? 0,
+    scheduledDays: (json['scheduledDays'] as num?)?.toInt() ?? 0,
+    lastReview: DateTime.parse(json['lastReview'] as String? ?? DateTime.now().toIso8601String()),
+    dueDate: DateTime.parse(json['dueDate'] as String? ?? DateTime.now().toIso8601String()),
+    repetitions: (json['repetitions'] as num?)?.toInt() ?? 0,
+    reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
+    isNew: (json['isNew'] as bool?) ?? true,
+  );
 
   FsrsCard copy() => FsrsCard.fromJson(toJson());
 }
@@ -78,22 +76,33 @@ class FsrsCard {
 class Fsrs5Engine {
   // FSRS-5 默认参数（17 个权重）
   static const List<double> _defaultWeights = [
-    0.40255, 1.18385, 3.173, 15.69105, 7.1949,
-    0.5345, 1.4604, 0.0046, 1.54575, 0.1192,
-    1.01925, 1.9395, 0.11, 0.29605, 2.2698,
-    0.2315, 2.9898,
+    0.40255,
+    1.18385,
+    3.173,
+    15.69105,
+    7.1949,
+    0.5345,
+    1.4604,
+    0.0046,
+    1.54575,
+    0.1192,
+    1.01925,
+    1.9395,
+    0.11,
+    0.29605,
+    2.2698,
+    0.2315,
+    2.9898,
   ];
 
   // 参数
   final List<double> weights;
-  final double decay;        // 遗忘衰减因子 (-0.5)
-  final double factor;       // 稳定性增长因子 (1 / (9 * (1 - decay)))
+  final double decay; // 遗忘衰减因子 (-0.5)
+  final double factor; // 稳定性增长因子 (1 / (9 * (1 - decay)))
 
-  Fsrs5Engine({
-    List<double>? weights,
-    this.decay = -0.5,
-  })  : weights = weights ?? _defaultWeights,
-        factor = 1.0 / (9.0 * (1.0 - (-0.5)));
+  Fsrs5Engine({List<double>? weights, this.decay = -0.5})
+    : weights = weights ?? _defaultWeights,
+      factor = 1.0 / (9.0 * (1.0 - (-0.5)));
 
   /// 计算 retrievability（记忆提取概率）
   double _retrievability(int elapsedDays, double stability) {
@@ -108,15 +117,12 @@ class Fsrs5Engine {
 
     if (rating == FsrsRating.again) {
       // 忘记：稳定性下降
-      return stability *
-          (1.0 + exp(3.45) *
-              pow(stability, -0.1) *
-              (exp((1 - retrievability) * 2.95) - 1) *
-              0.85);
+      return stability * (1.0 + exp(3.45) * pow(stability, -0.1) * (exp((1 - retrievability) * 2.95) - 1) * 0.85);
     }
 
     // Good/Hard/Easy：稳定性增长
-    final growth = exp(weights[8]) *
+    final growth =
+        exp(weights[8]) *
         (11 - difficulty) *
         pow(stability, -weights[9]) *
         (exp((1 - retrievability) * weights[10]) - 1) *
@@ -133,18 +139,17 @@ class Fsrs5Engine {
     final delta = rating == FsrsRating.again
         ? weights[6]
         : rating == FsrsRating.hard
-            ? weights[7]
-            : rating == FsrsRating.good
-                ? 0
-                : -weights[7];
+        ? weights[7]
+        : rating == FsrsRating.good
+        ? 0
+        : -weights[7];
 
     return (difficulty + meanReversion + delta).clamp(1.0, 10.0);
   }
 
   /// 计算下次间隔天数
   double _nextInterval(double stability, double requestRetention) {
-    return (stability / 0.9 * (pow(requestRetention, 1.0 / decay) - 1))
-        .clamp(1.0, 365.0);
+    return (stability / 0.9 * (pow(requestRetention, 1.0 / decay) - 1)).clamp(1.0, 365.0);
   }
 
   /// 评分一个卡片，返回更新后的卡片
@@ -187,11 +192,7 @@ class Fsrs5Engine {
 
   /// 首次学习一个单词
   FsrsCard learn(String word, FsrsRating rating, {double requestRetention = 0.9}) {
-    final card = FsrsCard(
-      word: word,
-      lastReview: DateTime.now(),
-      dueDate: DateTime.now(),
-    );
+    final card = FsrsCard(word: word, lastReview: DateTime.now(), dueDate: DateTime.now());
     return review(card, rating, requestRetention: requestRetention);
   }
 

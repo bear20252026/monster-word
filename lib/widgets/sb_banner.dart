@@ -4,6 +4,7 @@
 // 用于首页「连续打卡 N 天」等特性横幅场景
 
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import '../tokens/starbucks_tokens.dart';
 import 'scale_down_on_press.dart';
@@ -69,25 +70,18 @@ class SbBanner extends StatelessWidget {
     final colors = context.skin.colors;
     // 深色模式下提亮横幅背景，避免与画布混淆
     final isDark = colors.pageBg == StarbucksDarkColors.pageBg;
-    final resolvedBg = backgroundColor ??
-        (isDark ? StarbucksCreamColors.greenSoft : _houseGreenDark);
+    final resolvedBg = backgroundColor ?? (isDark ? StarbucksCreamColors.greenSoft : _houseGreenDark);
     // 内容区域：图标 + 文字 + 操作按钮
     Widget content = Container(
       width: double.infinity,
       padding: padding,
-      decoration: BoxDecoration(
-        color: resolvedBg,
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
+      decoration: BoxDecoration(color: resolvedBg, borderRadius: BorderRadius.circular(borderRadius)),
       child: _buildContent(context),
     );
 
     // 有 onTap 时包装按压反馈
     if (onTap != null) {
-      content = ScaleDownOnPress(
-        onTap: onTap,
-        child: content,
-      );
+      content = ScaleDownOnPress(onTap: onTap, child: content);
     }
 
     return content;
@@ -130,17 +124,11 @@ class SbBanner extends StatelessWidget {
       return Row(
         children: [
           // 左侧图标
-          if (icon != null) ...[
-            icon!,
-            const SizedBox(width: 16),
-          ],
+          if (icon != null) ...[icon!, const SizedBox(width: 16)],
           // 中间文字（弹性填充）
           Expanded(child: textColumn),
           // 右侧操作按钮
-          if (actionChild != null) ...[
-            const SizedBox(width: 16),
-            actionChild!,
-          ],
+          if (actionChild != null) ...[const SizedBox(width: 16), actionChild!],
         ],
       );
     }

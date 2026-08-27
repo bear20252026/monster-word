@@ -15,6 +15,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+
 import '../theme/app_theme.dart';
 
 // ============================================================================
@@ -43,12 +44,7 @@ class PopFilterItemInfo {
   final IconData? icon;
   final bool isSelected;
 
-  const PopFilterItemInfo({
-    this.title = '',
-    this.subtitle = '',
-    this.icon,
-    this.isSelected = false,
-  });
+  const PopFilterItemInfo({this.title = '', this.subtitle = '', this.icon, this.isSelected = false});
 }
 
 /// 弹出筛选列表适配器（翻译自 PopFilterListItemAdapter.java）
@@ -57,12 +53,7 @@ class PopFilterListView extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int>? onItemSelected;
 
-  const PopFilterListView({
-    super.key,
-    required this.items,
-    this.selectedIndex = -1,
-    this.onItemSelected,
-  });
+  const PopFilterListView({super.key, required this.items, this.selectedIndex = -1, this.onItemSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -71,11 +62,7 @@ class PopFilterListView extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = items[index];
         final isSelected = index == selectedIndex;
-        return _PopFilterCellView(
-          item: item,
-          isSelected: isSelected,
-          onTap: () => onItemSelected?.call(index),
-        );
+        return _PopFilterCellView(item: item, isSelected: isSelected, onTap: () => onItemSelected?.call(index));
       },
     );
   }
@@ -94,11 +81,7 @@ class _PopFilterCellView extends StatelessWidget {
   final bool isSelected;
   final VoidCallback? onTap;
 
-  const _PopFilterCellView({
-    required this.item,
-    this.isSelected = false,
-    this.onTap,
-  });
+  const _PopFilterCellView({required this.item, this.isSelected = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -108,33 +91,20 @@ class _PopFilterCellView extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            if (item.icon != null) ...[
-              Icon(item.icon, size: 24, color: _black54),
-              const SizedBox(width: 12),
-            ],
+            if (item.icon != null) ...[Icon(item.icon, size: 24, color: _black54), const SizedBox(width: 12)],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    item.title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: isSelected ? _accent : _black87,
-                    ),
-                  ),
+                  Text(item.title, style: TextStyle(fontSize: 16, color: isSelected ? _accent : _black87)),
                   if (item.subtitle.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(
-                      item.subtitle,
-                      style: const TextStyle(fontSize: 13, color: _black54),
-                    ),
+                    Text(item.subtitle, style: const TextStyle(fontSize: 13, color: _black54)),
                   ],
                 ],
               ),
             ),
-            if (isSelected)
-              Icon(Icons.check, size: 20, color: _accent),
+            if (isSelected) Icon(Icons.check, size: 20, color: _accent),
           ],
         ),
       ),
@@ -153,12 +123,7 @@ class IconListItemInfo {
   final IconData? icon;
   final dynamic tag;
 
-  const IconListItemInfo({
-    this.title = '',
-    this.subtitle = '',
-    this.icon,
-    this.tag,
-  });
+  const IconListItemInfo({this.title = '', this.subtitle = '', this.icon, this.tag});
 }
 
 /// 带图标的列表适配器（翻译自 IconListItemAdapter.java）
@@ -167,12 +132,7 @@ class IconListView extends StatelessWidget {
   final ValueChanged<int>? onItemTap;
   final ValueChanged<int>? onIconTap;
 
-  const IconListView({
-    super.key,
-    required this.items,
-    this.onItemTap,
-    this.onIconTap,
-  });
+  const IconListView({super.key, required this.items, this.onItemTap, this.onIconTap});
 
   @override
   Widget build(BuildContext context) {
@@ -199,10 +159,7 @@ class IconListView extends StatelessWidget {
                       Text(item.title, style: const TextStyle(fontSize: 16)),
                       if (item.subtitle.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Text(
-                          item.subtitle,
-                          style: const TextStyle(fontSize: 13, color: _black54),
-                        ),
+                        Text(item.subtitle, style: const TextStyle(fontSize: 13, color: _black54)),
                       ],
                     ],
                   ),
@@ -225,11 +182,7 @@ class PlayOrderListView extends StatelessWidget {
   final List<String> words;
   final String? currentPlayWord;
 
-  const PlayOrderListView({
-    super.key,
-    required this.words,
-    this.currentPlayWord,
-  });
+  const PlayOrderListView({super.key, required this.words, this.currentPlayWord});
 
   @override
   Widget build(BuildContext context) {
@@ -252,8 +205,7 @@ class PlayOrderListView extends StatelessWidget {
                   ),
                 ),
               ),
-              if (isPlaying)
-                Icon(Icons.volume_up, size: 20, color: _accent),
+              if (isPlaying) Icon(Icons.volume_up, size: 20, color: _accent),
             ],
           ),
         );
@@ -279,11 +231,7 @@ class ListWordActionView extends StatelessWidget {
   final List<int> actionTypes;
   final ValueChanged<int>? onActionTap;
 
-  const ListWordActionView({
-    super.key,
-    required this.actionTypes,
-    this.onActionTap,
-  });
+  const ListWordActionView({super.key, required this.actionTypes, this.onActionTap});
 
   String _getDisplayName(int actionType) {
     switch (actionType) {
@@ -310,10 +258,7 @@ class ListWordActionView extends StatelessWidget {
           onTap: () => onActionTap?.call(actionType),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Text(
-              _getDisplayName(actionType),
-              style: const TextStyle(fontSize: 16),
-            ),
+            child: Text(_getDisplayName(actionType), style: const TextStyle(fontSize: 16)),
           ),
         );
       },
@@ -384,18 +329,14 @@ class SelectLibraryView extends StatelessWidget {
                 Container(
                   width: 60,
                   height: 80,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    color: _black12,
-                  ),
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), color: _black12),
                   child: book.coverUrl != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: Image.network(
                             book.coverUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) =>
-                                Icon(Icons.book, color: _black54),
+                            errorBuilder: (_, _, _) => Icon(Icons.book, color: _black54),
                           ),
                         )
                       : Icon(Icons.book, color: _black54),
@@ -405,13 +346,7 @@ class SelectLibraryView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        book.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                      Text(book.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                       const SizedBox(height: 4),
                       Text(
                         book.desc,
@@ -420,24 +355,15 @@ class SelectLibraryView extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        '${book.count}词',
-                        style: const TextStyle(fontSize: 12, color: _black54),
-                      ),
+                      Text('${book.count}词', style: const TextStyle(fontSize: 12, color: _black54)),
                     ],
                   ),
                 ),
                 if (isCurrentBook) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: _accent,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      '当前',
-                      style: TextStyle(fontSize: 11, color: AppColors.white100),
-                    ),
+                    decoration: BoxDecoration(color: _accent, borderRadius: BorderRadius.circular(4)),
+                    child: const Text('当前', style: TextStyle(fontSize: 11, color: AppColors.white100)),
                   ),
                 ],
                 if (book.isHistoryLib && showHistoryTag && !isCurrentBook) ...[
@@ -455,10 +381,7 @@ class SelectLibraryView extends StatelessWidget {
                     ),
                     child: Text(
                       book.hasBought ? '已购' : '付费',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: book.hasBought ? AppColors.white100 : _black87,
-                      ),
+                      style: TextStyle(fontSize: 11, color: book.hasBought ? AppColors.white100 : _black87),
                     ),
                   ),
                 ],
@@ -531,11 +454,7 @@ class CandidateListView extends StatelessWidget {
   final List<CandidateWordInfo> words;
   final ValueChanged<int>? onWordTap;
 
-  const CandidateListView({
-    super.key,
-    required this.words,
-    this.onWordTap,
-  });
+  const CandidateListView({super.key, required this.words, this.onWordTap});
 
   @override
   Widget build(BuildContext context) {
@@ -543,9 +462,7 @@ class CandidateListView extends StatelessWidget {
       itemCount: words.length,
       itemBuilder: (context, index) {
         final wordInfo = words[index];
-        final meaningText = wordInfo.hasStructuredDefinitions
-            ? wordInfo.formattedDefinitions
-            : wordInfo.interpret;
+        final meaningText = wordInfo.hasStructuredDefinitions ? wordInfo.formattedDefinitions : wordInfo.interpret;
         return GestureDetector(
           onTap: () => onWordTap?.call(index),
           child: Container(
@@ -553,13 +470,7 @@ class CandidateListView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  wordInfo.word,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                Text(wordInfo.word, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                 if (meaningText.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -617,11 +528,7 @@ class NewWordHorizontalList extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Text(
                   isEnd ? '查看全部' : '查看更多',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: _accent,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 14, color: _accent, fontWeight: FontWeight.w500),
                 ),
               ),
             );
@@ -631,14 +538,8 @@ class NewWordHorizontalList extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: _black12,
-                borderRadius: BorderRadius.circular(AppDimens.radiusNormal),
-              ),
-              child: Text(
-                words[index],
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-              ),
+              decoration: BoxDecoration(color: _black12, borderRadius: BorderRadius.circular(AppDimens.radiusNormal)),
+              child: Text(words[index], style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
             ),
           );
         },
@@ -683,13 +584,7 @@ class MessageListView extends StatelessWidget {
   final ValueChanged<int>? onMessageTap;
   final VoidCallback? onLoadMore;
 
-  const MessageListView({
-    super.key,
-    required this.messages,
-    this.hasMore = false,
-    this.onMessageTap,
-    this.onLoadMore,
-  });
+  const MessageListView({super.key, required this.messages, this.hasMore = false, this.onMessageTap, this.onLoadMore});
 
   String _getTimeLabel(int timestamp) {
     if (timestamp == 0) return '';
@@ -716,10 +611,7 @@ class MessageListView extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               alignment: Alignment.center,
-              child: const Text(
-                '加载更多',
-                style: TextStyle(color: _black54),
-              ),
+              child: const Text('加载更多', style: TextStyle(color: _black54)),
             ),
           );
         }
@@ -737,10 +629,7 @@ class MessageListView extends StatelessWidget {
                     width: 8,
                     height: 8,
                     margin: const EdgeInsets.only(top: 6, right: 8),
-                    decoration: const BoxDecoration(
-                      color: AppColors.errorRed,
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: const BoxDecoration(color: AppColors.errorRed, shape: BoxShape.circle),
                   ),
                 Expanded(
                   child: Column(
@@ -754,9 +643,7 @@ class MessageListView extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
-                                color: message.hasRead
-                                    ? _black54
-                                    : _black87,
+                                color: message.hasRead ? _black54 : _black87,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -771,18 +658,12 @@ class MessageListView extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         message.content,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: message.hasRead ? _black54 : _black87,
-                        ),
+                        style: TextStyle(fontSize: 13, color: message.hasRead ? _black54 : _black87),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        _getTimeLabel(message.time),
-                        style: const TextStyle(fontSize: 12, color: _black54),
-                      ),
+                      Text(_getTimeLabel(message.time), style: const TextStyle(fontSize: 12, color: _black54)),
                     ],
                   ),
                 ),
@@ -831,11 +712,7 @@ class LearnReviewResultListView extends StatefulWidget {
   final List<LearnResultInfo> results;
   final int type; // LearnReviewType.learn 或 LearnReviewType.review
 
-  const LearnReviewResultListView({
-    super.key,
-    required this.results,
-    this.type = LearnReviewType.learn,
-  });
+  const LearnReviewResultListView({super.key, required this.results, this.type = LearnReviewType.learn});
 
   @override
   State<LearnReviewResultListView> createState() => _LearnReviewResultListViewState();
@@ -868,10 +745,7 @@ class _LearnReviewResultListViewState extends State<LearnReviewResultListView> {
                     ],
                     // 单词
                     Expanded(
-                      child: Text(
-                        result.word,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
+                      child: Text(result.word, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                     ),
                     // 状态
                     _buildStatusWidget(result),
@@ -883,10 +757,7 @@ class _LearnReviewResultListViewState extends State<LearnReviewResultListView> {
                   ...result.interprets.map(
                     (interpret) => Padding(
                       padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        interpret,
-                        style: const TextStyle(fontSize: 14, color: _black54),
-                      ),
+                      child: Text(interpret, style: const TextStyle(fontSize: 14, color: _black54)),
                     ),
                   ),
                 ],
@@ -903,10 +774,7 @@ class _LearnReviewResultListViewState extends State<LearnReviewResultListView> {
     return Container(
       width: 4,
       height: 24,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(2),
-        color: level > 0 ? _accent : _black12,
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(2), color: level > 0 ? _accent : _black12),
     );
   }
 
@@ -918,17 +786,11 @@ class _LearnReviewResultListViewState extends State<LearnReviewResultListView> {
           children: [
             Icon(Icons.check_circle, size: 16, color: _accent),
             const SizedBox(width: 4),
-            const Text(
-              '已掌握',
-              style: TextStyle(fontSize: 13, color: _accentGreen),
-            ),
+            const Text('已掌握', style: TextStyle(fontSize: 13, color: _accentGreen)),
           ],
         );
       }
-      return Text(
-        '答错${result.failedCount}次',
-        style: const TextStyle(fontSize: 13, color: _accentRed),
-      );
+      return Text('答错${result.failedCount}次', style: const TextStyle(fontSize: 13, color: _accentRed));
     }
     // 复习模式
     switch (result.wordMark) {
@@ -938,10 +800,7 @@ class _LearnReviewResultListViewState extends State<LearnReviewResultListView> {
           children: [
             Icon(Icons.check_circle, size: 16, color: _accentGreen),
             const SizedBox(width: 4),
-            const Text(
-              '已掌握',
-              style: TextStyle(fontSize: 13, color: _accentGreen),
-            ),
+            const Text('已掌握', style: TextStyle(fontSize: 13, color: _accentGreen)),
           ],
         );
       case 1:
@@ -950,10 +809,7 @@ class _LearnReviewResultListViewState extends State<LearnReviewResultListView> {
           children: [
             Icon(Icons.check_circle, size: 16, color: _accentGreen),
             const SizedBox(width: 4),
-            const Text(
-              '已掌握',
-              style: TextStyle(fontSize: 13, color: _accentGreen),
-            ),
+            const Text('已掌握', style: TextStyle(fontSize: 13, color: _accentGreen)),
           ],
         );
       case 3:
@@ -962,17 +818,11 @@ class _LearnReviewResultListViewState extends State<LearnReviewResultListView> {
           children: [
             Icon(Icons.refresh, size: 16, color: _accentRed),
             const SizedBox(width: 4),
-            const Text(
-              '需重学',
-              style: TextStyle(fontSize: 13, color: _accentRed),
-            ),
+            const Text('需重学', style: TextStyle(fontSize: 13, color: _accentRed)),
           ],
         );
       default:
-        return Text(
-          '${result.duration}天后',
-          style: const TextStyle(fontSize: 13, color: _black54),
-        );
+        return Text('${result.duration}天后', style: const TextStyle(fontSize: 13, color: _black54));
     }
   }
 }
@@ -988,12 +838,7 @@ class SimplePageView extends StatelessWidget {
   final PageController? controller;
   final ValueChanged<int>? onPageChanged;
 
-  const SimplePageView({
-    super.key,
-    required this.pages,
-    this.controller,
-    this.onPageChanged,
-  });
+  const SimplePageView({super.key, required this.pages, this.controller, this.onPageChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -1016,11 +861,7 @@ class LearnCardData {
   final int wordId;
   final List<dynamic> cardItems; // RootSuffixData 或 AcceptationSentence
 
-  const LearnCardData({
-    this.word = '',
-    this.wordId = 0,
-    this.cardItems = const [],
-  });
+  const LearnCardData({this.word = '', this.wordId = 0, this.cardItems = const []});
 }
 
 /// 学习卡片页面视图（翻译自 LearnCardViewPagerAdapter.java）
@@ -1029,12 +870,7 @@ class LearnCardPageView extends StatelessWidget {
   final PageController? controller;
   final ValueChanged<int>? onPageChanged;
 
-  const LearnCardPageView({
-    super.key,
-    this.data,
-    this.controller,
-    this.onPageChanged,
-  });
+  const LearnCardPageView({super.key, this.data, this.controller, this.onPageChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -1047,12 +883,7 @@ class LearnCardPageView extends StatelessWidget {
       itemCount: data!.cardItems.length,
       itemBuilder: (context, index) {
         // 根据数据类型构建不同的卡片
-        return Center(
-          child: Text(
-            'Card: ${data!.word} ($index)',
-            style: const TextStyle(fontSize: 16),
-          ),
-        );
+        return Center(child: Text('Card: ${data!.word} ($index)', style: const TextStyle(fontSize: 16)));
       },
     );
   }
@@ -1125,13 +956,7 @@ class _SentenceCardPageViewState extends State<SentenceCardPageView> {
         decoration: BoxDecoration(
           color: AppColors.white100,
           borderRadius: BorderRadius.circular(AppleRadius.lg),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.black12,
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: AppColors.black12, blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1141,22 +966,14 @@ class _SentenceCardPageViewState extends State<SentenceCardPageView> {
               onTap: widget.onMoreTap,
               child: Text(
                 sentence.title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: _black54,
-                ),
+                style: const TextStyle(fontSize: 12, color: _black54),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(height: 12),
             // 英文句子
-            Expanded(
-              child: Text(
-                sentence.english,
-                style: const TextStyle(fontSize: 18, height: 1.5),
-              ),
-            ),
+            Expanded(child: Text(sentence.english, style: const TextStyle(fontSize: 18, height: 1.5))),
             // 中文翻译
             if (widget.showChinese) ...[
               const SizedBox(height: 8),
@@ -1204,19 +1021,11 @@ class LearnCardSentencePageView extends StatelessWidget {
   final int wordId;
   final bool showChinese;
 
-  const LearnCardSentencePageView({
-    super.key,
-    required this.sentences,
-    this.wordId = 0,
-    this.showChinese = true,
-  });
+  const LearnCardSentencePageView({super.key, required this.sentences, this.wordId = 0, this.showChinese = true});
 
   @override
   Widget build(BuildContext context) {
-    return SentenceCardPageView(
-      sentences: sentences,
-      showChinese: showChinese,
-    );
+    return SentenceCardPageView(sentences: sentences, showChinese: showChinese);
   }
 }
 
@@ -1230,11 +1039,7 @@ class FavSentenceInfo {
   final String sentenceId;
   final SentenceData sentenceData;
 
-  const FavSentenceInfo({
-    this.wordId = 0,
-    this.sentenceId = '',
-    required this.sentenceData,
-  });
+  const FavSentenceInfo({this.wordId = 0, this.sentenceId = '', required this.sentenceData});
 }
 
 /// 收藏句子页面视图（翻译自 FavSentenceViewPagerAdapter.java）
@@ -1268,11 +1073,7 @@ class FavSentencePageView extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 isEnd ? '查看全部' : '查看更多',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: _accent,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 16, color: _accent, fontWeight: FontWeight.w500),
               ),
             ),
           );
@@ -1283,10 +1084,7 @@ class FavSentencePageView extends StatelessWidget {
           onTap: () => onItemTap?.call(index),
           child: Container(
             margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppleRadius.lg),
-              color: AppColors.white100,
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppleRadius.lg), color: AppColors.white100),
             child: Column(
               children: [
                 // 封面图
@@ -1294,27 +1092,20 @@ class FavSentencePageView extends StatelessWidget {
                   flex: 3,
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(AppleRadius.lg),
-                      ),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(AppleRadius.lg)),
                       color: _black12,
                     ),
                     child: sentence.image.isNotEmpty
                         ? ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(AppleRadius.lg),
-                            ),
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppleRadius.lg)),
                             child: Image.network(
                               'https://img.beingfine.cn/${sentence.image}',
                               fit: BoxFit.cover,
                               width: double.infinity,
-                              errorBuilder: (_, _, _) =>
-                                  Icon(Icons.image, size: 48, color: _black54),
+                              errorBuilder: (_, _, _) => Icon(Icons.image, size: 48, color: _black54),
                             ),
                           )
-                        : Center(
-                            child: Icon(Icons.image, size: 48, color: _black54),
-                          ),
+                        : Center(child: Icon(Icons.image, size: 48, color: _black54)),
                   ),
                 ),
                 // 句子内容
@@ -1361,10 +1152,7 @@ class FavSentencePageView extends StatelessWidget {
 class FavCardSentencePageView extends StatelessWidget {
   final List<FavSentenceInfo> favSentences;
 
-  const FavCardSentencePageView({
-    super.key,
-    required this.favSentences,
-  });
+  const FavCardSentencePageView({super.key, required this.favSentences});
 
   @override
   Widget build(BuildContext context) {
@@ -1372,9 +1160,7 @@ class FavCardSentencePageView extends StatelessWidget {
       itemCount: favSentences.length,
       itemBuilder: (context, index) {
         final sentence = favSentences[index].sentenceData;
-        return SentenceCardPageView(
-          sentences: [sentence],
-        );
+        return SentenceCardPageView(sentences: [sentence]);
       },
     );
   }
@@ -1622,18 +1408,11 @@ class _SectionedWordListViewState extends State<SectionedWordListView> {
           if (indicator.isNotEmpty) ...[
             Text(
               indicator,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: _black87,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _black87),
             ),
             const SizedBox(width: 8),
           ],
-          Text(
-            sizeTitle,
-            style: const TextStyle(fontSize: 13, color: _black54),
-          ),
+          Text(sizeTitle, style: const TextStyle(fontSize: 13, color: _black54)),
         ],
       ),
     );
@@ -1641,8 +1420,7 @@ class _SectionedWordListViewState extends State<SectionedWordListView> {
 
   Widget _buildWordItem(IndexPath indexPath, int index) {
     final word = _resultModel.listWordAtIndexPath(indexPath);
-    final isCurrentWord = widget.currentWordId != null &&
-        word.wordId == widget.currentWordId;
+    final isCurrentWord = widget.currentWordId != null && word.wordId == widget.currentWordId;
 
     return GestureDetector(
       onTap: () => widget.onItemTap?.call(index),
@@ -1652,13 +1430,9 @@ class _SectionedWordListViewState extends State<SectionedWordListView> {
           children: [
             if (widget.isEditMode) ...[
               Icon(
-                word.isSelected == true
-                    ? Icons.check_circle
-                    : Icons.radio_button_unchecked,
+                word.isSelected == true ? Icons.check_circle : Icons.radio_button_unchecked,
                 size: 20,
-                color: word.isSelected == true
-                    ? _accent
-                    : _black54,
+                color: word.isSelected == true ? _accent : _black54,
               ),
               const SizedBox(width: 8),
             ],
@@ -1667,10 +1441,7 @@ class _SectionedWordListViewState extends State<SectionedWordListView> {
                 width: 4,
                 height: 20,
                 margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
-                  color: _accent,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+                decoration: BoxDecoration(color: _accent, borderRadius: BorderRadius.circular(2)),
               ),
             ],
             Expanded(
@@ -1769,18 +1540,11 @@ class _FavSentenceSectionedListViewState extends State<FavSentenceSectionedListV
           if (title.isNotEmpty) ...[
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: _black87,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _black87),
             ),
             const SizedBox(width: 8),
           ],
-          Text(
-            count,
-            style: const TextStyle(fontSize: 13, color: _black54),
-          ),
+          Text(count, style: const TextStyle(fontSize: 13, color: _black54)),
         ],
       ),
     );
@@ -1791,7 +1555,8 @@ class _FavSentenceSectionedListViewState extends State<FavSentenceSectionedListV
     if (favSentence == null) return const SizedBox.shrink();
 
     final sentence = favSentence.sentenceData;
-    final isCurrent = widget.currentWordId != null &&
+    final isCurrent =
+        widget.currentWordId != null &&
         widget.currentSentenceId != null &&
         favSentence.isSame(widget.currentWordId!, widget.currentSentenceId!);
 
@@ -1803,13 +1568,9 @@ class _FavSentenceSectionedListViewState extends State<FavSentenceSectionedListV
           children: [
             if (widget.isEditMode) ...[
               Icon(
-                favSentence.isSelected == true
-                    ? Icons.check_circle
-                    : Icons.radio_button_unchecked,
+                favSentence.isSelected == true ? Icons.check_circle : Icons.radio_button_unchecked,
                 size: 20,
-                color: favSentence.isSelected == true
-                    ? _accent
-                    : _black54,
+                color: favSentence.isSelected == true ? _accent : _black54,
               ),
               const SizedBox(width: 8),
             ],
@@ -1817,18 +1578,14 @@ class _FavSentenceSectionedListViewState extends State<FavSentenceSectionedListV
             Container(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                color: _black12,
-              ),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), color: _black12),
               child: sentence.image.isNotEmpty
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: Image.network(
                         'https://img.beingfine.cn/${sentence.image}',
                         fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) =>
-                            Icon(Icons.image, size: 24, color: _black54),
+                        errorBuilder: (_, _, _) => Icon(Icons.image, size: 24, color: _black54),
                       ),
                     )
                   : Icon(Icons.image, size: 24, color: _black54),
@@ -1863,10 +1620,7 @@ class _FavSentenceSectionedListViewState extends State<FavSentenceSectionedListV
                 width: 4,
                 height: 20,
                 margin: const EdgeInsets.only(left: 8),
-                decoration: BoxDecoration(
-                  color: _accent,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+                decoration: BoxDecoration(color: _accent, borderRadius: BorderRadius.circular(2)),
               ),
             ],
           ],
@@ -1888,13 +1642,7 @@ class WordListenData {
   final String? interpret;
   final SentenceData? firstSentence;
 
-  const WordListenData({
-    this.word = '',
-    this.usPron,
-    this.ukPron,
-    this.interpret,
-    this.firstSentence,
-  });
+  const WordListenData({this.word = '', this.usPron, this.ukPron, this.interpret, this.firstSentence});
 
   /// 是否有结构化释义
   bool get hasStructuredDefinitions => _cachedDefs?.isNotEmpty ?? false;
@@ -1948,13 +1696,7 @@ class WordListenPageView extends StatelessWidget {
   final ValueChanged<String>? onSentencePlay;
   final ValueChanged<int>? onWordTap;
 
-  const WordListenPageView({
-    super.key,
-    required this.words,
-    this.onPhoneticTap,
-    this.onSentencePlay,
-    this.onWordTap,
-  });
+  const WordListenPageView({super.key, required this.words, this.onPhoneticTap, this.onSentencePlay, this.onWordTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1968,24 +1710,16 @@ class WordListenPageView extends StatelessWidget {
   }
 
   Widget _buildWordListenCard(WordListenData wordData) {
-    final meaningText = wordData.hasStructuredDefinitions
-        ? wordData.formattedDefinitions
-        : wordData.interpret;
+    final meaningText = wordData.hasStructuredDefinitions ? wordData.formattedDefinitions : wordData.interpret;
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white100,
-        borderRadius: BorderRadius.circular(AppleRadius.lg),
-      ),
+      decoration: BoxDecoration(color: AppColors.white100, borderRadius: BorderRadius.circular(AppleRadius.lg)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 单词
-          Text(
-            wordData.word,
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-          ),
+          Text(wordData.word, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           // 音标
           if (wordData.usPron != null || wordData.ukPron != null) ...[
@@ -1994,20 +1728,14 @@ class WordListenPageView extends StatelessWidget {
                 if (wordData.usPron != null) ...[
                   GestureDetector(
                     onTap: () => onPhoneticTap?.call(wordData.usPron!),
-                    child: Text(
-                      '美 ${wordData.usPron}',
-                      style: const TextStyle(fontSize: 14, color: _black54),
-                    ),
+                    child: Text('美 ${wordData.usPron}', style: const TextStyle(fontSize: 14, color: _black54)),
                   ),
                   const SizedBox(width: 16),
                 ],
                 if (wordData.ukPron != null) ...[
                   GestureDetector(
                     onTap: () => onPhoneticTap?.call(wordData.ukPron!),
-                    child: Text(
-                      '英 ${wordData.ukPron}',
-                      style: const TextStyle(fontSize: 14, color: _black54),
-                    ),
+                    child: Text('英 ${wordData.ukPron}', style: const TextStyle(fontSize: 14, color: _black54)),
                   ),
                 ],
               ],
@@ -2016,30 +1744,18 @@ class WordListenPageView extends StatelessWidget {
           ],
           // 释义（优先结构化释义）
           if (meaningText != null && meaningText.isNotEmpty) ...[
-            Text(
-              meaningText,
-              style: const TextStyle(fontSize: 16, height: 1.5),
-            ),
+            Text(meaningText, style: const TextStyle(fontSize: 16, height: 1.5)),
             const SizedBox(height: 16),
           ],
           // 例句
           if (wordData.firstSentence != null) ...[
             const Divider(),
             const SizedBox(height: 8),
-            Text(
-              wordData.firstSentence!.english,
-              style: const TextStyle(fontSize: 15, height: 1.4),
-            ),
+            Text(wordData.firstSentence!.english, style: const TextStyle(fontSize: 15, height: 1.4)),
             const SizedBox(height: 8),
-            Text(
-              wordData.firstSentence!.chinese,
-              style: const TextStyle(fontSize: 14, color: _black54),
-            ),
+            Text(wordData.firstSentence!.chinese, style: const TextStyle(fontSize: 14, color: _black54)),
             const SizedBox(height: 8),
-            Text(
-              '来自 ${wordData.firstSentence!.title}',
-              style: const TextStyle(fontSize: 12, color: _black54),
-            ),
+            Text('来自 ${wordData.firstSentence!.title}', style: const TextStyle(fontSize: 12, color: _black54)),
           ],
         ],
       ),
@@ -2077,10 +1793,7 @@ class RootSuffixGroupData {
   final List<RootSuffixData> items;
   bool isAllUnFold;
 
-  RootSuffixGroupData({
-    required this.items,
-    this.isAllUnFold = false,
-  });
+  RootSuffixGroupData({required this.items, this.isAllUnFold = false});
 
   int get count => items.length;
 
@@ -2137,8 +1850,7 @@ class _RootSuffixGroupListViewState extends State<RootSuffixGroupListView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 分组头部
-        if (groupIndex > 0)
-          const Divider(height: 1),
+        if (groupIndex > 0) const Divider(height: 1),
         // 子项
         ...List.generate(group.count, (itemIndex) {
           final item = group.getData(itemIndex);
@@ -2148,12 +1860,7 @@ class _RootSuffixGroupListViewState extends State<RootSuffixGroupListView> {
     );
   }
 
-  Widget _buildItem(
-    int groupIndex,
-    int itemIndex,
-    RootSuffixData item,
-    RootSuffixGroupData group,
-  ) {
+  Widget _buildItem(int groupIndex, int itemIndex, RootSuffixData item, RootSuffixGroupData group) {
     final isOriginalWord = item.word == widget.originalWord;
     return GestureDetector(
       onTap: () {
@@ -2189,9 +1896,7 @@ class _RootSuffixGroupListViewState extends State<RootSuffixGroupListView> {
                       });
                     },
                     child: Icon(
-                      group.isAllUnFold
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
+                      group.isAllUnFold ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                       size: 20,
                       color: _black54,
                     ),
@@ -2211,10 +1916,7 @@ class _RootSuffixGroupListViewState extends State<RootSuffixGroupListView> {
                   ),
                 ),
                 // 等级
-                Text(
-                  item.wordGrade,
-                  style: const TextStyle(fontSize: 13, color: _black54),
-                ),
+                Text(item.wordGrade, style: const TextStyle(fontSize: 13, color: _black54)),
                 const SizedBox(width: 8),
                 // 添加生词按钮
                 GestureDetector(
@@ -2235,19 +1937,18 @@ class _RootSuffixGroupListViewState extends State<RootSuffixGroupListView> {
                 Wrap(
                   spacing: 8,
                   children: item.rootSuffixList
-                      .map((root) => Chip(
-                            label: Text(root, style: const TextStyle(fontSize: 12)),
-                            backgroundColor: _black12,
-                          ))
+                      .map(
+                        (root) => Chip(
+                          label: Text(root, style: const TextStyle(fontSize: 12)),
+                          backgroundColor: _black12,
+                        ),
+                      )
                       .toList(),
                 ),
               // 例句
               if (item.example != null && item.example!.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                Text(
-                  item.example!,
-                  style: const TextStyle(fontSize: 14, color: _black54),
-                ),
+                Text(item.example!, style: const TextStyle(fontSize: 14, color: _black54)),
               ],
             ],
           ],

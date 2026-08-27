@@ -46,21 +46,12 @@ class VerificationCodeInput extends StatelessWidget {
           return Container(
             width: boxSize,
             height: boxSize,
-            margin: EdgeInsets.only(
-              right: index < length - 1 ? (index < length - 1 ? 8.0 : 0.0) : 0,
-            ),
-            decoration: BoxDecoration(
-              color: boxColor,
-              borderRadius: BorderRadius.circular(boxRadius),
-            ),
+            margin: EdgeInsets.only(right: index < length - 1 ? (index < length - 1 ? 8.0 : 0.0) : 0),
+            decoration: BoxDecoration(color: boxColor, borderRadius: BorderRadius.circular(boxRadius)),
             child: Center(
               child: Text(
                 char,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: fontSize, color: textColor, fontWeight: FontWeight.bold),
               ),
             ),
           );

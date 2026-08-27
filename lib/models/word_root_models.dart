@@ -27,30 +27,29 @@ class RootSuffixData {
     List<RootSuffixItemData>? rootsuffixList,
   }) : rootsuffixList = rootsuffixList ?? [];
 
-  factory RootSuffixData.fromJson(Map<String, dynamic> json) =>
-      RootSuffixData(
-        word: json['word'] ?? '',
-        wordgradle: json['wordgradle'] ?? '',
-        hightlight: json['hightlight'] ?? '',
-        example: json['example'] ?? '',
-        ukPron: json['uk_pron'] ?? '',
-        usPron: json['us_pron'] ?? '',
-        rootsuffixList: (json['rootsuffixList'] as List?)
-                ?.map((e) =>
-                    RootSuffixItemData.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-      );
+  factory RootSuffixData.fromJson(Map<String, dynamic> json) => RootSuffixData(
+    word: json['word'] ?? '',
+    wordgradle: json['wordgradle'] ?? '',
+    hightlight: json['hightlight'] ?? '',
+    example: json['example'] ?? '',
+    ukPron: json['uk_pron'] ?? '',
+    usPron: json['us_pron'] ?? '',
+    rootsuffixList:
+        (json['rootsuffixList'] as List?)
+            ?.map((e) => RootSuffixItemData.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [],
+  );
 
   Map<String, dynamic> toJson() => {
-        'word': word,
-        'wordgradle': wordgradle,
-        'hightlight': hightlight,
-        'example': example,
-        'uk_pron': ukPron,
-        'us_pron': usPron,
-        'rootsuffixList': rootsuffixList.map((e) => e.toJson()).toList(),
-      };
+    'word': word,
+    'wordgradle': wordgradle,
+    'hightlight': hightlight,
+    'example': example,
+    'uk_pron': ukPron,
+    'us_pron': usPron,
+    'rootsuffixList': rootsuffixList.map((e) => e.toJson()).toList(),
+  };
 }
 
 /// 词根词缀分组数据（翻译自 RootSuffixGroupData.java）
@@ -93,11 +92,7 @@ class RootSuffixItemData {
   int type;
   String content;
 
-  RootSuffixItemData({
-    this.id = 0,
-    this.type = 0,
-    this.content = '',
-  });
+  RootSuffixItemData({this.id = 0, this.type = 0, this.content = ''});
 
   String get lableName {
     switch (type) {
@@ -114,16 +109,11 @@ class RootSuffixItemData {
     }
   }
 
-  factory RootSuffixItemData.fromJson(Map<String, dynamic> json) =>
-      RootSuffixItemData(
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        type: (json['type'] as num?)?.toInt() ?? 0,
-        content: json['content'] ?? '',
-      );
+  factory RootSuffixItemData.fromJson(Map<String, dynamic> json) => RootSuffixItemData(
+    id: (json['id'] as num?)?.toInt() ?? 0,
+    type: (json['type'] as num?)?.toInt() ?? 0,
+    content: json['content'] ?? '',
+  );
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'type': type,
-        'content': content,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'type': type, 'content': content};
 }

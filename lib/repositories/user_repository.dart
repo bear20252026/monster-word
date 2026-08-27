@@ -2,7 +2,7 @@
 // UserRepository — 用户数据访问抽象
 
 /// 用户数据仓库接口
-/// 
+///
 /// 提供用户信息、学习统计、签到记录等数据访问抽象。
 abstract class UserRepository {
   /// 获取用户信息

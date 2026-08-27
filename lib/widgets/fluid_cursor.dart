@@ -2,6 +2,7 @@
 // 颜色可自定义，支持单点触摸扩散
 // 适用于：全局触摸反馈、按钮按下效果、页面交互增强
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// 流体光标控制器（全局单例，追踪触摸位置）
@@ -22,11 +23,7 @@ class FluidCursorController extends ChangeNotifier {
   void setPressed(bool pressed) {
     _isPressed = pressed;
     if (pressed && _position != null) {
-      _ripples.add(_FluidRipple(
-        position: _position!,
-        startTime: DateTime.now(),
-        color: _rippleColor,
-      ));
+      _ripples.add(_FluidRipple(position: _position!, startTime: DateTime.now(), color: _rippleColor));
       if (_ripples.length > 5) _ripples.removeAt(0);
     }
     notifyListeners();
@@ -46,11 +43,7 @@ class _FluidRipple {
   final DateTime startTime;
   final Color color;
 
-  _FluidRipple({
-    required this.position,
-    required this.startTime,
-    required this.color,
-  });
+  _FluidRipple({required this.position, required this.startTime, required this.color});
 }
 
 /// 流体光标覆盖层（放在最上层，拦截触摸事件）
@@ -72,8 +65,7 @@ class FluidCursorOverlay extends StatefulWidget {
   State<FluidCursorOverlay> createState() => _FluidCursorOverlayState();
 }
 
-class _FluidCursorOverlayState extends State<FluidCursorOverlay>
-    with SingleTickerProviderStateMixin {
+class _FluidCursorOverlayState extends State<FluidCursorOverlay> with SingleTickerProviderStateMixin {
   late FluidCursorController _controller;
   late AnimationController _animController;
 
@@ -81,10 +73,7 @@ class _FluidCursorOverlayState extends State<FluidCursorOverlay>
   void initState() {
     super.initState();
     _controller = FluidCursorController()..setRippleColor(widget.rippleColor);
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
+    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
     _controller.addListener(_onControllerChanged);
   }
 
@@ -152,12 +141,7 @@ class _FluidRipplePainter extends CustomPainter {
   final double maxRadius;
   final Color color;
 
-  _FluidRipplePainter({
-    required this.ripples,
-    required this.now,
-    required this.maxRadius,
-    required this.color,
-  });
+  _FluidRipplePainter({required this.ripples, required this.now, required this.maxRadius, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -183,10 +167,7 @@ class _FluidRipplePainter extends CustomPainter {
             color.withValues(alpha: opacity),
             color.withValues(alpha: 0),
           ],
-        ).createShader(Rect.fromCircle(
-          center: ripple.position,
-          radius: radius * 0.6,
-        ));
+        ).createShader(Rect.fromCircle(center: ripple.position, radius: radius * 0.6));
       canvas.drawCircle(ripple.position, radius * 0.6, innerPaint);
     }
   }
@@ -213,13 +194,7 @@ class FluidTouchable extends StatefulWidget {
   final BorderRadius? borderRadius;
   final Color? rippleColor;
 
-  const FluidTouchable({
-    super.key,
-    required this.child,
-    this.onTap,
-    this.borderRadius,
-    this.rippleColor,
-  });
+  const FluidTouchable({super.key, required this.child, this.onTap, this.borderRadius, this.rippleColor});
 
   @override
   State<FluidTouchable> createState() => _FluidTouchableState();
@@ -236,10 +211,7 @@ class _FluidTouchableState extends State<FluidTouchable> {
       onTapUp: (_) => _globalFluidController?.setPressed(false),
       onTapCancel: () => _globalFluidController?.setPressed(false),
       onTap: widget.onTap,
-      child: ClipRRect(
-        borderRadius: widget.borderRadius ?? BorderRadius.zero,
-        child: widget.child,
-      ),
+      child: ClipRRect(borderRadius: widget.borderRadius ?? BorderRadius.zero, child: widget.child),
     );
   }
 }

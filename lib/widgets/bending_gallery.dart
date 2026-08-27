@@ -3,6 +3,7 @@
 // 颜色/曲率/间距均可自定义
 // 适用于：词书选择页、成就徽章展示、功能入口展示
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../tokens/design_tokens.dart';
@@ -13,12 +14,7 @@ class BendingGalleryItem {
   final VoidCallback? onTap;
   final Color? color;
 
-  const BendingGalleryItem({
-    required this.child,
-    this.label,
-    this.onTap,
-    this.color,
-  });
+  const BendingGalleryItem({required this.child, this.label, this.onTap, this.color});
 }
 
 class BendingGallery extends StatefulWidget {
@@ -26,7 +22,7 @@ class BendingGallery extends StatefulWidget {
   final double height;
   final double itemWidth;
   final double spacing;
-  final double curvature;       // 弯曲程度 (0 = 平面, 1 = 最大弯曲)
+  final double curvature; // 弯曲程度 (0 = 平面, 1 = 最大弯曲)
   final bool enableInteraction; // 是否启用交互弯曲
   final Duration animDuration;
   final Color? activeColor;
@@ -57,7 +53,8 @@ class _BendingGalleryState extends State<BendingGallery> {
       onHover: widget.enableInteraction
           ? (event) {
               setState(() {
-                _pointerX = (event.localPosition.dx / (widget.items.length * (widget.itemWidth + widget.spacing))).clamp(0.0, 1.0);
+                _pointerX = (event.localPosition.dx / (widget.items.length * (widget.itemWidth + widget.spacing)))
+                    .clamp(0.0, 1.0);
                 _isHovering = true;
               });
             }
@@ -76,12 +73,8 @@ class _BendingGalleryState extends State<BendingGallery> {
                 // 计算每个 item 的弯曲偏移
                 final itemCenter = (i + 0.5) / widget.items.length;
                 final distFromPointer = (itemCenter - _pointerX).abs();
-                final bendOffset = _isHovering
-                    ? math.sin(distFromPointer * math.pi) * widget.curvature * -30
-                    : 0.0;
-                final scale = _isHovering
-                    ? 1.0 + (1 - distFromPointer) * 0.15
-                    : 1.0;
+                final bendOffset = _isHovering ? math.sin(distFromPointer * math.pi) * widget.curvature * -30 : 0.0;
+                final scale = _isHovering ? 1.0 + (1 - distFromPointer) * 0.15 : 1.0;
 
                 return AnimatedContainer(
                   duration: widget.animDuration,
@@ -89,10 +82,7 @@ class _BendingGalleryState extends State<BendingGallery> {
                   transform: Matrix4.identity()
                     ..translate(0.0, bendOffset)
                     ..scale(scale),
-                  child: GestureDetector(
-                    onTap: item.onTap,
-                    child: _buildItem(item, i),
-                  ),
+                  child: GestureDetector(onTap: item.onTap, child: _buildItem(item, i)),
                 );
               }),
             );
@@ -146,13 +136,7 @@ class PerspectiveGallery extends StatefulWidget {
   final double itemWidth;
   final Function(int)? onSelected;
 
-  const PerspectiveGallery({
-    super.key,
-    required this.items,
-    this.height = 180,
-    this.itemWidth = 120,
-    this.onSelected,
-  });
+  const PerspectiveGallery({super.key, required this.items, this.height = 180, this.itemWidth = 120, this.onSelected});
 
   @override
   State<PerspectiveGallery> createState() => _PerspectiveGalleryState();
@@ -183,10 +167,7 @@ class _PerspectiveGalleryState extends State<PerspectiveGallery> {
               curve: Curves.easeOutBack,
               transform: Matrix4.identity()
                 ..rotateY((i - widget.items.length / 2) * 0.15)
-                ..translate(
-                  0.0,
-                  isSelected ? -15.0 : normalizedDist * 20,
-                )
+                ..translate(0.0, isSelected ? -15.0 : normalizedDist * 20)
                 ..scale(isSelected ? 1.1 : (1.0 - normalizedDist * 0.2)),
               child: Container(
                 width: widget.itemWidth,

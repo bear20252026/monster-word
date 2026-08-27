@@ -9,11 +9,7 @@ void main() {
   group('Word.cleanInterpret', () {
     test('当 def 为 ID 引用 [22285] 时，不应显示原始 JSON 符号', () {
       // ✅ 复现 bug：API 返回的 interpret 字段包含整数 ID 引用
-      final word = Word(
-        id: 1,
-        word: 'amuse',
-        interpret: '[{"t":"vt.","def":[22285]}]',
-      );
+      final word = Word(id: 1, word: 'amuse', interpret: '[{"t":"vt.","def":[22285]}]');
 
       final result = word.cleanInterpret;
 
@@ -27,11 +23,7 @@ void main() {
     });
 
     test('当 def 为 ID 引用时，应提取词性文本', () {
-      final word = Word(
-        id: 1,
-        word: 'amuse',
-        interpret: '[{"t":"vt.","def":[22285]}]',
-      );
+      final word = Word(id: 1, word: 'amuse', interpret: '[{"t":"vt.","def":[22285]}]');
 
       final result = word.cleanInterpret;
 
@@ -53,11 +45,7 @@ void main() {
     });
 
     test('当 interpret 为纯文本时，应原样返回', () {
-      final word = Word(
-        id: 3,
-        word: 'test',
-        interpret: 'n. 测试；考试',
-      );
+      final word = Word(id: 3, word: 'test', interpret: 'n. 测试；考试');
 
       final result = word.cleanInterpret;
 
@@ -74,11 +62,7 @@ void main() {
 
   group('Word.formattedDefinitions', () {
     test('当 def 为 ID 引用时，应回退到 cleanInterpret 而非空字符串', () {
-      final word = Word(
-        id: 1,
-        word: 'amuse',
-        interpret: '[{"t":"vt.","def":[22285]}]',
-      );
+      final word = Word(id: 1, word: 'amuse', interpret: '[{"t":"vt.","def":[22285]}]');
 
       final result = word.formattedDefinitions;
 
@@ -104,11 +88,7 @@ void main() {
 
   group('Word.parsedDefinitions', () {
     test('当 def 为 ID 引用时，应返回空列表（跳过非 Map 项）', () {
-      final word = Word(
-        id: 1,
-        word: 'amuse',
-        interpret: '[{"t":"vt.","def":[22285]}]',
-      );
+      final word = Word(id: 1, word: 'amuse', interpret: '[{"t":"vt.","def":[22285]}]');
 
       final result = word.parsedDefinitions;
 
@@ -158,8 +138,7 @@ void main() {
     });
 
     test('当 def 为完整对象时，应提取中英文释义', () {
-      final pair =
-          WordChoicePair('hello', '[{"t":"int.","def":[{"en":"used as a greeting","cn":"你好"}]}]');
+      final pair = WordChoicePair('hello', '[{"t":"int.","def":[{"en":"used as a greeting","cn":"你好"}]}]');
 
       final result = pair.cleanInterpret;
 
@@ -191,8 +170,7 @@ void main() {
     });
 
     test('当 def 为完整对象时，应正确解析', () {
-      final pair =
-          WordChoicePair('hello', '[{"t":"int.","def":[{"en":"used as a greeting","cn":"你好"}]}]');
+      final pair = WordChoicePair('hello', '[{"t":"int.","def":[{"en":"used as a greeting","cn":"你好"}]}]');
 
       final defs = pair.parsedDefinitions;
 

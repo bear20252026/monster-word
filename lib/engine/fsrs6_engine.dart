@@ -5,10 +5,10 @@ import 'dart:math';
 
 /// FSRS-6 评分等级
 enum FsrsRating {
-  again(1, '不认识'),   // 完全忘记
-  hard(2, '模糊'),      // 勉强想起
-  good(3, '认识'),      // 正常记忆
-  easy(4, '熟练');      // 非常熟练
+  again(1, '不认识'), // 完全忘记
+  hard(2, '模糊'), // 勉强想起
+  good(3, '认识'), // 正常记忆
+  easy(4, '熟练'); // 非常熟练
 
   const FsrsRating(this.value, this.label);
   final int value;
@@ -18,15 +18,15 @@ enum FsrsRating {
 /// FSRS-6 卡片状态
 class FsrsCard {
   final String word;
-  double stability;      // 记忆稳定性（天）
-  double difficulty;     // 难度 (1-10)
-  int elapsedDays;       // 距上次复习的天数
-  int scheduledDays;     // 计划间隔天数
-  DateTime lastReview;   // 上次复习日期
-  DateTime dueDate;      // 下次复习日期
-  int repetitions;       // 连续答对次数
-  int reviewCount;       // 复习总次数
-  bool isNew;            // 是否新词
+  double stability; // 记忆稳定性（天）
+  double difficulty; // 难度 (1-10)
+  int elapsedDays; // 距上次复习的天数
+  int scheduledDays; // 计划间隔天数
+  DateTime lastReview; // 上次复习日期
+  DateTime dueDate; // 下次复习日期
+  int repetitions; // 连续答对次数
+  int reviewCount; // 复习总次数
+  bool isNew; // 是否新词
   double shortTermStability; // 短时记忆稳定性（FSRS-6 新增）
 
   FsrsCard({
@@ -46,35 +46,32 @@ class FsrsCard {
   bool get isDue => !isNew && dueDate.isBefore(DateTime.now());
 
   Map<String, dynamic> toJson() => {
-        'word': word,
-        'stability': stability,
-        'difficulty': difficulty,
-        'elapsedDays': elapsedDays,
-        'scheduledDays': scheduledDays,
-        'lastReview': lastReview.toIso8601String(),
-        'dueDate': dueDate.toIso8601String(),
-        'repetitions': repetitions,
-        'reviewCount': reviewCount,
-        'isNew': isNew,
-        'shortTermStability': shortTermStability,
-      };
+    'word': word,
+    'stability': stability,
+    'difficulty': difficulty,
+    'elapsedDays': elapsedDays,
+    'scheduledDays': scheduledDays,
+    'lastReview': lastReview.toIso8601String(),
+    'dueDate': dueDate.toIso8601String(),
+    'repetitions': repetitions,
+    'reviewCount': reviewCount,
+    'isNew': isNew,
+    'shortTermStability': shortTermStability,
+  };
 
   factory FsrsCard.fromJson(Map<String, dynamic> json) => FsrsCard(
-        word: json['word'] as String,
-        stability: (json['stability'] as num?)?.toDouble() ?? 0,
-        difficulty: (json['difficulty'] as num?)?.toDouble() ?? 0,
-        elapsedDays: (json['elapsedDays'] as num?)?.toInt() ?? 0,
-        scheduledDays: (json['scheduledDays'] as num?)?.toInt() ?? 0,
-        lastReview: DateTime.parse(
-            json['lastReview'] as String? ?? DateTime.now().toIso8601String()),
-        dueDate: DateTime.parse(
-            json['dueDate'] as String? ?? DateTime.now().toIso8601String()),
-        repetitions: (json['repetitions'] as num?)?.toInt() ?? 0,
-        reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
-        isNew: (json['isNew'] as bool?) ?? true,
-        shortTermStability:
-            (json['shortTermStability'] as num?)?.toDouble() ?? 0,
-      );
+    word: json['word'] as String,
+    stability: (json['stability'] as num?)?.toDouble() ?? 0,
+    difficulty: (json['difficulty'] as num?)?.toDouble() ?? 0,
+    elapsedDays: (json['elapsedDays'] as num?)?.toInt() ?? 0,
+    scheduledDays: (json['scheduledDays'] as num?)?.toInt() ?? 0,
+    lastReview: DateTime.parse(json['lastReview'] as String? ?? DateTime.now().toIso8601String()),
+    dueDate: DateTime.parse(json['dueDate'] as String? ?? DateTime.now().toIso8601String()),
+    repetitions: (json['repetitions'] as num?)?.toInt() ?? 0,
+    reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
+    isNew: (json['isNew'] as bool?) ?? true,
+    shortTermStability: (json['shortTermStability'] as num?)?.toDouble() ?? 0,
+  );
 
   FsrsCard copy() => FsrsCard.fromJson(toJson());
 }
@@ -87,25 +84,38 @@ class FsrsCard {
 class Fsrs6Engine {
   // FSRS-6 默认参数（21 个权重 - 通过机器学习优化）
   static const List<double> _defaultWeights = [
-    0.40255, 1.18385, 3.173, 15.69105, 7.1949,
-    0.5345, 1.4604, 0.0046, 1.54575, 0.1192,
-    1.01925, 1.9395, 0.11, 0.29605, 2.2698,
-    0.2315, 2.9898, 0.51655, 0.6621, 0.0294,
+    0.40255,
+    1.18385,
+    3.173,
+    15.69105,
+    7.1949,
+    0.5345,
+    1.4604,
+    0.0046,
+    1.54575,
+    0.1192,
+    1.01925,
+    1.9395,
+    0.11,
+    0.29605,
+    2.2698,
+    0.2315,
+    2.9898,
+    0.51655,
+    0.6621,
+    0.0294,
     0.0805,
   ];
 
   // 参数
   final List<double> weights;
-  final double decay;        // 遗忘衰减因子 (-0.5)
-  final double factor;       // 稳定性增长因子
+  final double decay; // 遗忘衰减因子 (-0.5)
+  final double factor; // 稳定性增长因子
   final double desiredRetention; // 目标记忆保持率
 
-  Fsrs6Engine({
-    List<double>? weights,
-    this.decay = -0.5,
-    this.desiredRetention = 0.9,
-  })  : weights = weights ?? _defaultWeights,
-        factor = 1.0 / (9.0 * (1.0 - (-0.5)));
+  Fsrs6Engine({List<double>? weights, this.decay = -0.5, this.desiredRetention = 0.9})
+    : weights = weights ?? _defaultWeights,
+      factor = 1.0 / (9.0 * (1.0 - (-0.5)));
 
   /// 计算 retrievability（记忆提取概率）- FSRS-6 精确公式
   /// 返回 0.0-1.0 之间的值，表示记住该单词的概率
@@ -117,8 +127,7 @@ class Fsrs6Engine {
 
   /// 计算新的短时记忆稳定性（FSRS-6 新增）
   /// 同一天内的复习使用短时模型
-  double _nextShortTermStability(
-      double stability, double difficulty, FsrsRating rating) {
+  double _nextShortTermStability(double stability, double difficulty, FsrsRating rating) {
     switch (rating) {
       case FsrsRating.again:
         return weights[0] * pow(difficulty / 10.0, -weights[16]) * pow(stability + 1, weights[17]);
@@ -132,22 +141,18 @@ class Fsrs6Engine {
   }
 
   /// 计算新的长时记忆稳定性
-  double _nextLongTermStability(
-      double stability, double difficulty, double retrievability, FsrsRating rating) {
+  double _nextLongTermStability(double stability, double difficulty, double retrievability, FsrsRating rating) {
     final hardPenalty = rating == FsrsRating.hard ? 0.8 : 1.0;
     final easyBonus = rating == FsrsRating.easy ? 1.3 : 1.0;
 
     if (rating == FsrsRating.again) {
       // 忘记：稳定性下降
-      return stability *
-          (1.0 + exp(3.45) *
-              pow(stability, -0.1) *
-              (exp((1 - retrievability) * 2.95) - 1) *
-              0.85);
+      return stability * (1.0 + exp(3.45) * pow(stability, -0.1) * (exp((1 - retrievability) * 2.95) - 1) * 0.85);
     }
 
     // Good/Hard/Easy：稳定性增长
-    final growth = exp(weights[8]) *
+    final growth =
+        exp(weights[8]) *
         (11 - difficulty) *
         pow(stability, -weights[9]) *
         (exp((1 - retrievability) * weights[10]) - 1) *
@@ -161,15 +166,15 @@ class Fsrs6Engine {
   double _nextDifficulty(double difficulty, FsrsRating rating) {
     // 均值回归：难度趋向于中间值
     final meanReversion = weights[4] * (weights[5] - difficulty);
-    
+
     // 评分对难度的影响
     final delta = rating == FsrsRating.again
         ? weights[6]
         : rating == FsrsRating.hard
-            ? weights[7]
-            : rating == FsrsRating.good
-                ? 0
-                : -weights[7];
+        ? weights[7]
+        : rating == FsrsRating.good
+        ? 0
+        : -weights[7];
 
     return (difficulty + meanReversion + delta).clamp(1.0, 10.0);
   }
@@ -177,8 +182,7 @@ class Fsrs6Engine {
   /// 计算下次间隔天数
   double _nextInterval(double stability) {
     // FSRS-6 间隔公式: I = S / 0.9 * (R^(1/decay) - 1)
-    return (stability / desiredRetention * (pow(desiredRetention, 1.0 / decay) - 1))
-        .clamp(1.0, 365.0);
+    return (stability / desiredRetention * (pow(desiredRetention, 1.0 / decay) - 1)).clamp(1.0, 365.0);
   }
 
   /// 评分一个卡片，返回更新后的卡片
@@ -201,18 +205,16 @@ class Fsrs6Engine {
     } else {
       // 复习卡片更新
       updated.difficulty = _nextDifficulty(card.difficulty, rating);
-      
+
       // FSRS-6: 区分短时和长时记忆
       final isSameDay = elapsed == 0;
       if (isSameDay) {
         // 同一天复习：使用短时记忆模型
-        updated.shortTermStability = _nextShortTermStability(
-            card.shortTermStability, card.difficulty, rating);
+        updated.shortTermStability = _nextShortTermStability(card.shortTermStability, card.difficulty, rating);
         updated.stability = updated.shortTermStability;
       } else {
         // 跨天复习：使用长时记忆模型
-        updated.stability = _nextLongTermStability(
-            card.stability, card.difficulty, retrievability, rating);
+        updated.stability = _nextLongTermStability(card.stability, card.difficulty, retrievability, rating);
         updated.shortTermStability = updated.stability;
       }
     }
@@ -235,11 +237,7 @@ class Fsrs6Engine {
 
   /// 首次学习一个单词
   FsrsCard learn(String word, FsrsRating rating) {
-    final card = FsrsCard(
-      word: word,
-      lastReview: DateTime.now(),
-      dueDate: DateTime.now(),
-    );
+    final card = FsrsCard(word: word, lastReview: DateTime.now(), dueDate: DateTime.now());
     return review(card, rating);
   }
 

@@ -11,12 +11,7 @@ abstract class LockView {
   /// [examples] 例句 HTML 数组
   /// [mp3Paths] 音频路径数组
   /// [word] 当前单词
-  void loadExampleData(
-    List<Map<String, dynamic>> sentences,
-    List<String> examples,
-    List<String> mp3Paths,
-    String word,
-  );
+  void loadExampleData(List<Map<String, dynamic>> sentences, List<String> examples, List<String> mp3Paths, String word);
 
   /// 例句加载完成
   void loadExampleFinish(Map<String, dynamic> wordProcess);

@@ -5,6 +5,7 @@
 // 参考：docs/a11y_contrast_report.md、docs/a11y_dark_mode_report.md
 
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -45,13 +46,7 @@ void main() {
 }
 
 /// 测试单个配对的对比度
-void _testPair(
-  String label,
-  Color foreground,
-  Color background,
-  double threshold,
-  String themeId,
-) {
+void _testPair(String label, Color foreground, Color background, double threshold, String themeId) {
   test('$label — 对比度 ≥ ${threshold.toStringAsFixed(1)}:1', () {
     // 带 alpha 的前景色先与背景做 alpha 合成
     final effectiveFg = _alphaComposite(foreground, background);
@@ -76,22 +71,13 @@ Color _alphaComposite(Color fg, Color bg) {
 }
 
 /// 失败时的详细输出
-String _failureMessage(
-  String label,
-  Color originalFg,
-  Color bg,
-  Color effectiveFg,
-  double actual,
-  double required,
-) {
+String _failureMessage(String label, Color originalFg, Color bg, Color effectiveFg, double actual, double required) {
   final fgHex = '#${originalFg.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase()}';
   final bgHex = '#${bg.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase()}';
   final effHex = '#${effectiveFg.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase()}';
 
   // 判断是否经过了 alpha 合成
-  final alphaNote = originalFg.alpha < 255
-      ? '  （α=${originalFg.alpha}，合成等效色：$effHex）\n'
-      : '';
+  final alphaNote = originalFg.alpha < 255 ? '  （α=${originalFg.alpha}，合成等效色：$effHex）\n' : '';
 
   return '''
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

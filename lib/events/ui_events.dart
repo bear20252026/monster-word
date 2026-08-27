@@ -53,10 +53,10 @@ class FloatButtonActionEvent {
 /// 悬浮按钮动作类型（对应原版 bean/FloatButtonAction）
 enum FloatButtonActionType {
   unknown,
-  search,     // 搜索
-  settings,   // 设置
-  help,       // 帮助
-  feedback,   // 反馈
+  search, // 搜索
+  settings, // 设置
+  help, // 帮助
+  feedback, // 反馈
 }
 
 /// 悬浮按钮动作数据

@@ -5,6 +5,7 @@
 // 文件：MyTextView, MyEditText, MyAnimatedNumTextView, CustomeTypefaceSpan, TextViewUtils, CustomSelectedView
 
 import 'package:flutter/material.dart';
+
 import '../tokens/design_tokens.dart';
 import 'animations.dart';
 
@@ -46,14 +47,7 @@ class MyCustomText extends StatelessWidget {
         fontSize: fontSize,
         color: color,
         fontWeight: fontWeight,
-        shadows: showShadow
-            ? [
-                Shadow(
-                  color: color ?? MistralColors.ink,
-                  blurRadius: 20,
-                ),
-              ]
-            : null,
+        shadows: showShadow ? [Shadow(color: color ?? MistralColors.ink, blurRadius: 20)] : null,
       ),
     );
   }
@@ -95,12 +89,7 @@ class MyCustomTextField extends StatelessWidget {
       maxLength: maxLength,
       style: TextStyle(fontFamily: fontFamily),
       cursorColor: cursorColor,
-      decoration: decoration ??
-          InputDecoration(
-            hintText: hintText,
-            border: InputBorder.none,
-            counterText: '',
-          ),
+      decoration: decoration ?? InputDecoration(hintText: hintText, border: InputBorder.none, counterText: ''),
     );
   }
 }
@@ -123,8 +112,7 @@ class AnimatedNumText extends StatefulWidget {
   State<AnimatedNumText> createState() => _AnimatedNumTextState();
 }
 
-class _AnimatedNumTextState extends State<AnimatedNumText>
-    with SingleTickerProviderStateMixin {
+class _AnimatedNumTextState extends State<AnimatedNumText> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<int> _animation;
   int _oldValue = 0;
@@ -134,8 +122,10 @@ class _AnimatedNumTextState extends State<AnimatedNumText>
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration);
     _oldValue = widget.value;
-    _animation = IntTween(begin: _oldValue, end: widget.value)
-        .animate(CurvedAnimation(parent: _controller, curve: fataleCurve));
+    _animation = IntTween(
+      begin: _oldValue,
+      end: widget.value,
+    ).animate(CurvedAnimation(parent: _controller, curve: fataleCurve));
     _controller.forward();
   }
 
@@ -144,8 +134,10 @@ class _AnimatedNumTextState extends State<AnimatedNumText>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
       _oldValue = oldWidget.value;
-      _animation = IntTween(begin: _oldValue, end: widget.value)
-          .animate(CurvedAnimation(parent: _controller, curve: fataleCurve));
+      _animation = IntTween(
+        begin: _oldValue,
+        end: widget.value,
+      ).animate(CurvedAnimation(parent: _controller, curve: fataleCurve));
       _controller.reset();
       _controller.forward();
     }
@@ -162,10 +154,7 @@ class _AnimatedNumTextState extends State<AnimatedNumText>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        return Text(
-          _animation.value.toString(),
-          style: widget.style,
-        );
+        return Text(_animation.value.toString(), style: widget.style);
       },
     );
   }
@@ -188,18 +177,8 @@ class CustomFontTextSpan extends TextSpan {
 /// 文本工具类（翻译自 TextViewUtils.dart）
 class TextViewUtils {
   /// 设置文本样式
-  static TextStyle setTextStyle({
-    String? fontFamily,
-    double? fontSize,
-    Color? color,
-    FontWeight? fontWeight,
-  }) {
-    return TextStyle(
-      fontFamily: fontFamily,
-      fontSize: fontSize,
-      color: color,
-      fontWeight: fontWeight,
-    );
+  static TextStyle setTextStyle({String? fontFamily, double? fontSize, Color? color, FontWeight? fontWeight}) {
+    return TextStyle(fontFamily: fontFamily, fontSize: fontSize, color: color, fontWeight: fontWeight);
   }
 
   /// 创建可点击的图片 Widget（替代 ClickableImageSpan）
@@ -220,13 +199,7 @@ class SelectableWordText extends StatefulWidget {
   final TextStyle? style;
   final Color? highlightColor;
 
-  const SelectableWordText({
-    super.key,
-    required this.text,
-    this.onWordSelected,
-    this.style,
-    this.highlightColor,
-  });
+  const SelectableWordText({super.key, required this.text, this.onWordSelected, this.style, this.highlightColor});
 
   @override
   State<SelectableWordText> createState() => _SelectableWordTextState();
@@ -242,9 +215,7 @@ class _SelectableWordTextState extends State<SelectableWordText> {
       style: widget.style,
       onSelectionChanged: (selection, cause) {
         if (selection.isCollapsed) return;
-        final word = widget.text
-            .substring(selection.start, selection.end)
-            .trim();
+        final word = widget.text.substring(selection.start, selection.end).trim();
         if (word.isNotEmpty && word != _selectedWord) {
           _selectedWord = word;
           widget.onWordSelected?.call(word);

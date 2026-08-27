@@ -30,25 +30,27 @@ class _HelpPageState extends State<HelpPage> {
     super.initState();
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.disabled) // 安全加固：禁用 JS（帮助页无需执行脚本）
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageStarted: (_) => setState(() {
-          _isLoading = true;
-          _hasError = false;
-        }),
-        onPageFinished: (_) => setState(() => _isLoading = false),
-        onWebResourceError: (_) => setState(() {
-          _hasError = true;
-          _isLoading = false;
-        }),
-        // 安全加固：仅允许 beingfine.cn 域名导航，阻止跳转到外部恶意站点
-        onNavigationRequest: (request) {
-          final uri = Uri.tryParse(request.url);
-          if (uri != null && uri.host.endsWith('beingfine.cn')) {
-            return NavigationDecision.navigate;
-          }
-          return NavigationDecision.prevent;
-        },
-      ));
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (_) => setState(() {
+            _isLoading = true;
+            _hasError = false;
+          }),
+          onPageFinished: (_) => setState(() => _isLoading = false),
+          onWebResourceError: (_) => setState(() {
+            _hasError = true;
+            _isLoading = false;
+          }),
+          // 安全加固：仅允许 beingfine.cn 域名导航，阻止跳转到外部恶意站点
+          onNavigationRequest: (request) {
+            final uri = Uri.tryParse(request.url);
+            if (uri != null && uri.host.endsWith('beingfine.cn')) {
+              return NavigationDecision.navigate;
+            }
+            return NavigationDecision.prevent;
+          },
+        ),
+      );
 
     final url = widget.url ?? 'https://www.beingfine.cn/help';
     _controller.loadRequest(Uri.parse(url));
@@ -90,8 +92,7 @@ class _HelpPageState extends State<HelpPage> {
                     )
                   else
                     WebViewWidget(controller: _controller),
-                  if (_isLoading)
-                    Center(child: CircularProgressIndicator(color: MistralColors.primary)),
+                  if (_isLoading) Center(child: CircularProgressIndicator(color: MistralColors.primary)),
                 ],
               ),
             ),

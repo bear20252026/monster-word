@@ -40,10 +40,7 @@ class CoursesPage extends StatelessWidget {
                         _CourseBanner(skin: skin),
                         const SizedBox(height: AppSpacing.lg),
                         // 课程卡片网格
-                        Text(
-                          '精品课程',
-                          style: MistralTypography.heading4.copyWith(color: skin.text1),
-                        ),
+                        Text('精品课程', style: MistralTypography.heading4.copyWith(color: skin.text1)),
                         const SizedBox(height: AppSpacing.sm),
                         _CourseCardGrid(skin: skin),
                         const SizedBox(height: AppSpacing.lg),
@@ -82,10 +79,7 @@ class CoursesPage extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             '不背学堂',
-            style: MistralTypography.heading5.copyWith(
-              color: skin.text1,
-              fontWeight: FontWeight.w600,
-            ),
+            style: MistralTypography.heading5.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
           ),
           const Spacer(),
         ],
@@ -128,10 +122,7 @@ class _CourseBanner extends StatelessWidget {
             child: Container(
               width: 120,
               height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.white100.withValues(alpha: 0.15),
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.white100.withValues(alpha: 0.15)),
             ),
           ),
           Positioned(
@@ -140,10 +131,7 @@ class _CourseBanner extends StatelessWidget {
             child: Container(
               width: 80,
               height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.white100.withValues(alpha: 0.1),
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.white100.withValues(alpha: 0.1)),
             ),
           ),
           // 文字内容
@@ -154,20 +142,14 @@ class _CourseBanner extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: 3,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
                   decoration: BoxDecoration(
                     color: MistralColors.primary,
                     borderRadius: BorderRadius.circular(AppRadius.xs),
                   ),
                   child: Text(
                     '全新上线',
-                    style: MistralTypography.micro.copyWith(
-                      color: AppColors.white100,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: MistralTypography.micro.copyWith(color: AppColors.white100, fontWeight: FontWeight.w600),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -181,27 +163,18 @@ class _CourseBanner extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '六级听力 阶梯训练',
-                  style: MistralTypography.heading3.copyWith(
-                    color: AppColors.white100,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: MistralTypography.heading3.copyWith(color: AppColors.white100, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.xs,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
                   decoration: BoxDecoration(
                     color: AppColors.white100.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Text(
                     '轻松练真题 →',
-                    style: MistralTypography.bodySm.copyWith(
-                      color: AppColors.white100,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: MistralTypography.bodySm.copyWith(color: AppColors.white100, fontWeight: FontWeight.w500),
                   ),
                 ),
               ],
@@ -247,20 +220,8 @@ class _CourseCardGrid extends StatelessWidget {
         color: const Color(0xFFCE93D8), // 课程装饰色（紫）- 可保留
         icon: Icons.headphones,
       ),
-      _CourseData(
-        title: '四级听力 阶梯训练',
-        subtitle: '轻松练真题',
-        tag: '',
-        color: skin.success,
-        icon: Icons.headphones,
-      ),
-      _CourseData(
-        title: '考研写作炼句',
-        subtitle: '快速炼制高分金句',
-        tag: '',
-        color: MistralColors.warning,
-        icon: Icons.edit,
-      ),
+      _CourseData(title: '四级听力 阶梯训练', subtitle: '轻松练真题', tag: '', color: skin.success, icon: Icons.headphones),
+      _CourseData(title: '考研写作炼句', subtitle: '快速炼制高分金句', tag: '', color: MistralColors.warning, icon: Icons.edit),
       _CourseData(
         title: '小野解词',
         subtitle: '词根词缀，图记单词',
@@ -315,10 +276,7 @@ class _CourseCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   data.title,
-                  style: MistralTypography.bodyMd.copyWith(
-                    color: skin.text1,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -333,10 +291,7 @@ class _CourseCard extends StatelessWidget {
                   ),
                   child: Text(
                     data.tag,
-                    style: MistralTypography.micro.copyWith(
-                      color: data.color,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: MistralTypography.micro.copyWith(color: data.color, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -355,10 +310,7 @@ class _CourseCard extends StatelessWidget {
             child: Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                color: data.color.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: data.color.withValues(alpha: 0.2), shape: BoxShape.circle),
               child: Icon(data.icon, color: data.color, size: 20),
             ),
           ),
@@ -475,16 +427,10 @@ class _EntryTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: MistralTypography.bodyMd.copyWith(
-                      color: skin.text1,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: MistralTypography.bodySm.copyWith(color: skin.text3),
-                  ),
+                  Text(subtitle, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
                 ],
               ),
             ),

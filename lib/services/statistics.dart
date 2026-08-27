@@ -51,11 +51,7 @@ class BBStatistician {
 
   /// 上报事件（原版 trackEvent）
   void trackEvent(String eventName, [Map<String, dynamic>? params]) {
-    final event = {
-      'event': eventName,
-      'timestamp': DateTime.now().toIso8601String(),
-      ...?params,
-    };
+    final event = {'event': eventName, 'timestamp': DateTime.now().toIso8601String(), ...?params};
     _eventQueue.add(event);
     _logEvent(event);
   }
@@ -83,10 +79,7 @@ class BBStatistician {
 
   /// 复习开始
   void trackReviewStart(int totalWords) {
-    trackEvent(BBUMEvent.review, {
-      BBUMEvent.paramCount: totalWords,
-      'action': 'start',
-    });
+    trackEvent(BBUMEvent.review, {BBUMEvent.paramCount: totalWords, 'action': 'start'});
   }
 
   /// 复习完成
@@ -107,10 +100,7 @@ class BBStatistician {
 
   /// 发音播放
   void trackWordPlay(String word, {bool isUK = false}) {
-    trackEvent(BBUMEvent.wordPlay, {
-      BBUMEvent.paramWord: word,
-      BBUMEvent.paramType: isUK ? 'uk' : 'us',
-    });
+    trackEvent(BBUMEvent.wordPlay, {BBUMEvent.paramWord: word, BBUMEvent.paramType: isUK ? 'uk' : 'us'});
   }
 
   /// 签到

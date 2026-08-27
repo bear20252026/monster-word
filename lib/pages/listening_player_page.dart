@@ -13,10 +13,10 @@ import '../tokens/design_tokens.dart';
 import '../widgets/sb_card.dart';
 
 enum ListeningMode {
-  wordOnly,       // 仅单词
-  wordMeaning,    // 单词+释义
-  meaningWord,    // 释义+单词
-  wordExample,    // 单词+例句
+  wordOnly, // 仅单词
+  wordMeaning, // 单词+释义
+  meaningWord, // 释义+单词
+  wordExample, // 单词+例句
 }
 
 class ListeningPlayerPage extends StatefulWidget {
@@ -39,8 +39,7 @@ class ListeningPlayerPage extends StatefulWidget {
   State<ListeningPlayerPage> createState() => _ListeningPlayerPageState();
 }
 
-class _ListeningPlayerPageState extends State<ListeningPlayerPage>
-    with SingleTickerProviderStateMixin {
+class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTickerProviderStateMixin {
   late SystemTts _tts;
   int _currentIndex = 0;
   bool _isPlaying = false;
@@ -54,10 +53,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
   void initState() {
     super.initState();
     _currentIndex = widget.startIndex;
-    _progressController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
+    _progressController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
     _tts = SystemTts();
     _tts.onComplete = _onSpeechComplete;
     _tts.onErrorHandler = _onSpeechError;
@@ -71,11 +67,19 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
     super.dispose();
   }
 
-  Word get _currentWord =>
-      widget.words.isNotEmpty ? widget.words[_currentIndex] : Word(
-        id: 0, word: '', mainWord: '', interpret: '', ukPron: '', usPron: '',
-        phrase: '', example: '', confuse: '',
-      );
+  Word get _currentWord => widget.words.isNotEmpty
+      ? widget.words[_currentIndex]
+      : Word(
+          id: 0,
+          word: '',
+          mainWord: '',
+          interpret: '',
+          ukPron: '',
+          usPron: '',
+          phrase: '',
+          example: '',
+          confuse: '',
+        );
 
   void _onSpeechComplete() {
     if (!mounted) return;
@@ -170,10 +174,14 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
 
   String _modeName(ListeningMode mode) {
     switch (mode) {
-      case ListeningMode.wordOnly: return '仅单词';
-      case ListeningMode.wordMeaning: return '单词+释义';
-      case ListeningMode.meaningWord: return '释义+单词';
-      case ListeningMode.wordExample: return '单词+例句';
+      case ListeningMode.wordOnly:
+        return '仅单词';
+      case ListeningMode.wordMeaning:
+        return '单词+释义';
+      case ListeningMode.meaningWord:
+        return '释义+单词';
+      case ListeningMode.wordExample:
+        return '单词+例句';
     }
   }
 
@@ -185,15 +193,9 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
     if (widget.words.isEmpty) {
       return Scaffold(
         backgroundColor: skin.colors.pageBg,
-        appBar: AppBar(
-          backgroundColor: skin.colors.pageBg,
-          foregroundColor: skin.colors.text1,
-          elevation: 0,
-        ),
+        appBar: AppBar(backgroundColor: skin.colors.pageBg, foregroundColor: skin.colors.text1, elevation: 0),
         body: Center(
-          child: Text('暂无单词可播放', style: MistralTypography.body.copyWith(
-            color: skin.colors.text3,
-          )),
+          child: Text('暂无单词可播放', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
         ),
       );
     }
@@ -201,40 +203,40 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
     return PopScope(
       canPop: true,
       child: Scaffold(
-      backgroundColor: skin.colors.pageBg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildNavBar(skin, resp),
-            Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: resp.horizontalPadding),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // 进度指示
-                        _buildProgress(skin),
-                        const SizedBox(height: 32),
-                        // 单词卡片
-                        _buildWordCard(skin, resp),
-                        const SizedBox(height: 48),
-                        // 播放控制
-                        _buildControls(skin, resp),
-                        const SizedBox(height: 24),
-                        // 语速控制
-                        _buildRateControl(skin, resp),
-                      ],
+        backgroundColor: skin.colors.pageBg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildNavBar(skin, resp),
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: resp.horizontalPadding),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // 进度指示
+                          _buildProgress(skin),
+                          const SizedBox(height: 32),
+                          // 单词卡片
+                          _buildWordCard(skin, resp),
+                          const SizedBox(height: 48),
+                          // 播放控制
+                          _buildControls(skin, resp),
+                          const SizedBox(height: 24),
+                          // 语速控制
+                          _buildRateControl(skin, resp),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -281,32 +283,20 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              '${_currentIndex + 1}',
-              style: MistralTypography.heading4.copyWith(color: MistralColors.primary),
-            ),
-            Text(
-              ' / ${widget.words.length}',
-              style: MistralTypography.heading5.copyWith(color: skin.colors.text3),
-            ),
+            Text('${_currentIndex + 1}', style: MistralTypography.heading4.copyWith(color: MistralColors.primary)),
+            Text(' / ${widget.words.length}', style: MistralTypography.heading5.copyWith(color: skin.colors.text3)),
           ],
         ),
         const SizedBox(height: 8),
         Container(
           height: 6,
           width: 200,
-          decoration: BoxDecoration(
-            color: skin.colors.divider,
-            borderRadius: BorderRadius.circular(8),
-          ),
+          decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(8)),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
             widthFactor: progress,
             child: Container(
-              decoration: BoxDecoration(
-                color: MistralColors.primary,
-                borderRadius: BorderRadius.circular(8),
-              ),
+              decoration: BoxDecoration(color: MistralColors.primary, borderRadius: BorderRadius.circular(8)),
             ),
           ),
         ),
@@ -316,9 +306,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
 
   Widget _buildWordCard(SkinSystem skin, AppResponsive resp) {
     final word = _currentWord;
-    final meaningText = word.hasStructuredDefinitions
-        ? word.formattedDefinitions
-        : word.cleanInterpret;
+    final meaningText = word.hasStructuredDefinitions ? word.formattedDefinitions : word.cleanInterpret;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(resp.pageMargin * 1.5),
@@ -332,10 +320,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
           // 单词
           Text(
             word.word,
-            style: AppTypography.heroWord.copyWith(
-              color: skin.colors.text1,
-              fontSize: 48 * resp.fontScale,
-            ),
+            style: AppTypography.heroWord.copyWith(color: skin.colors.text1, fontSize: 48 * resp.fontScale),
             textAlign: TextAlign.center,
           ),
           // 音标
@@ -343,10 +328,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
             const SizedBox(height: 8),
             Text(
               word.usPron.isNotEmpty ? word.usPron : word.ukPron,
-              style: MistralTypography.body.copyWith(
-                color: skin.colors.text3,
-                fontSize: 16 * resp.fontScale,
-              ),
+              style: MistralTypography.body.copyWith(color: skin.colors.text3, fontSize: 16 * resp.fontScale),
               textAlign: TextAlign.center,
             ),
           ],
@@ -364,21 +346,14 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
                 ),
                 textAlign: TextAlign.center,
               ),
-              crossFadeState: _showMeaning
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
+              crossFadeState: _showMeaning ? CrossFadeState.showSecond : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 300),
             ),
             if (!_showMeaning) ...[
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () => setState(() => _showMeaning = true),
-                child: Text(
-                  '点击显示释义',
-                  style: MistralTypography.caption.copyWith(
-                    color: MistralColors.primary,
-                  ),
-                ),
+                child: Text('点击显示释义', style: MistralTypography.caption.copyWith(color: MistralColors.primary)),
               ),
             ],
           ],
@@ -393,10 +368,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
               ),
               child: Text(
                 word.example,
-                style: MistralTypography.bodySm.copyWith(
-                  color: skin.colors.text2,
-                  fontStyle: FontStyle.italic,
-                ),
+                style: MistralTypography.bodySm.copyWith(color: skin.colors.text2, fontStyle: FontStyle.italic),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -423,9 +395,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
           const SizedBox(width: 32),
           // 播放/暂停（主按钮）
           _ControlButton(
-            icon: _isPlaying && !_isPaused
-                ? Icons.pause_rounded
-                : Icons.play_arrow_rounded,
+            icon: _isPlaying && !_isPaused ? Icons.pause_rounded : Icons.play_arrow_rounded,
             size: buttonSize * 1.5,
             onPressed: _togglePlayPause,
             skin: skin,
@@ -447,10 +417,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage>
   Widget _buildRateControl(SkinSystem skin, AppResponsive resp) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: skin.colors.cardBgAlt,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
+      decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(AppRadius.lg)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

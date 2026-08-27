@@ -2,6 +2,7 @@
 // 颜色可自定义，支持弹性动画和视差效果
 // 适用于：词书分类标签、设置页标签、任何 Tab 切换场景
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 class MorphingTab {
@@ -9,11 +10,7 @@ class MorphingTab {
   final IconData? icon;
   final Widget? child;
 
-  const MorphingTab({
-    required this.label,
-    this.icon,
-    this.child,
-  });
+  const MorphingTab({required this.label, this.icon, this.child});
 }
 
 class MorphingTabs extends StatefulWidget {
@@ -52,8 +49,7 @@ class MorphingTabs extends StatefulWidget {
   State<MorphingTabs> createState() => _MorphingTabsState();
 }
 
-class _MorphingTabsState extends State<MorphingTabs>
-    with TickerProviderStateMixin {
+class _MorphingTabsState extends State<MorphingTabs> with TickerProviderStateMixin {
   late int _currentIndex;
   late AnimationController _morphController;
   late AnimationController _bounceController;
@@ -73,19 +69,10 @@ class _MorphingTabsState extends State<MorphingTabs>
     _tabKeys.addAll(List.generate(widget.tabs.length, (_) => GlobalKey()));
     _tabPositions.addAll(List.generate(widget.tabs.length, (_) => Offset.zero));
 
-    _morphController = AnimationController(
-      vsync: this,
-      duration: widget.animationDuration,
-    );
-    _bounceController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
+    _morphController = AnimationController(vsync: this, duration: widget.animationDuration);
+    _bounceController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
 
-    _morphAnim = CurvedAnimation(
-      parent: _morphController,
-      curve: Curves.easeInOutCubic,
-    );
+    _morphAnim = CurvedAnimation(parent: _morphController, curve: Curves.easeInOutCubic);
     _bounceAnim = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.12), weight: 40),
       TweenSequenceItem(tween: Tween(begin: 1.12, end: 0.95), weight: 30),
@@ -148,10 +135,7 @@ class _MorphingTabsState extends State<MorphingTabs>
 
         return Container(
           height: widget.height,
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-          ),
+          decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(widget.borderRadius)),
           padding: widget.padding,
           child: Stack(
             children: [
@@ -160,10 +144,7 @@ class _MorphingTabsState extends State<MorphingTabs>
                 AnimatedBuilder(
                   animation: Listenable.merge([_morphAnim, _bounceAnim]),
                   builder: (context, _) {
-                    return _buildMorphIndicator(
-                      indicatorColor,
-                      constraints.maxWidth,
-                    );
+                    return _buildMorphIndicator(indicatorColor, constraints.maxWidth);
                   },
                 ),
               // Tab 项
@@ -202,12 +183,7 @@ class _MorphingTabsState extends State<MorphingTabs>
                                 ),
                                 const SizedBox(width: 4),
                               ],
-                              Flexible(
-                                child: Text(
-                                  tab.label,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
+                              Flexible(child: Text(tab.label, overflow: TextOverflow.ellipsis)),
                             ],
                           ),
                         ),
@@ -249,13 +225,7 @@ class _MorphingTabsState extends State<MorphingTabs>
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(widget.borderRadius - widget.padding.top),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))],
           ),
         ),
       ),
@@ -299,8 +269,7 @@ class SimpleMorphingTabs extends StatefulWidget {
   State<SimpleMorphingTabs> createState() => _SimpleMorphingTabsState();
 }
 
-class _SimpleMorphingTabsState extends State<SimpleMorphingTabs>
-    with TickerProviderStateMixin {
+class _SimpleMorphingTabsState extends State<SimpleMorphingTabs> with TickerProviderStateMixin {
   late int _currentIndex;
   late AnimationController _controller;
   late AnimationController _bounceCtrl;
@@ -313,14 +282,8 @@ class _SimpleMorphingTabsState extends State<SimpleMorphingTabs>
     super.initState();
     _currentIndex = widget.initialIndex;
 
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 450),
-    );
-    _bounceCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 450));
+    _bounceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
 
     _slideAnim = CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic);
     _morphAnim = TweenSequence<double>([
@@ -328,9 +291,10 @@ class _SimpleMorphingTabsState extends State<SimpleMorphingTabs>
       TweenSequenceItem(tween: Tween(begin: 1.25, end: 0.92), weight: 35),
       TweenSequenceItem(tween: Tween(begin: 0.92, end: 1.0), weight: 30),
     ]).animate(_controller);
-    _bounceAnim = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeOut),
-    );
+    _bounceAnim = Tween<double>(
+      begin: 1.0,
+      end: 1.08,
+    ).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeOut));
   }
 
   @override
@@ -363,10 +327,7 @@ class _SimpleMorphingTabsState extends State<SimpleMorphingTabs>
 
         return Container(
           height: widget.height,
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-          ),
+          decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(widget.borderRadius)),
           padding: widget.padding,
           child: Stack(
             children: [
@@ -471,12 +432,7 @@ class MorphingTabIndicator extends StatelessWidget {
             decoration: BoxDecoration(
               color: color,
               borderRadius: BorderRadius.circular(borderRadius),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.4),
-                  blurRadius: 6,
-                ),
-              ],
+              boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 6)],
             ),
           ),
         );

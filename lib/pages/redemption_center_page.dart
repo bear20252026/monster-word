@@ -70,9 +70,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
 
   void _redeem(_RedeemItem item) {
     if (_coins < item.cost) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('尖叫币不足，快去签到赚取吧！')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('尖叫币不足，快去签到赚取吧！')));
       return;
     }
     showDialog(
@@ -80,8 +78,10 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       builder: (ctx) => AlertDialog(
         backgroundColor: SkinProvider.of(context).colors.cardBg,
         title: Text('确认兑换', style: TextStyle(color: SkinProvider.of(context).colors.text1)),
-        content: Text('确定花费 ${item.cost} 兑换「${item.title}」吗？',
-            style: TextStyle(color: SkinProvider.of(context).colors.text2)),
+        content: Text(
+          '确定花费 ${item.cost} 兑换「${item.title}」吗？',
+          style: TextStyle(color: SkinProvider.of(context).colors.text2),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -95,9 +95,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
             onPressed: () {
               Navigator.pop(ctx);
               setState(() => _coins -= item.cost);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('兑换成功！${item.title} 已到账')),
-              );
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！${item.title} 已到账')));
             },
             child: const Text('确认兑换'),
           ),
@@ -123,8 +121,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
             icon: Icon(Icons.arrow_back, color: colors.text1),
             onPressed: () => Navigator.pop(context),
           ),
-          title: Text('兑换中心',
-              style: MistralTypography.heading5.copyWith(color: colors.text1)),
+          title: Text('兑换中心', style: MistralTypography.heading5.copyWith(color: colors.text1)),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1),
             child: Container(height: 1, color: colors.divider),
@@ -168,13 +165,9 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('我的尖叫币',
-                  style: MistralTypography.bodySm
-                      .copyWith(color: colors.onGlassAccent.withOpacity(0.8))),
+              Text('我的尖叫币', style: MistralTypography.bodySm.copyWith(color: colors.onGlassAccent.withOpacity(0.8))),
               const SizedBox(height: 4),
-              Text('$_coins',
-                  style: MistralTypography.heading3
-                      .copyWith(color: colors.onGlassAccent)),
+              Text('$_coins', style: MistralTypography.heading3.copyWith(color: colors.onGlassAccent)),
             ],
           ),
         ],
@@ -203,26 +196,21 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
           ),
           child: Icon(item.icon, color: Color(item.color)),
         ),
-        title: Text(item.title,
-            style: MistralTypography.bodyBold.copyWith(color: colors.text1)),
+        title: Text(item.title, style: MistralTypography.bodyBold.copyWith(color: colors.text1)),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text(item.description,
-              style: MistralTypography.caption.copyWith(color: colors.text2)),
+          child: Text(item.description, style: MistralTypography.caption.copyWith(color: colors.text2)),
         ),
         trailing: ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: canAfford ? colors.accent : colors.text3,
             foregroundColor: colors.onGlassAccent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppleRadius.pill),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppleRadius.pill)),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             elevation: 0,
           ),
           onPressed: () => _redeem(item),
-          child: Text('${item.cost}币',
-              style: MistralTypography.micro.copyWith(color: colors.onGlassAccent)),
+          child: Text('${item.cost}币', style: MistralTypography.micro.copyWith(color: colors.onGlassAccent)),
         ),
       ),
     );

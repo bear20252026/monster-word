@@ -30,27 +30,27 @@ class LexisDaily {
   });
 
   factory LexisDaily.fromJson(Map<String, dynamic> json) => LexisDaily(
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        userId: (json['user'] as num?)?.toInt() ?? 0,
-        date: json['ld'] ?? '',
-        learnDuration: (json['ldu'] as num?)?.toInt() ?? 0,
-        reviewDuration: (json['rdu'] as num?)?.toInt() ?? 0,
-        appDuration: (json['adu'] as num?)?.toInt() ?? 0,
-        listenDuration: (json['idu'] as num?)?.toInt() ?? 0,
-        beginTime: json['bt'] ?? '',
-        endTime: json['et'] ?? '',
-      );
+    id: (json['id'] as num?)?.toInt() ?? 0,
+    userId: (json['user'] as num?)?.toInt() ?? 0,
+    date: json['ld'] ?? '',
+    learnDuration: (json['ldu'] as num?)?.toInt() ?? 0,
+    reviewDuration: (json['rdu'] as num?)?.toInt() ?? 0,
+    appDuration: (json['adu'] as num?)?.toInt() ?? 0,
+    listenDuration: (json['idu'] as num?)?.toInt() ?? 0,
+    beginTime: json['bt'] ?? '',
+    endTime: json['et'] ?? '',
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': userId,
-        'bt': beginTime,
-        'et': endTime,
-        'ld': date,
-        'adu': appDuration,
-        'ldu': learnDuration,
-        'rdu': reviewDuration,
-        'idu': listenDuration,
-      };
+    'id': userId,
+    'bt': beginTime,
+    'et': endTime,
+    'ld': date,
+    'adu': appDuration,
+    'ldu': learnDuration,
+    'rdu': reviewDuration,
+    'idu': listenDuration,
+  };
 
   /// 重置为今日初始状态
   void reset() {
@@ -87,15 +87,10 @@ class LearnDurationData {
   int get todayLearnDuration => today?.duration ?? 0;
   int get totalLearnDuration => total?.duration ?? 0;
 
-  factory LearnDurationData.fromJson(Map<String, dynamic> json) =>
-      LearnDurationData(
-        today: json['today'] != null
-            ? _LDStruct.fromJson(json['today'] as Map<String, dynamic>)
-            : null,
-        total: json['total'] != null
-            ? _LDStruct.fromJson(json['total'] as Map<String, dynamic>)
-            : null,
-      );
+  factory LearnDurationData.fromJson(Map<String, dynamic> json) => LearnDurationData(
+    today: json['today'] != null ? _LDStruct.fromJson(json['today'] as Map<String, dynamic>) : null,
+    total: json['total'] != null ? _LDStruct.fromJson(json['total'] as Map<String, dynamic>) : null,
+  );
 }
 
 class _LDStruct {
@@ -104,10 +99,8 @@ class _LDStruct {
 
   _LDStruct({this.duration = 0, this.amount = 0});
 
-  factory _LDStruct.fromJson(Map<String, dynamic> json) => _LDStruct(
-        duration: (json['duration'] as num?)?.toInt() ?? 0,
-        amount: (json['amount'] as num?)?.toInt() ?? 0,
-      );
+  factory _LDStruct.fromJson(Map<String, dynamic> json) =>
+      _LDStruct(duration: (json['duration'] as num?)?.toInt() ?? 0, amount: (json['amount'] as num?)?.toInt() ?? 0);
 }
 
 /// 学习签到数据（翻译自 StudySignData.java）
@@ -116,20 +109,16 @@ class StudySignData {
   final int study;
   final int timestamp;
 
-  StudySignData({
-    this.signIn = 0,
-    this.study = 0,
-    this.timestamp = 0,
-  });
+  StudySignData({this.signIn = 0, this.study = 0, this.timestamp = 0});
 
   bool get isStudy => study == 1;
   bool get isSignIn => signIn == 1;
 
   factory StudySignData.fromJson(Map<String, dynamic> json) => StudySignData(
-        signIn: (json['sign_in'] as num?)?.toInt() ?? 0,
-        study: (json['study'] as num?)?.toInt() ?? 0,
-        timestamp: (json['timestamp'] as num?)?.toInt() ?? 0,
-      );
+    signIn: (json['sign_in'] as num?)?.toInt() ?? 0,
+    study: (json['study'] as num?)?.toInt() ?? 0,
+    timestamp: (json['timestamp'] as num?)?.toInt() ?? 0,
+  );
 }
 
 /// 签到日期信息（翻译自 SignDayInfo.java）
@@ -162,9 +151,7 @@ class SignDayInfo {
 
   /// 用 StudySignData 更新状态
   bool updateData(StudySignData? data) {
-    if (data == null ||
-        data.timestamp < timeStamp ||
-        data.timestamp >= timeStamp + _millisOfDay) {
+    if (data == null || data.timestamp < timeStamp || data.timestamp >= timeStamp + _millisOfDay) {
       return false;
     }
     if (data.isSignIn) signed = true;
@@ -183,12 +170,9 @@ class SignDayInfo {
     final result = <SignDayInfo>[];
     for (int i = 0; i < 7; i++) {
       final d = monday.add(Duration(days: i));
-      result.add(SignDayInfo(
-        weekDay: i,
-        monthDay: d.day,
-        timeStamp: d.millisecondsSinceEpoch,
-        isToday: weekDayOffset == i,
-      ));
+      result.add(
+        SignDayInfo(weekDay: i, monthDay: d.day, timeStamp: d.millisecondsSinceEpoch, isToday: weekDayOffset == i),
+      );
     }
     return result;
   }
@@ -212,24 +196,23 @@ class SentencePlayLog {
     this.playtime = 0,
   });
 
-  factory SentencePlayLog.fromJson(Map<String, dynamic> json) =>
-      SentencePlayLog(
-        sentenceId: json['sentenceId'] ?? '',
-        episodeId: json['episodeId'] ?? '',
-        wordId: (json['wordId'] as num?)?.toInt() ?? 0,
-        bookId: (json['bookId'] as num?)?.toInt() ?? 0,
-        wordStatus: (json['wordStatus'] as num?)?.toInt() ?? 0,
-        playtime: (json['playtime'] as num?)?.toInt() ?? 0,
-      );
+  factory SentencePlayLog.fromJson(Map<String, dynamic> json) => SentencePlayLog(
+    sentenceId: json['sentenceId'] ?? '',
+    episodeId: json['episodeId'] ?? '',
+    wordId: (json['wordId'] as num?)?.toInt() ?? 0,
+    bookId: (json['bookId'] as num?)?.toInt() ?? 0,
+    wordStatus: (json['wordStatus'] as num?)?.toInt() ?? 0,
+    playtime: (json['playtime'] as num?)?.toInt() ?? 0,
+  );
 
   Map<String, dynamic> toJson() => {
-        'sentenceId': sentenceId,
-        'episodeId': episodeId,
-        'wordId': wordId,
-        'bookId': bookId,
-        'wordStatus': wordStatus,
-        'playtime': playtime,
-      };
+    'sentenceId': sentenceId,
+    'episodeId': episodeId,
+    'wordId': wordId,
+    'bookId': bookId,
+    'wordStatus': wordStatus,
+    'playtime': playtime,
+  };
 }
 
 /// 列表最后位置信息（翻译自 ListLastPosInfo.java）
@@ -239,30 +222,22 @@ class ListLastPosInfo {
   String dataTime;
   List<String> alreadyListenView;
 
-  ListLastPosInfo({
-    this.word = '',
-    this.listPos = 0,
-    this.dataTime = '',
-    List<String>? alreadyListenView,
-  }) : alreadyListenView = alreadyListenView ?? [];
+  ListLastPosInfo({this.word = '', this.listPos = 0, this.dataTime = '', List<String>? alreadyListenView})
+    : alreadyListenView = alreadyListenView ?? [];
 
-  factory ListLastPosInfo.fromJson(Map<String, dynamic> json) =>
-      ListLastPosInfo(
-        word: json['word'] ?? '',
-        listPos: (json['listPos'] as num?)?.toInt() ?? 0,
-        dataTime: json['dataTime'] ?? '',
-        alreadyListenView: (json['alreadyListenView'] as List?)
-                ?.map((e) => e.toString())
-                .toList() ??
-            [],
-      );
+  factory ListLastPosInfo.fromJson(Map<String, dynamic> json) => ListLastPosInfo(
+    word: json['word'] ?? '',
+    listPos: (json['listPos'] as num?)?.toInt() ?? 0,
+    dataTime: json['dataTime'] ?? '',
+    alreadyListenView: (json['alreadyListenView'] as List?)?.map((e) => e.toString()).toList() ?? [],
+  );
 
   Map<String, dynamic> toJson() => {
-        'word': word,
-        'listPos': listPos,
-        'dataTime': dataTime,
-        'alreadyListenView': alreadyListenView,
-      };
+    'word': word,
+    'listPos': listPos,
+    'dataTime': dataTime,
+    'alreadyListenView': alreadyListenView,
+  };
 }
 
 /// 可序列化 Map（翻译自 SerializableMap.java）
@@ -282,9 +257,7 @@ class SerializableMap {
     return SerializableMap(m);
   }
 
-  Map<String, dynamic> toJson() => {
-        'map': map.map((k, v) => MapEntry('$k', v)),
-      };
+  Map<String, dynamic> toJson() => {'map': map.map((k, v) => MapEntry('$k', v))};
 }
 
 /// 例句集合数据（翻译自 SentenceSetData.java，基类占位）

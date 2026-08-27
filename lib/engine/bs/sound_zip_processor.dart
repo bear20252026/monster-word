@@ -84,22 +84,18 @@ class SoundZipProcessor {
         final response = await request.close();
 
         if (response.statusCode == 200 || response.statusCode == 206) {
-          final totalSize =
-              response.contentLength + cacheSize;
+          final totalSize = response.contentLength + cacheSize;
           var downloaded = cacheSize;
 
           // 写入文件（追加模式）
-          final sink = tmpFile.openWrite(
-            mode: cacheSize > 0 ? FileMode.append : FileMode.write,
-          );
+          final sink = tmpFile.openWrite(mode: cacheSize > 0 ? FileMode.append : FileMode.write);
 
           await for (final chunk in response) {
             sink.add(chunk);
             downloaded += chunk.length;
 
             if (totalSize > 0) {
-              final progress =
-                  ((downloaded * 100.0) / totalSize).round();
+              final progress = ((downloaded * 100.0) / totalSize).round();
               _notifyProgress(progress);
             }
           }
@@ -119,8 +115,7 @@ class SoundZipProcessor {
           await tmpFile.rename(zipFile.path);
 
           // 解压
-          final extractPath =
-              zipFile.path.substring(0, zipFile.path.lastIndexOf('.zip'));
+          final extractPath = zipFile.path.substring(0, zipFile.path.lastIndexOf('.zip'));
           final success = await _unzipFile(zipFile.path, extractPath);
 
           if (success) {

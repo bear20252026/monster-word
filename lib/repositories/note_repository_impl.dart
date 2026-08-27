@@ -2,6 +2,7 @@
 // NoteRepositoryImpl — 笔记数据仓库实现（使用 SharedPreferences）
 
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/word_note.dart';
@@ -20,9 +21,7 @@ class NoteRepositoryImpl implements NoteRepository {
     if (jsonStr == null || jsonStr.isEmpty) return [];
     try {
       final list = jsonDecode(jsonStr) as List;
-      return list
-          .map((e) => WordNote.fromMap(e as Map<String, dynamic>))
-          .toList();
+      return list.map((e) => WordNote.fromMap(e as Map<String, dynamic>)).toList();
     } catch (_) {
       return [];
     }

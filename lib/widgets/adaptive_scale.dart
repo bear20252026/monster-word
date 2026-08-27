@@ -12,12 +12,7 @@ class AdaptiveScale extends StatelessWidget {
   final double minWidth;
   final double minHeight;
 
-  const AdaptiveScale({
-    super.key,
-    required this.child,
-    this.minWidth = 360,
-    this.minHeight = 640,
-  });
+  const AdaptiveScale({super.key, required this.child, this.minWidth = 360, this.minHeight = 640});
 
   @override
   Widget build(BuildContext context) {
@@ -35,11 +30,7 @@ class AdaptiveScale extends StatelessWidget {
         return FittedBox(
           fit: BoxFit.contain,
           alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: minWidth,
-            height: minHeight,
-            child: child,
-          ),
+          child: SizedBox(width: minWidth, height: minHeight, child: child),
         );
       },
     );

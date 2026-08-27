@@ -40,7 +40,7 @@ class LeitnerCardEngine extends BBCoreEngine {
   }
 
   LeitnerCardEngine({super.eventLabel = 'learn', LearnStrategy? strategy})
-      : strategy = strategy ?? const LearnStrategy();
+    : strategy = strategy ?? const LearnStrategy();
 
   /// 初始化：填充等级列表（原版 fillTheArray）+ 随机打乱
   void init(List<BBWordProcess> allWords) {
@@ -127,9 +127,7 @@ class LeitnerCardEngine extends BBCoreEngine {
     final seen = <String>{current.word};
     final distractorPool = <WordChoicePair>[];
     for (final w in [..._currentGroup, ..._finishedLearned]) {
-      if (w.interpret.isNotEmpty &&
-          !seen.contains(w.word) &&
-          w.word != current.word) {
+      if (w.interpret.isNotEmpty && !seen.contains(w.word) && w.word != current.word) {
         seen.add(w.word);
         distractorPool.add(WordChoicePair(w.word, w.interpret));
       }
@@ -141,10 +139,7 @@ class LeitnerCardEngine extends BBCoreEngine {
 
     // 如果干扰项不足3个，用通用释义填充
     while (distractors.length < 3) {
-      distractors.add(WordChoicePair(
-        'option_${distractors.length}',
-        '释义 ${distractors.length + 1}',
-      ));
+      distractors.add(WordChoicePair('option_${distractors.length}', '释义 ${distractors.length + 1}'));
     }
 
     // 组合4个选项并随机打乱顺序

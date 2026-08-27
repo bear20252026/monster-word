@@ -49,8 +49,7 @@ class NoteDatabase {
             updated_at TEXT NOT NULL
           )
         ''');
-        await db.execute(
-            'CREATE INDEX idx_word_notes_word_id ON word_notes(word_id)');
+        await db.execute('CREATE INDEX idx_word_notes_word_id ON word_notes(word_id)');
       },
     );
     _initialized = true;
@@ -58,21 +57,13 @@ class NoteDatabase {
 
   /// 获取单词的所有笔记
   Future<List<WordNote>> getNotesByWordId(int wordId) async {
-    final rows = await db.query(
-      'word_notes',
-      where: 'word_id = ?',
-      whereArgs: [wordId],
-      orderBy: 'updated_at DESC',
-    );
+    final rows = await db.query('word_notes', where: 'word_id = ?', whereArgs: [wordId], orderBy: 'updated_at DESC');
     return rows.map(WordNote.fromMap).toList();
   }
 
   /// 获取单词笔记数量
   Future<int> getNoteCount(int wordId) async {
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as cnt FROM word_notes WHERE word_id = ?',
-      [wordId],
-    );
+    final result = await db.rawQuery('SELECT COUNT(*) as cnt FROM word_notes WHERE word_id = ?', [wordId]);
     return (result.first['cnt'] as int?) ?? 0;
   }
 
@@ -84,31 +75,17 @@ class NoteDatabase {
 
   /// 更新笔记
   Future<void> updateNote(WordNote note) async {
-    await db.update(
-      'word_notes',
-      note.toMap(),
-      where: 'id = ?',
-      whereArgs: [note.id],
-    );
+    await db.update('word_notes', note.toMap(), where: 'id = ?', whereArgs: [note.id]);
   }
 
   /// 删除笔记
   Future<void> deleteNote(int noteId) async {
-    await db.delete(
-      'word_notes',
-      where: 'id = ?',
-      whereArgs: [noteId],
-    );
+    await db.delete('word_notes', where: 'id = ?', whereArgs: [noteId]);
   }
 
   /// 获取所有笔记（按更新时间倒序）
   Future<List<WordNote>> getAllNotes({int limit = 100, int offset = 0}) async {
-    final rows = await db.query(
-      'word_notes',
-      orderBy: 'updated_at DESC',
-      limit: limit,
-      offset: offset,
-    );
+    final rows = await db.query('word_notes', orderBy: 'updated_at DESC', limit: limit, offset: offset);
     return rows.map(WordNote.fromMap).toList();
   }
 

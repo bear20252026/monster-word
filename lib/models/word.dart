@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'definition.dart';
 
 /// 单词数据模型
@@ -35,34 +36,34 @@ class Word {
   });
 
   factory Word.fromMap(Map<String, dynamic> map) => Word(
-        id: (map['id'] as num?)?.toInt() ?? 0,
-        word: (map['word'] as String?) ?? '',
-        mainWord: (map['main_word'] as String?) ?? '',
-        interpret: (map['interpret'] as String?) ?? '',
-        ukPron: (map['uk_pron'] as String?) ?? '',
-        usPron: (map['us_pron'] as String?) ?? '',
-        phrase: (map['phrase'] as String?) ?? '',
-        example: (map['example'] as String?) ?? '',
-        confuse: (map['confuse'] as String?) ?? '',
-        audioUrls: (map['audio_urls'] as String?) ?? '',
-        imageUrls: (map['image_urls'] as String?) ?? '',
-        wordRoot: (map['word_root'] as String?) ?? '',
-      );
+    id: (map['id'] as num?)?.toInt() ?? 0,
+    word: (map['word'] as String?) ?? '',
+    mainWord: (map['main_word'] as String?) ?? '',
+    interpret: (map['interpret'] as String?) ?? '',
+    ukPron: (map['uk_pron'] as String?) ?? '',
+    usPron: (map['us_pron'] as String?) ?? '',
+    phrase: (map['phrase'] as String?) ?? '',
+    example: (map['example'] as String?) ?? '',
+    confuse: (map['confuse'] as String?) ?? '',
+    audioUrls: (map['audio_urls'] as String?) ?? '',
+    imageUrls: (map['image_urls'] as String?) ?? '',
+    wordRoot: (map['word_root'] as String?) ?? '',
+  );
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'word': word,
-        'main_word': mainWord,
-        'interpret': interpret,
-        'uk_pron': ukPron,
-        'us_pron': usPron,
-        'phrase': phrase,
-        'example': example,
-        'confuse': confuse,
-        'audio_urls': audioUrls,
-        'image_urls': imageUrls,
-        'word_root': wordRoot,
-      };
+    'id': id,
+    'word': word,
+    'main_word': mainWord,
+    'interpret': interpret,
+    'uk_pron': ukPron,
+    'us_pron': usPron,
+    'phrase': phrase,
+    'example': example,
+    'confuse': confuse,
+    'audio_urls': audioUrls,
+    'image_urls': imageUrls,
+    'word_root': wordRoot,
+  };
 
   /// 清理 HTML 标签和格式代码（如 `<font color=...>`、`<b>` 等）
   static String cleanHtml(String text) {
@@ -114,8 +115,7 @@ class Word {
   }
 
   /// 解释按行拆分（每个词性一行，已清理 HTML）
-  List<String> get interpretLines =>
-      cleanInterpret.split('\n').where((l) => l.trim().isNotEmpty).toList();
+  List<String> get interpretLines => cleanInterpret.split('\n').where((l) => l.trim().isNotEmpty).toList();
 
   /// 第一行释义（用于列表显示，优先结构化释义）
   String get firstInterpretLine {
@@ -150,11 +150,7 @@ class Word {
               // ✅ 修复：优先获取 en/cn 字段，忽略 id 引用
               final enDef = (d['en'] ?? d['endef'] ?? '') as String;
               final cnDef = (d['cn'] ?? d['cndef'] ?? '') as String;
-              result.add(Definition(
-                partOfSpeech: cleanHtml(pos),
-                enDef: cleanHtml(enDef),
-                cnDef: cleanHtml(cnDef),
-              ));
+              result.add(Definition(partOfSpeech: cleanHtml(pos), enDef: cleanHtml(enDef), cnDef: cleanHtml(cnDef)));
             }
           }
         }
@@ -200,4 +196,3 @@ class Word {
     return (const JsonDecoder()).convert(source);
   }
 }
-

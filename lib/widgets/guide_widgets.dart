@@ -5,6 +5,7 @@
 // 文件：GuideView2, LabGuideView
 
 import 'package:flutter/material.dart';
+
 import 'animations.dart';
 import '../tokens/design_tokens.dart';
 
@@ -40,8 +41,7 @@ class GuideTooltip extends StatefulWidget {
   State<GuideTooltip> createState() => _GuideTooltipState();
 }
 
-class _GuideTooltipState extends State<GuideTooltip>
-    with SingleTickerProviderStateMixin {
+class _GuideTooltipState extends State<GuideTooltip> with SingleTickerProviderStateMixin {
   bool _visible = false;
   late AnimationController _controller;
   late Animation<double> _fadeAnim;
@@ -50,16 +50,12 @@ class _GuideTooltipState extends State<GuideTooltip>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: standardCurve),
-    );
-    _scaleAnim = Tween<double>(begin: 0.7, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _fadeAnim = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _controller, curve: standardCurve));
+    _scaleAnim = Tween<double>(
+      begin: 0.7,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
   }
 
   @override
@@ -97,21 +93,13 @@ class _GuideTooltipState extends State<GuideTooltip>
       opacity: _fadeAnim,
       child: ScaleTransition(
         scale: _scaleAnim,
-        alignment: widget.arrowOnTop
-            ? Alignment.bottomCenter
-            : Alignment.topCenter,
+        alignment: widget.arrowOnTop ? Alignment.bottomCenter : Alignment.topCenter,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: widget.theme == 1 ? MistralColors.ink : widget.bgColor,
             borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: MistralColors.black15,
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow: [BoxShadow(color: MistralColors.black15, blurRadius: 10, offset: const Offset(0, 4))],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -123,10 +111,7 @@ class _GuideTooltipState extends State<GuideTooltip>
               Flexible(
                 child: Text(
                   widget.message,
-                  style: TextStyle(
-                    color: widget.theme == 1 ? AppColors.white100 : widget.textColor,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: widget.theme == 1 ? AppColors.white100 : widget.textColor, fontSize: 14),
                 ),
               ),
             ],
@@ -164,34 +149,16 @@ class LabGuideBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = theme == 1;
     return CustomPaint(
-      painter: _BubbleArrowPainter(
-        arrowOnTop: arrowOnTop,
-        color: isDark ? MistralColors.ink : bgColor,
-      ),
+      painter: _BubbleArrowPainter(arrowOnTop: arrowOnTop, color: isDark ? MistralColors.ink : bgColor),
       child: Container(
-        margin: EdgeInsets.only(
-          top: arrowOnTop ? 8 : 0,
-          bottom: arrowOnTop ? 0 : 8,
-        ),
+        margin: EdgeInsets.only(top: arrowOnTop ? 8 : 0, bottom: arrowOnTop ? 0 : 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isDark ? MistralColors.ink : bgColor,
-          borderRadius: BorderRadius.circular(10),
-        ),
+        decoration: BoxDecoration(color: isDark ? MistralColors.ink : bgColor, borderRadius: BorderRadius.circular(10)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (emoji != null) ...[
-              Icon(emoji, size: 20, color: textColor),
-              const SizedBox(width: 4),
-            ],
-            Text(
-              message,
-              style: TextStyle(
-                color: isDark ? AppColors.white100 : textColor,
-                fontSize: 14,
-              ),
-            ),
+            if (emoji != null) ...[Icon(emoji, size: 20, color: textColor), const SizedBox(width: 4)],
+            Text(message, style: TextStyle(color: isDark ? AppColors.white100 : textColor, fontSize: 14)),
           ],
         ),
       ),

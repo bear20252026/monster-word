@@ -27,11 +27,7 @@ void main() {
     });
 
     test('第三方音频 URL 应包含有效的音频域名', () {
-      final validDomains = [
-        'dict.youdao.com',
-        'audio.example.com',
-        'media.voicetube.com',
-      ];
+      final validDomains = ['dict.youdao.com', 'audio.example.com', 'media.voicetube.com'];
 
       for (final domain in validDomains) {
         final url = 'https://$domain/audio/test.mp3';

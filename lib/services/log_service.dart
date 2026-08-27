@@ -67,20 +67,10 @@ class LogEntry {
   final int logtime; // 毫秒时间戳
   final String logContent;
 
-  LogEntry({
-    this.id,
-    required this.level,
-    required this.logtime,
-    required this.logContent,
-  });
+  LogEntry({this.id, required this.level, required this.logtime, required this.logContent});
 
   Map<String, dynamic> toMap() {
-    return {
-      if (id != null) 'id': id,
-      'logtime': logtime,
-      'level': level,
-      'logcontent': logContent,
-    };
+    return {if (id != null) 'id': id, 'logtime': logtime, 'level': level, 'logcontent': logContent};
   }
 
   factory LogEntry.fromMap(Map<String, dynamic> map) {
@@ -186,19 +176,14 @@ class LogDatabase {
     if (ids.isEmpty) return;
     final db = await database;
     final placeholders = ids.map((_) => '?').join(',');
-    await db.rawDelete(
-      'DELETE FROM $_table WHERE id IN ($placeholders)',
-      ids,
-    );
+    await db.rawDelete('DELETE FROM $_table WHERE id IN ($placeholders)', ids);
   }
 
   /// 获取待上传的日志数据（最多 200 条，按时间排序）
   /// 返回：日志 JSON 字符串 + 对应 ID 列表
   Future<(String? json, List<int> ids)> getUploadData() async {
     final db = await database;
-    final rows = await db.rawQuery(
-      'SELECT id, logtime, level, logcontent FROM $_table ORDER BY logtime ASC LIMIT 200',
-    );
+    final rows = await db.rawQuery('SELECT id, logtime, level, logcontent FROM $_table ORDER BY logtime ASC LIMIT 200');
 
     final ids = <int>[];
     final jsonArray = <Map<String, dynamic>>[];
@@ -296,20 +281,12 @@ class LogTracker {
 
   LogEntry _buildLogEntry(String event, {int level = 0, String? page, Map<String, Object>? params}) {
     final now = DateTime.now().millisecondsSinceEpoch;
-    final map = <String, dynamic>{
-      'event': event,
-      'logtime': now,
-      'level': level,
-    };
+    final map = <String, dynamic>{'event': event, 'logtime': now, 'level': level};
     if (page != null) map['page'] = page;
     map.addAll(_superProperties);
     if (params != null) map.addAll(params);
 
-    return LogEntry(
-      level: level,
-      logtime: now,
-      logContent: jsonEncode(map),
-    );
+    return LogEntry(level: level, logtime: now, logContent: jsonEncode(map));
   }
 
   // ------ 持久化 super properties ------
@@ -435,24 +412,15 @@ class PageTracker extends NavigatorObserver {
   void _onPageEnter(String? pageName) {
     _startTime = DateTime.now();
     _currentPage = pageName;
-    LogTracker.instance.track(
-      _pageTrackEvent,
-      page: pageName,
-      params: {'action': 'enter'},
-    );
+    LogTracker.instance.track(_pageTrackEvent, page: pageName, params: {'action': 'enter'});
   }
 
   void _onPageExit(String? pageName) {
-    final duration = _startTime != null
-        ? DateTime.now().difference(_startTime!).inMilliseconds
-        : 0;
+    final duration = _startTime != null ? DateTime.now().difference(_startTime!).inMilliseconds : 0;
     LogTracker.instance.track(
       _pageTrackEvent,
       page: pageName ?? _currentPage,
-      params: {
-        'action': 'exit',
-        'duration_ms': duration,
-      },
+      params: {'action': 'exit', 'duration_ms': duration},
     );
   }
 }

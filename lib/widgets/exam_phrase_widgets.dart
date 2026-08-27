@@ -63,11 +63,7 @@ class ExamPhraseCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   '配套真题词组',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: skin.text1,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: skin.text1),
                 ),
                 const Spacer(),
                 // 添加按钮
@@ -75,19 +71,13 @@ class ExamPhraseCard extends StatelessWidget {
                   onTap: onAdd,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: skin.accent,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    decoration: BoxDecoration(color: skin.accent, borderRadius: BorderRadius.circular(16)),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.add, size: 16, color: Colors.white),
                         const SizedBox(width: 4),
-                        Text(
-                          '添加',
-                          style: TextStyle(fontSize: 13, color: Colors.white),
-                        ),
+                        Text('添加', style: TextStyle(fontSize: 13, color: Colors.white)),
                       ],
                     ),
                   ),
@@ -100,16 +90,10 @@ class ExamPhraseCard extends StatelessWidget {
           if (phraseGroups.isEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Text(
-                '暂无配套词组，点击"添加"获取真题词组',
-                style: TextStyle(fontSize: 13, color: skin.text3),
-              ),
+              child: Text('暂无配套词组，点击"添加"获取真题词组', style: TextStyle(fontSize: 13, color: skin.text3)),
             )
           else
-            ...phraseGroups.map((group) => _PhraseGroupTile(
-                  group: group,
-                  onTap: () => onTap?.call(group),
-                )),
+            ...phraseGroups.map((group) => _PhraseGroupTile(group: group, onTap: () => onTap?.call(group))),
         ],
       ),
     );
@@ -146,11 +130,7 @@ class _PhraseGroupTile extends StatelessWidget {
               ),
               child: Text(
                 group.examType,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: skin.accent,
-                ),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: skin.accent),
               ),
             ),
             const SizedBox(width: 10),
@@ -164,10 +144,7 @@ class _PhraseGroupTile extends StatelessWidget {
               ),
             ),
             // 词组数量
-            Text(
-              '${group.phraseCount}组',
-              style: TextStyle(fontSize: 12, color: skin.text3),
-            ),
+            Text('${group.phraseCount}组', style: TextStyle(fontSize: 12, color: skin.text3)),
             const SizedBox(width: 8),
             // 状态图标
             Icon(
@@ -188,12 +165,7 @@ class ExamPhraseSheet extends StatelessWidget {
   final List<ExamPhraseGroup> availableGroups;
   final ValueChanged<ExamPhraseGroup> onAdd;
 
-  const ExamPhraseSheet({
-    super.key,
-    required this.bookName,
-    required this.availableGroups,
-    required this.onAdd,
-  });
+  const ExamPhraseSheet({super.key, required this.bookName, required this.availableGroups, required this.onAdd});
 
   /// 显示弹窗
   static Future<void> show(
@@ -206,11 +178,7 @@ class ExamPhraseSheet extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => ExamPhraseSheet(
-        bookName: bookName,
-        availableGroups: availableGroups,
-        onAdd: onAdd,
-      ),
+      builder: (_) => ExamPhraseSheet(bookName: bookName, availableGroups: availableGroups, onAdd: onAdd),
     );
   }
 
@@ -231,11 +199,9 @@ class ExamPhraseSheet extends StatelessWidget {
           // 拖拽条
           Center(
             child: Container(
-              width: 36, height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
             ),
           ),
           const SizedBox(height: 16),
@@ -244,30 +210,26 @@ class ExamPhraseSheet extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: skin.text1),
           ),
           const SizedBox(height: 4),
-          Text(
-            '为"$bookName"添加配套的真题词组',
-            style: TextStyle(fontSize: 13, color: skin.text3),
-          ),
+          Text('为"$bookName"添加配套的真题词组', style: TextStyle(fontSize: 13, color: skin.text3)),
           const SizedBox(height: 16),
           // 可选词组列表
           if (availableGroups.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Center(
-                child: Text(
-                  '暂无可添加的真题词组',
-                  style: TextStyle(fontSize: 14, color: skin.text3),
-                ),
+                child: Text('暂无可添加的真题词组', style: TextStyle(fontSize: 14, color: skin.text3)),
               ),
             )
           else
-            ...availableGroups.map((group) => _AddableTile(
-                  group: group,
-                  onAdd: () {
-                    onAdd(group);
-                    Navigator.pop(context);
-                  },
-                )),
+            ...availableGroups.map(
+              (group) => _AddableTile(
+                group: group,
+                onAdd: () {
+                  onAdd(group);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
         ],
       ),
     );

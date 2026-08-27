@@ -44,10 +44,7 @@ class ClassActivityBanner extends StatelessWidget {
               child: Container(
                 width: 100,
                 height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.white100.withValues(alpha: 0.15),
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.white100.withValues(alpha: 0.15)),
               ),
             ),
             Positioned(
@@ -56,10 +53,7 @@ class ClassActivityBanner extends StatelessWidget {
               child: Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.white100.withValues(alpha: 0.2),
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.white100.withValues(alpha: 0.2)),
                 child: const Icon(Icons.wb_sunny, color: AppColors.white100, size: 24),
               ),
             ),
@@ -70,10 +64,7 @@ class ClassActivityBanner extends StatelessWidget {
               child: Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.white100.withValues(alpha: 0.2),
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.white100.withValues(alpha: 0.2)),
               ),
             ),
             Positioned(
@@ -82,10 +73,7 @@ class ClassActivityBanner extends StatelessWidget {
               child: Container(
                 width: 8,
                 height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.white100.withValues(alpha: 0.15),
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.white100.withValues(alpha: 0.15)),
               ),
             ),
             // 文字内容
@@ -104,33 +92,19 @@ class ClassActivityBanner extends StatelessWidget {
                     ),
                     child: Text(
                       '班级活动',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.white100,
-                      ),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.white100),
                     ),
                   ),
                   const SizedBox(height: 12),
                   // 大标题
                   const Text(
                     '全班一起学',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.white100,
-                      height: 1.2,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.white100, height: 1.2),
                   ),
                   const SizedBox(height: 4),
                   const Text(
                     '刷词不掉队',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.white100,
-                      height: 1.2,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.white100, height: 1.2),
                   ),
                 ],
               ),
@@ -144,10 +118,7 @@ class ClassActivityBanner extends StatelessWidget {
                   Container(
                     width: 56,
                     height: 56,
-                    decoration: BoxDecoration(
-                      color: AppColors.white100.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: BoxDecoration(color: AppColors.white100.withValues(alpha: 0.2), shape: BoxShape.circle),
                     child: const Icon(Icons.groups, color: AppColors.white100, size: 32),
                   ),
                   const SizedBox(height: 4),

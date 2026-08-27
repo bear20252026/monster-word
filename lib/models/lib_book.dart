@@ -51,29 +51,25 @@ class LibBook {
   /// 历史词书
   bool isHistoryLib() => lvl1TagId == 0 && lvl2TagIds.contains(tagHistory);
 
-  bool isOnlyHistoryLib() =>
-      lvl1TagId == 0 && lvl2TagIds.length == 1 && lvl2TagIds.contains(tagHistory);
+  bool isOnlyHistoryLib() => lvl1TagId == 0 && lvl2TagIds.length == 1 && lvl2TagIds.contains(tagHistory);
 
   static bool isUploadTag(int id) => id == tagUpload;
   static bool isHistoryTag(int id) => id == tagHistory;
   static bool isHasBuyedTag(int id) => id == tagBought;
 
   factory LibBook.fromJson(Map<String, dynamic> json) => LibBook(
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        code: json['code'] ?? '',
-        name: json['name'] ?? '',
-        count: (json['count'] as num?)?.toInt() ?? 0,
-        version: (json['version'] as num?)?.toInt() ?? 0,
-        url: json['url'] ?? '',
-        desc: json['desc'] ?? '',
-        cover: json['cover'] ?? '',
-        sortBy: json['sortBy'] ?? '',
-        forSale: (json['forSale'] as num?)?.toInt() ?? 0,
-        purchased: (json['purchased'] as num?)?.toInt() ?? 0,
-        lvl1TagId: (json['lvl1TagId'] as num?)?.toInt() ?? 0,
-        lvl2TagIds: (json['lvl2TagIds'] as List?)
-                ?.map((e) => (e as num).toInt())
-                .toList() ??
-            [],
-      );
+    id: (json['id'] as num?)?.toInt() ?? 0,
+    code: json['code'] ?? '',
+    name: json['name'] ?? '',
+    count: (json['count'] as num?)?.toInt() ?? 0,
+    version: (json['version'] as num?)?.toInt() ?? 0,
+    url: json['url'] ?? '',
+    desc: json['desc'] ?? '',
+    cover: json['cover'] ?? '',
+    sortBy: json['sortBy'] ?? '',
+    forSale: (json['forSale'] as num?)?.toInt() ?? 0,
+    purchased: (json['purchased'] as num?)?.toInt() ?? 0,
+    lvl1TagId: (json['lvl1TagId'] as num?)?.toInt() ?? 0,
+    lvl2TagIds: (json['lvl2TagIds'] as List?)?.map((e) => (e as num).toInt()).toList() ?? [],
+  );
 }

@@ -28,10 +28,10 @@ class BBWordBaseInfo {
     List<String>? confuse,
     List<String>? confuseExps,
     List<Interpret>? interpretList,
-  })  : spell = spell ?? [],
-        confuse = confuse ?? [],
-        confuseExps = confuseExps ?? [],
-        interpretList = interpretList ?? [];
+  }) : spell = spell ?? [],
+       confuse = confuse ?? [],
+       confuseExps = confuseExps ?? [],
+       interpretList = interpretList ?? [];
 
   /// 从 JSON 解析（zpk 词条）
   factory BBWordBaseInfo.fromJson(Map<String, dynamic> json) {
@@ -42,17 +42,12 @@ class BBWordBaseInfo {
       ukPron: json['uk_pron'] ?? '',
       example: json['example']?.toString() ?? '',
       spell: (json['spell'] as List?)?.map((e) => e.toString()).toList() ?? [],
-      confuse:
-          (json['confuse'] as List?)?.map((e) => e.toString()).toList() ?? [],
-      confuseExps:
-          (json['confuse_exps'] as List?)?.map((e) => e.toString()).toList() ??
-              [],
+      confuse: (json['confuse'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      confuseExps: (json['confuse_exps'] as List?)?.map((e) => e.toString()).toList() ?? [],
     );
     final v2 = json['interpret_v2'];
     if (v2 is List) {
-      info.interpretList = v2
-          .map((e) => Interpret.fromJson(e as Map<String, dynamic>))
-          .toList();
+      info.interpretList = v2.map((e) => Interpret.fromJson(e as Map<String, dynamic>)).toList();
     }
     return info;
   }
@@ -77,24 +72,21 @@ class LearnCardData {
     }
   }
 
-  Object? getObject(int i) =>
-      (i >= 0 && i < dataList.length) ? dataList[i] : null;
+  Object? getObject(int i) => (i >= 0 && i < dataList.length) ? dataList[i] : null;
 
   int get count => dataList.length;
 
   void clear() => dataList.clear();
 
   /// 第一个元素是否为词根词缀数据
-  bool hasRootSuffixData() =>
-      dataList.isNotEmpty && dataList.first is Map<String, dynamic>;
+  bool hasRootSuffixData() => dataList.isNotEmpty && dataList.first is Map<String, dynamic>;
 
   void removeWordRootData() {
     if (hasRootSuffixData()) dataList.removeAt(0);
   }
 
   /// 词根词缀起始位置
-  int get rootSuffixStartPos =>
-      dataList.indexWhere((e) => e is Map<String, dynamic>).clamp(0, dataList.length);
+  int get rootSuffixStartPos => dataList.indexWhere((e) => e is Map<String, dynamic>).clamp(0, dataList.length);
 
   /// 例句起始位置
   int get acceptionStartPos => 0;
@@ -111,8 +103,7 @@ class LearnResultData {
   List<String> wrongWords = []; // 错误单词
 
   int get total => studyCount + reviewCount;
-  double get successRate =>
-      (studyCount + reviewCount) == 0 ? 0 : successCount / (studyCount + reviewCount);
+  double get successRate => (studyCount + reviewCount) == 0 ? 0 : successCount / (studyCount + reviewCount);
 }
 
 /// 候选词（翻译自 CandidateWord.java，4 选 1 用）
@@ -121,9 +112,5 @@ class CandidateWord {
   final String interpret;
   final bool isAnswer;
 
-  CandidateWord({
-    required this.word,
-    required this.interpret,
-    this.isAnswer = false,
-  });
+  CandidateWord({required this.word, required this.interpret, this.isAnswer = false});
 }

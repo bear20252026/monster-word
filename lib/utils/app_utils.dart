@@ -148,9 +148,7 @@ class Tools {
 
   /// 高亮文本转换（翻译自 convertHighlightTextWithHighLightColor）
   static String convertHighlightText(String html, String highlightColor) {
-    return html
-        .replaceAll('<b>', '<font color=#$highlightColor>')
-        .replaceAll('</b>', '</font>');
+    return html.replaceAll('<b>', '<font color=#$highlightColor>').replaceAll('</b>', '</font>');
   }
 
   /// 是否是短语（包含空格）

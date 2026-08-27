@@ -5,6 +5,7 @@
 // 文件：MyCustomeDialog, MiddleToast, BottomInformationDialog
 
 import 'package:flutter/material.dart';
+
 import '../tokens/design_tokens.dart';
 import 'animations.dart';
 
@@ -39,11 +40,7 @@ class CustomBlurDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      child: child,
-    );
+    return Dialog(backgroundColor: Colors.transparent, elevation: 0, child: child);
   }
 }
 
@@ -64,11 +61,7 @@ class MiddleToast {
     }
     _isVisible = true;
     _entry = OverlayEntry(
-      builder: (_) => _MiddleToastWidget(
-        message: message,
-        icon: icon,
-        onDismiss: hide,
-      ),
+      builder: (_) => _MiddleToastWidget(message: message, icon: icon, onDismiss: hide),
     );
     Overlay.of(context).insert(_entry!);
     Future.delayed(duration, hide);
@@ -88,31 +81,24 @@ class _MiddleToastWidget extends StatefulWidget {
   final IconData? icon;
   final VoidCallback onDismiss;
 
-  const _MiddleToastWidget({
-    required this.message,
-    this.icon,
-    required this.onDismiss,
-  });
+  const _MiddleToastWidget({required this.message, this.icon, required this.onDismiss});
 
   @override
   State<_MiddleToastWidget> createState() => _MiddleToastWidgetState();
 }
 
-class _MiddleToastWidgetState extends State<_MiddleToastWidget>
-    with SingleTickerProviderStateMixin {
+class _MiddleToastWidgetState extends State<_MiddleToastWidget> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 225),
-    );
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: standardCurve),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 225));
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: standardCurve));
     _controller.forward();
   }
 
@@ -129,10 +115,7 @@ class _MiddleToastWidgetState extends State<_MiddleToastWidget>
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          decoration: BoxDecoration(
-            color: MistralColors.ink,
-            borderRadius: BorderRadius.circular(12),
-          ),
+          decoration: BoxDecoration(color: MistralColors.ink, borderRadius: BorderRadius.circular(12)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -159,29 +142,15 @@ class BottomInfoSheet extends StatelessWidget {
   final Widget child;
   final bool showHandle;
 
-  const BottomInfoSheet({
-    super.key,
-    this.title,
-    required this.child,
-    this.showHandle = true,
-  });
+  const BottomInfoSheet({super.key, this.title, required this.child, this.showHandle = true});
 
   /// 显示底部弹窗
-  static Future<T?> show<T>(
-    BuildContext context, {
-    String? title,
-    required Widget child,
-    bool showHandle = true,
-  }) {
+  static Future<T?> show<T>(BuildContext context, {String? title, required Widget child, bool showHandle = true}) {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => BottomInfoSheet(
-        title: title,
-        showHandle: showHandle,
-        child: child,
-      ),
+      builder: (_) => BottomInfoSheet(title: title, showHandle: showHandle, child: child),
     );
   }
 
@@ -209,13 +178,7 @@ class BottomInfoSheet extends StatelessWidget {
           if (title != null) ...[
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(
-                title!,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: Text(title!, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
           ],
           Flexible(child: child),

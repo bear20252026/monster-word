@@ -93,10 +93,7 @@ class DictionaryService {
     final wordData = await _db.getWord(word);
     if (wordData == null) return [];
     if (wordData.hasStructuredDefinitions) {
-      return wordData.formattedDefinitions
-          .split('\n')
-          .where((l) => l.trim().isNotEmpty)
-          .toList();
+      return wordData.formattedDefinitions.split('\n').where((l) => l.trim().isNotEmpty).toList();
     }
     return wordData.interpretLines;
   }
@@ -106,10 +103,7 @@ class DictionaryService {
   Future<Map<String, String>> getWordPhonetics(String word) async {
     final wordData = await _db.getWord(word);
     if (wordData == null) return {};
-    return {
-      'uk': wordData.ukPron,
-      'us': wordData.usPron,
-    };
+    return {'uk': wordData.ukPron, 'us': wordData.usPron};
   }
 
   /// 获取单词例句
@@ -193,10 +187,7 @@ class DictionaryService {
     if (wordData == null || wordData.confuse.isEmpty) return [];
 
     // confuse 字段包含近义词列表（逗号分隔）
-    final synonyms = wordData.confuse.split(',')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
+    final synonyms = wordData.confuse.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
 
     if (synonyms.isEmpty) return [];
 
@@ -217,10 +208,7 @@ class DictionaryService {
   Future<List<String>> getConfusingWords(String word) async {
     final wordData = await _db.getWord(word);
     if (wordData == null || wordData.confuse.isEmpty) return [];
-    return wordData.confuse.split(',')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
+    return wordData.confuse.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
   }
 
   // ============================================================
@@ -234,15 +222,16 @@ class DictionaryService {
     if (wordData == null || wordData.example.isEmpty) return [];
 
     // 解析例句（格式：例句1\n例句2\n...）
-    final examples = wordData.example.split('\n')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
+    final examples = wordData.example.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
 
-    return examples.map((example) => {
-      'sentence': example,
-      'translation': '', // 翻译需要额外数据源
-    }).toList();
+    return examples
+        .map(
+          (example) => {
+            'sentence': example,
+            'translation': '', // 翻译需要额外数据源
+          },
+        )
+        .toList();
   }
 
   /// 获取单词的音频URL
@@ -300,12 +289,7 @@ class DictionaryService {
     final words = <Word>[];
     for (final wordId in wordIds) {
       // 通过ID查询单词
-      final rows = await _db.db.query(
-        'words',
-        where: 'id = ?',
-        whereArgs: [wordId],
-        limit: 1,
-      );
+      final rows = await _db.db.query('words', where: 'id = ?', whereArgs: [wordId], limit: 1);
       if (rows.isNotEmpty) {
         words.add(Word.fromMap(rows.first));
       }
@@ -354,23 +338,21 @@ class DictionaryService {
     if (words.isEmpty) return [];
 
     final placeholders = words.map((_) => '?').join(',');
-    final rows = await _db.db.query(
-      'words',
-      where: 'word IN ($placeholders)',
-      whereArgs: words,
-      orderBy: 'word',
-    );
+    final rows = await _db.db.query('words', where: 'word IN ($placeholders)', whereArgs: words, orderBy: 'word');
     return rows.map(Word.fromMap).toList();
   }
 
   /// 获取随机单词
   /// [count] 数量
   Future<List<Word>> getRandomWords({int count = 10}) async {
-    final rows = await _db.db.rawQuery('''
+    final rows = await _db.db.rawQuery(
+      '''
       SELECT * FROM words
       ORDER BY RANDOM()
       LIMIT ?
-    ''', [count]);
+    ''',
+      [count],
+    );
     return rows.map(Word.fromMap).toList();
   }
 }

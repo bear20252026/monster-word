@@ -3,6 +3,7 @@
 // 由 Claude 团队生成 | 移植自 v3.2 widget/CircleProgressBar.java, DotIndicator.java, SquareIndicator.java, CircleIndicator.java, PageNumView.java
 // 进度条与指示器组件集合
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import 'animations.dart';
 
@@ -33,18 +34,14 @@ class CircleProgressBar extends StatefulWidget {
   State<CircleProgressBar> createState() => _CircleProgressBarState();
 }
 
-class _CircleProgressBarState extends State<CircleProgressBar>
-    with SingleTickerProviderStateMixin {
+class _CircleProgressBarState extends State<CircleProgressBar> with SingleTickerProviderStateMixin {
   AnimationController? _controller;
 
   @override
   void initState() {
     super.initState();
     if (widget.indeterminate) {
-      _controller = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 1200),
-      )..repeat();
+      _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat();
     }
   }
 
@@ -52,10 +49,7 @@ class _CircleProgressBarState extends State<CircleProgressBar>
   void didUpdateWidget(CircleProgressBar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.indeterminate && _controller == null) {
-      _controller = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 1200),
-      )..repeat();
+      _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat();
     } else if (!widget.indeterminate && _controller != null) {
       _controller!.dispose();
       _controller = null;
@@ -87,9 +81,7 @@ class _CircleProgressBarState extends State<CircleProgressBar>
                     strokeWidth: widget.strokeWidth,
                     rotationAngle: _controller!.value * 2 * 3.14159,
                   ),
-                  child: widget.child != null
-                      ? Center(child: widget.child)
-                      : null,
+                  child: widget.child != null ? Center(child: widget.child) : null,
                 );
               },
             )
@@ -100,9 +92,7 @@ class _CircleProgressBarState extends State<CircleProgressBar>
                 progressColor: pColor,
                 strokeWidth: widget.strokeWidth,
               ),
-              child: widget.child != null
-                  ? Center(child: widget.child)
-                  : null,
+              child: widget.child != null ? Center(child: widget.child) : null,
             ),
     );
   }
@@ -152,9 +142,7 @@ class _CircleProgressPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CircleProgressPainter old) =>
-      progress != old.progress ||
-      backgroundColor != old.backgroundColor ||
-      progressColor != old.progressColor;
+      progress != old.progress || backgroundColor != old.backgroundColor || progressColor != old.progressColor;
 }
 
 class _IndeterminateCirclePainter extends CustomPainter {
@@ -162,11 +150,7 @@ class _IndeterminateCirclePainter extends CustomPainter {
   final double strokeWidth;
   final double rotationAngle;
 
-  _IndeterminateCirclePainter({
-    required this.color,
-    required this.strokeWidth,
-    required this.rotationAngle,
-  });
+  _IndeterminateCirclePainter({required this.color, required this.strokeWidth, required this.rotationAngle});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -183,19 +167,12 @@ class _IndeterminateCirclePainter extends CustomPainter {
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotationAngle);
     canvas.translate(-center.dx, -center.dy);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      0,
-      90 * 3.14159 / 180,
-      false,
-      paint,
-    );
+    canvas.drawArc(Rect.fromCircle(center: center, radius: radius), 0, 90 * 3.14159 / 180, false, paint);
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_IndeterminateCirclePainter old) =>
-      rotationAngle != old.rotationAngle;
+  bool shouldRepaint(_IndeterminateCirclePainter old) => rotationAngle != old.rotationAngle;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -233,10 +210,7 @@ class DotIndicator extends StatelessWidget {
           margin: EdgeInsets.symmetric(horizontal: gap / 2),
           width: isActive ? dotRadius * 2 : dotRadius * 2,
           height: isActive ? dotRadius * 2 : dotRadius * 2,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: i <= currentIndex ? aColor : nColor,
-          ),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: i <= currentIndex ? aColor : nColor),
         );
       }),
     );
@@ -281,10 +255,7 @@ class SquareIndicator extends StatelessWidget {
           margin: EdgeInsets.symmetric(horizontal: gap / 2),
           width: size,
           height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isSelected ? sColor : nColor,
-          ),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: isSelected ? sColor : nColor),
         );
       }),
     );
@@ -341,10 +312,7 @@ class CircleIndicator extends StatelessWidget {
           margin: EdgeInsets.symmetric(horizontal: gap / 2),
           width: r * 2,
           height: r * 2,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-          ),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
         );
       }),
     );
@@ -378,15 +346,10 @@ class PageNumIndicator extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cursorWidth = totalPages > 0
-            ? constraints.maxWidth / totalPages
-            : 0.0;
+        final cursorWidth = totalPages > 0 ? constraints.maxWidth / totalPages : 0.0;
         return Container(
           height: height,
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(height / 2),
-          ),
+          decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(height / 2)),
           child: Stack(
             children: [
               AnimatedPositioned(
@@ -397,10 +360,7 @@ class PageNumIndicator extends StatelessWidget {
                 top: 0,
                 bottom: 0,
                 child: Container(
-                  decoration: BoxDecoration(
-                    color: cColor,
-                    borderRadius: BorderRadius.circular(height / 2),
-                  ),
+                  decoration: BoxDecoration(color: cColor, borderRadius: BorderRadius.circular(height / 2)),
                 ),
               ),
             ],

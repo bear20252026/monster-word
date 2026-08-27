@@ -34,14 +34,14 @@ class CardActionEvent {
 /// 卡片动作类型（对应原版 bean/CardAction）
 enum CardActionType {
   unknown,
-  flip,       // 翻卡片
-  next,       // 下一个
-  previous,   // 上一个
-  know,       // 认识
-  dontKnow,   // 不认识
-  skip,       // 跳过
-  collect,    // 收藏
-  playAudio,  // 播放发音
+  flip, // 翻卡片
+  next, // 下一个
+  previous, // 上一个
+  know, // 认识
+  dontKnow, // 不认识
+  skip, // 跳过
+  collect, // 收藏
+  playAudio, // 播放发音
 }
 
 /// 卡片动作数据
@@ -70,11 +70,7 @@ class LearnCardOptionEvent {
   final Object? extraData;
   final Object? extraData2;
 
-  const LearnCardOptionEvent({
-    required this.type,
-    this.extraData,
-    this.extraData2,
-  });
+  const LearnCardOptionEvent({required this.type, this.extraData, this.extraData2});
 }
 
 // ============================================================

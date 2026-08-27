@@ -29,8 +29,7 @@ class CoolHttpResponse {
   final String body;
   final bool success;
 
-  CoolHttpResponse({required this.statusCode, required this.body})
-      : success = statusCode == 200;
+  CoolHttpResponse({required this.statusCode, required this.body}) : success = statusCode == 200;
 
   Map<String, dynamic>? get jsonBody {
     try {
@@ -98,23 +97,11 @@ class CoolHttpClientV3 {
   //              --dart-define=API_IMG_URL=https://img.beingfine.cn/ \
   //              --dart-define=APP_ID=xxx \
   //              --dart-define=USER_SECRET=xxx
-  static const String baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'https://api.beingfine.cn/',
-  );
-  static const String baseImgUrl = String.fromEnvironment(
-    'API_IMG_URL',
-    defaultValue: 'https://img.beingfine.cn/',
-  );
+  static const String baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://api.beingfine.cn/');
+  static const String baseImgUrl = String.fromEnvironment('API_IMG_URL', defaultValue: 'https://img.beingfine.cn/');
   static const String localFilePath = ''; // TODO: 本地文件缓存路径
-  static const String appId = String.fromEnvironment(
-    'APP_ID',
-    defaultValue: '',
-  );
-  static const String _userSecret = String.fromEnvironment(
-    'USER_SECRET',
-    defaultValue: '',
-  );
+  static const String appId = String.fromEnvironment('APP_ID', defaultValue: '');
+  static const String _userSecret = String.fromEnvironment('USER_SECRET', defaultValue: '');
 
   static int _timeoutMs = 30000; // 默认 30 秒
 
@@ -139,32 +126,23 @@ class CoolHttpClientV3 {
   /// 离线本地版用简化签名：md5(拼接参数 + secret)
   static void appendParamSign(RequestParams params) {
     final sorted = _sortParams(params.params);
-    final joined =
-        sorted.entries.map((e) => '${e.key}=${e.value}').join('&');
+    final joined = sorted.entries.map((e) => '${e.key}=${e.value}').join('&');
     final sign = SecurityUtils.md5String('$joined$_userSecret');
     params.put('sign', sign);
   }
 
   static Map<String, dynamic> _sortParams(Map<String, dynamic> params) {
-    final sorted = Map<String, dynamic>.fromEntries(
-        params.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+    final sorted = Map<String, dynamic>.fromEntries(params.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
     return sorted;
   }
 
   /// GET 请求（原版 get）
-  static Future<CoolHttpResponse> get(
-    RequestParams params,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<CoolHttpResponse> get(RequestParams params, CoolJsonHttpResponseHandler handler) async {
     try {
-      final uri = Uri.parse('$baseUrl${params.path}').replace(
-          queryParameters:
-              params.params.map((k, v) => MapEntry(k, v.toString())));
-      final resp = await http.get(uri).timeout(
-            Duration(milliseconds: _timeoutMs),
-          );
-      final result =
-          CoolHttpResponse(statusCode: resp.statusCode, body: resp.body);
+      final uri = Uri.parse('$baseUrl${params.path}')
+          .replace(queryParameters: params.params.map((k, v) => MapEntry(k, v.toString())));
+      final resp = await http.get(uri).timeout(Duration(milliseconds: _timeoutMs));
+      final result = CoolHttpResponse(statusCode: resp.statusCode, body: resp.body);
       if (result.success) {
         handler.onSuccess(result);
       } else {
@@ -179,21 +157,13 @@ class CoolHttpClientV3 {
   }
 
   /// POST 请求（原版 post）
-  static Future<CoolHttpResponse> post(
-    RequestParams params,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<CoolHttpResponse> post(RequestParams params, CoolJsonHttpResponseHandler handler) async {
     try {
       final uri = Uri.parse('$baseUrl${params.path}');
       final resp = await http
-          .post(
-            uri,
-            body: params.params,
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          )
+          .post(uri, body: params.params, headers: {'Content-Type': 'application/x-www-form-urlencoded'})
           .timeout(Duration(milliseconds: _timeoutMs));
-      final result =
-          CoolHttpResponse(statusCode: resp.statusCode, body: resp.body);
+      final result = CoolHttpResponse(statusCode: resp.statusCode, body: resp.body);
       if (result.success) {
         handler.onSuccess(result);
       } else {
@@ -208,19 +178,16 @@ class CoolHttpClientV3 {
   }
 
   /// 登录检查专用（原版 checkLogin，使用自定义 OkHttpClient）
-  static Future<CoolHttpResponse> checkLogin(
-    RequestParams params,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<CoolHttpResponse> checkLogin(RequestParams params, CoolJsonHttpResponseHandler handler) async {
     try {
-      final uri = Uri.parse('$baseUrl${params.path}').replace(
-          queryParameters:
-              params.params.map((k, v) => MapEntry(k, v.toString())));
-      final resp = await http.get(uri).timeout(
+      final uri = Uri.parse('$baseUrl${params.path}')
+          .replace(queryParameters: params.params.map((k, v) => MapEntry(k, v.toString())));
+      final resp = await http
+          .get(uri)
+          .timeout(
             const Duration(seconds: 2), // 原版 2 秒超时
           );
-      final result =
-          CoolHttpResponse(statusCode: resp.statusCode, body: resp.body);
+      final result = CoolHttpResponse(statusCode: resp.statusCode, body: resp.body);
       if (result.success) {
         handler.onSuccess(result);
       } else {
@@ -242,9 +209,7 @@ class CoolHttpClientV3 {
 class LexisBooks {
   /// 获取词书分组列表（原版 getLexisGroupBooks）
   /// 端点：GET 2/bb/wordbooks
-  static Future<CoolHttpResponse> getLexisGroupBooks(
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<CoolHttpResponse> getLexisGroupBooks(CoolJsonHttpResponseHandler handler) async {
     final params = CoolHttpClientV3.requestParamsWithToken('2/bb/wordbooks');
     CoolHttpClientV3.appendParamSign(params);
     return CoolHttpClientV3.get(params, handler);
@@ -252,10 +217,7 @@ class LexisBooks {
 
   /// 移除词书（原版 uploadLibraryRemoved）
   /// 端点：POST bb/user/wordbooks {book_code, operation=1}
-  static Future<CoolHttpResponse> uploadLibraryRemoved(
-    String bookCode,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<CoolHttpResponse> uploadLibraryRemoved(String bookCode, CoolJsonHttpResponseHandler handler) async {
     if (bookCode.isEmpty) return CoolHttpResponse(statusCode: -1, body: 'empty');
     final params = CoolHttpClientV3.requestParamsWithToken('bb/user/wordbooks');
     params.put('book_code', bookCode);
@@ -266,10 +228,7 @@ class LexisBooks {
 
   /// 添加词书（原版 uploadLibraryAdded）
   /// 端点：POST bb/user/wordbooks {book_code}
-  static Future<CoolHttpResponse> uploadLibraryAdded(
-    String bookCode,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<CoolHttpResponse> uploadLibraryAdded(String bookCode, CoolJsonHttpResponseHandler handler) async {
     if (bookCode.isEmpty) return CoolHttpResponse(statusCode: -1, body: 'empty');
     final params = CoolHttpClientV3.requestParamsWithToken('bb/user/wordbooks');
     params.put('book_code', bookCode);
@@ -329,8 +288,7 @@ class _LoginCheckHandler extends CoolJsonHttpResponseHandler {
   void onSuccess(CoolHttpResponse response) {
     if (response.success) {
       listener.onCheckValid(true);
-    } else if (response.resultCode == 30102 ||
-        response.resultCode == 30104) {
+    } else if (response.resultCode == 30102 || response.resultCode == 30104) {
       // token 过期
       listener.onCheckValid(false);
     } else {
@@ -373,10 +331,7 @@ class PhoneLoginService {
 
   /// 友盟 token 首次登录检查（原版 isFirstLoginWithOpenId）
   /// 端点：GET account/binding/by-umeng {umeng_token}
-  static Future<void> isFirstLoginWithOpenId(
-    String umengToken,
-    PhoneLoginListener listener,
-  ) async {
+  static Future<void> isFirstLoginWithOpenId(String umengToken, PhoneLoginListener listener) async {
     final params = CoolHttpClientV3.requestParams('account/binding/by-umeng');
     params.put('umeng_token', umengToken);
     CoolHttpClientV3.get(params, _PhoneLoginHandler(listener));
@@ -384,10 +339,7 @@ class PhoneLoginService {
 
   /// 手机号首次登录检查（原版 isFirstLoginWithPhone）
   /// 端点：GET account/binding/by-phone2 {phone_number}
-  static Future<void> isFirstLoginWithPhone(
-    String phone,
-    PhoneLoginListener listener,
-  ) async {
+  static Future<void> isFirstLoginWithPhone(String phone, PhoneLoginListener listener) async {
     final params = CoolHttpClientV3.requestParams('account/binding/by-phone2');
     params.put('phone_number', phone);
     params.remove('tencent_uid');
@@ -396,10 +348,7 @@ class PhoneLoginService {
 
   /// 友盟 token 登录（原版 loggin）
   /// 端点：POST login/by-umeng {umeng_token}
-  static Future<CoolHttpResponse> login(
-    String umengToken,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<CoolHttpResponse> login(String umengToken, CoolJsonHttpResponseHandler handler) async {
     final params = CoolHttpClientV3.requestParamsWithToken('login/by-umeng');
     params.put('umeng_token', umengToken);
     CoolHttpClientV3.appendParamSign(params);
@@ -408,11 +357,7 @@ class PhoneLoginService {
 
   /// 手机验证码登录（原版 phoneCodeValid）
   /// 端点：POST login/by-sms {phone_number, sms_code}
-  static Future<CoolHttpResponse> phoneCodeValid(
-    String phone,
-    String code,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<CoolHttpResponse> phoneCodeValid(String phone, String code, CoolJsonHttpResponseHandler handler) async {
     final params = CoolHttpClientV3.requestParams('login/by-sms');
     params.put('phone_number', phone);
     params.put('sms_code', code);
@@ -421,10 +366,7 @@ class PhoneLoginService {
 
   /// 发送登录验证码（原版 sendPhoneCode）
   /// 端点：POST sms/send/by-login {phone_number, sign}
-  static Future<void> sendPhoneCode(
-    String phone,
-    PhoneLoginListener listener,
-  ) async {
+  static Future<void> sendPhoneCode(String phone, PhoneLoginListener listener) async {
     try {
       final params = CoolHttpClientV3.requestParams('sms/send/by-login');
       params.remove('tencent_uid');
@@ -436,13 +378,9 @@ class PhoneLoginService {
 
   /// 发送绑定验证码（原版 sendBindingPhoneCode）
   /// 端点：POST sms/send/by-bind {phone_number}
-  static Future<void> sendBindingPhoneCode(
-    String phone,
-    PhoneLoginListener listener,
-  ) async {
+  static Future<void> sendBindingPhoneCode(String phone, PhoneLoginListener listener) async {
     try {
-      final params =
-          CoolHttpClientV3.requestParamsWithToken('sms/send/by-bind');
+      final params = CoolHttpClientV3.requestParamsWithToken('sms/send/by-bind');
       params.put('phone_number', phone);
       CoolHttpClientV3.appendParamSign(params);
       await CoolHttpClientV3.post(params, _PhoneLoginSimpleHandler(listener));
@@ -451,13 +389,9 @@ class PhoneLoginService {
 
   /// 发送修改手机验证码（原版 sendModifyPhoneCode）
   /// 端点：POST sms/send/by-rebind {phone_number}
-  static Future<void> sendModifyPhoneCode(
-    String phone,
-    PhoneLoginListener listener,
-  ) async {
+  static Future<void> sendModifyPhoneCode(String phone, PhoneLoginListener listener) async {
     try {
-      final params =
-          CoolHttpClientV3.requestParamsWithToken('sms/send/by-rebind');
+      final params = CoolHttpClientV3.requestParamsWithToken('sms/send/by-rebind');
       params.put('phone_number', phone);
       CoolHttpClientV3.appendParamSign(params);
       await CoolHttpClientV3.post(params, _PhoneLoginSimpleHandler(listener));
@@ -466,13 +400,8 @@ class PhoneLoginService {
 
   /// 验证绑定手机验证码（原版 validateBindingPhoneCode）
   /// 端点：POST account/binding/by-sms {phone_number, code}
-  static Future<void> validateBindingPhoneCode(
-    String phone,
-    String code,
-    PhoneLoginListener listener,
-  ) async {
-    final params =
-        CoolHttpClientV3.requestParamsWithToken('account/binding/by-sms');
+  static Future<void> validateBindingPhoneCode(String phone, String code, PhoneLoginListener listener) async {
+    final params = CoolHttpClientV3.requestParamsWithToken('account/binding/by-sms');
     params.put('phone_number', phone);
     params.put('code', code);
     CoolHttpClientV3.appendParamSign(params);
@@ -481,12 +410,8 @@ class PhoneLoginService {
 
   /// 绑定手机（原版 bindPhone）
   /// 端点：POST account/binding/by-umeng {umeng_token}
-  static Future<void> bindPhone(
-    String umengToken,
-    PhoneLoginListener listener,
-  ) async {
-    final params =
-        CoolHttpClientV3.requestParamsWithToken('account/binding/by-umeng');
+  static Future<void> bindPhone(String umengToken, PhoneLoginListener listener) async {
+    final params = CoolHttpClientV3.requestParamsWithToken('account/binding/by-umeng');
     params.put('umeng_token', umengToken);
     CoolHttpClientV3.appendParamSign(params);
     await CoolHttpClientV3.post(params, _PhoneLoginBindHandler(listener));
@@ -494,13 +419,8 @@ class PhoneLoginService {
 
   /// 修改手机验证码验证（原版 modifyPhoneCodeValidate）
   /// 端点：POST account/rebinding/by-sms {phone_number, code}
-  static Future<void> modifyPhoneCodeValidate(
-    String phone,
-    String code,
-    PhoneLoginListener listener,
-  ) async {
-    final params =
-        CoolHttpClientV3.requestParamsWithToken('account/rebinding/by-sms');
+  static Future<void> modifyPhoneCodeValidate(String phone, String code, PhoneLoginListener listener) async {
+    final params = CoolHttpClientV3.requestParamsWithToken('account/rebinding/by-sms');
     params.put('phone_number', phone);
     params.put('code', code);
     CoolHttpClientV3.appendParamSign(params);
@@ -509,10 +429,7 @@ class PhoneLoginService {
 
   /// 检查手机是否已绑定（原版 checkPhoneHasBinded）
   /// 端点：GET account/binding/by-phone {phone_number}
-  static Future<void> checkPhoneHasBinded(
-    String phone,
-    PhoneLoginListener listener,
-  ) async {
+  static Future<void> checkPhoneHasBinded(String phone, PhoneLoginListener listener) async {
     final params = CoolHttpClientV3.requestParams('account/binding/by-phone');
     params.put('phone_number', phone);
     await CoolHttpClientV3.get(params, _PhoneLoginBindCheckHandler(listener));
@@ -622,9 +539,9 @@ void _notifyError(PhoneLoginListener listener, CoolHttpResponse? response) {
 
 /// 同步状态回调
 abstract class SyncListener {
-  void onSyncStart();  // 消息码 400
+  void onSyncStart(); // 消息码 400
   void onSyncSuccess(); // 消息码 401, arg1=1
-  void onSyncFailed();  // 消息码 401, arg1=0
+  void onSyncFailed(); // 消息码 401, arg1=0
 }
 
 class SyncChainServiceV2 {
@@ -701,9 +618,7 @@ class SyncChainServiceV2 {
 
   /// 上传 V2 数据（原版 uploadV2Data）
   /// 端点：POST report/v2-process {stat}
-  static Future<void> uploadV2Data(
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<void> uploadV2Data(CoolJsonHttpResponseHandler handler) async {
     // TODO: 需要 BBWordProcessDao 集成
     // final v2AllData = BBWordProcessDao.getV2AllData();
     // if (v2AllData == null || v2AllData.isEmpty) {
@@ -741,11 +656,8 @@ class SyncChainServiceV2 {
 class LearnDurationService {
   /// 获取学习时长（原版 call）
   /// 端点：GET bb/dashboard/learn-duration
-  static Future<CoolHttpResponse> call(
-    CoolJsonHttpResponseHandler handler,
-  ) async {
-    final params =
-        CoolHttpClientV3.requestParamsWithToken('bb/dashboard/learn-duration');
+  static Future<CoolHttpResponse> call(CoolJsonHttpResponseHandler handler) async {
+    final params = CoolHttpClientV3.requestParamsWithToken('bb/dashboard/learn-duration');
     CoolHttpClientV3.appendParamSign(params);
     return CoolHttpClientV3.get(params, handler);
   }
@@ -758,19 +670,14 @@ class LearnDurationService {
 class ReportUserAction {
   /// 上报用户行为（原版 call）
   /// 端点：POST report/webview/action {action_type, action_data}
-  static Future<void> call(
-    String actionType,
-    String actionData,
-    CoolJsonHttpResponseHandler handler,
-  ) async {
+  static Future<void> call(String actionType, String actionData, CoolJsonHttpResponseHandler handler) async {
     // TODO: 需要 UserPreferences.isLoginYet() 集成
     // if (!UserPreferences.isLoginYet()) {
     //   print('$_logTag: 未登录，跳过');
     //   return;
     // }
 
-    final params =
-        CoolHttpClientV3.requestParamsWithToken('report/webview/action');
+    final params = CoolHttpClientV3.requestParamsWithToken('report/webview/action');
     params.put('action_type', actionType);
     params.put('action_data', actionData);
     CoolHttpClientV3.appendParamSign(params);
@@ -803,8 +710,7 @@ class ReportUserDaily {
     //   return;
     // }
 
-    final params =
-        CoolHttpClientV3.requestParamsWithToken('bb/user-stat/learn-duration');
+    final params = CoolHttpClientV3.requestParamsWithToken('bb/user-stat/learn-duration');
     // params.put('stat', jsonEncode(syncData));
     CoolHttpClientV3.appendParamSign(params);
 
@@ -824,8 +730,7 @@ class ReportUserDaily {
     //   return;
     // }
 
-    final params =
-        CoolHttpClientV3.requestParamsWithToken('bb/user-stat/review-task');
+    final params = CoolHttpClientV3.requestParamsWithToken('bb/user-stat/review-task');
     // params.put('stat', jsonEncode(reviewTaskInfo));
     CoolHttpClientV3.appendParamSign(params);
 
@@ -875,22 +780,15 @@ class AppConfiguration {
 
   factory AppConfiguration.fromJson(Map<String, dynamic> json) {
     return AppConfiguration(
-      appRec: (json['app_rec'] as List?)
-          ?.map((e) => AppRec.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      coolab: json['coolab'] != null
-          ? CoolabConfig.fromJson(json['coolab'] as Map<String, dynamic>)
-          : null,
-      settings: json['settings'] != null
-          ? AppSettings.fromJson(json['settings'] as Map<String, dynamic>)
-          : null,
+      appRec: (json['app_rec'] as List?)?.map((e) => AppRec.fromJson(e as Map<String, dynamic>)).toList(),
+      coolab: json['coolab'] != null ? CoolabConfig.fromJson(json['coolab'] as Map<String, dynamic>) : null,
+      settings: json['settings'] != null ? AppSettings.fromJson(json['settings'] as Map<String, dynamic>) : null,
     );
   }
 
   List<CellMenu>? get moreMenus => settings?.moreMenu;
 
-  String get coolabUrl =>
-      (coolab == null || !coolab!.isEnabled) ? '' : coolab!.url;
+  String get coolabUrl => (coolab == null || !coolab!.isEnabled) ? '' : coolab!.url;
 }
 
 /// 应用设置（原版 Settings）
@@ -901,9 +799,7 @@ class AppSettings {
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
     return AppSettings(
-      moreMenu: (json['more_menu'] as List?)
-          ?.map((e) => CellMenu.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      moreMenu: (json['more_menu'] as List?)?.map((e) => CellMenu.fromJson(e as Map<String, dynamic>)).toList(),
     );
   }
 }
@@ -935,10 +831,7 @@ class CoolabConfig {
   CoolabConfig({required this.enable, required this.url});
 
   factory CoolabConfig.fromJson(Map<String, dynamic> json) {
-    return CoolabConfig(
-      enable: json['enable'] as int? ?? 0,
-      url: json['url'] as String? ?? '',
-    );
+    return CoolabConfig(enable: json['enable'] as int? ?? 0, url: json['url'] as String? ?? '');
   }
 
   bool get isEnabled => enable == 1;
@@ -964,9 +857,7 @@ class AppRec {
 
   factory AppRec.fromJson(Map<String, dynamic> json) {
     return AppRec(
-      icon: json['icon'] != null
-          ? AppIcon.fromJson(json['icon'] as Map<String, dynamic>)
-          : null,
+      icon: json['icon'] != null ? AppIcon.fromJson(json['icon'] as Map<String, dynamic>) : null,
       intro: json['intro'] as String? ?? '',
       name: json['name'] as String? ?? '',
       pkg: json['pkg'] as String? ?? '',
@@ -1022,8 +913,7 @@ class GetAppConfiguration {
   static AppConfiguration? loadFromCache(String cachedJson) {
     if (cachedJson.isEmpty) return null;
     try {
-      return AppConfiguration.fromJson(
-          jsonDecode(cachedJson) as Map<String, dynamic>);
+      return AppConfiguration.fromJson(jsonDecode(cachedJson) as Map<String, dynamic>);
     } catch (_) {
       return null;
     }

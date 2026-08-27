@@ -30,14 +30,8 @@ class SessionExitGuard extends StatelessWidget {
         title: Text('退出$subject？'),
         content: const Text('退出后本次进度将不会保存。'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('继续学习'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('退出'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('继续学习')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('退出')),
         ],
       ),
     );

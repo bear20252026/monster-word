@@ -7,10 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// 壁纸类型
 enum WallpaperType {
-  solid,    // 纯色背景
+  solid, // 纯色背景
   gradient, // 渐变背景
-  image,    // 图片壁纸（assets）
-  custom,   // 用户自定义上传
+  image, // 图片壁纸（assets）
+  custom, // 用户自定义上传
 }
 
 /// 壁纸数据
@@ -48,20 +48,15 @@ class WallpaperItem {
   bool get isCustom => type == WallpaperType.custom;
 
   /// 序列化为 JSON（用于存储自定义壁纸）
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'type': type.index,
-        'filePath': filePath,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'type': type.index, 'filePath': filePath};
 
   /// 从 JSON 反序列化
   factory WallpaperItem.fromJson(Map<String, dynamic> json) => WallpaperItem(
-        id: json['id'] as String,
-        name: json['name'] as String? ?? '自定义壁纸',
-        type: WallpaperType.custom,
-        filePath: json['filePath'] as String?,
-      );
+    id: json['id'] as String,
+    name: json['name'] as String? ?? '自定义壁纸',
+    type: WallpaperType.custom,
+    filePath: json['filePath'] as String?,
+  );
 }
 
 /// 预设壁纸列表
@@ -180,15 +175,11 @@ class WallpaperData {
       allWallpapers.where((w) => w.type == WallpaperType.gradient).toList();
 
   /// 图片壁纸列表
-  static List<WallpaperItem> get imageWallpapers =>
-      allWallpapers.where((w) => w.type == WallpaperType.image).toList();
+  static List<WallpaperItem> get imageWallpapers => allWallpapers.where((w) => w.type == WallpaperType.image).toList();
 
   /// 根据 ID 获取壁纸
   static WallpaperItem getById(String id) {
-    return allWallpapers.firstWhere(
-      (w) => w.id == id,
-      orElse: () => defaultWallpaper,
-    );
+    return allWallpapers.firstWhere((w) => w.id == id, orElse: () => defaultWallpaper);
   }
 
   /// 保存用户选择
@@ -204,10 +195,7 @@ class WallpaperData {
     // 如果是自定义壁纸，从自定义列表中查找
     if (id.startsWith('custom_')) {
       final customs = await loadCustomWallpapers();
-      return customs.firstWhere(
-        (w) => w.id == id,
-        orElse: () => defaultWallpaper,
-      );
+      return customs.firstWhere((w) => w.id == id, orElse: () => defaultWallpaper);
     }
     return getById(id);
   }
@@ -224,9 +212,7 @@ class WallpaperData {
     final jsonStr = prefs.getString(_customPrefKey);
     if (jsonStr == null || jsonStr.isEmpty) return [];
     try {
-      final list = List<Map<String, dynamic>>.from(
-        const JsonDecoder().convert(jsonStr) as List,
-      );
+      final list = List<Map<String, dynamic>>.from(const JsonDecoder().convert(jsonStr) as List);
       return list.map((e) => WallpaperItem.fromJson(e)).toList();
     } catch (_) {
       return [];

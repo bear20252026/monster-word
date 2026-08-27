@@ -2,6 +2,7 @@
 // 颜色/密度/速度/角度均可自定义
 // 适用于：学习完成、签到成功、测验满分、升级庆祝、成就达成
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 class ConfettiParticle {
@@ -26,21 +27,15 @@ class ConfettiParticle {
   });
 }
 
-enum ConfettiShape {
-  rectangle,
-  circle,
-  triangle,
-  star,
-  strip,
-}
+enum ConfettiShape { rectangle, circle, triangle, star, strip }
 
 enum ConfettiDirection {
-  down,       // 向下落
-  up,         // 向上喷
-  left,       // 向左
-  right,      // 向右
-  explosion,  // 爆炸式
-  shower,     // 淋浴式
+  down, // 向下落
+  up, // 向上喷
+  left, // 向左
+  right, // 向右
+  explosion, // 爆炸式
+  shower, // 淋浴式
 }
 
 /// 彩带控制器（触发式，可手动播放）
@@ -102,8 +97,7 @@ class ConfettiOverlay extends StatefulWidget {
   State<ConfettiOverlay> createState() => _ConfettiOverlayState();
 }
 
-class _ConfettiOverlayState extends State<ConfettiOverlay>
-    with SingleTickerProviderStateMixin {
+class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   final List<ConfettiParticle> _particles = [];
   final math.Random _random = math.Random();
@@ -112,10 +106,7 @@ class _ConfettiOverlayState extends State<ConfettiOverlay>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
 
     _controller.addListener(_updateParticles);
     _controller.addStatusListener((status) {
@@ -182,50 +173,26 @@ class _ConfettiOverlayState extends State<ConfettiOverlay>
 
     switch (widget.direction) {
       case ConfettiDirection.down:
-        position = Offset(
-          _random.nextDouble() * 400 - 50,
-          -20 - _random.nextDouble() * 100,
-        );
-        velocity = Offset(
-          (_random.nextDouble() - 0.5) * 200,
-          100 + _random.nextDouble() * 200,
-        );
+        position = Offset(_random.nextDouble() * 400 - 50, -20 - _random.nextDouble() * 100);
+        velocity = Offset((_random.nextDouble() - 0.5) * 200, 100 + _random.nextDouble() * 200);
         break;
       case ConfettiDirection.up:
-        position = Offset(
-          _random.nextDouble() * 400 - 50,
-          600 + _random.nextDouble() * 100,
-        );
-        velocity = Offset(
-          (_random.nextDouble() - 0.5) * 200,
-          -(100 + _random.nextDouble() * 200),
-        );
+        position = Offset(_random.nextDouble() * 400 - 50, 600 + _random.nextDouble() * 100);
+        velocity = Offset((_random.nextDouble() - 0.5) * 200, -(100 + _random.nextDouble() * 200));
         break;
       case ConfettiDirection.explosion:
         position = const Offset(175, 300);
         final angle = _random.nextDouble() * 2 * math.pi;
         final speed = 150 + _random.nextDouble() * 250;
-        velocity = Offset(
-          math.cos(angle) * speed,
-          math.sin(angle) * speed,
-        );
+        velocity = Offset(math.cos(angle) * speed, math.sin(angle) * speed);
         break;
       case ConfettiDirection.shower:
-        position = Offset(
-          _random.nextDouble() * 400,
-          -20,
-        );
-        velocity = Offset(
-          (_random.nextDouble() - 0.5) * 50,
-          150 + _random.nextDouble() * 150,
-        );
+        position = Offset(_random.nextDouble() * 400, -20);
+        velocity = Offset((_random.nextDouble() - 0.5) * 50, 150 + _random.nextDouble() * 150);
         break;
       default:
         position = Offset(_random.nextDouble() * 400, -20);
-        velocity = Offset(
-          (_random.nextDouble() - 0.5) * 200,
-          100 + _random.nextDouble() * 200,
-        );
+        velocity = Offset((_random.nextDouble() - 0.5) * 200, 100 + _random.nextDouble() * 200);
     }
 
     return ConfettiParticle(
@@ -247,16 +214,10 @@ class _ConfettiOverlayState extends State<ConfettiOverlay>
     setState(() {
       for (final p in _particles) {
         // 更新位置
-        p.position = Offset(
-          p.position.dx + p.velocity.dx * dt,
-          p.position.dy + p.velocity.dy * dt,
-        );
+        p.position = Offset(p.position.dx + p.velocity.dx * dt, p.position.dy + p.velocity.dy * dt);
 
         // 应用重力
-        p.velocity = Offset(
-          p.velocity.dx,
-          p.velocity.dy + widget.gravity * dt,
-        );
+        p.velocity = Offset(p.velocity.dx, p.velocity.dy + widget.gravity * dt);
 
         // 更新旋转
         p.rotation += p.rotationSpeed * dt;
@@ -277,9 +238,7 @@ class _ConfettiOverlayState extends State<ConfettiOverlay>
         if (_isPlaying)
           Positioned.fill(
             child: IgnorePointer(
-              child: CustomPaint(
-                painter: _ConfettiPainter(particles: _particles),
-              ),
+              child: CustomPaint(painter: _ConfettiPainter(particles: _particles)),
             ),
           ),
       ],
@@ -307,10 +266,7 @@ class _ConfettiPainter extends CustomPainter {
 
       switch (p.shape) {
         case ConfettiShape.rectangle:
-          canvas.drawRect(
-            Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.6),
-            paint,
-          );
+          canvas.drawRect(Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.6), paint);
           break;
         case ConfettiShape.circle:
           canvas.drawCircle(Offset.zero, p.size / 2, paint);
@@ -327,10 +283,7 @@ class _ConfettiPainter extends CustomPainter {
           _drawStar(canvas, paint, p.size / 2);
           break;
         case ConfettiShape.strip:
-          canvas.drawRect(
-            Rect.fromCenter(center: Offset.zero, width: p.size * 0.3, height: p.size * 2),
-            paint,
-          );
+          canvas.drawRect(Rect.fromCenter(center: Offset.zero, width: p.size * 0.3, height: p.size * 2), paint);
           break;
       }
 
@@ -385,14 +338,16 @@ class ConfettiPlayer {
     return ConfettiOverlay(
       controller: getController(),
       particleCount: particleCount,
-      colors: colors ?? const [
-        Color(0xFFFF6B6B),
-        Color(0xFFFFD93D),
-        Color(0xFF6BCB77),
-        Color(0xFF4D96FF),
-        Color(0xFFC77DFF),
-        Color(0xFFFF922B),
-      ],
+      colors:
+          colors ??
+          const [
+            Color(0xFFFF6B6B),
+            Color(0xFFFFD93D),
+            Color(0xFF6BCB77),
+            Color(0xFF4D96FF),
+            Color(0xFFC77DFF),
+            Color(0xFFFF922B),
+          ],
       direction: direction,
       duration: duration,
       child: child,

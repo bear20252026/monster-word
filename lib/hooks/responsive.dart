@@ -115,11 +115,7 @@ class AppResponsive {
   double get radiusScale => scale;
 
   /// 根据屏幕类型选择值
-  T pick<T>({
-    required T mobile,
-    T? tablet,
-    T? desktop,
-  }) {
+  T pick<T>({required T mobile, T? tablet, T? desktop}) {
     switch (screenType) {
       case ScreenType.desktop:
         return desktop ?? tablet ?? mobile;
@@ -145,12 +141,7 @@ class ResponsiveCenter extends StatelessWidget {
   final double? maxWidth;
   final EdgeInsetsGeometry? padding;
 
-  const ResponsiveCenter({
-    super.key,
-    required this.child,
-    this.maxWidth,
-    this.padding,
-  });
+  const ResponsiveCenter({super.key, required this.child, this.maxWidth, this.padding});
 
   @override
   Widget build(BuildContext context) {
@@ -160,9 +151,7 @@ class ResponsiveCenter extends StatelessWidget {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: mw),
-        child: padding != null
-            ? Padding(padding: padding!, child: child)
-            : child,
+        child: padding != null ? Padding(padding: padding!, child: child) : child,
       ),
     );
   }

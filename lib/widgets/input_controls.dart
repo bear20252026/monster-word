@@ -3,6 +3,7 @@
 // 由 Claude 团队生成 | 移植自 v3.2 widget/BBFakeSwitch.java, CustomInputView.java, MyEditText.java, AutoFitEditTextView.java, ScaleDownOnPressOnTouchListener.java
 // 输入与交互类组件集合
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import 'animations.dart';
@@ -43,21 +44,18 @@ class FakeSwitch extends StatefulWidget {
   State<FakeSwitch> createState() => _FakeSwitchState();
 }
 
-class _FakeSwitchState extends State<FakeSwitch>
-    with SingleTickerProviderStateMixin {
+class _FakeSwitchState extends State<FakeSwitch> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _thumbAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
-    _thumbAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: standardCurve),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
+    _thumbAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: standardCurve));
     if (widget.value) {
       _controller.value = 1.0;
     }
@@ -89,25 +87,17 @@ class _FakeSwitchState extends State<FakeSwitch>
     final thumb = widget.thumbColor ?? Colors.white;
 
     return GestureDetector(
-      onTap: widget.enabled
-          ? () => widget.onChanged?.call(!widget.value)
-          : null,
+      onTap: widget.enabled ? () => widget.onChanged?.call(!widget.value) : null,
       child: AnimatedBuilder(
         animation: _thumbAnimation,
         builder: (context, _) {
-          final trackColor = widget.enabled
-              ? Color.lerp(inactive, active, _thumbAnimation.value)
-              : inactive;
+          final trackColor = widget.enabled ? Color.lerp(inactive, active, _thumbAnimation.value) : inactive;
           final thumbSize = widget.height - 4;
-          final thumbOffset =
-              _thumbAnimation.value * (widget.width - thumbSize - 4);
+          final thumbOffset = _thumbAnimation.value * (widget.width - thumbSize - 4);
           return Container(
             width: widget.width,
             height: widget.height,
-            decoration: BoxDecoration(
-              color: trackColor,
-              borderRadius: BorderRadius.circular(widget.height / 2),
-            ),
+            decoration: BoxDecoration(color: trackColor, borderRadius: BorderRadius.circular(widget.height / 2)),
             child: Stack(
               children: [
                 Positioned(
@@ -120,11 +110,7 @@ class _FakeSwitchState extends State<FakeSwitch>
                       shape: BoxShape.circle,
                       color: thumb,
                       boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(30),
-                          blurRadius: 2,
-                          offset: const Offset(0, 1),
-                        ),
+                        BoxShadow(color: Colors.black.withAlpha(30), blurRadius: 2, offset: const Offset(0, 1)),
                       ],
                     ),
                   ),
@@ -190,8 +176,7 @@ class CustomInput extends StatelessWidget {
         suffixIcon: suffixIcon,
         filled: true,
         fillColor: skin.colors.cardBg,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRadius),
           borderSide: BorderSide(color: skin.colors.divider),
@@ -243,8 +228,7 @@ class AutoFitInput extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hintText,
         border: const OutlineInputBorder(),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );
   }
@@ -283,11 +267,7 @@ class _PressScaleState extends State<PressScale> {
         widget.onTap?.call();
       },
       onTapCancel: () => setState(() => _pressing = false),
-      child: AnimatedScale(
-        scale: _pressing ? widget.scale : 1.0,
-        duration: widget.duration,
-        child: widget.child,
-      ),
+      child: AnimatedScale(scale: _pressing ? widget.scale : 1.0, duration: widget.duration, child: widget.child),
     );
   }
 }

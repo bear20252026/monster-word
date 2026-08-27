@@ -11,11 +11,7 @@ class WordRootData {
   final List<String> roots;
   final String suffix;
 
-  const WordRootData({
-    this.prefix = '',
-    this.roots = const [],
-    this.suffix = '',
-  });
+  const WordRootData({this.prefix = '', this.roots = const [], this.suffix = ''});
 
   /// 从 JSON 字符串解析
   factory WordRootData.fromJson(String jsonStr) {
@@ -42,24 +38,15 @@ class WordRootData {
     final List<WordRootComponent> components = [];
 
     if (prefix.isNotEmpty) {
-      components.add(WordRootComponent(
-        type: WordRootType.prefix,
-        text: prefix,
-      ));
+      components.add(WordRootComponent(type: WordRootType.prefix, text: prefix));
     }
 
     for (final root in roots) {
-      components.add(WordRootComponent(
-        type: WordRootType.root,
-        text: root,
-      ));
+      components.add(WordRootComponent(type: WordRootType.root, text: root));
     }
 
     if (suffix.isNotEmpty) {
-      components.add(WordRootComponent(
-        type: WordRootType.suffix,
-        text: suffix,
-      ));
+      components.add(WordRootComponent(type: WordRootType.suffix, text: suffix));
     }
 
     return components;
@@ -68,9 +55,9 @@ class WordRootData {
 
 /// 词根类型
 enum WordRootType {
-  prefix,  // 前缀
-  root,    // 词根
-  suffix,  // 后缀
+  prefix, // 前缀
+  root, // 词根
+  suffix, // 后缀
 }
 
 /// 词根组成部分
@@ -78,10 +65,7 @@ class WordRootComponent {
   final WordRootType type;
   final String text;
 
-  const WordRootComponent({
-    required this.type,
-    required this.text,
-  });
+  const WordRootComponent({required this.type, required this.text});
 
   /// 获取类型名称
   String get typeName {

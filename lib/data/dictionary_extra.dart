@@ -12,14 +12,9 @@ class DictionaryExtra {
   final List<String> synonyms; // 近义词
   final List<ExamSentence> examSentences; // 真题例句
 
-  const DictionaryExtra({
-    required this.derivatives,
-    required this.synonyms,
-    required this.examSentences,
-  });
+  const DictionaryExtra({required this.derivatives, required this.synonyms, required this.examSentences});
 
-  bool get isEmpty =>
-      derivatives.isEmpty && synonyms.isEmpty && examSentences.isEmpty;
+  bool get isEmpty => derivatives.isEmpty && synonyms.isEmpty && examSentences.isEmpty;
 }
 
 /// 真题例句（带来源标注）
@@ -70,22 +65,14 @@ class DictionaryExtraStore {
 
   static DictionaryExtra _parse(dynamic entry) {
     if (entry is! Map<String, dynamic>) {
-      return const DictionaryExtra(
-        derivatives: [], synonyms: [], examSentences: []);
+      return const DictionaryExtra(derivatives: [], synonyms: [], examSentences: []);
     }
-    final derivatives = (entry['derivatives'] as List<dynamic>? ?? [])
-        .map((e) => e.toString())
-        .toList();
-    final synonyms = (entry['synonyms'] as List<dynamic>? ?? [])
-        .map((e) => e.toString())
-        .toList();
+    final derivatives = (entry['derivatives'] as List<dynamic>? ?? []).map((e) => e.toString()).toList();
+    final synonyms = (entry['synonyms'] as List<dynamic>? ?? []).map((e) => e.toString()).toList();
     final examSentences = (entry['examSentences'] as List<dynamic>? ?? [])
         .whereType<Map<String, dynamic>>()
-        .map((e) => ExamSentence(
-            sentence: e['sentence']?.toString() ?? '',
-            source: e['source']?.toString() ?? ''))
+        .map((e) => ExamSentence(sentence: e['sentence']?.toString() ?? '', source: e['source']?.toString() ?? ''))
         .toList();
-    return DictionaryExtra(
-        derivatives: derivatives, synonyms: synonyms, examSentences: examSentences);
+    return DictionaryExtra(derivatives: derivatives, synonyms: synonyms, examSentences: examSentences);
   }
 }

@@ -3,8 +3,10 @@
 // 由 Claude 团队生成 | 移植自 v3.2 widget/component/ 下的通用组件
 // 通用组件集合：按钮、文本、进度条、图片等
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+
 // ─────────────────────────────────────────────────────────────
 // CustomButton — 自定义按钮（移植自 component/CustomButton.java）
 // ─────────────────────────────────────────────────────────────
@@ -49,54 +51,46 @@ class CustomButton extends StatelessWidget {
       height: height ?? 44,
       child: switch (variant) {
         ButtonVariant.filled => ElevatedButton(
-            onPressed: enabled ? onPressed : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: btnColor,
-              foregroundColor: txtColor,
-              padding: padding ?? const EdgeInsets.symmetric(horizontal: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(borderRadius),
-              ),
-              elevation: 0,
-            ),
-            child: _buildChild(txtColor),
+          onPressed: enabled ? onPressed : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: btnColor,
+            foregroundColor: txtColor,
+            padding: padding ?? const EdgeInsets.symmetric(horizontal: 20),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
+            elevation: 0,
           ),
+          child: _buildChild(txtColor),
+        ),
         ButtonVariant.outlined => OutlinedButton(
-            onPressed: enabled ? onPressed : null,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: btnColor,
-              padding: padding ?? const EdgeInsets.symmetric(horizontal: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(borderRadius),
-              ),
-              side: BorderSide(color: btnColor),
-            ),
-            child: _buildChild(txtColor),
+          onPressed: enabled ? onPressed : null,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: btnColor,
+            padding: padding ?? const EdgeInsets.symmetric(horizontal: 20),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
+            side: BorderSide(color: btnColor),
           ),
+          child: _buildChild(txtColor),
+        ),
         ButtonVariant.text => TextButton(
-            onPressed: enabled ? onPressed : null,
-            style: TextButton.styleFrom(
-              foregroundColor: btnColor,
-              padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(borderRadius),
-              ),
-            ),
-            child: _buildChild(txtColor),
+          onPressed: enabled ? onPressed : null,
+          style: TextButton.styleFrom(
+            foregroundColor: btnColor,
+            padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
           ),
+          child: _buildChild(txtColor),
+        ),
         ButtonVariant.elevated => ElevatedButton(
-            onPressed: enabled ? onPressed : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: skin.colors.cardBg,
-              foregroundColor: skin.colors.text1,
-              padding: padding ?? const EdgeInsets.symmetric(horizontal: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(borderRadius),
-              ),
-              elevation: 2,
-            ),
-            child: _buildChild(skin.colors.text1),
+          onPressed: enabled ? onPressed : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: skin.colors.cardBg,
+            foregroundColor: skin.colors.text1,
+            padding: padding ?? const EdgeInsets.symmetric(horizontal: 20),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
+            elevation: 2,
           ),
+          child: _buildChild(skin.colors.text1),
+        ),
       },
     );
   }
@@ -218,13 +212,7 @@ class CustomVectorIcon extends StatelessWidget {
   final Color? color;
   final String? semanticLabel;
 
-  const CustomVectorIcon({
-    super.key,
-    required this.icon,
-    this.size = 24,
-    this.color,
-    this.semanticLabel,
-  });
+  const CustomVectorIcon({super.key, required this.icon, this.size = 24, this.color, this.semanticLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -266,13 +254,7 @@ class ShadowBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor ?? skin.colors.cardBg,
         borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor ?? MistralColors.black15,
-            blurRadius: blurRadius,
-            offset: offset,
-          ),
-        ],
+        boxShadow: [BoxShadow(color: shadowColor ?? MistralColors.black15, blurRadius: blurRadius, offset: offset)],
       ),
       child: child,
     );
@@ -315,10 +297,7 @@ class VerticalLevel extends StatelessWidget {
           width: width,
           height: segmentHeight,
           margin: const EdgeInsets.symmetric(vertical: 1),
-          decoration: BoxDecoration(
-            color: isActive ? aColor : iColor,
-            borderRadius: BorderRadius.circular(width / 2),
-          ),
+          decoration: BoxDecoration(color: isActive ? aColor : iColor, borderRadius: BorderRadius.circular(width / 2)),
         );
       }),
     );
@@ -334,13 +313,7 @@ class ImageCell extends StatelessWidget {
   final double borderRadius;
   final VoidCallback? onTap;
 
-  const ImageCell({
-    super.key,
-    this.image,
-    this.size = 48,
-    this.borderRadius = 8,
-    this.onTap,
-  });
+  const ImageCell({super.key, this.image, this.size = 48, this.borderRadius = 8, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -350,12 +323,7 @@ class ImageCell extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
         child: image != null
-            ? Image(
-                image: image!,
-                width: size,
-                height: size,
-                fit: BoxFit.cover,
-              )
+            ? Image(image: image!, width: size, height: size, fit: BoxFit.cover)
             : Container(
                 width: size,
                 height: size,

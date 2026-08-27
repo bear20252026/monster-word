@@ -64,14 +64,14 @@ class _PlayOrderPageState extends State<PlayOrderPage> {
                           Icon(order.icon, color: isSelected ? MistralColors.primary : skin.colors.text3, size: 24),
                           const SizedBox(width: 16),
                           Expanded(
-                            child: Text(order.label,
+                            child: Text(
+                              order.label,
                               style: MistralTypography.bodyBold.copyWith(
                                 color: isSelected ? MistralColors.primary : skin.colors.text1,
                               ),
                             ),
                           ),
-                          if (isSelected)
-                            Icon(Icons.check_circle, color: MistralColors.primary, size: 24),
+                          if (isSelected) Icon(Icons.check_circle, color: MistralColors.primary, size: 24),
                         ],
                       ),
                     ),

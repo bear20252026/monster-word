@@ -14,12 +14,7 @@ class ExampleSentence {
   final String source; // 来源（剧集/考试）
   final String? audioUrl; // 音频 URL
 
-  ExampleSentence({
-    required this.en,
-    required this.cn,
-    this.source = '',
-    this.audioUrl,
-  });
+  ExampleSentence({required this.en, required this.cn, this.source = '', this.audioUrl});
 
   /// 去掉 <b> 高亮标签
   String get cleanEn => en.replaceAll('<b>', '').replaceAll('</b>', '');
@@ -62,9 +57,7 @@ class ExampleParser {
 
     try {
       final decoded = jsonDecode(raw);
-      final data = decoded is Map<String, dynamic>
-          ? (decoded['data'] as List? ?? [])
-          : (decoded as List? ?? []);
+      final data = decoded is Map<String, dynamic> ? (decoded['data'] as List? ?? []) : (decoded as List? ?? []);
 
       for (final item in data) {
         if (item is! Map<String, dynamic>) continue;
@@ -79,14 +72,7 @@ class ExampleParser {
             final source = (s['b'] as String?) ?? '';
             final audioUrl = (s['audio'] as String?) ?? (s['audioUrl'] as String?);
             if (en.isNotEmpty) {
-              sentences.add(
-                ExampleSentence(
-                  en: en,
-                  cn: cn,
-                  source: source,
-                  audioUrl: audioUrl,
-                ),
-              );
+              sentences.add(ExampleSentence(en: en, cn: cn, source: source, audioUrl: audioUrl));
             }
           }
         }

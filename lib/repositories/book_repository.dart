@@ -4,7 +4,7 @@
 import '../../models/book.dart';
 
 /// 词书数据仓库接口
-/// 
+///
 /// 提供词书（Book）的 CRUD 操作抽象。
 /// 实现类负责具体的数据库/网络访问细节。
 abstract class BookRepository {

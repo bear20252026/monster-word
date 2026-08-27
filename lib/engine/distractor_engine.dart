@@ -13,11 +13,7 @@ class DistractorCandidate {
   final String interpret;
   final double score; // 综合混淆度评分（越高越容易混淆）
 
-  DistractorCandidate({
-    required this.word,
-    required this.interpret,
-    required this.score,
-  });
+  DistractorCandidate({required this.word, required this.interpret, required this.score});
 }
 
 /// 干扰项生成引擎（纯算法，无外部依赖）
@@ -50,11 +46,7 @@ class DistractorEngine {
       if (interpret == targetInterpret) continue;
 
       final score = _calculateConfusionScore(target, word.toLowerCase());
-      candidates.add(DistractorCandidate(
-        word: word,
-        interpret: interpret,
-        score: score,
-      ));
+      candidates.add(DistractorCandidate(word: word, interpret: interpret, score: score));
     }
 
     // 按混淆度降序排序
@@ -119,15 +111,19 @@ class DistractorEngine {
     final n = b.length;
     final dp = List.generate(m + 1, (_) => List.filled(n + 1, 0));
 
-    for (var i = 0; i <= m; i++) { dp[i][0] = i; }
-    for (var j = 0; j <= n; j++) { dp[0][j] = j; }
+    for (var i = 0; i <= m; i++) {
+      dp[i][0] = i;
+    }
+    for (var j = 0; j <= n; j++) {
+      dp[0][j] = j;
+    }
 
     for (var i = 1; i <= m; i++) {
       for (var j = 1; j <= n; j++) {
         final cost = a[i - 1] == b[j - 1] ? 0 : 1;
         dp[i][j] = [
-          dp[i - 1][j] + 1,      // 删除
-          dp[i][j - 1] + 1,      // 插入
+          dp[i - 1][j] + 1, // 删除
+          dp[i][j - 1] + 1, // 插入
           dp[i - 1][j - 1] + cost, // 替换
         ].reduce(min);
       }
@@ -189,12 +185,7 @@ class DistractorEngine {
     required List<Map<String, String>> pool,
     int count = 3,
   }) {
-    final result = generate(
-      targetWord: targetWord,
-      targetInterpret: targetInterpret,
-      allWords: pool,
-      count: count,
-    );
+    final result = generate(targetWord: targetWord, targetInterpret: targetInterpret, allWords: pool, count: count);
     return result.map((c) => {'word': c.word, 'interpret': c.interpret}).toList();
   }
 }

@@ -3,6 +3,7 @@
 // scale(0.95) + 200ms easeOut；回调在恢复完成后触发（防误触）
 
 import 'package:flutter/material.dart';
+
 import '../tokens/motion_tokens.dart';
 
 /// 星巴克标准按压反馈包装器
@@ -61,9 +62,9 @@ class ScaleDownOnPress extends StatefulWidget {
     this.onLongPress,
     this.enabled = true,
     this.enableScale = true,
-    this.scale = MotionPress.scale,       // 0.95（星巴克 --buttonActiveScale）
+    this.scale = MotionPress.scale, // 0.95（星巴克 --buttonActiveScale）
     this.duration = MotionPress.duration, // 200ms（base 档）
-    this.curve = MotionPress.curve,       // Curves.easeOut
+    this.curve = MotionPress.curve, // Curves.easeOut
     this.behavior,
     this.triggerAfterRestore = true,
   });
@@ -72,8 +73,7 @@ class ScaleDownOnPress extends StatefulWidget {
   State<ScaleDownOnPress> createState() => _ScaleDownOnPressState();
 }
 
-class _ScaleDownOnPressState extends State<ScaleDownOnPress>
-    with SingleTickerProviderStateMixin {
+class _ScaleDownOnPressState extends State<ScaleDownOnPress> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -91,9 +91,10 @@ class _ScaleDownOnPressState extends State<ScaleDownOnPress>
       duration: widget.duration,
       value: 1.0, // 初始状态：未缩放
     );
-    _animation = Tween<double>(begin: 1.0, end: widget.scale).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve),
-    );
+    _animation = Tween<double>(
+      begin: 1.0,
+      end: widget.scale,
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
   }
 
   @override
@@ -158,10 +159,7 @@ class _ScaleDownOnPressState extends State<ScaleDownOnPress>
     }
 
     Widget result = RepaintBoundary(
-      child: ScaleTransition(
-        scale: _animation,
-        child: widget.child,
-      ),
+      child: ScaleTransition(scale: _animation, child: widget.child),
     );
 
     // 支持长按时使用 GestureDetector 统一处理

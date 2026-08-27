@@ -13,12 +13,7 @@ class TabDef {
   final IconData icon;
   final Widget Function(BuildContext) builder;
 
-  const TabDef({
-    required this.id,
-    required this.label,
-    required this.icon,
-    required this.builder,
-  });
+  const TabDef({required this.id, required this.label, required this.icon, required this.builder});
 }
 
 /// 主壳（原版 MainShell）
@@ -26,11 +21,7 @@ class MainShell extends StatefulWidget {
   final List<TabDef> tabs;
   final int initialTab;
 
-  const MainShell({
-    super.key,
-    required this.tabs,
-    this.initialTab = 0,
-  });
+  const MainShell({super.key, required this.tabs, this.initialTab = 0});
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -57,12 +48,7 @@ class _MainShellState extends State<MainShell> {
         children: [
           // Z2 内容：使用 IndexedStack 避免切换时白屏
           Positioned.fill(
-            child: IndexedStack(
-              index: _active,
-              children: widget.tabs
-                  .map((t) => t.builder(context))
-                  .toList(),
-            ),
+            child: IndexedStack(index: _active, children: widget.tabs.map((t) => t.builder(context)).toList()),
           ),
           // Z3 底部 Dock 导航（macOS 风格浮动栏）
           Positioned(
@@ -70,12 +56,7 @@ class _MainShellState extends State<MainShell> {
             right: 0,
             bottom: MediaQuery.of(context).padding.bottom,
             child: FloatingDock(
-              items: widget.tabs
-                  .map((t) => DockItem(
-                        icon: t.icon,
-                        label: t.label,
-                      ))
-                  .toList(),
+              items: widget.tabs.map((t) => DockItem(icon: t.icon, label: t.label)).toList(),
               currentIndex: _active,
               onTap: switchTab,
               activeColor: StarbucksCreamColors.greenHouse,

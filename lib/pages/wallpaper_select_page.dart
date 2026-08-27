@@ -47,12 +47,8 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
     });
     await WallpaperData.saveSelected(item.id);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('已切换为「${item.name}」壁纸'),
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('已切换为「${item.name}」壁纸'), duration: const Duration(seconds: 1)));
     }
   }
 
@@ -77,15 +73,11 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
       await WallpaperData.addCustomWallpaper(customItem);
       await _loadCustomWallpapers();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('壁纸上传成功！')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('壁纸上传成功！')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('上传失败：$e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('上传失败：$e')));
       }
     }
   }
@@ -99,9 +91,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
     }
     await _loadCustomWallpapers();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已删除自定义壁纸')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已删除自定义壁纸')));
     }
   }
 
@@ -143,10 +133,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                     _buildSectionTitle(skin, '渐变'),
                     const SizedBox(height: 8),
                     ...WallpaperData.gradientWallpapers.map(
-                      (w) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _buildGradientTile(skin, w),
-                      ),
+                      (w) => Padding(padding: const EdgeInsets.only(bottom: 8), child: _buildGradientTile(skin, w)),
                     ),
                     const SizedBox(height: 20),
                     _buildSectionTitle(skin, '壁纸'),
@@ -174,10 +161,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text(
-            '外观 & 沉浸场景',
-            style: MistralTypography.heading5.copyWith(color: skin.text1),
-          ),
+          Text('外观 & 沉浸场景', style: MistralTypography.heading5.copyWith(color: skin.text1)),
         ],
       ),
     );
@@ -197,11 +181,9 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add_photo_alternate_outlined,
-                  size: 32, color: skin.accent),
+              Icon(Icons.add_photo_alternate_outlined, size: 32, color: skin.accent),
               const SizedBox(height: 4),
-              Text('上传自定义壁纸',
-                  style: MistralTypography.bodyMd.copyWith(color: skin.accent)),
+              Text('上传自定义壁纸', style: MistralTypography.bodyMd.copyWith(color: skin.accent)),
             ],
           ),
         ),
@@ -240,9 +222,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                   end: Alignment.bottomCenter,
                 ),
               ),
-              child: Center(
-                child: Icon(Icons.wallpaper, size: 48, color: MistralColors.white54),
-              ),
+              child: Center(child: Icon(Icons.wallpaper, size: 48, color: MistralColors.white54)),
             ),
           ),
           // 半透明遮罩 + 模拟首页内容
@@ -302,9 +282,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                   end: wallpaper.end ?? Alignment.bottomCenter,
                 ),
               ),
-              child: Center(
-                child: Icon(Icons.wallpaper, size: 48, color: MistralColors.white54),
-              ),
+              child: Center(child: Icon(Icons.wallpaper, size: 48, color: MistralColors.white54)),
             ),
           ),
           // 半透明遮罩 + 模拟首页内容
@@ -368,9 +346,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
             Text(
               'Monster',
               style: MistralTypography.heading1.copyWith(
-                color: wallpaper.id == 'default'
-                    ? MistralColors.ink
-                    : AppColors.white100.withValues(alpha: 0.9),
+                color: wallpaper.id == 'default' ? MistralColors.ink : AppColors.white100.withValues(alpha: 0.9),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -378,18 +354,13 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: (wallpaper.id == 'default'
-                        ? MistralColors.ink
-                        : AppColors.white100)
-                    .withValues(alpha: 0.1),
+                color: (wallpaper.id == 'default' ? MistralColors.ink : AppColors.white100).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: Text(
                 'Learn 10  ·  Review 0',
                 style: MistralTypography.bodySm.copyWith(
-                  color: wallpaper.id == 'default'
-                      ? MistralColors.slate
-                      : MistralColors.white70,
+                  color: wallpaper.id == 'default' ? MistralColors.slate : MistralColors.white70,
                 ),
               ),
             ),
@@ -400,10 +371,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
   }
 
   Widget _buildSectionTitle(ThemeVars skin, String title) {
-    return Text(
-      title,
-      style: MistralTypography.bodyBold.copyWith(color: skin.text1),
-    );
+    return Text(title, style: MistralTypography.bodyBold.copyWith(color: skin.text1));
   }
 
   Widget _buildColorTile(ThemeVars skin, WallpaperItem wallpaper) {
@@ -419,10 +387,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
         decoration: BoxDecoration(
           color: wallpaper.colors?.first,
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(
-            color: isSelected ? MistralColors.primary : skin.divider,
-            width: isSelected ? 2 : 1,
-          ),
+          border: Border.all(color: isSelected ? MistralColors.primary : skin.divider, width: isSelected ? 2 : 1),
         ),
         child: Row(
           children: [
@@ -434,8 +399,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
               ),
             ),
             const Spacer(),
-            if (isSelected)
-              Icon(Icons.check_circle, color: MistralColors.primary, size: 22),
+            if (isSelected) Icon(Icons.check_circle, color: MistralColors.primary, size: 22),
           ],
         ),
       ),
@@ -475,8 +439,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
               ),
             ),
             const Spacer(),
-            if (isSelected)
-              Icon(Icons.check_circle, color: AppColors.white100, size: 22),
+            if (isSelected) Icon(Icons.check_circle, color: AppColors.white100, size: 22),
           ],
         ),
       ),
@@ -501,10 +464,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(
-                color: isSelected ? MistralColors.primary : skin.divider,
-                width: isSelected ? 3 : 1,
-              ),
+              border: Border.all(color: isSelected ? MistralColors.primary : skin.divider, width: isSelected ? 3 : 1),
             ),
             clipBehavior: Clip.antiAlias,
             child: Stack(
@@ -541,13 +501,9 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                     ),
                     child: Row(
                       children: [
-                        Text(
-                          wallpaper.name,
-                          style: MistralTypography.bodySm.copyWith(color: AppColors.white100),
-                        ),
+                        Text(wallpaper.name, style: MistralTypography.bodySm.copyWith(color: AppColors.white100)),
                         const Spacer(),
-                        if (isSelected)
-                          Icon(Icons.check_circle, color: AppColors.white100, size: 18),
+                        if (isSelected) Icon(Icons.check_circle, color: AppColors.white100, size: 18),
                       ],
                     ),
                   ),
@@ -578,10 +534,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(
-                color: isSelected ? MistralColors.primary : skin.divider,
-                width: isSelected ? 3 : 1,
-              ),
+              border: Border.all(color: isSelected ? MistralColors.primary : skin.divider, width: isSelected ? 3 : 1),
             ),
             clipBehavior: Clip.antiAlias,
             child: Stack(
@@ -626,8 +579,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (isSelected)
-                          Icon(Icons.check_circle, color: AppColors.white100, size: 18),
+                        if (isSelected) Icon(Icons.check_circle, color: AppColors.white100, size: 18),
                       ],
                     ),
                   ),
@@ -640,10 +592,7 @@ class _WallpaperSelectPageState extends State<WallpaperSelectPage> {
                     onTap: () => _deleteCustomWallpaper(wallpaper),
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: MistralColors.black54,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      decoration: BoxDecoration(color: MistralColors.black54, borderRadius: BorderRadius.circular(12)),
                       child: const Icon(Icons.close, color: Colors.white, size: 16),
                     ),
                   ),

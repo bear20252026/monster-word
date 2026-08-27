@@ -1,6 +1,7 @@
 // 听写练习页面
 // 系统 TTS 播放单词发音，用户输入拼写，实时判分
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 // wordbook_database.dart removed - not used in this file
@@ -14,11 +15,7 @@ class DictationSessionPage extends StatefulWidget {
   final List<Word> words;
   final String bookName;
 
-  const DictationSessionPage({
-    super.key,
-    required this.words,
-    this.bookName = '',
-  });
+  const DictationSessionPage({super.key, required this.words, this.bookName = ''});
 
   static const routeName = '/dictation_session';
 
@@ -59,11 +56,19 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
     super.dispose();
   }
 
-  Word get _currentWord =>
-      widget.words.isNotEmpty ? widget.words[_currentIndex] : Word(
-        id: 0, word: '', mainWord: '', interpret: '', ukPron: '', usPron: '',
-        phrase: '', example: '', confuse: '',
-      );
+  Word get _currentWord => widget.words.isNotEmpty
+      ? widget.words[_currentIndex]
+      : Word(
+          id: 0,
+          word: '',
+          mainWord: '',
+          interpret: '',
+          ukPron: '',
+          usPron: '',
+          phrase: '',
+          example: '',
+          confuse: '',
+        );
 
   Future<void> _speakWord() async {
     if (widget.words.isEmpty) return;
@@ -140,7 +145,9 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
       return Scaffold(
         backgroundColor: skin.colors.pageBg,
         appBar: AppBar(backgroundColor: skin.colors.pageBg, elevation: 0),
-        body: Center(child: Text('暂无单词', style: MistralTypography.body.copyWith(color: skin.colors.text3))),
+        body: Center(
+          child: Text('暂无单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+        ),
       );
     }
 
@@ -229,18 +236,12 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
     return Container(
       height: 6,
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: skin.colors.divider,
-        borderRadius: BorderRadius.circular(8),
-      ),
+      decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(8)),
       child: FractionallySizedBox(
         alignment: Alignment.centerLeft,
         widthFactor: progress,
         child: Container(
-          decoration: BoxDecoration(
-            color: MistralColors.primary,
-            borderRadius: BorderRadius.circular(8),
-          ),
+          decoration: BoxDecoration(color: MistralColors.primary, borderRadius: BorderRadius.circular(8)),
         ),
       ),
     );
@@ -321,10 +322,7 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
           const Icon(Icons.cancel, color: MistralColors.error, size: 48),
           const SizedBox(height: 8),
           Text('正确答案：', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
-          Text(
-            _currentWord.word,
-            style: MistralTypography.heading4.copyWith(color: MistralColors.primary),
-          ),
+          Text(_currentWord.word, style: MistralTypography.heading4.copyWith(color: MistralColors.primary)),
         ],
       );
     }

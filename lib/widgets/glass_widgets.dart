@@ -2,6 +2,7 @@
 // 玻璃拟态组件库 - 实现毛玻璃效果
 
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../hooks/responsive.dart';
@@ -46,16 +47,9 @@ class GlassCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: skin.glassBg.withValues(alpha: opacity),
             borderRadius: BorderRadius.circular(radius),
-            border: Border.all(
-              color: skin.glassBorder.withValues(alpha: 0.2),
-              width: 0.5,
-            ),
+            border: Border.all(color: skin.glassBorder.withValues(alpha: 0.2), width: 0.5),
             boxShadow: [
-              BoxShadow(
-                color: skin.text1.withValues(alpha: 0.1),
-                blurRadius: 10.0,
-                offset: const Offset(0, 4),
-              ),
+              BoxShadow(color: skin.text1.withValues(alpha: 0.1), blurRadius: 10.0, offset: const Offset(0, 4)),
             ],
           ),
           child: child,
@@ -72,13 +66,7 @@ class GlassEntryCard extends StatelessWidget {
   final VoidCallback? onTap;
   final double? width;
 
-  const GlassEntryCard({
-    super.key,
-    required this.title,
-    required this.count,
-    this.onTap,
-    this.width,
-  });
+  const GlassEntryCard({super.key, required this.title, required this.count, this.onTap, this.width});
 
   @override
   Widget build(BuildContext context) {
@@ -98,35 +86,20 @@ class GlassEntryCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: skin.glassBg.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(24.0),
-              border: Border.all(
-                color: skin.glassBorder.withValues(alpha: 0.2),
-                width: 0.5,
-              ),
+              border: Border.all(color: skin.glassBorder.withValues(alpha: 0.2), width: 0.5),
               boxShadow: [
-                BoxShadow(
-                  color: skin.text1.withValues(alpha: 0.1),
-                  blurRadius: 10.0,
-                  offset: const Offset(0, 4),
-                ),
+                BoxShadow(color: skin.text1.withValues(alpha: 0.1), blurRadius: 10.0, offset: const Offset(0, 4)),
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  title,
-                  style: MistralTypography.captionBold.copyWith(
-                    color: skin.text1,
-                  ),
-                ),
+                Text(title, style: MistralTypography.captionBold.copyWith(color: skin.text1)),
                 const SizedBox(height: 4),
                 Text(
                   '$count',
-                  style: MistralTypography.heading2.copyWith(
-                    color: count > 0 ? skin.accent : skin.text3,
-                    fontSize: 32,
-                  ),
+                  style: MistralTypography.heading2.copyWith(color: count > 0 ? skin.accent : skin.text3, fontSize: 32),
                 ),
               ],
             ),
@@ -159,16 +132,9 @@ class GlassPill extends StatelessWidget {
             decoration: BoxDecoration(
               color: skin.glassBg.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(20.0),
-              border: Border.all(
-                color: skin.glassBorder.withValues(alpha: 0.2),
-                width: 0.5,
-              ),
+              border: Border.all(color: skin.glassBorder.withValues(alpha: 0.2), width: 0.5),
               boxShadow: [
-                BoxShadow(
-                  color: skin.text1.withValues(alpha: 0.1),
-                  blurRadius: 10.0,
-                  offset: const Offset(0, 4),
-                ),
+                BoxShadow(color: skin.text1.withValues(alpha: 0.1), blurRadius: 10.0, offset: const Offset(0, 4)),
               ],
             ),
             child: child,
@@ -187,10 +153,7 @@ class GlassBg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
-    return Container(
-      color: skin.pageBg,
-      child: child,
-    );
+    return Container(color: skin.pageBg, child: child);
   }
 }
 
@@ -201,13 +164,7 @@ class GlassModal extends StatelessWidget {
   final Widget child;
   final double? width;
 
-  const GlassModal({
-    super.key,
-    required this.visible,
-    required this.onClose,
-    required this.child,
-    this.width,
-  });
+  const GlassModal({super.key, required this.visible, required this.onClose, required this.child, this.width});
 
   @override
   Widget build(BuildContext context) {
@@ -231,16 +188,9 @@ class GlassModal extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: skin.glassBg.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(16.0),
-                    border: Border.all(
-                      color: skin.glassBorder.withValues(alpha: 0.2),
-                      width: 0.5,
-                    ),
+                    border: Border.all(color: skin.glassBorder.withValues(alpha: 0.2), width: 0.5),
                     boxShadow: [
-                      BoxShadow(
-                        color: skin.text1.withValues(alpha: 0.1),
-                        blurRadius: 10.0,
-                        offset: const Offset(0, 4),
-                      ),
+                      BoxShadow(color: skin.text1.withValues(alpha: 0.1), blurRadius: 10.0, offset: const Offset(0, 4)),
                     ],
                   ),
                   padding: const EdgeInsets.all(20),

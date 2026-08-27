@@ -4,8 +4,10 @@
 // 文本类组件集合
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import 'animations.dart';
+
 // ─────────────────────────────────────────────────────────────
 // AutoFitText — 自动适配字号文本（移植自 AutoFitTextView.java）
 // ─────────────────────────────────────────────────────────────
@@ -49,8 +51,7 @@ class AutoFitText extends StatelessWidget {
         }
         return Text(
           text,
-          style: (style ?? DefaultTextStyle.of(context).style)
-              .copyWith(fontSize: fontSize),
+          style: (style ?? DefaultTextStyle.of(context).style).copyWith(fontSize: fontSize),
           maxLines: maxLines,
           overflow: TextOverflow.ellipsis,
           textAlign: textAlign,
@@ -83,8 +84,7 @@ class AnimatedNumberText extends StatefulWidget {
   State<AnimatedNumberText> createState() => _AnimatedNumberTextState();
 }
 
-class _AnimatedNumberTextState extends State<AnimatedNumberText>
-    with SingleTickerProviderStateMixin {
+class _AnimatedNumberTextState extends State<AnimatedNumberText> with SingleTickerProviderStateMixin {
   AnimationController? _controller;
   Animation<int>? _animation;
   int _displayNumber = 0;
@@ -100,22 +100,16 @@ class _AnimatedNumberTextState extends State<AnimatedNumberText>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.number != widget.number) {
       _controller?.dispose();
-      _controller = AnimationController(
-        vsync: this,
-        duration: widget.duration,
-      );
-      _animation = IntTween(
-        begin: _displayNumber,
-        end: widget.number,
-      ).animate(CurvedAnimation(
-        parent: _controller!,
-        curve: standardCurve,
-      ))
-        ..addListener(() {
-          setState(() {
-            _displayNumber = _animation!.value;
+      _controller = AnimationController(vsync: this, duration: widget.duration);
+      _animation =
+          IntTween(
+            begin: _displayNumber,
+            end: widget.number,
+          ).animate(CurvedAnimation(parent: _controller!, curve: standardCurve))..addListener(() {
+            setState(() {
+              _displayNumber = _animation!.value;
+            });
           });
-        });
       _controller!.forward();
     }
   }
@@ -128,10 +122,7 @@ class _AnimatedNumberTextState extends State<AnimatedNumberText>
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      '${widget.prefix}$_displayNumber${widget.suffix}',
-      style: widget.style,
-    );
+    return Text('${widget.prefix}$_displayNumber${widget.suffix}', style: widget.style);
   }
 }
 
@@ -167,13 +158,8 @@ class BadgeView extends StatelessWidget {
           right: -4,
           top: -4,
           child: Container(
-            padding: count > 9
-                ? const EdgeInsets.symmetric(horizontal: 4, vertical: 1)
-                : null,
-            constraints: BoxConstraints(
-              minWidth: size,
-              minHeight: size,
-            ),
+            padding: count > 9 ? const EdgeInsets.symmetric(horizontal: 4, vertical: 1) : null,
+            constraints: BoxConstraints(minWidth: size, minHeight: size),
             decoration: BoxDecoration(
               color: badgeColor ?? context.skin.colors.danger,
               borderRadius: BorderRadius.circular(size / 2),
@@ -200,16 +186,11 @@ class BadgeView extends StatelessWidget {
 // MiddleToast — 居中 Toast（移植自 MiddleToast.java）
 // ─────────────────────────────────────────────────────────────
 class MiddleToast {
-  static void show(BuildContext context, String message,
-      {Duration duration = const Duration(seconds: 2)}) {
+  static void show(BuildContext context, String message, {Duration duration = const Duration(seconds: 2)}) {
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
     entry = OverlayEntry(
-      builder: (context) => _ToastWidget(
-        message: message,
-        onDismiss: () => entry.remove(),
-        duration: duration,
-      ),
+      builder: (context) => _ToastWidget(message: message, onDismiss: () => entry.remove(), duration: duration),
     );
     overlay.insert(entry);
   }
@@ -220,27 +201,19 @@ class _ToastWidget extends StatefulWidget {
   final VoidCallback onDismiss;
   final Duration duration;
 
-  const _ToastWidget({
-    required this.message,
-    required this.onDismiss,
-    required this.duration,
-  });
+  const _ToastWidget({required this.message, required this.onDismiss, required this.duration});
 
   @override
   State<_ToastWidget> createState() => _ToastWidgetState();
 }
 
-class _ToastWidgetState extends State<_ToastWidget>
-    with SingleTickerProviderStateMixin {
+class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    )..forward();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 200))..forward();
     Future.delayed(widget.duration, () {
       if (mounted) {
         _controller.reverse().then((_) => widget.onDismiss());
@@ -263,14 +236,8 @@ class _ToastWidgetState extends State<_ToastWidget>
           color: Colors.transparent,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.black87,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              widget.message,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-            ),
+            decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(8)),
+            child: Text(widget.message, style: const TextStyle(color: Colors.white, fontSize: 14)),
           ),
         ),
       ),
@@ -287,25 +254,14 @@ class AutoLinkText extends StatelessWidget {
   final TextStyle? linkStyle;
   final void Function(String url)? onLinkTap;
 
-  const AutoLinkText(
-    this.text, {
-    super.key,
-    this.style,
-    this.linkStyle,
-    this.onLinkTap,
-  });
+  const AutoLinkText(this.text, {super.key, this.style, this.linkStyle, this.onLinkTap});
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    final defaultLinkStyle = linkStyle ??
-        TextStyle(
-          color: skin.colors.accent,
-          decoration: TextDecoration.underline,
-        );
+    final defaultLinkStyle = linkStyle ?? TextStyle(color: skin.colors.accent, decoration: TextDecoration.underline);
     return RichText(
-      text: _buildTextSpan(text, style ?? DefaultTextStyle.of(context).style,
-          defaultLinkStyle, onLinkTap),
+      text: _buildTextSpan(text, style ?? DefaultTextStyle.of(context).style, defaultLinkStyle, onLinkTap),
     );
   }
 
@@ -315,25 +271,17 @@ class AutoLinkText extends StatelessWidget {
     TextStyle linkStyle,
     void Function(String)? onLinkTap,
   ) {
-    final urlPattern = RegExp(
-      r'(https?://[^\s]+)',
-      caseSensitive: false,
-    );
+    final urlPattern = RegExp(r'(https?://[^\s]+)', caseSensitive: false);
     final spans = <InlineSpan>[];
     int lastEnd = 0;
     for (final match in urlPattern.allMatches(text)) {
       if (match.start > lastEnd) {
-        spans.add(TextSpan(
-          text: text.substring(lastEnd, match.start),
-          style: defaultStyle,
-        ));
+        spans.add(TextSpan(text: text.substring(lastEnd, match.start), style: defaultStyle));
       }
       final url = match.group(0)!;
-      spans.add(TextSpan(
-        text: url,
-        style: linkStyle,
-        recognizer: TapGestureRecognizer()..onTap = () => onLinkTap?.call(url),
-      ));
+      spans.add(
+        TextSpan(text: url, style: linkStyle, recognizer: TapGestureRecognizer()..onTap = () => onLinkTap?.call(url)),
+      );
       lastEnd = match.end;
     }
     if (lastEnd < text.length) {

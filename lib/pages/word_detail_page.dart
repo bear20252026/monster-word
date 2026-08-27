@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
 import '../data/dictionary_extra.dart';
 import '../data/example_parser.dart';
 import '../hooks/responsive.dart';
@@ -12,10 +11,10 @@ import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../features/learning/data/review_schedule_repository.dart';
 import '../features/learning/presentation/learning_session_state.dart';
 import '../features/player/presentation/audio_playback_state.dart';
+import '../features/word_browse/application/sentence_favorites_store.dart';
+import '../features/word_browse/application/word_notes_store.dart';
 import '../models/word.dart';
 import '../models/word_note.dart';
-import '../repositories/fav_repository.dart';
-import '../repositories/note_repository.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/sb_card.dart';
@@ -65,7 +64,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
     if (word == null) return;
 
     try {
-      final notes = await sl<NoteRepository>().getNotesByWord(word.id);
+      final notes = await context.read<WordNotesStore>().listForWord(word.id);
       if (mounted)
         setState(() {
           _notes = notes;
@@ -88,7 +87,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
     );
     if (result != null && result.trim().isNotEmpty) {
       final note = WordNote(wordId: word.id, word: word.word, content: result.trim());
-      await sl<NoteRepository>().insertNote(note);
+      await context.read<WordNotesStore>().add(note);
       await _loadNotes();
     }
   }
@@ -100,7 +99,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       builder: (ctx) => _NoteDialog(controller: controller, title: '编辑笔记'),
     );
     if (result != null && result.trim().isNotEmpty) {
-      await sl<NoteRepository>().updateNote(note.copyWith(content: result.trim()));
+      await context.read<WordNotesStore>().update(note.copyWith(content: result.trim()));
       await _loadNotes();
     }
   }
@@ -118,7 +117,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       ),
     );
     if (confirmed == true) {
-      await sl<NoteRepository>().deleteNote(note.id!);
+      await context.read<WordNotesStore>().deleteById(note.id!);
       await _loadNotes();
     }
   }
@@ -988,7 +987,7 @@ class _ExampleTileState extends State<_ExampleTile> {
   void _checkFavStatus() {
     // 使用句子的唯一标识（英文内容的hash）作为sentenceId
     final sentenceId = widget.example.en.hashCode.toString();
-    sl<FavRepository>().isFavoriteSentence(widget.wordId, sentenceId).then((v) {
+    context.read<SentenceFavoritesStore>().isFavorite(wordId: widget.wordId, sentenceId: sentenceId).then((v) {
       if (mounted) setState(() => _isFav = v);
     });
   }
@@ -996,7 +995,7 @@ class _ExampleTileState extends State<_ExampleTile> {
   Future<void> _toggleFav() async {
     final sentenceId = widget.example.en.hashCode.toString();
 
-    await sl<FavRepository>().toggleFavoriteSentence(
+    await context.read<SentenceFavoritesStore>().toggle(
       wordId: widget.wordId,
       sentenceId: sentenceId,
       english: widget.example.en,
@@ -1006,7 +1005,10 @@ class _ExampleTileState extends State<_ExampleTile> {
 
     if (mounted) {
       // 直接获取新状态，不设中间值避免闪烁
-      final newStatus = await sl<FavRepository>().isFavoriteSentence(widget.wordId, sentenceId);
+      final newStatus = await context.read<SentenceFavoritesStore>().isFavorite(
+        wordId: widget.wordId,
+        sentenceId: sentenceId,
+      );
       if (mounted) setState(() => _isFav = newStatus);
 
       ScaffoldMessenger.of(context)

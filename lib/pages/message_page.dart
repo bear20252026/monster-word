@@ -73,30 +73,27 @@ class _MessagePageState extends State<MessagePage> {
               child: _isLoading
                   ? Center(child: CircularProgressIndicator(color: MistralColors.primary))
                   : _messages.isEmpty
-                      ? _buildEmptyView(skin)
-                      : RefreshIndicator(
-                          color: MistralColors.primary,
-                          onRefresh: () => _loadMessages(refresh: true),
-                          child: ListView.builder(
-                            itemCount: _messages.length + (_hasMore ? 1 : 0),
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            itemBuilder: (context, index) {
-                              if (index == _messages.length) {
-                                _loadMessages();
-                                return Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: CircularProgressIndicator(
-                                      color: MistralColors.primary,
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                );
-                              }
-                              return _buildMessageItem(skin, _messages[index]);
-                            },
-                          ),
-                        ),
+                  ? _buildEmptyView(skin)
+                  : RefreshIndicator(
+                      color: MistralColors.primary,
+                      onRefresh: () => _loadMessages(refresh: true),
+                      child: ListView.builder(
+                        itemCount: _messages.length + (_hasMore ? 1 : 0),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemBuilder: (context, index) {
+                          if (index == _messages.length) {
+                            _loadMessages();
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: CircularProgressIndicator(color: MistralColors.primary, strokeWidth: 2),
+                              ),
+                            );
+                          }
+                          return _buildMessageItem(skin, _messages[index]);
+                        },
+                      ),
+                    ),
             ),
           ],
         ),

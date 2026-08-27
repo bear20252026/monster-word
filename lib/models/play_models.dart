@@ -17,11 +17,8 @@ class ExtensivePlayParameter {
   int playTypeInterval;
   int nextTimesInterval;
 
-  ExtensivePlayParameter({
-    List<int>? playTypes,
-    this.playTypeInterval = 1,
-    this.nextTimesInterval = 2,
-  }) : playTypes = playTypes ?? [playTypeWord];
+  ExtensivePlayParameter({List<int>? playTypes, this.playTypeInterval = 1, this.nextTimesInterval = 2})
+    : playTypes = playTypes ?? [playTypeWord];
 
   /// 慢速播放速度
   double get slowPlaySpeed => 0.7;
@@ -36,23 +33,17 @@ class ExtensivePlayParameter {
 
   int get typeCount => playTypes.length;
 
-  factory ExtensivePlayParameter.fromJson(Map<String, dynamic> json) =>
-      ExtensivePlayParameter(
-        playTypes: (json['playTypes'] as List?)
-                ?.map((e) => (e as num).toInt())
-                .toList() ??
-            [playTypeWord],
-        playTypeInterval:
-            (json['playTypeInterval'] as num?)?.toInt() ?? 1,
-        nextTimesInterval:
-            (json['nextTimesInterval'] as num?)?.toInt() ?? 2,
-      );
+  factory ExtensivePlayParameter.fromJson(Map<String, dynamic> json) => ExtensivePlayParameter(
+    playTypes: (json['playTypes'] as List?)?.map((e) => (e as num).toInt()).toList() ?? [playTypeWord],
+    playTypeInterval: (json['playTypeInterval'] as num?)?.toInt() ?? 1,
+    nextTimesInterval: (json['nextTimesInterval'] as num?)?.toInt() ?? 2,
+  );
 
   Map<String, dynamic> toJson() => {
-        'playTypes': playTypes,
-        'playTypeInterval': playTypeInterval,
-        'nextTimesInterval': nextTimesInterval,
-      };
+    'playTypes': playTypes,
+    'playTypeInterval': playTypeInterval,
+    'nextTimesInterval': nextTimesInterval,
+  };
 }
 
 /// 泛听播放模式（翻译自 ExtensivePlayMode.java）

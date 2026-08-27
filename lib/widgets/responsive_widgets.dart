@@ -1,6 +1,7 @@
 // 响应式组件库：提供跨屏幕尺寸一致的自适应行为
 // 包含：响应式网格、响应式卡片、响应式文字、响应式按钮
 import 'package:flutter/material.dart';
+
 import '../hooks/responsive.dart';
 
 /// 响应式文字：根据屏幕类型自动缩放字号
@@ -34,9 +35,7 @@ class ResponsiveText extends StatelessWidget {
     TextStyle? base = style;
 
     if (scaleAcrossScreens && fontSize != null) {
-      base = (base ?? const TextStyle()).copyWith(
-        fontSize: fontSize! * resp.fontScale,
-      );
+      base = (base ?? const TextStyle()).copyWith(fontSize: fontSize! * resp.fontScale);
     }
 
     if (fontWeight != null) {
@@ -47,13 +46,7 @@ class ResponsiveText extends StatelessWidget {
       base = (base ?? const TextStyle()).copyWith(color: color);
     }
 
-    return Text(
-      data,
-      style: base,
-      textAlign: textAlign,
-      maxLines: maxLines,
-      overflow: overflow,
-    );
+    return Text(data, style: base, textAlign: textAlign, maxLines: maxLines, overflow: overflow);
   }
 }
 
@@ -91,12 +84,7 @@ class ResponsivePadding extends StatelessWidget {
     double? b = bottom ?? vertical ?? all;
 
     return Padding(
-      padding: EdgeInsets.only(
-        left: (l ?? 0) * s,
-        top: (t ?? 0) * s,
-        right: (r ?? 0) * s,
-        bottom: (b ?? 0) * s,
-      ),
+      padding: EdgeInsets.only(left: (l ?? 0) * s, top: (t ?? 0) * s, right: (r ?? 0) * s, bottom: (b ?? 0) * s),
       child: child,
     );
   }
@@ -123,10 +111,7 @@ class ResponsiveConstrainedBox extends StatelessWidget {
     return Align(
       alignment: alignment,
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: maxWidth ?? resp.contentMaxWidth,
-          minWidth: minWidth ?? 0,
-        ),
+        constraints: BoxConstraints(maxWidth: maxWidth ?? resp.contentMaxWidth, minWidth: minWidth ?? 0),
         child: child,
       ),
     );
@@ -165,11 +150,7 @@ class ResponsiveGrid extends StatelessWidget {
           spacing: spacing,
           runSpacing: runSpacing,
           children: children.map((child) {
-            return SizedBox(
-              width: itemWidth,
-              height: itemHeight,
-              child: child,
-            );
+            return SizedBox(width: itemWidth, height: itemHeight, child: child);
           }).toList(),
         );
       },
@@ -185,14 +166,7 @@ class ResponsiveIconButton extends StatelessWidget {
   final Color? color;
   final String? tooltip;
 
-  const ResponsiveIconButton({
-    super.key,
-    required this.icon,
-    this.onPressed,
-    this.size,
-    this.color,
-    this.tooltip,
-  });
+  const ResponsiveIconButton({super.key, required this.icon, this.onPressed, this.size, this.color, this.tooltip});
 
   @override
   Widget build(BuildContext context) {
@@ -204,10 +178,7 @@ class ResponsiveIconButton extends StatelessWidget {
       onPressed: onPressed,
       color: color,
       tooltip: tooltip,
-      constraints: BoxConstraints(
-        minWidth: 48 * resp.scale,
-        minHeight: 48 * resp.scale,
-      ),
+      constraints: BoxConstraints(minWidth: 48 * resp.scale, minHeight: 48 * resp.scale),
     );
   }
 }
@@ -238,21 +209,16 @@ class ResponsiveCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resp = context.responsive;
-    final p = padding ??
+    final p =
+        padding ??
         EdgeInsets.all(
-          resp.pick(
-            mobile: mobilePadding ?? 12,
-            tablet: tabletPadding ?? 16,
-            desktop: desktopPadding ?? 20,
-          ),
+          resp.pick(mobile: mobilePadding ?? 12, tablet: tabletPadding ?? 16, desktop: desktopPadding ?? 20),
         );
 
     return Card(
       color: color,
       elevation: elevation,
-      shape: borderRadius != null
-          ? RoundedRectangleBorder(borderRadius: borderRadius!)
-          : null,
+      shape: borderRadius != null ? RoundedRectangleBorder(borderRadius: borderRadius!) : null,
       child: Padding(padding: p, child: child),
     );
   }
@@ -264,18 +230,11 @@ class ResponsiveSizedBox extends StatelessWidget {
   final double? height;
   final Widget? child;
 
-  const ResponsiveSizedBox({
-    super.key,
-    this.width,
-    this.height,
-    this.child,
-  });
+  const ResponsiveSizedBox({super.key, this.width, this.height, this.child});
 
-  factory ResponsiveSizedBox.w(double w) =>
-      ResponsiveSizedBox(width: w);
+  factory ResponsiveSizedBox.w(double w) => ResponsiveSizedBox(width: w);
 
-  factory ResponsiveSizedBox.h(double h) =>
-      ResponsiveSizedBox(height: h);
+  factory ResponsiveSizedBox.h(double h) => ResponsiveSizedBox(height: h);
 
   @override
   Widget build(BuildContext context) {
@@ -317,9 +276,7 @@ class ResponsiveFlex extends StatelessWidget {
     final widgets = <Widget>[];
     for (var i = 0; i < children.length; i++) {
       if (i > 0 && spacing != null) {
-        widgets.add(useRow
-            ? SizedBox(width: spacing! * resp.scale)
-            : SizedBox(height: spacing! * resp.scale));
+        widgets.add(useRow ? SizedBox(width: spacing! * resp.scale) : SizedBox(height: spacing! * resp.scale));
       }
       widgets.add(children[i]);
     }

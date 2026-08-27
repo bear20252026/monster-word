@@ -77,10 +77,7 @@ class UIThemeSelectPage extends StatelessWidget {
   Widget _buildFollowSystemToggle(BuildContext context, SkinSystem skin) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: skin.colors.cardBgAlt,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(16)),
       child: Row(
         children: [
           Icon(Icons.brightness_6, color: skin.colors.accent),
@@ -90,8 +87,7 @@ class UIThemeSelectPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('跟随系统', style: MistralTypography.body.copyWith(color: skin.colors.text1)),
-                Text('根据系统深色/浅色自动切换',
-                    style: MistralTypography.caption.copyWith(color: skin.colors.text2)),
+                Text('根据系统深色/浅色自动切换', style: MistralTypography.caption.copyWith(color: skin.colors.text2)),
               ],
             ),
           ),
@@ -108,13 +104,20 @@ class UIThemeSelectPage extends StatelessWidget {
   /// 主题描述文字
   String _themeDescription(String id) {
     switch (id) {
-      case 'starbucks_cream': return '星巴克绿，奶油画布，温暖咖啡感';
-      case 'starbucks_dark': return '深绿夜空，沉浸式学习';
-      case 'bright': return 'Mistral AI 风格，清爽明亮';
-      case 'dark': return '护眼深色，夜间友好';
-      case 'pure_black': return '纯黑模式，OLED 省电';
-      case 'warm_orange': return '暖阳橙，活力温暖，适合日间';
-      default: return '';
+      case 'starbucks_cream':
+        return '星巴克绿，奶油画布，温暖咖啡感';
+      case 'starbucks_dark':
+        return '深绿夜空，沉浸式学习';
+      case 'bright':
+        return 'Mistral AI 风格，清爽明亮';
+      case 'dark':
+        return '护眼深色，夜间友好';
+      case 'pure_black':
+        return '纯黑模式，OLED 省电';
+      case 'warm_orange':
+        return '暖阳橙，活力温暖，适合日间';
+      default:
+        return '';
     }
   }
 
@@ -160,8 +163,7 @@ class UIThemeSelectPage extends StatelessWidget {
                 ],
               ),
             ),
-            if (isSelected)
-              Icon(Icons.check_circle, color: MistralColors.primary, size: 24),
+            if (isSelected) Icon(Icons.check_circle, color: MistralColors.primary, size: 24),
           ],
         ),
       ),

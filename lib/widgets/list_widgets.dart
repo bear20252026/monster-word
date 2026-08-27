@@ -3,6 +3,7 @@
 // 由 Claude 团队生成 | 移植自 v3.2 widget/MyExpandleListView.java, SubListView.java, MyViewPager.java, InfiniteViewPager.java, InfinitePagerAdapter.java
 // 列表与翻页组件集合
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import 'animations.dart';
 
@@ -44,11 +45,7 @@ class ExpandableGroup<T> {
   final List<T> items;
   final dynamic data;
 
-  const ExpandableGroup({
-    required this.title,
-    required this.items,
-    this.data,
-  });
+  const ExpandableGroup({required this.title, required this.items, this.data});
 }
 
 class _ExpandableGroupWidget<T> extends StatefulWidget {
@@ -65,12 +62,10 @@ class _ExpandableGroupWidget<T> extends StatefulWidget {
   });
 
   @override
-  State<_ExpandableGroupWidget<T>> createState() =>
-      _ExpandableGroupWidgetState<T>();
+  State<_ExpandableGroupWidget<T>> createState() => _ExpandableGroupWidgetState<T>();
 }
 
-class _ExpandableGroupWidgetState<T>
-    extends State<_ExpandableGroupWidget<T>> {
+class _ExpandableGroupWidgetState<T> extends State<_ExpandableGroupWidget<T>> {
   late bool _expanded;
 
   @override
@@ -87,48 +82,31 @@ class _ExpandableGroupWidgetState<T>
       children: [
         GestureDetector(
           onTap: () => setState(() => _expanded = !_expanded),
-          child: widget.headerBuilder?.call(widget.group, _expanded) ??
+          child:
+              widget.headerBuilder?.call(widget.group, _expanded) ??
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  border: Border(
-                    bottom:
-                        BorderSide(color: skin.colors.divider, width: 0.5),
-                  ),
+                  border: Border(bottom: BorderSide(color: skin.colors.divider, width: 0.5)),
                 ),
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(
                         widget.group.title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: skin.colors.text1,
-                        ),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1),
                       ),
                     ),
-                    Icon(
-                      _expanded
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      color: skin.colors.text3,
-                    ),
+                    Icon(_expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: skin.colors.text3),
                   ],
                 ),
               ),
         ),
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 200),
-          crossFadeState:
-              _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          crossFadeState: _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
           firstChild: const SizedBox.shrink(),
-          secondChild: Column(
-            children: widget.group.items
-                .map((item) => widget.itemBuilder(item))
-                .toList(),
-          ),
+          secondChild: Column(children: widget.group.items.map((item) => widget.itemBuilder(item)).toList()),
         ),
       ],
     );
@@ -161,8 +139,7 @@ class SubList<T> extends StatelessWidget {
       physics: physics ?? const NeverScrollableScrollPhysics(),
       padding: padding,
       shrinkWrap: shrinkWrap,
-      itemBuilder: (context, index) =>
-          itemBuilder(context, items[index], index),
+      itemBuilder: (context, index) => itemBuilder(context, items[index], index),
     );
   }
 }
@@ -203,8 +180,7 @@ class _InfinitePageViewState extends State<InfinitePageView> {
   void initState() {
     super.initState();
     _virtualIndex = _kMiddle;
-    _controller = widget.controller ??
-        PageController(initialPage: _virtualIndex);
+    _controller = widget.controller ?? PageController(initialPage: _virtualIndex);
     if (widget.autoPlay) {
       _startAutoPlay();
     }
@@ -214,11 +190,7 @@ class _InfinitePageViewState extends State<InfinitePageView> {
     Future.delayed(widget.autoPlayInterval, () {
       if (!mounted) return;
       _virtualIndex++;
-      _controller.animateToPage(
-        _virtualIndex,
-        duration: const Duration(milliseconds: 300),
-        curve: standardCurve,
-      );
+      _controller.animateToPage(_virtualIndex, duration: const Duration(milliseconds: 300), curve: standardCurve);
       _startAutoPlay();
     });
   }
@@ -314,8 +286,7 @@ class FullWidthHorizontalList<T> extends StatelessWidget {
         padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
         itemCount: items.length,
         separatorBuilder: (_, _) => SizedBox(width: spacing),
-        itemBuilder: (context, index) =>
-            itemBuilder(context, items[index], index),
+        itemBuilder: (context, index) => itemBuilder(context, items[index], index),
       ),
     );
   }

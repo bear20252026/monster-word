@@ -4,6 +4,7 @@
 // 规格来源：docs/component_spec.md §8 + docs/motion_spec.md
 
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 
 /// 星巴克模态框模式
@@ -73,13 +74,7 @@ class SbModal extends StatelessWidget {
     bool barrierDismissible = true,
     double? maxWidth,
   }) {
-    final modal = SbModal(
-      title: title,
-      showClose: showClose,
-      maxWidth: maxWidth,
-      actions: actions,
-      child: child,
-    );
+    final modal = SbModal(title: title, showClose: showClose, maxWidth: maxWidth, actions: actions, child: child);
 
     switch (mode) {
       case SbModalMode.center:
@@ -90,11 +85,7 @@ class SbModal extends StatelessWidget {
   }
 
   /// 居中弹出
-  static Future<T?> _showCenter<T>(
-    BuildContext context,
-    SbModal modal,
-    bool barrierDismissible,
-  ) {
+  static Future<T?> _showCenter<T>(BuildContext context, SbModal modal, bool barrierDismissible) {
     final colors = context.skin.colors;
     return showDialog<T>(
       context: context,
@@ -103,9 +94,7 @@ class SbModal extends StatelessWidget {
       builder: (_) => Dialog(
         backgroundColor: colors.cardBg,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: modal.maxWidth ?? 360),
           child: modal, // ignore: sort_child_properties_last — modal is the final child
@@ -115,20 +104,14 @@ class SbModal extends StatelessWidget {
   }
 
   /// 底部弹出
-  static Future<T?> _showBottom<T>(
-    BuildContext context,
-    SbModal modal,
-    bool barrierDismissible,
-  ) {
+  static Future<T?> _showBottom<T>(BuildContext context, SbModal modal, bool barrierDismissible) {
     final colors = context.skin.colors;
     return showModalBottomSheet<T>(
       context: context,
       backgroundColor: colors.cardBg,
       isScrollControlled: true,
       barrierColor: Colors.black.withValues(alpha: 0.55),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (_) => SafeArea(child: modal),
     );
   }
@@ -149,11 +132,7 @@ class SbModal extends StatelessWidget {
               if (title != null) ...[
                 Text(
                   title!,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: colors.text1,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.text1),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -164,24 +143,14 @@ class SbModal extends StatelessWidget {
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: actions!
-                      .map((a) => Padding(
-                            padding: const EdgeInsets.only(left: 12),
-                            child: a,
-                          ))
-                      .toList(),
+                  children: actions!.map((a) => Padding(padding: const EdgeInsets.only(left: 12), child: a)).toList(),
                 ),
               ],
             ],
           ),
         ),
         // 右上角关闭按钮
-        if (showClose)
-          Positioned(
-            top: 16,
-            right: 16,
-            child: _CloseButton(onTap: () => Navigator.of(context).pop()),
-          ),
+        if (showClose) Positioned(top: 16, right: 16, child: _CloseButton(onTap: () => Navigator.of(context).pop())),
       ],
     );
   }
@@ -201,17 +170,11 @@ class _CloseButton extends StatelessWidget {
       height: 32,
       child: Material(
         color: Colors.transparent,
-        shape: CircleBorder(
-          side: BorderSide(color: colors.divider, width: 1),
-        ),
+        shape: CircleBorder(side: BorderSide(color: colors.divider, width: 1)),
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onTap,
-          child: Icon(
-            Icons.close,
-            size: 18,
-            color: colors.text2,
-          ),
+          child: Icon(Icons.close, size: 18, color: colors.text2),
         ),
       ),
     );

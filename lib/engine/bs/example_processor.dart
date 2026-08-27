@@ -50,8 +50,8 @@ class ExampleProcessor {
   final String _htmlFormat;
 
   ExampleProcessor({int type = typeNormal})
-      : _type = type,
-        _htmlFormat = type == typeNormal ? _normalHtmlFormat : _lockHtmlFormat;
+    : _type = type,
+      _htmlFormat = type == typeNormal ? _normalHtmlFormat : _lockHtmlFormat;
 
   /// 主题色（原版 getThemeColorStr）
   static String get themeColorStr => '#e0c964';
@@ -106,12 +106,7 @@ class ExampleProcessor {
     }
   }
 
-  String _getExampleByIndex(
-    List<SentenceData> sentences,
-    int height,
-    List<String> audioArr,
-    int index,
-  ) {
+  String _getExampleByIndex(List<SentenceData> sentences, int height, List<String> audioArr, int index) {
     final color = themeColorStr;
     final sentence = sentences[index];
     final audio = sentence.u;
@@ -128,9 +123,7 @@ class ExampleProcessor {
       rowNum = int.tryParse(fileBaseName.substring(fileBaseName.length - 5)) ?? 0;
     }
 
-    final escapedTitle = sentence.b
-        .replaceAll("'", "\\'")
-        .replaceAll('"', '\\"');
+    final escapedTitle = sentence.b.replaceAll("'", "\\'").replaceAll('"', '\\"');
     final spanHtml = createSpanHtml(sentence.e, rowNum);
 
     final sentBody = _fmt(_sentStrFormat, [
@@ -175,14 +168,10 @@ class ExampleProcessor {
         .replaceAll('Mrs.', 'Mrs__ ')
         .replaceAll('Ms.', 'Ms__ ')
         .replaceAll('Dr.', 'Dr__ ')
-        .replaceAllMapped(
-            RegExp(r"[^a-zA-Z0-9](o'clock)"), (m) => ' o__clock')
-        .replaceAllMapped(
-            RegExp(r"[^a-zA-Z0-9](O'CLOCK)"), (m) => ' O__CLOCK')
-        .replaceAllMapped(
-            RegExp(r"[^a-zA-Z0-9](O'Clock)"), (m) => ' O__Clock')
-        .replaceAllMapped(
-            RegExp(r"[^a-zA-Z0-9](O'clock)"), (m) => ' O__clock')
+        .replaceAllMapped(RegExp(r"[^a-zA-Z0-9](o'clock)"), (m) => ' o__clock')
+        .replaceAllMapped(RegExp(r"[^a-zA-Z0-9](O'CLOCK)"), (m) => ' O__CLOCK')
+        .replaceAllMapped(RegExp(r"[^a-zA-Z0-9](O'Clock)"), (m) => ' O__Clock')
+        .replaceAllMapped(RegExp(r"[^a-zA-Z0-9](O'clock)"), (m) => ' O__clock')
         .replaceAll("ma'am", 'ma__am')
         .replaceAll("Ma'am", 'Ma__am')
         .replaceAll("MA'AM", 'MA__AM')
@@ -191,8 +180,7 @@ class ExampleProcessor {
 
     // 处理连续大写字母间的句点（如 U.S.A.）
     while (true) {
-      final next =
-          text.replaceAllMapped(RegExp(r'([\w][A-Z]\.)([A-Z])'), (m) {
+      final next = text.replaceAllMapped(RegExp(r'([\w][A-Z]\.)([A-Z])'), (m) {
         return '${m.group(1)} ${m.group(2)}';
       });
       if (next == text) break;
@@ -201,8 +189,7 @@ class ExampleProcessor {
 
     // 处理大写字母缩写中的句点（如 U.S. → U___S）
     while (true) {
-      final next =
-          text.replaceAllMapped(RegExp(r'([A-Z])\.([A-Z])'), (m) {
+      final next = text.replaceAllMapped(RegExp(r'([A-Z])\.([A-Z])'), (m) {
         return '${m.group(1)}___${m.group(2)}';
       });
       if (next == text) break;
@@ -211,8 +198,7 @@ class ExampleProcessor {
 
     // 处理小数点（如 3.14 → 3___14）
     while (true) {
-      final next =
-          text.replaceAllMapped(RegExp(r'([0-9]*)\.([0-9])'), (m) {
+      final next = text.replaceAllMapped(RegExp(r'([0-9]*)\.([0-9])'), (m) {
         return '${m.group(1)}___${m.group(2)}';
       });
       if (next == text) break;
@@ -221,8 +207,7 @@ class ExampleProcessor {
 
     // 处理 n't 缩写
     while (true) {
-      final next =
-          text.replaceAllMapped(RegExp(r"(\w)(n)'(t)\b"), (m) {
+      final next = text.replaceAllMapped(RegExp(r"(\w)(n)'(t)\b"), (m) {
         return '${m.group(1)} ${m.group(2)}___${m.group(3)}';
       });
       if (next == text) break;
@@ -244,9 +229,7 @@ class ExampleProcessor {
       // 检测是否为加粗标记
       var isBold = false;
       if (part.startsWith('___b1___') && part.endsWith('___b2___')) {
-        part = part
-            .replaceAll('___b1___', '')
-            .replaceAll('___b2___', '');
+        part = part.replaceAll('___b1___', '').replaceAll('___b2___', '');
         isBold = true;
       }
 
@@ -258,14 +241,10 @@ class ExampleProcessor {
         // 还原句点
         part = part.replaceAll('___', '.');
 
-        final spanId =
-            "'${rowNum.toString().padLeft(5, "0")}${wordIndex.toString().padLeft(3, "0")}01'";
+        final spanId = "'${rowNum.toString().padLeft(5, "0")}${wordIndex.toString().padLeft(3, "0")}01'";
 
         // 处理缩写后的撇号（'re, 'll, 've, 'm, 's, 'd）
-        if (i > 0 &&
-            RegExp(r"^(re|ll|ve|m|s|d)$", caseSensitive: false)
-                .hasMatch(part) &&
-            parts[i - 1] == "'") {
+        if (i > 0 && RegExp(r"^(re|ll|ve|m|s|d)$", caseSensitive: false).hasMatch(part) && parts[i - 1] == "'") {
           part = "'$part";
         }
 
@@ -276,15 +255,13 @@ class ExampleProcessor {
         }
       } else if (part == ' ') {
         // 空格：检查后面是否跟着 n't
-        if (i >= parts.length - 1 ||
-            parts[i + 1].toLowerCase() != 'n___t') {
+        if (i >= parts.length - 1 || parts[i + 1].toLowerCase() != 'n___t') {
           sb.write(part);
         }
       } else if (part == "'" && i < parts.length - 1) {
         // 撇号：检查后面是否跟着缩写
         final nextPart = parts[i + 1];
-        if (!RegExp(r'^(re|ll|ve|m|s|d)$', caseSensitive: false)
-            .hasMatch(nextPart)) {
+        if (!RegExp(r'^(re|ll|ve|m|s|d)$', caseSensitive: false).hasMatch(nextPart)) {
           sb.write(part);
         }
       } else {
@@ -322,9 +299,7 @@ class ExampleProcessor {
   /// 将 ___b1___ / ___b2___ 转为 <b> / </b>（原版 encapsulateHightLightSentence）
   static String encapsulateHighlightSentence(String str) {
     if (StrUtils.isEmpty(str)) return str;
-    return str
-        .replaceAll('___b1___', '<b>')
-        .replaceAll('___b2___', '</b>');
+    return str.replaceAll('___b1___', '<b>').replaceAll('___b2___', '</b>');
   }
 
   /// 带原生高亮的句子封装（原版 encapsulateNativeHightLightSentence）
@@ -349,17 +324,13 @@ class ExampleProcessor {
       if (si < 0) break;
       final ei = trimmed.indexOf(endTag, si);
       if (ei <= si) break;
-      highlightRanges.add(_HighlightRange(
-        si - lengthOffset,
-        ei - lengthOffset - startTag.length,
-      ));
+      highlightRanges.add(_HighlightRange(si - lengthOffset, ei - lengthOffset - startTag.length));
       lengthOffset += startTag.length + endTag.length;
       searchStart = ei;
     }
 
     // 分词并标记
-    final tokens =
-        WordTokenizer.tokenize(encapsulateHighlightSentence(trimmed), keepNonAlpha: true);
+    final tokens = WordTokenizer.tokenize(encapsulateHighlightSentence(trimmed), keepNonAlpha: true);
     final sb = StringBuffer('<myspan></myspan>');
     var rangeIdx = 0;
     var charOffset = 0;
@@ -367,13 +338,11 @@ class ExampleProcessor {
 
     for (final token in tokens) {
       if (WordTokenizer.isValidSpanValue(token)) {
-        final spanId =
-            "'${wordPos.toString().padLeft(5, "0")}${wordCount.toString().padLeft(3, "0")}01'";
+        final spanId = "'${wordPos.toString().padLeft(5, "0")}${wordCount.toString().padLeft(3, "0")}01'";
 
         if (rangeIdx < highlightRanges.length) {
           final range = highlightRanges[rangeIdx];
-          if (range.start >= charOffset &&
-              range.end <= token.length + charOffset) {
+          if (range.start >= charOffset && range.end <= token.length + charOffset) {
             // 此单词包含高亮
             final localStart = range.start - charOffset;
             final localEnd = range.end - charOffset;
@@ -431,13 +400,11 @@ class ExampleProcessor {
       if (si < 0) break;
       final ei = str.indexOf(endTag, si);
       if (ei <= si) break;
-      highlightWords
-          .add(str.substring(si + startTag.length, ei));
+      highlightWords.add(str.substring(si + startTag.length, ei));
       searchStart = ei;
     }
 
-    final tokens =
-        WordTokenizer.tokenize(encapsulateHighlightSentence(str), keepNonAlpha: true);
+    final tokens = WordTokenizer.tokenize(encapsulateHighlightSentence(str), keepNonAlpha: true);
     final sb = StringBuffer('<span></span>');
 
     for (final token in tokens) {
@@ -464,9 +431,7 @@ class ExampleProcessor {
   static List<String> parseHtmlToElements(String html) {
     if (html.isEmpty) return [];
     // 简单解析 <h4> 标签（原版用 Jsoup，这里用正则简化）
-    final sanitized = html
-        .replaceAll('<b>', '___b1___')
-        .replaceAll('</b>', '___b2___');
+    final sanitized = html.replaceAll('<b>', '___b1___').replaceAll('</b>', '___b2___');
     final regex = RegExp(r'<h4[^>]*>(.*?)</h4>', dotAll: true);
     final matches = regex.allMatches(sanitized).toList();
     return matches.map((m) => m.group(0) ?? '').toList();
@@ -479,14 +444,10 @@ class ExampleProcessor {
 
     try {
       final map = jsonData is String ? jsonDecode(jsonData) : jsonData;
-      if (map is Map<String, dynamic> &&
-          map['v'] != null &&
-          map['v'] == 1 &&
-          map['data'] != null) {
+      if (map is Map<String, dynamic> && map['v'] != null && map['v'] == 1 && map['data'] != null) {
         final data = map['data'] as List;
         for (final item in data) {
-          final sentence =
-              NormalAcceptationSentence.fromJson(item as Map<String, dynamic>);
+          final sentence = NormalAcceptationSentence.fromJson(item as Map<String, dynamic>);
           result.add(sentence);
         }
       }
@@ -497,10 +458,7 @@ class ExampleProcessor {
   }
 
   /// 解析例句数据（兼容 HTML 和 JSON 格式，原版 changedSentenceData）
-  static List<AcceptationSentence> parseSentenceData(
-    String? rawData,
-    List<Interpret>? interprets,
-  ) {
+  static List<AcceptationSentence> parseSentenceData(String? rawData, List<Interpret>? interprets) {
     final result = <AcceptationSentence>[];
     if (rawData == null || rawData.isEmpty) {
       result.add(OldAcceptationSentence.create(interprets, []));
@@ -522,8 +480,7 @@ class ExampleProcessor {
         sentence.i = _extractAttr(h4, 'img');
         sentence.e = _extractText(h4);
         if (sentence.sid.length > 5) {
-          sentence.eid =
-              sentence.sid.substring(0, sentence.sid.length - 5);
+          sentence.eid = sentence.sid.substring(0, sentence.sid.length - 5);
         }
         sentence.c = _extractText(content);
         sentences.add(sentence);
@@ -537,8 +494,7 @@ class ExampleProcessor {
       final parsed = parseJsonToSentenceData(rawData);
       result.addAll(parsed);
       for (final item in result) {
-        if (item.type == AcceptationSentence.typeOld &&
-            item is OldAcceptationSentence) {
+        if (item.type == AcceptationSentence.typeOld && item is OldAcceptationSentence) {
           item.interprets = interprets;
         }
       }
@@ -567,8 +523,7 @@ class ExampleProcessor {
       sentence.i = _extractAttr(h4, 'img');
       sentence.e = _extractText(h4);
       if (sentence.sid.length > 5) {
-        sentence.eid =
-            sentence.sid.substring(0, sentence.sid.length - 5);
+        sentence.eid = sentence.sid.substring(0, sentence.sid.length - 5);
       }
       sentence.c = _extractText(content);
       return sentence;
@@ -623,9 +578,7 @@ class ExampleProcessor {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is List) {
-        return decoded
-            .map((e) => Interpret.fromJson(e as Map<String, dynamic>))
-            .toList();
+        return decoded.map((e) => Interpret.fromJson(e as Map<String, dynamic>)).toList();
       }
     } catch (_) {
       // 不是 JSON，按纯文本处理
@@ -641,11 +594,7 @@ class ExampleProcessor {
   }
 
   static String _extractText(String html) {
-    return html
-        .replaceAll(RegExp(r'<[^>]*>'), '')
-        .replaceAll('___b1___', '<b>')
-        .replaceAll('___b2___', '</b>')
-        .trim();
+    return html.replaceAll(RegExp(r'<[^>]*>'), '').replaceAll('___b1___', '<b>').replaceAll('___b2___', '</b>').trim();
   }
 }
 

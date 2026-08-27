@@ -28,9 +28,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
   Future<void> _submit() async {
     if (_controller.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写反馈内容')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请填写反馈内容')));
       return;
     }
     setState(() => _isSubmitting = true);
@@ -60,8 +58,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
             icon: Icon(Icons.arrow_back, color: colors.text1),
             onPressed: () => Navigator.pop(context),
           ),
-          title: Text('帮助与反馈',
-              style: MistralTypography.heading5.copyWith(color: colors.text1)),
+          title: Text('帮助与反馈', style: MistralTypography.heading5.copyWith(color: colors.text1)),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1),
             child: Container(height: 1, color: colors.divider),
@@ -80,16 +77,13 @@ class _FeedbackPageState extends State<FeedbackPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 标题
-          Text('我们很乐意听取您的意见',
-              style: MistralTypography.heading4.copyWith(color: colors.text1)),
+          Text('我们很乐意听取您的意见', style: MistralTypography.heading4.copyWith(color: colors.text1)),
           const SizedBox(height: 8),
-          Text('请告诉我们您遇到的问题或建议',
-              style: MistralTypography.body.copyWith(color: colors.text2)),
+          Text('请告诉我们您遇到的问题或建议', style: MistralTypography.body.copyWith(color: colors.text2)),
           const SizedBox(height: 24),
 
           // 反馈内容输入框
-          Text('反馈内容',
-              style: MistralTypography.bodyBold.copyWith(color: colors.text1)),
+          Text('反馈内容', style: MistralTypography.bodyBold.copyWith(color: colors.text1)),
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
@@ -113,8 +107,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
           const SizedBox(height: 20),
 
           // 联系方式（可选）
-          Text('联系方式（可选）',
-              style: MistralTypography.bodyBold.copyWith(color: colors.text1)),
+          Text('联系方式（可选）', style: MistralTypography.bodyBold.copyWith(color: colors.text1)),
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
@@ -143,9 +136,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.accent,
                 foregroundColor: colors.onGlassAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppleRadius.pill),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppleRadius.pill)),
                 elevation: 0,
               ),
               onPressed: _isSubmitting ? null : _submit,
@@ -158,9 +149,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                         valueColor: AlwaysStoppedAnimation(colors.onGlassAccent),
                       ),
                     )
-                  : Text('提交反馈',
-                      style: MistralTypography.buttonMd
-                          .copyWith(color: colors.onGlassAccent)),
+                  : Text('提交反馈', style: MistralTypography.buttonMd.copyWith(color: colors.onGlassAccent)),
             ),
           ),
         ],
@@ -179,19 +168,17 @@ class _FeedbackPageState extends State<FeedbackPage> {
             Container(
               width: 80,
               height: 80,
-              decoration: BoxDecoration(
-                color: colors.success.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: colors.success.withValues(alpha: 0.1), shape: BoxShape.circle),
               child: Icon(Icons.check_circle, size: 48, color: colors.success),
             ),
             const SizedBox(height: 24),
-            Text('感谢你的反馈！',
-                style: MistralTypography.heading3.copyWith(color: colors.text1)),
+            Text('感谢你的反馈！', style: MistralTypography.heading3.copyWith(color: colors.text1)),
             const SizedBox(height: 12),
-            Text('我们会认真阅读您的建议，持续改进产品',
-                style: MistralTypography.body.copyWith(color: colors.text2),
-                textAlign: TextAlign.center),
+            Text(
+              '我们会认真阅读您的建议，持续改进产品',
+              style: MistralTypography.body.copyWith(color: colors.text2),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
@@ -200,14 +187,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colors.accent,
                   foregroundColor: colors.onGlassAccent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppleRadius.pill),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppleRadius.pill)),
                 ),
                 onPressed: () => Navigator.pop(context),
-                child: Text('返回',
-                    style: MistralTypography.buttonMd
-                        .copyWith(color: colors.onGlassAccent)),
+                child: Text('返回', style: MistralTypography.buttonMd.copyWith(color: colors.onGlassAccent)),
               ),
             ),
           ],

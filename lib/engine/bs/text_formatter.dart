@@ -27,39 +27,31 @@ class TextFormatter {
     for (final match in regex.allMatches(text)) {
       // 匹配前的普通文本
       if (match.start > lastEnd) {
-        spans.add(TextSpan(
-          text: text.substring(lastEnd, match.start),
-        ));
+        spans.add(TextSpan(text: text.substring(lastEnd, match.start)));
       }
 
       // 数字部分着色
-      spans.add(TextSpan(
-        text: ' ${match.group(0)} ',
-        style: TextStyle(color: numberColor),
-      ));
+      spans.add(
+        TextSpan(
+          text: ' ${match.group(0)} ',
+          style: TextStyle(color: numberColor),
+        ),
+      );
 
       lastEnd = match.end;
     }
 
     // 匹配后的普通文本
     if (lastEnd < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(lastEnd),
-      ));
+      spans.add(TextSpan(text: text.substring(lastEnd)));
     }
 
     return TextSpan(children: spans.cast<InlineSpan>());
   }
 
   /// 将文本中的数字着色（Widget 版本，直接返回 RichText）
-  static Widget numColoredWidget(
-    String text,
-    Color numberColor, {
-    TextStyle? style,
-  }) {
-    return RichText(
-      text: numColored(text, numberColor),
-    );
+  static Widget numColoredWidget(String text, Color numberColor, {TextStyle? style}) {
+    return RichText(text: numColored(text, numberColor));
   }
 
   /// 从 Color int 值创建颜色（原版 #AARRGGBB 格式）

@@ -2,6 +2,7 @@
 // 备考速刷：针对考试的快速复习模式
 // 特点：高频词汇优先、限时模式、统计正确率
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/di/service_locator.dart';
@@ -77,12 +78,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
   static const Color _optionOrange = FuncColors.warningLight;
   static const Color _optionPurple = FuncColors.purpleLight;
 
-  final List<Color> _optionColors = [
-    _optionGreen,
-    _optionBlue,
-    _optionOrange,
-    _optionPurple,
-  ];
+  final List<Color> _optionColors = [_optionGreen, _optionBlue, _optionOrange, _optionPurple];
 
   @override
   void initState() {
@@ -254,10 +250,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    '备考速刷',
-                    style: MistralTypography.heading5.copyWith(color: skin.colors.text1),
-                  ),
+                  Text('备考速刷', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
                 ],
               ),
             ),
@@ -269,15 +262,9 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                 children: [
                   Icon(Icons.speed, size: 64, color: MistralColors.primary),
                   const SizedBox(height: 16),
-                  Text(
-                    '快速复习高频词汇',
-                    style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
-                  ),
+                  Text('快速复习高频词汇', style: MistralTypography.heading4.copyWith(color: skin.colors.text1)),
                   const SizedBox(height: 8),
-                  Text(
-                    '限时答题，统计正确率，高效备考',
-                    style: MistralTypography.body.copyWith(color: skin.colors.text3),
-                  ),
+                  Text('限时答题，统计正确率，高效备考', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
                 ],
               ),
             ),
@@ -293,9 +280,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: selected
-                            ? MistralColors.primary.withValues(alpha: 0.1)
-                            : skin.colors.cardBg,
+                        color: selected ? MistralColors.primary.withValues(alpha: 0.1) : skin.colors.cardBg,
                         borderRadius: BorderRadius.circular(AppRadius.lg),
                         border: Border.all(
                           color: selected ? MistralColors.primary : skin.colors.divider,
@@ -304,10 +289,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                       ),
                       child: Row(
                         children: [
-                          Icon(
-                            _getExamIcon(exam),
-                            color: selected ? MistralColors.primary : skin.colors.text3,
-                          ),
+                          Icon(_getExamIcon(exam), color: selected ? MistralColors.primary : skin.colors.text3),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
@@ -328,8 +310,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                               ],
                             ),
                           ),
-                          if (selected)
-                            Icon(Icons.check_circle, color: MistralColors.primary),
+                          if (selected) Icon(Icons.check_circle, color: MistralColors.primary),
                         ],
                       ),
                     ),
@@ -348,14 +329,9 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MistralColors.primary,
                     foregroundColor: AppColors.white100,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
                   ),
-                  child: Text(
-                    '开始速刷',
-                    style: MistralTypography.buttonMd.copyWith(color: AppColors.white100),
-                  ),
+                  child: Text('开始速刷', style: MistralTypography.buttonMd.copyWith(color: AppColors.white100)),
                 ),
               ),
             ),
@@ -443,18 +419,12 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                     // 单词
                     Text(
                       current.word,
-                      style: MistralTypography.heading1.copyWith(
-                        color: skin.colors.text1,
-                        fontSize: 40,
-                      ),
+                      style: MistralTypography.heading1.copyWith(color: skin.colors.text1, fontSize: 40),
                     ),
                     const SizedBox(height: 8),
                     // 音标
                     if (current.usPron.isNotEmpty)
-                      Text(
-                        '美 /${current.usPron}/',
-                        style: MistralTypography.body.copyWith(color: skin.colors.text3),
-                      ),
+                      Text('美 /${current.usPron}/', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
                     const SizedBox(height: 32),
                     // 选项
                     ...List.generate(_choices.length, (index) {
@@ -479,9 +449,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                       onPressed: _showAnswer ? null : _skipWord,
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                       ),
                       child: const Text('跳过'),
                     ),
@@ -496,9 +464,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                         backgroundColor: MistralColors.primary,
                         foregroundColor: AppColors.white100,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                       ),
                       child: Text(_currentIndex < _words.length - 1 ? '下一词' : '完成'),
                     ),
@@ -559,24 +525,16 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
               child: Center(
                 child: Text(
                   String.fromCharCode(65 + index), // A, B, C, D
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : skin.colors.text1,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(color: isSelected ? Colors.white : skin.colors.text1, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                _choices[index],
-                style: MistralTypography.body.copyWith(color: skin.colors.text1),
-              ),
+              child: Text(_choices[index], style: MistralTypography.body.copyWith(color: skin.colors.text1)),
             ),
-            if (showResult && isCorrect)
-              Icon(Icons.check_circle, color: skin.colors.success, size: 20),
-            if (showResult && isSelected && !isCorrect)
-              Icon(Icons.cancel, color: skin.colors.danger, size: 20),
+            if (showResult && isCorrect) Icon(Icons.check_circle, color: skin.colors.success, size: 20),
+            if (showResult && isSelected && !isCorrect) Icon(Icons.cancel, color: skin.colors.danger, size: 20),
           ],
         ),
       ),
@@ -586,15 +544,9 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
   Widget _buildStatItem(String label, String value, Color color) {
     return Column(
       children: [
-        Text(
-          value,
-          style: MistralTypography.heading5.copyWith(color: color),
-        ),
+        Text(value, style: MistralTypography.heading5.copyWith(color: color)),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: MistralTypography.micro.copyWith(color: MistralColors.muted),
-        ),
+        Text(label, style: MistralTypography.micro.copyWith(color: MistralColors.muted)),
       ],
     );
   }
@@ -625,15 +577,9 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text(
-                  '速刷完成！',
-                  style: MistralTypography.heading3.copyWith(color: skin.colors.text1),
-                ),
+                Text('速刷完成！', style: MistralTypography.heading3.copyWith(color: skin.colors.text1)),
                 const SizedBox(height: 8),
-                Text(
-                  _selectedExam.label,
-                  style: MistralTypography.body.copyWith(color: skin.colors.text3),
-                ),
+                Text(_selectedExam.label, style: MistralTypography.body.copyWith(color: skin.colors.text3)),
                 const SizedBox(height: 32),
                 // 统计卡片
                 Container(
@@ -650,8 +596,12 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                       _buildResultRow('错误', '${_stats.wrong}', skin),
                       _buildResultRow('跳过', '${_stats.skipped}', skin),
                       const Divider(),
-                      _buildResultRow('正确率', _stats.accuracyPercent, skin,
-                          valueColor: _stats.accuracy >= 0.8 ? skin.colors.success : skin.colors.danger),
+                      _buildResultRow(
+                        '正确率',
+                        _stats.accuracyPercent,
+                        skin,
+                        valueColor: _stats.accuracy >= 0.8 ? skin.colors.success : skin.colors.danger,
+                      ),
                       _buildResultRow('用时', _stats.timeFormatted, skin),
                     ],
                   ),
@@ -670,9 +620,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                         },
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                         ),
                         child: const Text('重新选择'),
                       ),
@@ -685,9 +633,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                           backgroundColor: MistralColors.primary,
                           foregroundColor: AppColors.white100,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                         ),
                         child: const Text('再来一轮'),
                       ),
@@ -697,10 +643,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    '返回首页',
-                    style: MistralTypography.body.copyWith(color: skin.colors.text3),
-                  ),
+                  child: Text('返回首页', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
                 ),
               ],
             ),
@@ -710,8 +653,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
     );
   }
 
-  Widget _buildResultRow(String label, String value, SkinSystem skin,
-      {Color? valueColor}) {
+  Widget _buildResultRow(String label, String value, SkinSystem skin, {Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -720,10 +662,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
           Text(label, style: MistralTypography.body.copyWith(color: skin.colors.text2)),
           Text(
             value,
-            style: MistralTypography.body.copyWith(
-              color: valueColor ?? skin.colors.text1,
-              fontWeight: FontWeight.w600,
-            ),
+            style: MistralTypography.body.copyWith(color: valueColor ?? skin.colors.text1, fontWeight: FontWeight.w600),
           ),
         ],
       ),

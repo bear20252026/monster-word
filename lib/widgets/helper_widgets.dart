@@ -3,8 +3,10 @@
 // 由 Claude 团队生成 | 移植自 v3.2 widget/LearnReviewHelper.java, LoadInfoHelper.java, OnScrollLoadMoreListener.java, TextViewUtils.java, SplashTransition.java, MySpaceTransition.java, UserInfoManageReturnFadeTransition.java, CustomeTypefaceSpan.java, Fling/ScrollStateListener.java, Fling/IScrollFling.java
 // 辅助工具与混合组件集合
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
+
 // ─────────────────────────────────────────────────────────────
 // ScrollLoadMore — 滚动加载更多监听（移植自 OnScrollLoadMoreListener.java）
 // ─────────────────────────────────────────────────────────────
@@ -34,8 +36,7 @@ class _ScrollLoadMoreState extends State<ScrollLoadMore> {
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification is ScrollUpdateNotification &&
-            notification.metrics.maxScrollExtent - notification.metrics.pixels <
-                widget.threshold &&
+            notification.metrics.maxScrollExtent - notification.metrics.pixels < widget.threshold &&
             !widget.isLoading) {
           widget.onLoadMore?.call();
         }
@@ -46,10 +47,7 @@ class _ScrollLoadMoreState extends State<ScrollLoadMore> {
           Expanded(child: widget.child),
           if (widget.isLoading)
             widget.loadingWidget ??
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+                const Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(strokeWidth: 2)),
         ],
       ),
     );
@@ -67,11 +65,7 @@ class ScrollStateNotifier extends StatefulWidget {
   final Widget child;
   final ScrollStateCallback? onStateChanged;
 
-  const ScrollStateNotifier({
-    super.key,
-    required this.child,
-    this.onStateChanged,
-  });
+  const ScrollStateNotifier({super.key, required this.child, this.onStateChanged});
 
   @override
   State<ScrollStateNotifier> createState() => _ScrollStateNotifierState();
@@ -83,11 +77,7 @@ class _ScrollStateNotifierState extends State<ScrollStateNotifier> {
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification is ScrollStartNotification) {
-          widget.onStateChanged?.call(
-            notification.dragDetails != null
-                ? ScrollState.dragging
-                : ScrollState.settling,
-          );
+          widget.onStateChanged?.call(notification.dragDetails != null ? ScrollState.dragging : ScrollState.settling);
         } else if (notification is ScrollEndNotification) {
           widget.onStateChanged?.call(ScrollState.idle);
         }
@@ -133,10 +123,7 @@ class NoDataGuide extends StatelessWidget {
             ),
             if (actionText != null) ...[
               const SizedBox(height: 16),
-              TextButton(
-                onPressed: onAction,
-                child: Text(actionText!),
-              ),
+              TextButton(onPressed: onAction, child: Text(actionText!)),
             ],
           ],
         ),
@@ -177,11 +164,7 @@ class TipLabel extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: fontSize,
-          color: textColor ?? skin.colors.accent,
-          fontWeight: FontWeight.w500,
-        ),
+        style: TextStyle(fontSize: fontSize, color: textColor ?? skin.colors.accent, fontWeight: FontWeight.w500),
       ),
     );
   }
@@ -221,16 +204,11 @@ class LableClassify extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected ? skin.colors.accent : skin.colors.cardBg,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected ? skin.colors.accent : skin.colors.divider,
-              ),
+              border: Border.all(color: isSelected ? skin.colors.accent : skin.colors.divider),
             ),
             child: Text(
               labels[i],
-              style: TextStyle(
-                fontSize: 14,
-                color: isSelected ? AppColors.white100 : skin.colors.text2,
-              ),
+              style: TextStyle(fontSize: 14, color: isSelected ? AppColors.white100 : skin.colors.text2),
             ),
           ),
         );
@@ -275,8 +253,8 @@ class LableCard extends StatelessWidget {
         child: style == LableCardStyle.style1
             ? _buildStyle1(skin)
             : style == LableCardStyle.style2
-                ? _buildStyle2(skin)
-                : _buildStyle3(skin),
+            ? _buildStyle2(skin)
+            : _buildStyle3(skin),
       ),
     );
   }
@@ -285,15 +263,13 @@ class LableCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title,
-            style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: skin.colors.text1)),
+        Text(
+          title,
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: skin.colors.text1),
+        ),
         if (subtitle != null) ...[
           const SizedBox(height: 4),
-          Text(subtitle!,
-              style: TextStyle(fontSize: 12, color: skin.colors.text3)),
+          Text(subtitle!, style: TextStyle(fontSize: 12, color: skin.colors.text3)),
         ],
       ],
     );
@@ -303,15 +279,13 @@ class LableCard extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Text(title,
-              style: TextStyle(fontSize: 14, color: skin.colors.text1)),
+          child: Text(title, style: TextStyle(fontSize: 14, color: skin.colors.text1)),
         ),
         if (value != null)
-          Text(value!,
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: skin.colors.accent)),
+          Text(
+            value!,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: skin.colors.accent),
+          ),
       ],
     );
   }
@@ -320,14 +294,12 @@ class LableCard extends StatelessWidget {
     return Column(
       children: [
         if (value != null)
-          Text(value!,
-              style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: skin.colors.accent)),
+          Text(
+            value!,
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: skin.colors.accent),
+          ),
         const SizedBox(height: 4),
-        Text(title,
-            style: TextStyle(fontSize: 13, color: skin.colors.text2)),
+        Text(title, style: TextStyle(fontSize: 13, color: skin.colors.text2)),
       ],
     );
   }
@@ -368,17 +340,10 @@ class LearnStatusTag extends StatelessWidget {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withAlpha(30),
-        borderRadius: BorderRadius.circular(4),
-      ),
+      decoration: BoxDecoration(color: color.withAlpha(30), borderRadius: BorderRadius.circular(4)),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: 11,
-          color: color,
-          fontWeight: FontWeight.w500,
-        ),
+        style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500),
       ),
     );
   }
@@ -413,20 +378,16 @@ class LearnReviewBand extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: skin.colors.accent.withAlpha(20),
-                borderRadius: const BorderRadius.horizontal(
-                    left: Radius.circular(8)),
+                borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
               ),
               child: Column(
                 children: [
-                  Text('$learnCount',
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: skin.colors.accent)),
+                  Text(
+                    '$learnCount',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: skin.colors.accent),
+                  ),
                   const SizedBox(height: 2),
-                  Text('待学习',
-                      style: TextStyle(
-                          fontSize: 12, color: skin.colors.text3)),
+                  Text('待学习', style: TextStyle(fontSize: 12, color: skin.colors.text3)),
                 ],
               ),
             ),
@@ -439,20 +400,16 @@ class LearnReviewBand extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: MistralColors.warning.withAlpha(20),
-                borderRadius: const BorderRadius.horizontal(
-                    right: Radius.circular(8)),
+                borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
               ),
               child: Column(
                 children: [
-                  Text('$reviewCount',
-                      style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: MistralColors.warning)),
+                  Text(
+                    '$reviewCount',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: MistralColors.warning),
+                  ),
                   const SizedBox(height: 2),
-                  Text('待复习',
-                      style: TextStyle(
-                          fontSize: 12, color: skin.colors.text3)),
+                  Text('待复习', style: TextStyle(fontSize: 12, color: skin.colors.text3)),
                 ],
               ),
             ),
@@ -489,14 +446,9 @@ class CustomSelected extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: selected
-              ? (selectedColor ?? skin.colors.accent).withAlpha(20)
-              : null,
+          color: selected ? (selectedColor ?? skin.colors.accent).withAlpha(20) : null,
           borderRadius: BorderRadius.circular(borderRadius),
-          border: selected
-              ? Border.all(
-                  color: selectedColor ?? skin.colors.accent, width: 1.5)
-              : null,
+          border: selected ? Border.all(color: selectedColor ?? skin.colors.accent, width: 1.5) : null,
         ),
         child: child,
       ),

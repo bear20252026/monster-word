@@ -69,14 +69,18 @@ class FavRepositoryImpl implements FavRepository {
   @override
   Future<List<Map<String, dynamic>>> getFavoriteSentences() async {
     final sentences = await FavSentenceDao.instance.loadAll();
-    return sentences.map((s) => {
-      'wordId': s.wordId,
-      'sentenceId': s.sentenceId,
-      'sentenceData': s.sentenceData,
-      'wordUsage': s.wordUsage,
-      'updateTime': s.updateTime,
-      'type': s.type,
-    }).toList();
+    return sentences
+        .map(
+          (s) => {
+            'wordId': s.wordId,
+            'sentenceId': s.sentenceId,
+            'sentenceData': s.sentenceData,
+            'wordUsage': s.wordUsage,
+            'updateTime': s.updateTime,
+            'type': s.type,
+          },
+        )
+        .toList();
   }
 
   @override
@@ -87,12 +91,7 @@ class FavRepositoryImpl implements FavRepository {
     required String chinese,
     String source = '',
   }) async {
-    final sentenceData = SentenceData(
-      sid: sentenceId,
-      e: english,
-      c: chinese,
-      b: source,
-    );
+    final sentenceData = SentenceData(sid: sentenceId, e: english, c: chinese, b: source);
     return await FavSentenceDao.instance.addFavSentence(
       word: '',
       wordId: wordId,
@@ -114,12 +113,7 @@ class FavRepositoryImpl implements FavRepository {
     required String chinese,
     String source = '',
   }) async {
-    final sentenceData = SentenceData(
-      sid: sentenceId,
-      e: english,
-      c: chinese,
-      b: source,
-    );
+    final sentenceData = SentenceData(sid: sentenceId, e: english, c: chinese, b: source);
     return await FavSentenceDao.instance.toggleFavSentence(
       word: '',
       wordId: wordId,

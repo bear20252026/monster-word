@@ -34,8 +34,7 @@ class TextRevealCard extends StatefulWidget {
   State<TextRevealCard> createState() => _TextRevealCardState();
 }
 
-class _TextRevealCardState extends State<TextRevealCard>
-    with SingleTickerProviderStateMixin {
+class _TextRevealCardState extends State<TextRevealCard> with SingleTickerProviderStateMixin {
   bool _revealed = false;
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -45,9 +44,10 @@ class _TextRevealCardState extends State<TextRevealCard>
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration);
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
@@ -80,9 +80,7 @@ class _TextRevealCardState extends State<TextRevealCard>
         duration: widget.duration,
         padding: widget.padding,
         decoration: BoxDecoration(
-          color: _revealed
-              ? (widget.revealBgColor ?? widget.bgColor)
-              : widget.bgColor,
+          color: _revealed ? (widget.revealBgColor ?? widget.bgColor) : widget.bgColor,
           borderRadius: BorderRadius.circular(widget.borderRadius),
           boxShadow: [
             BoxShadow(
@@ -98,16 +96,8 @@ class _TextRevealCardState extends State<TextRevealCard>
           children: [
             Row(
               children: [
-                if (widget.icon != null) ...[
-                  widget.icon!,
-                  const SizedBox(width: 12),
-                ],
-                Expanded(
-                  child: Text(
-                    widget.title,
-                    style: widget.titleStyle,
-                  ),
-                ),
+                if (widget.icon != null) ...[widget.icon!, const SizedBox(width: 12)],
+                Expanded(child: Text(widget.title, style: widget.titleStyle)),
                 AnimatedRotation(
                   turns: _revealed ? 0.5 : 0,
                   duration: widget.duration,
@@ -127,16 +117,11 @@ class _TextRevealCardState extends State<TextRevealCard>
                   opacity: _fadeAnimation,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 12),
-                    child: Text(
-                      widget.revealText,
-                      style: widget.revealStyle,
-                    ),
+                    child: Text(widget.revealText, style: widget.revealStyle),
                   ),
                 ),
               ),
-              crossFadeState: _revealed
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
+              crossFadeState: _revealed ? CrossFadeState.showSecond : CrossFadeState.showFirst,
               duration: widget.duration,
             ),
           ],

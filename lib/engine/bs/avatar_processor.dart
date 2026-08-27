@@ -55,8 +55,7 @@ class AvatarProcessor {
       final request = await client.getUrl(Uri.parse(url));
       final response = await request.close();
       if (response.statusCode == 200) {
-        final bytes = await response.fold<List<int>>(
-            [], (prev, chunk) => prev..addAll(chunk));
+        final bytes = await response.fold<List<int>>([], (prev, chunk) => prev..addAll(chunk));
         await file.parent.create(recursive: true);
         await file.writeAsBytes(bytes);
         client.close();
@@ -91,8 +90,7 @@ class AvatarProcessor {
       final request = await client.getUrl(Uri.parse(url));
       final response = await request.close();
       if (response.statusCode == 200) {
-        final bytes = await response.fold<List<int>>(
-            [], (prev, chunk) => prev..addAll(chunk));
+        final bytes = await response.fold<List<int>>([], (prev, chunk) => prev..addAll(chunk));
         await file.parent.create(recursive: true);
         await file.writeAsBytes(bytes);
         client.close();
