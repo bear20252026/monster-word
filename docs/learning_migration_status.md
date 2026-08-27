@@ -188,3 +188,9 @@
 `LearningSessionState` 现拥有当前学习队列、当前索引、翻卡状态、四选一候选、Leitner 推进以及学习会话评分后的索引推进。它组合 `LearningQueueRepository`、`LearningProgressRepository` 与 `ReviewScheduleRepository`，因此词书加载、进度保存和按实际当前词写入 FSRS 不再散落在遗留状态实现中。
 
 `LearningState` 已收敛为兼容外观：它监听同一个 `LearningSessionState` 并转发仍被未迁出页面使用的旧 API，同时继续承担收藏/掌握标记和占位账号状态。新读取层 `LearningQueueState` 已直接监听专用会话状态，不再经由兼容外观复制队列。后续页面迁移应优先直接消费 `LearningSessionState` 的会话读写能力，再逐步删除对应的外观转发方法。
+
+## 已迁移学习会话入口
+
+句子测验页、词条详情页、词书选择卡和收藏词“开始学习”入口现直接使用 `LearningSessionState` 完成当前词读取、词书/收藏队列加载与学习评分。词条详情页的 FSRS 预测改为直接读取 `ReviewScheduleRepository`，避免为了展示预测而重新经过遗留外观。
+
+词典、收藏批量管理、账号、引导及导出页面仍可暂时使用 `LearningState` 的收藏、账号或兼容读取 API；它们不应再调用加载、评分、索引或候选生成等学习会话命令。下一步迁移这些页面时，应按其实际职责分别接入收藏仓储、队列快照或账号状态，而不是继续扩展兼容外观。
