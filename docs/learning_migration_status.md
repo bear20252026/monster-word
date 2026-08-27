@@ -68,3 +68,12 @@
 `BookWordsReader` 通过 `WordRepository` 加载指定词书的单词；`BookWordsPage` 已覆盖通用列表页的数据源扩展点并从根 `Provider` 获取该读取器，不再为列表查询读取 `LearningState`。开始学习和真题词组交互保持原实现，本轮不改变。
 
 `WordRepository.getWordsByBookId` 现在通过 `word_books` 关联表按既有顺序查询，并保留词书页面原有的 1000 条加载上限。该修正避免将词书关系错误地假设为 `words.book_id`，使页面迁移不会改变实际词书范围或排序。
+
+
+## 队列分类词表查询边界
+
+`QueueWordLists` 将当前学习队列按既有 FSRS 卡片语义分类：存在卡片即“已学”，不存在卡片即“未学习”，存在卡片且难度不高于 5.0 即“复习中”。分类保留原队列顺序，并由纯领域测试覆盖；`LearningState` 的原有查询方法改为委托该规则，避免同一筛选条件继续分散。
+
+`LearningQueueWordListsState` 是迁移期的只读展示适配器，当前从遗留状态同步分类快照。`MyWordsPage`、`NotLearnedWordsPage` 与 `ReviewingWordsPage` 通过该适配器加载列表，不再直接依赖 `LearningState`。这不改变当前队列和 FSRS 卡片仍由遗留状态维护的事实，只收敛页面读取边界。
+
+`NewWordsPage` 暂不迁移：`LearningState.getNewWords()` 当前固定返回空列表，且不存在“生词”写入模型或唯一事实来源。必须先定义生词的持久化身份、写入路径和与 FSRS 的关系，不能将“未学习”或手动掌握标记误作生词本。

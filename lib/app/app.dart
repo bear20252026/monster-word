@@ -9,6 +9,7 @@ import '../repositories/mastered_repository.dart';
 import '../features/learning/application/book_words_reader.dart';
 import '../features/learning/application/mastered_words_reader.dart';
 import '../features/learning/presentation/learning_collections_state.dart';
+import '../features/learning/presentation/learning_queue_word_lists_state.dart';
 import '../features/learning/presentation/learning_statistics_state.dart';
 import '../pages/lib_select_page.dart';
 import '../screens/home_screen.dart';
@@ -49,6 +50,10 @@ class WordApp extends StatelessWidget {
         ChangeNotifierProxyProvider<LearningState, LearningCollectionsState>(
           create: (_) => LearningCollectionsState(),
           update: (_, legacy, collections) => (collections ?? LearningCollectionsState())..synchronizeFrom(legacy),
+        ),
+        ChangeNotifierProxyProvider<LearningState, LearningQueueWordListsState>(
+          create: (_) => LearningQueueWordListsState(),
+          update: (_, legacy, wordLists) => (wordLists ?? LearningQueueWordListsState())..synchronizeFrom(legacy),
         ),
         Provider<BookWordsReader>.value(value: sl<BookWordsReader>()),
         Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),

@@ -11,6 +11,7 @@ import '../engine/core_engine.dart';
 import '../engine/fsrs6_engine.dart';
 import '../engine/leitner_engine.dart';
 import '../features/learning/domain/choice_generator.dart';
+import '../features/learning/domain/queue_word_lists.dart';
 import '../models/bb_word_process.dart';
 import '../repositories/fav_repository.dart';
 import '../repositories/mastered_repository.dart';
@@ -582,9 +583,17 @@ class LearningState extends ChangeNotifier {
   int get reviewingNum => _fsrsEngine.getDueCards(_cards.values.toList()).length;
   int get totalLearnedDays => _activeDates.length;
 
+  QueueWordLists get queueWordLists => QueueWordLists.fromQueue(
+    queue: _queue,
+    isLearned: (word) => _cards.containsKey(word.word),
+    isReviewing: (word) {
+      final card = _cards[word.word];
+      return card != null && card.difficulty <= 5.0;
+    },
+  );
+
   Future<List<Word>> getLearnedWords() async {
-    // TODO: 从数据库查询已学单词
-    return _queue.where((w) => _cards.containsKey(w.word)).toList();
+    return queueWordLists.learnedWords;
   }
 
   Future<List<Word>> getNewWords() async {
@@ -600,16 +609,11 @@ class LearningState extends ChangeNotifier {
   }
 
   Future<List<Word>> getNotLearnedWords() async {
-    // TODO: 从数据库查询未学习单词
-    return _queue.where((w) => !_cards.containsKey(w.word)).toList();
+    return queueWordLists.notLearnedWords;
   }
 
   Future<List<Word>> getReviewingWords() async {
-    // TODO: 从数据库查询复习中单词
-    return _queue.where((w) {
-      final card = _cards[w.word];
-      return card != null && card.difficulty <= 5.0;
-    }).toList();
+    return queueWordLists.reviewingWords;
   }
 
   Future<List<Word>> getWordsByBook(int bookId) async {

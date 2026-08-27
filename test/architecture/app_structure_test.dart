@@ -62,6 +62,24 @@ void main() {
     });
   });
 
+  group('队列分类词表查询边界', () {
+    test('队列分类词表页通过展示适配器加载数据', () {
+      const pages = [
+        'lib/pages/my_words_page.dart',
+        'lib/pages/not_learned_words_page.dart',
+        'lib/pages/reviewing_words_page.dart',
+      ];
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+
+      expect(appSource, contains('LearningQueueWordListsState'));
+      for (final path in pages) {
+        final source = File(path).readAsStringSync();
+        expect(source, contains('LearningQueueWordListsState'), reason: '$path 应读取队列词表展示适配器');
+        expect(source, isNot(contains('LearningState')), reason: '$path 不应直接读取遗留 LearningState');
+      }
+    });
+  });
+
   group('学习集合展示状态边界', () {
     test('足迹页通过集合展示状态读取掌握数量', () {
       final source = File('lib/pages/foot_mark_page.dart').readAsStringSync();
