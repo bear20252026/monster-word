@@ -6,12 +6,12 @@ import '../core/di/service_locator.dart';
 import '../core/router/app_router.dart';
 import '../features/account/presentation/account_feature_providers.dart';
 import '../features/learning/presentation/learning_feature_providers.dart';
+import '../features/settings/presentation/settings_feature_providers.dart';
 import '../pages/lib_select_page.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
 import '../shell/main_shell.dart';
 import '../state/player_state.dart';
-import '../state/settings_state.dart';
 import '../state/user_stats_state.dart';
 import '../state/wallpaper_state.dart';
 import '../theme/skin_system.dart';
@@ -30,15 +30,16 @@ class WordApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return buildAccountFeatureScope(
       child: buildLearningFeatureScope(
-        child: MultiProvider(
-          providers: [
-            ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
-            ChangeNotifierProvider(create: (_) => sl<SettingsState>()..init()),
-            ChangeNotifierProvider(create: (_) => sl<PlayerState>()),
-            ChangeNotifierProvider(create: (_) => SkinSystem()),
-            ChangeNotifierProvider(create: (_) => WallpaperState()),
-          ],
-          child: const _AppLifecycle(),
+        child: buildSettingsFeatureScope(
+          child: MultiProvider(
+            providers: [
+              ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
+              ChangeNotifierProvider(create: (_) => sl<PlayerState>()),
+              ChangeNotifierProvider(create: (_) => SkinSystem()),
+              ChangeNotifierProvider(create: (_) => WallpaperState()),
+            ],
+            child: const _AppLifecycle(),
+          ),
         ),
       ),
     );
