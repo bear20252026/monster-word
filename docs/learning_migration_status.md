@@ -127,6 +127,8 @@
 
 正式复习页面的其余操作协调也已拆分：`ReviewAudioPlayer` 是正式复习发音的应用端口，根组合层将其适配为既有 `AudioService.playWordAudio`；`ReviewAudioState` 维护播放请求的加载快照并向页面转交失败，页面不再直接通过服务定位器调用音频服务。`ReviewWordDetails` 集中 `BBWordProcess` 到词典页面 `Word` 的字段映射；`FormalReviewMoreOptionsSheet` 则只发出“播放发音/查看详情”意图。页面仍负责路由、SnackBar 和 Navigator 协调，因此没有将 UI 副作用下沉到展示组件或基础设施层。
 
+收藏和手动掌握的页面副作用现由 `ReviewWordActionCoordinator` 统一协调。它以显式 `ReviewWordActionOutcome` 返回“已收藏、已取消收藏、已标记掌握、已存在、无当前词或持久化失败”等结果，保持旧有的操作顺序：收藏在持久化后更新展示快照；“熟”先推进会话，再写入幂等的手动掌握标记。`ReviewWordActionFeedback` 将结果映射为页面可展示的反馈文案与时长，`ReviewPage` 仅决定是否显示 Snackbar。这样不会把持久化调用、异常分支和用户提示再次混进路由页面，也不会混同 `favorite_words_v1`、`mastered_words_v1` 与 FSRS 卡片熟练度。
+
 正式复习已移除原有“撤销”入口：该入口仅减少展示计数，既不会回退 `SuperMemoryEngine`，也不会撤销已经发出的 FSRS 写入或手动掌握操作，继续保留会误导用户。兼容 `/review_session` 未改动。后续如需提供真实撤销，必须先定义可逆的题目推进、FSRS 持久化和手动标记事务合同，而不能重加仅修改计数的按钮。
 
 
