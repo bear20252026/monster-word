@@ -1,15 +1,14 @@
 // 由账号4生成
 // 学习状态管理：当前词书、学习队列、进度、SRS 评分、4选1选词
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart';
 import '../engine/fsrs6_engine.dart';
 import '../engine/leitner_engine.dart';
+import '../features/learning/data/learning_progress_repository.dart';
 import '../features/learning/data/review_schedule_repository.dart';
 import '../features/learning/domain/choice_generator.dart';
 import '../features/learning/domain/queue_word_lists.dart';
@@ -26,6 +25,7 @@ class LearningState extends ChangeNotifier {
 
   // 正式复习的 FSRS 卡片和每日统计由独立调度仓储维护。
   final ReviewScheduleRepository _reviewSchedule;
+  final LearningProgressRepository _progressRepository;
 
   // 单词收藏与掌握标记均委托给独立仓储。
   final FavRepository _favRepository;
@@ -55,38 +55,25 @@ class LearningState extends ChangeNotifier {
 
   Word? get currentWord => _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
 
-  // 学习进度持久化
-  static const _currentBookPrefKey = 'current_book_v1';
-  static const _currentIndexPrefKey = 'current_index_v1';
-  static const _queueSnapshotPrefKey = 'queue_snapshot_v1';
-
-  /// 保存当前学习进度
+  /// 保存当前学习进度。
+  ///
+  /// 持久化键和值结构由 [LearningProgressRepository] 维护，当前状态只决定何时保存。
   Future<void> _saveProgress() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      if (_currentBook != null) {
-        await prefs.setString(_currentBookPrefKey, _currentBook!.id.toString());
-        await prefs.setInt(_currentIndexPrefKey, _currentIndex);
-        // 保存队列快照（单词ID列表）
-        final queueIds = _queue.map((w) => w.id).toList();
-        await prefs.setString(_queueSnapshotPrefKey, jsonEncode(queueIds));
-      }
+      await _progressRepository.save(currentBook: _currentBook, currentIndex: _currentIndex, queue: _queue);
     } catch (e) {
       debugPrint('Save progress error: $e');
     }
   }
 
-  /// 加载上次的学习进度
+  /// 加载上次的学习进度。
+  ///
+  /// 当前会话仍在显式加载词书时重建队列，因此启动阶段仅恢复已保存索引的历史语义。
   Future<void> _loadProgress() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final bookId = prefs.getString(_currentBookPrefKey);
-      if (bookId != null) {
-        _currentIndex = prefs.getInt(_currentIndexPrefKey) ?? 0;
-        final queueStr = prefs.getString(_queueSnapshotPrefKey);
-        if (queueStr != null) {
-          // 队列将在 loadBook 时重建，此处仅保存快照标记
-        }
+      final saved = await _progressRepository.load();
+      if (saved != null) {
+        _currentIndex = saved.currentIndex;
       }
     } catch (e) {
       debugPrint('Load progress error: $e');
@@ -101,9 +88,11 @@ class LearningState extends ChangeNotifier {
     required FavRepository favRepository,
     required MasteredRepository masteredRepository,
     ReviewScheduleRepository? reviewSchedule,
+    LearningProgressRepository? progressRepository,
   }) : _favRepository = favRepository,
        _masteredRepository = masteredRepository,
-       _reviewSchedule = reviewSchedule ?? ReviewScheduleRepository() {
+       _reviewSchedule = reviewSchedule ?? ReviewScheduleRepository(),
+       _progressRepository = progressRepository ?? LearningProgressRepository() {
     _reviewSchedule.addListener(_onReviewScheduleChanged);
     unawaited(_reviewSchedule.initialize());
     unawaited(_loadProgress());
