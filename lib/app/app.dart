@@ -65,7 +65,7 @@ class WordApp extends StatelessWidget {
           update: (_, legacy, reviewQueue) => (reviewQueue ?? ReviewQueueState())..synchronizeFrom(legacy),
         ),
         ProxyProvider<LearningState, ReviewRatingWriter>(
-          update: (_, legacy, _) => ReviewRatingWriter(writeRating: legacy.rate),
+          update: (_, legacy, _) => ReviewRatingWriter(writeRating: legacy.rateReviewWord),
         ),
         Provider<BookWordsReader>.value(value: sl<BookWordsReader>()),
         Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),

@@ -365,7 +365,10 @@ class LearningState extends ChangeNotifier {
     _audioSub = null;
   }
 
-  /// 用户评分（SRS）：不认识/模糊/认识/熟练
+  /// 用户评分（SRS）：不认识/模糊/认识/熟练。
+  ///
+  /// 此路径保留遗留学习会话的 Leitner 联动与队列推进；正式复习会话应使用
+  /// [rateReviewWord]，由自己的内存引擎推进题目，仅复用 FSRS 持久化与统计。
   Future<void> rate(FsrsRating rating) async {
     final word = currentWord;
     if (word == null) return;
@@ -382,15 +385,7 @@ class LearningState extends ChangeNotifier {
         _leitnerEngine.tooEasy();
     }
 
-    // SRS 卡片更新
-    final existing = _cards[word.word];
-    final isLearn = existing == null; // 新词=learn，已有卡片=review
-    final updated = isLearn ? _fsrsEngine.learn(word.word, rating) : _fsrsEngine.review(existing, rating);
-    _cards[word.word] = updated;
-    await _saveCards();
-
-    // 记录每日学习统计
-    await _recordActivity(isLearn: isLearn);
+    await _persistFsrsRating(word: word.word, rating: rating);
 
     // 移动到下一个（引擎当前词已推进）
     _currentIndex++;
@@ -399,6 +394,26 @@ class LearningState extends ChangeNotifier {
     }
     _regenerateChoices();
     notifyListeners();
+  }
+
+  /// 持久化正式复习会话中实际作答单词的 FSRS 评分。
+  ///
+  /// 不读取或推进当前学习队列，避免 [SuperMemoryEngine] 已推进后将评分写入
+  /// 另一单词；卡片序列化和每日统计则与 [rate] 使用完全相同的逻辑。
+  Future<void> rateReviewWord({required String word, required FsrsRating rating}) async {
+    await _persistFsrsRating(word: word, rating: rating);
+    notifyListeners();
+  }
+
+  Future<void> _persistFsrsRating({required String word, required FsrsRating rating}) async {
+    final existing = _cards[word];
+    final isLearn = existing == null; // 新词=learn，已有卡片=review
+    final updated = isLearn ? _fsrsEngine.learn(word, rating) : _fsrsEngine.review(existing, rating);
+    _cards[word] = updated;
+    await _saveCards();
+
+    // 记录每日学习统计
+    await _recordActivity(isLearn: isLearn);
   }
 
   /// 重学：将当前单词重新插入队列（当前位置之后），稍后再次出现

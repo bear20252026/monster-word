@@ -106,9 +106,12 @@ class _ReviewPageState extends State<ReviewPage> {
     _choices = choices.map((choice) => WordChoicePair(choice.word, choice.interpret)).toList();
   }
 
-  /// 评分（同步到 FSRS-6 算法 + Leitner 引擎）
+  /// 评分（同步到本地会话引擎与 FSRS-6 持久化）。
   void _rate(RecallRating rating) {
-    // 同步到 Leitner 引擎
+    // 引擎评分会推进或移除当前题目，因此必须先保存实际作答词。
+    final reviewedWord = _engine.currentWord();
+    if (reviewedWord == null) return;
+
     switch (rating) {
       case RecallRating.again:
         _engine.iDontKnow();
@@ -119,17 +122,13 @@ class _ReviewPageState extends State<ReviewPage> {
       case RecallRating.easy:
         _engine.tooEasy();
     }
-    // 同步到 FSRS-6 算法（精确记忆评估）
     final fsrsRating = switch (rating) {
       RecallRating.again => FsrsRating.again,
       RecallRating.hard => FsrsRating.hard,
       RecallRating.good => FsrsRating.good,
       RecallRating.easy => FsrsRating.easy,
     };
-    final currentWord = _engine.currentWord();
-    if (currentWord != null) {
-      context.read<ReviewRatingWriter>().rate(fsrsRating);
-    }
+    context.read<ReviewRatingWriter>().rate(word: reviewedWord.word, rating: fsrsRating);
     _done++;
     _showAnswer = false;
     _wrongChoiceIndex = -1;
