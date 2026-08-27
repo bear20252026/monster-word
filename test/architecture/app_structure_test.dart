@@ -150,21 +150,35 @@ void main() {
   });
 
   group('正式复习词条操作边界', () {
-    test('主复习页通过协调状态读取并持久化收藏和手动掌握标记', () {
+    test('页面读取收藏快照，协调器承接收藏和手动掌握的持久化控制流', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
       final actionsSource = File('lib/features/learning/presentation/review_word_actions_state.dart')
+          .readAsStringSync();
+      final coordinatorSource = File('lib/features/learning/presentation/review_word_action_coordinator.dart')
+          .readAsStringSync();
+      final feedbackSource = File('lib/features/learning/presentation/review_word_action_feedback.dart')
           .readAsStringSync();
 
       expect(appSource, contains('ReviewWordActionsState'));
       expect(pageSource, contains('ReviewWordActionsState'));
       expect(pageSource, contains('wordActions.isFavorite'));
-      expect(pageSource, contains('toggleFavorite(current.word)'));
-      expect(pageSource, contains('markManuallyMastered(currentWord.word)'));
+      expect(pageSource, contains('ReviewWordActionCoordinator'));
+      expect(pageSource, contains('_wordActionCoordinator()'));
+      expect(pageSource, contains('feedbackMessage'));
+      expect(pageSource, isNot(contains('toggleFavorite(current.word)')));
+      expect(pageSource, isNot(contains('markManuallyMastered(currentWord.word)')));
       expect(pageSource, isNot(contains('_isFavorited')));
       expect(pageSource, isNot(contains('TODO: persist favorite')));
       expect(actionsSource, contains('FavRepository'));
       expect(actionsSource, contains('MasteredRepository'));
+      expect(coordinatorSource, contains('ReviewWordActionOutcome'));
+      expect(coordinatorSource, contains('toggleFavorite(currentWord.word)'));
+      expect(coordinatorSource, contains('markCurrentWordAsKnown'));
+      expect(coordinatorSource, contains('markManuallyMastered(currentWord.word)'));
+      expect(feedbackSource, contains('extension ReviewWordActionFeedback'));
+      expect(feedbackSource, contains('favoritePersistFailed'));
+      expect(feedbackSource, contains('manualMasteryPersistFailed'));
     });
   });
 

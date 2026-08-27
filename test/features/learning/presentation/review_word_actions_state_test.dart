@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/features/learning/presentation/review_word_action_coordinator.dart';
+import 'package:word_app/features/learning/presentation/review_word_action_feedback.dart';
 import 'package:word_app/features/learning/presentation/review_word_actions_state.dart';
+import 'package:word_app/models/bb_word_process.dart';
 import 'package:word_app/repositories/fav_repository.dart';
 import 'package:word_app/repositories/mastered_repository.dart';
 
@@ -36,6 +39,89 @@ void main() {
       expect(mastered.isMastered('reviewed'), isTrue);
     });
   });
+
+  group('ReviewWordActionCoordinator', () {
+    test('收藏切换返回持久化结果和对应反馈意图', () async {
+      final actions = ReviewWordActionsState(
+        favRepository: _FakeFavRepository(const {}),
+        masteredRepository: _FakeMasteredRepository(const {}),
+      );
+      final coordinator = ReviewWordActionCoordinator(
+        wordActions: actions,
+        currentWord: () => BBWordProcess(word: 'reviewed'),
+        markCurrentWordAsKnown: () => true,
+      );
+
+      final added = await coordinator.toggleFavorite();
+      final removed = await coordinator.toggleFavorite();
+
+      expect(added.outcome, ReviewWordActionOutcome.favoriteAdded);
+      expect(added.feedbackMessage, '已收藏 reviewed');
+      expect(added.feedbackDuration, const Duration(seconds: 1));
+      expect(removed.outcome, ReviewWordActionOutcome.favoriteRemoved);
+      expect(removed.feedbackMessage, '已取消收藏');
+    });
+
+    test('手动掌握先推进会话，再以幂等方式持久化标记', () async {
+      final actions = ReviewWordActionsState(
+        favRepository: _FakeFavRepository(const {}),
+        masteredRepository: _FakeMasteredRepository(const {}),
+      );
+      var advanceCalls = 0;
+      final coordinator = ReviewWordActionCoordinator(
+        wordActions: actions,
+        currentWord: () => BBWordProcess(word: 'reviewed'),
+        markCurrentWordAsKnown: () {
+          advanceCalls++;
+          return true;
+        },
+      );
+
+      final first = await coordinator.markCurrentWordAsKnown();
+      final repeated = await coordinator.markCurrentWordAsKnown();
+
+      expect(first.outcome, ReviewWordActionOutcome.manuallyMastered);
+      expect(first.feedbackMessage, '已标记掌握 reviewed');
+      expect(repeated.outcome, ReviewWordActionOutcome.alreadyManuallyMastered);
+      expect(repeated.feedbackMessage, isNull);
+      expect(advanceCalls, 2);
+    });
+
+    test('没有当前词或持久化失败时返回明确的非成功结果', () async {
+      final noWordCoordinator = ReviewWordActionCoordinator(
+        wordActions: ReviewWordActionsState(
+          favRepository: _FakeFavRepository(const {}),
+          masteredRepository: _FakeMasteredRepository(const {}),
+        ),
+        currentWord: () => null,
+        markCurrentWordAsKnown: () => true,
+      );
+      final failingCoordinator = ReviewWordActionCoordinator(
+        wordActions: _ThrowingReviewWordActionsState(
+          favRepository: _FakeFavRepository(const {}),
+          masteredRepository: _FakeMasteredRepository(const {}),
+        ),
+        currentWord: () => BBWordProcess(word: 'reviewed'),
+        markCurrentWordAsKnown: () => true,
+      );
+
+      final ignored = await noWordCoordinator.toggleFavorite();
+      final failed = await failingCoordinator.toggleFavorite();
+
+      expect(ignored.outcome, ReviewWordActionOutcome.ignored);
+      expect(ignored.shouldShowFeedback, isFalse);
+      expect(failed.outcome, ReviewWordActionOutcome.favoritePersistFailed);
+      expect(failed.feedbackMessage, '收藏状态保存失败，请重试');
+      expect(failed.feedbackDuration, const Duration(seconds: 4));
+    });
+  });
+}
+
+class _ThrowingReviewWordActionsState extends ReviewWordActionsState {
+  _ThrowingReviewWordActionsState({required super.favRepository, required super.masteredRepository});
+
+  @override
+  Future<bool> toggleFavorite(String word) => Future<bool>.error(StateError('favorite unavailable'));
 }
 
 class _FakeMasteredRepository implements MasteredRepository {
