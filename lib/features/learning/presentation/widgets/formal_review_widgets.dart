@@ -7,6 +7,7 @@ library;
 export 'formal_review_choice_card.dart';
 export 'formal_review_header.dart';
 export 'formal_review_more_options_sheet.dart';
+export 'formal_review_page_content.dart';
 export 'formal_review_question.dart';
 export 'formal_review_session_layout.dart';
 export 'formal_review_state_views.dart';

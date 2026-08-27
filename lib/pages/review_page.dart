@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../features/learning/application/review_session_starter.dart';
 import '../features/learning/application/review_word_details.dart';
 import '../features/learning/presentation/review_audio_state.dart';
 import '../features/learning/presentation/review_queue_state.dart';
@@ -32,12 +33,10 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   Future<void> _initReview() async {
-    try {
-      final reviewQueue = context.read<ReviewQueueState>();
-      await context.read<ReviewSessionState>().initialize(reviewQueue.snapshot);
-    } catch (_) {
-      // 会话状态保存异常并触发错误视图；页面只负责提供重试回调。
-    }
+    await ReviewSessionStarter(
+      snapshot: context.read<ReviewQueueState>().snapshot,
+      initialize: context.read<ReviewSessionState>().initialize,
+    ).start();
   }
 
   @override
@@ -46,17 +45,35 @@ class _ReviewPageState extends State<ReviewPage> {
     final wordActions = context.watch<ReviewWordActionsState>();
     final reviewAudio = context.watch<ReviewAudioState>();
 
-    if (session.isLoading) return const FormalReviewLoadingView();
-    if (session.hasLoadError) return FormalReviewLoadErrorView(error: session.loadError, onRetry: _initReview);
-
     final word = session.currentWord;
-    if (word == null) {
-      return FormalReviewCompleteView(
-        done: session.done,
-        onReturnHome: () => Navigator.of(context).pushReplacementNamed('/'),
-      );
-    }
+    return FormalReviewPageContent(
+      phase: formalReviewPagePhase(
+        isLoading: session.isLoading,
+        hasLoadError: session.hasLoadError,
+        hasWord: word != null,
+      ),
+      loadError: session.loadError,
+      done: session.done,
+      word: word,
+      onRetry: _initReview,
+      onReturnHome: () => Navigator.of(context).pushReplacementNamed('/'),
+      reviewingBuilder: (contentContext, reviewingWord) => _buildReviewingContent(
+        context: contentContext,
+        word: reviewingWord,
+        session: session,
+        wordActions: wordActions,
+        reviewAudio: reviewAudio,
+      ),
+    );
+  }
 
+  Widget _buildReviewingContent({
+    required BuildContext context,
+    required BBWordProcess word,
+    required ReviewSessionState session,
+    required ReviewWordActionsState wordActions,
+    required ReviewAudioState reviewAudio,
+  }) {
     return SessionExitGuard(
       subject: '本次复习',
       child: Scaffold(
@@ -70,12 +87,8 @@ class _ReviewPageState extends State<ReviewPage> {
           wallpaper: context.watch<WallpaperState>().current,
           isFavorite: wordActions.isFavorite(word.word),
           onBack: () => Navigator.pop(context),
-          onToggleFavorite: () {
-            _toggleFavorite();
-          },
-          onMarkAsKnown: () {
-            _markAsKnown();
-          },
+          onToggleFavorite: _toggleFavorite,
+          onMarkAsKnown: _markAsKnown,
           onShowMore: () => _showMoreOptions(context),
           onPlayAudio: _playWordAudio,
           onSelectChoice: session.selectChoice,
