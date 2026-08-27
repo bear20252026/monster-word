@@ -170,3 +170,9 @@
 `LearningQueueState` 现以不可变 `LearningQueueSnapshot` 表达当前词书、词条队列、当前索引和已学计数。正式复习队列、学习统计以及队列分类词表均组合这一读取状态和 `ReviewScheduleRepository`，不再直接读取 `LearningState` 的队列、卡片或统计 getter。快照复制词条列表，防止展示侧因持有遗留可变队列而在一次刷新间隔内观察到未同步变更。
 
 当前学习会话的 `loadBook`、收藏词学习、Leitner 推进、四选一候选和队列写入仍保留在 `LearningState`，并通过单一 Proxy 同步到 `LearningQueueState`。这是刻意保留的迁移适配器：后续应提取队列写入命令和会话状态，而不是让新页面或正式复习重新读取该遗留聚合状态。
+
+## 学习进度持久化边界
+
+`LearningProgressRepository` 现为当前学习词书、学习索引和队列单词 ID 快照的唯一偏好存储边界，并保留既有 `current_book_v1`、`current_index_v1`、`queue_snapshot_v1` 键和值结构。`LearningState` 只保留保存时机和启动时恢复索引的兼容会话职责，不再直接使用 `SharedPreferences` 或处理 JSON 编解码。
+
+当前词书加载、收藏词学习、Leitner 推进和四选一候选仍属于遗留学习会话命令，下一阶段应将它们整体迁至专用会话状态；不得仅迁移其中一个命令而同时保留两套可变队列。

@@ -13,6 +13,7 @@ import '../application/new_words_reader.dart';
 import '../application/review_audio_player.dart';
 import '../application/review_queue_reader.dart';
 import '../application/review_rating_writer.dart';
+import '../data/learning_progress_repository.dart';
 import '../data/review_schedule_repository.dart';
 import 'learning_collections_state.dart';
 import 'learning_queue_state.dart';
@@ -38,6 +39,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
           favRepository: sl<FavRepository>(),
           masteredRepository: sl<MasteredRepository>(),
           reviewSchedule: sl<ReviewScheduleRepository>(),
+          progressRepository: sl<LearningProgressRepository>(),
         ),
       ),
       ChangeNotifierProxyProvider<LearningState, LearningQueueState>(
