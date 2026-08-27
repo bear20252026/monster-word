@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/di/service_locator.dart';
 import '../engine/core_engine.dart' show WordChoicePair;
 import '../features/learning/application/review_queue_reader.dart';
 import '../features/learning/domain/choice_generator.dart';
