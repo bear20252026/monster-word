@@ -19,8 +19,6 @@ import '../../repositories/mastered_repository.dart';
 import '../../repositories/mastered_repository_impl.dart';
 import '../../repositories/new_word_repository.dart';
 import '../../repositories/new_word_repository_impl.dart';
-import '../../services/review_service.dart';
-import '../../services/review_service_impl.dart';
 import '../../services/audio_service.dart';
 import '../../services/audio_service_impl.dart';
 import '../../services/checkin_service.dart';
@@ -40,7 +38,6 @@ import '../../features/learning/application/new_words_reader.dart';
 import '../../features/learning/application/review_audio_player.dart';
 import '../../features/learning/application/review_queue_reader.dart';
 import '../../features/learning/presentation/new_words_state.dart';
-import '../../state/review_state.dart';
 import '../../state/user_stats_state.dart';
 import '../../state/settings_state.dart';
 import '../../state/player_state.dart';
@@ -172,13 +169,6 @@ Future<void> setupServiceLocator() async {
     );
   }
 
-  // ReviewService（复习流程）
-  if (!sl.isRegistered<ReviewService>()) {
-    sl.registerLazySingleton<ReviewService>(
-      () => ReviewServiceImpl(wordRepo: sl<WordRepository>(), audioService: sl<AudioService>()),
-    );
-  }
-
   // CheckInService（签到）
   if (!sl.isRegistered<CheckInService>()) {
     sl.registerLazySingleton<CheckInService>(() => CheckInServiceImpl(userRepo: sl<UserRepository>()));
@@ -202,11 +192,6 @@ Future<void> setupServiceLocator() async {
   }
 
   // ========== ViewModel Layer（视图模型层）==========
-  // ReviewState（复习状态）
-  if (!sl.isRegistered<ReviewState>()) {
-    sl.registerLazySingleton<ReviewState>(() => ReviewState(reviewService: sl<ReviewService>()));
-  }
-
   // UserStatsState（用户统计状态）
   if (!sl.isRegistered<UserStatsState>()) {
     sl.registerLazySingleton<UserStatsState>(() => UserStatsState(statsService: sl<StatsService>()));

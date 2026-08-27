@@ -68,6 +68,19 @@ void main() {
       expect(sessionSource, contains('List.unmodifiable(_queue)'));
       expect(sessionSource, contains('void exitLearning()'));
     });
+
+    test('遗留复习会话栈已删除，功能域装配不再注册旧状态或服务', () {
+      final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
+      final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
+
+      expect(File('lib/state/review_state.dart').existsSync(), isFalse);
+      expect(File('lib/services/review_service.dart').existsSync(), isFalse);
+      expect(File('lib/services/review_service_impl.dart').existsSync(), isFalse);
+      expect(locatorSource, isNot(contains('ReviewState')));
+      expect(locatorSource, isNot(contains('ReviewService')));
+      expect(providersSource, isNot(contains('ReviewState')));
+    });
   });
 
   group('正式复习禁止依赖', () {
