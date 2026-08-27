@@ -45,12 +45,14 @@ void main() {
     });
 
     test('历史复习深链保留名称但重定向到正式复习页面', () {
-      final routerSource = File('lib/core/router/app_router.dart').readAsStringSync();
+      final namesSource = File('lib/core/router/route_names.dart').readAsStringSync();
+      final learningRoutesSource = File('lib/core/router/learning_routes.dart').readAsStringSync();
 
-      expect(routerSource, contains("static const String reviewSession = '/review_session';"));
-      expect(routerSource, contains('case RouteNames.reviewSession:\n        return const ReviewPage();'));
-      expect(routerSource, isNot(contains("import '../../screens/review_session.dart';")));
-      expect(routerSource, isNot(contains('return const ReviewSession();')));
+      expect(namesSource, contains("static const String reviewSession = '/review_session';"));
+      expect(learningRoutesSource, contains('case RouteNames.reviewSession:'));
+      expect(learningRoutesSource, contains('return const ReviewPage();'));
+      expect(learningRoutesSource, isNot(contains("import '../../screens/review_session.dart';")));
+      expect(learningRoutesSource, isNot(contains('return const ReviewSession();')));
     });
   });
 
