@@ -165,7 +165,7 @@ class _ReviewPageState extends State<ReviewPage> {
           ),
           // abc button - 显示答案
           GestureDetector(
-            onTap: _revealAnswer,
+            onTap: session.revealAnswer,
             child: Text(
               'abc',
               style: TextStyle(fontSize: 16 * resp.fontScale, fontWeight: FontWeight.w700, color: skin.onGlassText1),
@@ -416,7 +416,7 @@ class _ReviewPageState extends State<ReviewPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, color: skin.error, size: 56),
+              Icon(Icons.error_outline, color: skin.quizWrongText, size: 56),
               const SizedBox(height: 16),
               Text('复习数据加载失败', style: MistralTypography.heading3.copyWith(color: skin.text1)),
               const SizedBox(height: 8),
