@@ -1,9 +1,9 @@
 // 账号信息页：还原 v3.2 原版账号信息页布局
 // 包含：头像 + 相机图标、ID账号、账号、昵称、手机号、绑定平台
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
-import '../services/user_service.dart';
+import '../features/account/presentation/account_profile_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -17,31 +17,10 @@ class AccountInfoPage extends StatefulWidget {
 }
 
 class _AccountInfoPageState extends State<AccountInfoPage> {
-  String _nickname = '';
-  String _wechatName = '';
-  String _userId = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserInfo();
-  }
-
-  Future<void> _loadUserInfo() async {
-    final userInfo = await sl<UserService>().getUserInfoBean();
-    if (mounted) {
-      setState(() {
-        _nickname = userInfo.nickname;
-        _userId = userInfo.displayId.isEmpty
-            ? 'U${DateTime.now().millisecondsSinceEpoch % 100000}'
-            : userInfo.displayId;
-        _wechatName = userInfo.wechatName;
-      });
-    }
-  }
+  AccountProfileState get _profile => context.read<AccountProfileState>();
 
   Future<void> _editNickname() async {
-    final controller = TextEditingController(text: _nickname);
+    final controller = TextEditingController(text: _profile.nickname);
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -57,15 +36,12 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       ),
     );
     if (result != null && result.isNotEmpty) {
-      final userInfo = await sl<UserService>().getUserInfoBean();
-      userInfo.nickname = result;
-      await sl<UserService>().setUserInfoBean(userInfo);
-      if (mounted) setState(() => _nickname = result);
+      await _profile.updateNickname(result);
     }
   }
 
   Future<void> _editWechatName() async {
-    final controller = TextEditingController(text: _wechatName);
+    final controller = TextEditingController(text: _profile.wechatName);
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -81,15 +57,12 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       ),
     );
     if (result != null) {
-      final userInfo = await sl<UserService>().getUserInfoBean();
-      userInfo.wechatName = result;
-      await sl<UserService>().setUserInfoBean(userInfo);
-      if (mounted) setState(() => _wechatName = result);
+      await _profile.updateWechatName(result);
     }
   }
 
   Future<void> _editUserId() async {
-    final controller = TextEditingController(text: _userId);
+    final controller = TextEditingController(text: _profile.displayId);
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -105,16 +78,14 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       ),
     );
     if (result != null && result.isNotEmpty) {
-      final userInfo = await sl<UserService>().getUserInfoBean();
-      userInfo.displayId = result;
-      await sl<UserService>().setUserInfoBean(userInfo);
-      if (mounted) setState(() => _userId = result);
+      await _profile.updateDisplayId(result);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
+    final profile = context.watch<AccountProfileState>();
 
     return Scaffold(
       backgroundColor: skin.pageBg,
@@ -130,9 +101,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                     const SizedBox(height: 24),
                     _buildAvatarSection(skin),
                     const SizedBox(height: 32),
-                    _buildInfoCard(context, skin),
+                    _buildInfoCard(context, skin, profile),
                     const SizedBox(height: 16),
-                    _buildBindCard(context, skin),
+                    _buildBindCard(context, skin, profile),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -201,32 +172,29 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     );
   }
 
-  Widget _buildInfoCard(BuildContext context, ThemeVars skin) {
+  Widget _buildInfoCard(BuildContext context, ThemeVars skin, AccountProfileState profile) {
     return Container(
-      decoration: BoxDecoration(
-        color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-      ),
+      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(AppRadius.xl)),
       child: Column(
         children: [
           _buildInfoRow(
             skin,
             label: 'ID账号',
-            value: _userId.isEmpty ? '点击设置' : _userId,
+            value: profile.displayId.isEmpty ? '点击设置' : profile.displayId,
             onTap: _editUserId,
           ),
           _buildDivider(skin),
           _buildInfoRow(
             skin,
             label: '账号',
-            value: _wechatName.isEmpty ? '点击设置' : '微信：$_wechatName',
+            value: profile.wechatName.isEmpty ? '点击设置' : '微信：${profile.wechatName}',
             onTap: _editWechatName,
           ),
           _buildDivider(skin),
           _buildInfoRow(
             skin,
             label: '昵称',
-            value: _nickname.isEmpty ? '点击设置' : _nickname,
+            value: profile.nickname.isEmpty ? '点击设置' : profile.nickname,
             onTap: _editNickname,
           ),
           _buildDivider(skin),
@@ -236,12 +204,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     );
   }
 
-  Widget _buildBindCard(BuildContext context, ThemeVars skin) {
+  Widget _buildBindCard(BuildContext context, ThemeVars skin, AccountProfileState profile) {
     return Container(
-      decoration: BoxDecoration(
-        color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-      ),
+      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(AppRadius.xl)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -254,16 +219,37 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             icon: Icons.chat_bubble,
             iconColor: const Color(0xFF07C160),
             platform: '微信',
-            isBound: _wechatName.isNotEmpty,
-            boundName: _wechatName.isEmpty ? '' : _wechatName,
+            isBound: profile.wechatName.isNotEmpty,
+            boundName: profile.wechatName,
             onTap: _editWechatName,
           ),
           _buildDivider(skin),
-          _buildBindRow(skin, icon: Icons.circle, iconColor: const Color(0xFF12B7F5), platform: 'QQ', isBound: false, onTap: () {}),
+          _buildBindRow(
+            skin,
+            icon: Icons.circle,
+            iconColor: const Color(0xFF12B7F5),
+            platform: 'QQ',
+            isBound: false,
+            onTap: () {},
+          ),
           _buildDivider(skin),
-          _buildBindRow(skin, icon: Icons.language, iconColor: const Color(0xFFE6162D), platform: '微博', isBound: false, onTap: () {}),
+          _buildBindRow(
+            skin,
+            icon: Icons.language,
+            iconColor: const Color(0xFFE6162D),
+            platform: '微博',
+            isBound: false,
+            onTap: () {},
+          ),
           _buildDivider(skin),
-          _buildBindRow(skin, icon: Icons.apple, iconColor: skin.text1, platform: 'Apple ID', isBound: false, onTap: () {}),
+          _buildBindRow(
+            skin,
+            icon: Icons.apple,
+            iconColor: skin.text1,
+            platform: 'Apple ID',
+            isBound: false,
+            onTap: () {},
+          ),
           const SizedBox(height: 4),
         ],
       ),
@@ -290,7 +276,15 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     );
   }
 
-  Widget _buildBindRow(ThemeVars skin, {required IconData icon, required Color iconColor, required String platform, required bool isBound, String? boundName, required VoidCallback onTap}) {
+  Widget _buildBindRow(
+    ThemeVars skin, {
+    required IconData icon,
+    required Color iconColor,
+    required String platform,
+    required bool isBound,
+    String? boundName,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -302,7 +296,10 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             Container(
               width: 28,
               height: 28,
-              decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Icon(icon, size: 16, color: iconColor),
             ),
             const SizedBox(width: 12),

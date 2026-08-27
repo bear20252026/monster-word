@@ -70,6 +70,26 @@ void main() {
       expect(sessionSource, contains('void exitLearning()'));
     });
 
+    test('账户资料功能域拥有展示与编辑快照，资料页面不再直连用户服务', () {
+      const profileConsumers = [
+        'lib/pages/account_info_page.dart',
+        'lib/pages/user_info_manage_page.dart',
+        'lib/pages/my_space_page.dart',
+        'lib/screens/profile_screen.dart',
+      ];
+      final providersSource = File('lib/features/account/presentation/account_feature_providers.dart')
+          .readAsStringSync();
+
+      expect(providersSource, contains('AccountProfileRepository'));
+      expect(providersSource, contains('AccountProfileState'));
+      for (final path in profileConsumers) {
+        final source = File(path).readAsStringSync();
+        expect(source, contains('AccountProfileState'), reason: '$path 应使用账户资料状态');
+        expect(source, isNot(contains('sl<UserService>')), reason: '$path 不应直连用户服务定位器');
+        expect(source, isNot(contains('getUserInfoSyncBean')), reason: '$path 不应读取同步默认资料');
+      }
+    });
+
     test('设置功能域拥有学习偏好，设置页不再保留可丢失的本地偏好副本', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final settingsPageSource = File('lib/pages/settings_page.dart').readAsStringSync();

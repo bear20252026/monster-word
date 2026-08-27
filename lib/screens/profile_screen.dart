@@ -1,9 +1,9 @@
 // 个人中心页：星巴克风格 — 奶油画布 + 头像 + 尖叫币/装备 + 菜单
 // batch4a 改造：金色渐变→奶油纯色，硬编码→token，卡片→SbCard
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
-import '../services/user_service.dart';
+import '../features/account/presentation/account_profile_state.dart';
 import '../hooks/responsive.dart';
 import '../pages/appearance_page.dart';
 import '../pages/more_settings_page.dart';
@@ -36,6 +36,7 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final resp = context.responsive;
+    final profile = context.watch<AccountProfileState>();
 
     return Container(
       color: skin.colors.pageBg,
@@ -46,25 +47,26 @@ class ProfileScreen extends StatelessWidget {
             Container(
               height: AppSpacing.navH,
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(children: [
-                const Spacer(),
-                IconButton(
-                  icon: Icon(Icons.mail_outline, color: skin.colors.text1, size: 22),
-                  tooltip: '消息',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('消息功能开发中...'), duration: Duration(seconds: 1)),
-                    );
-                  },
-                ),
-              ]),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  IconButton(
+                    icon: Icon(Icons.mail_outline, color: skin.colors.text1, size: 22),
+                    tooltip: '消息',
+                    onPressed: () {
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(const SnackBar(content: Text('消息功能开发中...'), duration: Duration(seconds: 1)));
+                    },
+                  ),
+                ],
+              ),
             ),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   children: [
                     // 金色渐变头部区
-                    _buildProfileHeader(context, skin),
+                    _buildProfileHeader(context, skin, profile),
                     const SizedBox(height: 20),
                     // 尖叫币 + 装备卡片
                     Padding(
@@ -90,7 +92,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context, SkinSystem skin) {
+  Widget _buildProfileHeader(BuildContext context, SkinSystem skin, AccountProfileState profile) {
     final resp = context.responsive;
     return Container(
       width: double.infinity,
@@ -111,14 +113,11 @@ class ProfileScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          sl<UserService>().getUserInfoSyncBean().nickname,
+                          profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
                           style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          'VIP 会员',
-                          style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
-                        ),
+                        Text('VIP 会员', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
                       ],
                     ),
                   ],
@@ -130,7 +129,7 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     // 用户 ID（用户可自定义）
                     Text(
-                      sl<UserService>().getUserInfoSyncBean().nickname,
+                      profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
                       style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
                     ),
                   ],
@@ -168,11 +167,10 @@ class ProfileScreen extends StatelessWidget {
                 border: Border.all(color: AppColors.white100, width: 2),
               ),
               child: const Center(
-                child: Text('VIP', style: TextStyle(
-                  color: AppColors.white100,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                )),
+                child: Text(
+                  'VIP',
+                  style: TextStyle(color: AppColors.white100, fontSize: 9, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ),
@@ -185,20 +183,27 @@ class ProfileScreen extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
       child: SbCard(
-        child: Column(children: [
-          _menuRow(
-            Icons.palette_outlined,
-            FuncColors.success, // #4CAF50 → token
-            '外观 & 沉浸场景',
-            skin,
-            onTap: () => Navigator.pushNamed(context, AppearancePage.routeName),
-          ),
-          Divider(height: 1, color: skin.colors.divider),
-          _menuRow(Icons.tune, FuncColors.purple, '学习偏好', skin),
-          Divider(height: 1, color: skin.colors.divider),
-          _menuRow(Icons.settings_outlined, FuncColors.info, '更多设置', skin,
-            onTap: () => Navigator.pushNamed(context, MoreSettingsPage.routeName)),
-        ]),
+        child: Column(
+          children: [
+            _menuRow(
+              Icons.palette_outlined,
+              FuncColors.success, // #4CAF50 → token
+              '外观 & 沉浸场景',
+              skin,
+              onTap: () => Navigator.pushNamed(context, AppearancePage.routeName),
+            ),
+            Divider(height: 1, color: skin.colors.divider),
+            _menuRow(Icons.tune, FuncColors.purple, '学习偏好', skin),
+            Divider(height: 1, color: skin.colors.divider),
+            _menuRow(
+              Icons.settings_outlined,
+              FuncColors.info,
+              '更多设置',
+              skin,
+              onTap: () => Navigator.pushNamed(context, MoreSettingsPage.routeName),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -211,21 +216,24 @@ class ProfileScreen extends StatelessWidget {
         child: Container(
           height: AppSpacing.rowH,
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
               ),
-              child: Icon(icon, color: iconColor, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(child: Text(label,
-              style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1))),
-            Icon(Icons.chevron_right, size: 18, color: skin.colors.text3),
-          ]),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(label, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1)),
+              ),
+              Icon(Icons.chevron_right, size: 18, color: skin.colors.text3),
+            ],
+          ),
         ),
       ),
     );
@@ -248,8 +256,10 @@ class _CoinCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text('尖叫币', style: MistralTypography.bodyMd.copyWith(
-                  color: skin.colors.text1, fontWeight: FontWeight.w600)),
+                Text(
+                  '尖叫币',
+                  style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w600),
+                ),
                 const Spacer(),
                 Icon(Icons.chevron_right, color: skin.colors.text3, size: 16),
               ],
@@ -264,8 +274,7 @@ class _CoinCard extends StatelessWidget {
                   builder: (context, snap) {
                     return Text(
                       '${snap.data ?? 0}',
-                      style: MistralTypography.heading4.copyWith(
-                        color: skin.colors.text1, fontWeight: FontWeight.w700),
+                      style: MistralTypography.heading4.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w700),
                     );
                   },
                 ),
@@ -292,11 +301,12 @@ class _EquipCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('装备', style: MistralTypography.bodyMd.copyWith(
-                color: skin.colors.text1, fontWeight: FontWeight.w600)),
+              Text(
+                '装备',
+                style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w600),
+              ),
               const SizedBox(width: 6),
-              Text('9/9', style: MistralTypography.caption.copyWith(
-                color: skin.colors.text3)),
+              Text('9/9', style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
               const Spacer(),
               Icon(Icons.chevron_right, color: skin.colors.text3, size: 16),
             ],
@@ -323,10 +333,7 @@ class _EquipCard extends StatelessWidget {
     return Container(
       width: 28,
       height: 28,
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
       child: Icon(icon, color: fg, size: 16),
     );
   }

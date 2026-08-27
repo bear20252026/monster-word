@@ -1,10 +1,10 @@
 // 我的空间页：顶部导航 + 头像区 + 昵称 + 会员入口 + 卡片
 // 已接入 SkinSystem 主题
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
+import '../features/account/presentation/account_profile_state.dart';
 import '../hooks/responsive.dart';
-import '../services/user_service.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import 'message_page.dart';
@@ -20,6 +20,7 @@ class MySpacePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
+    final profile = context.watch<AccountProfileState>();
 
     return Scaffold(
       body: Column(
@@ -67,7 +68,8 @@ class MySpacePage extends StatelessWidget {
                                 right: 8,
                                 top: 8,
                                 child: Container(
-                                  width: 8, height: 8,
+                                  width: 8,
+                                  height: 8,
                                   decoration: BoxDecoration(
                                     color: skin.danger,
                                     shape: BoxShape.circle,
@@ -87,7 +89,7 @@ class MySpacePage extends StatelessWidget {
                     ),
                   ),
                   // 头像 + VIP 徽章 + 用户 ID + 会员状态
-                  _buildProfileHeader(context, skin),
+                  _buildProfileHeader(context, skin, profile),
                   const SizedBox(height: 16),
                   // 尖叫币 + 装备卡片
                   Padding(
@@ -113,7 +115,7 @@ class MySpacePage extends StatelessWidget {
   }
 
   /// 头像 + VIP 徽章 + 用户 ID + 会员状态条
-  Widget _buildProfileHeader(BuildContext context, ThemeVars skin) {
+  Widget _buildProfileHeader(BuildContext context, ThemeVars skin, AccountProfileState profile) {
     final resp = context.responsive;
     return resp.isDesktop
         ? Row(
@@ -121,11 +123,13 @@ class MySpacePage extends StatelessWidget {
             children: [
               // 头像
               SizedBox(
-                width: 80, height: 80,
+                width: 80,
+                height: 80,
                 child: Stack(
                   children: [
                     Container(
-                      width: 80, height: 80,
+                      width: 80,
+                      height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
@@ -134,26 +138,32 @@ class MySpacePage extends StatelessWidget {
                           colors: [MistralColors.sunshine300, MistralColors.sunshine500],
                         ),
                         border: Border.all(color: skin.cardBg, width: 3),
-                        boxShadow: [BoxShadow(
-                          color: MistralColors.sunshine500.withValues(alpha: 0.3),
-                          blurRadius: 12, offset: const Offset(0, 4),
-                        )],
+                        boxShadow: [
+                          BoxShadow(
+                            color: MistralColors.sunshine500.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Icon(Icons.person, color: skin.cardBg, size: 40),
                     ),
                     Positioned(
-                      right: 0, bottom: 0,
+                      right: 0,
+                      bottom: 0,
                       child: Container(
-                        width: 26, height: 26,
+                        width: 26,
+                        height: 26,
                         decoration: BoxDecoration(
                           color: MistralColors.sunshine500,
                           shape: BoxShape.circle,
                           border: Border.all(color: skin.cardBg, width: 2),
                         ),
                         child: Center(
-                          child: Text('V', style: TextStyle(
-                            color: skin.cardBg, fontSize: 13, fontWeight: FontWeight.bold,
-                          )),
+                          child: Text(
+                            'V',
+                            style: TextStyle(color: skin.cardBg, fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ),
@@ -166,7 +176,7 @@ class MySpacePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    sl<UserService>().getUserInfoSyncBean().nickname,
+                    profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
                     style: MistralTypography.bodyMd.copyWith(color: skin.text2),
                   ),
                 ],
@@ -176,11 +186,13 @@ class MySpacePage extends StatelessWidget {
         : Column(
             children: [
               SizedBox(
-                width: 80, height: 80,
+                width: 80,
+                height: 80,
                 child: Stack(
                   children: [
                     Container(
-                      width: 80, height: 80,
+                      width: 80,
+                      height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
@@ -189,26 +201,32 @@ class MySpacePage extends StatelessWidget {
                           colors: [MistralColors.sunshine300, MistralColors.sunshine500],
                         ),
                         border: Border.all(color: skin.cardBg, width: 3),
-                        boxShadow: [BoxShadow(
-                          color: MistralColors.sunshine500.withValues(alpha: 0.3),
-                          blurRadius: 12, offset: const Offset(0, 4),
-                        )],
+                        boxShadow: [
+                          BoxShadow(
+                            color: MistralColors.sunshine500.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Icon(Icons.person, color: skin.cardBg, size: 40),
                     ),
                     Positioned(
-                      right: 0, bottom: 0,
+                      right: 0,
+                      bottom: 0,
                       child: Container(
-                        width: 26, height: 26,
+                        width: 26,
+                        height: 26,
                         decoration: BoxDecoration(
                           color: MistralColors.sunshine500,
                           shape: BoxShape.circle,
                           border: Border.all(color: skin.cardBg, width: 2),
                         ),
                         child: Center(
-                          child: Text('V', style: TextStyle(
-                            color: skin.cardBg, fontSize: 13, fontWeight: FontWeight.bold,
-                          )),
+                          child: Text(
+                            'V',
+                            style: TextStyle(color: skin.cardBg, fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ),
@@ -217,7 +235,7 @@ class MySpacePage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                sl<UserService>().getUserInfoSyncBean().nickname,
+                profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
                 style: MistralTypography.bodyMd.copyWith(color: skin.text2),
               ),
             ],
@@ -277,14 +295,18 @@ class _MenuItem extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(
-          width: 38, height: 38,
+          width: 38,
+          height: 38,
           decoration: BoxDecoration(
             color: MistralColors.sunshine300.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: skin.accent, size: 20),
         ),
-        title: Text(title, style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w500, color: skin.text1)),
+        title: Text(
+          title,
+          style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w500, color: skin.text1),
+        ),
         subtitle: Text(subtitle, style: MistralTypography.caption.copyWith(color: skin.text3)),
         trailing: Icon(Icons.chevron_right, color: skin.text3, size: 20),
         onTap: onTap,
@@ -325,10 +347,7 @@ class _CoinCard extends StatelessWidget {
                     builder: (context, snap) {
                       return Text(
                         '${snap.data ?? 0}',
-                        style: MistralTypography.heading4.copyWith(
-                          color: skin.text1,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: MistralTypography.heading4.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
                       );
                     },
                   ),
@@ -370,8 +389,10 @@ class _EquipCard extends StatelessWidget {
                     children: [
                       Text('装备', style: MistralTypography.micro.copyWith(color: skin.text3)),
                       const SizedBox(width: 4),
-                      Text('9/9', style: MistralTypography.micro.copyWith(
-                        color: skin.accent, fontWeight: FontWeight.w600)),
+                      Text(
+                        '9/9',
+                        style: MistralTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -400,10 +421,7 @@ class _EquipCard extends StatelessWidget {
     return Container(
       width: 26,
       height: 26,
-      decoration: BoxDecoration(
-        color: skin.accent.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
+      decoration: BoxDecoration(color: skin.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
       child: Icon(icon, color: skin.accent, size: 15),
     );
   }

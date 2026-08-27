@@ -11,6 +11,7 @@ class UserInfoBean {
   String secret;
   String displayId; // 用户自定义 ID（可自由设定）
   String wechatName; // 微信名
+  String signature; // 个人签名
 
   UserInfoBean({
     this.userId = 0,
@@ -21,27 +22,30 @@ class UserInfoBean {
     this.secret = '',
     this.displayId = '',
     this.wechatName = '',
+    this.signature = '',
   });
 
   factory UserInfoBean.fromJson(Map<String, dynamic> json) => UserInfoBean(
-        userId: (json['userId'] as num?)?.toInt() ?? 0,
-        nickname: json['nickname'] ?? '',
-        avatar: json['avatar'] ?? '',
-        phone: json['phone'] ?? '',
-        token: json['token'] ?? '',
-        secret: json['secret'] ?? '',
-        displayId: json['displayId'] ?? '',
-        wechatName: json['wechatName'] ?? '',
-      );
+    userId: (json['userId'] as num?)?.toInt() ?? 0,
+    nickname: json['nickname'] ?? '',
+    avatar: json['avatar'] ?? '',
+    phone: json['phone'] ?? '',
+    token: json['token'] ?? '',
+    secret: json['secret'] ?? '',
+    displayId: json['displayId'] ?? '',
+    wechatName: json['wechatName'] ?? '',
+    signature: json['signature'] ?? '',
+  );
 
   Map<String, dynamic> toJson() => {
-        'userId': userId,
-        'nickname': nickname,
-        'avatar': avatar,
-        'phone': phone,
-        'token': token,
-        'secret': secret,
-        'displayId': displayId,
-        'wechatName': wechatName,
-      };
+    'userId': userId,
+    'nickname': nickname,
+    'avatar': avatar,
+    'phone': phone,
+    'token': token,
+    'secret': secret,
+    displayId: displayId,
+    wechatName: wechatName,
+    signature: signature,
+  };
 }
