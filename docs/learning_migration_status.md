@@ -105,7 +105,14 @@
 
 `ReviewPage` 现在通过 `ReviewQueueState` 读取由 `LearningState` 提供的不可变队列快照，并委托 `ReviewQueueReader` 决定候选词。读取器将既有优先级固定为“FSRS 到期词 → 当前学习队列 → `a` 样本 → `the` 样本”，因此本轮不改变用户在无到期词时仍可进入复习的行为。
 
-这是一次过渡性读取隔离：FSRS 到期判断和当前学习队列的事实来源仍是 `LearningState`，但页面不再同时负责读取旧状态、选择优先级和词库回退查询。评分继续由页面写回 `LearningState.rate`，以保持卡片持久化、每日统计和现有排程语义不变；评分写入边界将作为下一独立阶段审计，不能直接迁用仅维护内存状态的兼容 `ReviewService`。
+这是一次过渡性读取隔离：FSRS 到期判断和当前学习队列的事实来源仍是 `LearningState`，但页面不再同时负责读取旧状态、选择优先级和词库回退查询。评分写入边界已在后续阶段独立迁移，不能直接迁用仅维护内存状态的兼容 `ReviewService`。
+
+
+## 正式复习评分写入边界
+
+`ReviewPage` 现在将评分提交给 `ReviewRatingWriter`，而不再直接依赖 `LearningState`。应用根通过 `ProxyProvider` 将该写入端口适配到既有的 `LearningState.rate`，因此评分仍以原有顺序更新 FSRS 卡片并写入 `fsrs6_cards_v1`，记录每日学习或复习计数及活跃日期，然后通知展示状态。
+
+这只是依赖反转，不是评分算法替换：`SuperMemoryEngine` 仍先在页面中推进本次会话，`FsrsRating` 的映射、卡片格式、SharedPreferences 键名和统计分类均保持不变。`/review_session` 仍直接使用遗留评分路径，待两条会话的队列和交互合同统一后再另行迁移。
 
 
 ## 复习主入口边界

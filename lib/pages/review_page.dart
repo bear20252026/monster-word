@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../core/di/service_locator.dart';
 import '../engine/core_engine.dart' show WordChoicePair;
 import '../features/learning/application/review_queue_reader.dart';
+import '../features/learning/application/review_rating_writer.dart';
 import '../features/learning/domain/choice_generator.dart';
 import '../features/learning/presentation/review_queue_state.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
@@ -16,7 +17,6 @@ import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
 import '../models/word.dart';
 import '../pages/dictionary_page.dart';
-import '../state/learning_state.dart';
 import '../data/wallpaper_data.dart' show WallpaperType;
 import '../state/wallpaper_state.dart';
 import '../theme/skin_system.dart';
@@ -128,7 +128,7 @@ class _ReviewPageState extends State<ReviewPage> {
     };
     final currentWord = _engine.currentWord();
     if (currentWord != null) {
-      context.read<LearningState>().rate(fsrsRating);
+      context.read<ReviewRatingWriter>().rate(fsrsRating);
     }
     _done++;
     _showAnswer = false;
