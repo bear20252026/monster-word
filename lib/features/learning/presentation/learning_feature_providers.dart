@@ -64,7 +64,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
       ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>(
         create: (_) => LearningCollectionsState(),
         update: (_, favorites, mastered, collections) =>
-            (collections ?? LearningCollectionsState()).synchronize(favorites: favorites, mastered: mastered),
+            (collections ?? LearningCollectionsState())..synchronize(favorites: favorites, mastered: mastered),
       ),
       ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, LearningQueueWordListsState>(
         create: (_) => LearningQueueWordListsState(),
