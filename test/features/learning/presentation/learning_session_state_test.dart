@@ -4,53 +4,32 @@ import 'package:word_app/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/data/learning_progress_repository.dart';
 import 'package:word_app/features/learning/data/learning_queue_repository.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
-import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
+import 'package:word_app/features/learning/presentation/learning_mastered_state.dart';
 import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
+import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/repositories/fav_repository.dart';
 import 'package:word_app/repositories/mastered_repository.dart';
-import 'package:word_app/state/learning_state.dart';
 
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('rateReviewWord 只更新实际复习词，不推进遗留学习队列', () async {
-    final state = LearningState(favRepository: _FakeFavRepository(), masteredRepository: _FakeMasteredRepository());
-    await Future<void>.delayed(Duration.zero);
-    final legacyQueueWord = Word(word: 'legacy-queue');
-    state.queue.add(legacyQueueWord);
-
-    await state.rateReviewWord(word: 'reviewed-word', rating: FsrsRating.good);
-
-    expect(state.currentWord, same(legacyQueueWord));
-    expect(state.currentIndex, 0);
-    expect(state.getCard('reviewed-word'), isNotNull);
-    expect(state.getCard('legacy-queue'), isNull);
-    expect(state.todayLearnCount, 1);
-
-    await state.rateReviewWord(word: 'reviewed-word', rating: FsrsRating.again);
-
-    expect(state.todayLearnCount, 1);
-    expect(state.todayReviewCount, 1);
-  });
-
-  test('队列与统计读取快照隔离遗留可变队列并组合独立复习调度', () async {
+  test('队列与统计读取快照隔离专用会话的可变队列并组合独立复习调度', () async {
     final schedule = ReviewScheduleRepository();
     await schedule.initialize();
-    final legacy = LearningState(
-      favRepository: _FakeFavRepository(),
-      masteredRepository: _FakeMasteredRepository(),
-      reviewSchedule: schedule,
+    final session = _sessionWithWords(
+      words: [Word(id: 1, word: 'first')],
+      schedule: schedule,
     );
-    legacy.queue.add(Word(word: 'first'));
+    await session.loadBook(_testBook, shuffle: false);
 
-    final queue = LearningQueueState()..synchronizeFrom(legacy.session);
-    legacy.queue.add(Word(word: 'later'));
+    final queue = LearningQueueState()..synchronizeFrom(session);
+    session.queue.add(Word(id: 2, word: 'later'));
     final statistics = LearningStatisticsState()..synchronize(queue: queue.snapshot, schedule: schedule);
 
     expect(queue.words.map((word) => word.word), ['first']);
@@ -76,21 +55,30 @@ void main() {
     expect(favorites.favoriteCount, 0);
   });
 
+  test('专用掌握词状态刷新并切换掌握标记时更新可订阅计数', () async {
+    final repository = _FakeMasteredRepository({'saved'});
+    final mastered = LearningMasteredState(masteredRepository: repository);
+
+    await mastered.refresh();
+    expect(mastered.masteredCount, 1);
+    expect(mastered.isMastered('saved'), isTrue);
+
+    final isMastered = await mastered.toggle('saved');
+    expect(isMastered, isFalse);
+    expect(mastered.masteredCount, 0);
+  });
+
   test('专用学习会话独立完成词书加载、候选生成与评分推进', () async {
     final schedule = ReviewScheduleRepository();
-    final session = LearningSessionState(
-      queueRepository: LearningQueueRepository(
-        wordSource: _FakeWordSource([
-          Word(id: 1, word: 'first', interpret: '第一'),
-          Word(id: 2, word: 'second', interpret: '第二'),
-        ]),
-        favRepository: _FakeFavRepository(),
-      ),
-      progressRepository: LearningProgressRepository(),
-      reviewSchedule: schedule,
+    final session = _sessionWithWords(
+      words: [
+        Word(id: 1, word: 'first', interpret: '第一'),
+        Word(id: 2, word: 'second', interpret: '第二'),
+      ],
+      schedule: schedule,
     );
 
-    await session.loadBook(Book(id: 1, code: 'TEST', name: '测试', wordCount: 2), shuffle: false);
+    await session.loadBook(_testBook, shuffle: false);
     expect(session.currentWord?.word, 'first');
     expect(session.choices.where((choice) => choice.word == 'first'), hasLength(1));
 
@@ -101,47 +89,25 @@ void main() {
   });
 
   test('专用学习会话在收藏词为空时保留当前队列与词书', () async {
-    final session = LearningSessionState(
-      queueRepository: LearningQueueRepository(
-        wordSource: _FakeWordSource([Word(id: 1, word: 'first')]),
-        favRepository: _FakeFavRepository(),
-      ),
-      progressRepository: LearningProgressRepository(),
-      reviewSchedule: ReviewScheduleRepository(),
-    );
-    final book = Book(id: 1, code: 'TEST', name: '测试', wordCount: 1);
-    await session.loadBook(book, shuffle: false);
+    final session = _sessionWithWords(words: [Word(id: 1, word: 'first')]);
+    await session.loadBook(_testBook, shuffle: false);
 
     await session.loadFavorites();
 
-    expect(session.currentBook, same(book));
+    expect(session.currentBook, same(_testBook));
     expect(session.queue.map((word) => word.word), ['first']);
   });
+}
 
-  test('学习会话兼容外观委托队列加载、候选生成与评分推进', () async {
-    final source = _FakeWordSource([
-      Word(id: 1, word: 'first', interpret: '第一'),
-      Word(id: 2, word: 'second', interpret: '第二'),
-    ]);
-    final schedule = ReviewScheduleRepository();
-    final state = LearningState(
-      favRepository: _FakeFavRepository(),
-      masteredRepository: _FakeMasteredRepository(),
-      reviewSchedule: schedule,
-      queueRepository: LearningQueueRepository(wordSource: source, favRepository: _FakeFavRepository()),
-    );
+final _testBook = Book(id: 1, code: 'TEST', name: '测试', wordCount: 2);
 
-    await state.loadBook(Book(id: 1, code: 'TEST', name: '测试', wordCount: 2), shuffle: false);
-    final first = state.currentWord;
-
-    expect(first?.word, 'first');
-    expect(state.choices.where((choice) => choice.word == first?.word), hasLength(1));
-
-    await state.rate(FsrsRating.good);
-
-    expect(schedule.cardFor('first'), isNotNull);
-    expect(state.currentWord?.word, 'second');
-  });
+LearningSessionState _sessionWithWords({required List<Word> words, ReviewScheduleRepository? schedule}) {
+  final favorites = _FakeFavRepository();
+  return LearningSessionState(
+    queueRepository: LearningQueueRepository(wordSource: _FakeWordSource(words), favRepository: favorites),
+    progressRepository: LearningProgressRepository(),
+    reviewSchedule: schedule ?? ReviewScheduleRepository(),
+  );
 }
 
 class _FakeWordSource implements LearningQueueWordSource {
@@ -159,7 +125,9 @@ class _FakeWordSource implements LearningQueueWordSource {
 }
 
 class _FakeMasteredRepository implements MasteredRepository {
-  final Set<String> _words = {};
+  _FakeMasteredRepository([Iterable<String> initialWords = const []]) : _words = {...initialWords};
+
+  final Set<String> _words;
 
   @override
   Future<Set<String>> getMasteredWords() async => Set<String>.from(_words);

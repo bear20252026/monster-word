@@ -4,7 +4,7 @@ import 'mastered_repository.dart';
 
 /// 基于 SharedPreferences 的已掌握单词标记仓储。
 ///
-/// 存储键与遗留 LearningState 保持一致，确保用户已有的掌握标记无需迁移。
+/// 保留既有存储键，确保用户已有的手动掌握标记无需迁移。
 class MasteredRepositoryImpl implements MasteredRepository {
   static const _masteredWordsKey = 'mastered_words_v1';
 

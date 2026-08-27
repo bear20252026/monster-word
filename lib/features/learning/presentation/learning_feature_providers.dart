@@ -5,7 +5,6 @@ import '../../../core/di/service_locator.dart';
 import '../../../repositories/fav_repository.dart';
 import '../../../repositories/mastered_repository.dart';
 import '../../../state/learn_state.dart';
-import '../../../state/learning_state.dart';
 import '../../../state/review_state.dart';
 import '../application/book_words_reader.dart';
 import '../application/mastered_words_reader.dart';
@@ -18,6 +17,7 @@ import '../data/learning_queue_repository.dart';
 import '../data/review_schedule_repository.dart';
 import 'learning_collections_state.dart';
 import 'learning_favorites_state.dart';
+import 'learning_mastered_state.dart';
 import 'learning_queue_state.dart';
 import 'learning_queue_word_lists_state.dart';
 import 'learning_session_state.dart';
@@ -44,21 +44,12 @@ Widget buildLearningFeatureScope({required Widget child}) {
           queueRepository: sl<LearningQueueRepository>(),
         ),
       ),
+      ChangeNotifierProvider(create: (_) => LearningMasteredState(masteredRepository: sl<MasteredRepository>())),
       ChangeNotifierProvider(
         create: (_) => LearningSessionState(
           queueRepository: sl<LearningQueueRepository>(),
           progressRepository: sl<LearningProgressRepository>(),
           reviewSchedule: sl<ReviewScheduleRepository>(),
-        ),
-      ),
-      ChangeNotifierProvider(
-        create: (context) => LearningState(
-          favRepository: sl<FavRepository>(),
-          masteredRepository: sl<MasteredRepository>(),
-          reviewSchedule: sl<ReviewScheduleRepository>(),
-          progressRepository: sl<LearningProgressRepository>(),
-          queueRepository: sl<LearningQueueRepository>(),
-          session: context.read<LearningSessionState>(),
         ),
       ),
       ChangeNotifierProxyProvider<LearningSessionState, LearningQueueState>(
@@ -70,9 +61,10 @@ Widget buildLearningFeatureScope({required Widget child}) {
         update: (_, queue, schedule, statistics) =>
             (statistics ?? LearningStatisticsState())..synchronize(queue: queue.snapshot, schedule: schedule),
       ),
-      ChangeNotifierProxyProvider<LearningState, LearningCollectionsState>(
+      ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>(
         create: (_) => LearningCollectionsState(),
-        update: (_, legacy, collections) => (collections ?? LearningCollectionsState())..synchronizeFrom(legacy),
+        update: (_, favorites, mastered, collections) =>
+            (collections ?? LearningCollectionsState()).synchronize(favorites: favorites, mastered: mastered),
       ),
       ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, LearningQueueWordListsState>(
         create: (_) => LearningQueueWordListsState(),

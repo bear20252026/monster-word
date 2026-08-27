@@ -114,8 +114,7 @@ class WordRepositoryImpl implements WordRepository {
 
   @override
   Future<int> updateWordStatus(int wordId, Map<String, dynamic> status) async {
-    // 使用 SharedPreferences 存储单词状态（与现有 LearningState 保持一致）
-    // 此方法暂不实现，状态由 LearningState 管理
+    // 此兼容接口尚未实现；学习状态由学习域的专用仓储与状态管理。
     return 0;
   }
 }

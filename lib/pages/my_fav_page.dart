@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../features/learning/presentation/learning_favorites_state.dart';
 import '../features/learning/presentation/learning_session_state.dart';
 import '../screens/learn_session.dart';
-import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../models/word.dart';

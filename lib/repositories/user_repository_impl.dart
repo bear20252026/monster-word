@@ -2,11 +2,12 @@
 // UserRepositoryImpl — 用户数据仓库实现（使用 SharedPreferences）
 
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'user_repository.dart';
 
 /// 用户数据仓库的具体实现
 ///
-/// 使用 SharedPreferences 存储用户数据（与现有 LearningState 保持一致）
+/// 使用 SharedPreferences 存储用户数据。
 class UserRepositoryImpl implements UserRepository {
   static const _userInfoKey = 'user_info_v1';
   static const _checkInRecordsKey = 'check_in_records_v1';
@@ -29,13 +30,8 @@ class UserRepositoryImpl implements UserRepository {
 
   @override
   Future<Map<String, dynamic>> getLearningStats() async {
-    // 从 LearningState 读取统计（已持久化到 SharedPreferences）
-    return {
-      'totalWords': 0,
-      'mastered': 0,
-      'learning': 0,
-      'reviewing': 0,
-    };
+    // 学习统计由学习域的专用读取状态提供；该兼容仓储暂保留既有零值返回。
+    return {'totalWords': 0, 'mastered': 0, 'learning': 0, 'reviewing': 0};
   }
 
   @override

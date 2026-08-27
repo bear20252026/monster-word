@@ -15,6 +15,7 @@ void main() {
       expect(bootstrapSource, isNot(contains("import '../pages/")));
       expect(bootstrapSource, isNot(contains('MaterialApp')));
       expect(appSource, contains('AppRouter.buildPage(settings)'));
+      expect(appSource, contains('buildAccountFeatureScope('));
       expect(appSource, contains('buildLearningFeatureScope('));
       expect(appSource, isNot(contains("import '../state/learning_state.dart';")));
       expect(appSource, isNot(contains("import '../features/learning/application/")));
@@ -27,19 +28,18 @@ void main() {
       expect(providersSource, contains('ReviewScheduleRepository'));
       expect(providersSource, contains('ReviewRatingWriter(writeRating: schedule.rateWord)'));
       expect(providersSource, contains('LearningSessionState'));
+      expect(providersSource, contains('LearningFavoritesState'));
+      expect(providersSource, contains('LearningMasteredState'));
       expect(providersSource, contains('LearningQueueState'));
       expect(providersSource, contains('ReviewQueueState'));
       expect(providersSource, isNot(contains('legacy.rateReviewWord')));
+      expect(providersSource, isNot(contains('LearningState(')));
     });
 
-    test('遗留学习外观不重新持有专用会话的可变队列或 Leitner 实现', () {
-      final facadeSource = File('lib/state/learning_state.dart').readAsStringSync();
+    test('遗留学习外观已删除，专用会话保持唯一的可变队列和 Leitner 实现', () {
       final sessionSource = File('lib/features/learning/presentation/learning_session_state.dart').readAsStringSync();
 
-      expect(facadeSource, contains('LearningSessionState'));
-      expect(facadeSource, isNot(contains('LeitnerCardEngine')));
-      expect(facadeSource, isNot(contains('List<Word> _queue')));
-      expect(facadeSource, isNot(contains('_regenerateChoices')));
+      expect(File('lib/state/learning_state.dart').existsSync(), isFalse);
       expect(sessionSource, contains('LeitnerCardEngine'));
       expect(sessionSource, contains('Future<void> rate(FsrsRating rating)'));
     });
