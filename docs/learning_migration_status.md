@@ -108,6 +108,13 @@
 这是一次过渡性读取隔离：FSRS 到期判断和当前学习队列的事实来源仍是 `LearningState`，但页面不再同时负责读取旧状态、选择优先级和词库回退查询。评分写入边界已在后续阶段独立迁移，不能直接迁用仅维护内存状态的兼容 `ReviewService`。
 
 
+## 正式复习词条操作边界
+
+`ReviewWordActionsState` 现在协调正式 `/review` 的按词收藏与手动掌握操作。它从既有 `FavRepository` 和 `MasteredRepository` 读取不可变展示快照，操作成功后再更新快照并通知页面；复习页顶部星标不再维护未持久化的 `_isFavorited` 本地副本。
+
+收藏仍使用字符串键的 `favorite_words_v1`，手动掌握仍使用字符串键的 `mastered_words_v1`。二者分别独立于用户数据库的 `wordId` 收藏和 FSRS 卡片熟练度。“熟”按钮保留原有本地会话推进，同时为刚作答的词写入幂等的手动掌握标记；它不会反转已存在的手动掌握状态。
+
+
 ## 正式复习会话状态边界
 
 `ReviewSessionState` 现在承接正式 `/review` 的本地题目队列初始化、`SuperMemoryEngine` 推进、共享候选项生成、显示答案状态和会话进度。它依赖 `ReviewQueueReader` 取得候选词，并依赖 `ReviewRatingWriter` 提交已捕获的实际作答词；页面不再同时持有引擎、候选项、初始化和评分推进逻辑。

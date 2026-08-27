@@ -65,6 +65,25 @@ void main() {
     });
   });
 
+  group('正式复习词条操作边界', () {
+    test('主复习页通过协调状态读取并持久化收藏和手动掌握标记', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final actionsSource = File('lib/features/learning/presentation/review_word_actions_state.dart')
+          .readAsStringSync();
+
+      expect(appSource, contains('ReviewWordActionsState'));
+      expect(pageSource, contains('ReviewWordActionsState'));
+      expect(pageSource, contains('wordActions.isFavorite'));
+      expect(pageSource, contains('toggleFavorite(current.word)'));
+      expect(pageSource, contains('markManuallyMastered(currentWord.word)'));
+      expect(pageSource, isNot(contains('_isFavorited')));
+      expect(pageSource, isNot(contains('TODO: persist favorite')));
+      expect(actionsSource, contains('FavRepository'));
+      expect(actionsSource, contains('MasteredRepository'));
+    });
+  });
+
   group('正式复习会话状态边界', () {
     test('主复习页通过会话展示状态管理本地题目与进度', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
