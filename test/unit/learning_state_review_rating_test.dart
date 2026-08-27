@@ -1,8 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/engine/fsrs6_engine.dart';
+import 'package:word_app/features/learning/data/learning_progress_repository.dart';
 import 'package:word_app/features/learning/data/learning_queue_repository.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
+import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
 import 'package:word_app/models/book.dart';
@@ -54,6 +56,30 @@ void main() {
     expect(statistics.total, 1);
     expect(statistics.dueCount, 0);
     expect(statistics.memoryStats['total'], 0);
+  });
+
+  test('专用学习会话独立完成词书加载、候选生成与评分推进', () async {
+    final schedule = ReviewScheduleRepository();
+    final session = LearningSessionState(
+      queueRepository: LearningQueueRepository(
+        wordSource: _FakeWordSource([
+          Word(id: 1, word: 'first', interpret: '第一'),
+          Word(id: 2, word: 'second', interpret: '第二'),
+        ]),
+        favRepository: _FakeFavRepository(),
+      ),
+      progressRepository: LearningProgressRepository(),
+      reviewSchedule: schedule,
+    );
+
+    await session.loadBook(Book(id: 1, code: 'TEST', name: '测试', wordCount: 2), shuffle: false);
+    expect(session.currentWord?.word, 'first');
+    expect(session.choices.where((choice) => choice.word == 'first'), hasLength(1));
+
+    await session.rate(FsrsRating.good);
+
+    expect(schedule.cardFor('first'), isNotNull);
+    expect(session.currentWord?.word, 'second');
   });
 
   test('学习会话兼容外观委托队列加载、候选生成与评分推进', () async {
