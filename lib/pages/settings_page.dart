@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../features/settings/presentation/learning_preferences_state.dart';
 import '../hooks/responsive.dart';
-import '../state/settings_state.dart';
 import '../theme/skin_system.dart';
 import '../widgets/scale_down_on_press.dart';
 
@@ -18,17 +18,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  // 设置状态
-  bool _wechatReminder = false;
-  bool _systemReminder = true;
-  String _pronType = '美式'; // 英式/美式
-  bool _autoPronWord = true;
-  bool _autoPronExample = false;
-  bool _spellRightSwipe = true;
-  bool _spellReviewTip = true;
-  int _learnPace = 10; // 5/10/15/20
-  String _reviewMode = '新模式';
-  int _reviewPace = 10; // 10/15/20/40/100
+  LearningPreferencesState get _preferences => context.read<LearningPreferencesState>();
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +67,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildPreferences(BuildContext context) {
     final resp = context.responsive;
-    final settings = context.watch<SettingsState>();
+    final settings = context.watch<LearningPreferencesState>();
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: resp.isWide ? 24 : 16, vertical: 16),
       children: [
@@ -87,36 +77,32 @@ class _SettingsPageState extends State<SettingsPage> {
 
         // --- 第二组：发音设置 ---
         _SettingGroup([
-          _Cell(title: '单词发音类型', value: _pronType, onTap: () => _showPronTypeDialog()),
+          _Cell(title: '单词发音类型', value: settings.pronunciationType, onTap: () => _showPronTypeDialog()),
           _CellWithDesc(
             title: '自动发音',
-            desc: _autoPronWord ? (_autoPronExample ? '单词、词义页面例句' : '单词') : (_autoPronExample ? '词义页面例句' : '已关闭'),
+            desc: settings.autoPlayAudio
+                ? (settings.autoPlayExampleAudio ? '单词、词义页面例句' : '单词')
+                : (settings.autoPlayExampleAudio ? '词义页面例句' : '已关闭'),
             onTap: () => _showAutoPronDialog(),
           ),
         ]),
         const SizedBox(height: 16),
 
         // --- 第三组：拼写设置 ---
-        _SettingGroup([_CellWithDesc(title: '拼写', desc: _spellDesc, onTap: () => _showSpellDialog())]),
+        _SettingGroup([_CellWithDesc(title: '拼写', desc: _spellDesc(settings), onTap: () => _showSpellDialog())]),
         const SizedBox(height: 16),
 
         // --- 第四组：学习节奏 ---
         _SettingGroup([
           _Cell(title: '每日新学', value: '${settings.dailyNewWords} 词', onTap: () => _showDailyNewWordsDialog()),
-          _Cell(title: '学习节奏', value: '$_learnPace 词/小结', onTap: () => _showLearnPaceDialog()),
-          _Cell(title: '复习节奏', value: '$_reviewPace 词/组', onTap: () => _showReviewPaceDialog()),
+          _Cell(title: '学习节奏', value: '${settings.learnPace} 词/小结', onTap: () => _showLearnPaceDialog()),
+          _Cell(title: '复习节奏', value: '${settings.reviewPace} 词/组', onTap: () => _showReviewPaceDialog()),
         ]),
         const SizedBox(height: 16),
 
         // --- 第五组：题型/助记 ---
         _SettingGroup([
-          _SwitchCell(
-            '听音选义题型',
-            initialValue: true,
-            onChanged: (v) {
-              // TODO: persist to SharedPreferences
-            },
-          ),
+          _SwitchCell('听音选义题型', value: settings.audioMeaningQuestion, onChanged: settings.setAudioMeaningQuestion),
           _Cell(
             title: '助记顺序',
             value: '派生词 - 词组搭配 - 特殊变形 - …',
@@ -128,18 +114,14 @@ class _SettingsPageState extends State<SettingsPage> {
           _SwitchCellWithDesc(
             title: '拆分助记',
             desc: '学习时自动拆分单词',
-            initialValue: true,
-            onChanged: (v) {
-              // TODO: persist to SharedPreferences
-            },
+            value: settings.splitMnemonic,
+            onChanged: settings.setSplitMnemonic,
           ),
           _SwitchCellWithDesc(
             title: '混淆项辨析',
             desc: '显示选择题错误选项词义',
-            initialValue: true,
-            onChanged: (v) {
-              // TODO: persist to SharedPreferences
-            },
+            value: settings.showConfusableMeanings,
+            onChanged: settings.setShowConfusableMeanings,
           ),
         ]),
         const SizedBox(height: 16),
@@ -158,10 +140,10 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  String get _spellDesc {
+  String _spellDesc(LearningPreferencesState settings) {
     final parts = <String>[];
-    if (_spellRightSwipe) parts.add('右滑随手拼');
-    if (_spellReviewTip) parts.add('复习拼写提示');
+    if (settings.spellRightSwipe) parts.add('右滑随手拼');
+    if (settings.spellReviewTip) parts.add('复习拼写提示');
     return parts.isEmpty ? '已关闭' : parts.join('、');
   }
 
@@ -177,13 +159,19 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             _SheetSwitchRow(
               title: '微信提醒',
-              value: _wechatReminder,
-              onChanged: (v) => setSheetState(() => setState(() => _wechatReminder = v)),
+              value: _preferences.wechatReminder,
+              onChanged: (v) async {
+                await _preferences.setWechatReminder(v);
+                if (ctx.mounted) setSheetState(() {});
+              },
             ),
             _SheetSwitchRow(
               title: '系统提醒',
-              value: _systemReminder,
-              onChanged: (v) => setSheetState(() => setState(() => _systemReminder = v)),
+              value: _preferences.systemReminder,
+              onChanged: (v) async {
+                await _preferences.setSystemReminder(v);
+                if (ctx.mounted) setSheetState(() {});
+              },
             ),
           ],
         ),
@@ -203,13 +191,19 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             _SheetOptionRow(
               label: '英式',
-              selected: _pronType == '英式',
-              onTap: () => setSheetState(() => setState(() => _pronType = '英式')),
+              selected: _preferences.pronunciationType == '英式',
+              onTap: () async {
+                await _preferences.setPronunciationType('英式');
+                if (ctx.mounted) setSheetState(() {});
+              },
             ),
             _SheetOptionRow(
               label: '美式',
-              selected: _pronType == '美式',
-              onTap: () => setSheetState(() => setState(() => _pronType = '美式')),
+              selected: _preferences.pronunciationType == '美式',
+              onTap: () async {
+                await _preferences.setPronunciationType('美式');
+                if (ctx.mounted) setSheetState(() {});
+              },
             ),
           ],
         ),
@@ -229,13 +223,19 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             _SheetSwitchRow(
               title: '单词自动发音',
-              value: _autoPronWord,
-              onChanged: (v) => setSheetState(() => setState(() => _autoPronWord = v)),
+              value: _preferences.autoPlayAudio,
+              onChanged: (v) async {
+                await _preferences.setAutoPlayAudio(v);
+                if (ctx.mounted) setSheetState(() {});
+              },
             ),
             _SheetSwitchRow(
               title: '词义页面例句自动发音',
-              value: _autoPronExample,
-              onChanged: (v) => setSheetState(() => setState(() => _autoPronExample = v)),
+              value: _preferences.autoPlayExampleAudio,
+              onChanged: (v) async {
+                await _preferences.setAutoPlayExampleAudio(v);
+                if (ctx.mounted) setSheetState(() {});
+              },
             ),
           ],
         ),
@@ -255,13 +255,19 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             _SheetSwitchRow(
               title: '右滑随手拼',
-              value: _spellRightSwipe,
-              onChanged: (v) => setSheetState(() => setState(() => _spellRightSwipe = v)),
+              value: _preferences.spellRightSwipe,
+              onChanged: (v) async {
+                await _preferences.setSpellRightSwipe(v);
+                if (ctx.mounted) setSheetState(() {});
+              },
             ),
             _SheetSwitchRow(
               title: '复习拼写提示',
-              value: _spellReviewTip,
-              onChanged: (v) => setSheetState(() => setState(() => _spellReviewTip = v)),
+              value: _preferences.spellReviewTip,
+              onChanged: (v) async {
+                await _preferences.setSpellReviewTip(v);
+                if (ctx.mounted) setSheetState(() {});
+              },
             ),
           ],
         ),
@@ -282,9 +288,9 @@ class _SettingsPageState extends State<SettingsPage> {
               .map(
                 (n) => _SheetOptionRow(
                   label: '$n 词',
-                  selected: context.read<SettingsState>().dailyNewWords == n,
+                  selected: _preferences.dailyNewWords == n,
                   onTap: () async {
-                    await context.read<SettingsState>().setDailyNewWords(n);
+                    await _preferences.setDailyNewWords(n);
                     if (ctx.mounted) {
                       setSheetState(() {});
                     }
@@ -310,8 +316,11 @@ class _SettingsPageState extends State<SettingsPage> {
               .map(
                 (n) => _SheetOptionRow(
                   label: '$n 词/小结',
-                  selected: _learnPace == n,
-                  onTap: () => setSheetState(() => setState(() => _learnPace = n)),
+                  selected: _preferences.learnPace == n,
+                  onTap: () async {
+                    await _preferences.setLearnPace(n);
+                    if (ctx.mounted) setSheetState(() {});
+                  },
                 ),
               )
               .toList(),
@@ -338,11 +347,14 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 8),
               Row(
                 children: ['新模式', '旧模式'].map((m) {
-                  final on = _reviewMode == m;
+                  final on = _preferences.reviewMode == m;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: GestureDetector(
-                      onTap: () => setSheetState(() => setState(() => _reviewMode = m)),
+                      onTap: () async {
+                        await _preferences.setReviewMode(m);
+                        if (ctx.mounted) setSheetState(() {});
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
@@ -370,8 +382,11 @@ class _SettingsPageState extends State<SettingsPage> {
               ...[10, 15, 20, 40, 100].map(
                 (n) => _SheetOptionRow(
                   label: '$n 词/组',
-                  selected: _reviewPace == n,
-                  onTap: () => setSheetState(() => setState(() => _reviewPace = n)),
+                  selected: _preferences.reviewPace == n,
+                  onTap: () async {
+                    await _preferences.setReviewPace(n);
+                    if (ctx.mounted) setSheetState(() {});
+                  },
                 ),
               ),
             ],
@@ -535,18 +550,11 @@ class _CellWithDesc extends StatelessWidget {
 }
 
 /// 开关设置项
-class _SwitchCell extends StatefulWidget {
+class _SwitchCell extends StatelessWidget {
   final String title;
-  final bool initialValue;
-  final ValueChanged<bool>? onChanged;
-  const _SwitchCell(this.title, {this.initialValue = false, this.onChanged});
-
-  @override
-  State<_SwitchCell> createState() => _SwitchCellState();
-}
-
-class _SwitchCellState extends State<_SwitchCell> {
-  late bool _value = widget.initialValue;
+  final bool value;
+  final Future<void> Function(bool)? onChanged;
+  const _SwitchCell(this.title, {required this.value, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -557,14 +565,11 @@ class _SwitchCellState extends State<_SwitchCell> {
       child: Row(
         children: [
           Expanded(
-            child: Text(widget.title, style: TextStyle(fontSize: 16, color: skin.text1)),
+            child: Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
           ),
           Switch(
-            value: _value,
-            onChanged: (v) {
-              setState(() => _value = v);
-              widget.onChanged?.call(v);
-            },
+            value: value,
+            onChanged: onChanged == null ? null : (next) => onChanged!(next),
             activeThumbColor: Colors.white,
             activeTrackColor: skin.accent,
             inactiveThumbColor: Colors.white,
@@ -577,19 +582,12 @@ class _SwitchCellState extends State<_SwitchCell> {
 }
 
 /// 带描述的开关设置项
-class _SwitchCellWithDesc extends StatefulWidget {
+class _SwitchCellWithDesc extends StatelessWidget {
   final String title;
   final String desc;
-  final bool initialValue;
-  final ValueChanged<bool>? onChanged;
-  const _SwitchCellWithDesc({required this.title, required this.desc, this.initialValue = false, this.onChanged});
-
-  @override
-  State<_SwitchCellWithDesc> createState() => _SwitchCellWithDescState();
-}
-
-class _SwitchCellWithDescState extends State<_SwitchCellWithDesc> {
-  late bool _value = widget.initialValue;
+  final bool value;
+  final Future<void> Function(bool)? onChanged;
+  const _SwitchCellWithDesc({required this.title, required this.desc, required this.value, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -602,18 +600,15 @@ class _SwitchCellWithDescState extends State<_SwitchCellWithDesc> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.title, style: TextStyle(fontSize: 16, color: skin.text1)),
+                Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
                 const SizedBox(height: 4),
-                Text(widget.desc, style: TextStyle(fontSize: 12, color: skin.text3)),
+                Text(desc, style: TextStyle(fontSize: 12, color: skin.text3)),
               ],
             ),
           ),
           Switch(
-            value: _value,
-            onChanged: (v) {
-              setState(() => _value = v);
-              widget.onChanged?.call(v);
-            },
+            value: value,
+            onChanged: onChanged == null ? null : (next) => onChanged!(next),
             activeThumbColor: Colors.white,
             activeTrackColor: skin.accent,
             inactiveThumbColor: Colors.white,

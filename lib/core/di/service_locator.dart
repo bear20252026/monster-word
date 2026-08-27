@@ -39,7 +39,6 @@ import '../../features/learning/application/review_audio_player.dart';
 import '../../features/learning/application/review_queue_reader.dart';
 import '../../features/learning/presentation/new_words_state.dart';
 import '../../state/user_stats_state.dart';
-import '../../state/settings_state.dart';
 import '../../state/player_state.dart';
 
 /// 全局服务定位器实例
@@ -195,11 +194,6 @@ Future<void> setupServiceLocator() async {
   // UserStatsState（用户统计状态）
   if (!sl.isRegistered<UserStatsState>()) {
     sl.registerLazySingleton<UserStatsState>(() => UserStatsState(statsService: sl<StatsService>()));
-  }
-
-  // SettingsState（设置状态）
-  if (!sl.isRegistered<SettingsState>()) {
-    sl.registerLazySingleton<SettingsState>(() => SettingsState());
   }
 
   // PlayerState（播放状态）

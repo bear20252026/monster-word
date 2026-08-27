@@ -17,6 +17,7 @@ void main() {
       expect(appSource, contains('AppRouter.buildPage(settings)'));
       expect(appSource, contains('buildAccountFeatureScope('));
       expect(appSource, contains('buildLearningFeatureScope('));
+      expect(appSource, contains('buildSettingsFeatureScope('));
       expect(appSource, isNot(contains("import '../state/learning_state.dart';")));
       expect(appSource, isNot(contains("import '../features/learning/application/")));
     });
@@ -67,6 +68,19 @@ void main() {
       }
       expect(sessionSource, contains('List.unmodifiable(_queue)'));
       expect(sessionSource, contains('void exitLearning()'));
+    });
+
+    test('设置功能域拥有学习偏好，设置页不再保留可丢失的本地偏好副本', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final settingsPageSource = File('lib/pages/settings_page.dart').readAsStringSync();
+      final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
+
+      expect(File('lib/state/settings_state.dart').existsSync(), isFalse);
+      expect(appSource, contains('buildSettingsFeatureScope('));
+      expect(settingsPageSource, contains('LearningPreferencesState'));
+      expect(settingsPageSource, isNot(contains('SettingsState')));
+      expect(settingsPageSource, isNot(contains('TODO: persist to SharedPreferences')));
+      expect(locatorSource, isNot(contains('SettingsState')));
     });
 
     test('遗留复习会话栈已删除，功能域装配不再注册旧状态或服务', () {
