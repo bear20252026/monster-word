@@ -35,6 +35,18 @@ void main() {
     });
   });
 
+  group('复习候选规则边界', () {
+    test('主复习页复用共享候选生成规则', () {
+      final source = File('lib/pages/review_page.dart').readAsStringSync();
+
+      expect(source, contains('ChoiceGenerator'));
+      expect(source, contains('ChoiceCandidate'));
+      expect(source, isNot(contains('dart:convert')));
+      expect(source, isNot(contains('_extractCn')));
+      expect(source, isNot(contains("'非标准用法'")));
+    });
+  });
+
   group('每日新学词数设置边界', () {
     test('设置状态是每日新学词数的唯一页面读写入口', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();

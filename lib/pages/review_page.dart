@@ -1,12 +1,11 @@
 // 复习页：壁纸沉浸 + 四选一 + 睭底操作栏
 // 已接入 SkinSystem 主题
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/di/service_locator.dart';
 import '../engine/core_engine.dart' show WordChoicePair;
+import '../features/learning/domain/choice_generator.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../services/audio_service.dart';
 import '../engine/srs_engine.dart';
@@ -56,18 +55,18 @@ class _ReviewPageState extends State<ReviewPage> {
       final state = context.read<LearningState>();
       // 使用 FSRS-6 的到期单词（基于记忆曲线精确预测）
       final dueWords = state.dueWords;
-      final pool = dueWords.isNotEmpty
-          ? dueWords
-          : (state.queue.isNotEmpty ? state.queue : await _fallbackWords());
+      final pool = dueWords.isNotEmpty ? dueWords : (state.queue.isNotEmpty ? state.queue : await _fallbackWords());
       final processes = pool
-          .map((w) => BBWordProcess(
-                word: w.word,
-                wordId: w.id,
-                interpret: w.interpret,
-                usPron: w.usPron,
-                ukPron: w.ukPron,
-                example: w.example,
-              ))
+          .map(
+            (w) => BBWordProcess(
+              word: w.word,
+              wordId: w.id,
+              interpret: w.interpret,
+              usPron: w.usPron,
+              ukPron: w.ukPron,
+              example: w.example,
+            ),
+          )
           .toList();
       _engine.init(processes);
       _total = _engine.totalNum;
@@ -81,12 +80,16 @@ class _ReviewPageState extends State<ReviewPage> {
       if (mounted) setState(() {});
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('加载复习数据失败: $e'), action: SnackBarAction(
-            label: '重试', onPressed: () {
-              _initialized = false;
-              _initReview();
-            },
-          )),
+          SnackBar(
+            content: Text('加载复习数据失败: $e'),
+            action: SnackBarAction(
+              label: '重试',
+              onPressed: () {
+                _initialized = false;
+                _initReview();
+              },
+            ),
+          ),
         );
       }
     }
@@ -99,87 +102,16 @@ class _ReviewPageState extends State<ReviewPage> {
     return await sl<WordRepository>().searchWords('the', limit: 20);
   }
 
-  /// 生成 4 选 1 选项（优先选择有中文释义的干扰项）
+  /// 通过共享规则生成四选一候选：释义去重、中文优先和稳定兜底与学习流程保持一致。
   void _regenerateChoices() {
     final current = _engine.currentWord();
     if (current == null) return;
 
-    final correctInterpret = current.interpret;
-    final correctWord = current.word;
-
-    // 构建候选池（从复习列表中取，去重释义，优先有中文的）
-    final seenInterprets = <String>{correctInterpret};
-    final pool = <Map<String, String>>[];
-    for (final w in _engine.reviewList) {
-      if (w.word != correctWord &&
-          w.interpret.isNotEmpty &&
-          !seenInterprets.contains(w.interpret)) {
-        seenInterprets.add(w.interpret);
-        final cn = _extractCn(w.interpret);
-        pool.add({'word': w.word, 'interpret': w.interpret, 'cn': cn});
-      }
-    }
-
-    // 优先选择有中文释义的干扰项
-    pool.shuffle();
-    final withCn = pool.where((w) => (w['cn'] ?? '').isNotEmpty).toList();
-    final withoutCn = pool.where((w) => (w['cn'] ?? '').isEmpty).toList();
-
-    final distractors = <Map<String, String>>[];
-    // 先取有中文的
-    for (final w in withCn) {
-      if (distractors.length >= 3) break;
-      distractors.add(w);
-    }
-    // 不够再补无中文的
-    for (final w in withoutCn) {
-      if (distractors.length >= 3) break;
-      distractors.add(w);
-    }
-
-    // 如果不够 3 个，用占位释义补齐
-    final fallbacks = [
-      {'word': '', 'interpret': '非标准用法', 'cn': '非标准用法'},
-      {'word': '', 'interpret': '罕用释义', 'cn': '罕用释义'},
-      {'word': '', 'interpret': '非正式表达', 'cn': '非正式表达'},
-    ];
-    int fb = 0;
-    while (distractors.length < 3 && fb < fallbacks.length) {
-      final fbInterpret = fallbacks[fb]['interpret']!;
-      if (!seenInterprets.contains(fbInterpret)) {
-        distractors.add(fallbacks[fb]);
-        seenInterprets.add(fbInterpret);
-      }
-      fb++;
-    }
-
-    // 组装 4 个选项并打乱
-    final choices = <WordChoicePair>[
-      WordChoicePair(correctWord, correctInterpret),
-      ...distractors.map((d) => WordChoicePair(d['word'] ?? '', d['interpret'] ?? '')),
-    ];
-    _choices = choices.toList()..shuffle();
-  }
-
-  /// 从 interpret JSON 提取中文释义
-  String _extractCn(String interpret) {
-    try {
-      final decoded = jsonDecode(interpret);
-      if (decoded is List && decoded.isNotEmpty) {
-        final first = decoded.first;
-        if (first is Map) {
-          final defList = first['def'];
-          if (defList is List && defList.isNotEmpty) {
-            final firstDef = defList.first;
-            if (firstDef is Map) {
-              final cn = (firstDef['cn'] ?? firstDef['cndef'] ?? '') as String;
-              return cn.trim();
-            }
-          }
-        }
-      }
-    } catch (_) {}
-    return '';
+    final choices = ChoiceGenerator.generate(
+      correct: ChoiceCandidate(word: current.word, interpret: current.interpret),
+      candidates: _engine.reviewList.map((word) => ChoiceCandidate(word: word.word, interpret: word.interpret)),
+    );
+    _choices = choices.map((choice) => WordChoicePair(choice.word, choice.interpret)).toList();
   }
 
   /// 评分（同步到 FSRS-6 算法 + Leitner 引擎）
@@ -229,52 +161,42 @@ class _ReviewPageState extends State<ReviewPage> {
     return SessionExitGuard(
       subject: '本次复习',
       child: Scaffold(
-      body: word == null
-          ? _buildReviewDone()
-          : Stack(
-              children: [
-                // 全屏壁纸背景
-                Positioned.fill(
-                  child: _buildWallpaperBg(wallpaper, skin),
-                ),
-                // 半透明遮罩
-                Positioned.fill(
-                  child: Container(color: skin.wallpaperScrim.withValues(alpha: 0.15)),
-                ),
-                SafeArea(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
-                      child: isLandscape
-                          ? Row(
-                              children: [
-                                Expanded(child: _buildWordArea(word, skin)),
-                                Expanded(child: _buildChoiceArea(word, skin)),
-                              ],
-                            )
-                          : Column(
-                        children: [
-                          // 顶部栏
-                          _buildTopBar(skin),
-                          // 上半：单词区
-                          Expanded(
-                            flex: 4,
-                            child: _buildWordArea(word, skin),
-                          ),
-                          // 下半：4选1
-                          Expanded(
-                            flex: 6,
-                            child: _buildChoiceArea(word, skin),
-                          ),
-                          // 底部操作栏
-                          _buildBottomBar(skin),
-                        ],
+        body: word == null
+            ? _buildReviewDone()
+            : Stack(
+                children: [
+                  // 全屏壁纸背景
+                  Positioned.fill(child: _buildWallpaperBg(wallpaper, skin)),
+                  // 半透明遮罩
+                  Positioned.fill(child: Container(color: skin.wallpaperScrim.withValues(alpha: 0.15))),
+                  SafeArea(
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
+                        child: isLandscape
+                            ? Row(
+                                children: [
+                                  Expanded(child: _buildWordArea(word, skin)),
+                                  Expanded(child: _buildChoiceArea(word, skin)),
+                                ],
+                              )
+                            : Column(
+                                children: [
+                                  // 顶部栏
+                                  _buildTopBar(skin),
+                                  // 上半：单词区
+                                  Expanded(flex: 4, child: _buildWordArea(word, skin)),
+                                  // 下半：4选1
+                                  Expanded(flex: 6, child: _buildChoiceArea(word, skin)),
+                                  // 底部操作栏
+                                  _buildBottomBar(skin),
+                                ],
+                              ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
       ),
     );
   }
@@ -283,11 +205,7 @@ class _ReviewPageState extends State<ReviewPage> {
     if (wallpaper.type == WallpaperType.image && wallpaper.assetPath != null) {
       return Container(
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(wallpaper.assetPath!),
-            fit: BoxFit.cover,
-            onError: (_, _) {},
-          ),
+          image: DecorationImage(image: AssetImage(wallpaper.assetPath!), fit: BoxFit.cover, onError: (_, _) {}),
         ),
       );
     }
@@ -329,11 +247,7 @@ class _ReviewPageState extends State<ReviewPage> {
           ),
           Text(
             '$_done/$_total',
-            style: TextStyle(
-              fontSize: 16 * resp.fontScale,
-              fontWeight: FontWeight.w600,
-              color: skin.onGlassText1,
-            ),
+            style: TextStyle(fontSize: 16 * resp.fontScale, fontWeight: FontWeight.w600, color: skin.onGlassText1),
           ),
           const SizedBox(width: 8),
           IconButton(
@@ -342,29 +256,30 @@ class _ReviewPageState extends State<ReviewPage> {
             onPressed: _canUndo ? _undo : null,
           ),
           IconButton(
-            icon: Icon(_isFavorited ? Icons.star : Icons.star_border, size: 22,
-                color: _isFavorited ? MistralColors.accent : skin.onGlassText1),
+            icon: Icon(
+              _isFavorited ? Icons.star : Icons.star_border,
+              size: 22,
+              color: _isFavorited ? MistralColors.accent : skin.onGlassText1,
+            ),
             tooltip: '收藏',
             onPressed: _toggleFavorite,
           ),
           // abc button - 显示答案
           GestureDetector(
             onTap: _revealAnswer,
-            child: Text('abc', style: TextStyle(
-              fontSize: 16 * resp.fontScale,
-              fontWeight: FontWeight.w700,
-              color: skin.onGlassText1,
-            )),
+            child: Text(
+              'abc',
+              style: TextStyle(fontSize: 16 * resp.fontScale, fontWeight: FontWeight.w700, color: skin.onGlassText1),
+            ),
           ),
           const SizedBox(width: 12),
           // 熟 button - 标记已掌握
           GestureDetector(
             onTap: _markAsKnown,
-            child: Text('熟', style: TextStyle(
-              fontSize: 16 * resp.fontScale,
-              fontWeight: FontWeight.w700,
-              color: skin.onGlassText1,
-            )),
+            child: Text(
+              '熟',
+              style: TextStyle(fontSize: 16 * resp.fontScale, fontWeight: FontWeight.w700, color: skin.onGlassText1),
+            ),
           ),
           const SizedBox(width: 8),
           IconButton(
@@ -407,27 +322,30 @@ class _ReviewPageState extends State<ReviewPage> {
                     color: skin.glassBg.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text('美', style: TextStyle(
-                    fontSize: 12 * resp.fontScale,
-                    color: skin.onGlassText1,
-                    fontWeight: FontWeight.w500,
-                  )),
+                  child: Text(
+                    '美',
+                    style: TextStyle(
+                      fontSize: 12 * resp.fontScale,
+                      color: skin.onGlassText1,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 6),
                 GestureDetector(
                   onTap: () => _playWordAudio(word),
                   child: _audioLoading
-                      ? SizedBox(width: 18, height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: skin.onGlassText2))
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: skin.onGlassText2),
+                        )
                       : Icon(Icons.volume_up_outlined, color: skin.onGlassText2, size: 20),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   '/${word.usPron.isNotEmpty ? word.usPron : word.ukPron}/',
-                  style: TextStyle(
-                    fontSize: 15 * resp.fontScale,
-                    color: skin.onGlassText2,
-                  ),
+                  style: TextStyle(fontSize: 15 * resp.fontScale, color: skin.onGlassText2),
                 ),
               ],
             ),
@@ -436,10 +354,7 @@ class _ReviewPageState extends State<ReviewPage> {
           // 提示文字
           Text(
             '先回想词义再选择，想不起来「看答案」',
-            style: TextStyle(
-              fontSize: 14 * resp.fontScale,
-              color: skin.onGlassText2.withValues(alpha: 0.7),
-            ),
+            style: TextStyle(fontSize: 14 * resp.fontScale, color: skin.onGlassText2.withValues(alpha: 0.7)),
           ),
         ],
       ),
@@ -497,11 +412,7 @@ class _ReviewPageState extends State<ReviewPage> {
           children: [
             Text(
               _showAnswer ? '继续' : '看答案',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: skin.onGlassText1,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: skin.onGlassText1),
             ),
             const SizedBox(height: 6),
             // 底部彩色指示条
@@ -536,8 +447,7 @@ class _ReviewPageState extends State<ReviewPage> {
       setState(() => _isFavorited = !_isFavorited);
       // TODO: persist favorite to database
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_isFavorited ? '已收藏 ${current.word}' : '已取消收藏'),
-          duration: const Duration(seconds: 1)),
+        SnackBar(content: Text(_isFavorited ? '已收藏 ${current.word}' : '已取消收藏'), duration: const Duration(seconds: 1)),
       );
     }
   }
@@ -585,13 +495,24 @@ class _ReviewPageState extends State<ReviewPage> {
                 Navigator.pop(ctx);
                 final w = _engine.currentWord();
                 if (w != null) {
-                  Navigator.push(ctx, MaterialPageRoute(
-                    builder: (_) => DictionaryPage(word: Word(
-                      id: w.wordId, word: w.word, mainWord: w.word,
-                      interpret: w.interpret, usPron: w.usPron, ukPron: w.ukPron,
-                      example: w.example, phrase: '', confuse: '',
-                    )),
-                  ));
+                  Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder: (_) => DictionaryPage(
+                        word: Word(
+                          id: w.wordId,
+                          word: w.word,
+                          mainWord: w.word,
+                          interpret: w.interpret,
+                          usPron: w.usPron,
+                          ukPron: w.ukPron,
+                          example: w.example,
+                          phrase: '',
+                          confuse: '',
+                        ),
+                      ),
+                    ),
+                  );
                 }
               },
             ),
@@ -617,16 +538,11 @@ class _ReviewPageState extends State<ReviewPage> {
               style: MistralTypography.heading3.copyWith(fontWeight: FontWeight.bold, color: skin.text1),
             ),
             const SizedBox(height: 8),
-            Text(
-              '共复习 $_done 个单词',
-              style: MistralTypography.bodySm.copyWith(color: skin.text3),
-            ),
+            Text('共复习 $_done 个单词', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
-              style: FilledButton.styleFrom(
-                backgroundColor: skin.success,
-              ),
+              style: FilledButton.styleFrom(backgroundColor: skin.success),
               child: const Text('返回首页'),
             ),
           ],
@@ -645,9 +561,8 @@ class _ReviewPageState extends State<ReviewPage> {
       await sl<AudioService>().playWordAudio(word.word);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
       }
     } finally {
       if (mounted) setState(() => _audioLoading = false);
@@ -695,10 +610,7 @@ class _FrostedChoiceCard extends StatelessWidget {
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 10),
-        padding: EdgeInsets.symmetric(
-          horizontal: 20 * resp.scale,
-          vertical: 18 * resp.scale,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: 20 * resp.scale, vertical: 18 * resp.scale),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(14),
