@@ -30,17 +30,18 @@ void main() {
       expect(state.total, 2);
       expect(state.done, 0);
       expect(reviewedWord, isNotNull);
+      final reviewedWordText = reviewedWord!.word;
       expect(state.choices, hasLength(4));
-      expect(state.choices.where((choice) => choice.word == reviewedWord!.word), hasLength(1));
+      expect(state.choices.where((choice) => choice.word == reviewedWordText), hasLength(1));
 
       state.revealAnswer();
       state.rate(RecallRating.good);
 
-      expect(persistedWord, reviewedWord.word);
+      expect(persistedWord, reviewedWordText);
       expect(persistedRating, FsrsRating.good);
       expect(state.done, 1);
       expect(state.showAnswer, isFalse);
-      expect(state.currentWord?.word, isNot(reviewedWord.word));
+      expect(state.currentWord?.word, isNot(reviewedWordText));
     });
   });
 }
