@@ -282,16 +282,21 @@ void main() {
   });
 
   group('复习候选规则边界', () {
-    test('正式会话复用共享候选生成规则', () {
+    test('会话题目工厂复用共享候选生成规则', () {
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
+      final questionFactorySource = File('lib/features/learning/application/review_session_question_factory.dart')
+          .readAsStringSync();
 
-      expect(sessionSource, contains('ChoiceGenerator'));
-      expect(sessionSource, contains('ChoiceCandidate'));
+      expect(questionFactorySource, contains('ChoiceGenerator'));
+      expect(questionFactorySource, contains('ChoiceCandidate'));
+      expect(sessionSource, contains('ReviewSessionQuestionFactory'));
+      expect(sessionSource, isNot(contains('ChoiceGenerator')));
+      expect(sessionSource, isNot(contains('ChoiceCandidate')));
       expect(pageSource, isNot(contains('ChoiceGenerator')));
-      expect(sessionSource, isNot(contains('dart:convert')));
-      expect(sessionSource, isNot(contains('_extractCn')));
-      expect(sessionSource, isNot(contains("'非标准用法'")));
+      expect(questionFactorySource, isNot(contains('dart:convert')));
+      expect(questionFactorySource, isNot(contains('_extractCn')));
+      expect(questionFactorySource, isNot(contains("'非标准用法'")));
     });
   });
 
