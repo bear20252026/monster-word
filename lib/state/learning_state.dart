@@ -4,11 +4,14 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../data/wordbook_database.dart';
+import '../data/wordbook_database.dart' show WordBookDatabase;
+import '../models/book.dart';
+import '../models/word.dart';
 import '../engine/core_engine.dart';
 import '../engine/fsrs6_engine.dart';
 import '../engine/leitner_engine.dart';
 import '../features/learning/data/learning_progress_repository.dart';
+import '../features/learning/data/learning_queue_repository.dart';
 import '../features/learning/data/review_schedule_repository.dart';
 import '../features/learning/domain/choice_generator.dart';
 import '../features/learning/domain/queue_word_lists.dart';
@@ -26,6 +29,7 @@ class LearningState extends ChangeNotifier {
   // 正式复习的 FSRS 卡片和每日统计由独立调度仓储维护。
   final ReviewScheduleRepository _reviewSchedule;
   final LearningProgressRepository _progressRepository;
+  final LearningQueueRepository _queueRepository;
 
   // 单词收藏与掌握标记均委托给独立仓储。
   final FavRepository _favRepository;
@@ -89,10 +93,17 @@ class LearningState extends ChangeNotifier {
     required MasteredRepository masteredRepository,
     ReviewScheduleRepository? reviewSchedule,
     LearningProgressRepository? progressRepository,
+    LearningQueueRepository? queueRepository,
   }) : _favRepository = favRepository,
        _masteredRepository = masteredRepository,
        _reviewSchedule = reviewSchedule ?? ReviewScheduleRepository(),
-       _progressRepository = progressRepository ?? LearningProgressRepository() {
+       _progressRepository = progressRepository ?? LearningProgressRepository(),
+       _queueRepository =
+           queueRepository ??
+           LearningQueueRepository(
+             wordSource: WordBookLearningQueueWordSource(database: WordBookDatabase.instance),
+             favRepository: favRepository,
+           ) {
     _reviewSchedule.addListener(_onReviewScheduleChanged);
     unawaited(_reviewSchedule.initialize());
     unawaited(_loadProgress());
@@ -136,14 +147,8 @@ class LearningState extends ChangeNotifier {
   }
 
   /// 获取收藏单词列表（从完整词库查询，不仅限当前队列）。
-  Future<List<Word>> getFavoriteWords() async {
-    final favoriteWords = await _favRepository.getFavoriteWords();
-    if (favoriteWords.isEmpty) return [];
-    // 从完整词库批量查询收藏的单词。
-    final words = await WordBookDatabase.instance.getWordsByNames(favoriteWords);
-    if (words.isNotEmpty) return words;
-    // 回退：从当前队列过滤。
-    return _queue.where((w) => favoriteWords.contains(w.word)).toList();
+  Future<List<Word>> getFavoriteWords() {
+    return _queueRepository.loadFavoriteWords(currentQueue: _queue);
   }
 
   /// 从收藏单词本开始学习
@@ -189,14 +194,9 @@ class LearningState extends ChangeNotifier {
   /// 加载一本书进入学习队列（乱序版：单词顺序随机打乱）
   Future<void> loadBook(Book book, {int limit = 50, bool shuffle = true}) async {
     _currentBook = book;
-    _queue = await WordBookDatabase.instance.getWordsByBook(book.id, limit: limit, offset: 0);
+    _queue = await _queueRepository.loadBook(book, limit: limit, shuffle: shuffle);
     _currentIndex = 0;
     _showAnswer = false;
-
-    // 乱序版：打乱单词顺序，避免每次都从 A 开始
-    if (shuffle) {
-      _queue.shuffle();
-    }
 
     // 初始化 Leitner 引擎（4选1选词逻辑 1:1）
     _processQueue = _queue
@@ -446,9 +446,8 @@ class LearningState extends ChangeNotifier {
     return queueWordLists.reviewingWords;
   }
 
-  Future<List<Word>> getWordsByBook(int bookId) async {
-    // TODO: 从数据库查询指定词书的单词
-    return await WordBookDatabase.instance.getWordsByBook(bookId, limit: 1000);
+  Future<List<Word>> getWordsByBook(int bookId) {
+    return _queueRepository.loadWordsByBook(bookId);
   }
 
   @override
