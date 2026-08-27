@@ -31,6 +31,8 @@
 
 `ReviewSessionRatingExecutor` 必须在 `SuperMemoryEngine` 推进前捕获实际作答词，并经 `ReviewRatingWriter` 写入 `ReviewScheduleRepository`。因此评分始终关联本题词条，而不会错写到下一词或漏写最后一词。展示组件不读取 `ReviewSessionState`；页面将只读快照和命令回调映射给布局组件。
 
+旧 `ReviewState`、`ReviewService` 及其服务定位器注册已经删除。它们曾维护另一套字符串队列、引擎推进和候选生成接口，却没有生产页面消费者；保留会重新引入与正式复习会话和 FSRS 排程平行的事实来源。正式复习现仅由 `ReviewSessionState`、`ReviewSessionRatingExecutor`、`ReviewQueueReader`、`ReviewRatingWriter` 和 `ReviewScheduleRepository` 组成。
+
 “熟”操作仅推进正式复习的本地会话，并幂等写入手动掌握标记；它不写入 FSRS。原有伪撤销入口已删除，因为它既不能回退引擎，也不能撤销已提交的持久化操作。将来若提供真实撤销，必须先定义题目推进、FSRS 持久化和手动标记的可逆事务合同。
 
 ## 收藏、手动掌握与 FSRS 的事实模型隔离
@@ -51,8 +53,8 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 ## 功能域装配与回归保护
 
-`learning_feature_providers.dart` 依赖顺序为：正式复习排程仓储和队列仓储先创建，随后创建收藏、手动掌握和学习会话状态；队列、统计、收藏/掌握数量、队列分类和正式复习状态均从这些专用依赖组合。`LearningCollectionsState` 使用 `ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>` 装配，不再依赖兼容代理。旧 `LearnState`、`LearnService`、其服务定位器注册和空学习模块均已删除，因此不会再形成第二套队列、FSRS 卡片或进度持久化。
+`learning_feature_providers.dart` 依赖顺序为：正式复习排程仓储和队列仓储先创建，随后创建收藏、手动掌握和学习会话状态；队列、统计、收藏/掌握数量、队列分类和正式复习状态均从这些专用依赖组合。`LearningCollectionsState` 使用 `ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>` 装配，不再依赖兼容代理。旧 `LearnState`、`LearnService`、`ReviewState`、`ReviewService` 及其服务定位器注册和空学习模块均已删除，因此不会再形成平行的学习或复习队列、FSRS 卡片或进度持久化。
 
-结构测试保留少量高价值负向门禁：应用根和生产 Provider/页面不得导入或创建 `LearningState` 或 `LearnState`，两类遗留源文件及 `LearnService` 均不得恢复；正式复习页不得回流题目算法、会话状态或服务定位器；展示组件不得直接读取复习会话状态；历史深链不得重新创建旧 `ReviewSession`。学习状态测试覆盖专用会话加载与评分、只读队列与快照隔离、退出清理、空收藏队列保护、收藏状态和掌握状态的刷新/切换/计数。
+结构测试保留少量高价值负向门禁：应用根和生产 Provider/页面不得导入或创建 `LearningState`、`LearnState` 或 `ReviewState`，三类遗留状态及 `LearnService`、`ReviewService` 均不得恢复；正式复习页不得回流题目算法、会话状态或服务定位器；展示组件不得直接读取复习会话状态；历史深链不得重新创建旧 `ReviewSession`。学习状态测试覆盖专用会话加载与评分、只读队列与快照隔离、退出清理、空收藏队列保护、收藏状态和掌握状态的刷新/切换/计数。
 
 后续新增需求应首先定位其事实模型，并在该功能域的仓储、应用服务或专用状态中实现。不得以“方便页面读取”为由重新创建跨域聚合状态，或将会话、FSRS、手动标记、收藏、账号和持久化职责重新塞入单一 `ChangeNotifier`。
