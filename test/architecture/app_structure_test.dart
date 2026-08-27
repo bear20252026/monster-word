@@ -128,6 +128,8 @@ void main() {
           .readAsStringSync();
       final contentSource = File('lib/features/learning/presentation/widgets/formal_review_page_content.dart')
           .readAsStringSync();
+      final answerStateSource = File('lib/features/learning/presentation/review_session_answer_state.dart')
+          .readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
       expect(pageSource, contains('session.isLoading'));
@@ -144,10 +146,16 @@ void main() {
       expect(questionSource, isNot(contains('ReviewSessionState')));
       expect(questionSource, contains('onSelectChoice(choice.word)'));
       expect(sessionSource, contains('ReviewSessionLoadPhase'));
-      expect(sessionSource, contains('Timer'));
+      expect(sessionSource, contains('ReviewSessionAnswerState'));
       expect(sessionSource, contains('String? get selectedWrongChoice'));
       expect(sessionSource, contains('selectChoice'));
       expect(sessionSource, contains('continueWithGoodRating'));
+      expect(sessionSource, isNot(contains('_wrongChoiceTimer')));
+      expect(answerStateSource, contains('class ReviewSessionAnswerState'));
+      expect(answerStateSource, contains('Timer'));
+      expect(answerStateSource, contains('ReviewChoiceSelection'));
+      expect(answerStateSource, contains('wrongChoiceFeedback'));
+      expect(answerStateSource, isNot(contains('ReviewRatingWriter')));
     });
   });
 
