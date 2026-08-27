@@ -65,6 +65,18 @@ void main() {
     });
   });
 
+  group('正式复习撤销边界', () {
+    test('不提供只回退计数而不回退题目的伪撤销操作', () {
+      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
+
+      expect(pageSource, isNot(contains('Icons.undo')));
+      expect(pageSource, isNot(contains('_canUndo')));
+      expect(pageSource, isNot(contains('_history')));
+      expect(sessionSource, isNot(contains('undoProgress')));
+    });
+  });
+
   group('正式复习词条操作边界', () {
     test('主复习页通过协调状态读取并持久化收藏和手动掌握标记', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();

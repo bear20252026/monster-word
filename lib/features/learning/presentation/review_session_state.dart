@@ -124,16 +124,6 @@ class ReviewSessionState extends ChangeNotifier {
     return true;
   }
 
-  /// 保留原撤销按钮仅回退会话显示进度的行为。
-  bool undoProgress() {
-    if (_done <= 0) return false;
-    _done--;
-    _showAnswer = false;
-    _regenerateChoices();
-    notifyListeners();
-    return true;
-  }
-
   void _regenerateChoices() {
     final current = currentWord;
     if (current == null) {
