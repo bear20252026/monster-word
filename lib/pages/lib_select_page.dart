@@ -13,8 +13,8 @@ import '../hooks/responsive.dart';
 import '../pages/dictation_session_page.dart';
 import '../pages/quick_spell_page.dart';
 import '../pages/word_export_page.dart';
+import '../features/learning/data/learning_queue_repository.dart';
 import '../features/learning/presentation/learning_session_state.dart';
-import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/bending_gallery.dart';
@@ -356,8 +356,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   void _onToolTap(BuildContext context, String tool) {
-    final state = context.read<LearningState>();
-    final book = state.currentBook;
+    final book = context.read<LearningSessionState>().currentBook;
 
     if (book == null && tool != 'immersive') {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先选择一本词书')));
@@ -400,8 +399,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   Future<void> _startDictation(BuildContext context, Book book) async {
-    final state = context.read<LearningState>();
-    final words = await state.getWordsByBook(book.id);
+    final words = await context.read<LearningQueueRepository>().loadWordsByBook(book.id);
     if (!context.mounted) return;
     if (words.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));
@@ -416,8 +414,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   Future<void> _startQuickSpell(BuildContext context, Book book) async {
-    final state = context.read<LearningState>();
-    final words = await state.getWordsByBook(book.id);
+    final words = await context.read<LearningQueueRepository>().loadWordsByBook(book.id);
     if (!context.mounted) return;
     if (words.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));

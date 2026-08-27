@@ -36,6 +36,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
       ChangeNotifierProvider<ReviewScheduleRepository>.value(value: sl<ReviewScheduleRepository>()),
+      Provider<LearningQueueRepository>.value(value: sl<LearningQueueRepository>()),
       ChangeNotifierProvider(
         create: (_) => LearningSessionState(
           queueRepository: sl<LearningQueueRepository>(),
