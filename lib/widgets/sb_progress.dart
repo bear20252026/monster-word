@@ -3,6 +3,7 @@
 // 使用 ThemeVars 语义 token，支持深色模式
 
 import 'package:flutter/material.dart';
+
 import '../theme/skin_system.dart';
 import '../tokens/motion_tokens.dart';
 
@@ -19,7 +20,7 @@ import '../tokens/motion_tokens.dart';
 /// 细线进度条：高 4px 胶囊，填充 accent，轨道 cardBgAlt
 ///
 /// 用于 `dashboard_page.dart`（统计卡进度）、`home_screen.dart`（今日目标细线条）、
-/// `learn_page.dart` / `review_session.dart`（会话答题进度条）。
+/// `learn_page.dart` 与正式 `review_page.dart` 的会话答题进度条。
 ///
 /// 示例：
 /// ```dart
@@ -38,13 +39,7 @@ class SbLinearProgress extends StatelessWidget {
   /// 高度，默认为 4px
   final double height;
 
-  const SbLinearProgress({
-    super.key,
-    required this.value,
-    this.color,
-    this.backgroundColor,
-    this.height = 4,
-  });
+  const SbLinearProgress({super.key, required this.value, this.color, this.backgroundColor, this.height = 4});
 
   @override
   Widget build(BuildContext context) {
@@ -130,12 +125,7 @@ class SbRingProgress extends StatelessWidget {
           ),
           Text(
             label,
-            style: labelStyle ??
-                TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: colors.text1,
-                ),
+            style: labelStyle ?? TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1),
           ),
         ],
       ),

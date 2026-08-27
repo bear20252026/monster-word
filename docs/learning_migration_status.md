@@ -137,21 +137,21 @@
 
 收藏和手动掌握的页面副作用现由 `ReviewWordActionCoordinator` 统一协调。它以显式 `ReviewWordActionOutcome` 返回“已收藏、已取消收藏、已标记掌握、已存在、无当前词或持久化失败”等结果，保持旧有的操作顺序：收藏在持久化后更新展示快照；“熟”先推进会话，再写入幂等的手动掌握标记。`ReviewWordActionFeedback` 将结果映射为页面可展示的反馈文案与时长，`ReviewPage` 仅决定是否显示 Snackbar。这样不会把持久化调用、异常分支和用户提示再次混进路由页面，也不会混同 `favorite_words_v1`、`mastered_words_v1` 与 FSRS 卡片熟练度。
 
-正式复习已移除原有“撤销”入口：该入口仅减少展示计数，既不会回退 `SuperMemoryEngine`，也不会撤销已经发出的 FSRS 写入或手动掌握操作，继续保留会误导用户。历史 `/review_session` 深链现在由路由层重定向至正式 `/review`，因此旧会话实现不再是可达产品路径。后续如需提供真实撤销，必须先定义可逆的题目推进、FSRS 持久化和手动标记事务合同，而不能重加仅修改计数的按钮。
+正式复习已移除原有“撤销”入口：该入口仅减少展示计数，既不会回退 `SuperMemoryEngine`，也不会撤销已经发出的 FSRS 写入或手动掌握操作，继续保留会误导用户。历史 `/review_session` 深链现在由路由层重定向至正式 `/review`，并且不可达的旧会话实现已删除。后续如需提供真实撤销，必须先定义可逆的题目推进、FSRS 持久化和手动标记事务合同，而不能重加仅修改计数的按钮。
 
 
 ## 正式复习评分写入边界
 
 `ReviewPage` 现在将评分提交给 `ReviewRatingWriter`，而不再直接依赖 `LearningState`。页面会在 `SuperMemoryEngine` 推进题目之前捕获实际作答词；应用根将写入端口直接适配到 `ReviewScheduleRepository.rateWord`。该命令只更新该词的 FSRS 卡片并写入既有 `fsrs6_cards_v1`，记录每日学习或复习计数及活跃日期，然后通知依赖它的展示状态，不会推进遗留学习队列。
 
-这既是依赖反转，也是一次数据关联修正：原先页面在本地引擎推进后才由 `LearningState.rate` 推断当前词，可能把本题评分写到下一队列词，并在最后一题时遗漏写入。现在 `SuperMemoryEngine` 的推进顺序和 `FsrsRating` 映射保持不变，但持久化评分始终对应本题单词。遗留学习会话仍使用 `LearningState.rate`，保留其 Leitner 联动和队列推进；为兼容未迁出页面，`LearningState.rateReviewWord`、卡片读取和统计读取暂时仅委托调度仓储，不再维护第二份卡片或统计内存状态。历史 `/review_session` 已在路由层重定向，旧页面仅留待后续删除审计，不再承担兼容会话。
+这既是依赖反转，也是一次数据关联修正：原先页面在本地引擎推进后才由 `LearningState.rate` 推断当前词，可能把本题评分写到下一队列词，并在最后一题时遗漏写入。现在 `SuperMemoryEngine` 的推进顺序和 `FsrsRating` 映射保持不变，但持久化评分始终对应本题单词。遗留学习会话仍使用 `LearningState.rate`，保留其 Leitner 联动和队列推进；为兼容未迁出页面，`LearningState.rateReviewWord`、卡片读取和统计读取暂时仅委托调度仓储，不再维护第二份卡片或统计内存状态。历史 `/review_session` 已在路由层重定向，旧页面已在全仓引用审计后删除，不再承担兼容会话。
 
 
 ## 复习主入口边界
 
 回顾弹窗的“开始复习”已从 `/review_session` 改为主路由 `/review`。前者会直接以词库搜索样本初始化兼容会话，后者才读取当前 `LearningState` 的 FSRS 到期词，并仅在没有到期词时回退至当前学习队列或词库样本。因此用户从正常回顾入口启动复习时，现会进入已有的正式到期词流程。
 
-`/review_session` 的历史名称仍保留以兼容既有深链，但路由现在始终返回正式 `ReviewPage`，不再创建旧 `ReviewSession`。正式 `/review` 已将队列读取与评分提交隔离为专用端口，同时保持原有评分和排程持久化语义；旧页面的随机样本、直接评分调用及占位操作不再属于可达产品行为，可在确认无外部二进制路由依赖后删除源文件。
+`/review_session` 的历史名称仍保留以兼容既有深链，但路由现在始终返回正式 `ReviewPage`，不再创建旧 `ReviewSession`。正式 `/review` 已将队列读取与评分提交隔离为专用端口，同时保持原有评分和排程持久化语义；旧页面的随机样本、直接评分调用及占位操作已随不可达源文件删除。
 
 ## 路由功能域边界
 
