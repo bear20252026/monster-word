@@ -46,18 +46,22 @@ void main() {
   });
 
   group('复习队列读取边界', () {
-    test('主复习页通过队列快照和读取器获取候选词', () {
+    test('正式会话通过队列快照和读取器获取候选词', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
       expect(appSource, contains('ReviewQueueState'));
       expect(appSource, contains('Provider<ReviewQueueReader>.value'));
       expect(pageSource, contains('ReviewQueueState'));
-      expect(pageSource, contains('ReviewQueueReader'));
-      expect(pageSource, contains('loadWords(reviewQueue.snapshot)'));
-      expect(pageSource, isNot(contains('state.dueWords')));
-      expect(pageSource, isNot(contains('state.queue')));
-      expect(pageSource, isNot(contains('sl<WordRepository>()')));
+      expect(pageSource, contains('ReviewSessionState'));
+      expect(pageSource, contains('initialize(reviewQueue.snapshot)'));
+      expect(pageSource, isNot(contains('ReviewQueueReader')));
+      expect(sessionSource, contains('ReviewQueueReader'));
+      expect(sessionSource, contains('_queueReader.loadWords(snapshot)'));
+      expect(sessionSource, isNot(contains('state.dueWords')));
+      expect(sessionSource, isNot(contains('state.queue')));
+      expect(sessionSource, isNot(contains('sl<WordRepository>()')));
     });
   });
 
@@ -76,28 +80,33 @@ void main() {
   });
 
   group('复习评分写入边界', () {
-    test('主复习页通过评分写入端口提交 FSRS 评分', () {
+    test('正式会话通过评分写入端口提交 FSRS 评分', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
       expect(appSource, contains('ProxyProvider<LearningState, ReviewRatingWriter>'));
       expect(appSource, contains('ReviewRatingWriter(writeRating: legacy.rateReviewWord)'));
-      expect(pageSource, contains('ReviewRatingWriter'));
-      expect(pageSource, contains('final reviewedWord = _engine.currentWord()'));
-      expect(pageSource, contains('rate(word: reviewedWord.word, rating: fsrsRating)'));
+      expect(pageSource, contains('context.read<ReviewSessionState>().rate(rating)'));
+      expect(pageSource, isNot(contains('ReviewRatingWriter')));
+      expect(sessionSource, contains('ReviewRatingWriter'));
+      expect(sessionSource, contains('final reviewedWord = currentWord'));
+      expect(sessionSource, contains('_ratingWriter.rate(word: reviewedWord.word, rating: fsrsRating)'));
       expect(pageSource, isNot(contains('LearningState')));
     });
   });
 
   group('复习候选规则边界', () {
-    test('主复习页复用共享候选生成规则', () {
-      final source = File('lib/pages/review_page.dart').readAsStringSync();
+    test('正式会话复用共享候选生成规则', () {
+      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
-      expect(source, contains('ChoiceGenerator'));
-      expect(source, contains('ChoiceCandidate'));
-      expect(source, isNot(contains('dart:convert')));
-      expect(source, isNot(contains('_extractCn')));
-      expect(source, isNot(contains("'非标准用法'")));
+      expect(sessionSource, contains('ChoiceGenerator'));
+      expect(sessionSource, contains('ChoiceCandidate'));
+      expect(pageSource, isNot(contains('ChoiceGenerator')));
+      expect(sessionSource, isNot(contains('dart:convert')));
+      expect(sessionSource, isNot(contains('_extractCn')));
+      expect(sessionSource, isNot(contains("'非标准用法'")));
     });
   });
 
