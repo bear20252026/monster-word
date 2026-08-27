@@ -4,7 +4,7 @@
 
 学习域已不再存在或装配 `LearningState`。原先集中持有学习队列、会话推进、FSRS、收藏、手动掌握、账号占位、偏好持久化和展示数据的聚合状态已被物理删除；生产页面与功能域 Provider 均不得重新导入或创建它。
 
-目前的边界按业务事实拆分：可变学习会话由 `LearningSessionState` 唯一拥有，正式复习排程由 `ReviewScheduleRepository` 唯一拥有，收藏和手动掌握分别由独立状态与仓储拥有，账号与引导由账户功能域拥有，学习偏好由设置功能域拥有。所有词书、主学习、沉浸刷词、拼写、单词机和学习会话入口均使用专用会话；应用根只组合账户、学习和设置功能域作用域，不感知其内部的具体状态类型。
+目前的边界按业务事实拆分：可变学习会话由 `LearningSessionState` 唯一拥有，正式复习排程由 `ReviewScheduleRepository` 唯一拥有，收藏和手动掌握分别由独立状态与仓储拥有，账号与引导由账户功能域拥有，学习偏好由设置功能域拥有，发音播放由播放器功能域拥有。所有词书、主学习、沉浸刷词、拼写、单词机和学习会话入口均使用专用会话；应用根只组合账户、学习、设置和播放器功能域作用域，不感知其内部的具体状态类型。
 
 | 责任 | 当前唯一入口 | 说明 |
 |---|---|---|
@@ -17,6 +17,7 @@
 | 收藏/掌握数量展示 | `LearningCollectionsState` | 只组合 `LearningFavoritesState` 与 `LearningMasteredState` 的只读数量。 |
 | 账号会话与首次引导 | `AppSessionState` | 位于账户功能域，不得回流至学习域。 |
 | 账号资料读取与编辑 | `AccountProfileState` + `AccountProfileRepository` | 提供不含认证凭据的资料快照；昵称、微信名、个人 ID、签名、头像和手机号统一通过账户功能域持久化。 |
+| 单词发音请求、加载与播放标识 | `AudioPlaybackState` + `AudioService` | 播放器功能域唯一入口；共享设备服务不直接暴露给页面，迟到的异步播放回调不会覆盖停止或新播放命令。 |
 | 学习提醒、发音、拼写、节奏与题型偏好 | `LearningPreferencesState` + `LearningPreferencesRepository` | 设置功能域唯一入口；保留旧四项设置键，并持久化原先仅留在设置页内存中的选项。 |
 
 ## 学习会话与队列读取边界
@@ -53,6 +54,12 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 登录和启动页已使用账户域的 `AppSessionState`，保留本地登录占位、输入校验、频率限制、动画等待和首次引导分流。账户资料页、资料管理页、个人中心和我的空间统一使用 `AccountProfileState` 的同一可订阅快照，昵称、微信名、个人 ID 和签名编辑不再由页面重新读取再写回 `UserService`。资料状态不暴露 token 或 secret；旧同步资料接口因始终返回默认空 Bean 已删除。回顾弹窗组合 `LearningSessionState` 与 `ReviewScheduleRepository`；词典弹窗组合 `LearningFavoritesState`。这些展示组件不再依赖全局学习聚合状态。
 
+## 播放器与统计边界
+
+`AudioPlaybackState` 是词典、学习、搜索、拼写和词条详情页的唯一播放命令入口。它保存当前词与当前外部音频地址，并以请求序号隔离并发播放、停止和恢复操作；恢复播放仍使用原始外部音频地址。`AudioService` 保持为应用级设备资源，但只由播放器功能域和正式复习音频适配器使用，页面不得直接通过服务定位器调用它。
+
+旧 `PlayerState`、`UserStatsState`、`StatsService` 和 `StatsRepository` 及其实现已经删除。前者是与播放器功能域平行的全局展示状态；后者没有生产消费者，且其“学习/复习总量”与 `ReviewScheduleRepository` 及 `LearningQueueState` 已迁移的统计读模型平行。删除不会修改正式复习每日统计、FSRS 或学习队列统计的既有语义。
+
 ## 设置偏好边界
 
 `LearningPreferencesState` 是设置页唯一可订阅状态，`LearningPreferencesRepository` 是其唯一持久化边界。每日新学、自动发音、音标显示和深色模式继续使用既有 `daily_new_words_v1`、`auto_play_audio_v1`、`show_phonetic_v1`、`dark_mode_v1` 键；提醒、发音类型、例句发音、拼写、学习与复习节奏、题型和助记开关使用独立语义键。设置页不再保存这些值的本地副本，所有交互均以状态快照渲染并通过命令持久化。
@@ -61,8 +68,8 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 ## 功能域装配与回归保护
 
-`learning_feature_providers.dart` 依赖顺序为：正式复习排程仓储和队列仓储先创建，随后创建收藏、手动掌握和学习会话状态；队列、统计、收藏/掌握数量、队列分类和正式复习状态均从这些专用依赖组合。`LearningCollectionsState` 使用 `ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>` 装配，不再依赖兼容代理。旧 `LearnState`、`LearnService`、`ReviewState`、`ReviewService` 及其服务定位器注册和空学习模块均已删除，因此不会再形成平行的学习或复习队列、FSRS 卡片或进度持久化。
+`learning_feature_providers.dart` 依赖顺序为：正式复习排程仓储和队列仓储先创建，随后创建收藏、手动掌握和学习会话状态；队列、统计、收藏/掌握数量、队列分类和正式复习状态均从这些专用依赖组合。`LearningCollectionsState` 使用 `ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>` 装配，不再依赖兼容代理。播放器功能域单独提供 `AudioService` 和 `AudioPlaybackState`，应用根不再创建旧播放器状态或无消费者统计状态。旧 `LearnState`、`LearnService`、`ReviewState`、`ReviewService`、`PlayerState`、`UserStatsState`、`StatsService` 和 `StatsRepository` 及其实现均已删除，因此不会再形成平行的学习、复习、播放或统计事实来源。
 
-结构测试保留少量高价值负向门禁：应用根和生产 Provider/页面不得导入或创建 `LearningState`、`LearnState`、`ReviewState` 或 `SettingsState`，四类遗留状态及 `LearnService`、`ReviewService` 均不得恢复；账户资料展示和编辑页面不得直连 `UserService` 或调用同步空资料读取；设置页不得重新保存学习偏好本地副本或遗留的“待持久化”开关；正式复习页不得回流题目算法、会话状态或服务定位器；展示组件不得直接读取复习会话状态；历史深链不得重新创建旧 `ReviewSession`。学习状态测试覆盖专用会话加载与评分、只读队列与快照隔离、退出清理、空收藏队列保护、收藏状态和掌握状态的刷新/切换/计数，以及学习偏好旧键兼容和新字段持久化；账户资料测试覆盖统一加载与字段级保存。
+结构测试保留少量高价值负向门禁：应用根和生产 Provider/页面不得导入或创建 `LearningState`、`LearnState`、`ReviewState`、`SettingsState`、`PlayerState` 或 `UserStatsState`，相应遗留服务和仓储均不得恢复；账户资料展示和编辑页面不得直连 `UserService` 或调用同步空资料读取；设置页不得重新保存学习偏好本地副本或遗留的“待持久化”开关；播放页面不得直连 `AudioService`；正式复习页不得回流题目算法、会话状态或服务定位器；展示组件不得直接读取复习会话状态；历史深链不得重新创建旧 `ReviewSession`。学习状态测试覆盖专用会话加载与评分、只读队列与快照隔离、退出清理、空收藏队列保护、收藏状态和掌握状态的刷新/切换/计数，以及学习偏好旧键兼容和新字段持久化；账户资料测试覆盖统一加载与字段级保存；播放器测试覆盖播放、停止竞争和携带外部地址的恢复。
 
 后续新增需求应首先定位其事实模型，并在该功能域的仓储、应用服务或专用状态中实现。不得以“方便页面读取”为由重新创建跨域聚合状态，或将会话、FSRS、手动标记、收藏、账号和持久化职责重新塞入单一 `ChangeNotifier`。
