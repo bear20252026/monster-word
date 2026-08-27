@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../pages/review_page.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -39,10 +40,7 @@ class _ReviewDialog extends StatelessWidget {
               margin: const EdgeInsets.only(top: 10),
               width: 36,
               height: 4,
-              decoration: BoxDecoration(
-                color: skin.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
+              decoration: BoxDecoration(color: skin.divider, borderRadius: BorderRadius.circular(2)),
             ),
             // 标题栏
             Padding(
@@ -64,23 +62,27 @@ class _ReviewDialog extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Expanded(child: _StatCard(
-                    label: '今日已学',
-                    value: '${state.todayLearnCount}',
-                    unit: '词',
-                    icon: Icons.school_outlined,
-                    color: skin.accent,
-                    skin: skin,
-                  )),
+                  Expanded(
+                    child: _StatCard(
+                      label: '今日已学',
+                      value: '${state.todayLearnCount}',
+                      unit: '词',
+                      icon: Icons.school_outlined,
+                      color: skin.accent,
+                      skin: skin,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: _StatCard(
-                    label: '今日复习',
-                    value: '${state.todayReviewCount}',
-                    unit: '词',
-                    icon: Icons.replay_outlined,
-                    color: skin.success,
-                    skin: skin,
-                  )),
+                  Expanded(
+                    child: _StatCard(
+                      label: '今日复习',
+                      value: '${state.todayReviewCount}',
+                      unit: '词',
+                      icon: Icons.replay_outlined,
+                      color: skin.success,
+                      skin: skin,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -96,9 +98,7 @@ class _ReviewDialog extends StatelessWidget {
                     children: [
                       Text('学习进度', style: MistralTypography.caption.copyWith(color: skin.text3)),
                       Text(
-                        state.total > 0
-                            ? '${((state.learnedNum / state.total) * 100).toInt()}%'
-                            : '0%',
+                        state.total > 0 ? '${((state.learnedNum / state.total) * 100).toInt()}%' : '0%',
                         style: MistralTypography.captionBold.copyWith(color: skin.accent),
                       ),
                     ],
@@ -137,9 +137,7 @@ class _ReviewDialog extends StatelessWidget {
                         foregroundColor: skin.accent,
                         side: BorderSide(color: skin.accent),
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
                       ),
                     ),
                   ),
@@ -150,7 +148,7 @@ class _ReviewDialog extends StatelessWidget {
                         // 修复：同上，先捕获 Navigator 再关弹窗
                         final nav = Navigator.of(context);
                         nav.pop();
-                        nav.pushNamed('/review_session');
+                        nav.pushNamed(ReviewPage.routeName);
                       },
                       icon: const Icon(Icons.replay, size: 18),
                       label: const Text('开始复习'),
@@ -158,9 +156,7 @@ class _ReviewDialog extends StatelessWidget {
                         backgroundColor: skin.accent,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
                         elevation: 0,
                       ),
                     ),
@@ -216,11 +212,10 @@ class _StatCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(value,
-                style: MistralTypography.heading2.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                )),
+              Text(
+                value,
+                style: MistralTypography.heading2.copyWith(color: color, fontWeight: FontWeight.w700),
+              ),
               const SizedBox(width: 4),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),

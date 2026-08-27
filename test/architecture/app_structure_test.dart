@@ -35,6 +35,16 @@ void main() {
     });
   });
 
+  group('复习主入口边界', () {
+    test('回顾弹窗将开始复习路由到正式到期词流程', () {
+      final source = File('lib/widgets/review_dialog.dart').readAsStringSync();
+
+      expect(source, contains("import '../pages/review_page.dart';"));
+      expect(source, contains('nav.pushNamed(ReviewPage.routeName)'));
+      expect(source, isNot(contains("nav.pushNamed('/review_session')")));
+    });
+  });
+
   group('复习候选规则边界', () {
     test('主复习页复用共享候选生成规则', () {
       final source = File('lib/pages/review_page.dart').readAsStringSync();
