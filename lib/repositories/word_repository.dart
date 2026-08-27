@@ -19,6 +19,9 @@ abstract class WordRepository {
   /// 根据单词文本批量获取
   Future<List<Word>> getWordsByTexts(Iterable<String> texts);
 
+  /// 根据单词 ID 批量获取
+  Future<List<Word>> getWordsByIds(Iterable<int> ids);
+
   /// 搜索单词
   Future<List<Word>> searchWords(String query, {int? limit});
 

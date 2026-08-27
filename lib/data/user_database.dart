@@ -31,11 +31,7 @@ class UserDatabase {
     final dir = await getApplicationSupportDirectory();
     final dbPath = p.join(dir.path, 'user_data.db');
 
-    _db = await openDatabase(
-      dbPath,
-      version: 1,
-      onCreate: _onCreate,
-    );
+    _db = await openDatabase(dbPath, version: 2, onCreate: _onCreate, onUpgrade: _onUpgrade);
     _initialized = true;
   }
 
@@ -54,6 +50,28 @@ class UserDatabase {
     // 创建索引
     await db.execute('CREATE INDEX idx_favorites_word_id ON favorites(word_id)');
     await db.execute('CREATE INDEX idx_favorites_created_at ON favorites(created_at)');
+    await _createNewWordsTable(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _createNewWordsTable(db);
+    }
+  }
+
+  Future<void> _createNewWordsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE new_words (
+        word_id INTEGER PRIMARY KEY,
+        word_text TEXT NOT NULL,
+        source TEXT NOT NULL,
+        operation_code TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        synced_at INTEGER
+      )
+    ''');
+    await db.execute('CREATE INDEX idx_new_words_operation_updated ON new_words(operation_code, updated_at DESC)');
   }
 
   // ============================================================
@@ -63,35 +81,22 @@ class UserDatabase {
   /// 添加收藏
   /// [wordId] 单词ID（来自 wordbook.db 的 words 表）
   Future<void> addFavorite(int wordId) async {
-    await db.insert(
-      'favorites',
-      {
-        'word_id': wordId,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await db.insert('favorites', {
+      'word_id': wordId,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   /// 删除收藏
   /// [wordId] 单词ID
   Future<void> removeFavorite(int wordId) async {
-    await db.delete(
-      'favorites',
-      where: 'word_id = ?',
-      whereArgs: [wordId],
-    );
+    await db.delete('favorites', where: 'word_id = ?', whereArgs: [wordId]);
   }
 
   /// 检查是否已收藏
   /// [wordId] 单词ID
   Future<bool> isFavorite(int wordId) async {
-    final result = await db.query(
-      'favorites',
-      where: 'word_id = ?',
-      whereArgs: [wordId],
-      limit: 1,
-    );
+    final result = await db.query('favorites', where: 'word_id = ?', whereArgs: [wordId], limit: 1);
     return result.isNotEmpty;
   }
 
@@ -143,9 +148,7 @@ class UserDatabase {
     );
 
     final favoriteIds = rows.map((row) => (row['word_id'] as int?) ?? 0).toSet();
-    return Map.fromEntries(
-      wordIds.map((id) => MapEntry(id, favoriteIds.contains(id))),
-    );
+    return Map.fromEntries(wordIds.map((id) => MapEntry(id, favoriteIds.contains(id))));
   }
 
   /// 清空所有收藏

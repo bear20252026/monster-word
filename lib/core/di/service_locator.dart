@@ -3,6 +3,7 @@
 
 import 'package:get_it/get_it.dart';
 
+import '../../data/user_database.dart';
 import '../../data/wordbook_database.dart';
 import '../../repositories/book_repository.dart';
 import '../../repositories/book_repository_impl.dart';
@@ -16,6 +17,8 @@ import '../../repositories/fav_repository.dart';
 import '../../repositories/fav_repository_impl.dart';
 import '../../repositories/mastered_repository.dart';
 import '../../repositories/mastered_repository_impl.dart';
+import '../../repositories/new_word_repository.dart';
+import '../../repositories/new_word_repository_impl.dart';
 import '../../services/learn_service.dart';
 import '../../services/learn_service_impl.dart';
 import '../../services/review_service.dart';
@@ -32,6 +35,8 @@ import '../../repositories/stats_repository.dart';
 import '../../repositories/stats_repository_impl.dart';
 import '../../features/learning/application/book_words_reader.dart';
 import '../../features/learning/application/mastered_words_reader.dart';
+import '../../features/learning/application/new_words_reader.dart';
+import '../../features/learning/presentation/new_words_state.dart';
 import '../../state/learn_state.dart';
 import '../../state/review_state.dart';
 import '../../state/user_stats_state.dart';
@@ -60,6 +65,9 @@ Future<void> setupServiceLocator() async {
   // 数据库单例（只注册一次）
   if (!sl.isRegistered<WordBookDatabase>()) {
     sl.registerLazySingleton<WordBookDatabase>(() => WordBookDatabase.instance);
+  }
+  if (!sl.isRegistered<UserDatabase>()) {
+    sl.registerLazySingleton<UserDatabase>(() => UserDatabase.instance);
   }
 
   // ========== Repository Layer（仓库层）==========
@@ -93,6 +101,11 @@ Future<void> setupServiceLocator() async {
     sl.registerLazySingleton<MasteredRepository>(() => MasteredRepositoryImpl());
   }
 
+  // NewWordRepository
+  if (!sl.isRegistered<NewWordRepository>()) {
+    sl.registerLazySingleton<NewWordRepository>(() => NewWordRepositoryImpl(sl<UserDatabase>()));
+  }
+
   // BookWordsReader
   if (!sl.isRegistered<BookWordsReader>()) {
     sl.registerLazySingleton<BookWordsReader>(() => BookWordsReader(wordRepository: sl<WordRepository>()));
@@ -103,6 +116,18 @@ Future<void> setupServiceLocator() async {
     sl.registerLazySingleton<MasteredWordsReader>(
       () => MasteredWordsReader(masteredRepository: sl<MasteredRepository>(), wordRepository: sl<WordRepository>()),
     );
+  }
+
+  // NewWordsReader
+  if (!sl.isRegistered<NewWordsReader>()) {
+    sl.registerLazySingleton<NewWordsReader>(
+      () => NewWordsReader(newWordRepository: sl<NewWordRepository>(), wordRepository: sl<WordRepository>()),
+    );
+  }
+
+  // NewWordsState
+  if (!sl.isRegistered<NewWordsState>()) {
+    sl.registerLazySingleton<NewWordsState>(() => NewWordsState(newWordRepository: sl<NewWordRepository>()));
   }
 
   // ========== Service Layer（服务层）==========

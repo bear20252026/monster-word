@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../features/learning/presentation/learning_collections_state.dart';
+import '../features/learning/presentation/new_words_state.dart';
 import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -25,6 +26,7 @@ class FootMarkPage extends StatelessWidget {
     final skin = context.skin;
     final state = context.watch<LearningState>();
     final collections = context.watch<LearningCollectionsState>();
+    final newWords = context.watch<NewWordsState>();
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
@@ -52,7 +54,7 @@ class FootMarkPage extends StatelessWidget {
                       skin: skin,
                       icon: Icons.fiber_new,
                       title: '生词本',
-                      count: state.newWordNum,
+                      count: newWords.count,
                       onTap: () => Navigator.pushNamed(context, NewWordsPage.routeName),
                     ),
                     const SizedBox(height: 12),

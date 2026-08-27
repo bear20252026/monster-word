@@ -50,6 +50,27 @@ void main() {
     });
   });
 
+  group('生词本数据边界', () {
+    test('生词本页面通过读取器和展示状态访问独立数据源', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final pageSource = File('lib/pages/new_words_page.dart').readAsStringSync();
+      final footMarkSource = File('lib/pages/foot_mark_page.dart').readAsStringSync();
+      final dictionarySource = File('lib/pages/dictionary_page.dart').readAsStringSync();
+      final legacySource = File('lib/state/learning_state.dart').readAsStringSync();
+
+      expect(appSource, contains('Provider<NewWordsReader>.value'));
+      expect(appSource, contains('sl<NewWordsState>()..initialize()'));
+      expect(pageSource, contains('NewWordsReader'));
+      expect(pageSource, contains('NewWordsState'));
+      expect(pageSource, isNot(contains('LearningState')));
+      expect(footMarkSource, contains('newWords.count'));
+      expect(dictionarySource, contains('NewWordsState'));
+      expect(dictionarySource, contains("source: 'dictionary'"));
+      expect(legacySource, isNot(contains('getNewWords')));
+      expect(legacySource, isNot(contains('newWordNum')));
+    });
+  });
+
   group('已掌握词表查询边界', () {
     test('已掌握词表页面通过读取器加载数据', () {
       final source = File('lib/pages/mastered_words_page.dart').readAsStringSync();
