@@ -60,7 +60,7 @@ class WordApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => sl<LearnState>()),
         ChangeNotifierProvider(create: (_) => sl<ReviewState>()),
         ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
-        ChangeNotifierProvider(create: (_) => sl<SettingsState>()),
+        ChangeNotifierProvider(create: (_) => sl<SettingsState>()..init()),
         ChangeNotifierProvider(create: (_) => sl<PlayerState>()),
         ChangeNotifierProvider(create: (_) => SkinSystem()),
         ChangeNotifierProvider(create: (_) => WallpaperState()),

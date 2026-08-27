@@ -1,9 +1,10 @@
 // 设置页：学习偏好 + 7 个底部弹窗交互
 // 已接入 SkinSystem 主题 — 所有颜色使用 context.skin.colors
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 import '../hooks/responsive.dart';
+import '../state/settings_state.dart';
 import '../theme/skin_system.dart';
 import '../widgets/scale_down_on_press.dart';
 
@@ -28,32 +29,11 @@ class _SettingsPageState extends State<SettingsPage> {
   int _learnPace = 10; // 5/10/15/20
   String _reviewMode = '新模式';
   int _reviewPace = 10; // 10/15/20/40/100
-  int _dailyNewWords = 10; // 每日新学词数：5/10/15/20/30/50
-
-  static const _dailyNewWordsPrefKey = 'daily_new_words_v1';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDailyNewWords();
-  }
-
-  Future<void> _loadDailyNewWords() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getInt(_dailyNewWordsPrefKey);
-    if (saved != null && mounted) {
-      setState(() => _dailyNewWords = saved);
-    }
-  }
-
-  Future<void> _saveDailyNewWords(int value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_dailyNewWordsPrefKey, value);
-  }
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
+    final settings = context.watch<SettingsState>();
 
     return Scaffold(
       backgroundColor: skin.pageBg,
@@ -78,11 +58,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: Center(
                           child: Text(
                             '学习偏好',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: skin.text1,
-                            ),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
                           ),
                         ),
                       ),
@@ -91,9 +67,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 // 内容区
-                Expanded(
-                  child: _buildPreferences(context),
-                ),
+                Expanded(child: _buildPreferences(context)),
               ],
             ),
           ),
@@ -105,93 +79,80 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildPreferences(BuildContext context) {
     final resp = context.responsive;
     return ListView(
-      padding: EdgeInsets.symmetric(
-        horizontal: resp.isWide ? 24 : 16,
-        vertical: 16,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: resp.isWide ? 24 : 16, vertical: 16),
       children: [
         // --- 第一组：学习提醒 ---
-        _SettingGroup([
-          _Cell(
-            title: '学习提醒',
-            onTap: () => _showReminderDialog(),
-          ),
-        ]),
+        _SettingGroup([_Cell(title: '学习提醒', onTap: () => _showReminderDialog())]),
         const SizedBox(height: 16),
 
         // --- 第二组：发音设置 ---
         _SettingGroup([
-          _Cell(
-            title: '单词发音类型',
-            value: _pronType,
-            onTap: () => _showPronTypeDialog(),
-          ),
+          _Cell(title: '单词发音类型', value: _pronType, onTap: () => _showPronTypeDialog()),
           _CellWithDesc(
             title: '自动发音',
-            desc: _autoPronWord
-                ? (_autoPronExample ? '单词、词义页面例句' : '单词')
-                : (_autoPronExample ? '词义页面例句' : '已关闭'),
+            desc: _autoPronWord ? (_autoPronExample ? '单词、词义页面例句' : '单词') : (_autoPronExample ? '词义页面例句' : '已关闭'),
             onTap: () => _showAutoPronDialog(),
           ),
         ]),
         const SizedBox(height: 16),
 
         // --- 第三组：拼写设置 ---
-        _SettingGroup([
-          _CellWithDesc(
-            title: '拼写',
-            desc: _spellDesc,
-            onTap: () => _showSpellDialog(),
-          ),
-        ]),
+        _SettingGroup([_CellWithDesc(title: '拼写', desc: _spellDesc, onTap: () => _showSpellDialog())]),
         const SizedBox(height: 16),
 
         // --- 第四组：学习节奏 ---
         _SettingGroup([
-          _Cell(
-            title: '每日新学',
-            value: '$_dailyNewWords 词',
-            onTap: () => _showDailyNewWordsDialog(),
-          ),
-          _Cell(
-            title: '学习节奏',
-            value: '$_learnPace 词/小结',
-            onTap: () => _showLearnPaceDialog(),
-          ),
-          _Cell(
-            title: '复习节奏',
-            value: '$_reviewPace 词/组',
-            onTap: () => _showReviewPaceDialog(),
-          ),
+          _Cell(title: '每日新学', value: '${settings.dailyNewWords} 词', onTap: () => _showDailyNewWordsDialog()),
+          _Cell(title: '学习节奏', value: '$_learnPace 词/小结', onTap: () => _showLearnPaceDialog()),
+          _Cell(title: '复习节奏', value: '$_reviewPace 词/组', onTap: () => _showReviewPaceDialog()),
         ]),
         const SizedBox(height: 16),
 
         // --- 第五组：题型/助记 ---
         _SettingGroup([
-          _SwitchCell('听音选义题型', initialValue: true, onChanged: (v) {
-            // TODO: persist to SharedPreferences
-          }),
-          _Cell(title: '助记顺序', value: '派生词 - 词组搭配 - 特殊变形 - …', onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('助记顺序设置开发中...'), duration: Duration(seconds: 1)),
-            );
-          }),
-          _SwitchCellWithDesc(title: '拆分助记', desc: '学习时自动拆分单词', initialValue: true, onChanged: (v) {
-            // TODO: persist to SharedPreferences
-          }),
-          _SwitchCellWithDesc(title: '混淆项辨析', desc: '显示选择题错误选项词义', initialValue: true, onChanged: (v) {
-            // TODO: persist to SharedPreferences
-          }),
+          _SwitchCell(
+            '听音选义题型',
+            initialValue: true,
+            onChanged: (v) {
+              // TODO: persist to SharedPreferences
+            },
+          ),
+          _Cell(
+            title: '助记顺序',
+            value: '派生词 - 词组搭配 - 特殊变形 - …',
+            onTap: () {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text('助记顺序设置开发中...'), duration: Duration(seconds: 1)));
+            },
+          ),
+          _SwitchCellWithDesc(
+            title: '拆分助记',
+            desc: '学习时自动拆分单词',
+            initialValue: true,
+            onChanged: (v) {
+              // TODO: persist to SharedPreferences
+            },
+          ),
+          _SwitchCellWithDesc(
+            title: '混淆项辨析',
+            desc: '显示选择题错误选项词义',
+            initialValue: true,
+            onChanged: (v) {
+              // TODO: persist to SharedPreferences
+            },
+          ),
         ]),
         const SizedBox(height: 16),
 
         // --- 第六组：更多设置 ---
         _SettingGroup([
-          _Cell(title: '更多学习偏好', onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('更多学习偏好开发中...'), duration: Duration(seconds: 1)),
-            );
-          }),
+          _Cell(
+            title: '更多学习偏好',
+            onTap: () {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text('更多学习偏好开发中...'), duration: Duration(seconds: 1)));
+            },
+          ),
         ]),
       ],
     );
@@ -317,14 +278,20 @@ class _SettingsPageState extends State<SettingsPage> {
       child: StatefulBuilder(
         builder: (ctx, setSheetState) => Column(
           mainAxisSize: MainAxisSize.min,
-          children: [5, 10, 15, 20, 30, 50].map((n) => _SheetOptionRow(
-            label: '$n 词',
-            selected: _dailyNewWords == n,
-            onTap: () {
-              setSheetState(() => setState(() => _dailyNewWords = n));
-              _saveDailyNewWords(n);
-            },
-          )).toList(),
+          children: [5, 10, 15, 20, 30, 50]
+              .map(
+                (n) => _SheetOptionRow(
+                  label: '$n 词',
+                  selected: context.read<SettingsState>().dailyNewWords == n,
+                  onTap: () async {
+                    await context.read<SettingsState>().setDailyNewWords(n);
+                    if (ctx.mounted) {
+                      setSheetState(() {});
+                    }
+                  },
+                ),
+              )
+              .toList(),
         ),
       ),
     );
@@ -339,11 +306,15 @@ class _SettingsPageState extends State<SettingsPage> {
       child: StatefulBuilder(
         builder: (ctx, setSheetState) => Column(
           mainAxisSize: MainAxisSize.min,
-          children: [5, 10, 15, 20].map((n) => _SheetOptionRow(
-            label: '$n 词/小结',
-            selected: _learnPace == n,
-            onTap: () => setSheetState(() => setState(() => _learnPace = n)),
-          )).toList(),
+          children: [5, 10, 15, 20]
+              .map(
+                (n) => _SheetOptionRow(
+                  label: '$n 词/小结',
+                  selected: _learnPace == n,
+                  onTap: () => setSheetState(() => setState(() => _learnPace = n)),
+                ),
+              )
+              .toList(),
         ),
       ),
     );
@@ -377,9 +348,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         decoration: BoxDecoration(
                           color: on ? skin.accent : skin.cardBgAlt,
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: on ? skin.accent : skin.divider,
-                          ),
+                          border: Border.all(color: on ? skin.accent : skin.divider),
                         ),
                         child: Text(
                           m,
@@ -398,11 +367,13 @@ class _SettingsPageState extends State<SettingsPage> {
               // 词数组
               Text('每组词数', style: TextStyle(fontSize: 13, color: skin.text3)),
               const SizedBox(height: 8),
-              ...[10, 15, 20, 40, 100].map((n) => _SheetOptionRow(
-                label: '$n 词/组',
-                selected: _reviewPace == n,
-                onTap: () => setSheetState(() => setState(() => _reviewPace = n)),
-              )),
+              ...[10, 15, 20, 40, 100].map(
+                (n) => _SheetOptionRow(
+                  label: '$n 词/组',
+                  selected: _reviewPace == n,
+                  onTap: () => setSheetState(() => setState(() => _reviewPace = n)),
+                ),
+              ),
             ],
           );
         },
@@ -436,11 +407,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 Expanded(
                   child: Center(
                     child: Container(
-                      width: 36, height: 4,
-                      decoration: BoxDecoration(
-                        color: skin.divider,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(color: skin.divider, borderRadius: BorderRadius.circular(8)),
                     ),
                   ),
                 ),
@@ -457,8 +426,10 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 12),
             // 标题
-            Text(title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: skin.text1)),
+            Text(
+              title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: skin.text1),
+            ),
             const SizedBox(height: 16),
             // 内容
             child,
@@ -482,10 +453,7 @@ class _SettingGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     return Container(
-      decoration: BoxDecoration(
-        color: skin.cardBg,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(16)),
       child: Column(children: children),
     );
   }
@@ -614,12 +582,7 @@ class _SwitchCellWithDesc extends StatefulWidget {
   final String desc;
   final bool initialValue;
   final ValueChanged<bool>? onChanged;
-  const _SwitchCellWithDesc({
-    required this.title,
-    required this.desc,
-    this.initialValue = false,
-    this.onChanged,
-  });
+  const _SwitchCellWithDesc({required this.title, required this.desc, this.initialValue = false, this.onChanged});
 
   @override
   State<_SwitchCellWithDesc> createState() => _SwitchCellWithDescState();
@@ -724,8 +687,7 @@ class _SheetOptionRow extends StatelessWidget {
                 ),
               ),
             ),
-            if (selected)
-              Icon(Icons.check, size: 22, color: skin.accent),
+            if (selected) Icon(Icons.check, size: 22, color: skin.accent),
           ],
         ),
       ),

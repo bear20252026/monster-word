@@ -40,22 +40,6 @@ class LearningState extends ChangeNotifier {
   static const _dailyStatsPrefKey = 'daily_stats_v1';
   static const _activeDatesPrefKey = 'active_learn_dates_v1';
 
-  // ========== 每日新学词数设置 ==========
-  int _dailyNewWords = 10; // 默认 10 词/天
-  static const _dailyNewWordsPrefKey = 'daily_new_words_v1';
-
-  /// 每日新学词数（5/10/15/20/30/50）
-  int get dailyNewWords => _dailyNewWords;
-
-  /// 设置每日新学词数
-  Future<void> setDailyNewWords(int value) async {
-    if (value == _dailyNewWords) return;
-    _dailyNewWords = value;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_dailyNewWordsPrefKey, value);
-  }
-
   // Leitner 学习引擎（4选1选词）
   final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
   List<BBWordProcess> _processQueue = [];
@@ -125,21 +109,7 @@ class LearningState extends ChangeNotifier {
     _loadCards();
     _loadDailyStats();
     _loadActiveDates();
-    _loadDailyNewWords();
     _loadProgress();
-  }
-
-  Future<void> _loadDailyNewWords() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getInt(_dailyNewWordsPrefKey);
-      if (saved != null) {
-        _dailyNewWords = saved;
-        notifyListeners();
-      }
-    } catch (_) {
-      // 数据损坏时使用默认值 10
-    }
   }
 
   /// 从 shared_preferences 加载 FSRS-5 卡片

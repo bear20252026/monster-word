@@ -35,6 +35,21 @@ void main() {
     });
   });
 
+  group('每日新学词数设置边界', () {
+    test('设置状态是每日新学词数的唯一页面读写入口', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final settingsPageSource = File('lib/pages/settings_page.dart').readAsStringSync();
+      final legacySource = File('lib/state/learning_state.dart').readAsStringSync();
+
+      expect(appSource, contains('sl<SettingsState>()..init()'));
+      expect(settingsPageSource, contains('SettingsState'));
+      expect(settingsPageSource, isNot(contains("import 'package:shared_preferences/shared_preferences.dart';")));
+      expect(settingsPageSource, isNot(contains('_dailyNewWords')));
+      expect(legacySource, isNot(contains('daily_new_words_v1')));
+      expect(legacySource, isNot(contains('setDailyNewWords')));
+    });
+  });
+
   group('已掌握词表查询边界', () {
     test('已掌握词表页面通过读取器加载数据', () {
       final source = File('lib/pages/mastered_words_page.dart').readAsStringSync();
