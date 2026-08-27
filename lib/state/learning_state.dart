@@ -10,7 +10,11 @@ import '../data/wordbook_database.dart';
 import '../engine/core_engine.dart';
 import '../engine/fsrs6_engine.dart';
 import '../engine/leitner_engine.dart';
+import '../features/learning/domain/choice_generator.dart';
+import '../features/learning/domain/queue_word_lists.dart';
 import '../models/bb_word_process.dart';
+import '../repositories/fav_repository.dart';
+import '../repositories/mastered_repository.dart';
 
 /// 学习状态（ChangeNotifier，供 UI 监听）
 class LearningState extends ChangeNotifier {
@@ -24,11 +28,9 @@ class LearningState extends ChangeNotifier {
   Map<String, FsrsCard> _cards = {};
   static const _cardsPrefKey = 'fsrs6_cards_v1';
 
-  // 收藏 & 标记已掌握
-  final Set<String> _favoriteWords = {};
-  final Set<String> _masteredWords = {};
-  static const _favoritesPrefKey = 'favorite_words_v1';
-  static const _masteredPrefKey = 'mastered_words_v1';
+  // 单词收藏与掌握标记均委托给独立仓储。
+  final FavRepository _favRepository;
+  final MasteredRepository _masteredRepository;
 
   // ========== 学习统计（每日计数 + 连续天数） ==========
   // 格式: { "2026-08-24": {"learn": 15, "review": 30}, ... }
@@ -37,22 +39,6 @@ class LearningState extends ChangeNotifier {
   Set<String> _activeDates = {};
   static const _dailyStatsPrefKey = 'daily_stats_v1';
   static const _activeDatesPrefKey = 'active_learn_dates_v1';
-
-  // ========== 每日新学词数设置 ==========
-  int _dailyNewWords = 10; // 默认 10 词/天
-  static const _dailyNewWordsPrefKey = 'daily_new_words_v1';
-
-  /// 每日新学词数（5/10/15/20/30/50）
-  int get dailyNewWords => _dailyNewWords;
-
-  /// 设置每日新学词数
-  Future<void> setDailyNewWords(int value) async {
-    if (value == _dailyNewWords) return;
-    _dailyNewWords = value;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_dailyNewWordsPrefKey, value);
-  }
 
   // Leitner 学习引擎（4选1选词）
   final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
@@ -74,8 +60,7 @@ class LearningState extends ChangeNotifier {
   /// 今日待复习数量
   int get dueCount => _fsrsEngine.getDueCards(_cards.values.toList()).length;
 
-  Word? get currentWord =>
-      _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
+  Word? get currentWord => _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
 
   // 学习进度持久化
   static const _currentBookPrefKey = 'current_book_v1';
@@ -115,28 +100,16 @@ class LearningState extends ChangeNotifier {
     }
   }
 
-  /// 构造函数：加载所有持久化数据
-  LearningState() {
+  /// 构造函数：加载遗留持久化数据。
+  ///
+  /// 收藏和掌握标记分别由仓储负责加载和保存，因此不再在此重复维护。
+  LearningState({required FavRepository favRepository, required MasteredRepository masteredRepository})
+    : _favRepository = favRepository,
+      _masteredRepository = masteredRepository {
     _loadCards();
-    _loadFavorites();
-    _loadMastered();
     _loadDailyStats();
     _loadActiveDates();
-    _loadDailyNewWords();
     _loadProgress();
-  }
-
-  Future<void> _loadDailyNewWords() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getInt(_dailyNewWordsPrefKey);
-      if (saved != null) {
-        _dailyNewWords = saved;
-        notifyListeners();
-      }
-    } catch (_) {
-      // 数据损坏时使用默认值 10
-    }
   }
 
   /// 从 shared_preferences 加载 FSRS-5 卡片
@@ -146,9 +119,7 @@ class LearningState extends ChangeNotifier {
       final raw = prefs.getString(_cardsPrefKey);
       if (raw != null && raw.isNotEmpty) {
         final map = jsonDecode(raw) as Map<String, dynamic>;
-        _cards = map.map(
-          (k, v) => MapEntry(k, FsrsCard.fromJson(v as Map<String, dynamic>)),
-        );
+        _cards = map.map((k, v) => MapEntry(k, FsrsCard.fromJson(v as Map<String, dynamic>)));
       }
     } catch (e) {
       debugPrint('FSRS-5 cards loading error: $e');
@@ -164,40 +135,6 @@ class LearningState extends ChangeNotifier {
   }
 
   // ========== 收藏 & 标记已掌握 ==========
-
-  /// 从 SharedPreferences 加载收藏列表
-  Future<void> _loadFavorites() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getStringList(_favoritesPrefKey);
-      if (raw != null) _favoriteWords.addAll(raw);
-    } catch (e) {
-      debugPrint('Favorites loading error: $e');
-    }
-  }
-
-  /// 从 SharedPreferences 加载已掌握列表
-  Future<void> _loadMastered() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getStringList(_masteredPrefKey);
-      if (raw != null) _masteredWords.addAll(raw);
-    } catch (e) {
-      debugPrint('Mastered words loading error: $e');
-    }
-  }
-
-  /// 保存收藏列表到 SharedPreferences
-  Future<void> _saveFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_favoritesPrefKey, _favoriteWords.toList());
-  }
-
-  /// 保存已掌握列表到 SharedPreferences
-  Future<void> _saveMastered() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_masteredPrefKey, _masteredWords.toList());
-  }
 
   // ========== 每日学习统计 + 连续天数 ==========
 
@@ -216,10 +153,7 @@ class LearningState extends ChangeNotifier {
         final map = jsonDecode(raw) as Map<String, dynamic>;
         _dailyStats = map.map((date, counts) {
           final m = counts as Map<String, dynamic>;
-          return MapEntry(date, {
-            'learn': m['learn'] as int? ?? 0,
-            'review': m['review'] as int? ?? 0,
-          });
+          return MapEntry(date, {'learn': m['learn'] as int? ?? 0, 'review': m['review'] as int? ?? 0});
         });
       }
     } catch (e) {
@@ -295,44 +229,37 @@ class LearningState extends ChangeNotifier {
     return count;
   }
 
-  /// 单词是否已收藏
-  bool isFavorite(String word) => _favoriteWords.contains(word);
+  /// 单词是否已收藏。
+  ///
+  /// 收藏的唯一事实来源是 [FavRepository]，与新学习状态及学习服务保持一致。
+  bool isFavorite(String word) => _favRepository.isFavorite(word);
 
-  /// 单词是否已标记掌握
-  bool isMastered(String word) => _masteredWords.contains(word);
+  /// 单词是否已标记掌握。
+  bool isMastered(String word) => _masteredRepository.isMastered(word);
 
-  /// 切换收藏状态（返回切换后的状态）
+  /// 切换收藏状态（返回切换后的状态）。
   Future<bool> toggleFavorite(String word) async {
-    if (_favoriteWords.contains(word)) {
-      _favoriteWords.remove(word);
-    } else {
-      _favoriteWords.add(word);
-    }
-    await _saveFavorites();
+    await _favRepository.toggleFavorite(word);
     notifyListeners();
-    return _favoriteWords.contains(word);
+    return _favRepository.isFavorite(word);
   }
 
-  /// 切换已掌握状态（返回切换后的状态）
+  /// 切换已掌握状态（返回切换后的状态）。
   Future<bool> toggleMastered(String word) async {
-    if (_masteredWords.contains(word)) {
-      _masteredWords.remove(word);
-    } else {
-      _masteredWords.add(word);
-    }
-    await _saveMastered();
+    await _masteredRepository.toggleMastered(word);
     notifyListeners();
-    return _masteredWords.contains(word);
+    return _masteredRepository.isMastered(word);
   }
 
-  /// 获取收藏单词列表（从完整词库查询，不仅限当前队列）
+  /// 获取收藏单词列表（从完整词库查询，不仅限当前队列）。
   Future<List<Word>> getFavoriteWords() async {
-    if (_favoriteWords.isEmpty) return [];
-    // 从完整词库批量查询收藏的单词
-    final words = await WordBookDatabase.instance.getWordsByNames(_favoriteWords);
+    final favoriteWords = await _favRepository.getFavoriteWords();
+    if (favoriteWords.isEmpty) return [];
+    // 从完整词库批量查询收藏的单词。
+    final words = await WordBookDatabase.instance.getWordsByNames(favoriteWords);
     if (words.isNotEmpty) return words;
-    // 回退：从当前队列过滤
-    return _queue.where((w) => _favoriteWords.contains(w.word)).toList();
+    // 回退：从当前队列过滤。
+    return _queue.where((w) => favoriteWords.contains(w.word)).toList();
   }
 
   /// 从收藏单词本开始学习
@@ -347,36 +274,38 @@ class LearningState extends ChangeNotifier {
 
     // 初始化 Leitner 引擎
     _processQueue = _queue
-        .map((w) => BBWordProcess(
-              word: w.word,
-              wordId: w.id,
-              interpret: w.interpret,
-              usPron: w.usPron,
-              ukPron: w.ukPron,
-              example: w.example,
-            ))
+        .map(
+          (w) => BBWordProcess(
+            word: w.word,
+            wordId: w.id,
+            interpret: w.interpret,
+            usPron: w.usPron,
+            ukPron: w.ukPron,
+            example: w.example,
+          ),
+        )
         .toList();
     _leitnerEngine.init(_processQueue);
     _regenerateChoices();
     notifyListeners();
   }
 
-  /// 获取已掌握单词列表
+  /// 获取已掌握单词列表。
   Future<List<Word>> getMasteredWords() async {
-    return _queue.where((w) => _masteredWords.contains(w.word)).toList();
+    final masteredWords = await _masteredRepository.getMasteredWords();
+    return _queue.where((word) => masteredWords.contains(word.word)).toList();
   }
 
-  /// 收藏单词数量
-  int get favoriteCount => _favoriteWords.length;
+  /// 收藏单词数量。
+  int get favoriteCount => _favRepository.favoriteCount;
 
-  /// 已掌握单词数量
-  int get masteredCount => _masteredWords.length;
+  /// 已掌握单词数量。
+  int get masteredCount => _masteredRepository.masteredCount;
 
   /// 加载一本书进入学习队列（乱序版：单词顺序随机打乱）
   Future<void> loadBook(Book book, {int limit = 50, bool shuffle = true}) async {
     _currentBook = book;
-    _queue = await WordBookDatabase.instance
-        .getWordsByBook(book.id, limit: limit, offset: 0);
+    _queue = await WordBookDatabase.instance.getWordsByBook(book.id, limit: limit, offset: 0);
     _currentIndex = 0;
     _showAnswer = false;
 
@@ -387,14 +316,16 @@ class LearningState extends ChangeNotifier {
 
     // 初始化 Leitner 引擎（4选1选词逻辑 1:1）
     _processQueue = _queue
-        .map((w) => BBWordProcess(
-              word: w.word,
-              wordId: w.id,
-              interpret: w.interpret,
-              usPron: w.usPron,
-              ukPron: w.ukPron,
-              example: w.example,
-            ))
+        .map(
+          (w) => BBWordProcess(
+            word: w.word,
+            wordId: w.id,
+            interpret: w.interpret,
+            usPron: w.usPron,
+            ukPron: w.ukPron,
+            example: w.example,
+          ),
+        )
         .toList();
     _leitnerEngine.init(_processQueue);
     _regenerateChoices();
@@ -408,85 +339,24 @@ class LearningState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 重新生成 4 选 1 选项（保证始终 4 个：1 正确 + 3 干扰）
+  /// 重新生成 4 选 1 选项。
+  ///
+  /// 旧状态仍承担词书、统计和持久化职责；候选去重、中文优先与兜底策略
+  /// 则统一委托给学习领域规则，避免继续与 [LearnState] 漂移。
   void _regenerateChoices() {
-    final current = _leitnerEngine.currentWord();
-    if (current == null) { _choices = []; return; }
-
-    final correctInterpret = current.interpret;
-    final correctWord = current.word;
-
-    // 构建候选池（去重释义，优先有中文的）
-    final seenInterprets = <String>{correctInterpret};
-    final pool = <Map<String, String>>[];
-    for (final w in _queue) {
-      if (w.word != correctWord && w.interpret.isNotEmpty && !seenInterprets.contains(w.interpret)) {
-        seenInterprets.add(w.interpret);
-        final cn = _extractCn(w.interpret);
-        pool.add({'word': w.word, 'interpret': w.interpret, 'cn': cn});
-      }
+    // 页面展示的当前词以队列索引为准；Leitner 引擎会随机组内顺序，
+    // 不能把引擎当前词作为正确答案，否则题干和候选正确项可能不一致。
+    final current = currentWord;
+    if (current == null) {
+      _choices = [];
+      return;
     }
 
-    // 优先选择有中文释义的干扰项
-    pool.shuffle();
-    final withCn = pool.where((w) => (w['cn'] ?? '').isNotEmpty).toList();
-    final withoutCn = pool.where((w) => (w['cn'] ?? '').isEmpty).toList();
-
-    final distractors = <Map<String, String>>[];
-    // 先取有中文的
-    for (final w in withCn) {
-      if (distractors.length >= 3) break;
-      distractors.add(w);
-    }
-    // 不够再补无中文的
-    for (final w in withoutCn) {
-      if (distractors.length >= 3) break;
-      distractors.add(w);
-    }
-
-    // 如果不够 3 个，用占位释义补齐
-    final fallbacks = [
-      {'word': '', 'interpret': '非标准用法', 'cn': '非标准用法'},
-      {'word': '', 'interpret': '罕用释义', 'cn': '罕用释义'},
-      {'word': '', 'interpret': '非正式表达', 'cn': '非正式表达'},
-    ];
-    int fb = 0;
-    while (distractors.length < 3 && fb < fallbacks.length) {
-      final fbInterpret = fallbacks[fb]['interpret']!;
-      if (!seenInterprets.contains(fbInterpret)) {
-        distractors.add(fallbacks[fb]);
-        seenInterprets.add(fbInterpret);
-      }
-      fb++;
-    }
-
-    // 组装 4 个选项并打乱
-    final choices = <WordChoicePair>[
-      WordChoicePair(correctWord, correctInterpret),
-      ...distractors.map((d) => WordChoicePair(d['word'] ?? '', d['interpret'] ?? '')),
-    ];
-    _choices = choices.toList()..shuffle();
-  }
-
-  /// 从 interpret JSON 提取中文释义
-  String _extractCn(String interpret) {
-    try {
-      final decoded = jsonDecode(interpret);
-      if (decoded is List && decoded.isNotEmpty) {
-        final first = decoded.first;
-        if (first is Map) {
-          final defList = first['def'];
-          if (defList is List && defList.isNotEmpty) {
-            final firstDef = defList.first;
-            if (firstDef is Map) {
-              final cn = (firstDef['cn'] ?? firstDef['cndef'] ?? '') as String;
-              return cn.trim();
-            }
-          }
-        }
-      }
-    } catch (_) {}
-    return '';
+    final generated = ChoiceGenerator.generate(
+      correct: ChoiceCandidate(word: current.word, interpret: current.interpret),
+      candidates: _queue.map((word) => ChoiceCandidate(word: word.word, interpret: word.interpret)),
+    );
+    _choices = generated.map((choice) => WordChoicePair(choice.word, choice.interpret)).toList();
   }
 
   /// 退出学习：清除当前学习状态，释放音频资源
@@ -515,9 +385,7 @@ class LearningState extends ChangeNotifier {
     // SRS 卡片更新
     final existing = _cards[word.word];
     final isLearn = existing == null; // 新词=learn，已有卡片=review
-    final updated = isLearn
-        ? _fsrsEngine.learn(word.word, rating)
-        : _fsrsEngine.review(existing, rating);
+    final updated = isLearn ? _fsrsEngine.learn(word.word, rating) : _fsrsEngine.review(existing, rating);
     _cards[word.word] = updated;
     await _saveCards();
 
@@ -621,13 +489,7 @@ class LearningState extends ChangeNotifier {
         matureCount++;
       }
     }
-    return {
-      'new': newCount,
-      'due': dueCount,
-      'learning': learningCount,
-      'mature': matureCount,
-      'total': _cards.length,
-    };
+    return {'new': newCount, 'due': dueCount, 'learning': learningCount, 'mature': matureCount, 'total': _cards.length};
   }
 
   /// 获取今日学习统计
@@ -686,14 +548,22 @@ class LearningState extends ChangeNotifier {
   // ========== 单词分类查询 ==========
 
   int get newWordNum => _queue.where((w) => !_cards.containsKey(w.word)).length;
-  int get masteredNum => _masteredWords.length;
+  int get masteredNum => _masteredRepository.masteredCount;
   int get notLearnedNum => _queue.length - learnedNum;
   int get reviewingNum => _fsrsEngine.getDueCards(_cards.values.toList()).length;
   int get totalLearnedDays => _activeDates.length;
 
+  QueueWordLists get queueWordLists => QueueWordLists.fromQueue(
+    queue: _queue,
+    isLearned: (word) => _cards.containsKey(word.word),
+    isReviewing: (word) {
+      final card = _cards[word.word];
+      return card != null && card.difficulty <= 5.0;
+    },
+  );
+
   Future<List<Word>> getLearnedWords() async {
-    // TODO: 从数据库查询已学单词
-    return _queue.where((w) => _cards.containsKey(w.word)).toList();
+    return queueWordLists.learnedWords;
   }
 
   Future<List<Word>> getNewWords() async {
@@ -709,21 +579,15 @@ class LearningState extends ChangeNotifier {
   }
 
   Future<List<Word>> getNotLearnedWords() async {
-    // TODO: 从数据库查询未学习单词
-    return _queue.where((w) => !_cards.containsKey(w.word)).toList();
+    return queueWordLists.notLearnedWords;
   }
 
   Future<List<Word>> getReviewingWords() async {
-    // TODO: 从数据库查询复习中单词
-    return _queue.where((w) {
-      final card = _cards[w.word];
-      return card != null && card.difficulty <= 5.0;
-    }).toList();
+    return queueWordLists.reviewingWords;
   }
 
   Future<List<Word>> getWordsByBook(int bookId) async {
     // TODO: 从数据库查询指定词书的单词
     return await WordBookDatabase.instance.getWordsByBook(bookId, limit: 1000);
   }
-
 }

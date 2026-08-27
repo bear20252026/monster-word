@@ -3,8 +3,9 @@
 // 移植自 v3.2 MyWordsActivity
 // 我的单词：显示所有已学单词
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../state/learning_state.dart';
+import '../features/learning/presentation/learning_queue_word_lists_state.dart';
 import '../models/word.dart';
 import 'list_words_page.dart';
 
@@ -22,7 +23,7 @@ class _MyWordsPageState extends ListWordsPageState<MyWordsPage> {
   String get pageTitle => '全部已学单词';
 
   @override
-  Future<List<Word>> loadWords(LearningState state) async {
-    return state.getLearnedWords();
+  Future<List<Word>> loadWordsForContext(BuildContext context) async {
+    return context.read<LearningQueueWordListsState>().learnedWords;
   }
 }

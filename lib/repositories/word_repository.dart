@@ -1,10 +1,10 @@
 // 由 Claude 团队生成 | Monster Word App
 // WordRepository — 单词数据访问抽象
 
-import '../../models/word.dart';
+import '../models/word.dart';
 
 /// 单词数据仓库接口
-/// 
+///
 /// 提供单词（Word）的查询和管理操作抽象。
 abstract class WordRepository {
   /// 获取指定词书的所有单词
@@ -15,6 +15,9 @@ abstract class WordRepository {
 
   /// 根据单词文本获取
   Future<Word?> getWordByText(String text);
+
+  /// 根据单词文本批量获取
+  Future<List<Word>> getWordsByTexts(Iterable<String> texts);
 
   /// 搜索单词
   Future<List<Word>> searchWords(String query, {int? limit});

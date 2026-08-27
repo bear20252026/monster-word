@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/di/service_locator.dart';
+import '../features/learning/application/book_words_reader.dart';
 import '../repositories/book_repository.dart';
-import '../state/learning_state.dart';
 import '../state/learn_state.dart';
 import '../models/word.dart';
 import '../theme/skin_system.dart';
@@ -20,11 +20,7 @@ class BookWordsPage extends ListWordsPage {
   final int bookId;
   final String bookName;
 
-  const BookWordsPage({
-    super.key,
-    required this.bookId,
-    required this.bookName,
-  });
+  const BookWordsPage({super.key, required this.bookId, required this.bookName});
 
   static const routeName = '/book_words';
 
@@ -40,21 +36,21 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
   /// 词书内容页主操作：加载当前词书后开始学习
   @override
   Widget? get learningFab => SbFab(
-        icon: Icons.play_arrow_rounded,
-        label: '开始学习',
-        onTap: () async {
-          // ✅ 修复：使用 LearnState（与 LearnPage 一致），而非 LearningState
-          final learnState = context.read<LearnState>();
-          final bookRepo = sl<BookRepository>();
-          final books = await bookRepo.getBooks();
-          final book = books.where((b) => b.id == widget.bookId).firstOrNull;
-          if (book == null) return;
-          await learnState.loadBook(book, shuffle: true);
-          if (context.mounted) {
-            Navigator.pushNamed(context, LearnPage.routeName);
-          }
-        },
-      );
+    icon: Icons.play_arrow_rounded,
+    label: '开始学习',
+    onTap: () async {
+      // 使用与 LearnPage 一致的会话状态启动学习。
+      final learnState = context.read<LearnState>();
+      final bookRepo = sl<BookRepository>();
+      final books = await bookRepo.getBooks();
+      final book = books.where((b) => b.id == widget.bookId).firstOrNull;
+      if (book == null) return;
+      await learnState.loadBook(book, shuffle: true);
+      if (context.mounted) {
+        Navigator.pushNamed(context, LearnPage.routeName);
+      }
+    },
+  );
 
   @override
   String get pageTitle => widget.bookName;
@@ -77,57 +73,36 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
 
     setState(() {
       _availableGroups = [
-        ExamPhraseGroup(
-          id: 1,
-          bookId: widget.bookId,
-          name: '$examType高频真题词组',
-          examType: examType,
-          phraseCount: 120,
-        ),
-        ExamPhraseGroup(
-          id: 2,
-          bookId: widget.bookId,
-          name: '$examType阅读真题词组',
-          examType: examType,
-          phraseCount: 85,
-        ),
-        ExamPhraseGroup(
-          id: 3,
-          bookId: widget.bookId,
-          name: '$examType写作真题词组',
-          examType: examType,
-          phraseCount: 60,
-        ),
+        ExamPhraseGroup(id: 1, bookId: widget.bookId, name: '$examType高频真题词组', examType: examType, phraseCount: 120),
+        ExamPhraseGroup(id: 2, bookId: widget.bookId, name: '$examType阅读真题词组', examType: examType, phraseCount: 85),
+        ExamPhraseGroup(id: 3, bookId: widget.bookId, name: '$examType写作真题词组', examType: examType, phraseCount: 60),
       ];
     });
   }
 
   void _addPhraseGroup(ExamPhraseGroup group) {
     setState(() {
-      _phraseGroups.add(ExamPhraseGroup(
-        id: group.id,
-        bookId: group.bookId,
-        name: group.name,
-        examType: group.examType,
-        phraseCount: group.phraseCount,
-        isAdded: true,
-      ));
+      _phraseGroups.add(
+        ExamPhraseGroup(
+          id: group.id,
+          bookId: group.bookId,
+          name: group.name,
+          examType: group.examType,
+          phraseCount: group.phraseCount,
+          isAdded: true,
+        ),
+      );
       _availableGroups = _availableGroups.where((g) => g.id != group.id).toList();
     });
   }
 
   void _showAddSheet() {
-    ExamPhraseSheet.show(
-      context,
-      bookName: widget.bookName,
-      availableGroups: _availableGroups,
-      onAdd: _addPhraseGroup,
-    );
+    ExamPhraseSheet.show(context, bookName: widget.bookName, availableGroups: _availableGroups, onAdd: _addPhraseGroup);
   }
 
   @override
-  Future<List<Word>> loadWords(LearningState state) async {
-    return state.getWordsByBook(widget.bookId);
+  Future<List<Word>> loadWordsForContext(BuildContext context) {
+    return context.read<BookWordsReader>().loadWords(widget.bookId);
   }
 
   @override
@@ -185,11 +160,7 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
           const SizedBox(width: 4),
           Text(
             pageTitle,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: skin.colors.text1,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: skin.colors.text1),
           ),
           const Spacer(),
         ],
@@ -200,9 +171,7 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
   Widget _buildWordListSliver(SkinSystem skin) {
     // 使用基类已加载的单词列表，避免重复加载
     if (isLoading) {
-      return const SliverFillRemaining(
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return const SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
     }
     final words = this.words;
     if (words.isEmpty) {
@@ -226,30 +195,20 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
       );
     }
     return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final word = words[index];
-          return ListTile(
-            title: Text(
-              word.word,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: skin.colors.text1,
-              ),
-            ),
-            subtitle: word.usPron.isNotEmpty
-                ? Text(
-                    '/${word.usPron}/',
-                    style: TextStyle(fontSize: 13, color: skin.colors.text3),
-                  )
-                : null,
-            trailing: Icon(Icons.chevron_right, color: skin.colors.text3),
-            onTap: () => Navigator.pushNamed(context, '/word_detail', arguments: word),
-          );
-        },
-        childCount: words.length,
-      ),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final word = words[index];
+        return ListTile(
+          title: Text(
+            word.word,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: skin.colors.text1),
+          ),
+          subtitle: word.usPron.isNotEmpty
+              ? Text('/${word.usPron}/', style: TextStyle(fontSize: 13, color: skin.colors.text3))
+              : null,
+          trailing: Icon(Icons.chevron_right, color: skin.colors.text3),
+          onTap: () => Navigator.pushNamed(context, '/word_detail', arguments: word),
+        );
+      }, childCount: words.length),
     );
   }
 }

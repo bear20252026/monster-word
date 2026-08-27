@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../engine/core_engine.dart' show WordChoicePair;
 import '../engine/fsrs6_engine.dart' show Fsrs6Engine, FsrsCard, FsrsRating;
 import '../engine/leitner_engine.dart';
+import '../features/learning/domain/choice_generator.dart';
 import '../models/bb_word_process.dart';
 import '../models/book.dart';
 import '../models/word.dart';
@@ -23,13 +24,10 @@ class LearnState extends ChangeNotifier {
   final AudioService _audioService;
   final FavRepository? _favRepository;
 
-  LearnState({
-    required LearnService learnService,
-    required AudioService audioService,
-    FavRepository? favRepository,
-  })  : _learnService = learnService,
-        _audioService = audioService,
-        _favRepository = favRepository;
+  LearnState({required LearnService learnService, required AudioService audioService, FavRepository? favRepository})
+    : _learnService = learnService,
+      _audioService = audioService,
+      _favRepository = favRepository;
 
   Book? _currentBook;
   List<Word> _queue = [];
@@ -66,8 +64,7 @@ class LearnState extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get hasError => _errorMessage != null;
 
-  Word? get currentWord =>
-      _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
+  Word? get currentWord => _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
 
   int get learnedNum => _leitnerEngine.learnedNumber;
 
@@ -118,10 +115,7 @@ class LearnState extends ChangeNotifier {
     if (favWords.isEmpty) return;
 
     _currentBook = null;
-    _queue = favWords
-        .take(limit)
-        .map((w) => Word(word: w))
-        .toList();
+    _queue = favWords.take(limit).map((w) => Word(word: w)).toList();
     _currentIndex = 0;
     _showAnswer = false;
 
@@ -132,14 +126,16 @@ class LearnState extends ChangeNotifier {
 
   void _initLeitnerEngine() {
     _processQueue = _queue
-        .map((w) => BBWordProcess(
-              word: w.word,
-              wordId: w.id,
-              interpret: w.interpret,
-              usPron: w.usPron,
-              ukPron: w.ukPron,
-              example: w.example,
-            ))
+        .map(
+          (w) => BBWordProcess(
+            word: w.word,
+            wordId: w.id,
+            interpret: w.interpret,
+            usPron: w.usPron,
+            ukPron: w.ukPron,
+            example: w.example,
+          ),
+        )
         .toList();
     _leitnerEngine.init(_processQueue);
   }
@@ -150,84 +146,24 @@ class LearnState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 重新生成 4 选 1 选项
+  /// 重新生成 4 选 1 选项。
+  ///
+  /// 候选去重、中文释义优先与兜底策略由领域层统一维护，状态层仅负责
+  /// 将当前会话模型适配为 UI 使用的 [WordChoicePair]。
   void _regenerateChoices() {
-    final current = _leitnerEngine.currentWord();
+    // UI 展示的当前词来自队列索引；Leitner 引擎在初始化时会随机组内顺序，
+    // 因此不能把引擎当前词作为正确答案，否则题干和候选正确项可能不一致。
+    final current = currentWord;
     if (current == null) {
       _choices = [];
       return;
     }
 
-    final correctInterpret = current.interpret;
-    final correctWord = current.word;
-
-    final seenInterprets = <String>{correctInterpret};
-    final pool = <Map<String, String>>[];
-    for (final w in _queue) {
-      if (w.word != correctWord &&
-          w.interpret.isNotEmpty &&
-          !seenInterprets.contains(w.interpret)) {
-        seenInterprets.add(w.interpret);
-        final cn = _extractCn(w.interpret);
-        pool.add({'word': w.word, 'interpret': w.interpret, 'cn': cn});
-      }
-    }
-
-    pool.shuffle();
-    final withCn = pool.where((w) => (w['cn'] ?? '').isNotEmpty).toList();
-    final withoutCn = pool.where((w) => (w['cn'] ?? '').isEmpty).toList();
-
-    final distractors = <Map<String, String>>[];
-    for (final w in withCn) {
-      if (distractors.length >= 3) break;
-      distractors.add(w);
-    }
-    for (final w in withoutCn) {
-      if (distractors.length >= 3) break;
-      distractors.add(w);
-    }
-
-    final fallbacks = [
-      {'word': '', 'interpret': '非标准用法', 'cn': '非标准用法'},
-      {'word': '', 'interpret': '罕用释义', 'cn': '罕用释义'},
-      {'word': '', 'interpret': '非正式表达', 'cn': '非正式表达'},
-    ];
-    int fb = 0;
-    while (distractors.length < 3 && fb < fallbacks.length) {
-      final fbInterpret = fallbacks[fb]['interpret']!;
-      if (!seenInterprets.contains(fbInterpret)) {
-        distractors.add(fallbacks[fb]);
-        seenInterprets.add(fbInterpret);
-      }
-      fb++;
-    }
-
-    final choices = <WordChoicePair>[
-      WordChoicePair(correctWord, correctInterpret),
-      ...distractors.map(
-          (d) => WordChoicePair(d['word'] ?? '', d['interpret'] ?? '')),
-    ];
-    _choices = choices.toList()..shuffle();
-  }
-
-  String _extractCn(String interpret) {
-    try {
-      final decoded = jsonDecode(interpret);
-      if (decoded is List && decoded.isNotEmpty) {
-        final first = decoded.first;
-        if (first is Map) {
-          final defList = first['def'];
-          if (defList is List && defList.isNotEmpty) {
-            final firstDef = defList.first;
-            if (firstDef is Map) {
-              return ((firstDef['cn'] ?? firstDef['cndef'] ?? '') as String)
-                  .trim();
-            }
-          }
-        }
-      }
-    } catch (_) {}
-    return '';
+    final generated = ChoiceGenerator.generate(
+      correct: ChoiceCandidate(word: current.word, interpret: current.interpret),
+      candidates: _queue.map((word) => ChoiceCandidate(word: word.word, interpret: word.interpret)),
+    );
+    _choices = generated.map((choice) => WordChoicePair(choice.word, choice.interpret)).toList();
   }
 
   /// 用户评分（SRS）
@@ -349,11 +285,7 @@ class LearnState extends ChangeNotifier {
     if (card != null) {
       _cards[word] = card.isNew
           ? _fsrsEngine.learn(word, FsrsRating.good)
-          : FsrsCard(
-              word: word,
-              lastReview: DateTime.now(),
-              dueDate: DateTime.now(),
-            );
+          : FsrsCard(word: word, lastReview: DateTime.now(), dueDate: DateTime.now());
       notifyListeners();
     }
   }
@@ -362,16 +294,14 @@ class LearnState extends ChangeNotifier {
   String getStatusText(FsrsCard card) => _fsrsEngine.getStatusText(card);
 
   /// 获取难度描述文本
-  String getDifficultyText(FsrsCard card) =>
-      _fsrsEngine.getDifficultyText(card);
+  String getDifficultyText(FsrsCard card) => _fsrsEngine.getDifficultyText(card);
 
   /// 保存学习进度
   Future<void> _saveProgress() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       if (_currentBook != null) {
-        await prefs.setString(
-            _currentBookPrefKey, _currentBook!.id.toString());
+        await prefs.setString(_currentBookPrefKey, _currentBook!.id.toString());
         await prefs.setInt(_currentIndexPrefKey, _currentIndex);
         final queueIds = _queue.map((w) => w.id).toList();
         await prefs.setString(_queueSnapshotPrefKey, jsonEncode(queueIds));

@@ -3,8 +3,9 @@
 // 移植自 v3.2 NotLearnedWordsActivity
 // 未学习单词：显示尚未开始学习的单词
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../state/learning_state.dart';
+import '../features/learning/presentation/learning_queue_word_lists_state.dart';
 import '../models/word.dart';
 import 'list_words_page.dart';
 
@@ -22,7 +23,7 @@ class _NotLearnedWordsPageState extends ListWordsPageState<NotLearnedWordsPage> 
   String get pageTitle => '未学习单词';
 
   @override
-  Future<List<Word>> loadWords(LearningState state) async {
-    return state.getNotLearnedWords();
+  Future<List<Word>> loadWordsForContext(BuildContext context) async {
+    return context.read<LearningQueueWordListsState>().notLearnedWords;
   }
 }

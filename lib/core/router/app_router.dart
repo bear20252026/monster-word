@@ -3,64 +3,65 @@
 
 import 'package:flutter/material.dart';
 
-import '../models/book.dart';
-import '../models/word.dart';
-import '../pages/account_info_page.dart';
-import '../pages/appearance_page.dart';
-import '../pages/book_words_page.dart';
-import '../pages/check_in_history_page.dart';
-import '../pages/courses_page.dart';
-import '../pages/dashboard_page.dart';
-import '../pages/dictation_session_page.dart';
-import '../pages/extensive_model_select_page.dart';
-import '../pages/feedback_page.dart';
-import '../pages/foot_mark_page.dart';
-import '../pages/help_page.dart';
-import '../pages/immersive_swipe_page.dart';
-import '../pages/learn_page.dart';
-import '../pages/linked_me_middle_page.dart';
-import '../pages/lib_select_page.dart';
-import '../pages/list_word_listen_page.dart';
-import '../pages/listening_player_page.dart';
-import '../pages/login_page.dart';
-import '../pages/mastered_words_page.dart';
-import '../pages/message_page.dart';
-import '../pages/more_settings_page.dart';
-import '../pages/my_content_page.dart';
-import '../pages/my_equip_page.dart';
-import '../pages/my_fav_page.dart';
-import '../pages/my_fav_sentence_page.dart';
-import '../pages/my_space_page.dart';
-import '../pages/my_words_page.dart';
-import '../pages/net_diagnosis_page.dart';
-import '../pages/new_words_page.dart';
-import '../pages/not_learned_words_page.dart';
-import '../pages/personal_stereo_page.dart';
-import '../pages/play_order_page.dart';
-import '../pages/quick_spell_page.dart';
-import '../pages/redemption_center_page.dart';
-import '../pages/review_page.dart';
-import '../pages/reviewing_words_page.dart';
-import '../pages/scare_coin_history_page.dart';
-import '../pages/search_page.dart';
-import '../pages/sentence_detail_page.dart';
-import '../pages/sentence_quiz_page.dart';
-import '../pages/settings_page.dart';
-import '../pages/spell_check_page.dart';
-import '../pages/spell_session_page.dart';
-import '../pages/splash_page.dart';
-import '../pages/ui_theme_select_page.dart';
-import '../pages/user_info_manage_page.dart';
-import '../pages/word_detail_page.dart';
-import '../pages/word_export_page.dart';
-import '../pages/word_machine_page.dart';
-import '../screens/learn_session.dart';
-import '../screens/profile_screen.dart';
-import '../screens/review_session.dart';
-import '../widgets/transition_widgets.dart';
+import '../../models/book.dart';
+import '../../models/word.dart';
+import '../../pages/account_info_page.dart';
+import '../../pages/appearance_page.dart';
+import '../../pages/book_words_page.dart';
+import '../../pages/check_in_history_page.dart';
+import '../../pages/courses_page.dart';
+import '../../pages/dashboard_page.dart';
+import '../../pages/dictation_session_page.dart';
+import '../../pages/extensive_model_select_page.dart';
+import '../../pages/feedback_page.dart';
+import '../../pages/foot_mark_page.dart';
+import '../../pages/help_page.dart';
+import '../../pages/immersive_swipe_page.dart';
+import '../../pages/learn_page.dart';
+import '../../pages/linked_me_middle_page.dart';
+import '../../pages/lib_select_page.dart';
+import '../../pages/list_word_listen_page.dart';
+import '../../pages/listening_player_page.dart';
+import '../../pages/login_page.dart';
+import '../../pages/mastered_words_page.dart';
+import '../../pages/message_page.dart';
+import '../../pages/more_settings_page.dart';
+import '../../pages/my_content_page.dart';
+import '../../pages/my_equip_page.dart';
+import '../../pages/my_fav_page.dart';
+import '../../pages/my_fav_sentence_page.dart';
+import '../../pages/my_space_page.dart';
+import '../../pages/my_words_page.dart';
+import '../../pages/net_diagnosis_page.dart';
+import '../../pages/new_words_page.dart';
+import '../../pages/not_learned_words_page.dart';
+import '../../pages/personal_stereo_page.dart';
+import '../../pages/play_order_page.dart';
+import '../../pages/quick_spell_page.dart';
+import '../../pages/redemption_center_page.dart';
+import '../../pages/review_page.dart';
+import '../../pages/reviewing_words_page.dart';
+import '../../pages/scare_coin_history_page.dart';
+import '../../pages/search_page.dart';
+import '../../pages/sentence_detail_page.dart';
+import '../../pages/sentence_quiz_page.dart';
+import '../../pages/settings_page.dart';
+import '../../pages/spell_check_page.dart';
+import '../../pages/spell_session_page.dart';
+import '../../pages/splash_page.dart';
+import '../../pages/ui_theme_select_page.dart';
+import '../../pages/user_info_manage_page.dart';
+import '../../pages/word_detail_page.dart';
+import '../../pages/word_export_page.dart';
+import '../../pages/word_machine_page.dart';
+import '../../screens/home_screen.dart';
+import '../../screens/learn_session.dart';
+import '../../screens/review_session.dart';
+import '../../widgets/transition_widgets.dart';
 
 /// 路由名称常量
 class RouteNames {
+  static const String home = '/home';
   static const String learn = '/learn';
   static const String libSelect = '/lib_select';
   static const String bookWords = '/book_words';
@@ -115,7 +116,7 @@ class RouteNames {
 }
 
 /// 路由配置类
-/// 
+///
 /// 集中管理所有路由定义，包括：
 /// - 路由名称常量
 /// - 页面构建逻辑
@@ -127,6 +128,8 @@ class AppRouter {
     final args = settings.arguments;
 
     switch (name) {
+      case RouteNames.home:
+        return const HomeScreen();
       case RouteNames.learn:
         return const LearnPage();
       case RouteNames.libSelect:
@@ -275,10 +278,7 @@ class AppRouter {
       return BookWordsPage(bookId: args.id, bookName: args.name);
     }
     final map = args is Map<String, dynamic> ? args : const <String, dynamic>{};
-    return BookWordsPage(
-      bookId: (map['bookId'] as num?)?.toInt() ?? 0,
-      bookName: (map['bookName'] as String?) ?? '词书',
-    );
+    return BookWordsPage(bookId: (map['bookId'] as num?)?.toInt() ?? 0, bookName: (map['bookName'] as String?) ?? '词书');
   }
 
   static Widget _buildSentenceDetailPage(Object? args) {
@@ -297,26 +297,17 @@ class AppRouter {
       return const _RouteErrorPage(routeName: 'listen_mode_select', message: '缺少必要参数');
     }
     final bookId = (a['bookId'] as num?)?.toInt() ?? 0;
-    return ExtensiveModelSelectPage(
-      bookId: bookId,
-      bookName: a['bookName'] as String? ?? '',
-    );
+    return ExtensiveModelSelectPage(bookId: bookId, bookName: a['bookName'] as String? ?? '');
   }
 
   static Widget _buildSpellCheckPage(Object? args) {
     final a = args is Map<String, dynamic> ? args : null;
-    return SpellCheckPage(
-      word: a?['word'] as String? ?? '',
-      phonetic: a?['phonetic'] as String?,
-    );
+    return SpellCheckPage(word: a?['word'] as String? ?? '', phonetic: a?['phonetic'] as String?);
   }
 
   static Widget _buildLinkedMePage(Object? args) {
     final a = args is Map<String, dynamic> ? args : null;
-    return LinkedMeMiddlePage(
-      word: a?['word'] as String? ?? '',
-      association: a?['association'] as String?,
-    );
+    return LinkedMeMiddlePage(word: a?['word'] as String? ?? '', association: a?['association'] as String?);
   }
 
   static Widget _buildListeningPlayerPage(Object? args) {
@@ -329,11 +320,7 @@ class AppRouter {
     final mode = modeIdx >= 0 && modeIdx < ListeningMode.values.length
         ? ListeningMode.values[modeIdx]
         : ListeningMode.wordOnly;
-    return ListeningPlayerPage(
-      words: words,
-      mode: mode,
-      bookName: a['bookName'] as String? ?? '',
-    );
+    return ListeningPlayerPage(words: words, mode: mode, bookName: a['bookName'] as String? ?? '');
   }
 
   static Widget _buildDictationSessionPage(Object? args) {
@@ -342,10 +329,7 @@ class AppRouter {
       return const _RouteErrorPage(routeName: 'dictation_session', message: '缺少必要参数');
     }
     final words = (a['words'] as List?)?.map((e) => e as Word).toList() ?? [];
-    return DictationSessionPage(
-      words: words,
-      bookName: a['bookName'] as String? ?? '',
-    );
+    return DictationSessionPage(words: words, bookName: a['bookName'] as String? ?? '');
   }
 
   static Widget _buildQuickSpellPage(Object? args) {
@@ -354,10 +338,7 @@ class AppRouter {
       return const _RouteErrorPage(routeName: 'quick_spell', message: '缺少必要参数');
     }
     final words = (a['words'] as List?)?.map((e) => e as Word).toList() ?? [];
-    return QuickSpellPage(
-      words: words,
-      bookName: a['bookName'] as String? ?? '',
-    );
+    return QuickSpellPage(words: words, bookName: a['bookName'] as String? ?? '');
   }
 
   static Widget _buildWordExportPage(Object? args) {
@@ -366,10 +347,7 @@ class AppRouter {
       return const _RouteErrorPage(routeName: 'word_export', message: '缺少必要参数');
     }
     final bookId = (a['bookId'] as num?)?.toInt() ?? 0;
-    return WordExportPage(
-      bookId: bookId,
-      bookName: a['bookName'] as String? ?? '',
-    );
+    return WordExportPage(bookId: bookId, bookName: a['bookName'] as String? ?? '');
   }
 
   /// 路由错误页
@@ -383,10 +361,7 @@ class _RouteErrorPage extends StatelessWidget {
   final String routeName;
   final String message;
 
-  const _RouteErrorPage({
-    required this.routeName,
-    required this.message,
-  });
+  const _RouteErrorPage({required this.routeName, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -402,11 +377,7 @@ class _RouteErrorPage extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 '无法打开 $routeName',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF3D3630),
-                ),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3D3630)),
               ),
               const SizedBox(height: 8),
               Text(

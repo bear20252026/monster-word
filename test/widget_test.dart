@@ -1,6 +1,6 @@
 // 应用启动冒烟测试
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/main.dart';
+import 'package:word_app/app/app.dart';
 import 'package:word_app/core/di/service_locator.dart';
 
 void main() {

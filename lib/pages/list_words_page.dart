@@ -31,7 +31,16 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
   Future<void> refreshData() => _loadData();
 
   String get pageTitle;
-  Future<List<Word>> loadWords(LearningState state);
+
+  /// 兼容既有词表页的遗留状态读取入口。
+  Future<List<Word>> loadWords(LearningState _) {
+    throw UnimplementedError('子类应覆盖 loadWords 或 loadWordsForContext');
+  }
+
+  /// 允许页面从应用层数据源加载词表；默认复用遗留状态读取入口。
+  Future<List<Word>> loadWordsForContext(BuildContext context) {
+    return loadWords(context.read<LearningState>());
+  }
 
   /// 子类可提供的主操作按钮（如「开始学习」FAB）；默认无
   Widget? get learningFab => null;
@@ -44,8 +53,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final state = context.read<LearningState>();
-    final words = await loadWords(state);
+    final words = await loadWordsForContext(context);
     if (mounted) {
       setState(() {
         _words = words;
@@ -95,14 +103,10 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: _isLoading
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        color: MistralColors.primary,
-                      ),
-                    )
+                  ? Center(child: CircularProgressIndicator(color: MistralColors.primary))
                   : _words.isEmpty
-                      ? _buildEmptyView(skin)
-                      : _buildWordList(skin),
+                  ? _buildEmptyView(skin)
+                  : _buildWordList(skin),
             ),
           ],
         ),
@@ -123,12 +127,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text(
-            pageTitle,
-            style: MistralTypography.heading5.copyWith(
-              color: skin.colors.text1,
-            ),
-          ),
+          Text(pageTitle, style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           if (_isBatchEditMode) ...[
             TextButton(
@@ -159,10 +158,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
         children: [
           Icon(Icons.inbox_outlined, size: 64, color: skin.colors.text3),
           const SizedBox(height: 16),
-          Text(
-            '暂无单词',
-            style: MistralTypography.body.copyWith(color: skin.colors.text3),
-          ),
+          Text('暂无单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
           const SizedBox(height: 16),
           TextButton.icon(
             onPressed: () => _loadData(),
@@ -186,9 +182,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
 
         return Dismissible(
           key: ValueKey(word.id),
-          direction: _isBatchEditMode
-              ? DismissDirection.none
-              : DismissDirection.endToStart,
+          direction: _isBatchEditMode ? DismissDirection.none : DismissDirection.endToStart,
           background: Container(
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 20),
@@ -202,14 +196,8 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
                 title: const Text('确认删除'),
                 content: Text('确定要删除 "${word.word}" 吗？'),
                 actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text('取消'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text('删除'),
-                  ),
+                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+                  TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('删除')),
                 ],
               ),
             );
@@ -219,9 +207,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
             // TODO: 从数据库删除
           },
           child: ListTile(
-            onTap: _isBatchEditMode
-                ? () => _toggleSelect(index)
-                : () => _openWordDetail(word),
+            onTap: _isBatchEditMode ? () => _toggleSelect(index) : () => _openWordDetail(word),
             leading: _isBatchEditMode
                 ? Checkbox(
                     value: isSelected,
@@ -229,23 +215,11 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
                     activeColor: MistralColors.primary,
                   )
                 : null,
-            title: Text(
-              word.word,
-              style: MistralTypography.heading5.copyWith(
-                color: skin.colors.text1,
-              ),
-            ),
+            title: Text(word.word, style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
             subtitle: word.usPron.isNotEmpty
-                ? Text(
-                    '/${word.usPron}/',
-                    style: MistralTypography.bodySm.copyWith(
-                      color: skin.colors.text3,
-                    ),
-                  )
+                ? Text('/${word.usPron}/', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3))
                 : null,
-            trailing: _isBatchEditMode
-                ? null
-                : Icon(Icons.chevron_right, color: skin.colors.text3),
+            trailing: _isBatchEditMode ? null : Icon(Icons.chevron_right, color: skin.colors.text3),
           ),
         );
       },

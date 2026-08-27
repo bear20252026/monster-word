@@ -14,6 +14,8 @@ import '../../repositories/note_repository.dart';
 import '../../repositories/note_repository_impl.dart';
 import '../../repositories/fav_repository.dart';
 import '../../repositories/fav_repository_impl.dart';
+import '../../repositories/mastered_repository.dart';
+import '../../repositories/mastered_repository_impl.dart';
 import '../../services/learn_service.dart';
 import '../../services/learn_service_impl.dart';
 import '../../services/review_service.dart';
@@ -28,6 +30,8 @@ import '../../services/stats_service.dart';
 import '../../services/stats_service_impl.dart';
 import '../../repositories/stats_repository.dart';
 import '../../repositories/stats_repository_impl.dart';
+import '../../features/learning/application/book_words_reader.dart';
+import '../../features/learning/application/mastered_words_reader.dart';
 import '../../state/learn_state.dart';
 import '../../state/review_state.dart';
 import '../../state/user_stats_state.dart';
@@ -38,16 +42,16 @@ import '../../state/player_state.dart';
 final GetIt sl = GetIt.instance;
 
 /// 注册所有依赖
-/// 
+///
 /// 在 main() 中调用，必须在 runApp() 之前完成。
-/// 
+///
 /// 使用方式：
 /// ```dart
 /// void main() {
 ///   setupServiceLocator();
 ///   runApp(const MyApp());
 /// }
-/// 
+///
 /// // 在需要的地方获取服务：
 /// final learnService = sl<LearnService>();
 /// ```
@@ -55,53 +59,56 @@ Future<void> setupServiceLocator() async {
   // ========== Data Layer（数据层）==========
   // 数据库单例（只注册一次）
   if (!sl.isRegistered<WordBookDatabase>()) {
-    sl.registerLazySingleton<WordBookDatabase>(
-      () => WordBookDatabase.instance,
-    );
+    sl.registerLazySingleton<WordBookDatabase>(() => WordBookDatabase.instance);
   }
 
   // ========== Repository Layer（仓库层）==========
   // BookRepository
   if (!sl.isRegistered<BookRepository>()) {
-    sl.registerLazySingleton<BookRepository>(
-      () => BookRepositoryImpl(sl<WordBookDatabase>()),
-    );
+    sl.registerLazySingleton<BookRepository>(() => BookRepositoryImpl(sl<WordBookDatabase>()));
   }
 
   // WordRepository
   if (!sl.isRegistered<WordRepository>()) {
-    sl.registerLazySingleton<WordRepository>(
-      () => WordRepositoryImpl(sl<WordBookDatabase>()),
-    );
+    sl.registerLazySingleton<WordRepository>(() => WordRepositoryImpl(sl<WordBookDatabase>()));
   }
 
   // UserRepository
   if (!sl.isRegistered<UserRepository>()) {
-    sl.registerLazySingleton<UserRepository>(
-      () => UserRepositoryImpl(),
-    );
+    sl.registerLazySingleton<UserRepository>(() => UserRepositoryImpl());
   }
 
   // NoteRepository
   if (!sl.isRegistered<NoteRepository>()) {
-    sl.registerLazySingleton<NoteRepository>(
-      () => NoteRepositoryImpl(),
-    );
+    sl.registerLazySingleton<NoteRepository>(() => NoteRepositoryImpl());
   }
 
   // FavRepository
   if (!sl.isRegistered<FavRepository>()) {
-    sl.registerLazySingleton<FavRepository>(
-      () => FavRepositoryImpl(),
+    sl.registerLazySingleton<FavRepository>(() => FavRepositoryImpl());
+  }
+
+  // MasteredRepository
+  if (!sl.isRegistered<MasteredRepository>()) {
+    sl.registerLazySingleton<MasteredRepository>(() => MasteredRepositoryImpl());
+  }
+
+  // BookWordsReader
+  if (!sl.isRegistered<BookWordsReader>()) {
+    sl.registerLazySingleton<BookWordsReader>(() => BookWordsReader(wordRepository: sl<WordRepository>()));
+  }
+
+  // MasteredWordsReader
+  if (!sl.isRegistered<MasteredWordsReader>()) {
+    sl.registerLazySingleton<MasteredWordsReader>(
+      () => MasteredWordsReader(masteredRepository: sl<MasteredRepository>(), wordRepository: sl<WordRepository>()),
     );
   }
 
   // ========== Service Layer（服务层）==========
   // AudioService（音频播放）
   if (!sl.isRegistered<AudioService>()) {
-    sl.registerLazySingleton<AudioService>(
-      () => AudioServiceImpl(),
-    );
+    sl.registerLazySingleton<AudioService>(() => AudioServiceImpl());
   }
 
   // LearnService（学习流程）
@@ -118,44 +125,30 @@ Future<void> setupServiceLocator() async {
   // ReviewService（复习流程）
   if (!sl.isRegistered<ReviewService>()) {
     sl.registerLazySingleton<ReviewService>(
-      () => ReviewServiceImpl(
-        wordRepo: sl<WordRepository>(),
-        audioService: sl<AudioService>(),
-      ),
+      () => ReviewServiceImpl(wordRepo: sl<WordRepository>(), audioService: sl<AudioService>()),
     );
   }
 
   // CheckInService（签到）
   if (!sl.isRegistered<CheckInService>()) {
-    sl.registerLazySingleton<CheckInService>(
-      () => CheckInServiceImpl(
-        userRepo: sl<UserRepository>(),
-      ),
-    );
+    sl.registerLazySingleton<CheckInService>(() => CheckInServiceImpl(userRepo: sl<UserRepository>()));
   }
 
   // UserService（用户）
   if (!sl.isRegistered<UserService>()) {
     sl.registerLazySingleton<UserService>(
-      () => UserServiceImpl(
-        userRepo: sl<UserRepository>(),
-        noteRepo: sl<NoteRepository>(),
-      ),
+      () => UserServiceImpl(userRepo: sl<UserRepository>(), noteRepo: sl<NoteRepository>()),
     );
   }
 
   // StatsService（学习统计）
   if (!sl.isRegistered<StatsService>()) {
-    sl.registerLazySingleton<StatsService>(
-      () => StatsServiceImpl(userRepo: sl<UserRepository>()),
-    );
+    sl.registerLazySingleton<StatsService>(() => StatsServiceImpl(userRepo: sl<UserRepository>()));
   }
 
   // StatsRepository（统计数据仓库）
   if (!sl.isRegistered<StatsRepository>()) {
-    sl.registerLazySingleton<StatsRepository>(
-      () => StatsRepositoryImpl(statsService: sl<StatsService>()),
-    );
+    sl.registerLazySingleton<StatsRepository>(() => StatsRepositoryImpl(statsService: sl<StatsService>()));
   }
 
   // ========== ViewModel Layer（视图模型层）==========
@@ -172,30 +165,22 @@ Future<void> setupServiceLocator() async {
 
   // ReviewState（复习状态）
   if (!sl.isRegistered<ReviewState>()) {
-    sl.registerLazySingleton<ReviewState>(
-      () => ReviewState(reviewService: sl<ReviewService>()),
-    );
+    sl.registerLazySingleton<ReviewState>(() => ReviewState(reviewService: sl<ReviewService>()));
   }
 
   // UserStatsState（用户统计状态）
   if (!sl.isRegistered<UserStatsState>()) {
-    sl.registerLazySingleton<UserStatsState>(
-      () => UserStatsState(statsService: sl<StatsService>()),
-    );
+    sl.registerLazySingleton<UserStatsState>(() => UserStatsState(statsService: sl<StatsService>()));
   }
 
   // SettingsState（设置状态）
   if (!sl.isRegistered<SettingsState>()) {
-    sl.registerLazySingleton<SettingsState>(
-      () => SettingsState(),
-    );
+    sl.registerLazySingleton<SettingsState>(() => SettingsState());
   }
 
   // PlayerState（播放状态）
   if (!sl.isRegistered<PlayerState>()) {
-    sl.registerLazySingleton<PlayerState>(
-      () => PlayerState(audioService: sl<AudioService>()),
-    );
+    sl.registerLazySingleton<PlayerState>(() => PlayerState(audioService: sl<AudioService>()));
   }
 }
 

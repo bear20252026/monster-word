@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
 import '../player/audio_players.dart' show playWordAudio;
-import '../state/learning_state.dart';
+import '../state/learn_state.dart';
 import '../tokens/gameboy.dart';
 import '../widgets/session_exit_guard.dart';
 import '../widgets/text_generate_effect.dart';
@@ -26,8 +26,7 @@ class WordMachinePage extends StatefulWidget {
   State<WordMachinePage> createState() => _WordMachinePageState();
 }
 
-class _WordMachinePageState extends State<WordMachinePage>
-    with TickerProviderStateMixin {
+class _WordMachinePageState extends State<WordMachinePage> with TickerProviderStateMixin {
   int _selectedChoice = -1;
   bool _showResult = false;
   bool _isCorrect = false;
@@ -45,18 +44,14 @@ class _WordMachinePageState extends State<WordMachinePage>
   @override
   void initState() {
     super.initState();
-    _blinkController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    )..repeat(reverse: true);
+    _blinkController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600))
+      ..repeat(reverse: true);
 
-    _shakeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _shakeAnimation = Tween<double>(begin: -4, end: 4).animate(
-      CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
-    );
+    _shakeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _shakeAnimation = Tween<double>(
+      begin: -4,
+      end: 4,
+    ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn));
   }
 
   @override
@@ -68,7 +63,7 @@ class _WordMachinePageState extends State<WordMachinePage>
 
   /// 切换到上一个单词
   void _previousWord() {
-    final state = context.read<LearningState>();
+    final state = context.read<LearnState>();
     if (state.currentIndex > 0) {
       state.jumpTo(state.currentIndex - 1);
       setState(() {
@@ -82,7 +77,7 @@ class _WordMachinePageState extends State<WordMachinePage>
 
   /// 切换到下一个单词
   void _nextWordManual() {
-    final state = context.read<LearningState>();
+    final state = context.read<LearnState>();
     if (state.currentIndex < state.total - 1) {
       state.jumpTo(state.currentIndex + 1);
       setState(() {
@@ -111,7 +106,7 @@ class _WordMachinePageState extends State<WordMachinePage>
   void _onChoice(int index) {
     if (_showResult) return;
 
-    final state = context.read<LearningState>();
+    final state = context.read<LearnState>();
     final word = state.currentWord;
     if (word == null) return;
 
@@ -158,7 +153,7 @@ class _WordMachinePageState extends State<WordMachinePage>
   }
 
   void _nextWord() {
-    final state = context.read<LearningState>();
+    final state = context.read<LearnState>();
     setState(() {
       _selectedChoice = -1;
       _showResult = false;
@@ -178,9 +173,7 @@ class _WordMachinePageState extends State<WordMachinePage>
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: min(400, resp.contentWidth),
-              ),
+              constraints: BoxConstraints(maxWidth: min(400, resp.contentWidth)),
               child: _buildConsole(),
             ),
           ),
@@ -211,11 +204,7 @@ class _WordMachinePageState extends State<WordMachinePage>
           // 屏幕区域
           _buildScreen(),
           // 中间装饰线
-          Container(
-            height: 3,
-            margin: const EdgeInsets.symmetric(horizontal: 32),
-            color: GameBoyPalette.bodyDark,
-          ),
+          Container(height: 3, margin: const EdgeInsets.symmetric(horizontal: 32), color: GameBoyPalette.bodyDark),
           const SizedBox(height: 16),
           // 按钮区域
           _buildControls(),
@@ -241,14 +230,7 @@ class _WordMachinePageState extends State<WordMachinePage>
             decoration: BoxDecoration(
               color: _started ? GameBoyPalette.powerOn : GameBoyPalette.powerOff,
               shape: BoxShape.circle,
-              boxShadow: _started
-                  ? [
-                      BoxShadow(
-                        color: GameBoyPalette.powerOnGlow,
-                        blurRadius: 6,
-                      ),
-                    ]
-                  : null,
+              boxShadow: _started ? [BoxShadow(color: GameBoyPalette.powerOnGlow, blurRadius: 6)] : null,
             ),
           ),
           const SizedBox(width: 12),
@@ -267,10 +249,7 @@ class _WordMachinePageState extends State<WordMachinePage>
           // Dot-One 标识
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: GameBoyPalette.bodyDark,
-              borderRadius: BorderRadius.circular(4),
-            ),
+            decoration: BoxDecoration(color: GameBoyPalette.bodyDark, borderRadius: BorderRadius.circular(4)),
             child: const Text(
               'Dot-One',
               style: TextStyle(
@@ -292,10 +271,7 @@ class _WordMachinePageState extends State<WordMachinePage>
     return AnimatedBuilder(
       listenable: _shakeAnimation,
       builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(_shakeAnimation.value, 0),
-          child: child,
-        );
+        return Transform.translate(offset: Offset(_shakeAnimation.value, 0), child: child);
       },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -313,10 +289,7 @@ class _WordMachinePageState extends State<WordMachinePage>
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(5),
-          child: SizedBox(
-            height: 320,
-            child: _started ? _buildGameScreen() : _buildStartScreen(),
-          ),
+          child: SizedBox(height: 320, child: _started ? _buildGameScreen() : _buildStartScreen()),
         ),
       ),
     );
@@ -333,10 +306,7 @@ class _WordMachinePageState extends State<WordMachinePage>
           Container(
             width: 80,
             height: 80,
-            decoration: BoxDecoration(
-              color: GameBoyPalette.screenDark,
-              borderRadius: BorderRadius.circular(4),
-            ),
+            decoration: BoxDecoration(color: GameBoyPalette.screenDark, borderRadius: BorderRadius.circular(4)),
             child: const Center(
               child: Text(
                 'BB',
@@ -364,19 +334,12 @@ class _WordMachinePageState extends State<WordMachinePage>
           const SizedBox(height: 4),
           const Text(
             'BBDC-Dot-One',
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 12,
-              color: GameBoyPalette.screenMid,
-              letterSpacing: 1,
-            ),
+            style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: GameBoyPalette.screenMid, letterSpacing: 1),
           ),
           const SizedBox(height: 24),
           // 闪烁 PRESS START
           FadeTransition(
-            opacity: _blinkController.drive(
-              Tween<double>(begin: 1.0, end: 0.0),
-            ),
+            opacity: _blinkController.drive(Tween<double>(begin: 1.0, end: 0.0)),
             child: const Text(
               'PRESS START',
               style: TextStyle(
@@ -392,11 +355,7 @@ class _WordMachinePageState extends State<WordMachinePage>
           // 版本号
           const Text(
             'v1.0.0',
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 10,
-              color: GameBoyPalette.screenMid,
-            ),
+            style: TextStyle(fontFamily: 'monospace', fontSize: 10, color: GameBoyPalette.screenMid),
           ),
         ],
       ),
@@ -405,7 +364,7 @@ class _WordMachinePageState extends State<WordMachinePage>
 
   /// 游戏画面
   Widget _buildGameScreen() {
-    final state = context.watch<LearningState>();
+    final state = context.watch<LearnState>();
     final word = state.currentWord;
 
     if (word == null) {
@@ -417,37 +376,22 @@ class _WordMachinePageState extends State<WordMachinePage>
             children: [
               const Text(
                 'CLEAR!',
-                style: TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 16,
-                  color: GameBoyPalette.screenDark,
-                ),
+                style: TextStyle(fontFamily: 'monospace', fontSize: 16, color: GameBoyPalette.screenDark),
               ),
               const SizedBox(height: 8),
               const Text(
                 '今日学习完成',
-                style: TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 10,
-                  color: GameBoyPalette.screenMid,
-                ),
+                style: TextStyle(fontFamily: 'monospace', fontSize: 10, color: GameBoyPalette.screenMid),
               ),
               const SizedBox(height: 12),
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: GameBoyPalette.screenDark,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+                  decoration: BoxDecoration(color: GameBoyPalette.screenDark, borderRadius: BorderRadius.circular(4)),
                   child: const Text(
                     '返回首页',
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 10,
-                      color: GameBoyPalette.screenBg,
-                    ),
+                    style: TextStyle(fontFamily: 'monospace', fontSize: 10, color: GameBoyPalette.screenBg),
                   ),
                 ),
               ),
@@ -482,9 +426,7 @@ class _WordMachinePageState extends State<WordMachinePage>
   Widget _buildStatusBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: const BoxDecoration(
-        color: GameBoyPalette.screenDark,
-      ),
+      decoration: const BoxDecoration(color: GameBoyPalette.screenDark),
       child: Row(
         children: [
           Text(
@@ -503,9 +445,7 @@ class _WordMachinePageState extends State<WordMachinePage>
               fontFamily: 'monospace',
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: _streak > 0
-                  ? GameBoyPalette.screenLight
-                  : GameBoyPalette.screenMid,
+              color: _streak > 0 ? GameBoyPalette.screenLight : GameBoyPalette.screenMid,
             ),
           ),
         ],
@@ -533,11 +473,7 @@ class _WordMachinePageState extends State<WordMachinePage>
           if (word.usPron.isNotEmpty)
             Text(
               '/${word.usPron}/',
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 12,
-                color: GameBoyPalette.screenMid,
-              ),
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: GameBoyPalette.screenMid),
             ),
         ],
       ),
@@ -550,17 +486,13 @@ class _WordMachinePageState extends State<WordMachinePage>
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: const Text(
         'Choose the correct meaning:',
-        style: TextStyle(
-          fontFamily: 'monospace',
-          fontSize: 11,
-          color: GameBoyPalette.screenMid,
-        ),
+        style: TextStyle(fontFamily: 'monospace', fontSize: 11, color: GameBoyPalette.screenMid),
       ),
     );
   }
 
   /// 4 个选项
-  Widget _buildChoiceGrid(LearningState state) {
+  Widget _buildChoiceGrid(LearnState state) {
     final choices = state.choices;
     return Padding(
       padding: const EdgeInsets.all(8),
@@ -578,7 +510,7 @@ class _WordMachinePageState extends State<WordMachinePage>
   }
 
   /// 单个选项按钮
-  Widget _buildChoiceButton(int index, dynamic choice, LearningState state) {
+  Widget _buildChoiceButton(int index, dynamic choice, LearnState state) {
     final word = state.currentWord;
     final isCorrectChoice = choice.word == word?.word;
     final isSelected = _selectedChoice == index;
@@ -610,12 +542,7 @@ class _WordMachinePageState extends State<WordMachinePage>
         child: Center(
           child: Text(
             choice.interpret.toString().split('；').first,
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: textColor,
-            ),
+            style: TextStyle(fontFamily: 'monospace', fontSize: 12, fontWeight: FontWeight.w700, color: textColor),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
@@ -637,9 +564,7 @@ class _WordMachinePageState extends State<WordMachinePage>
             fontFamily: 'monospace',
             fontSize: 14,
             fontWeight: FontWeight.w900,
-            color: _isCorrect
-                ? GameBoyPalette.screenLight
-                : GameBoyPalette.errorFg,
+            color: _isCorrect ? GameBoyPalette.screenLight : GameBoyPalette.errorFg,
             letterSpacing: 2,
           ),
         ),
@@ -649,7 +574,7 @@ class _WordMachinePageState extends State<WordMachinePage>
 
   /// 播放发音
   void _playPronunciation() {
-    final state = context.read<LearningState>();
+    final state = context.read<LearnState>();
     final word = state.currentWord;
     if (word == null) return;
     // 使用 TTS 或在线音频播放
@@ -663,25 +588,19 @@ class _WordMachinePageState extends State<WordMachinePage>
     } catch (e) {
       debugPrint('Audio playback error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('🔊 $wordText'),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('🔊 $wordText'), duration: const Duration(seconds: 1)));
       }
     }
   }
 
   /// 构建单词详情面板（BoxReveal 动画展开/收起）
   Widget _buildWordDetails() {
-    final state = context.read<LearningState>();
+    final state = context.read<LearnState>();
     final word = state.currentWord;
     if (word == null) return const SizedBox.shrink();
 
-    final meaningText = word.hasStructuredDefinitions
-        ? word.formattedDefinitions
-        : word.interpret;
+    final meaningText = word.hasStructuredDefinitions ? word.formattedDefinitions : word.interpret;
 
     return BoxReveal(
       direction: BoxRevealDirection.top,
@@ -705,25 +624,15 @@ class _WordMachinePageState extends State<WordMachinePage>
                 if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[
                   Text(
                     '🔊 ${word.usPron}  ${word.ukPron}',
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 11,
-                      color: GameBoyPalette.screenLight,
-                    ),
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: GameBoyPalette.screenLight),
                   ),
                   const SizedBox(height: 4),
                 ],
                 // 释义（优先结构化释义）
                 if (meaningText.isNotEmpty) ...[
                   Text(
-                    meaningText.length > 80
-                        ? '${meaningText.substring(0, 80)}...'
-                        : meaningText,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 10,
-                      color: GameBoyPalette.screenLight,
-                    ),
+                    meaningText.length > 80 ? '${meaningText.substring(0, 80)}...' : meaningText,
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 10, color: GameBoyPalette.screenLight),
                   ),
                   const SizedBox(height: 4),
                 ],
@@ -731,21 +640,11 @@ class _WordMachinePageState extends State<WordMachinePage>
                 if (word.example.isNotEmpty) ...[
                   const Text(
                     '📖 例句:',
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 9,
-                      color: GameBoyPalette.screenMid,
-                    ),
+                    style: TextStyle(fontFamily: 'monospace', fontSize: 9, color: GameBoyPalette.screenMid),
                   ),
                   TextGenerateEffect(
-                    text: word.example.length > 80
-                        ? '${word.example.substring(0, 80)}...'
-                        : word.example,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 9,
-                      color: GameBoyPalette.screenLight,
-                    ),
+                    text: word.example.length > 80 ? '${word.example.substring(0, 80)}...' : word.example,
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 9, color: GameBoyPalette.screenLight),
                     duration: const Duration(milliseconds: 800),
                   ),
                   const SizedBox(height: 4),
@@ -754,19 +653,11 @@ class _WordMachinePageState extends State<WordMachinePage>
                 if (word.wordRoot.isNotEmpty) ...[
                   const Text(
                     '🌱 词根:',
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 9,
-                      color: GameBoyPalette.screenMid,
-                    ),
+                    style: TextStyle(fontFamily: 'monospace', fontSize: 9, color: GameBoyPalette.screenMid),
                   ),
                   Text(
                     word.wordRoot,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 9,
-                      color: GameBoyPalette.screenLight,
-                    ),
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 9, color: GameBoyPalette.screenLight),
                   ),
                 ],
               ],
@@ -939,10 +830,7 @@ class _WordMachinePageState extends State<WordMachinePage>
           Container(
             width: 24,
             height: 24,
-            decoration: BoxDecoration(
-              color: GameBoyPalette.dpadGray,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: GameBoyPalette.dpadGray, shape: BoxShape.circle),
           ),
         ],
       ),
@@ -962,10 +850,7 @@ class _WordMachinePageState extends State<WordMachinePage>
               width: 40,
               height: 3,
               margin: const EdgeInsets.only(bottom: 4),
-              decoration: BoxDecoration(
-                color: GameBoyPalette.bodyDark,
-                borderRadius: BorderRadius.circular(1),
-              ),
+              decoration: BoxDecoration(color: GameBoyPalette.bodyDark, borderRadius: BorderRadius.circular(1)),
             ),
           ),
         ),
@@ -979,12 +864,7 @@ class AnimatedBuilder extends AnimatedWidget {
   final Widget Function(BuildContext, Widget?) builder;
   final Widget? child;
 
-  const AnimatedBuilder({
-    super.key,
-    required super.listenable,
-    required this.builder,
-    this.child,
-  });
+  const AnimatedBuilder({super.key, required super.listenable, required this.builder, this.child});
 
   @override
   Widget build(BuildContext context) {

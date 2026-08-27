@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
+import '../features/learning/presentation/learning_collections_state.dart';
 import '../hooks/responsive.dart';
-import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/func_colors.dart';
 import '../tokens/design_tokens.dart';
@@ -67,9 +67,8 @@ class MyContentPage extends StatelessWidget {
                     // 列表组 2：单词本 / 句库 / 笔记
                     _ListGroup(
                       children: [
-                        // 用 Selector 只订阅 favoriteCount，避免 LearningState
-                        // 任意变化导致整页 rebuild
-                        Selector<LearningState, int>(
+                        // 只订阅收藏计数快照，避免集合以外的状态变化导致整页 rebuild。
+                        Selector<LearningCollectionsState, int>(
                           selector: (_, s) => s.favoriteCount,
                           builder: (context, favCount, _) => _ListItem(
                             icon: Icons.book_outlined,
@@ -77,8 +76,7 @@ class MyContentPage extends StatelessWidget {
                             title: '单词本',
                             value: '$favCount 词',
                             skin: skin,
-                            onTap: () =>
-                                Navigator.pushNamed(context, MyFavPage.routeName),
+                            onTap: () => Navigator.pushNamed(context, MyFavPage.routeName),
                           ),
                         ),
                         _ListItem(
@@ -128,17 +126,18 @@ class _NavBar extends StatelessWidget {
           ),
           Expanded(
             child: Center(
-              child: Text('我的内容',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1)),
+              child: Text(
+                '我的内容',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
+              ),
             ),
           ),
           IconButton(
             icon: Icon(Icons.lightbulb_outline, size: 22, color: skin.text1),
             tooltip: '提示',
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('提示功能开发中...'), duration: Duration(seconds: 1)),
-              );
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text('提示功能开发中...'), duration: Duration(seconds: 1)));
             },
           ),
         ],
@@ -190,9 +189,7 @@ class _HorizontalCards extends StatelessWidget {
               iconBg: FuncColors.info,
               title: '听写',
               skin: skin,
-              children: [
-                _MiniCard(title: '单元测', count: '', accent: FuncColors.info, skin: skin),
-              ],
+              children: [_MiniCard(title: '单元测', count: '', accent: FuncColors.info, skin: skin)],
             ),
           ),
         ],
@@ -225,13 +222,7 @@ class _FeatureCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: iconBg.withValues(alpha: 0.2),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: iconBg.withValues(alpha: 0.2), blurRadius: 16, offset: const Offset(0, 6))],
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -242,23 +233,21 @@ class _FeatureCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: 28, height: 28,
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    shape: BoxShape.circle,
-                  ),
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
                   child: Icon(icon, color: AppColors.white100, size: 15),
                 ),
                 const SizedBox(width: 8),
-                Text(title,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: skin.text1)),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: skin.text1),
+                ),
               ],
             ),
             const SizedBox(height: 12),
             // 子卡片行
-            Expanded(
-              child: Row(children: children),
-            ),
+            Expanded(child: Row(children: children)),
           ],
         ),
       ),
@@ -287,22 +276,21 @@ class _MiniCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: skin.text1)),
+            Text(
+              title,
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: skin.text1),
+            ),
             if (count.isNotEmpty) ...[
               const SizedBox(height: 2),
-              Text(count,
-                style: TextStyle(fontSize: 12, color: skin.text3)),
+              Text(count, style: TextStyle(fontSize: 12, color: skin.text3)),
             ],
             const Spacer(),
             Align(
               alignment: Alignment.centerRight,
               child: Container(
-                width: 28, height: 28,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(color: accent.withValues(alpha: 0.15), shape: BoxShape.circle),
                 child: Icon(Icons.play_arrow, color: accent, size: 18),
               ),
             ),
@@ -322,10 +310,7 @@ class _ListGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     return Container(
-      decoration: BoxDecoration(
-        color: skin.cardBg,
-        borderRadius: BorderRadius.circular(14),
-      ),
+      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(14)),
       child: Column(
         children: [
           for (int i = 0; i < children.length; i++) ...[
@@ -370,7 +355,8 @@ class _ListItem extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 36, height: 36,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: iconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
@@ -379,14 +365,14 @@ class _ListItem extends StatelessWidget {
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: Text(title,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: skin.text1)),
+              child: Text(
+                title,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: skin.text1),
+              ),
             ),
-            Text(value,
-              style: TextStyle(fontSize: 14, color: skin.text3)),
+            Text(value, style: TextStyle(fontSize: 14, color: skin.text3)),
             const SizedBox(width: 4),
-            if (onTap != null)
-              Icon(Icons.chevron_right, size: 20, color: skin.text3),
+            if (onTap != null) Icon(Icons.chevron_right, size: 20, color: skin.text3),
           ],
         ),
       ),

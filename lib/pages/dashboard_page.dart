@@ -3,11 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../features/learning/presentation/learning_statistics_state.dart';
 import '../hooks/responsive.dart';
 import '../models/book.dart';
 import '../pages/scare_coin_history_page.dart';
 import '../services/share_image_service.dart';
-import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -18,9 +18,9 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<LearningState>();
+    final state = context.watch<LearningStatisticsState>();
     final book = state.currentBook;
-    final learned = state.learnedNum;
+    final learned = state.learnedCount;
     final skin = context.skin.colors;
 
     return Scaffold(
@@ -40,14 +40,11 @@ class DashboardPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // 正在学习
-                        Text(
-                          '正在学习',
-                          style: MistralTypography.heading4.copyWith(color: skin.text1),
-                        ),
+                        Text('正在学习', style: MistralTypography.heading4.copyWith(color: skin.text1)),
                         const SizedBox(height: 12),
-                        _buildCurrentBookCard(context, state, book, learned, skin),
+                        _buildCurrentBookCard(context, book, learned, skin),
                         const SizedBox(height: 24),
-                        _buildMyDataSection(context, state, book, learned, skin),
+                        _buildMyDataSection(context, state, skin),
                       ],
                     ),
                   ),
@@ -68,10 +65,7 @@ class DashboardPage extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 4),
-          Text(
-            '仪表盘',
-            style: MistralTypography.heading5.copyWith(color: skin.text1),
-          ),
+          Text('仪表盘', style: MistralTypography.heading5.copyWith(color: skin.text1)),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.share, size: 20),
@@ -85,7 +79,7 @@ class DashboardPage extends StatelessWidget {
   }
 
   /// 当前词书卡片（封面 + 名称 + 学习进度条）
-  Widget _buildCurrentBookCard(BuildContext context, LearningState state, Book? book, int learned, ThemeVars skin) {
+  Widget _buildCurrentBookCard(BuildContext context, Book? book, int learned, ThemeVars skin) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -112,10 +106,7 @@ class DashboardPage extends StatelessWidget {
                 child: Center(
                   child: Text(
                     _shortName(book?.name ?? '未选择'),
-                    style: MistralTypography.micro.copyWith(
-                      color: AppColors.white100,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: MistralTypography.micro.copyWith(color: AppColors.white100, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -126,16 +117,10 @@ class DashboardPage extends StatelessWidget {
                   children: [
                     Text(
                       book?.name ?? '请先选择词书',
-                      style: MistralTypography.bodyMd.copyWith(
-                        color: skin.text1,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      '${book?.wordCount ?? 0} 词',
-                      style: MistralTypography.bodySm.copyWith(color: skin.text3),
-                    ),
+                    Text('${book?.wordCount ?? 0} 词', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
                   ],
                 ),
               ),
@@ -155,15 +140,9 @@ class DashboardPage extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              Text(
-                '已学习 $learned',
-                style: MistralTypography.bodySm.copyWith(color: skin.text3),
-              ),
+              Text('已学习 $learned', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
               const Spacer(),
-              Text(
-                '总词数 ${book?.wordCount ?? 0}',
-                style: MistralTypography.bodySm.copyWith(color: skin.text3),
-              ),
+              Text('总词数 ${book?.wordCount ?? 0}', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
             ],
           ),
         ],
@@ -172,15 +151,12 @@ class DashboardPage extends StatelessWidget {
   }
 
   /// 我的数据统计卡片
-  Widget _buildMyDataSection(BuildContext context, LearningState state, Book? book, int learned, ThemeVars skin) {
+  Widget _buildMyDataSection(BuildContext context, LearningStatisticsState state, ThemeVars skin) {
     final resp = context.responsive;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '我的数据',
-          style: MistralTypography.heading4.copyWith(color: skin.text1),
-        ),
+        Text('我的数据', style: MistralTypography.heading4.copyWith(color: skin.text1)),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(20),
@@ -197,7 +173,7 @@ class DashboardPage extends StatelessWidget {
   }
 
   /// FSRS-6 记忆统计面板
-  Widget _buildFsrsStats(BuildContext context, LearningState state, ThemeVars skin, AppResponsive resp) {
+  Widget _buildFsrsStats(BuildContext context, LearningStatisticsState state, ThemeVars skin, AppResponsive resp) {
     final stats = state.memoryStats;
     final todayStats = state.todayStats;
     final newCount = stats['new'] ?? 0;
@@ -209,15 +185,25 @@ class DashboardPage extends StatelessWidget {
     if (resp.isDesktop) {
       return Row(
         children: [
-          Expanded(child: _DataItem(label: '新词', value: '$newCount', color: Colors.blue)),
+          Expanded(
+            child: _DataItem(label: '新词', value: '$newCount', color: Colors.blue),
+          ),
           Container(width: 1, height: 40, color: skin.divider),
-          Expanded(child: _DataItem(label: '学习中', value: '$learningCount', color: Colors.orange)),
+          Expanded(
+            child: _DataItem(label: '学习中', value: '$learningCount', color: Colors.orange),
+          ),
           Container(width: 1, height: 40, color: skin.divider),
-          Expanded(child: _DataItem(label: '待复习', value: '$dueCount', color: Colors.red)),
+          Expanded(
+            child: _DataItem(label: '待复习', value: '$dueCount', color: Colors.red),
+          ),
           Container(width: 1, height: 40, color: skin.divider),
-          Expanded(child: _DataItem(label: '已掌握', value: '$matureCount', color: Colors.green)),
+          Expanded(
+            child: _DataItem(label: '已掌握', value: '$matureCount', color: Colors.green),
+          ),
           Container(width: 1, height: 40, color: skin.divider),
-          Expanded(child: _DataItem(label: '总词汇', value: '$totalCount')),
+          Expanded(
+            child: _DataItem(label: '总词汇', value: '$totalCount'),
+          ),
         ],
       );
     }
@@ -252,9 +238,8 @@ class DashboardPage extends StatelessWidget {
   Future<void> _sharePoster(BuildContext context) async {
     try {
       // 显示 loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('正在生成分享图...'), duration: Duration(seconds: 1)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('正在生成分享图...'), duration: Duration(seconds: 1)));
 
       // 获取用户数据（临时使用 ScareCoinLedger 获取签到数据）
       final totalDays = (await ScareCoinLedger.checkinDates()).length;
@@ -268,9 +253,7 @@ class DashboardPage extends StatelessWidget {
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('分享失败: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('分享失败: $e')));
       }
     }
   }
@@ -289,16 +272,10 @@ class _DataItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: MistralTypography.heading3.copyWith(
-            color: color ?? skin.success,
-            fontWeight: FontWeight.bold,
-          ),
+          style: MistralTypography.heading3.copyWith(color: color ?? skin.success, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: MistralTypography.bodySm.copyWith(color: skin.text3),
-        ),
+        Text(label, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
       ],
     );
   }

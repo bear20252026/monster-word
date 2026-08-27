@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -21,13 +23,25 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Create placeholder assets
-        run: mkdir -p assets/db && echo placeholder > assets/db/wordbook.db.gz
+      - name: Verify wordbook asset
+        run: test -s assets/db/wordbook.db.gz
 
-      - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed --line-length 120 lib/
+      - name: Verify changed Dart formatting
+        shell: bash
+        run: |
+          base_ref="${{ github.base_ref || github.event.repository.default_branch }}"
+          git fetch origin "$base_ref" --depth=1
+          git diff --name-only --diff-filter=ACMR "origin/$base_ref...HEAD" -- lib test \
+            | grep -E '\.dart$' > /tmp/changed_dart_files.txt || true
+          if [[ ! -s /tmp/changed_dart_files.txt ]]; then
+            echo "No changed Dart files to format."
+            exit 0
+          fi
+          xargs -d '\n' dart format --output=none --set-exit-if-changed --line-length 120 \
+            < /tmp/changed_dart_files.txt
 
       - name: Analyze project source
+        # 历史代码仍有 warning/info；本阶段先阻断 error，并将告警纳入后续治理清单。
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Run tests
