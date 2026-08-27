@@ -27,16 +27,17 @@ class WordApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ...buildLearningFeatureProviders(),
-        ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
-        ChangeNotifierProvider(create: (_) => sl<SettingsState>()..init()),
-        ChangeNotifierProvider(create: (_) => sl<PlayerState>()),
-        ChangeNotifierProvider(create: (_) => SkinSystem()),
-        ChangeNotifierProvider(create: (_) => WallpaperState()),
-      ],
-      child: const _AppLifecycle(),
+    return buildLearningFeatureScope(
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
+          ChangeNotifierProvider(create: (_) => sl<SettingsState>()..init()),
+          ChangeNotifierProvider(create: (_) => sl<PlayerState>()),
+          ChangeNotifierProvider(create: (_) => SkinSystem()),
+          ChangeNotifierProvider(create: (_) => WallpaperState()),
+        ],
+        child: const _AppLifecycle(),
+      ),
     );
   }
 }

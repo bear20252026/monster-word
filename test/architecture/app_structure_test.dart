@@ -15,7 +15,7 @@ void main() {
       expect(bootstrapSource, isNot(contains("import '../pages/")));
       expect(bootstrapSource, isNot(contains('MaterialApp')));
       expect(appSource, contains('AppRouter.buildPage(settings)'));
-      expect(appSource, contains('...buildLearningFeatureProviders()'));
+      expect(appSource, contains('buildLearningFeatureScope('));
       expect(appSource, isNot(contains("import '../state/learning_state.dart';")));
       expect(appSource, isNot(contains("import '../features/learning/application/")));
     });

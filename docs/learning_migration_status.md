@@ -109,7 +109,7 @@
 
 ## 学习功能域根装配边界
 
-学习功能的 Provider 现集中在 `learning_feature_providers.dart`。其中保留原有创建顺序：独立的复习调度仓储先于兼容 `LearningState`，评分写入端口先于正式 `ReviewSessionState`；音频状态仍为应用级 Provider，读取器仍以依赖容器中的既有实例提供。`WordApp` 只展开该功能域装配清单，再组合主题、壁纸、设置、播放和用户统计等全局状态。
+学习功能的 Provider 现集中在 `learning_feature_providers.dart`。其中保留原有创建顺序：独立的复习调度仓储先于兼容 `LearningState`，评分写入端口先于正式 `ReviewSessionState`；音频状态仍为应用级 Provider，读取器仍以依赖容器中的既有实例提供。`WordApp` 只嵌套该功能域 Provider 作用域，再组合主题、壁纸、设置、播放和用户统计等全局状态。
 
 这项拆分不改变任何 Provider 的生命周期或服务定位器注册方式，也不把功能域依赖反向拉回页面。后续迁移某个学习状态时，应修改功能域装配文件及其契约测试，而不是再次向应用根增加具体学习实现类型。
 

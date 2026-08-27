@@ -27,55 +27,58 @@ import 'review_word_actions_state.dart';
 /// 按原有顺序保留依赖关系和生命周期：正式复习调度仓储先于遗留兼容状态创建，
 /// 评分端口先于正式复习会话创建。应用根仅组合功能域装配，不感知学习功能内部的
 /// Provider 类型或迁移细节。
-List<SingleChildWidget> buildLearningFeatureProviders() {
-  return [
-    ChangeNotifierProvider<ReviewScheduleRepository>.value(value: sl<ReviewScheduleRepository>()),
-    ChangeNotifierProvider(
-      create: (_) => LearningState(
-        favRepository: sl<FavRepository>(),
-        masteredRepository: sl<MasteredRepository>(),
-        reviewSchedule: sl<ReviewScheduleRepository>(),
+Widget buildLearningFeatureScope({required Widget child}) {
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider<ReviewScheduleRepository>.value(value: sl<ReviewScheduleRepository>()),
+      ChangeNotifierProvider(
+        create: (_) => LearningState(
+          favRepository: sl<FavRepository>(),
+          masteredRepository: sl<MasteredRepository>(),
+          reviewSchedule: sl<ReviewScheduleRepository>(),
+        ),
       ),
-    ),
-    ChangeNotifierProxyProvider<LearningState, LearningStatisticsState>(
-      create: (_) => LearningStatisticsState(),
-      update: (_, legacy, statistics) => (statistics ?? LearningStatisticsState())..synchronizeFrom(legacy),
-    ),
-    ChangeNotifierProxyProvider<LearningState, LearningCollectionsState>(
-      create: (_) => LearningCollectionsState(),
-      update: (_, legacy, collections) => (collections ?? LearningCollectionsState())..synchronizeFrom(legacy),
-    ),
-    ChangeNotifierProxyProvider<LearningState, LearningQueueWordListsState>(
-      create: (_) => LearningQueueWordListsState(),
-      update: (_, legacy, wordLists) => (wordLists ?? LearningQueueWordListsState())..synchronizeFrom(legacy),
-    ),
-    ChangeNotifierProxyProvider2<LearningState, ReviewScheduleRepository, ReviewQueueState>(
-      create: (_) => ReviewQueueState(),
-      update: (_, legacy, schedule, reviewQueue) =>
-          (reviewQueue ?? ReviewQueueState())..synchronize(queue: legacy.queue, schedule: schedule),
-    ),
-    ProxyProvider<ReviewScheduleRepository, ReviewRatingWriter>(
-      update: (_, schedule, _) => ReviewRatingWriter(writeRating: schedule.rateWord),
-    ),
-    ChangeNotifierProxyProvider<ReviewRatingWriter, ReviewSessionState>(
-      create: (context) =>
-          ReviewSessionState(queueReader: sl<ReviewQueueReader>(), ratingWriter: context.read<ReviewRatingWriter>()),
-      update: (_, ratingWriter, session) =>
-          (session ?? ReviewSessionState(queueReader: sl<ReviewQueueReader>(), ratingWriter: ratingWriter))
-            ..updateRatingWriter(ratingWriter),
-    ),
-    ChangeNotifierProvider(
-      create: (_) =>
-          ReviewWordActionsState(favRepository: sl<FavRepository>(), masteredRepository: sl<MasteredRepository>())
-            ..initialize(),
-    ),
-    ChangeNotifierProvider(create: (_) => ReviewAudioState(audioPlayer: sl<ReviewAudioPlayer>())),
-    Provider<BookWordsReader>.value(value: sl<BookWordsReader>()),
-    Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),
-    Provider<NewWordsReader>.value(value: sl<NewWordsReader>()),
-    Provider<ReviewQueueReader>.value(value: sl<ReviewQueueReader>()),
-    ChangeNotifierProvider(create: (_) => sl<NewWordsState>()..initialize()),
-    ChangeNotifierProvider(create: (_) => sl<LearnState>()),
-    ChangeNotifierProvider(create: (_) => sl<ReviewState>()),
-  ];
+      ChangeNotifierProxyProvider<LearningState, LearningStatisticsState>(
+        create: (_) => LearningStatisticsState(),
+        update: (_, legacy, statistics) => (statistics ?? LearningStatisticsState())..synchronizeFrom(legacy),
+      ),
+      ChangeNotifierProxyProvider<LearningState, LearningCollectionsState>(
+        create: (_) => LearningCollectionsState(),
+        update: (_, legacy, collections) => (collections ?? LearningCollectionsState())..synchronizeFrom(legacy),
+      ),
+      ChangeNotifierProxyProvider<LearningState, LearningQueueWordListsState>(
+        create: (_) => LearningQueueWordListsState(),
+        update: (_, legacy, wordLists) => (wordLists ?? LearningQueueWordListsState())..synchronizeFrom(legacy),
+      ),
+      ChangeNotifierProxyProvider2<LearningState, ReviewScheduleRepository, ReviewQueueState>(
+        create: (_) => ReviewQueueState(),
+        update: (_, legacy, schedule, reviewQueue) =>
+            (reviewQueue ?? ReviewQueueState())..synchronize(queue: legacy.queue, schedule: schedule),
+      ),
+      ProxyProvider<ReviewScheduleRepository, ReviewRatingWriter>(
+        update: (_, schedule, _) => ReviewRatingWriter(writeRating: schedule.rateWord),
+      ),
+      ChangeNotifierProxyProvider<ReviewRatingWriter, ReviewSessionState>(
+        create: (context) =>
+            ReviewSessionState(queueReader: sl<ReviewQueueReader>(), ratingWriter: context.read<ReviewRatingWriter>()),
+        update: (_, ratingWriter, session) =>
+            (session ?? ReviewSessionState(queueReader: sl<ReviewQueueReader>(), ratingWriter: ratingWriter))
+              ..updateRatingWriter(ratingWriter),
+      ),
+      ChangeNotifierProvider(
+        create: (_) =>
+            ReviewWordActionsState(favRepository: sl<FavRepository>(), masteredRepository: sl<MasteredRepository>())
+              ..initialize(),
+      ),
+      ChangeNotifierProvider(create: (_) => ReviewAudioState(audioPlayer: sl<ReviewAudioPlayer>())),
+      Provider<BookWordsReader>.value(value: sl<BookWordsReader>()),
+      Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),
+      Provider<NewWordsReader>.value(value: sl<NewWordsReader>()),
+      Provider<ReviewQueueReader>.value(value: sl<ReviewQueueReader>()),
+      ChangeNotifierProvider(create: (_) => sl<NewWordsState>()..initialize()),
+      ChangeNotifierProvider(create: (_) => sl<LearnState>()),
+      ChangeNotifierProvider(create: (_) => sl<ReviewState>()),
+    ],
+    child: child,
+  );
 }
