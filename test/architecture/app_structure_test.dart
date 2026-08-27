@@ -61,6 +61,20 @@ void main() {
     });
   });
 
+  group('正式复习会话状态边界', () {
+    test('主复习页通过会话展示状态管理本地题目与进度', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+
+      expect(appSource, contains('ChangeNotifierProxyProvider<ReviewRatingWriter, ReviewSessionState>'));
+      expect(pageSource, contains('ReviewSessionState'));
+      expect(pageSource, contains('context.watch<ReviewSessionState>()'));
+      expect(pageSource, isNot(contains('SuperMemoryEngine')));
+      expect(pageSource, isNot(contains('ChoiceGenerator')));
+      expect(pageSource, isNot(contains('ReviewQueueReader')));
+    });
+  });
+
   group('复习评分写入边界', () {
     test('主复习页通过评分写入端口提交 FSRS 评分', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();

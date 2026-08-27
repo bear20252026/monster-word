@@ -4,15 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/di/service_locator.dart';
-import '../engine/core_engine.dart' show WordChoicePair;
-import '../features/learning/application/review_queue_reader.dart';
-import '../features/learning/application/review_rating_writer.dart';
-import '../features/learning/domain/choice_generator.dart';
 import '../features/learning/presentation/review_queue_state.dart';
-import '../engine/fsrs6_engine.dart' show FsrsRating;
+import '../features/learning/presentation/review_session_state.dart';
 import '../services/audio_service.dart';
 import '../engine/srs_engine.dart';
-import '../engine/super_memory_engine.dart';
 import '../hooks/responsive.dart';
 import '../models/bb_word_process.dart';
 import '../models/word.dart';
@@ -33,12 +28,6 @@ class ReviewPage extends StatefulWidget {
 }
 
 class _ReviewPageState extends State<ReviewPage> {
-  final SuperMemoryEngine _engine = SuperMemoryEngine();
-  bool _initialized = false;
-  bool _showAnswer = false;
-  List<WordChoicePair> _choices = [];
-  int _total = 0;
-  int _done = 0;
   int _wrongChoiceIndex = -1;
   bool _isFavorited = false;
   bool _canUndo = false;
@@ -50,98 +39,38 @@ class _ReviewPageState extends State<ReviewPage> {
     _initReview();
   }
 
-  /// 初始化复习（使用 FSRS-6 到期调度）
+  /// 初始化正式复习会话，队列读取与本地引擎推进由展示状态负责。
   Future<void> _initReview() async {
     try {
       final reviewQueue = context.read<ReviewQueueState>();
-      final pool = await context.read<ReviewQueueReader>().loadWords(reviewQueue.snapshot);
-      final processes = pool
-          .map(
-            (w) => BBWordProcess(
-              word: w.word,
-              wordId: w.id,
-              interpret: w.interpret,
-              usPron: w.usPron,
-              ukPron: w.ukPron,
-              example: w.example,
-            ),
-          )
-          .toList();
-      _engine.init(processes);
-      _total = _engine.totalNum;
-      _done = 0;
-      _initialized = true;
-      _regenerateChoices();
-      if (mounted) setState(() {});
+      await context.read<ReviewSessionState>().initialize(reviewQueue.snapshot);
     } catch (e) {
       debugPrint('[ReviewPage] init error: $e');
-      _initialized = true;
-      if (mounted) setState(() {});
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('加载复习数据失败: $e'),
-            action: SnackBarAction(
-              label: '重试',
-              onPressed: () {
-                _initialized = false;
-                _initReview();
-              },
-            ),
+            action: SnackBarAction(label: '重试', onPressed: _initReview),
           ),
         );
       }
     }
   }
 
-  /// 通过共享规则生成四选一候选：释义去重、中文优先和稳定兜底与学习流程保持一致。
-  void _regenerateChoices() {
-    final current = _engine.currentWord();
-    if (current == null) return;
-
-    final choices = ChoiceGenerator.generate(
-      correct: ChoiceCandidate(word: current.word, interpret: current.interpret),
-      candidates: _engine.reviewList.map((word) => ChoiceCandidate(word: word.word, interpret: word.interpret)),
-    );
-    _choices = choices.map((choice) => WordChoicePair(choice.word, choice.interpret)).toList();
-  }
-
-  /// 评分（同步到本地会话引擎与 FSRS-6 持久化）。
+  /// 提交本题评分；会话状态保留本地引擎推进与按词 FSRS 写入顺序。
   void _rate(RecallRating rating) {
-    // 引擎评分会推进或移除当前题目，因此必须先保存实际作答词。
-    final reviewedWord = _engine.currentWord();
-    if (reviewedWord == null) return;
-
-    switch (rating) {
-      case RecallRating.again:
-        _engine.iDontKnow();
-      case RecallRating.hard:
-        _engine.iMayKnow();
-      case RecallRating.good:
-        _engine.iReallyKnow();
-      case RecallRating.easy:
-        _engine.tooEasy();
-    }
-    final fsrsRating = switch (rating) {
-      RecallRating.again => FsrsRating.again,
-      RecallRating.hard => FsrsRating.hard,
-      RecallRating.good => FsrsRating.good,
-      RecallRating.easy => FsrsRating.easy,
-    };
-    context.read<ReviewRatingWriter>().rate(word: reviewedWord.word, rating: fsrsRating);
-    _done++;
-    _showAnswer = false;
+    context.read<ReviewSessionState>().rate(rating);
     _wrongChoiceIndex = -1;
-    _regenerateChoices();
     if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_initialized) {
+    final session = context.watch<ReviewSessionState>();
+    if (!session.initialized) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    final word = _engine.currentWord();
+    final word = session.currentWord;
     final skin = context.skin.colors;
     final resp = context.responsive;
     final wallpaper = context.watch<WallpaperState>().current;
@@ -153,7 +82,7 @@ class _ReviewPageState extends State<ReviewPage> {
       subject: '本次复习',
       child: Scaffold(
         body: word == null
-            ? _buildReviewDone()
+            ? _buildReviewDone(session)
             : Stack(
                 children: [
                   // 全屏壁纸背景
@@ -174,13 +103,13 @@ class _ReviewPageState extends State<ReviewPage> {
                             : Column(
                                 children: [
                                   // 顶部栏
-                                  _buildTopBar(skin),
+                                  _buildTopBar(skin, session),
                                   // 上半：单词区
                                   Expanded(flex: 4, child: _buildWordArea(word, skin)),
                                   // 下半：4选1
-                                  Expanded(flex: 6, child: _buildChoiceArea(word, skin)),
+                                  Expanded(flex: 6, child: _buildChoiceArea(word, skin, session)),
                                   // 底部操作栏
-                                  _buildBottomBar(skin),
+                                  _buildBottomBar(skin, session),
                                 ],
                               ),
                       ),
@@ -223,7 +152,7 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   /// 顶部栏（原版 top_bar_container）
-  Widget _buildTopBar(ThemeVars skin) {
+  Widget _buildTopBar(ThemeVars skin, ReviewSessionState session) {
     final resp = context.responsive;
     return Container(
       height: AppSpacing.navH,
@@ -237,7 +166,7 @@ class _ReviewPageState extends State<ReviewPage> {
             onPressed: () => Navigator.pop(context),
           ),
           Text(
-            '$_done/$_total',
+            '${session.done}/${session.total}',
             style: TextStyle(fontSize: 16 * resp.fontScale, fontWeight: FontWeight.w600, color: skin.onGlassText1),
           ),
           const SizedBox(width: 8),
@@ -353,27 +282,27 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   /// 下半：4选1 选项区
-  Widget _buildChoiceArea(BBWordProcess word, ThemeVars skin) {
+  Widget _buildChoiceArea(BBWordProcess word, ThemeVars skin, ReviewSessionState session) {
     final resp = context.responsive;
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: resp.horizontalPadding),
       child: Column(
         children: [
           const SizedBox(height: 8),
-          if (_choices.isNotEmpty)
-            ..._choices.map(
+          if (session.choices.isNotEmpty)
+            ...session.choices.map(
               (c) => _FrostedChoiceCard(
                 pair: c,
                 isCorrect: c.word == word.word,
-                isSelectedWrong: _wrongChoiceIndex == _choices.indexOf(c),
-                showAnswer: _showAnswer,
+                isSelectedWrong: _wrongChoiceIndex == session.choices.indexOf(c),
+                showAnswer: session.showAnswer,
                 skin: skin,
                 resp: resp,
                 onTap: () {
                   if (c.word == word.word) {
                     _rate(RecallRating.good);
                   } else {
-                    setState(() => _wrongChoiceIndex = _choices.indexOf(c));
+                    setState(() => _wrongChoiceIndex = session.choices.indexOf(c));
                     Future.delayed(const Duration(milliseconds: 300), () {
                       if (mounted) setState(() => _wrongChoiceIndex = -1);
                     });
@@ -387,13 +316,13 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   /// 底部操作栏（单按钮：看答案 / 继续）
-  Widget _buildBottomBar(ThemeVars skin) {
+  Widget _buildBottomBar(ThemeVars skin, ReviewSessionState session) {
     return Container(
       padding: const EdgeInsets.only(bottom: 24),
       child: GestureDetector(
         onTap: () {
-          if (!_showAnswer) {
-            setState(() => _showAnswer = true);
+          if (!session.showAnswer) {
+            _revealAnswer();
           } else {
             _rate(RecallRating.good);
           }
@@ -402,7 +331,7 @@ class _ReviewPageState extends State<ReviewPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _showAnswer ? '继续' : '看答案',
+              session.showAnswer ? '继续' : '看答案',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: skin.onGlassText1),
             ),
             const SizedBox(height: 6),
@@ -411,7 +340,7 @@ class _ReviewPageState extends State<ReviewPage> {
               width: 24,
               height: 3,
               decoration: BoxDecoration(
-                color: _showAnswer ? skin.quizCorrectText : skin.quizWrongText,
+                color: session.showAnswer ? skin.quizCorrectText : skin.quizWrongText,
                 borderRadius: BorderRadius.circular(1.5),
               ),
             ),
@@ -422,18 +351,15 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   void _undo() {
-    if (_history.isNotEmpty && _done > 0) {
+    if (_history.isNotEmpty && context.read<ReviewSessionState>().undoProgress()) {
       _history.removeLast();
-      _done = _done - 1;
-      _showAnswer = false;
       _wrongChoiceIndex = -1;
-      _regenerateChoices();
       if (mounted) setState(() {});
     }
   }
 
   void _toggleFavorite() {
-    final current = _engine.currentWord();
+    final current = context.read<ReviewSessionState>().currentWord;
     if (current != null) {
       setState(() => _isFavorited = !_isFavorited);
       // TODO: persist favorite to database
@@ -444,22 +370,19 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   void _revealAnswer() {
-    setState(() => _showAnswer = true);
-    _canUndo = true;
+    context.read<ReviewSessionState>().revealAnswer();
+    setState(() => _canUndo = true);
   }
 
   void _markAsKnown() {
     // 保存当前状态到历史记录（用于撤销）
-    final currentWord = _engine.currentWord();
-    if (currentWord != null) {
-      _history.add(currentWord);
-    }
-    _engine.iReallyKnow();
-    _done++;
-    _showAnswer = false;
+    final session = context.read<ReviewSessionState>();
+    final currentWord = session.currentWord;
+    if (currentWord == null || !session.markAsKnown()) return;
+
+    _history.add(currentWord);
     _wrongChoiceIndex = -1;
     _canUndo = true;
-    _regenerateChoices();
     if (mounted) setState(() {});
   }
 
@@ -475,7 +398,7 @@ class _ReviewPageState extends State<ReviewPage> {
               title: const Text('播放发音'),
               onTap: () {
                 Navigator.pop(ctx);
-                final w = _engine.currentWord();
+                final w = context.read<ReviewSessionState>().currentWord;
                 if (w != null) _playWordAudio(w);
               },
             ),
@@ -484,7 +407,7 @@ class _ReviewPageState extends State<ReviewPage> {
               title: const Text('查看详情'),
               onTap: () {
                 Navigator.pop(ctx);
-                final w = _engine.currentWord();
+                final w = context.read<ReviewSessionState>().currentWord;
                 if (w != null) {
                   Navigator.push(
                     ctx,
@@ -514,7 +437,7 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   /// 复习完成页
-  Widget _buildReviewDone() {
+  Widget _buildReviewDone(ReviewSessionState session) {
     final skin = context.skin.colors;
     return Scaffold(
       backgroundColor: skin.pageBg,
@@ -529,7 +452,7 @@ class _ReviewPageState extends State<ReviewPage> {
               style: MistralTypography.heading3.copyWith(fontWeight: FontWeight.bold, color: skin.text1),
             ),
             const SizedBox(height: 8),
-            Text('共复习 $_done 个单词', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+            Text('共复习 ${session.done} 个单词', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => Navigator.of(context).pushReplacementNamed('/'),

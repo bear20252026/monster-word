@@ -108,6 +108,13 @@
 这是一次过渡性读取隔离：FSRS 到期判断和当前学习队列的事实来源仍是 `LearningState`，但页面不再同时负责读取旧状态、选择优先级和词库回退查询。评分写入边界已在后续阶段独立迁移，不能直接迁用仅维护内存状态的兼容 `ReviewService`。
 
 
+## 正式复习会话状态边界
+
+`ReviewSessionState` 现在承接正式 `/review` 的本地题目队列初始化、`SuperMemoryEngine` 推进、共享候选项生成、显示答案状态和会话进度。它依赖 `ReviewQueueReader` 取得候选词，并依赖 `ReviewRatingWriter` 提交已捕获的实际作答词；页面不再同时持有引擎、候选项、初始化和评分推进逻辑。
+
+`ReviewPage` 仍保留属于视觉交互的短暂状态：错误选项闪烁、收藏按钮展示、撤销按钮可用性、音频加载和详情导航。“熟”与撤销保留原有会话层语义，兼容 `/review_session` 未改动。后续若要统一两条会话，必须先定义共同的交互、撤销与持久化合同，而不能把它们直接并为同一个状态类。
+
+
 ## 正式复习评分写入边界
 
 `ReviewPage` 现在将评分提交给 `ReviewRatingWriter`，而不再直接依赖 `LearningState`。页面会在 `SuperMemoryEngine` 推进题目之前捕获实际作答词；应用根再将写入端口适配到 `LearningState.rateReviewWord`。该命令只更新该词的 FSRS 卡片并写入 `fsrs6_cards_v1`，记录每日学习或复习计数及活跃日期，然后通知展示状态，不会推进遗留学习队列。
