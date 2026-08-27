@@ -11,19 +11,19 @@ import '../../../state/learning_state.dart';
 /// 该快照只描述遗留学习会话当前暴露的队列与进度，不包含评分、候选生成、收藏或
 /// 持久化命令。正式复习、学习统计和队列词表页面可依赖它而不再读取 [LearningState]。
 class LearningQueueSnapshot {
-  const LearningQueueSnapshot({
+  LearningQueueSnapshot({
     required this.currentBook,
-    required this.words,
+    required List<Word> words,
     required this.currentIndex,
     required this.learnedCount,
-  });
+  }) : words = List.unmodifiable(words);
 
   const LearningQueueSnapshot.empty() : currentBook = null, words = const [], currentIndex = 0, learnedCount = 0;
 
   factory LearningQueueSnapshot.fromLegacy(LearningState legacy) {
     return LearningQueueSnapshot(
       currentBook: legacy.currentBook,
-      words: UnmodifiableListView(List<Word>.from(legacy.queue)),
+      words: legacy.queue,
       currentIndex: legacy.currentIndex,
       learnedCount: legacy.learnedNum,
     );

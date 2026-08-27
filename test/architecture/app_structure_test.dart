@@ -26,6 +26,7 @@ void main() {
 
       expect(providersSource, contains('ReviewScheduleRepository'));
       expect(providersSource, contains('ReviewRatingWriter(writeRating: schedule.rateWord)'));
+      expect(providersSource, contains('LearningQueueState'));
       expect(providersSource, contains('ReviewQueueState'));
       expect(providersSource, isNot(contains('legacy.rateReviewWord')));
     });
@@ -58,9 +59,10 @@ void main() {
       expect(executorSource, isNot(contains('BuildContext')));
     });
 
-    test('遗留深链不会重新实例化旧复习会话', () {
+    test('遗留深链不会重新实例化或保留旧复习会话实现', () {
       final learningRoutesSource = File('lib/core/router/learning_routes.dart').readAsStringSync();
 
+      expect(File('lib/screens/review_session.dart').existsSync(), isFalse);
       expect(learningRoutesSource, isNot(contains("import '../../screens/review_session.dart';")));
       expect(learningRoutesSource, isNot(contains('return const ReviewSession();')));
     });
