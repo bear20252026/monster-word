@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 import '../../../engine/core_engine.dart' show WordChoicePair;
@@ -10,6 +8,7 @@ import '../../../models/bb_word_process.dart';
 import '../application/review_queue_reader.dart';
 import '../application/review_rating_writer.dart';
 import '../domain/choice_generator.dart';
+import 'review_session_answer_state.dart';
 
 /// 正式复习队列加载的当前阶段。
 enum ReviewSessionLoadPhase { idle, loading, ready, failed }
@@ -34,9 +33,7 @@ class ReviewSessionState extends ChangeNotifier {
 
   ReviewSessionLoadPhase _loadPhase = ReviewSessionLoadPhase.idle;
   Object? _loadError;
-  bool _showAnswer = false;
-  String? _wrongChoiceWord;
-  Timer? _wrongChoiceTimer;
+  late final ReviewSessionAnswerState _answerState = ReviewSessionAnswerState(onChanged: notifyListeners);
   List<WordChoicePair> _choices = const [];
   int _total = 0;
   int _done = 0;
@@ -46,8 +43,8 @@ class ReviewSessionState extends ChangeNotifier {
   bool get isReady => _loadPhase == ReviewSessionLoadPhase.ready;
   bool get hasLoadError => _loadPhase == ReviewSessionLoadPhase.failed;
   Object? get loadError => _loadError;
-  bool get showAnswer => _showAnswer;
-  String? get selectedWrongChoice => _wrongChoiceWord;
+  bool get showAnswer => _answerState.showAnswer;
+  String? get selectedWrongChoice => _answerState.selectedWrongChoice;
   List<WordChoicePair> get choices => _choices;
   int get total => _total;
   int get done => _done;
@@ -59,11 +56,9 @@ class ReviewSessionState extends ChangeNotifier {
 
   /// 按既有正式复习队列优先级初始化本地会话。
   Future<void> initialize(ReviewQueueSnapshot snapshot) async {
-    _wrongChoiceTimer?.cancel();
+    _answerState.reset();
     _loadPhase = ReviewSessionLoadPhase.loading;
     _loadError = null;
-    _showAnswer = false;
-    _wrongChoiceWord = null;
     _choices = const [];
     _total = 0;
     _done = 0;
@@ -101,29 +96,20 @@ class ReviewSessionState extends ChangeNotifier {
     final reviewedWord = currentWord;
     if (reviewedWord == null) return;
 
-    if (selectedWord == reviewedWord.word) {
+    final selection = _answerState.selectChoice(selectedWord: selectedWord, correctWord: reviewedWord.word);
+    if (selection == ReviewChoiceSelection.correct) {
       rate(RecallRating.good);
-      return;
     }
-
-    _wrongChoiceTimer?.cancel();
-    _wrongChoiceWord = selectedWord;
-    _wrongChoiceTimer = Timer(const Duration(milliseconds: 300), () {
-      _wrongChoiceWord = null;
-      notifyListeners();
-    });
-    notifyListeners();
   }
 
-  bool isWrongChoiceSelected(String word) => _wrongChoiceWord == word;
+  bool isWrongChoiceSelected(String word) => _answerState.isWrongChoiceSelected(word);
 
   /// 记录本题评分，推进本地引擎，并异步提交同一题目的 FSRS 持久化请求。
   void rate(RecallRating rating) {
     final reviewedWord = currentWord;
     if (reviewedWord == null) return;
 
-    _wrongChoiceTimer?.cancel();
-    _wrongChoiceWord = null;
+    _answerState.reset();
     switch (rating) {
       case RecallRating.again:
         _engine.iDontKnow();
@@ -142,15 +128,12 @@ class ReviewSessionState extends ChangeNotifier {
     };
     _ratingWriter.rate(word: reviewedWord.word, rating: fsrsRating);
     _done++;
-    _showAnswer = false;
     _regenerateChoices();
     notifyListeners();
   }
 
   void revealAnswer() {
-    if (_showAnswer) return;
-    _showAnswer = true;
-    notifyListeners();
+    _answerState.revealAnswer();
   }
 
   /// 保持“看答案后继续”沿用 good 评分推进正式复习的既有行为。
@@ -159,11 +142,9 @@ class ReviewSessionState extends ChangeNotifier {
   /// 保留原“熟”操作的会话推进语义；该按钮当前不提交 FSRS 持久化评分。
   bool markAsKnown() {
     if (currentWord == null) return false;
-    _wrongChoiceTimer?.cancel();
-    _wrongChoiceWord = null;
+    _answerState.reset();
     _engine.iReallyKnow();
     _done++;
-    _showAnswer = false;
     _regenerateChoices();
     notifyListeners();
     return true;
@@ -185,7 +166,7 @@ class ReviewSessionState extends ChangeNotifier {
 
   @override
   void dispose() {
-    _wrongChoiceTimer?.cancel();
+    _answerState.dispose();
     super.dispose();
   }
 }
