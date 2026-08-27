@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../core/di/service_locator.dart';
 import '../features/learning/presentation/review_queue_state.dart';
 import '../features/learning/presentation/review_session_state.dart';
+import '../features/learning/presentation/review_word_actions_state.dart';
 import '../services/audio_service.dart';
 import '../engine/srs_engine.dart';
 import '../hooks/responsive.dart';
@@ -29,7 +30,6 @@ class ReviewPage extends StatefulWidget {
 
 class _ReviewPageState extends State<ReviewPage> {
   int _wrongChoiceIndex = -1;
-  bool _isFavorited = false;
   bool _canUndo = false;
   final List<BBWordProcess> _history = [];
 
@@ -67,6 +67,7 @@ class _ReviewPageState extends State<ReviewPage> {
   @override
   Widget build(BuildContext context) {
     final session = context.watch<ReviewSessionState>();
+    final wordActions = context.watch<ReviewWordActionsState>();
     if (!session.initialized) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -103,7 +104,7 @@ class _ReviewPageState extends State<ReviewPage> {
                             : Column(
                                 children: [
                                   // 顶部栏
-                                  _buildTopBar(skin, session),
+                                  _buildTopBar(skin, session, wordActions),
                                   // 上半：单词区
                                   Expanded(flex: 4, child: _buildWordArea(word, skin)),
                                   // 下半：4选1
@@ -152,7 +153,7 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   /// 顶部栏（原版 top_bar_container）
-  Widget _buildTopBar(ThemeVars skin, ReviewSessionState session) {
+  Widget _buildTopBar(ThemeVars skin, ReviewSessionState session, ReviewWordActionsState wordActions) {
     final resp = context.responsive;
     return Container(
       height: AppSpacing.navH,
@@ -177,9 +178,9 @@ class _ReviewPageState extends State<ReviewPage> {
           ),
           IconButton(
             icon: Icon(
-              _isFavorited ? Icons.star : Icons.star_border,
+              wordActions.isFavorite(session.currentWord?.word ?? '') ? Icons.star : Icons.star_border,
               size: 22,
-              color: _isFavorited ? MistralColors.accent : skin.onGlassText1,
+              color: wordActions.isFavorite(session.currentWord?.word ?? '') ? MistralColors.accent : skin.onGlassText1,
             ),
             tooltip: '收藏',
             onPressed: _toggleFavorite,
@@ -358,14 +359,20 @@ class _ReviewPageState extends State<ReviewPage> {
     }
   }
 
-  void _toggleFavorite() {
+  Future<void> _toggleFavorite() async {
     final current = context.read<ReviewSessionState>().currentWord;
-    if (current != null) {
-      setState(() => _isFavorited = !_isFavorited);
-      // TODO: persist favorite to database
+    if (current == null) return;
+
+    try {
+      final isFavorite = await context.read<ReviewWordActionsState>().toggleFavorite(current.word);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_isFavorited ? '已收藏 ${current.word}' : '已取消收藏'), duration: const Duration(seconds: 1)),
+        SnackBar(content: Text(isFavorite ? '已收藏 ${current.word}' : '已取消收藏'), duration: const Duration(seconds: 1)),
       );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('收藏状态保存失败，请重试')));
+      }
     }
   }
 
@@ -374,8 +381,8 @@ class _ReviewPageState extends State<ReviewPage> {
     setState(() => _canUndo = true);
   }
 
-  void _markAsKnown() {
-    // 保存当前状态到历史记录（用于撤销）
+  Future<void> _markAsKnown() async {
+    // 保留既有会话推进，再为本题补齐独立的手动掌握持久化标记。
     final session = context.read<ReviewSessionState>();
     final currentWord = session.currentWord;
     if (currentWord == null || !session.markAsKnown()) return;
@@ -384,6 +391,18 @@ class _ReviewPageState extends State<ReviewPage> {
     _wrongChoiceIndex = -1;
     _canUndo = true;
     if (mounted) setState(() {});
+
+    try {
+      final marked = await context.read<ReviewWordActionsState>().markManuallyMastered(currentWord.word);
+      if (mounted && marked) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('已标记掌握 ${currentWord.word}'), duration: const Duration(seconds: 1)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('掌握标记保存失败，请重试')));
+      }
+    }
   }
 
   void _showMoreOptions(BuildContext context) {
