@@ -16,6 +16,7 @@
 | 手动掌握标记 | `LearningMasteredState` + `MasteredRepository` | 使用 `mastered_words_v1`，负责刷新、切换、集合与计数。 |
 | 收藏/掌握数量展示 | `LearningCollectionsState` | 只组合 `LearningFavoritesState` 与 `LearningMasteredState` 的只读数量。 |
 | 账号会话与首次引导 | `AppSessionState` | 位于账户功能域，不得回流至学习域。 |
+| 账号资料读取与编辑 | `AccountProfileState` + `AccountProfileRepository` | 提供不含认证凭据的资料快照；昵称、微信名、个人 ID、签名、头像和手机号统一通过账户功能域持久化。 |
 | 学习提醒、发音、拼写、节奏与题型偏好 | `LearningPreferencesState` + `LearningPreferencesRepository` | 设置功能域唯一入口；保留旧四项设置键，并持久化原先仅留在设置页内存中的选项。 |
 
 ## 学习会话与队列读取边界
@@ -50,7 +51,7 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 `MasteredWordsReader` 组合 `MasteredRepository` 与 `WordRepository`，将手动掌握的字符串标记解析为完整单词模型。`BookWordsReader` 使用既有 `word_books` 关联表读取词书范围和顺序。`NewWordsState` 和用户数据库 `new_words` 表仍独立承载生词本，不得将学习数量、收藏、手动掌握或未学习队列改名为“生词本”。
 
-登录和启动页已使用账户域的 `AppSessionState`，保留本地登录占位、输入校验、频率限制、动画等待和首次引导分流。回顾弹窗组合 `LearningSessionState` 与 `ReviewScheduleRepository`；词典弹窗组合 `LearningFavoritesState`。这些展示组件不再依赖全局学习聚合状态。
+登录和启动页已使用账户域的 `AppSessionState`，保留本地登录占位、输入校验、频率限制、动画等待和首次引导分流。账户资料页、资料管理页、个人中心和我的空间统一使用 `AccountProfileState` 的同一可订阅快照，昵称、微信名、个人 ID 和签名编辑不再由页面重新读取再写回 `UserService`。资料状态不暴露 token 或 secret；旧同步资料接口因始终返回默认空 Bean 已删除。回顾弹窗组合 `LearningSessionState` 与 `ReviewScheduleRepository`；词典弹窗组合 `LearningFavoritesState`。这些展示组件不再依赖全局学习聚合状态。
 
 ## 设置偏好边界
 
@@ -62,6 +63,6 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 `learning_feature_providers.dart` 依赖顺序为：正式复习排程仓储和队列仓储先创建，随后创建收藏、手动掌握和学习会话状态；队列、统计、收藏/掌握数量、队列分类和正式复习状态均从这些专用依赖组合。`LearningCollectionsState` 使用 `ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>` 装配，不再依赖兼容代理。旧 `LearnState`、`LearnService`、`ReviewState`、`ReviewService` 及其服务定位器注册和空学习模块均已删除，因此不会再形成平行的学习或复习队列、FSRS 卡片或进度持久化。
 
-结构测试保留少量高价值负向门禁：应用根和生产 Provider/页面不得导入或创建 `LearningState`、`LearnState`、`ReviewState` 或 `SettingsState`，四类遗留状态及 `LearnService`、`ReviewService` 均不得恢复；设置页不得重新保存学习偏好本地副本或遗留的“待持久化”开关；正式复习页不得回流题目算法、会话状态或服务定位器；展示组件不得直接读取复习会话状态；历史深链不得重新创建旧 `ReviewSession`。学习状态测试覆盖专用会话加载与评分、只读队列与快照隔离、退出清理、空收藏队列保护、收藏状态和掌握状态的刷新/切换/计数，以及学习偏好旧键兼容和新字段持久化。
+结构测试保留少量高价值负向门禁：应用根和生产 Provider/页面不得导入或创建 `LearningState`、`LearnState`、`ReviewState` 或 `SettingsState`，四类遗留状态及 `LearnService`、`ReviewService` 均不得恢复；账户资料展示和编辑页面不得直连 `UserService` 或调用同步空资料读取；设置页不得重新保存学习偏好本地副本或遗留的“待持久化”开关；正式复习页不得回流题目算法、会话状态或服务定位器；展示组件不得直接读取复习会话状态；历史深链不得重新创建旧 `ReviewSession`。学习状态测试覆盖专用会话加载与评分、只读队列与快照隔离、退出清理、空收藏队列保护、收藏状态和掌握状态的刷新/切换/计数，以及学习偏好旧键兼容和新字段持久化；账户资料测试覆盖统一加载与字段级保存。
 
 后续新增需求应首先定位其事实模型，并在该功能域的仓储、应用服务或专用状态中实现。不得以“方便页面读取”为由重新创建跨域聚合状态，或将会话、FSRS、手动标记、收藏、账号和持久化职责重新塞入单一 `ChangeNotifier`。
