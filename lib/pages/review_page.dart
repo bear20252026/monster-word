@@ -97,7 +97,7 @@ class _ReviewPageState extends State<ReviewPage> {
                             ? Row(
                                 children: [
                                   Expanded(child: _buildWordArea(word, skin)),
-                                  Expanded(child: _buildChoiceArea(word, skin)),
+                                  Expanded(child: _buildChoiceArea(word, skin, session)),
                                 ],
                               )
                             : Column(
