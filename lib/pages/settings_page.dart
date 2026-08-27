@@ -33,7 +33,6 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
-    final settings = context.watch<SettingsState>();
 
     return Scaffold(
       backgroundColor: skin.pageBg,
@@ -78,6 +77,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildPreferences(BuildContext context) {
     final resp = context.responsive;
+    final settings = context.watch<SettingsState>();
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: resp.isWide ? 24 : 16, vertical: 16),
       children: [
