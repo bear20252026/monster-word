@@ -9,9 +9,12 @@ import 'package:provider/provider.dart';
 import '../data/example_parser.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
+import '../features/learning/data/review_schedule_repository.dart';
+import '../features/learning/presentation/learning_favorites_state.dart';
+import '../features/learning/presentation/learning_mastered_state.dart';
+import '../features/learning/presentation/learning_session_state.dart';
 import '../models/word.dart';
 import '../pages/word_detail_page.dart';
-import '../state/learn_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/animations.dart';
@@ -27,8 +30,7 @@ class LearnSession extends StatefulWidget {
   State<LearnSession> createState() => _LearnSessionState();
 }
 
-class _LearnSessionState extends State<LearnSession>
-    with TickerProviderStateMixin {
+class _LearnSessionState extends State<LearnSession> with TickerProviderStateMixin {
   int _selectedTab = 0;
 
   static const _tabs = ['派生', '词组搭配', '词根', '笔记', '近义'];
@@ -44,17 +46,11 @@ class _LearnSessionState extends State<LearnSession>
   void initState() {
     super.initState();
     _pageController = PageController();
-    _bottomBarController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
+    _bottomBarController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
     _bottomBarAnim = Tween<Offset>(
       begin: const Offset(0, 1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _bottomBarController,
-      curve: SpringCurve(),
-    ));
+    ).animate(CurvedAnimation(parent: _bottomBarController, curve: SpringCurve()));
     // Trigger bottom bar slide-in
     _bottomBarController.forward();
   }
@@ -70,7 +66,7 @@ class _LearnSessionState extends State<LearnSession>
   Widget build(BuildContext context) {
     final skin = context.skin;
     final resp = context.responsive;
-    final state = context.watch<LearnState>();
+    final state = context.watch<LearningSessionState>();
     final word = state.currentWord;
 
     if (word == null) {
@@ -81,179 +77,162 @@ class _LearnSessionState extends State<LearnSession>
     return SessionExitGuard(
       subject: '本次学习',
       child: Scaffold(
-      body: GlassBg(
-        child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
-              child: Column(
-                children: [
-                  // 透明导航栏（原版 nav：返回 + 进度 + 操作）
-                  _buildNav(skin, state),
-                  // 内容区 — PageView with spring scroll physics for card swiping
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _pageController,
-                      physics: const BouncingScrollPhysics(
-                        parent: AlwaysScrollableScrollPhysics(),
+        body: GlassBg(
+          child: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
+                child: Column(
+                  children: [
+                    // 透明导航栏（原版 nav：返回 + 进度 + 操作）
+                    _buildNav(skin, state),
+                    // 内容区 — PageView with spring scroll physics for card swiping
+                    Expanded(
+                      child: PageView.builder(
+                        controller: _pageController,
+                        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                        onPageChanged: (page) {
+                          if (page != state.currentIndex) {
+                            state.jumpTo(page);
+                            if (mounted) setState(() {});
+                          }
+                        },
+                        itemCount: state.total,
+                        itemBuilder: (context, index) {
+                          final w = state.queue[index];
+                          final exs = ExampleParser.parse(w.example);
+                          return SingleChildScrollView(
+                            padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 24),
+                                // HeroWord (with syllable separators, green dot, like count) — 点击弹出字典
+                                GestureDetector(
+                                  onTap: () {
+                                    WordDictionaryPopup.show(
+                                      context,
+                                      w,
+                                      onViewDetail: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (_) => WordDetailPage(fromLearn: true)),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        _addSyllableSeparators(w.word),
+                                        style: AppTypography.heroWord.copyWith(
+                                          fontSize: resp.heroFontSize,
+                                          color: skin.colors.onGlassText1,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      // Green dot (mastered indicator)
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(color: skin.colors.success, shape: BoxShape.circle),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      // Like count
+                                      Icon(Icons.thumb_up_alt_outlined, size: 14, color: skin.colors.onGlassText2),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        '1',
+                                        style: AppTypography.footnote.copyWith(color: skin.colors.onGlassText2),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                // 音标
+                                if (w.usPron.isNotEmpty || w.ukPron.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      if (w.usPron.isNotEmpty) ...[
+                                        _PhoneticPill(label: '美', skin: skin),
+                                        const SizedBox(width: 4),
+                                        Text('/${w.usPron}/', style: AppTypography.phonetic),
+                                      ],
+                                      if (w.ukPron.isNotEmpty) ...[
+                                        const SizedBox(width: 12),
+                                        _PhoneticPill(label: '英', skin: skin),
+                                        const SizedBox(width: 4),
+                                        Text('/${w.ukPron}/', style: AppTypography.phonetic),
+                                      ],
+                                    ],
+                                  ),
+                                const SizedBox(height: 20),
+                                // 释义（优先结构化释义）
+                                ...(w.hasStructuredDefinitions
+                                        ? w.formattedDefinitions.split('\n').where((l) => l.trim().isNotEmpty).toList()
+                                        : w.interpretLines)
+                                    .map(
+                                      (line) => Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        child: Text(
+                                          line,
+                                          style: AppTypography.body.copyWith(
+                                            color: skin.colors.onGlassText1,
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                const SizedBox(height: 16),
+                                // 例句卡
+                                if (exs.isNotEmpty) ...exs.take(2).map((ex) => _ExampleCard(example: ex, skin: skin)),
+                                const SizedBox(height: 16),
+                                // 派生词卡片（原版橙色三角标记 + 派生词列表）
+                                _DerivedWordsCard(word: w.word, skin: skin),
+                                const SizedBox(height: 16),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                      onPageChanged: (page) {
-                        if (page != state.currentIndex) {
-                          state.jumpTo(page);
-                          if (mounted) setState(() {});
-                        }
-                      },
-                      itemCount: state.total,
-                      itemBuilder: (context, index) {
-                        final w = state.queue[index];
-                        final exs = ExampleParser.parse(w.example);
-                        return SingleChildScrollView(
-                          padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 24),
-                              // HeroWord (with syllable separators, green dot, like count) — 点击弹出字典
-                              GestureDetector(
-                                onTap: () {
-                                  WordDictionaryPopup.show(
-                                    context,
-                                    w,
-                                    onViewDetail: () {
-                                      Navigator.push(context, MaterialPageRoute(
-                                        builder: (_) => WordDetailPage(fromLearn: true),
-                                      ));
-                                    },
-                                  );
-                                },
-                                child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    _addSyllableSeparators(w.word),
-                                    style: AppTypography.heroWord.copyWith(
-                                      fontSize: resp.heroFontSize,
-                                      color: skin.colors.onGlassText1,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  // Green dot (mastered indicator)
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: skin.colors.success,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  // Like count
-                                  Icon(Icons.thumb_up_alt_outlined,
-                                    size: 14, color: skin.colors.onGlassText2),
-                                  const SizedBox(width: 2),
-                                  Text('1',
-                                    style: AppTypography.footnote.copyWith(
-                                      color: skin.colors.onGlassText2)),
-                                ],
-                              ),
-                              ),
-                              const SizedBox(height: 8),
-                              // 音标
-                              if (w.usPron.isNotEmpty || w.ukPron.isNotEmpty)
-                                Row(
-                                  children: [
-                                    if (w.usPron.isNotEmpty) ...[
-                                      _PhoneticPill(label: '美', skin: skin),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '/${w.usPron}/',
-                                        style: AppTypography.phonetic,
-                                      ),
-                                    ],
-                                    if (w.ukPron.isNotEmpty) ...[
-                                      const SizedBox(width: 12),
-                                      _PhoneticPill(label: '英', skin: skin),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '/${w.ukPron}/',
-                                        style: AppTypography.phonetic,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              const SizedBox(height: 20),
-                              // 释义（优先结构化释义）
-                              ...(w.hasStructuredDefinitions
-                                      ? w.formattedDefinitions
-                                          .split('\n')
-                                          .where((l) => l.trim().isNotEmpty)
-                                          .toList()
-                                      : w.interpretLines)
-                                  .map(
-                                (line) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Text(
-                                    line,
-                                    style: AppTypography.body.copyWith(
-                                      color: skin.colors.onGlassText1,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              // 例句卡
-                              if (exs.isNotEmpty)
-                                ...exs.take(2).map(
-                                  (ex) => _ExampleCard(example: ex, skin: skin),
-                                ),
-                              const SizedBox(height: 16),
-                              // 派生词卡片（原版橙色三角标记 + 派生词列表）
-                              _DerivedWordsCard(word: w.word, skin: skin),
-                              const SizedBox(height: 16),
-                            ],
-                          ),
-                        );
-                      },
                     ),
-                  ),
-                  // 1/3 page indicator
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: AnimatedBuilder(
-                      animation: _pageController,
-                      builder: (context, _) {
-                        final page = _pageController.hasClients
-                            ? (_pageController.page ?? state.currentIndex.toDouble())
-                            : state.currentIndex.toDouble();
-                        return _buildPageIndicator(skin, page, state.total);
-                      },
+                    // 1/3 page indicator
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: AnimatedBuilder(
+                        animation: _pageController,
+                        builder: (context, _) {
+                          final page = _pageController.hasClients
+                              ? (_pageController.page ?? state.currentIndex.toDouble())
+                              : state.currentIndex.toDouble();
+                          return _buildPageIndicator(skin, page, state.total);
+                        },
+                      ),
                     ),
-                  ),
-                  // SegmentTabs（原版 派生/词组搭配/词根/近义）
-                  _buildSegmentTabs(skin),
-                  // Tab 内容区域（根据选中 tab 显示不同内容）
-                  if (word != null) _buildTabContent(skin, word),
-                  // 底部按钮（原版 下一词 + 记错了 + 重学）— 弹性滑入动画
-                  SlideTransition(
-                    position: _bottomBarAnim,
-                    child: _buildBottomActions(skin, state),
-                  ),
-                ],
+                    // SegmentTabs（原版 派生/词组搭配/词根/近义）
+                    _buildSegmentTabs(skin),
+                    // Tab 内容区域（根据选中 tab 显示不同内容）
+                    if (word != null) _buildTabContent(skin, word),
+                    // 底部按钮（原版 下一词 + 记错了 + 重学）— 弹性滑入动画
+                    SlideTransition(position: _bottomBarAnim, child: _buildBottomActions(skin, state)),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-      ),
     );
   }
 
   /// 透明导航栏（原版 nav_transparent）
-  Widget _buildNav(SkinSystem skin, LearnState state) {
+  Widget _buildNav(SkinSystem skin, LearningSessionState state) {
     final word = state.currentWord;
-    final isFav = word != null && state.isFavorite(word.word);
-    final isMastered = word != null && state.isMastered(word.word);
+    final favorites = context.watch<LearningFavoritesState>();
+    final mastered = context.watch<LearningMasteredState>();
+    final isFav = word != null && favorites.isFavorite(word.word);
+    final isMastered = word != null && mastered.isMastered(word.word);
 
     return Container(
       height: AppSpacing.navH,
@@ -273,9 +252,8 @@ class _LearnSessionState extends State<LearnSession>
           IconButton(
             icon: Icon(Icons.undo, color: skin.colors.onGlassText2, size: 20),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('撤销功能开发中'), duration: Duration(seconds: 1)),
-              );
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text('撤销功能开发中'), duration: Duration(seconds: 1)));
             },
           ),
           // 收藏（原版 star_border 按钮）
@@ -289,29 +267,28 @@ class _LearnSessionState extends State<LearnSession>
             onPressed: word == null
                 ? null
                 : () async {
-                    await state.toggleFavorite(word.word);
-                    if (mounted) setState(() {});
+                    await favorites.toggle(word.word);
                   },
           ),
           // 熟（标记已掌握）
           IconButton(
-            icon: Text('熟',
+            icon: Text(
+              '熟',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: isMastered ? skin.colors.onGlassAccent : skin.colors.onGlassText2,
-              )),
+              ),
+            ),
             tooltip: isMastered ? '取消掌握' : '标记已掌握',
             onPressed: word == null
                 ? null
                 : () async {
-                    await state.toggleMastered(word.word);
-                    if (mounted) setState(() {});
+                    await mastered.toggle(word.word);
                   },
           ),
           // FSRS 记忆状态指示器
-          if (word != null)
-            _buildFsrsIndicator(context, word.word, skin),
+          if (word != null) _buildFsrsIndicator(context, word.word, skin),
         ],
       ),
     );
@@ -341,9 +318,7 @@ class _LearnSessionState extends State<LearnSession>
                           AnimatedDefaultTextStyle(
                             duration: const Duration(milliseconds: 200),
                             curve: standardCurve,
-                            style: on
-                                ? AppTypography.tabActive
-                                : AppTypography.tabInactive,
+                            style: on ? AppTypography.tabActive : AppTypography.tabInactive,
                             child: Text(_tabs[i]),
                           ),
                         ],
@@ -363,10 +338,7 @@ class _LearnSessionState extends State<LearnSession>
                   child: Container(
                     width: 24,
                     height: 2,
-                    decoration: BoxDecoration(
-                      color: skin.colors.onGlassAccent,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+                    decoration: BoxDecoration(color: skin.colors.onGlassAccent, borderRadius: BorderRadius.circular(4)),
                   ),
                 ),
               ),
@@ -394,10 +366,7 @@ class _LearnSessionState extends State<LearnSession>
             width: isActive ? 16 : 6,
             height: 6,
             decoration: BoxDecoration(
-              color: (isActive
-                      ? skin.colors.onGlassAccent
-                      : skin.colors.onGlassText2)
-                  .withValues(alpha: opacity),
+              color: (isActive ? skin.colors.onGlassAccent : skin.colors.onGlassText2).withValues(alpha: opacity),
               borderRadius: BorderRadius.circular(8),
             ),
           );
@@ -417,11 +386,7 @@ class _LearnSessionState extends State<LearnSession>
     };
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),
-      child: Padding(
-        key: ValueKey(_selectedTab),
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-        child: content,
-      ),
+      child: Padding(key: ValueKey(_selectedTab), padding: const EdgeInsets.fromLTRB(20, 8, 20, 0), child: content),
     );
   }
 
@@ -450,10 +415,7 @@ class _LearnSessionState extends State<LearnSession>
       key: const ValueKey('tab_content'),
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: skin.colors.glassBg,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: skin.colors.glassBg, borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -467,17 +429,12 @@ class _LearnSessionState extends State<LearnSession>
   }
 
   /// 底部单按钮「下一词」+ 绿色下划线（原版样式）
-  Widget _buildBottomActions(SkinSystem skin, LearnState state) {
+  Widget _buildBottomActions(SkinSystem skin, LearningSessionState state) {
     final resp = context.responsive;
     return SlideTransition(
       position: _bottomBarAnim,
       child: Container(
-        padding: EdgeInsets.fromLTRB(
-          resp.horizontalPadding,
-          12,
-          resp.horizontalPadding,
-          16,
-        ),
+        padding: EdgeInsets.fromLTRB(resp.horizontalPadding, 12, resp.horizontalPadding, 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -581,8 +538,8 @@ class _LearnSessionState extends State<LearnSession>
 
   /// FSRS 记忆状态指示器（显示当前单词的记忆状态）
   Widget _buildFsrsIndicator(BuildContext context, String word, SkinSystem skin) {
-    final state = context.read<LearnState>();
-    final card = state.getCard(word);
+    final schedule = context.read<ReviewScheduleRepository>();
+    final card = schedule.cardFor(word);
     if (card == null || card.isNew) {
       return const SizedBox.shrink();
     }
@@ -591,19 +548,16 @@ class _LearnSessionState extends State<LearnSession>
     final color = r < 3
         ? Colors.red
         : r < 7
-            ? Colors.orange
-            : r < 14
-                ? Colors.blue
-                : Colors.green;
+        ? Colors.orange
+        : r < 14
+        ? Colors.blue
+        : Colors.green;
     return Tooltip(
-      message: '记忆状态: ${state.getStatusText(card)} · 难度: ${state.getDifficultyText(card)}',
+      message: '记忆状态: ${schedule.getStatusText(card)} · 难度: ${schedule.getDifficultyText(card)}',
       child: Container(
         width: 8,
         height: 8,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       ),
     );
   }
@@ -619,14 +573,8 @@ class _PhoneticPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: skin.colors.divider,
-        borderRadius: BorderRadius.circular(AppRadius.control),
-      ),
-      child: Text(
-        label,
-        style: AppTypography.footnote.copyWith(color: skin.colors.onGlassText2),
-      ),
+      decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(AppRadius.control)),
+      child: Text(label, style: AppTypography.footnote.copyWith(color: skin.colors.onGlassText2)),
     );
   }
 }
@@ -652,17 +600,12 @@ class _ExampleCard extends StatelessWidget {
         children: [
           RichText(
             text: TextSpan(
-              style: AppTypography.body.copyWith(
-                color: skin.colors.text1,
-                height: 1.5,
-              ),
+              style: AppTypography.body.copyWith(color: skin.colors.text1, height: 1.5),
               children: example.highlightedParts
                   .map(
                     (p) => TextSpan(
                       text: p.text,
-                      style: p.highlight
-                          ? TextStyle(fontWeight: FontWeight.bold, color: skin.colors.teal)
-                          : null,
+                      style: p.highlight ? TextStyle(fontWeight: FontWeight.bold, color: skin.colors.teal) : null,
                     ),
                   )
                   .toList(),
@@ -670,18 +613,12 @@ class _ExampleCard extends StatelessWidget {
           ),
           if (example.cn.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(
-              example.cn,
-              style: AppTypography.caption.copyWith(color: skin.colors.text2),
-            ),
+            Text(example.cn, style: AppTypography.caption.copyWith(color: skin.colors.text2)),
           ],
           if (example.source.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                example.source,
-                style: AppTypography.footnote.copyWith(color: skin.colors.text3),
-              ),
+              child: Text(example.source, style: AppTypography.footnote.copyWith(color: skin.colors.text3)),
             ),
         ],
       ),
@@ -725,19 +662,13 @@ class _DerivedWordsCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 '派生词',
-                style: AppTypography.body.copyWith(
-                  color: skin.colors.text1,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTypography.body.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w600),
               ),
             ],
           ),
           const SizedBox(height: 12),
           // 派生词列表
-          ...derivedWords.map((dw) => _DerivedWordItem(
-            derivedWord: dw,
-            skin: skin,
-          )),
+          ...derivedWords.map((dw) => _DerivedWordItem(derivedWord: dw, skin: skin)),
           const SizedBox(height: 12),
           // 查看详细解析链接（功能暂未上线，禁用状态）
           Opacity(
@@ -745,18 +676,9 @@ class _DerivedWordsCard extends StatelessWidget {
             child: IgnorePointer(
               child: Row(
                 children: [
-                  Text(
-                    '查看详细解析',
-                    style: AppTypography.caption.copyWith(
-                      color: skin.colors.accent,
-                    ),
-                  ),
+                  Text('查看详细解析', style: AppTypography.caption.copyWith(color: skin.colors.accent)),
                   const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 12,
-                    color: skin.colors.accent,
-                  ),
+                  Icon(Icons.arrow_forward_ios, size: 12, color: skin.colors.accent),
                 ],
               ),
             ),
@@ -803,11 +725,7 @@ class DerivedWord {
   final String partOfSpeech;
   final String meaning;
 
-  const DerivedWord({
-    required this.word,
-    required this.partOfSpeech,
-    required this.meaning,
-  });
+  const DerivedWord({required this.word, required this.partOfSpeech, required this.meaning});
 }
 
 /// 派生词条目组件
@@ -829,30 +747,17 @@ class _DerivedWordItem extends StatelessWidget {
             child: Text(
               derivedWord.word,
               overflow: TextOverflow.ellipsis,
-              style: AppTypography.body.copyWith(
-                color: skin.colors.accent,
-                fontWeight: FontWeight.w500,
-              ),
+              style: AppTypography.body.copyWith(color: skin.colors.accent, fontWeight: FontWeight.w500),
             ),
           ),
           // 词性
           SizedBox(
             width: 40,
-            child: Text(
-              derivedWord.partOfSpeech,
-              style: AppTypography.caption.copyWith(
-                color: skin.colors.text3,
-              ),
-            ),
+            child: Text(derivedWord.partOfSpeech, style: AppTypography.caption.copyWith(color: skin.colors.text3)),
           ),
           // 中文释义
           Expanded(
-            child: Text(
-              derivedWord.meaning,
-              style: AppTypography.caption.copyWith(
-                color: skin.colors.text1,
-              ),
-            ),
+            child: Text(derivedWord.meaning, style: AppTypography.caption.copyWith(color: skin.colors.text1)),
           ),
         ],
       ),

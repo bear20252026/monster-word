@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
 import '../widgets/session_exit_guard.dart';
-import '../state/learn_state.dart';
+import '../features/learning/presentation/learning_session_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -17,8 +17,7 @@ class ImmersiveSwipePage extends StatefulWidget {
   State<ImmersiveSwipePage> createState() => _ImmersiveSwipePageState();
 }
 
-class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
-    with TickerProviderStateMixin {
+class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProviderStateMixin {
   late AnimationController _slideController;
   late AnimationController _fadeController;
   late Animation<Offset> _slideAnimation;
@@ -32,14 +31,8 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
   @override
   void initState() {
     super.initState();
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
+    _slideController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
+    _fadeController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
       end: Offset.zero,
@@ -62,7 +55,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
   }
 
   void _onVerticalDragEnd(DragEndDetails details) {
-    final state = context.read<LearnState>();
+    final state = context.read<LearningSessionState>();
     final threshold = 100.0;
 
     if (_dragOffset < -threshold) {
@@ -112,7 +105,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
   Widget build(BuildContext context) {
     final skin = context.skin;
     final resp = context.responsive;
-    final state = context.watch<LearnState>();
+    final state = context.watch<LearningSessionState>();
     final word = state.currentWord;
 
     if (word == null) {
@@ -126,8 +119,10 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
               const SizedBox(height: 16),
               Text('刷词完成！', style: MistralTypography.heading4.copyWith(color: skin.colors.text1)),
               const SizedBox(height: 8),
-              Text('认识 $_knownCount · 不认识 $_unknownCount',
-                style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+              Text(
+                '认识 $_knownCount · 不认识 $_unknownCount',
+                style: MistralTypography.body.copyWith(color: skin.colors.text3),
+              ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
@@ -146,39 +141,39 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
     return SessionExitGuard(
       subject: '沉浸刷词',
       child: Scaffold(
-      backgroundColor: skin.colors.pageBg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // 顶部栏
-            _buildTopBar(skin, state),
-            // 卡片区
-            Expanded(
-              child: GestureDetector(
-                onVerticalDragUpdate: _onVerticalDragUpdate,
-                onVerticalDragEnd: _onVerticalDragEnd,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Transform.translate(
-                      offset: Offset(0, _isDragging ? _dragOffset * 0.5 : 0),
-                      child: _buildCard(word, skin, resp),
+        backgroundColor: skin.colors.pageBg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // 顶部栏
+              _buildTopBar(skin, state),
+              // 卡片区
+              Expanded(
+                child: GestureDetector(
+                  onVerticalDragUpdate: _onVerticalDragUpdate,
+                  onVerticalDragEnd: _onVerticalDragEnd,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Transform.translate(
+                        offset: Offset(0, _isDragging ? _dragOffset * 0.5 : 0),
+                        child: _buildCard(word, skin, resp),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            // 底部提示
-            _buildBottomHint(skin),
-          ],
+              // 底部提示
+              _buildBottomHint(skin),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
 
-  Widget _buildTopBar(SkinSystem skin, LearnState state) {
+  Widget _buildTopBar(SkinSystem skin, LearningSessionState state) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -191,10 +186,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
           // 统计
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: skin.colors.cardBgAlt,
-              borderRadius: BorderRadius.circular(20),
-            ),
+            decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(20)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -232,13 +224,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
         color: skin.colors.cardBg,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: borderColor, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: MistralColors.black15,
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: MistralColors.black15, blurRadius: 20, offset: const Offset(0, 8))],
       ),
       child: Center(
         child: Padding(
@@ -249,37 +235,22 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage>
               // 单词
               Text(
                 word.word,
-                style: TextStyle(
-                  fontSize: resp.heroFontSize,
-                  fontWeight: FontWeight.w700,
-                  color: skin.colors.text1,
-                ),
+                style: TextStyle(fontSize: resp.heroFontSize, fontWeight: FontWeight.w700, color: skin.colors.text1),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               // 音标
               if (word.usPron.isNotEmpty)
-                Text(
-                  '/${word.usPron}/',
-                  style: MistralTypography.body.copyWith(color: skin.colors.text3),
-                ),
+                Text('/${word.usPron}/', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
               const SizedBox(height: 24),
               // 释义（始终显示，不再需要点击揭示 — 避免破坏"认识/不认识"体验）
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: skin.colors.cardBgAlt,
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(12)),
                 child: Text(
-                  word.hasStructuredDefinitions
-                      ? word.formattedDefinitions
-                      : word.cleanInterpret,
-                  style: MistralTypography.body.copyWith(
-                    color: skin.colors.text1,
-                    height: 1.5,
-                  ),
+                  word.hasStructuredDefinitions ? word.formattedDefinitions : word.cleanInterpret,
+                  style: MistralTypography.body.copyWith(color: skin.colors.text1, height: 1.5),
                   textAlign: TextAlign.center,
                 ),
               ),

@@ -47,6 +47,10 @@ class ReviewScheduleRepository extends ChangeNotifier {
 
   FsrsCard? cardFor(String word) => _cards[word];
 
+  String getStatusText(FsrsCard card) => _engine.getStatusText(card);
+
+  String getDifficultyText(FsrsCard card) => _engine.getDifficultyText(card);
+
   Map<String, int> get memoryStats {
     var newCount = 0;
     var dueCount = 0;

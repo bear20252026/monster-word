@@ -19,8 +19,6 @@ import '../../repositories/mastered_repository.dart';
 import '../../repositories/mastered_repository_impl.dart';
 import '../../repositories/new_word_repository.dart';
 import '../../repositories/new_word_repository_impl.dart';
-import '../../services/learn_service.dart';
-import '../../services/learn_service_impl.dart';
 import '../../services/review_service.dart';
 import '../../services/review_service_impl.dart';
 import '../../services/audio_service.dart';
@@ -42,7 +40,6 @@ import '../../features/learning/application/new_words_reader.dart';
 import '../../features/learning/application/review_audio_player.dart';
 import '../../features/learning/application/review_queue_reader.dart';
 import '../../features/learning/presentation/new_words_state.dart';
-import '../../state/learn_state.dart';
 import '../../state/review_state.dart';
 import '../../state/user_stats_state.dart';
 import '../../state/settings_state.dart';
@@ -63,7 +60,7 @@ final GetIt sl = GetIt.instance;
 /// }
 ///
 /// // 在需要的地方获取服务：
-/// final learnService = sl<LearnService>();
+/// final reviewSchedule = sl<ReviewScheduleRepository>();
 /// ```
 Future<void> setupServiceLocator() async {
   // ========== Data Layer（数据层）==========
@@ -175,17 +172,6 @@ Future<void> setupServiceLocator() async {
     );
   }
 
-  // LearnService（学习流程）
-  if (!sl.isRegistered<LearnService>()) {
-    sl.registerLazySingleton<LearnService>(
-      () => LearnServiceImpl(
-        wordRepo: sl<WordRepository>(),
-        audioService: sl<AudioService>(),
-        favRepo: sl<FavRepository>(),
-      ),
-    );
-  }
-
   // ReviewService（复习流程）
   if (!sl.isRegistered<ReviewService>()) {
     sl.registerLazySingleton<ReviewService>(
@@ -216,17 +202,6 @@ Future<void> setupServiceLocator() async {
   }
 
   // ========== ViewModel Layer（视图模型层）==========
-  // LearnState（学习状态）
-  if (!sl.isRegistered<LearnState>()) {
-    sl.registerLazySingleton<LearnState>(
-      () => LearnState(
-        learnService: sl<LearnService>(),
-        audioService: sl<AudioService>(),
-        favRepository: sl<FavRepository>(),
-      ),
-    );
-  }
-
   // ReviewState（复习状态）
   if (!sl.isRegistered<ReviewState>()) {
     sl.registerLazySingleton<ReviewState>(() => ReviewState(reviewService: sl<ReviewService>()));

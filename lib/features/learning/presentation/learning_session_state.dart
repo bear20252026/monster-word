@@ -41,9 +41,11 @@ class LearningSessionState extends ChangeNotifier {
   List<WordChoicePair> _choices = [];
 
   Book? get currentBook => _currentBook;
-  List<Word> get queue => _queue;
+  List<Word> get queue => List.unmodifiable(_queue);
   int get currentIndex => _currentIndex;
   int get total => _queue.length;
+  bool get hasMoreWords => _currentIndex < _queue.length - 1;
+  (int current, int total) get progress => _queue.isEmpty ? (0, 0) : (_currentIndex + 1, _queue.length);
   bool get showAnswer => _showAnswer;
   List<WordChoicePair> get choices => _choices;
   int get learnedNum => _leitnerEngine.learnedNumber;
@@ -67,6 +69,17 @@ class LearningSessionState extends ChangeNotifier {
 
   void flip() {
     _showAnswer = !_showAnswer;
+    notifyListeners();
+  }
+
+  /// 结束当前学习会话，但不触碰收藏、手动掌握、FSRS 排程或音频播放状态。
+  void exitLearning() {
+    _currentBook = null;
+    _queue = [];
+    _currentIndex = 0;
+    _showAnswer = false;
+    _choices = [];
+    _leitnerEngine.init(const <BBWordProcess>[]);
     notifyListeners();
   }
 

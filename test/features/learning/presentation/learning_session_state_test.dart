@@ -19,23 +19,51 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('队列与统计读取快照隔离专用会话的可变队列并组合独立复习调度', () async {
+  test('队列与统计读取快照隔离专用会话的后续导航', () async {
     final schedule = ReviewScheduleRepository();
     await schedule.initialize();
     final session = _sessionWithWords(
-      words: [Word(id: 1, word: 'first')],
+      words: [
+        Word(id: 1, word: 'first'),
+        Word(id: 2, word: 'later'),
+      ],
       schedule: schedule,
     );
     await session.loadBook(_testBook, shuffle: false);
 
     final queue = LearningQueueState()..synchronizeFrom(session);
-    session.queue.add(Word(id: 2, word: 'later'));
+    session.next();
     final statistics = LearningStatisticsState()..synchronize(queue: queue.snapshot, schedule: schedule);
 
-    expect(queue.words.map((word) => word.word), ['first']);
-    expect(statistics.total, 1);
+    expect(queue.words.map((word) => word.word), ['first', 'later']);
+    expect(queue.currentIndex, 0);
+    expect(statistics.total, 2);
     expect(statistics.dueCount, 0);
     expect(statistics.memoryStats['total'], 0);
+  });
+
+  test('会话不向页面暴露可变队列，并在退出时清理会话导航状态', () async {
+    final session = _sessionWithWords(
+      words: [
+        Word(id: 1, word: 'first'),
+        Word(id: 2, word: 'second'),
+      ],
+    );
+    await session.loadBook(_testBook, shuffle: false);
+
+    expect(session.progress, (1, 2));
+    expect(session.hasMoreWords, isTrue);
+    expect(() => session.queue.add(Word(id: 3, word: 'unexpected')), throwsUnsupportedError);
+
+    session.next();
+    expect(session.progress, (2, 2));
+    expect(session.hasMoreWords, isFalse);
+
+    session.exitLearning();
+    expect(session.currentWord, isNull);
+    expect(session.queue, isEmpty);
+    expect(session.choices, isEmpty);
+    expect(session.progress, (0, 0));
   });
 
   test('专用收藏状态刷新并切换收藏时更新可订阅计数', () async {
