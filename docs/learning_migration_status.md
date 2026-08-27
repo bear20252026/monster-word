@@ -176,3 +176,9 @@
 `LearningProgressRepository` 现为当前学习词书、学习索引和队列单词 ID 快照的唯一偏好存储边界，并保留既有 `current_book_v1`、`current_index_v1`、`queue_snapshot_v1` 键和值结构。`LearningState` 只保留保存时机和启动时恢复索引的兼容会话职责，不再直接使用 `SharedPreferences` 或处理 JSON 编解码。
 
 当前词书加载、收藏词学习、Leitner 推进和四选一候选仍属于遗留学习会话命令，下一阶段应将它们整体迁至专用会话状态；不得仅迁移其中一个命令而同时保留两套可变队列。
+
+## 学习队列命令边界
+
+`LearningQueueRepository` 与 `LearningQueueWordSource` 现集中词书加载、收藏词解析、当前队列回退和可选乱序规则。生产实现仍适配既有 `WordBookDatabase` 与 `FavRepository`，因此词书查询上限、起始偏移、收藏词优先从完整词库解析、无法解析时回退当前队列的行为均保持不变。
+
+`LearningState` 已不再直接调用词库数据库来加载队列或解析收藏词；它暂时仍负责将新队列初始化为 Leitner 会话、维护当前索引、生成候选、接收会话评分并通知遗留页面。后续会话状态迁移必须整体转移这组可变行为，避免新增第二套队列或评分推进。

@@ -35,6 +35,7 @@ import '../../repositories/stats_repository.dart';
 import '../../repositories/stats_repository_impl.dart';
 import '../../features/learning/application/book_words_reader.dart';
 import '../../features/learning/data/learning_progress_repository.dart';
+import '../../features/learning/data/learning_queue_repository.dart';
 import '../../features/learning/data/review_schedule_repository.dart';
 import '../../features/learning/application/mastered_words_reader.dart';
 import '../../features/learning/application/new_words_reader.dart';
@@ -137,6 +138,18 @@ Future<void> setupServiceLocator() async {
   // ReviewQueueReader
   if (!sl.isRegistered<ReviewQueueReader>()) {
     sl.registerLazySingleton<ReviewQueueReader>(() => ReviewQueueReader(wordRepository: sl<WordRepository>()));
+  }
+
+  // LearningQueueRepository（遗留学习会话队列加载命令边界）
+  if (!sl.isRegistered<LearningQueueWordSource>()) {
+    sl.registerLazySingleton<LearningQueueWordSource>(
+      () => WordBookLearningQueueWordSource(database: sl<WordBookDatabase>()),
+    );
+  }
+  if (!sl.isRegistered<LearningQueueRepository>()) {
+    sl.registerLazySingleton<LearningQueueRepository>(
+      () => LearningQueueRepository(wordSource: sl<LearningQueueWordSource>(), favRepository: sl<FavRepository>()),
+    );
   }
 
   // LearningProgressRepository（遗留学习会话进度持久化边界）
