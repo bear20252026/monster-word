@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../engine/core_engine.dart' show WordChoicePair;
 import '../../../../hooks/responsive.dart';
 import '../../../../models/bb_word_process.dart';
-import '../../../../tokens/design_tokens.dart';
+import '../../../../theme/skin_system.dart';
 import 'formal_review_choice_card.dart';
 
 /// 单词、音标和发音入口。
