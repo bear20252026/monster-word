@@ -16,6 +16,7 @@ class LearningStatisticsSnapshot {
     required this.total,
     required this.dueCount,
     required this.learnedCount,
+    required this.totalLearnedDays,
     required this.memoryStats,
     required this.todayStats,
   });
@@ -26,6 +27,7 @@ class LearningStatisticsSnapshot {
       total: 0,
       dueCount: 0,
       learnedCount: 0,
+      totalLearnedDays: 0,
       memoryStats: <String, int>{},
       todayStats: <String, int>{},
     );
@@ -41,6 +43,7 @@ class LearningStatisticsSnapshot {
       total: queue.total,
       dueCount: schedule.dueCount,
       learnedCount: queue.learnedCount,
+      totalLearnedDays: schedule.activeDateCount,
       memoryStats: UnmodifiableMapView(Map<String, int>.from(memoryStats)),
       todayStats: UnmodifiableMapView({
         'learned': queue.total - (memoryStats['new'] ?? 0),
@@ -55,6 +58,7 @@ class LearningStatisticsSnapshot {
   final int total;
   final int dueCount;
   final int learnedCount;
+  final int totalLearnedDays;
   final Map<String, int> memoryStats;
   final Map<String, int> todayStats;
 
@@ -80,6 +84,8 @@ class LearningStatisticsState extends ChangeNotifier {
   int get dueCount => _snapshot.dueCount;
 
   int get learnedCount => _snapshot.learnedCount;
+
+  int get totalLearnedDays => _snapshot.totalLearnedDays;
 
   Map<String, int> get memoryStats => _snapshot.memoryStats;
 

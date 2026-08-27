@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../features/learning/presentation/learning_collections_state.dart';
+import '../features/learning/presentation/learning_session_state.dart';
+import '../features/learning/presentation/learning_statistics_state.dart';
 import '../features/learning/presentation/new_words_state.dart';
-import '../state/learning_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import 'my_words_page.dart';
@@ -24,7 +25,8 @@ class FootMarkPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    final state = context.watch<LearningState>();
+    final session = context.watch<LearningSessionState>();
+    final statistics = context.watch<LearningStatisticsState>();
     final collections = context.watch<LearningCollectionsState>();
     final newWords = context.watch<NewWordsState>();
 
@@ -40,13 +42,13 @@ class FootMarkPage extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _buildStatCard(skin, state),
+                    _buildStatCard(skin, statistics),
                     const SizedBox(height: 16),
                     _buildEntryCard(
                       skin: skin,
                       icon: Icons.menu_book,
                       title: '全部已学单词',
-                      count: state.learnedNum,
+                      count: session.learnedNum,
                       onTap: () => Navigator.pushNamed(context, MyWordsPage.routeName),
                     ),
                     const SizedBox(height: 12),
@@ -70,7 +72,7 @@ class FootMarkPage extends StatelessWidget {
                       skin: skin,
                       icon: Icons.hourglass_empty,
                       title: '未学习单词',
-                      count: state.notLearnedNum,
+                      count: session.total - session.learnedNum,
                       onTap: () => Navigator.pushNamed(context, NotLearnedWordsPage.routeName),
                     ),
                     const SizedBox(height: 12),
@@ -78,7 +80,7 @@ class FootMarkPage extends StatelessWidget {
                       skin: skin,
                       icon: Icons.replay,
                       title: '复习中单词',
-                      count: state.reviewingNum,
+                      count: statistics.dueCount,
                       onTap: () => Navigator.pushNamed(context, ReviewingWordsPage.routeName),
                     ),
                   ],
@@ -109,7 +111,7 @@ class FootMarkPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(SkinSystem skin, LearningState state) {
+  Widget _buildStatCard(SkinSystem skin, LearningStatisticsState statistics) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -119,7 +121,10 @@ class FootMarkPage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text('${state.totalLearnedDays}', style: MistralTypography.heading1.copyWith(color: MistralColors.primary)),
+          Text(
+            '${statistics.totalLearnedDays}',
+            style: MistralTypography.heading1.copyWith(color: MistralColors.primary),
+          ),
           const SizedBox(height: 4),
           Text('累计学习天数', style: MistralTypography.body.copyWith(color: MistralColors.slate)),
         ],

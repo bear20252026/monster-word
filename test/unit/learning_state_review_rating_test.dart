@@ -1,9 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/engine/fsrs6_engine.dart';
+import 'package:word_app/features/learning/data/learning_progress_repository.dart';
+import 'package:word_app/features/learning/data/learning_queue_repository.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
+import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
+import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/repositories/fav_repository.dart';
 import 'package:word_app/repositories/mastered_repository.dart';
@@ -44,7 +48,7 @@ void main() {
     );
     legacy.queue.add(Word(word: 'first'));
 
-    final queue = LearningQueueState()..synchronizeFrom(legacy);
+    final queue = LearningQueueState()..synchronizeFrom(legacy.session);
     legacy.queue.add(Word(word: 'later'));
     final statistics = LearningStatisticsState()..synchronize(queue: queue.snapshot, schedule: schedule);
 
@@ -53,6 +57,87 @@ void main() {
     expect(statistics.dueCount, 0);
     expect(statistics.memoryStats['total'], 0);
   });
+
+  test('专用学习会话独立完成词书加载、候选生成与评分推进', () async {
+    final schedule = ReviewScheduleRepository();
+    final session = LearningSessionState(
+      queueRepository: LearningQueueRepository(
+        wordSource: _FakeWordSource([
+          Word(id: 1, word: 'first', interpret: '第一'),
+          Word(id: 2, word: 'second', interpret: '第二'),
+        ]),
+        favRepository: _FakeFavRepository(),
+      ),
+      progressRepository: LearningProgressRepository(),
+      reviewSchedule: schedule,
+    );
+
+    await session.loadBook(Book(id: 1, code: 'TEST', name: '测试', wordCount: 2), shuffle: false);
+    expect(session.currentWord?.word, 'first');
+    expect(session.choices.where((choice) => choice.word == 'first'), hasLength(1));
+
+    await session.rate(FsrsRating.good);
+
+    expect(schedule.cardFor('first'), isNotNull);
+    expect(session.currentWord?.word, 'second');
+  });
+
+  test('专用学习会话在收藏词为空时保留当前队列与词书', () async {
+    final session = LearningSessionState(
+      queueRepository: LearningQueueRepository(
+        wordSource: _FakeWordSource([Word(id: 1, word: 'first')]),
+        favRepository: _FakeFavRepository(),
+      ),
+      progressRepository: LearningProgressRepository(),
+      reviewSchedule: ReviewScheduleRepository(),
+    );
+    final book = Book(id: 1, code: 'TEST', name: '测试', wordCount: 1);
+    await session.loadBook(book, shuffle: false);
+
+    await session.loadFavorites();
+
+    expect(session.currentBook, same(book));
+    expect(session.queue.map((word) => word.word), ['first']);
+  });
+
+  test('学习会话兼容外观委托队列加载、候选生成与评分推进', () async {
+    final source = _FakeWordSource([
+      Word(id: 1, word: 'first', interpret: '第一'),
+      Word(id: 2, word: 'second', interpret: '第二'),
+    ]);
+    final schedule = ReviewScheduleRepository();
+    final state = LearningState(
+      favRepository: _FakeFavRepository(),
+      masteredRepository: _FakeMasteredRepository(),
+      reviewSchedule: schedule,
+      queueRepository: LearningQueueRepository(wordSource: source, favRepository: _FakeFavRepository()),
+    );
+
+    await state.loadBook(Book(id: 1, code: 'TEST', name: '测试', wordCount: 2), shuffle: false);
+    final first = state.currentWord;
+
+    expect(first?.word, 'first');
+    expect(state.choices.where((choice) => choice.word == first?.word), hasLength(1));
+
+    await state.rate(FsrsRating.good);
+
+    expect(schedule.cardFor('first'), isNotNull);
+    expect(state.currentWord?.word, 'second');
+  });
+}
+
+class _FakeWordSource implements LearningQueueWordSource {
+  _FakeWordSource(this._words);
+
+  final List<Word> _words;
+
+  @override
+  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset}) async {
+    return List<Word>.from(_words);
+  }
+
+  @override
+  Future<List<Word>> getWordsByNames(Iterable<String> words) async => const [];
 }
 
 class _FakeMasteredRepository implements MasteredRepository {

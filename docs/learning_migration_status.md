@@ -170,3 +170,27 @@
 `LearningQueueState` 现以不可变 `LearningQueueSnapshot` 表达当前词书、词条队列、当前索引和已学计数。正式复习队列、学习统计以及队列分类词表均组合这一读取状态和 `ReviewScheduleRepository`，不再直接读取 `LearningState` 的队列、卡片或统计 getter。快照复制词条列表，防止展示侧因持有遗留可变队列而在一次刷新间隔内观察到未同步变更。
 
 当前学习会话的 `loadBook`、收藏词学习、Leitner 推进、四选一候选和队列写入仍保留在 `LearningState`，并通过单一 Proxy 同步到 `LearningQueueState`。这是刻意保留的迁移适配器：后续应提取队列写入命令和会话状态，而不是让新页面或正式复习重新读取该遗留聚合状态。
+
+## 学习进度持久化边界
+
+`LearningProgressRepository` 现为当前学习词书、学习索引和队列单词 ID 快照的唯一偏好存储边界，并保留既有 `current_book_v1`、`current_index_v1`、`queue_snapshot_v1` 键和值结构。`LearningState` 只保留保存时机和启动时恢复索引的兼容会话职责，不再直接使用 `SharedPreferences` 或处理 JSON 编解码。
+
+当前词书加载、收藏词学习、Leitner 推进和四选一候选仍属于遗留学习会话命令，下一阶段应将它们整体迁至专用会话状态；不得仅迁移其中一个命令而同时保留两套可变队列。
+
+## 学习队列命令边界
+
+`LearningQueueRepository` 与 `LearningQueueWordSource` 现集中词书加载、收藏词解析、当前队列回退和可选乱序规则。生产实现仍适配既有 `WordBookDatabase` 与 `FavRepository`，因此词书查询上限、起始偏移、收藏词优先从完整词库解析、无法解析时回退当前队列的行为均保持不变。
+
+`LearningState` 已不再直接调用词库数据库来加载队列或解析收藏词；它暂时仍负责将新队列初始化为 Leitner 会话、维护当前索引、生成候选、接收会话评分并通知遗留页面。后续会话状态迁移必须整体转移这组可变行为，避免新增第二套队列或评分推进。
+
+## 学习会话编排边界
+
+`LearningSessionState` 现拥有当前学习队列、当前索引、翻卡状态、四选一候选、Leitner 推进以及学习会话评分后的索引推进。它组合 `LearningQueueRepository`、`LearningProgressRepository` 与 `ReviewScheduleRepository`，因此词书加载、进度保存和按实际当前词写入 FSRS 不再散落在遗留状态实现中。
+
+`LearningState` 已收敛为兼容外观：它监听同一个 `LearningSessionState` 并转发仍被未迁出页面使用的旧 API，同时继续承担收藏/掌握标记和占位账号状态。新读取层 `LearningQueueState` 已直接监听专用会话状态，不再经由兼容外观复制队列。后续页面迁移应优先直接消费 `LearningSessionState` 的会话读写能力，再逐步删除对应的外观转发方法。
+
+## 已迁移学习会话入口
+
+句子测验页、词条详情页、词书选择卡和收藏词“开始学习”入口现直接使用 `LearningSessionState` 完成当前词读取、词书/收藏队列加载与学习评分。词条详情页的 FSRS 预测改为直接读取 `ReviewScheduleRepository`，避免为了展示预测而重新经过遗留外观。
+
+词典、收藏批量管理、账号、引导及导出页面仍可暂时使用 `LearningState` 的收藏、账号或兼容读取 API；它们不应再调用加载、评分、索引或候选生成等学习会话命令。下一步迁移这些页面时，应按其实际职责分别接入收藏仓储、队列快照或账号状态，而不是继续扩展兼容外观。

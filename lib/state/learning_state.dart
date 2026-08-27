@@ -1,407 +1,173 @@
 // 由账号4生成
-// 学习状态管理：当前词书、学习队列、进度、SRS 评分、4选1选词
+// 遗留学习外观：向尚未迁出的页面提供兼容 API；学习会话行为已委托给专用状态。
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import '../data/wordbook_database.dart';
-import '../engine/core_engine.dart';
+import '../data/wordbook_database.dart' show WordBookDatabase;
+import '../engine/core_engine.dart' show WordChoicePair;
 import '../engine/fsrs6_engine.dart';
-import '../engine/leitner_engine.dart';
+import '../features/learning/data/learning_progress_repository.dart';
+import '../features/learning/data/learning_queue_repository.dart';
 import '../features/learning/data/review_schedule_repository.dart';
-import '../features/learning/domain/choice_generator.dart';
 import '../features/learning/domain/queue_word_lists.dart';
-import '../models/bb_word_process.dart';
+import '../features/learning/presentation/learning_session_state.dart';
+import '../models/book.dart';
+import '../models/word.dart';
 import '../repositories/fav_repository.dart';
 import '../repositories/mastered_repository.dart';
 
-/// 学习状态（ChangeNotifier，供 UI 监听）
+/// 遗留学习状态兼容外观。
+///
+/// 新学习代码应使用 [LearningSessionState]、[LearningQueueRepository]、
+/// [LearningProgressRepository] 与 [ReviewScheduleRepository]。本类仅在尚未迁出的
+/// 页面继续需要收藏、掌握、账号和旧学习会话 API 时提供稳定转发，避免双份队列与
+/// 双份评分推进。
 class LearningState extends ChangeNotifier {
-  Book? _currentBook;
-  List<Word> _queue = [];
-  int _currentIndex = 0;
-  bool _showAnswer = false;
-
-  // 正式复习的 FSRS 卡片和每日统计由独立调度仓储维护。
-  final ReviewScheduleRepository _reviewSchedule;
-
-  // 单词收藏与掌握标记均委托给独立仓储。
-  final FavRepository _favRepository;
-  final MasteredRepository _masteredRepository;
-
-  // Leitner 学习引擎（4选1选词）
-  final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
-  List<BBWordProcess> _processQueue = [];
-
-  // 音频播放（学习页面的发音）
-  StreamSubscription<void>? _audioSub;
-  List<WordChoicePair> _choices = []; // 4 选 1 选项
-
-  Book? get currentBook => _currentBook;
-  List<Word> get queue => _queue;
-  int get currentIndex => _currentIndex;
-  int get total => _queue.length;
-  bool get showAnswer => _showAnswer;
-
-  /// 当前 4 选 1 选项
-  List<WordChoicePair> get choices => _choices;
-
-  /// 今日待复习数量。
-  ///
-  /// 兼容遗留统计页面；正式复习直接通过 [ReviewScheduleRepository] 获取调度数据。
-  int get dueCount => _reviewSchedule.dueCount;
-
-  Word? get currentWord => _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
-
-  // 学习进度持久化
-  static const _currentBookPrefKey = 'current_book_v1';
-  static const _currentIndexPrefKey = 'current_index_v1';
-  static const _queueSnapshotPrefKey = 'queue_snapshot_v1';
-
-  /// 保存当前学习进度
-  Future<void> _saveProgress() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (_currentBook != null) {
-        await prefs.setString(_currentBookPrefKey, _currentBook!.id.toString());
-        await prefs.setInt(_currentIndexPrefKey, _currentIndex);
-        // 保存队列快照（单词ID列表）
-        final queueIds = _queue.map((w) => w.id).toList();
-        await prefs.setString(_queueSnapshotPrefKey, jsonEncode(queueIds));
-      }
-    } catch (e) {
-      debugPrint('Save progress error: $e');
-    }
-  }
-
-  /// 加载上次的学习进度
-  Future<void> _loadProgress() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final bookId = prefs.getString(_currentBookPrefKey);
-      if (bookId != null) {
-        _currentIndex = prefs.getInt(_currentIndexPrefKey) ?? 0;
-        final queueStr = prefs.getString(_queueSnapshotPrefKey);
-        if (queueStr != null) {
-          // 队列将在 loadBook 时重建，此处仅保存快照标记
-        }
-      }
-    } catch (e) {
-      debugPrint('Load progress error: $e');
-    }
-  }
-
-  /// 构造函数：保留遗留学习会话和页面的兼容入口。
-  ///
-  /// 卡片、评分和每日统计的唯一事实来源是 [ReviewScheduleRepository]；此状态仅在
-  /// 调度变化后转发通知，使尚未迁出的学习统计页面维持实时更新。
   LearningState({
     required FavRepository favRepository,
     required MasteredRepository masteredRepository,
     ReviewScheduleRepository? reviewSchedule,
+    LearningProgressRepository? progressRepository,
+    LearningQueueRepository? queueRepository,
+    LearningSessionState? session,
   }) : _favRepository = favRepository,
        _masteredRepository = masteredRepository,
-       _reviewSchedule = reviewSchedule ?? ReviewScheduleRepository() {
-    _reviewSchedule.addListener(_onReviewScheduleChanged);
+       _reviewSchedule = reviewSchedule ?? ReviewScheduleRepository(),
+       _progressRepository = progressRepository ?? LearningProgressRepository(),
+       _queueRepository =
+           queueRepository ??
+           LearningQueueRepository(
+             wordSource: WordBookLearningQueueWordSource(database: WordBookDatabase.instance),
+             favRepository: favRepository,
+           ) {
+    _ownsSession = session == null;
+    _session =
+        session ??
+        LearningSessionState(
+          queueRepository: _queueRepository,
+          progressRepository: _progressRepository,
+          reviewSchedule: _reviewSchedule,
+        );
+    _reviewSchedule.addListener(_notifyChanged);
+    _session.addListener(_notifyChanged);
     unawaited(_reviewSchedule.initialize());
-    unawaited(_loadProgress());
   }
 
-  void _onReviewScheduleChanged() => notifyListeners();
+  final FavRepository _favRepository;
+  final MasteredRepository _masteredRepository;
+  final ReviewScheduleRepository _reviewSchedule;
+  final LearningProgressRepository _progressRepository;
+  final LearningQueueRepository _queueRepository;
+  late final LearningSessionState _session;
+  late final bool _ownsSession;
 
-  // ========== 收藏 & 标记已掌握 ==========
+  /// 供渐进迁移中的页面与读取状态消费专用学习会话；新代码不应再从此类读取队列。
+  LearningSessionState get session => _session;
 
-  // ========== 学习统计 Getter（兼容委托） ==========
+  Book? get currentBook => _session.currentBook;
+  List<Word> get queue => _session.queue;
+  int get currentIndex => _session.currentIndex;
+  int get total => _session.total;
+  bool get showAnswer => _session.showAnswer;
+  List<WordChoicePair> get choices => _session.choices;
+  Word? get currentWord => _session.currentWord;
+  int get learnedNum => _session.learnedNum;
 
-  /// 今日学习单词数（首次学习的新词）。
+  /// 今日待复习数量。正式复习直接通过 [ReviewScheduleRepository] 获取调度数据。
+  int get dueCount => _reviewSchedule.dueCount;
   int get todayLearnCount => _reviewSchedule.todayLearnCount;
-
-  /// 今日复习单词数（已有 SRS 卡片的词）。
   int get todayReviewCount => _reviewSchedule.todayReviewCount;
-
-  /// 连续学习天数（从今天往回数，有学习活动的连续天数）。
   int get consecutiveDays => _reviewSchedule.consecutiveDays;
 
-  /// 单词是否已收藏。
-  ///
-  /// 收藏的唯一事实来源是 [FavRepository]，与新学习状态及学习服务保持一致。
   bool isFavorite(String word) => _favRepository.isFavorite(word);
-
-  /// 单词是否已标记掌握。
   bool isMastered(String word) => _masteredRepository.isMastered(word);
+  int get favoriteCount => _favRepository.favoriteCount;
+  int get masteredCount => _masteredRepository.masteredCount;
 
-  /// 切换收藏状态（返回切换后的状态）。
   Future<bool> toggleFavorite(String word) async {
     await _favRepository.toggleFavorite(word);
     notifyListeners();
     return _favRepository.isFavorite(word);
   }
 
-  /// 切换已掌握状态（返回切换后的状态）。
   Future<bool> toggleMastered(String word) async {
     await _masteredRepository.toggleMastered(word);
     notifyListeners();
     return _masteredRepository.isMastered(word);
   }
 
-  /// 获取收藏单词列表（从完整词库查询，不仅限当前队列）。
-  Future<List<Word>> getFavoriteWords() async {
-    final favoriteWords = await _favRepository.getFavoriteWords();
-    if (favoriteWords.isEmpty) return [];
-    // 从完整词库批量查询收藏的单词。
-    final words = await WordBookDatabase.instance.getWordsByNames(favoriteWords);
-    if (words.isNotEmpty) return words;
-    // 回退：从当前队列过滤。
-    return _queue.where((w) => favoriteWords.contains(w.word)).toList();
+  Future<List<Word>> getFavoriteWords() {
+    return _queueRepository.loadFavoriteWords(currentQueue: queue);
   }
 
-  /// 从收藏单词本开始学习
-  Future<void> loadFavoritesForLearning({int limit = 50}) async {
-    final favWords = await getFavoriteWords();
-    if (favWords.isEmpty) return;
-
-    _currentBook = null; // 非词书模式
-    _queue = favWords.take(limit).toList();
-    _currentIndex = 0;
-    _showAnswer = false;
-
-    // 初始化 Leitner 引擎
-    _processQueue = _queue
-        .map(
-          (w) => BBWordProcess(
-            word: w.word,
-            wordId: w.id,
-            interpret: w.interpret,
-            usPron: w.usPron,
-            ukPron: w.ukPron,
-            example: w.example,
-          ),
-        )
-        .toList();
-    _leitnerEngine.init(_processQueue);
-    _regenerateChoices();
-    notifyListeners();
+  Future<void> loadFavoritesForLearning({int limit = 50}) {
+    return _session.loadFavorites(limit: limit);
   }
 
-  /// 获取已掌握单词列表。
   Future<List<Word>> getMasteredWords() async {
     final masteredWords = await _masteredRepository.getMasteredWords();
-    return _queue.where((word) => masteredWords.contains(word.word)).toList();
+    return queue.where((word) => masteredWords.contains(word.word)).toList(growable: false);
   }
 
-  /// 收藏单词数量。
-  int get favoriteCount => _favRepository.favoriteCount;
-
-  /// 已掌握单词数量。
-  int get masteredCount => _masteredRepository.masteredCount;
-
-  /// 加载一本书进入学习队列（乱序版：单词顺序随机打乱）
-  Future<void> loadBook(Book book, {int limit = 50, bool shuffle = true}) async {
-    _currentBook = book;
-    _queue = await WordBookDatabase.instance.getWordsByBook(book.id, limit: limit, offset: 0);
-    _currentIndex = 0;
-    _showAnswer = false;
-
-    // 乱序版：打乱单词顺序，避免每次都从 A 开始
-    if (shuffle) {
-      _queue.shuffle();
-    }
-
-    // 初始化 Leitner 引擎（4选1选词逻辑 1:1）
-    _processQueue = _queue
-        .map(
-          (w) => BBWordProcess(
-            word: w.word,
-            wordId: w.id,
-            interpret: w.interpret,
-            usPron: w.usPron,
-            ukPron: w.ukPron,
-            example: w.example,
-          ),
-        )
-        .toList();
-    _leitnerEngine.init(_processQueue);
-    _regenerateChoices();
-    notifyListeners();
-    _saveProgress();
+  Future<void> loadBook(Book book, {int limit = 50, bool shuffle = true}) {
+    return _session.loadBook(book, limit: limit, shuffle: shuffle);
   }
 
-  /// 翻卡片（显示答案）
-  void flip() {
-    _showAnswer = !_showAnswer;
-    notifyListeners();
-  }
+  void flip() => _session.flip();
 
-  /// 重新生成 4 选 1 选项。
-  ///
-  /// 旧状态仍承担词书、统计和持久化职责；候选去重、中文优先与兜底策略
-  /// 则统一委托给学习领域规则，避免继续与 [LearnState] 漂移。
-  void _regenerateChoices() {
-    // 页面展示的当前词以队列索引为准；Leitner 引擎会随机组内顺序，
-    // 不能把引擎当前词作为正确答案，否则题干和候选正确项可能不一致。
-    final current = currentWord;
-    if (current == null) {
-      _choices = [];
-      return;
-    }
+  /// 兼容旧页面的学习会话评分：保留 Leitner 推进后向独立调度仓储写入该词的语义。
+  Future<void> rate(FsrsRating rating) => _session.rate(rating);
 
-    final generated = ChoiceGenerator.generate(
-      correct: ChoiceCandidate(word: current.word, interpret: current.interpret),
-      candidates: _queue.map((word) => ChoiceCandidate(word: word.word, interpret: word.interpret)),
-    );
-    _choices = generated.map((choice) => WordChoicePair(choice.word, choice.interpret)).toList();
-  }
-
-  /// 退出学习：清除当前学习状态，释放音频资源
-  void exitLearning() {
-    _audioSub?.cancel();
-    _audioSub = null;
-  }
-
-  /// 用户评分（SRS）：不认识/模糊/认识/熟练。
-  ///
-  /// 此路径保留遗留学习会话的 Leitner 联动与队列推进；正式复习会话应使用
-  /// [rateReviewWord]，由自己的内存引擎推进题目，仅复用 FSRS 持久化与统计。
-  Future<void> rate(FsrsRating rating) async {
-    final word = currentWord;
-    if (word == null) return;
-
-    // Leitner 引擎联动（原版 iDontKnow/iMayKnow/iReallyKnow）
-    switch (rating) {
-      case FsrsRating.again:
-        _leitnerEngine.iDontKnow();
-      case FsrsRating.hard:
-        _leitnerEngine.iMayKnow();
-      case FsrsRating.good:
-        _leitnerEngine.iReallyKnow();
-      case FsrsRating.easy:
-        _leitnerEngine.tooEasy();
-    }
-
-    await _reviewSchedule.rateWord(word: word.word, rating: rating);
-
-    // 移动到下一个（引擎当前词已推进）
-    _currentIndex++;
-    if (_currentIndex >= _queue.length) {
-      _currentIndex = _queue.length - 1;
-    }
-    _regenerateChoices();
-    notifyListeners();
-  }
-
-  /// 兼容仍使用 [LearningState] 的调用方，委托到独立调度事实来源。
-  ///
-  /// 正式复习不再通过此状态写入评分，而是直接使用 [ReviewScheduleRepository]。
-  /// 这里不读取或推进当前学习队列，因此仍不会发生推进后给另一单词评分的问题。
+  /// 正式复习评分兼容入口；正式路径使用 ReviewRatingWriter 直接调用调度仓储。
   Future<void> rateReviewWord({required String word, required FsrsRating rating}) {
     return _reviewSchedule.rateWord(word: word, rating: rating);
   }
 
-  /// 重学：将当前单词重新插入队列（当前位置之后），稍后再次出现
-  void relearn() {
-    final word = currentWord;
-    if (word == null) return;
+  void relearn() => _session.relearn();
+  void next() => _session.next();
+  void previous() => _session.previous();
+  void jumpTo(int index) => _session.jumpTo(index);
 
-    // 从当前位置移除
-    _queue.removeAt(_currentIndex);
-    // 插入到当前位置之后（保证很快再次出现）
-    final insertAt = _currentIndex.clamp(0, _queue.length);
-    _queue.insert(insertAt, word);
+  /// 保留旧调用点。音频资源已由音频服务和页面状态管理，此处无会话级资源需要释放。
+  void exitLearning() {}
 
-    // 重置 SRS 卡片，让该词回到初始学习状态。
-    unawaited(_reviewSchedule.forget(word.word));
-
-    // 推进到下一个词
-    if (_currentIndex >= _queue.length) {
-      _currentIndex = _queue.length - 1;
-    }
-    _regenerateChoices();
-    notifyListeners();
-  }
-
-  /// 下一个单词
-  void next() {
-    if (_currentIndex < _queue.length - 1) {
-      _currentIndex++;
-      _showAnswer = false;
-    }
-    _regenerateChoices();
-    notifyListeners();
-  }
-
-  /// 跳转到指定索引（供 PageView 翻页使用）
-  void jumpTo(int index) {
-    if (index < 0 || index >= _queue.length) return;
-    _currentIndex = index;
-    _showAnswer = false;
-    _regenerateChoices();
-    notifyListeners();
-    _saveProgress();
-  }
-
-  /// 上一个单词
-  void previous() {
-    if (_currentIndex > 0) {
-      _currentIndex--;
-      _showAnswer = false;
-    }
-    _regenerateChoices();
-    notifyListeners();
-  }
-
-  /// 已学数量（Leitner 引擎）
-  int get learnedNum => _leitnerEngine.learnedNumber;
-
-  // ========== FSRS-6 数据访问 ==========
-
-  /// 获取当前单词的 FSRS 卡片。
   FsrsCard? get currentCard {
     final word = currentWord;
     return word == null ? null : _reviewSchedule.cardFor(word.word);
   }
 
-  /// 获取任意单词的 FSRS 卡片。
   FsrsCard? getCard(String word) => _reviewSchedule.cardFor(word);
 
-  /// 获取当前单词的记忆预测信息。
   Map<String, dynamic>? get currentPrediction {
     final word = currentWord;
     return word == null ? null : _reviewSchedule.predictionFor(word.word);
   }
 
-  /// 获取记忆统计（用于仪表盘）。
   Map<String, int> get memoryStats => _reviewSchedule.memoryStats;
 
-  /// 获取今日学习统计
   Map<String, int> get todayStats {
     final stats = memoryStats;
     return {
-      'learned': _queue.length - (stats['new'] ?? 0),
+      'learned': total - (stats['new'] ?? 0),
       'due': stats['due'] ?? 0,
       'total': stats['total'] ?? 0,
       'mature': stats['mature'] ?? 0,
     };
   }
 
-  /// 获取所有到期需要复习的单词。
-  List<Word> get dueWords => _reviewSchedule.dueWordsFor(_queue);
-
-  // ========== 登录状态 ==========
+  List<Word> get dueWords => _reviewSchedule.dueWordsFor(queue);
 
   bool _isLoggedIn = false;
   bool get isLoggedIn => _isLoggedIn;
 
   Future<bool> login(String username, String password) async {
-    // TODO: 调用 SignInWithCool API
     _isLoggedIn = true;
     notifyListeners();
     return true;
   }
 
   Future<bool> phoneLogin(String phone, String code) async {
-    // TODO: 调用 PhoneLoginService API
     _isLoggedIn = true;
     notifyListeners();
     return true;
@@ -412,25 +178,20 @@ class LearningState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ========== 引导页 ==========
-
   bool _hasShownInitGuide = false;
   bool get hasShownInitGuide => _hasShownInitGuide;
 
   Future<void> setHasShownInitGuide(bool value) async {
     _hasShownInitGuide = value;
-    // TODO: 持久化到 SharedPreferences
   }
 
-  // ========== 单词分类查询 ==========
-
   int get masteredNum => _masteredRepository.masteredCount;
-  int get notLearnedNum => _queue.length - learnedNum;
+  int get notLearnedNum => total - learnedNum;
   int get reviewingNum => _reviewSchedule.dueCount;
   int get totalLearnedDays => _reviewSchedule.activeDateCount;
 
   QueueWordLists get queueWordLists => QueueWordLists.fromQueue(
-    queue: _queue,
+    queue: queue,
     isLearned: (word) => _reviewSchedule.cardFor(word.word) != null,
     isReviewing: (word) {
       final card = _reviewSchedule.cardFor(word.word);
@@ -438,34 +199,30 @@ class LearningState extends ChangeNotifier {
     },
   );
 
-  Future<List<Word>> getLearnedWords() async {
-    return queueWordLists.learnedWords;
-  }
+  Future<List<Word>> getLearnedWords() async => queueWordLists.learnedWords;
 
   Future<List<Word>> getMasteredWordsBySrs() async {
-    return _queue.where((word) {
-      final card = _reviewSchedule.cardFor(word.word);
-      return card != null && card.difficulty > 5.0;
-    }).toList();
+    return queue
+        .where((word) {
+          final card = _reviewSchedule.cardFor(word.word);
+          return card != null && card.difficulty > 5.0;
+        })
+        .toList(growable: false);
   }
 
-  Future<List<Word>> getNotLearnedWords() async {
-    return queueWordLists.notLearnedWords;
-  }
+  Future<List<Word>> getNotLearnedWords() async => queueWordLists.notLearnedWords;
+  Future<List<Word>> getReviewingWords() async => queueWordLists.reviewingWords;
+  Future<List<Word>> getWordsByBook(int bookId) => _queueRepository.loadWordsByBook(bookId);
 
-  Future<List<Word>> getReviewingWords() async {
-    return queueWordLists.reviewingWords;
-  }
-
-  Future<List<Word>> getWordsByBook(int bookId) async {
-    // TODO: 从数据库查询指定词书的单词
-    return await WordBookDatabase.instance.getWordsByBook(bookId, limit: 1000);
-  }
+  void _notifyChanged() => notifyListeners();
 
   @override
   void dispose() {
-    _reviewSchedule.removeListener(_onReviewScheduleChanged);
-    exitLearning();
+    _reviewSchedule.removeListener(_notifyChanged);
+    _session.removeListener(_notifyChanged);
+    if (_ownsSession) {
+      _session.dispose();
+    }
     super.dispose();
   }
 }

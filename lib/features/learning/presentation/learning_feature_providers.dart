@@ -13,10 +13,13 @@ import '../application/new_words_reader.dart';
 import '../application/review_audio_player.dart';
 import '../application/review_queue_reader.dart';
 import '../application/review_rating_writer.dart';
+import '../data/learning_progress_repository.dart';
+import '../data/learning_queue_repository.dart';
 import '../data/review_schedule_repository.dart';
 import 'learning_collections_state.dart';
 import 'learning_queue_state.dart';
 import 'learning_queue_word_lists_state.dart';
+import 'learning_session_state.dart';
 import 'learning_statistics_state.dart';
 import 'new_words_state.dart';
 import 'review_audio_state.dart';
@@ -33,16 +36,27 @@ Widget buildLearningFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
       ChangeNotifierProvider<ReviewScheduleRepository>.value(value: sl<ReviewScheduleRepository>()),
+      Provider<LearningQueueRepository>.value(value: sl<LearningQueueRepository>()),
       ChangeNotifierProvider(
-        create: (_) => LearningState(
-          favRepository: sl<FavRepository>(),
-          masteredRepository: sl<MasteredRepository>(),
+        create: (_) => LearningSessionState(
+          queueRepository: sl<LearningQueueRepository>(),
+          progressRepository: sl<LearningProgressRepository>(),
           reviewSchedule: sl<ReviewScheduleRepository>(),
         ),
       ),
-      ChangeNotifierProxyProvider<LearningState, LearningQueueState>(
+      ChangeNotifierProvider(
+        create: (context) => LearningState(
+          favRepository: sl<FavRepository>(),
+          masteredRepository: sl<MasteredRepository>(),
+          reviewSchedule: sl<ReviewScheduleRepository>(),
+          progressRepository: sl<LearningProgressRepository>(),
+          queueRepository: sl<LearningQueueRepository>(),
+          session: context.read<LearningSessionState>(),
+        ),
+      ),
+      ChangeNotifierProxyProvider<LearningSessionState, LearningQueueState>(
         create: (_) => LearningQueueState(),
-        update: (_, legacy, queue) => (queue ?? LearningQueueState())..synchronizeFrom(legacy),
+        update: (_, session, queue) => (queue ?? LearningQueueState())..synchronizeFrom(session),
       ),
       ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, LearningStatisticsState>(
         create: (_) => LearningStatisticsState(),

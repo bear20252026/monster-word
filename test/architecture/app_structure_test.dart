@@ -26,9 +26,22 @@ void main() {
 
       expect(providersSource, contains('ReviewScheduleRepository'));
       expect(providersSource, contains('ReviewRatingWriter(writeRating: schedule.rateWord)'));
+      expect(providersSource, contains('LearningSessionState'));
       expect(providersSource, contains('LearningQueueState'));
       expect(providersSource, contains('ReviewQueueState'));
       expect(providersSource, isNot(contains('legacy.rateReviewWord')));
+    });
+
+    test('遗留学习外观不重新持有专用会话的可变队列或 Leitner 实现', () {
+      final facadeSource = File('lib/state/learning_state.dart').readAsStringSync();
+      final sessionSource = File('lib/features/learning/presentation/learning_session_state.dart').readAsStringSync();
+
+      expect(facadeSource, contains('LearningSessionState'));
+      expect(facadeSource, isNot(contains('LeitnerCardEngine')));
+      expect(facadeSource, isNot(contains('List<Word> _queue')));
+      expect(facadeSource, isNot(contains('_regenerateChoices')));
+      expect(sessionSource, contains('LeitnerCardEngine'));
+      expect(sessionSource, contains('Future<void> rate(FsrsRating rating)'));
     });
   });
 

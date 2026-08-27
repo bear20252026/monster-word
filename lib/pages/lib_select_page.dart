@@ -13,7 +13,8 @@ import '../hooks/responsive.dart';
 import '../pages/dictation_session_page.dart';
 import '../pages/quick_spell_page.dart';
 import '../pages/word_export_page.dart';
-import '../state/learning_state.dart';
+import '../features/learning/data/learning_queue_repository.dart';
+import '../features/learning/presentation/learning_session_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/bending_gallery.dart';
@@ -103,11 +104,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                   Expanded(
                     child: Text(
                       '选择词书',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: colors.text1,
-                      ),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1),
                     ),
                   ),
                   // 搜索图标
@@ -120,12 +117,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                   ),
                   // 眼睛图标（显示/隐藏词书描述）
                   IconButton(
-                    icon: Icon(
-                      _showDescription
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      size: 22,
-                    ),
+                    icon: Icon(_showDescription ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 22),
                     color: colors.text1,
                     onPressed: () {
                       setState(() => _showDescription = !_showDescription);
@@ -182,8 +174,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                           const SizedBox(height: 16),
                           Text('暂无词书', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
                           const SizedBox(height: 8),
-                          Text('当前分类下没有词书，请切换分类或刷新',
-                            style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                          Text('当前分类下没有词书，请切换分类或刷新', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
                           const SizedBox(height: 24),
                           OutlinedButton.icon(
                             onPressed: () => setState(() => _booksFuture = _load()),
@@ -209,10 +200,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                           padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
                           child: Container(
                             padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: colors.cardBgAlt,
-                              borderRadius: BorderRadius.circular(24),
-                            ),
+                            decoration: BoxDecoration(color: colors.cardBgAlt, borderRadius: BorderRadius.circular(24)),
                             child: Row(
                               children: [
                                 WordGlobe(
@@ -225,23 +213,21 @@ class _LibSelectPageState extends State<LibSelectPage> {
                                 const SizedBox(width: 14),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('单词的环球之旅',
+                                      Text(
+                                        '单词的环球之旅',
                                         style: TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,
                                           color: colors.text1,
-                                        )),
+                                        ),
+                                      ),
                                       const SizedBox(height: 4),
                                       Text(
                                         '从罗马到伦敦，追溯每个词的起源与传播路径。拖动星球旋转，双指缩放探索。',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          height: 1.4,
-                                          color: colors.text2,
-                                        )),
+                                        style: TextStyle(fontSize: 12, height: 1.4, color: colors.text2),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -254,12 +240,10 @@ class _LibSelectPageState extends State<LibSelectPage> {
                           padding: const EdgeInsets.symmetric(horizontal: 14),
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: Text('精选词书 · 左右滑动探索',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: colors.text2,
-                              )),
+                            child: Text(
+                              '精选词书 · 左右滑动探索',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.text2),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -272,16 +256,14 @@ class _LibSelectPageState extends State<LibSelectPage> {
                             final idx = featured.indexOf(book);
                             return BendingGalleryItem(
                               label: book.name,
-                              color: _LibItem._coverColorsLight[
-                                idx % _LibItem._coverColorsLight.length],
+                              color: _LibItem._coverColorsLight[idx % _LibItem._coverColorsLight.length],
                               onTap: () => _openBookFromGallery(context, book),
                               // 画廊单元格固定约 112×122，放不下完整卡片，
                               // 这里用紧凑封面内容（图标 + 编码 + 词数）
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.menu_book,
-                                      color: AppColors.white100, size: 26),
+                                  const Icon(Icons.menu_book, color: AppColors.white100, size: 26),
                                   const SizedBox(height: 8),
                                   Text(
                                     book.code,
@@ -297,8 +279,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                                   Text(
                                     '${book.wordCount} 词',
                                     style: MistralTypography.caption.copyWith(
-                                      color: AppColors.white100
-                                          .withValues(alpha: 0.75),
+                                      color: AppColors.white100.withValues(alpha: 0.75),
                                     ),
                                   ),
                                 ],
@@ -320,27 +301,27 @@ class _LibSelectPageState extends State<LibSelectPage> {
                     );
                   }
                   return resp.isDesktop
-                    ? GridView.builder(
-                        padding: EdgeInsets.all(resp.horizontalPadding),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: resp.bookGridColumns,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: resp.horizontalPadding,
-                          mainAxisSpacing: resp.horizontalPadding,
-                        ),
-                        itemCount: books.length,
-                        itemBuilder: (context, index) {
-                          final book = books[index];
-                          return _LibItem(book: book, showDescription: _showDescription);
-                        },
-                      )
-                    : ListView.builder(
-                        itemCount: books.length,
-                        itemBuilder: (context, index) {
-                          final book = books[index];
-                          return _LibItem(book: book, showDescription: _showDescription);
-                        },
-                      );
+                      ? GridView.builder(
+                          padding: EdgeInsets.all(resp.horizontalPadding),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: resp.bookGridColumns,
+                            childAspectRatio: 0.75,
+                            crossAxisSpacing: resp.horizontalPadding,
+                            mainAxisSpacing: resp.horizontalPadding,
+                          ),
+                          itemCount: books.length,
+                          itemBuilder: (context, index) {
+                            final book = books[index];
+                            return _LibItem(book: book, showDescription: _showDescription);
+                          },
+                        )
+                      : ListView.builder(
+                          itemCount: books.length,
+                          itemBuilder: (context, index) {
+                            final book = books[index];
+                            return _LibItem(book: book, showDescription: _showDescription);
+                          },
+                        );
                 },
               ),
             ),
@@ -355,26 +336,10 @@ class _LibSelectPageState extends State<LibSelectPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _BottomToolItem(
-                      icon: Icons.style,
-                      label: '沉浸刷词',
-                      onTap: () => _onToolTap(context, 'immersive'),
-                    ),
-                    _BottomToolItem(
-                      icon: Icons.headphones,
-                      label: '随身听',
-                      onTap: () => _onToolTap(context, 'listen'),
-                    ),
-                    _BottomToolItem(
-                      icon: Icons.edit_note,
-                      label: '听写',
-                      onTap: () => _onToolTap(context, 'dictation'),
-                    ),
-                    _BottomToolItem(
-                      icon: Icons.spellcheck,
-                      label: '随手拼',
-                      onTap: () => _onToolTap(context, 'spell'),
-                    ),
+                    _BottomToolItem(icon: Icons.style, label: '沉浸刷词', onTap: () => _onToolTap(context, 'immersive')),
+                    _BottomToolItem(icon: Icons.headphones, label: '随身听', onTap: () => _onToolTap(context, 'listen')),
+                    _BottomToolItem(icon: Icons.edit_note, label: '听写', onTap: () => _onToolTap(context, 'dictation')),
+                    _BottomToolItem(icon: Icons.spellcheck, label: '随手拼', onTap: () => _onToolTap(context, 'spell')),
                     _BottomToolItem(
                       icon: Icons.file_download_outlined,
                       label: '导出',
@@ -391,13 +356,10 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   void _onToolTap(BuildContext context, String tool) {
-    final state = context.read<LearningState>();
-    final book = state.currentBook;
+    final book = context.read<LearningSessionState>().currentBook;
 
     if (book == null && tool != 'immersive') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先选择一本词书')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先选择一本词书')));
       return;
     }
 
@@ -410,10 +372,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ExtensiveModelSelectPage(
-              bookId: book!.id,
-              bookName: book.name,
-            ),
+            builder: (_) => ExtensiveModelSelectPage(bookId: book!.id, bookName: book.name),
           ),
         );
         break;
@@ -430,28 +389,20 @@ class _LibSelectPageState extends State<LibSelectPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => WordExportPage(
-              bookId: book!.id,
-              bookName: book.name,
-            ),
+            builder: (_) => WordExportPage(bookId: book!.id, bookName: book.name),
           ),
         );
         break;
       default:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$tool 功能开发中...')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$tool 功能开发中...')));
     }
   }
 
   Future<void> _startDictation(BuildContext context, Book book) async {
-    final state = context.read<LearningState>();
-    final words = await state.getWordsByBook(book.id);
+    final words = await context.read<LearningQueueRepository>().loadWordsByBook(book.id);
     if (!context.mounted) return;
     if (words.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('该词书暂无单词')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));
       return;
     }
     Navigator.push(
@@ -463,13 +414,10 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   Future<void> _startQuickSpell(BuildContext context, Book book) async {
-    final state = context.read<LearningState>();
-    final words = await state.getWordsByBook(book.id);
+    final words = await context.read<LearningQueueRepository>().loadWordsByBook(book.id);
     if (!context.mounted) return;
     if (words.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('该词书暂无单词')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));
       return;
     }
     Navigator.push(
@@ -484,9 +432,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: colors.cardBg,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -550,14 +496,14 @@ class _LibItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.read<LearningState>();
+    final session = context.read<LearningSessionState>();
     final colors = context.skin.colors;
-    final isLearning = state.currentBook?.id == book.id;
+    final isLearning = session.currentBook?.id == book.id;
 
     return GestureDetector(
       onTap: () async {
         try {
-          await state.loadBook(book, limit: 50);
+          await session.loadBook(book, limit: 50);
           if (context.mounted) {
             Navigator.pushNamed(
               context,
@@ -567,9 +513,7 @@ class _LibItem extends StatelessWidget {
           }
         } catch (e) {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('加载词书失败: $e')),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('加载词书失败: $e')));
           }
         }
       },
@@ -589,18 +533,14 @@ class _LibItem extends StatelessWidget {
                 color: _coverColor(context, book.code),
                 borderRadius: BorderRadius.circular(16),
               ),
-                child: Center(
-                  child: Text(
-                    _coverText(),
-                    style: const TextStyle(
-                      color: AppColors.white100,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+              child: Center(
+                child: Text(
+                  _coverText(),
+                  style: const TextStyle(color: AppColors.white100, fontSize: 11, fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -614,11 +554,7 @@ class _LibItem extends StatelessWidget {
                       Expanded(
                         child: Text(
                           book.name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: colors.text1,
-                          ),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -627,11 +563,7 @@ class _LibItem extends StatelessWidget {
                       if (isLearning)
                         Text(
                           '正在学习',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colors.success,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: TextStyle(fontSize: 12, color: colors.success, fontWeight: FontWeight.w500),
                         ),
                     ],
                   ),
@@ -647,18 +579,11 @@ class _LibItem extends StatelessWidget {
                   // 底部行：单词量（原版底部对齐）
                   Row(
                     children: [
-                      Text(
-                        '单词量',
-                        style: TextStyle(fontSize: 12, color: colors.text3),
-                      ),
+                      Text('单词量', style: TextStyle(fontSize: 12, color: colors.text3)),
                       const SizedBox(width: 5),
                       Text(
                         '${book.wordCount}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: colors.text3,
-                        ),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.text3),
                       ),
                     ],
                   ),
@@ -678,11 +603,7 @@ class _BottomToolItem extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _BottomToolItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+  const _BottomToolItem({required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -696,13 +617,7 @@ class _BottomToolItem extends StatelessWidget {
           children: [
             Icon(icon, size: 22, color: colors.text1),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: colors.text1,
-              ),
-            ),
+            Text(label, style: TextStyle(fontSize: 11, color: colors.text1)),
           ],
         ),
       ),
