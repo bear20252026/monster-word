@@ -1,0 +1,117 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:word_app/engine/fsrs6_engine.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/repositories/fav_repository.dart';
+import 'package:word_app/repositories/mastered_repository.dart';
+import 'package:word_app/state/learning_state.dart';
+
+void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  test('rateReviewWord 只更新实际复习词，不推进遗留学习队列', () async {
+    final state = LearningState(favRepository: _FakeFavRepository(), masteredRepository: _FakeMasteredRepository());
+    await Future<void>.delayed(Duration.zero);
+    final legacyQueueWord = Word(word: 'legacy-queue');
+    state.queue.add(legacyQueueWord);
+
+    await state.rateReviewWord(word: 'reviewed-word', rating: FsrsRating.good);
+
+    expect(state.currentWord, same(legacyQueueWord));
+    expect(state.currentIndex, 0);
+    expect(state.getCard('reviewed-word'), isNotNull);
+    expect(state.getCard('legacy-queue'), isNull);
+    expect(state.todayLearnCount, 1);
+
+    await state.rateReviewWord(word: 'reviewed-word', rating: FsrsRating.again);
+
+    expect(state.todayLearnCount, 1);
+    expect(state.todayReviewCount, 1);
+  });
+}
+
+class _FakeMasteredRepository implements MasteredRepository {
+  final Set<String> _words = {};
+
+  @override
+  Future<Set<String>> getMasteredWords() async => Set<String>.from(_words);
+
+  @override
+  bool isMastered(String word) => _words.contains(word);
+
+  @override
+  int get masteredCount => _words.length;
+
+  @override
+  Future<void> toggleMastered(String word) async {
+    if (_words.contains(word)) {
+      _words.remove(word);
+    } else {
+      _words.add(word);
+    }
+  }
+}
+
+class _FakeFavRepository implements FavRepository {
+  final Set<String> _words = {};
+
+  @override
+  Future<void> addFavorite(String word) async {
+    _words.add(word);
+  }
+
+  @override
+  int get favoriteCount => _words.length;
+
+  @override
+  int get favoriteSentenceCount => 0;
+
+  @override
+  Future<Set<String>> getFavoriteWords() async => Set<String>.from(_words);
+
+  @override
+  bool isFavorite(String word) => _words.contains(word);
+
+  @override
+  Future<void> removeFavorite(String word) async {
+    _words.remove(word);
+  }
+
+  @override
+  Future<void> toggleFavorite(String word) async {
+    if (_words.contains(word)) {
+      _words.remove(word);
+    } else {
+      _words.add(word);
+    }
+  }
+
+  @override
+  Future<bool> addFavoriteSentence({
+    required int wordId,
+    required String sentenceId,
+    required String english,
+    required String chinese,
+    String source = '',
+  }) async => false;
+
+  @override
+  Future<List<Map<String, dynamic>>> getFavoriteSentences() async => const [];
+
+  @override
+  Future<bool> isFavoriteSentence(int wordId, String sentenceId) async => false;
+
+  @override
+  Future<bool> removeFavoriteSentence(int wordId, String sentenceId) async => false;
+
+  @override
+  Future<bool> toggleFavoriteSentence({
+    required int wordId,
+    required String sentenceId,
+    required String english,
+    required String chinese,
+    String source = '',
+  }) async => false;
+}

@@ -67,9 +67,10 @@ void main() {
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
 
       expect(appSource, contains('ProxyProvider<LearningState, ReviewRatingWriter>'));
-      expect(appSource, contains('ReviewRatingWriter(writeRating: legacy.rate)'));
+      expect(appSource, contains('ReviewRatingWriter(writeRating: legacy.rateReviewWord)'));
       expect(pageSource, contains('ReviewRatingWriter'));
-      expect(pageSource, contains('context.read<ReviewRatingWriter>().rate(fsrsRating)'));
+      expect(pageSource, contains('final reviewedWord = _engine.currentWord()'));
+      expect(pageSource, contains('rate(word: reviewedWord.word, rating: fsrsRating)'));
       expect(pageSource, isNot(contains('LearningState')));
     });
   });

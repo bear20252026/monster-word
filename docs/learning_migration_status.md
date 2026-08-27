@@ -110,9 +110,9 @@
 
 ## 正式复习评分写入边界
 
-`ReviewPage` 现在将评分提交给 `ReviewRatingWriter`，而不再直接依赖 `LearningState`。应用根通过 `ProxyProvider` 将该写入端口适配到既有的 `LearningState.rate`，因此评分仍以原有顺序更新 FSRS 卡片并写入 `fsrs6_cards_v1`，记录每日学习或复习计数及活跃日期，然后通知展示状态。
+`ReviewPage` 现在将评分提交给 `ReviewRatingWriter`，而不再直接依赖 `LearningState`。页面会在 `SuperMemoryEngine` 推进题目之前捕获实际作答词；应用根再将写入端口适配到 `LearningState.rateReviewWord`。该命令只更新该词的 FSRS 卡片并写入 `fsrs6_cards_v1`，记录每日学习或复习计数及活跃日期，然后通知展示状态，不会推进遗留学习队列。
 
-这只是依赖反转，不是评分算法替换：`SuperMemoryEngine` 仍先在页面中推进本次会话，`FsrsRating` 的映射、卡片格式、SharedPreferences 键名和统计分类均保持不变。`/review_session` 仍直接使用遗留评分路径，待两条会话的队列和交互合同统一后再另行迁移。
+这既是依赖反转，也是一次数据关联修正：原先页面在本地引擎推进后才由 `LearningState.rate` 推断当前词，可能把本题评分写到下一队列词，并在最后一题时遗漏写入。现在 `SuperMemoryEngine` 的推进顺序和 `FsrsRating` 映射保持不变，但持久化评分始终对应本题单词。遗留学习会话仍使用 `LearningState.rate`，保留其 Leitner 联动和队列推进；`/review_session` 仍为兼容路径，待两条会话的队列和交互合同统一后再另行迁移。
 
 
 ## 复习主入口边界
