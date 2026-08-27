@@ -154,6 +154,26 @@ void main() {
     });
   });
 
+  group('词条浏览依赖边界', () {
+    test('详情页通过浏览功能域端口读写笔记和例句收藏', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final pageSource = File('lib/pages/word_detail_page.dart').readAsStringSync();
+      final providersSource = File('lib/features/word_browse/presentation/word_browse_feature_providers.dart')
+          .readAsStringSync();
+
+      expect(appSource, contains('buildWordBrowseFeatureScope('));
+      expect(File('lib/features/word_browse/application/word_notes_store.dart').existsSync(), isTrue);
+      expect(File('lib/features/word_browse/application/sentence_favorites_store.dart').existsSync(), isTrue);
+      expect(providersSource, contains('sl<NoteRepository>()'));
+      expect(providersSource, contains('sl<FavRepository>()'));
+      expect(pageSource, contains('WordNotesStore'));
+      expect(pageSource, contains('SentenceFavoritesStore'));
+      expect(pageSource, isNot(contains('sl<')));
+      expect(pageSource, isNot(contains('NoteRepository')));
+      expect(pageSource, isNot(contains('FavRepository')));
+    });
+  });
+
   group('正式复习禁止依赖', () {
     test('路由页面不回流会话算法、遗留聚合状态或服务定位器', () {
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
