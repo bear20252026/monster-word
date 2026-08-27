@@ -168,6 +168,40 @@ void main() {
     });
   });
 
+  group('正式复习页面操作协调边界', () {
+    test('音频状态、详情适配和更多操作面板均通过专用模块完成', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
+      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final audioPlayerSource = File('lib/features/learning/application/review_audio_player.dart').readAsStringSync();
+      final audioStateSource = File('lib/features/learning/presentation/review_audio_state.dart').readAsStringSync();
+      final detailsSource = File('lib/features/learning/application/review_word_details.dart').readAsStringSync();
+      final sheetSource = File('lib/features/learning/presentation/widgets/formal_review_more_options_sheet.dart')
+          .readAsStringSync();
+      final widgetsSource = File('lib/features/learning/presentation/widgets/formal_review_widgets.dart')
+          .readAsStringSync();
+
+      expect(appSource, contains('ReviewAudioPlayer'));
+      expect(appSource, contains('ReviewAudioState'));
+      expect(locatorSource, contains('ReviewAudioPlayer'));
+      expect(locatorSource, contains('sl<AudioService>().playWordAudio(word)'));
+      expect(pageSource, contains('ReviewAudioState'));
+      expect(pageSource, contains('FormalReviewMoreOptionsSheet'));
+      expect(pageSource, contains('word.toDictionaryWord()'));
+      expect(pageSource, contains(".playWord(word.word)"));
+      expect(pageSource, isNot(contains('sl<AudioService>()')));
+      expect(pageSource, isNot(contains('_audioLoading')));
+      expect(audioPlayerSource, contains('class ReviewAudioPlayer'));
+      expect(audioStateSource, contains('class ReviewAudioState'));
+      expect(audioStateSource, contains('ReviewAudioPlayer'));
+      expect(audioStateSource, isNot(contains('AudioService')));
+      expect(detailsSource, contains('extension ReviewWordDetails'));
+      expect(detailsSource, contains('toDictionaryWord'));
+      expect(sheetSource, contains('class FormalReviewMoreOptionsSheet'));
+      expect(widgetsSource, contains("export 'formal_review_more_options_sheet.dart';"));
+    });
+  });
+
   group('正式复习会话状态边界', () {
     test('主复习页通过会话展示状态管理本地题目与进度', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();

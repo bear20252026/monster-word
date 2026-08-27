@@ -125,6 +125,8 @@
 
 展示组件不再导入或直接读取 `ReviewSessionState`。页面把会话的只读快照（进度、候选项、答案显示和错误候选文本）及命令回调映射给布局组件；`ReviewSessionState.selectedWrongChoice` 是为此暴露的只读反馈快照，原有 300 毫秒定时器、题目推进和 FSRS 评分职责仍只留在会话状态中。该调整只改变展示层的依赖方向，不改变横竖屏布局、壁纸、候选反馈、评分、收藏或手动掌握语义。
 
+正式复习页面的其余操作协调也已拆分：`ReviewAudioPlayer` 是正式复习发音的应用端口，根组合层将其适配为既有 `AudioService.playWordAudio`；`ReviewAudioState` 维护播放请求的加载快照并向页面转交失败，页面不再直接通过服务定位器调用音频服务。`ReviewWordDetails` 集中 `BBWordProcess` 到词典页面 `Word` 的字段映射；`FormalReviewMoreOptionsSheet` 则只发出“播放发音/查看详情”意图。页面仍负责路由、SnackBar 和 Navigator 协调，因此没有将 UI 副作用下沉到展示组件或基础设施层。
+
 正式复习已移除原有“撤销”入口：该入口仅减少展示计数，既不会回退 `SuperMemoryEngine`，也不会撤销已经发出的 FSRS 写入或手动掌握操作，继续保留会误导用户。兼容 `/review_session` 未改动。后续如需提供真实撤销，必须先定义可逆的题目推进、FSRS 持久化和手动标记事务合同，而不能重加仅修改计数的按钮。
 
 
