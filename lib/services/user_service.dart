@@ -17,9 +17,6 @@ abstract class UserService {
   /// 更新用户信息（UserInfoBean 格式）
   Future<bool> setUserInfoBean(UserInfoBean bean);
 
-  /// 同步获取用户信息（UserInfoBean 格式）
-  UserInfoBean getUserInfoSyncBean();
-
   /// 获取学习统计
   Future<Map<String, dynamic>> getLearningStats();
 

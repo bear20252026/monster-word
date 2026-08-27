@@ -17,11 +17,9 @@ class UserServiceImpl implements UserService {
 
   static const _userInfoKey = 'monster_word_user_info';
 
-  UserServiceImpl({
-    required UserRepository userRepo,
-    required NoteRepository noteRepo,
-  })  : _userRepo = userRepo,
-        _noteRepo = noteRepo;
+  UserServiceImpl({required UserRepository userRepo, required NoteRepository noteRepo})
+    : _userRepo = userRepo,
+      _noteRepo = noteRepo;
 
   @override
   Future<Map<String, dynamic>?> getUserInfo() async {
@@ -39,8 +37,7 @@ class UserServiceImpl implements UserService {
     final jsonStr = prefs.getString(_userInfoKey);
     if (jsonStr == null || jsonStr.isEmpty) return UserInfoBean();
     try {
-      return UserInfoBean.fromJson(
-          jsonDecode(jsonStr) as Map<String, dynamic>);
+      return UserInfoBean.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
     } catch (_) {
       return UserInfoBean();
     }
@@ -50,19 +47,6 @@ class UserServiceImpl implements UserService {
   Future<bool> setUserInfoBean(UserInfoBean bean) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.setString(_userInfoKey, jsonEncode(bean.toJson()));
-  }
-
-  @override
-  UserInfoBean getUserInfoSyncBean() {
-    // 同步版本：直接读取 SharedPreferences 缓存
-    // 使用 FutureOr 方式，返回缓存值；如果未初始化则返回默认值
-    try {
-      // SharedPreferences.getInstance() 返回的是 Future，无法真正同步
-      // 这里返回一个默认值，异步场景请用 getUserInfoBean()
-      return UserInfoBean();
-    } catch (_) {
-      return UserInfoBean();
-    }
   }
 
   @override

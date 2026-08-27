@@ -3,9 +3,9 @@
 // 移植自 v3.2 UserInfoManageActivity
 // 用户信息管理：修改头像、昵称、签名等个人信息
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
-import '../services/user_service.dart';
+import '../features/account/presentation/account_profile_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -19,45 +19,12 @@ class UserInfoManagePage extends StatefulWidget {
 }
 
 class _UserInfoManagePageState extends State<UserInfoManagePage> {
-  String _nickname = '';
-  String _signature = '';
-  String _wechatName = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserInfo();
-  }
-
-  Future<void> _loadUserInfo() async {
-    final userInfo = await sl<UserService>().getUserInfoBean();
-    if (mounted) {
-      setState(() {
-        _nickname = userInfo.nickname.isEmpty ? '用户${DateTime.now().millisecondsSinceEpoch % 10000}' : userInfo.nickname;
-        _wechatName = userInfo.wechatName;
-      });
-    }
-  }
-
-  Future<void> _saveNickname(String value) async {
-    final userInfo = await sl<UserService>().getUserInfoBean();
-    userInfo.nickname = value;
-    await sl<UserService>().setUserInfoBean(userInfo);
-    if (mounted) setState(() => _nickname = value);
-  }
-
-  Future<void> _saveWechatName(String value) async {
-    try {
-      final userInfo = await sl<UserService>().getUserInfoBean();
-      userInfo.wechatName = value;
-      await sl<UserService>().setUserInfoBean(userInfo);
-    } catch (_) {}
-    if (mounted) setState(() => _wechatName = value);
-  }
+  AccountProfileState get _profile => context.read<AccountProfileState>();
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
+    final profile = context.watch<AccountProfileState>();
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
@@ -79,9 +46,7 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                         height: 80,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [MistralColors.cream, MistralColors.creamDeeper],
-                          ),
+                          gradient: LinearGradient(colors: [MistralColors.cream, MistralColors.creamDeeper]),
                           border: Border.all(color: MistralColors.hairline, width: 2),
                         ),
                         child: Icon(Icons.person, size: 40, color: MistralColors.stone),
@@ -90,9 +55,24 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                     const SizedBox(height: 8),
                     Text('点击更换头像', style: MistralTypography.micro.copyWith(color: MistralColors.link)),
                     const SizedBox(height: 24),
-                    _buildInfoTile(skin, '昵称', _nickname.isEmpty ? '点击设置' : _nickname, () => _editField('昵称', _nickname, _saveNickname)),
-                    _buildInfoTile(skin, '微信名', _wechatName.isEmpty ? '点击设置' : _wechatName, () => _editField('微信名', _wechatName, _saveWechatName)),
-                    _buildInfoTile(skin, '签名', _signature.isEmpty ? '未设置' : _signature, () => _editField('签名', _signature, (v) => setState(() => _signature = v))),
+                    _buildInfoTile(
+                      skin,
+                      '昵称',
+                      profile.nickname.isEmpty ? '点击设置' : profile.nickname,
+                      () => _editField('昵称', profile.nickname, _profile.updateNickname),
+                    ),
+                    _buildInfoTile(
+                      skin,
+                      '微信名',
+                      profile.wechatName.isEmpty ? '点击设置' : profile.wechatName,
+                      () => _editField('微信名', profile.wechatName, _profile.updateWechatName),
+                    ),
+                    _buildInfoTile(
+                      skin,
+                      '签名',
+                      profile.signature.isEmpty ? '未设置' : profile.signature,
+                      () => _editField('签名', profile.signature, _profile.updateSignature),
+                    ),
                     _buildInfoTile(skin, '手机号', '未绑定', null),
                     _buildInfoTile(skin, '注册时间', '—', null, isReadOnly: true),
                   ],
@@ -133,10 +113,16 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
         ),
         child: Row(
           children: [
-            SizedBox(width: 80, child: Text(label, style: MistralTypography.body.copyWith(color: skin.colors.text3))),
-            Expanded(child: Text(value, style: MistralTypography.body.copyWith(
-              color: isReadOnly ? skin.colors.text3 : skin.colors.text1,
-            ))),
+            SizedBox(
+              width: 80,
+              child: Text(label, style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+            ),
+            Expanded(
+              child: Text(
+                value,
+                style: MistralTypography.body.copyWith(color: isReadOnly ? skin.colors.text3 : skin.colors.text1),
+              ),
+            ),
             if (onTap != null && !isReadOnly) Icon(Icons.chevron_right, color: skin.colors.text3, size: 20),
           ],
         ),
@@ -149,19 +135,22 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
     // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('选择头像功能开发中')));
   }
 
-  void _editField(String label, String current, ValueChanged<String> onSave) {
+  void _editField(String label, String current, Future<void> Function(String) onSave) {
     final controller = TextEditingController(text: current);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('修改$label'),
-        content: TextField(controller: controller, decoration: InputDecoration(hintText: '请输入$label')),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(hintText: '请输入$label'),
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
           TextButton(
-            onPressed: () {
-              onSave(controller.text.trim());
-              Navigator.pop(ctx);
+            onPressed: () async {
+              await onSave(controller.text.trim());
+              if (ctx.mounted) Navigator.pop(ctx);
             },
             child: const Text('保存'),
           ),
