@@ -45,11 +45,11 @@ void main() {
     expect(collections.favoriteCount, 2);
     expect(collections.masteredCount, 1);
 
-    await favorites.toggle('apple');
-    await mastered.toggle('date');
+    await favorites.toggle('date');
+    await mastered.toggle('elderberry');
     collections.synchronize(favorites: favorites, mastered: mastered);
 
-    expect(collections.favoriteCount, 1);
+    expect(collections.favoriteCount, 3);
     expect(collections.masteredCount, 2);
   });
 }
