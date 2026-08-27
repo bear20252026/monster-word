@@ -82,6 +82,24 @@ void main() {
     expect(session.currentWord?.word, 'second');
   });
 
+  test('专用学习会话在收藏词为空时保留当前队列与词书', () async {
+    final session = LearningSessionState(
+      queueRepository: LearningQueueRepository(
+        wordSource: _FakeWordSource([Word(id: 1, word: 'first')]),
+        favRepository: _FakeFavRepository(),
+      ),
+      progressRepository: LearningProgressRepository(),
+      reviewSchedule: ReviewScheduleRepository(),
+    );
+    final book = Book(id: 1, code: 'TEST', name: '测试', wordCount: 1);
+    await session.loadBook(book, shuffle: false);
+
+    await session.loadFavorites();
+
+    expect(session.currentBook, same(book));
+    expect(session.queue.map((word) => word.word), ['first']);
+  });
+
   test('学习会话兼容外观委托队列加载、候选生成与评分推进', () async {
     final source = _FakeWordSource([
       Word(id: 1, word: 'first', interpret: '第一'),
