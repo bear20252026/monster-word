@@ -200,3 +200,7 @@
 `LearningFavoritesState` 现为词典、检索和收藏词页面的收藏单词读取与切换状态。它将持久化写入继续委托给既有 `FavRepository`，并通过 `LearningQueueRepository` 保留“收藏词优先从完整词库解析，未解析时回退当前学习队列”的读取语义。收藏页面不再依赖 `LearningState` 的收藏 API。
 
 `LearningCollectionsState` 暂时仍仅为“已掌握单词”数量提供兼容快照；它不与 `LearningFavoritesState` 共享或复制收藏持久化。后续迁移掌握标记时应建立同样独立的读写状态，再移除该兼容快照中的遗留依赖。
+
+## 账号与引导状态边界
+
+`AppSessionState` 现承接应用的账号会话和首次引导标记。登录页继续保留输入校验、频率限制、错误提示与成功跳转；启动页继续保留动画等待、登录分流和首次引导展示顺序。当前实现维持既有本地登录占位语义，未来接入实际认证时应替换该状态的认证适配，而不应再次将账号字段放回 `LearningState`。

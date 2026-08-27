@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../state/learning_state.dart';
+import '../features/account/presentation/app_session_state.dart';
 import '../theme/skin_system.dart';
 import '../widgets/animations.dart';
 import '../widgets/scale_down_on_press.dart';
@@ -20,8 +20,7 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
-    with SingleTickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
   // 0 = 主登录选择, 1 = 账号密码登录, 2 = 手机号登录
   int _loginMode = 0;
 
@@ -39,19 +38,15 @@ class _LoginPageState extends State<LoginPage>
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animController, curve: standardCurve),
-    );
+    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _fadeAnim = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animController, curve: standardCurve));
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _animController, curve: fataleCurve),
-    );
+    ).animate(CurvedAnimation(parent: _animController, curve: fataleCurve));
     _animController.forward();
   }
 
@@ -71,9 +66,7 @@ class _LoginPageState extends State<LoginPage>
   bool _checkRateLimit() {
     final now = DateTime.now();
     // 清除 1 分钟前的记录
-    _loginAttempts.removeWhere(
-      (t) => now.difference(t).inSeconds > 60,
-    );
+    _loginAttempts.removeWhere((t) => now.difference(t).inSeconds > 60);
     if (_loginAttempts.length >= _maxAttemptsPerMinute) {
       _showToast('登录过于频繁，请稍后再试');
       return false;
@@ -105,8 +98,8 @@ class _LoginPageState extends State<LoginPage>
 
     setState(() => _isLoading = true);
     try {
-      final state = context.read<LearningState>();
-      final success = await state.login(username, password);
+      final session = context.read<AppSessionState>();
+      final success = await session.login(username, password);
       if (success && mounted) {
         _onLoginSuccess();
       } else if (mounted) {
@@ -142,8 +135,8 @@ class _LoginPageState extends State<LoginPage>
 
     setState(() => _isLoading = true);
     try {
-      final state = context.read<LearningState>();
-      final success = await state.phoneLogin(phone, code);
+      final session = context.read<AppSessionState>();
+      final success = await session.phoneLogin(phone, code);
       if (success && mounted) {
         _onLoginSuccess();
       } else if (mounted) {
@@ -161,9 +154,7 @@ class _LoginPageState extends State<LoginPage>
   }
 
   void _showToast(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 2)));
   }
 
   @override
@@ -180,19 +171,17 @@ class _LoginPageState extends State<LoginPage>
         }
       },
       child: Scaffold(
-      backgroundColor: skin.colors.pageBg,
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnim,
-          child: SlideTransition(
-            position: _slideAnim,
-            child: _loginMode == 0
-                ? _buildMainLoginView(skin)
-                : _buildInputLoginView(skin),
+        backgroundColor: skin.colors.pageBg,
+        body: SafeArea(
+          child: FadeTransition(
+            opacity: _fadeAnim,
+            child: SlideTransition(
+              position: _slideAnim,
+              child: _loginMode == 0 ? _buildMainLoginView(skin) : _buildInputLoginView(skin),
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -203,10 +192,7 @@ class _LoginPageState extends State<LoginPage>
         title: const Text('退出应用'),
         content: const Text('确定要退出 Monster Word 吗？'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -231,23 +217,15 @@ class _LoginPageState extends State<LoginPage>
           height: 100,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [MistralColors.cream, MistralColors.creamDeeper],
-            ),
+            gradient: LinearGradient(colors: [MistralColors.cream, MistralColors.creamDeeper]),
           ),
           child: Icon(Icons.menu_book, size: 56, color: MistralColors.primary),
         ),
         const SizedBox(height: 16),
-        Text(
-          '不背单词',
-          style: MistralTypography.heading3.copyWith(color: skin.colors.text1),
-        ),
+        Text('不背单词', style: MistralTypography.heading3.copyWith(color: skin.colors.text1)),
         const SizedBox(height: 8),
         // Slogan（对应原版 tv_slogan）
-        Text(
-          '在语境中学习单词',
-          style: MistralTypography.body.copyWith(color: skin.colors.text3),
-        ),
+        Text('在语境中学习单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
         const Spacer(flex: 1),
         // 上次登录信息（对应原版 mTvLastAccountInfoView）
         if (_lastLoginAccountInfo != null && _lastLoginAccountInfo!.isNotEmpty)
@@ -355,12 +333,7 @@ class _LoginPageState extends State<LoginPage>
                 onPressed: () => setState(() => _loginMode = 0),
               ),
               const Spacer(),
-              Text(
-                isPhone ? '手机号登录' : '账号密码登录',
-                style: MistralTypography.heading5.copyWith(
-                  color: skin.colors.text1,
-                ),
-              ),
+              Text(isPhone ? '手机号登录' : '账号密码登录', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
               const Spacer(),
               const SizedBox(width: 48), // 占位，保持居中
             ],
@@ -405,9 +378,7 @@ class _LoginPageState extends State<LoginPage>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: MistralColors.primary,
                             foregroundColor: AppColors.white100,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppRadius.md),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                           ),
                           child: const Text('获取验证码'),
                         ),
@@ -430,9 +401,7 @@ class _LoginPageState extends State<LoginPage>
                     skin: skin,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                         color: skin.colors.text3,
                       ),
                       onPressed: () {
@@ -447,12 +416,7 @@ class _LoginPageState extends State<LoginPage>
                       onPressed: () {
                         // TODO: 忘记密码
                       },
-                      child: Text(
-                        '忘记密码？',
-                        style: MistralTypography.bodySm.copyWith(
-                          color: MistralColors.link,
-                        ),
-                      ),
+                      child: Text('忘记密码？', style: MistralTypography.bodySm.copyWith(color: MistralColors.link)),
                     ),
                   ),
                 ],
@@ -466,33 +430,22 @@ class _LoginPageState extends State<LoginPage>
                         ? null
                         : () {
                             if (isPhone) {
-                              _loginWithPhone(
-                                _phoneController.text.trim(),
-                                _codeController.text.trim(),
-                              );
+                              _loginWithPhone(_phoneController.text.trim(), _codeController.text.trim());
                             } else {
-                              _loginWithCoolID(
-                                _phoneController.text.trim(),
-                                _passwordController.text.trim(),
-                              );
+                              _loginWithCoolID(_phoneController.text.trim(), _passwordController.text.trim());
                             }
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: MistralColors.primary,
                       foregroundColor: AppColors.white100,
                       disabledBackgroundColor: MistralColors.muted,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
                     ),
                     child: _isLoading
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.white100,
-                            ),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white100),
                           )
                         : const Text('登录'),
                   ),
@@ -561,9 +514,7 @@ class _LoginPageState extends State<LoginPage>
               label: Text(label, style: TextStyle(color: color)),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: skin.colors.divider),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
               ),
             )
           : ElevatedButton.icon(
@@ -572,9 +523,7 @@ class _LoginPageState extends State<LoginPage>
               label: Text(label, style: const TextStyle(color: AppColors.white100)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: color,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
               ),
             ),
     );
@@ -597,9 +546,7 @@ class _LoginPageState extends State<LoginPage>
               child: Icon(icon, size: 22, color: MistralColors.stone),
             ),
             const SizedBox(height: 4),
-            Text(label, style: MistralTypography.micro.copyWith(
-              color: MistralColors.stone,
-            )),
+            Text(label, style: MistralTypography.micro.copyWith(color: MistralColors.stone)),
           ],
         ),
       ),

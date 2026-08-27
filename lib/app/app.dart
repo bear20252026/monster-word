@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../core/di/service_locator.dart';
 import '../core/router/app_router.dart';
+import '../features/account/presentation/account_feature_providers.dart';
 import '../features/learning/presentation/learning_feature_providers.dart';
 import '../pages/lib_select_page.dart';
 import '../screens/home_screen.dart';
@@ -27,16 +28,18 @@ class WordApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return buildLearningFeatureScope(
-      child: MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
-          ChangeNotifierProvider(create: (_) => sl<SettingsState>()..init()),
-          ChangeNotifierProvider(create: (_) => sl<PlayerState>()),
-          ChangeNotifierProvider(create: (_) => SkinSystem()),
-          ChangeNotifierProvider(create: (_) => WallpaperState()),
-        ],
-        child: const _AppLifecycle(),
+    return buildAccountFeatureScope(
+      child: buildLearningFeatureScope(
+        child: MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => sl<UserStatsState>()),
+            ChangeNotifierProvider(create: (_) => sl<SettingsState>()..init()),
+            ChangeNotifierProvider(create: (_) => sl<PlayerState>()),
+            ChangeNotifierProvider(create: (_) => SkinSystem()),
+            ChangeNotifierProvider(create: (_) => WallpaperState()),
+          ],
+          child: const _AppLifecycle(),
+        ),
       ),
     );
   }
