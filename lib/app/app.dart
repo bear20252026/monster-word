@@ -7,6 +7,7 @@ import '../core/router/app_router.dart';
 import '../repositories/fav_repository.dart';
 import '../repositories/mastered_repository.dart';
 import '../features/learning/application/book_words_reader.dart';
+import '../features/learning/data/review_schedule_repository.dart';
 import '../features/learning/application/mastered_words_reader.dart';
 import '../features/learning/application/new_words_reader.dart';
 import '../features/learning/application/review_audio_player.dart';
@@ -47,10 +48,15 @@ class WordApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // 兼容期内保留旧状态；学习模块迁移完成后应删除该 Provider。
+        // 正式复习的卡片、评分和每日统计事实来源。
+        ChangeNotifierProvider<ReviewScheduleRepository>.value(value: sl<ReviewScheduleRepository>()),
+        // 兼容期内保留旧状态；它只持有遗留学习队列并转发调度更新。
         ChangeNotifierProvider(
-          create: (_) =>
-              LearningState(favRepository: sl<FavRepository>(), masteredRepository: sl<MasteredRepository>()),
+          create: (_) => LearningState(
+            favRepository: sl<FavRepository>(),
+            masteredRepository: sl<MasteredRepository>(),
+            reviewSchedule: sl<ReviewScheduleRepository>(),
+          ),
         ),
         ChangeNotifierProxyProvider<LearningState, LearningStatisticsState>(
           create: (_) => LearningStatisticsState(),
@@ -64,12 +70,13 @@ class WordApp extends StatelessWidget {
           create: (_) => LearningQueueWordListsState(),
           update: (_, legacy, wordLists) => (wordLists ?? LearningQueueWordListsState())..synchronizeFrom(legacy),
         ),
-        ChangeNotifierProxyProvider<LearningState, ReviewQueueState>(
+        ChangeNotifierProxyProvider2<LearningState, ReviewScheduleRepository, ReviewQueueState>(
           create: (_) => ReviewQueueState(),
-          update: (_, legacy, reviewQueue) => (reviewQueue ?? ReviewQueueState())..synchronizeFrom(legacy),
+          update: (_, legacy, schedule, reviewQueue) =>
+              (reviewQueue ?? ReviewQueueState())..synchronize(queue: legacy.queue, schedule: schedule),
         ),
-        ProxyProvider<LearningState, ReviewRatingWriter>(
-          update: (_, legacy, _) => ReviewRatingWriter(writeRating: legacy.rateReviewWord),
+        ProxyProvider<ReviewScheduleRepository, ReviewRatingWriter>(
+          update: (_, schedule, _) => ReviewRatingWriter(writeRating: schedule.rateWord),
         ),
         ChangeNotifierProxyProvider<ReviewRatingWriter, ReviewSessionState>(
           create: (context) => ReviewSessionState(

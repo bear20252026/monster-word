@@ -1,22 +1,24 @@
 import 'package:flutter/foundation.dart';
 
 import '../application/review_queue_reader.dart';
-import '../../../state/learning_state.dart';
+import '../data/review_schedule_repository.dart';
+import '../../../models/word.dart';
 
-/// 正式复习队列的过渡展示状态。
+/// 正式复习队列的展示快照。
 ///
-/// FSRS 到期判断与当前学习队列仍以 [LearningState] 为事实来源；页面仅
-/// 读取此处提供的不可变快照。待调度数据迁出后，只需替换同步来源，
-/// 无需重新让页面耦合旧状态。
+/// FSRS 卡片、到期判断和评分均来自 [ReviewScheduleRepository]。兼容期内仅由
+/// [queue] 提供遗留学习会话维护的当前词表；页面与正式复习会话不再读取
+/// `LearningState`。
 class ReviewQueueState extends ChangeNotifier {
   ReviewQueueSnapshot _snapshot = const ReviewQueueSnapshot.empty();
 
   ReviewQueueSnapshot get snapshot => _snapshot;
 
-  void synchronizeFrom(LearningState legacy) {
+  void synchronize({required Iterable<Word> queue, required ReviewScheduleRepository schedule}) {
+    final queueWords = List<Word>.unmodifiable(queue);
     _snapshot = ReviewQueueSnapshot(
-      dueWords: List.unmodifiable(legacy.dueWords),
-      queueWords: List.unmodifiable(legacy.queue),
+      dueWords: List.unmodifiable(schedule.dueWordsFor(queueWords)),
+      queueWords: queueWords,
     );
     notifyListeners();
   }

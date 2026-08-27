@@ -280,8 +280,9 @@ void main() {
           .readAsStringSync();
       final sessionSource = File('lib/features/learning/presentation/review_session_state.dart').readAsStringSync();
 
-      expect(appSource, contains('ProxyProvider<LearningState, ReviewRatingWriter>'));
-      expect(appSource, contains('ReviewRatingWriter(writeRating: legacy.rateReviewWord)'));
+      expect(appSource, contains('ProxyProvider<ReviewScheduleRepository, ReviewRatingWriter>'));
+      expect(appSource, contains('ReviewRatingWriter(writeRating: schedule.rateWord)'));
+      expect(appSource, isNot(contains('ReviewRatingWriter(writeRating: legacy.rateReviewWord)')));
       expect(pageSource, contains('onSelectChoice: session.selectChoice'));
       expect(pageSource, contains('onContinueWithGoodRating: session.continueWithGoodRating'));
       expect(pageSource, isNot(contains('ReviewRatingWriter')));

@@ -103,9 +103,9 @@
 
 ## 正式复习队列读取边界
 
-`ReviewPage` 现在通过 `ReviewQueueState` 读取由 `LearningState` 提供的不可变队列快照，并委托 `ReviewQueueReader` 决定候选词。读取器将既有优先级固定为“FSRS 到期词 → 当前学习队列 → `a` 样本 → `the` 样本”，因此本轮不改变用户在无到期词时仍可进入复习的行为。
+`ReviewPage` 现在通过 `ReviewQueueState` 读取不可变队列快照，并委托 `ReviewQueueReader` 决定候选词。读取器将既有优先级固定为“FSRS 到期词 → 当前学习队列 → `a` 样本 → `the` 样本”，因此本轮不改变用户在无到期词时仍可进入复习的行为。
 
-这是一次过渡性读取隔离：FSRS 到期判断和当前学习队列的事实来源仍是 `LearningState`，但页面不再同时负责读取旧状态、选择优先级和词库回退查询。评分写入边界已在后续阶段独立迁移，不能直接迁用仅维护内存状态的兼容 `ReviewService`。
+`ReviewScheduleRepository` 现为正式复习的 FSRS 卡片、到期判断、按词评分、每日统计和活跃日期的唯一事实来源，并继续使用既有 `fsrs6_cards_v1`、`daily_stats_v1` 与 `active_learn_dates_v1` 键。`ReviewQueueState` 仅接收遗留 `LearningState` 维护的当前学习队列，再交给该仓储计算到期词；这是一项刻意保留的兼容边界，而不是让正式页面重新依赖遗留聚合状态。待学习队列本身有独立来源后，只需替换这一输入，不改变正式复习页面或读取器的行为。
 
 
 ## 正式复习词条操作边界
@@ -136,9 +136,9 @@
 
 ## 正式复习评分写入边界
 
-`ReviewPage` 现在将评分提交给 `ReviewRatingWriter`，而不再直接依赖 `LearningState`。页面会在 `SuperMemoryEngine` 推进题目之前捕获实际作答词；应用根再将写入端口适配到 `LearningState.rateReviewWord`。该命令只更新该词的 FSRS 卡片并写入 `fsrs6_cards_v1`，记录每日学习或复习计数及活跃日期，然后通知展示状态，不会推进遗留学习队列。
+`ReviewPage` 现在将评分提交给 `ReviewRatingWriter`，而不再直接依赖 `LearningState`。页面会在 `SuperMemoryEngine` 推进题目之前捕获实际作答词；应用根将写入端口直接适配到 `ReviewScheduleRepository.rateWord`。该命令只更新该词的 FSRS 卡片并写入既有 `fsrs6_cards_v1`，记录每日学习或复习计数及活跃日期，然后通知依赖它的展示状态，不会推进遗留学习队列。
 
-这既是依赖反转，也是一次数据关联修正：原先页面在本地引擎推进后才由 `LearningState.rate` 推断当前词，可能把本题评分写到下一队列词，并在最后一题时遗漏写入。现在 `SuperMemoryEngine` 的推进顺序和 `FsrsRating` 映射保持不变，但持久化评分始终对应本题单词。遗留学习会话仍使用 `LearningState.rate`，保留其 Leitner 联动和队列推进；历史 `/review_session` 已在路由层重定向，旧页面仅留待后续删除审计，不再承担兼容会话。
+这既是依赖反转，也是一次数据关联修正：原先页面在本地引擎推进后才由 `LearningState.rate` 推断当前词，可能把本题评分写到下一队列词，并在最后一题时遗漏写入。现在 `SuperMemoryEngine` 的推进顺序和 `FsrsRating` 映射保持不变，但持久化评分始终对应本题单词。遗留学习会话仍使用 `LearningState.rate`，保留其 Leitner 联动和队列推进；为兼容未迁出页面，`LearningState.rateReviewWord`、卡片读取和统计读取暂时仅委托调度仓储，不再维护第二份卡片或统计内存状态。历史 `/review_session` 已在路由层重定向，旧页面仅留待后续删除审计，不再承担兼容会话。
 
 
 ## 复习主入口边界
