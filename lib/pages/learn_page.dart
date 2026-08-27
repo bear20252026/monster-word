@@ -48,6 +48,7 @@ class _LearnPageState extends State<LearnPage> {
     final skin = context.skin;
     final resp = context.responsive;
     final state = context.watch<LearningSessionState>();
+    final player = context.watch<AudioPlaybackState>();
     final word = state.currentWord;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -74,7 +75,7 @@ class _LearnPageState extends State<LearnPage> {
                                   word: word,
                                   skin: skin,
                                   resp: resp,
-                                  audioLoading: _audioLoading,
+                                  audioLoading: player.isLoading && player.currentWord == word.word,
                                   onPlayAudio: _playAudio,
                                 ),
                               ),
@@ -92,7 +93,7 @@ class _LearnPageState extends State<LearnPage> {
                                   word: word,
                                   skin: skin,
                                   resp: resp,
-                                  audioLoading: _audioLoading,
+                                  audioLoading: player.isLoading && player.currentWord == word.word,
                                   onPlayAudio: _playAudio,
                                 ),
                               ),
