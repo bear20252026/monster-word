@@ -1,15 +1,21 @@
 import 'package:flutter/foundation.dart';
 
-import '../data/learning_preferences_repository.dart';
+import '../application/settings_reader.dart';
+import '../application/settings_writer.dart';
+import '../domain/learning_preferences.dart';
 
 /// 设置页的可订阅学习偏好状态。
 ///
-/// 所有值从 [LearningPreferencesRepository] 读取和写入。页面只发送明确的偏好命令，
+/// 所有值通过 [SettingsReader] / [SettingsWriter] 端口读写。页面只发送明确的偏好命令，
 /// 不再保存会在离开页面后丢失的本地设置副本。
 class LearningPreferencesState extends ChangeNotifier {
-  LearningPreferencesState({required LearningPreferencesRepository repository}) : _repository = repository;
+  LearningPreferencesState({
+    required this._reader,
+    required this._writer,
+  });
 
-  final LearningPreferencesRepository _repository;
+  final SettingsReader _reader;
+  final SettingsWriter _writer;
 
   LearningPreferences _preferences = const LearningPreferences.defaults();
   bool _isLoading = true;
@@ -41,7 +47,7 @@ class LearningPreferencesState extends ChangeNotifier {
     _loadError = null;
     notifyListeners();
     try {
-      _preferences = await _repository.load();
+      _preferences = await _reader.load();
     } catch (error) {
       _loadError = error;
       debugPrint('Learning preferences loading error: $error');
@@ -73,7 +79,7 @@ class LearningPreferencesState extends ChangeNotifier {
     _preferences = next;
     notifyListeners();
     try {
-      await _repository.save(next);
+      await _writer.save(next);
     } catch (error) {
       debugPrint('Learning preferences saving error: $error');
     }

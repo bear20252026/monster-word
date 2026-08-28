@@ -15,7 +15,8 @@ void main() {
       LearningPreferencesRepository.showPhoneticKey: false,
       LearningPreferencesRepository.darkModeKey: true,
     });
-    final state = LearningPreferencesState(repository: LearningPreferencesRepository());
+    final repo = LearningPreferencesRepository();
+    final state = LearningPreferencesState(reader: repo, writer: repo);
 
     await state.initialize();
 
@@ -27,7 +28,8 @@ void main() {
   });
 
   test('学习偏好状态持久化设置页的节奏、发音和拼写更新', () async {
-    final state = LearningPreferencesState(repository: LearningPreferencesRepository());
+    final repo = LearningPreferencesRepository();
+    final state = LearningPreferencesState(reader: repo, writer: repo);
     await state.initialize();
 
     await state.setDailyNewWords(20);
@@ -55,7 +57,8 @@ void main() {
   });
 
   test('学习偏好状态将提醒与助记开关写入各自的显式事实键', () async {
-    final state = LearningPreferencesState(repository: LearningPreferencesRepository());
+    final repo = LearningPreferencesRepository();
+    final state = LearningPreferencesState(reader: repo, writer: repo);
     await state.initialize();
 
     await state.setWechatReminder(true);

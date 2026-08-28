@@ -1,7 +1,5 @@
 import 'dart:io';
 
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -144,7 +142,8 @@ void main() {
 
     test('设置功能域拥有学习偏好，设置页不再保留可丢失的本地偏好副本', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      final settingsPageSource = File('lib/pages/settings_page.dart').readAsStringSync();
+      // 页面逻辑已迁入 feature，lib/pages 仅为薄 re-export，断言指向 feature 内部页
+      final settingsPageSource = File('lib/features/settings/presentation/settings_page.dart').readAsStringSync();
       final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
 
       expect(File('lib/state/settings_state.dart').existsSync(), isFalse);
@@ -153,6 +152,17 @@ void main() {
       expect(settingsPageSource, isNot(contains('SettingsState')));
       expect(settingsPageSource, isNot(contains('TODO: persist to SharedPreferences')));
       expect(locatorSource, isNot(contains('SettingsState')));
+    });
+
+    test('设置功能域已垂直化，页面迁入 feature 且 lib/pages 为薄适配', () {
+      final featurePage = 'lib/features/settings/presentation/settings_page.dart';
+      final adapter = 'lib/pages/settings_page.dart';
+      final featureSource = File(featurePage).readAsStringSync();
+      final adapterSource = File(adapter).readAsStringSync();
+      expect(featureSource, contains('class SettingsPage'));
+      expect(featureSource, contains("routeName = '/settings'"));
+      // 薄适配：只 re-export，不含业务逻辑
+      expect(adapterSource, contains('export'));
     });
 
     test('遗留复习会话栈已删除，功能域装配不再注册旧状态或服务', () {
