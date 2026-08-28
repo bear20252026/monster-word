@@ -20,7 +20,7 @@ void main() {
       expect(appSource, contains('buildAccountFeatureScope('));
       expect(appSource, contains('buildLearningFeatureScope('));
       expect(appSource, contains('buildSettingsFeatureScope('));
-      expect(appSource, contains('buildPlayerFeatureScope('));
+      expect(appSource, contains('buildWordAudioScope('));
       expect(appSource, isNot(contains("import '../state/learning_state.dart';")));
       expect(appSource, isNot(contains("import '../features/learning/application/")));
     });
@@ -93,7 +93,7 @@ void main() {
       }
     });
 
-    test('播放器功能域拥有播放状态，页面不再使用旧状态或直连音频服务', () {
+    test('单词音频为应用级共享能力（core），各功能经共享状态消费、不直连音频服务', () {
       const audioConsumers = [
         'lib/features/dictionary/presentation/dictionary_page.dart',
         'lib/pages/learn_page.dart',
@@ -106,12 +106,13 @@ void main() {
       final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
 
       expect(File('lib/state/player_state.dart').existsSync(), isFalse);
-      expect(appSource, contains('buildPlayerFeatureScope('));
+      expect(appSource, contains('buildWordAudioScope('));
       expect(locatorSource, isNot(contains('PlayerState')));
       for (final path in audioConsumers) {
         final source = File(path).readAsStringSync();
-        expect(source, contains('AudioPlaybackState'), reason: '$path 应使用专用播放器状态');
+        expect(source, contains('AudioPlaybackState'), reason: '$path 应使用共享单词音频状态');
         expect(source, isNot(contains('sl<AudioService>')), reason: '$path 不应直连音频服务');
+        expect(source, isNot(contains('features/player/')), reason: '$path 不应 import player 功能域内部');
       }
     });
 

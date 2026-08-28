@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../models/word.dart';
-import '../../../features/player/presentation/audio_playback_state.dart';
+import '../../../core/audio/audio_playback_state.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import '../../../widgets/word_root_tab.dart';

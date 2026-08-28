@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/features/player/presentation/audio_playback_state.dart';
+import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/services/audio_service.dart';
 
 void main() {

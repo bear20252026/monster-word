@@ -10,7 +10,7 @@ import '../models/sentence_models.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../features/learning/application/review_schedule_reader.dart';
 import '../features/learning/presentation/learning_session_state.dart';
-import '../features/player/presentation/audio_playback_state.dart';
+import '../core/audio/audio_playback_state.dart';
 import '../features/word_browse/application/sentence_favorites_store.dart';
 import '../features/word_browse/application/word_notes_store.dart';
 import '../models/word.dart';

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/audio/word_audio_scope.dart';
 import '../core/di/service_locator.dart';
 import '../core/router/app_router.dart';
 import '../features/account/presentation/account_feature_providers.dart';
@@ -9,7 +10,6 @@ import '../features/book/presentation/book_feature_providers.dart';
 import '../features/checkin/presentation/check_in_feature_providers.dart';
 import '../features/dictionary/presentation/dictionary_feature_providers.dart';
 import '../features/learning/presentation/learning_feature_providers.dart';
-import '../features/player/presentation/player_feature_providers.dart';
 import '../features/quick_review/presentation/quick_review_feature_providers.dart';
 import '../features/settings/presentation/settings_feature_providers.dart';
 import '../features/search/presentation/search_feature_providers.dart';
@@ -34,10 +34,10 @@ class WordApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return buildAccountFeatureScope(
-      child: buildLearningFeatureScope(
-        child: buildSettingsFeatureScope(
-          child: buildPlayerFeatureScope(
+    return buildWordAudioScope(
+      child: buildAccountFeatureScope(
+        child: buildLearningFeatureScope(
+          child: buildSettingsFeatureScope(
             child: buildSearchFeatureScope(
               child: buildQuickReviewFeatureScope(
                 child: buildBookFeatureScope(

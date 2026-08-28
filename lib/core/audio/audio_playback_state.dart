@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../services/audio_service.dart';
+import '../../services/audio_service.dart';
 
-/// 播放器功能域的可订阅播放状态。
+/// 应用级共享的「单词音频播放」状态（跨功能基础设施）。
 ///
-/// 页面只通过该状态触发单词发音，不再直接持有全局播放器状态。请求序号保证较早播放
-/// 请求的异步完成不会覆盖后续停止或新播放命令的状态。
+/// 供所有需要播放单词发音的功能（learning / search / dictionary / word_browse /
+/// spell 等）通过依赖注入消费；各功能一律 import 本共享抽象，
+/// 而不再互相 import 某个功能域的内部实现。
+/// 请求序号保证较早播放请求的异步完成不会覆盖后续停止或新播放命令的状态。
 class AudioPlaybackState extends ChangeNotifier {
   AudioPlaybackState({required AudioService audioService}) : _audioService = audioService;
 
@@ -56,7 +58,7 @@ class AudioPlaybackState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 底层服务暂未提供暂停端口，因此保持原有“仅更新 UI 播放标识”的兼容语义。
+  /// 底层服务暂未提供暂停端口，因此保持原有「仅更新 UI 播放标识」的兼容语义。
   void pause() {
     _isPlaying = false;
     notifyListeners();

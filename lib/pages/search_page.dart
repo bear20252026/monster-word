@@ -8,7 +8,7 @@ import '../hooks/responsive.dart';
 import 'package:provider/provider.dart';
 
 import '../models/word.dart';
-import '../features/player/presentation/audio_playback_state.dart';
+import '../core/audio/audio_playback_state.dart';
 import '../features/search/application/search_history_store.dart';
 import '../features/search/application/word_search_reader.dart';
 import '../features/learning/presentation/learning_favorites_state.dart';
