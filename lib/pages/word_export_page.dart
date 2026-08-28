@@ -7,11 +7,9 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../core/di/service_locator.dart';
 import '../hooks/responsive.dart';
 import '../models/word.dart';
-import '../repositories/word_repository.dart';
-import '../features/learning/data/learning_queue_repository.dart';
+import '../features/learning/application/book_words_reader.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
@@ -199,7 +197,7 @@ class _WordExportPageState extends State<WordExportPage> {
   }
 
   Future<List<Word>> _loadWords() {
-    return context.read<LearningQueueRepository>().loadWordsByBook(widget.bookId);
+    return context.read<BookWordsReader>().loadWords(widget.bookId);
   }
 
   String _generateContent(List<Word> words) {

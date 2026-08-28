@@ -173,6 +173,15 @@ void main() {
       expect(pageSource, isNot(contains('FavRepository')));
     });
 
+    test('词语导出页通过 BookWordsReader 读取词书单词', () {
+      final pageSource = File('lib/pages/word_export_page.dart').readAsStringSync();
+
+      expect(pageSource, contains('BookWordsReader'));
+      expect(pageSource, isNot(contains('LearningQueueRepository')));
+      expect(pageSource, isNot(contains('WordRepository')));
+      expect(pageSource, isNot(contains('sl<')));
+    });
+
     test('词典页通过 DictionaryContentReader 读取扩展内容', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/pages/dictionary_page.dart').readAsStringSync();
