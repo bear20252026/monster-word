@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import '../data/example_parser.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
-import '../features/learning/data/review_schedule_repository.dart';
+import '../features/learning/application/review_schedule_reader.dart';
 import '../features/learning/presentation/learning_favorites_state.dart';
 import '../features/learning/presentation/learning_mastered_state.dart';
 import '../features/learning/presentation/learning_session_state.dart';
@@ -538,7 +538,7 @@ class _LearnSessionState extends State<LearnSession> with TickerProviderStateMix
 
   /// FSRS 记忆状态指示器（显示当前单词的记忆状态）
   Widget _buildFsrsIndicator(BuildContext context, String word, SkinSystem skin) {
-    final schedule = context.read<ReviewScheduleRepository>();
+    final schedule = context.read<ReviewScheduleReader>();
     final card = schedule.cardFor(word);
     if (card == null || card.isNew) {
       return const SizedBox.shrink();

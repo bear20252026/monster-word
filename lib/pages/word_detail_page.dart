@@ -8,7 +8,7 @@ import '../data/example_parser.dart';
 import '../hooks/responsive.dart';
 import '../models/sentence_models.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
-import '../features/learning/data/review_schedule_repository.dart';
+import '../features/learning/application/review_schedule_reader.dart';
 import '../features/learning/presentation/learning_session_state.dart';
 import '../features/player/presentation/audio_playback_state.dart';
 import '../features/word_browse/application/sentence_favorites_store.dart';
@@ -127,7 +127,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
     final skin = context.skin;
     final resp = context.responsive;
     final session = context.watch<LearningSessionState>();
-    context.watch<ReviewScheduleRepository>();
+    context.watch<ReviewScheduleReader>();
     final word = _resolveTargetWord(session);
 
     if (word == null) return const Scaffold(body: Center(child: Text('暂无单词')));
@@ -181,7 +181,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
   }
 
   /// FSRS-6 记忆预测卡片（显示记忆状态、难度、下次复习时间）
-  Widget _buildFsrsPredictionCard(BuildContext context, ReviewScheduleRepository schedule, Word word) {
+  Widget _buildFsrsPredictionCard(BuildContext context, ReviewScheduleReader schedule, Word word) {
     final skin = context.skin;
     final card = schedule.cardFor(word.word);
     if (card == null || card.isNew) {
@@ -371,7 +371,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                     ],
                     // FSRS-6 记忆预测卡片
                     SizedBox(height: AppleSpacing.lg),
-                    _buildFsrsPredictionCard(context, context.read<ReviewScheduleRepository>(), word),
+                    _buildFsrsPredictionCard(context, context.read<ReviewScheduleReader>(), word),
                     // 形近词
                     if (confuseList.isNotEmpty) ...[
                       SizedBox(height: AppleSpacing.lg),
@@ -572,7 +572,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
           ],
           // FSRS-6 记忆预测卡片
           SizedBox(height: AppleSpacing.lg),
-          _buildFsrsPredictionCard(context, context.read<ReviewScheduleRepository>(), word),
+          _buildFsrsPredictionCard(context, context.read<ReviewScheduleReader>(), word),
           // 形近词
           if (confuseList.isNotEmpty) ...[
             SizedBox(height: AppleSpacing.lg),

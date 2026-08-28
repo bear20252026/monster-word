@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../features/learning/data/review_schedule_repository.dart';
+import '../features/learning/application/review_schedule_reader.dart';
 import '../features/learning/presentation/learning_session_state.dart';
 import '../pages/review_page.dart';
 import '../theme/skin_system.dart';
@@ -25,7 +25,7 @@ class _ReviewDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     final session = context.watch<LearningSessionState>();
-    final schedule = context.watch<ReviewScheduleRepository>();
+    final schedule = context.watch<ReviewScheduleReader>();
 
     return Container(
       decoration: BoxDecoration(
