@@ -173,6 +173,16 @@ void main() {
       expect(pageSource, isNot(contains('FavRepository')));
     });
 
+    test('句库页面通过例句收藏端口访问列表和删除', () {
+      final pageSource = File('lib/pages/my_fav_sentence_page.dart').readAsStringSync();
+
+      expect(pageSource, contains('SentenceFavoritesStore'));
+      expect(pageSource, isNot(contains('sl<')));
+      expect(pageSource, isNot(contains('FavRepository')));
+      expect(pageSource, isNot(contains('getFavoriteSentences')));
+      expect(pageSource, isNot(contains('removeFavoriteSentence')));
+    });
+
     test('搜索页通过搜索功能域端口访问查询与历史记录', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/pages/search_page.dart').readAsStringSync();

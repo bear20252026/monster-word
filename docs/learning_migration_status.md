@@ -64,7 +64,7 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 `word_browse` 功能域为词条详情页提供 `WordNotesStore` 与 `SentenceFavoritesStore` 两个应用端口。页面仅通过端口读取、写入和删除笔记，或查询、切换例句收藏；`NoteRepository` 和 `FavRepository` 仍分别是既有笔记和例句收藏的唯一持久化事实来源，适配器不缓存或复制这些数据。
 
-应用根通过 `buildWordBrowseFeatureScope` 集中构造上述适配器。词条详情页不得重新导入 `NoteRepository`、`FavRepository` 或服务定位器；结构测试对此保留负向门禁。该边界不改变 `favorite_words_v1`、`mastered_words_v1`、用户数据库 wordId 收藏和 FSRS 熟练度之间既有的不同事实模型。
+应用根通过 `buildWordBrowseFeatureScope` 集中构造上述适配器。词条详情页和句库页面不得重新导入 `NoteRepository`、`FavRepository` 或服务定位器；句库页面的列表、类型化记录映射和批量删除也统一通过 `SentenceFavoritesStore` 完成，结构测试对此保留负向门禁。该边界不改变 `favorite_words_v1`、`mastered_words_v1`、用户数据库 wordId 收藏和 FSRS 熟练度之间既有的不同事实模型。
 
 ## 搜索功能域边界
 

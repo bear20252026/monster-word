@@ -1,3 +1,4 @@
+import '../../../models/sentence_models.dart';
 import '../../../repositories/fav_repository.dart';
 import '../application/sentence_favorites_store.dart';
 
@@ -8,6 +9,35 @@ class RepositorySentenceFavoritesStore implements SentenceFavoritesStore {
   RepositorySentenceFavoritesStore({required FavRepository repository}) : _repository = repository;
 
   final FavRepository _repository;
+
+  @override
+  Future<List<FavSentenceData>> list() async {
+    final records = await _repository.getFavoriteSentences();
+    return records.map(_toFavoriteSentence).toList(growable: false);
+  }
+
+  FavSentenceData _toFavoriteSentence(Map<String, dynamic> record) {
+    final rawSentence = record['sentenceData'];
+    final sentenceData = rawSentence is SentenceData
+        ? rawSentence
+        : rawSentence is Map<String, dynamic>
+        ? SentenceData.fromJson(rawSentence)
+        : null;
+    return FavSentenceData(
+      word: record['word'] as String? ?? '',
+      wordId: (record['wordId'] as num?)?.toInt() ?? 0,
+      sentenceId: record['sentenceId'] as String? ?? '',
+      sentenceData: sentenceData,
+      wordUsage: record['wordUsage'] as String? ?? '',
+      updateTime: record['updateTime'] as String? ?? '20990101010101',
+      type: (record['type'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  @override
+  Future<bool> remove({required int wordId, required String sentenceId}) {
+    return _repository.removeFavoriteSentence(wordId, sentenceId);
+  }
 
   @override
   Future<bool> isFavorite({required int wordId, required String sentenceId}) {
