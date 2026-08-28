@@ -1,0 +1,19 @@
+import '../../../core/learning/learning_progress_reader.dart';
+import '../../../repositories/mastered_repository.dart';
+
+/// [LearningProgressReader] 的具体实现。
+///
+/// 通过 [MasteredRepository] 获取全局已掌握词集，
+/// 统计给定词集中已被掌握的单词数量。
+class LearningProgressReaderImpl implements LearningProgressReader {
+  const LearningProgressReaderImpl({required this._masteredRepository});
+
+  final MasteredRepository _masteredRepository;
+
+  @override
+  Future<int> countLearnedWords(Iterable<String> wordTexts) async {
+    final masteredWords = await _masteredRepository.getMasteredWords();
+    if (masteredWords.isEmpty) return 0;
+    return wordTexts.where(masteredWords.contains).length;
+  }
+}

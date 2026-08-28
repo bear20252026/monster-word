@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/learning/learning_progress_reader.dart';
 import '../../../repositories/fav_repository.dart';
 import '../../../repositories/mastered_repository.dart';
 import '../application/book_words_reader.dart';
@@ -11,6 +12,7 @@ import '../application/review_audio_player.dart';
 import '../application/review_queue_reader.dart';
 import '../application/review_schedule_reader.dart';
 import '../application/review_rating_writer.dart';
+import '../data/learning_progress_reader_impl.dart';
 import '../data/learning_progress_repository.dart';
 import '../data/learning_queue_repository.dart';
 import '../data/repository_review_schedule_reader.dart';
@@ -104,6 +106,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
       Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),
       Provider<NewWordsReader>.value(value: sl<NewWordsReader>()),
       Provider<ReviewQueueReader>.value(value: sl<ReviewQueueReader>()),
+      Provider<LearningProgressReader>.value(
+        value: LearningProgressReaderImpl(masteredRepository: sl<MasteredRepository>()),
+      ),
       ChangeNotifierProvider(create: (_) => sl<NewWordsState>()..initialize()),
     ],
     child: child,
