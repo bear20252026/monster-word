@@ -19,7 +19,7 @@ class CheckInHistoryPage extends StatefulWidget {
   State<CheckInHistoryPage> createState() => _CheckInHistoryPageState();
 }
 
-class _CheckInHistoryPageState extends State<CheckInHistoryPage> with SingleTickerProviderStateMixin {
+class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProviderStateMixin {
   DateTime _currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
   Set<String> _checkedDates = {};
   int _streak = 0;

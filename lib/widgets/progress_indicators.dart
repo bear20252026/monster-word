@@ -34,7 +34,7 @@ class CircleProgressBar extends StatefulWidget {
   State<CircleProgressBar> createState() => _CircleProgressBarState();
 }
 
-class _CircleProgressBarState extends State<CircleProgressBar> with SingleTickerProviderStateMixin {
+class _CircleProgressBarState extends State<CircleProgressBar> with TickerProviderStateMixin {
   AnimationController? _controller;
 
   @override
