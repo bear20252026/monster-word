@@ -69,6 +69,11 @@ class BookState extends ChangeNotifier {
       if (_currentBookId > 0) {
         _currentBook = await _catalogReader.findById(_currentBookId);
       }
+      // 兜底：若当前词书不在列表中（如已被删除），清除无效 ID
+      if (_currentBook != null && !_books.any((b) => b.id == _currentBookId)) {
+        _currentBook = null;
+        _currentBookId = 0;
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -97,11 +102,13 @@ class BookState extends ChangeNotifier {
       // 通过 learning 模块提供的契约读取真实已学数
       final learned = await _progressReader.countLearnedWords(_words.map((w) => w.word));
       _statistics = BookStatistics(
-        totalWords: _currentBook?.wordCount ?? _words.length,
+        // 优先使用词书自身的 wordCount；若缺失则回退到实际加载的单词数
+        totalWords: (_currentBook?.wordCount ?? 0) > 0 ? _currentBook!.wordCount : _words.length,
         learnedWords: learned,
       );
     } catch (e) {
       _words = const [];
+      _error = e.toString(); // 向 UI 层反馈错误，避免静默失败
     } finally {
       _wordsLoading = false;
       notifyListeners();

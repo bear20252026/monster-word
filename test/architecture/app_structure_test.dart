@@ -372,6 +372,14 @@ void main() {
       expect(adapterSource, contains('SharedPreferences'));
       expect(providerSource, contains('PreferencesScareCoinStore'));
       expect(appSource, contains('buildScareCoinFeatureScope('));
+      // 回归：ScareCoinFeatureScope 必须先于 CheckInFeatureScope 建立（即 scare_coin 作用域
+      // 是 checkin 作用域的祖先），否则 class_checkin_page 的 context.read<ScareCoinStore>() 会
+      // ProviderNotFound（P0-2 已修复，此断言锁定嵌套顺序防回归）。
+      final scareCoinScopeIdx = appSource.indexOf('buildScareCoinFeatureScope(');
+      final checkInScopeIdx = appSource.indexOf('buildCheckInFeatureScope(');
+      expect(scareCoinScopeIdx, greaterThan(-1));
+      expect(checkInScopeIdx, greaterThan(-1));
+      expect(scareCoinScopeIdx, lessThan(checkInScopeIdx));
       for (final source in [
         pageSource,
         calendarSource,

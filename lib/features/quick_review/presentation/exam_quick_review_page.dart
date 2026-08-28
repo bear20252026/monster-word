@@ -43,11 +43,15 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
   @override
   void initState() {
     super.initState();
-    context.read<QuickReviewWordReader>().loadWords().then((words) {
+    // 延迟到首帧后执行，避免 initState 中直接读 provider 的副作用
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      setState(() {
-        _words = words;
-        _isLoading = false;
+      context.read<QuickReviewWordReader>().loadWords().then((words) {
+        if (!mounted) return;
+        setState(() {
+          _words = words;
+          _isLoading = false;
+        });
       });
     });
   }

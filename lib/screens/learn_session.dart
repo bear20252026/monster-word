@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/audio/audio_playback_state.dart';
+import '../core/router/nav_utils.dart';
 import '../data/example_parser.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
@@ -242,7 +243,7 @@ class _LearnSessionState extends State<LearnSession> with TickerProviderStateMix
         children: [
           IconButton(
             icon: Icon(Icons.arrow_back_ios_new, size: 20, color: skin.colors.onGlassText1),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => NavUtils.safePop(context),
           ),
           Text(
             '${state.currentIndex + 1}/${state.total}',

@@ -164,6 +164,28 @@ void main() {
     expect(session.currentWord?.word, 'first');
     expect(session.progress, (1, 3));
   });
+
+  test('快速连点 rate() 不会重复推进索引（异步重入守卫）', () async {
+    // 回归：rate() 在 await 评分间隙是异步的，用户连点会二次进索引而跳词/越界。
+    final session = _sessionWithWords(
+      words: [
+        Word(id: 1, word: 'first'),
+        Word(id: 2, word: 'second'),
+        Word(id: 3, word: 'third'),
+      ],
+    );
+    await session.loadBook(_testBook, shuffle: false);
+    expect(session.currentWord?.word, 'first');
+
+    // 连续同步触发两次 rate()，第二次落在 await 间隙（_isRating=true）被守卫拦截。
+    final first = session.rate(FsrsRating.good);
+    final second = session.rate(FsrsRating.good);
+    await Future.wait([first, second]);
+
+    // 只应推进到 second（+1），不能跳到 third（+2）。
+    expect(session.currentWord?.word, 'second');
+    expect(session.progress, (2, 3));
+  });
 }
 
 final _testBook = Book(id: 1, code: 'TEST', name: '测试', wordCount: 2);

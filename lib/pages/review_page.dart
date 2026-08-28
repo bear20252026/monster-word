@@ -14,6 +14,7 @@ import '../features/learning/presentation/widgets/formal_review_widgets.dart';
 import '../models/bb_word_process.dart';
 import '../pages/dictionary_page.dart';
 import '../state/wallpaper_state.dart';
+import '../core/router/nav_utils.dart';
 import '../widgets/session_exit_guard.dart';
 
 class ReviewPage extends StatefulWidget {
@@ -56,7 +57,7 @@ class _ReviewPageState extends State<ReviewPage> {
       done: session.done,
       word: word,
       onRetry: _initReview,
-      onReturnHome: () => Navigator.of(context).pushReplacementNamed('/'),
+      onReturnHome: () => NavUtils.goHome(context),
       reviewingBuilder: (contentContext, reviewingWord) => _buildReviewingContent(
         context: contentContext,
         word: reviewingWord,
@@ -86,7 +87,7 @@ class _ReviewPageState extends State<ReviewPage> {
           showAnswer: session.showAnswer,
           wallpaper: context.watch<WallpaperState>().current,
           isFavorite: wordActions.isFavorite(word.word),
-          onBack: () => Navigator.pop(context),
+          onBack: () => NavUtils.safePop(context),
           onToggleFavorite: _toggleFavorite,
           onMarkAsKnown: _markAsKnown,
           onShowMore: () => _showMoreOptions(context),

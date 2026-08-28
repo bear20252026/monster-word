@@ -581,9 +581,11 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                           ],
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          '签到成功 +${context.read<CheckInHistoryReader>().checkInReward} 尖叫币',
-                          style: MistralTypography.caption.copyWith(color: skin.text3),
+                        Builder(
+                          builder: (ctx) => Text(
+                            '签到成功 +${ctx.watch<CheckInHistoryReader>().checkInReward} 尖叫币',
+                            style: MistralTypography.caption.copyWith(color: skin.text3),
+                          ),
                         ),
                       ],
                     ),

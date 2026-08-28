@@ -3,7 +3,10 @@
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
 // 还原原版 v3.2 个人中心 → 更多设置入口
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../core/router/nav_utils.dart';
+import '../../../features/account/presentation/app_session_state.dart';
 import '../../../hooks/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
@@ -337,7 +340,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           label: '退出',
           onTap: () {
             Navigator.pop(context);
-            // TODO: 执行退出登录逻辑
+            context.read<AppSessionState>().logout();
           },
           fillColor: context.skin.colors.danger,
         ),
@@ -358,7 +361,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             color: skin.colors.text1,
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => NavUtils.safePop(context),
           ),
           const SizedBox(width: 4),
           Text('更多设置', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),

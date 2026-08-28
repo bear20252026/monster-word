@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/router/nav_utils.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import 'account_profile_state.dart';
@@ -146,11 +147,11 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
           decoration: InputDecoration(hintText: '请输入$label'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(onPressed: () => NavUtils.safePop(ctx), child: const Text('取消')),
           TextButton(
             onPressed: () async {
               await onSave(controller.text.trim());
-              if (ctx.mounted) Navigator.pop(ctx);
+              if (ctx.mounted) NavUtils.safePop(ctx);
             },
             child: const Text('保存'),
           ),

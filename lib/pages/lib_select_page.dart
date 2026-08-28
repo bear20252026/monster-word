@@ -20,6 +20,7 @@ import '../tokens/design_tokens.dart';
 import '../widgets/bending_gallery.dart';
 import '../widgets/morphing_tabs.dart';
 import '../widgets/word_globe.dart';
+import '../core/router/nav_utils.dart';
 import 'book_words_page.dart';
 import 'extensive_model_select_page.dart';
 import 'search_page.dart';
@@ -97,7 +98,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new, size: 20),
                     color: colors.text1,
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => NavUtils.safePop(context),
                   ),
                   const SizedBox(width: 4),
                   Expanded(
@@ -513,6 +514,13 @@ class _LibItem extends StatelessWidget {
         try {
           await session.loadBook(book, limit: 50);
           if (context.mounted) {
+            // 空词表守卫：currentWord 为 null 说明词书无单词，提示而非跳转（避免白屏）。
+            if (session.currentWord == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('该词书暂无单词数据，无法开始学习')),
+              );
+              return;
+            }
             Navigator.pushNamed(
               context,
               BookWordsPage.routeName,

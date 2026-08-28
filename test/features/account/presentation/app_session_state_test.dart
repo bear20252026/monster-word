@@ -1,8 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('AppSessionState', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
     test('初始未登录且未展示引导', () {
       final state = AppSessionState();
 

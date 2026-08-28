@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/router/nav_utils.dart';
 import '../data/example_parser.dart';
 import '../hooks/responsive.dart';
 import '../features/learning/presentation/learning_session_state.dart';
@@ -75,7 +76,8 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
       });
     } else {
       // 测验完成，返回
-      Navigator.pop(context);
+      if (!mounted) return;
+      NavUtils.goHome(context);
     }
   }
 
@@ -88,17 +90,28 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
     if (_quizItems.isEmpty) {
       return Scaffold(
         backgroundColor: skin.colors.pageBg,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new, color: skin.colors.text1, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Text('例句测验', style: MistralTypography.body.copyWith(color: skin.colors.text1)),
-        ),
         body: Center(
-          child: Text('暂无可用例句', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.format_quote, size: 64, color: skin.colors.text3),
+              const SizedBox(height: 16),
+              Text('暂无可用例句', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+              const SizedBox(height: 8),
+              Text('当前单词暂无例句可用于测验', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => NavUtils.goHome(context),
+                icon: const Icon(Icons.home, size: 20),
+                label: const Text('返回首页'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: skin.colors.accent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -152,7 +165,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             color: skin.colors.text1,
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => NavUtils.safePop(context),
           ),
           const SizedBox(width: 4),
           Text('例句测验', style: MistralTypography.captionBold.copyWith(color: skin.colors.text1)),

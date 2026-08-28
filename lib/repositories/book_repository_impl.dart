@@ -1,6 +1,8 @@
 // 由 Claude 团队生成 | Monster Word App
 // BookRepositoryImpl — 词书数据仓库实现
 
+import 'package:flutter/foundation.dart';
+
 import '../../data/wordbook_database.dart';
 import 'book_repository.dart';
 
@@ -16,9 +18,16 @@ class BookRepositoryImpl implements BookRepository {
 
   @override
   Future<List<Book>> getBooks() async {
-    final db = _database.db;
-    final maps = await db.query('books');
-    return maps.map((m) => Book.fromMap(m)).toList();
+    try {
+      if (!_database.isInitialized) return [];
+      final db = _database.db;
+      final maps = await db.query('books');
+      return maps.map((m) => Book.fromMap(m)).toList();
+    } catch (e) {
+      // SQL 异常不穿透到 UI；返回空列表由上层兜底
+      debugPrint('BookRepositoryImpl.getBooks failed: $e');
+      return [];
+    }
   }
 
   @override
@@ -31,9 +40,15 @@ class BookRepositoryImpl implements BookRepository {
 
   @override
   Future<int> getWordCount(int bookId) async {
-    final db = _database.db;
-    final result = await db.rawQuery('SELECT COUNT(*) as cnt FROM words WHERE book_id = ?', [bookId]);
-    return (result.first['cnt'] as int?) ?? 0;
+    try {
+      if (!_database.isInitialized) return 0;
+      final db = _database.db;
+      final result = await db.rawQuery('SELECT COUNT(*) as cnt FROM words WHERE book_id = ?', [bookId]);
+      return (result.first['cnt'] as int?) ?? 0;
+    } catch (e) {
+      debugPrint('BookRepositoryImpl.getWordCount failed: $e');
+      return 0;
+    }
   }
 
   @override

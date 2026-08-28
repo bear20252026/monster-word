@@ -132,5 +132,68 @@ void main() {
       expect(state.statistics!.totalWords, 3);
       expect(state.statistics!.unlearnWords, 0); // 超过总量时 clamp 为 0
     });
+
+    // XP-FIX-4: loadWords 失败时设置 _error 给用户反馈
+    test('loadWords 失败时设置 error 反馈', () async {
+      selectionWriter.setCurrentBookId(1);
+      await state.load();
+      // 模拟 wordsReader 抛异常
+      wordsReader.setWords([]);
+      final errorReader = _ErrorBookWordsReader();
+      final errorState = BookState(
+        catalogReader: catalogReader,
+        selectionWriter: selectionWriter,
+        wordsReader: errorReader,
+        progressReader: FakeLearningProgressReader(learnedCount: 0),
+      );
+      // 先设置当前词书
+      await errorState.selectAndLoad(Book(id: 1, code: 'cet4', name: 'CET-4', wordCount: 100));
+
+      await errorState.loadWords();
+
+      expect(errorState.error, isNotNull);
+      expect(errorState.words, isEmpty);
+    });
+
+    // XP-FIX-4: totalWords 优先使用词书自身的 wordCount
+    test('totalWords 优先使用词书 wordCount 而非 words.length', () async {
+      final bookWithCount = Book(id: 1, code: 'cet4', name: 'CET-4', wordCount: 500);
+      catalogReader.setBooks([bookWithCount]);
+      catalogReader.setBookById(bookWithCount);
+      selectionWriter.setCurrentBookId(1);
+      selectionWriter.setCurrentBook(bookWithCount);
+      await state.load();
+
+      wordsReader.setWords([
+        Word(id: 1, word: 'apple'),
+        Word(id: 2, word: 'banana'),
+      ]);
+
+      await state.loadWords();
+
+      // totalWords 应该使用词书的 wordCount（500），而非 words.length（2）
+      expect(state.statistics!.totalWords, 500);
+    });
+
+    // XP-FIX-4: 兜底 — 词书不在列表中时清除无效 ID
+    test('load 时当前词书不在列表中则清除无效 ID', () async {
+      catalogReader.setBooks([
+        Book(id: 2, code: 'cet6', name: 'CET-6', wordCount: 2000),
+      ]);
+      catalogReader.setBookById(null);
+      selectionWriter.setCurrentBookId(999); // 无效 ID
+
+      await state.load();
+
+      expect(state.currentBook, isNull);
+    });
   });
+}
+
+/// 模拟会抛异常的 BookWordsReader
+class _ErrorBookWordsReader implements BookWordsReader {
+  @override
+  Future<List<Word>> loadWords(int bookId, {int limit = 50, int offset = 0}) async {
+    throw Exception('模拟数据库异常');
+  }
 }

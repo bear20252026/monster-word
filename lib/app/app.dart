@@ -40,8 +40,8 @@ class WordApp extends StatelessWidget {
             child: buildSearchFeatureScope(
               child: buildQuickReviewFeatureScope(
                 child: buildBookFeatureScope(
-                  child: buildCheckInFeatureScope(
-                    child: buildScareCoinFeatureScope(
+                  child: buildScareCoinFeatureScope(
+                    child: buildCheckInFeatureScope(
                       child: buildDictionaryFeatureScope(
                         child: buildWordBrowseFeatureScope(
                           child: MultiProvider(

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../features/learning/presentation/learning_favorites_state.dart';
 import '../features/learning/presentation/learning_session_state.dart';
 import '../screens/learn_session.dart';
+import '../core/router/route_names.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../models/word.dart';
@@ -265,7 +266,7 @@ class _MyFavPageState extends State<MyFavPage> {
                 child: ListTile(
                   onTap: _isBatchEditMode
                       ? () => _toggleSelect(index)
-                      : () => Navigator.pushNamed(context, '/word_detail', arguments: word),
+                      : () => Navigator.pushNamed(context, RouteNames.wordDetail, arguments: word),
                   leading: _isBatchEditMode
                       ? Checkbox(
                           value: isSelected,

@@ -21,6 +21,7 @@ import '../widgets/sb_card.dart';
 import '../widgets/text_generate_effect.dart';
 import '../widgets/box_reveal.dart';
 import '../widgets/definition_view.dart';
+import '../core/router/nav_utils.dart';
 import '../widgets/word_root_tab.dart';
 
 class WordDetailPage extends StatefulWidget {
@@ -42,7 +43,12 @@ class _WordDetailPageState extends State<WordDetailPage> {
   Word? _resolveTargetWord(LearningSessionState? session) {
     final arg = ModalRoute.of(context)?.settings.arguments;
     if (arg is Word) return arg;
-    return session?.currentWord ?? context.read<LearningSessionState>().currentWord;
+    // 尝试从会话中获取；深链场景若无参数且无会话则返回 null
+    try {
+      return session?.currentWord ?? context.read<LearningSessionState>().currentWord;
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -139,7 +145,34 @@ class _WordDetailPageState extends State<WordDetailPage> {
     context.watch<ReviewScheduleReader>();
     final word = _resolveTargetWord(session);
 
-    if (word == null) return const Scaffold(body: Center(child: Text('暂无单词')));
+    if (word == null) {
+      return Scaffold(
+        backgroundColor: skin.colors.pageBg,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.search_off, size: 64, color: skin.colors.text3),
+              const SizedBox(height: 16),
+              Text('未找到单词', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+              const SizedBox(height: 8),
+              Text('可能因参数缺失或数据异常', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => NavUtils.safePop(context),
+                icon: const Icon(Icons.arrow_back, size: 20),
+                label: const Text('返回上一页'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: skin.colors.accent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     final examples = ExampleParser.parse(word.example);
     final lines = word.hasStructuredDefinitions
@@ -168,7 +201,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                       icon: const Icon(Icons.arrow_back_ios_new, size: 20),
                       color: skin.colors.text1,
                       tooltip: '返回',
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => NavUtils.safePop(context),
                     ),
                     Text('单词详情', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
                   ],
@@ -271,7 +304,6 @@ class _WordDetailPageState extends State<WordDetailPage> {
     LearningSessionState session,
   ) {
     final fromLearnPage = widget.fromLearn;
-    final isLastWord = session.currentIndex >= session.queue.length - 1;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: resp.horizontalPadding, vertical: 12),
       decoration: BoxDecoration(
@@ -288,18 +320,16 @@ class _WordDetailPageState extends State<WordDetailPage> {
               if (fromLearnPage) {
                 // 从学习流程进入：记录评分并推进到下一个单词
                 session.rate(FsrsRating.good);
-                if (isLastWord) {
-                  Navigator.popUntil(context, (route) => route.isFirst);
-                } else {
-                  Navigator.pop(context);
-                }
+                // 无论是否最后一词，均返回上一层（学习完成页 / 搜索列表等）；
+                // goHome 仅在无上层路由时由 safePop 的 canPop 守卫自动降级
+                NavUtils.safePop(context);
               } else {
                 // 从其他入口进入：仅返回
-                Navigator.pop(context);
+                NavUtils.safePop(context);
               }
             },
-            icon: Icon(fromLearnPage ? (isLastWord ? Icons.check : Icons.arrow_forward) : Icons.arrow_back, size: 20),
-            label: Text(fromLearnPage ? (isLastWord ? '完成学习' : '下一词') : '返回'),
+            icon: Icon(fromLearnPage ? Icons.arrow_forward : Icons.arrow_back, size: 20),
+            label: Text(fromLearnPage ? '下一词' : '返回'),
             style: ElevatedButton.styleFrom(
               backgroundColor: skin.colors.accent,
               foregroundColor: Colors.white,
@@ -975,11 +1005,11 @@ class _NoteDialog extends StatelessWidget {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavUtils.safePop(context),
           child: Text('取消', style: TextStyle(color: skin.text3)),
         ),
         FilledButton(
-          onPressed: () => Navigator.pop(context, controller.text),
+          onPressed: () => NavUtils.safePop(context, controller.text),
           style: FilledButton.styleFrom(backgroundColor: skin.accent),
           child: const Text('保存'),
         ),

@@ -6,7 +6,7 @@ class RouteNames {
   static const String home = '/home';
   static const String learn = '/learn';
   static const String libSelect = '/lib_select';
-  static const String bookWords = '/book_words';
+  static const String bookWords = '/book-words';
   static const String review = '/review';
 
   /// 兼容历史深链；会被重定向到唯一的正式复习流程 [review]。

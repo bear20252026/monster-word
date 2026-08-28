@@ -37,6 +37,8 @@ class LearningSessionState extends ChangeNotifier {
   List<Word> _queue = [];
   int _currentIndex = 0;
   bool _showAnswer = false;
+  // 防止 rate() 异步 await 期间被连点二次进入，导致索引被双重推进而跳词/越界。
+  bool _isRating = false;
   List<WordChoicePair> _choices = [];
 
   /// 队列代际计数：每当用户主动加载新的词库/收藏（`_replaceQueue`）时自增，
@@ -94,26 +96,33 @@ class LearningSessionState extends ChangeNotifier {
   Future<void> rate(FsrsRating rating) async {
     final word = currentWord;
     if (word == null) return;
+    // 重入保护：rate() 在 await 评分间隙是异步的，快速连点会二次进入并重复推进索引。
+    if (_isRating) return;
+    _isRating = true;
 
-    switch (rating) {
-      case FsrsRating.again:
-        _leitnerEngine.iDontKnow();
-      case FsrsRating.hard:
-        _leitnerEngine.iMayKnow();
-      case FsrsRating.good:
-        _leitnerEngine.iReallyKnow();
-      case FsrsRating.easy:
-        _leitnerEngine.tooEasy();
-    }
+    try {
+      switch (rating) {
+        case FsrsRating.again:
+          _leitnerEngine.iDontKnow();
+        case FsrsRating.hard:
+          _leitnerEngine.iMayKnow();
+        case FsrsRating.good:
+          _leitnerEngine.iReallyKnow();
+        case FsrsRating.easy:
+          _leitnerEngine.tooEasy();
+      }
 
-    await _reviewSchedule.rateWord(word: word.word, rating: rating);
-    _currentIndex++;
-    // 完成整个队列：让 currentWord 变为 null，触发学习完成界面，而不是永远停在最后一个词。
-    if (_currentIndex > _queue.length) {
-      _currentIndex = _queue.length;
+      await _reviewSchedule.rateWord(word: word.word, rating: rating);
+      _currentIndex++;
+      // 完成整个队列：让 currentWord 变为 null，触发学习完成界面，而不是永远停在最后一个词。
+      if (_currentIndex > _queue.length) {
+        _currentIndex = _queue.length;
+      }
+      _regenerateChoices();
+      notifyListeners();
+    } finally {
+      _isRating = false;
     }
-    _regenerateChoices();
-    notifyListeners();
   }
 
   void relearn() {

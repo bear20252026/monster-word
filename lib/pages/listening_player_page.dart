@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 // wordbook_database.dart removed - not used in this file
 import '../core/audio/audio_playback_state.dart';
+import '../core/router/nav_utils.dart';
 import '../data/example_parser.dart';
 import 'package:provider/provider.dart';
 import '../models/word.dart';
@@ -255,7 +256,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             color: skin.colors.text1,
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => NavUtils.safePop(context),
           ),
           Expanded(
             child: Text(

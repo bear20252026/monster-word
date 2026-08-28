@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 // wordbook_database.dart removed - not used in this file
+import '../core/router/nav_utils.dart';
 import '../models/word.dart';
 import '../hooks/responsive.dart';
 import '../player/system_tts.dart';
@@ -96,6 +97,7 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
 
   void _next() {
     _autoNextTimer?.cancel();
+    if (!mounted) return;
     if (_currentIndex < widget.words.length - 1) {
       setState(() {
         _currentIndex++;
@@ -144,9 +146,28 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
     if (widget.words.isEmpty) {
       return Scaffold(
         backgroundColor: skin.colors.pageBg,
-        appBar: AppBar(backgroundColor: skin.colors.pageBg, elevation: 0),
         body: Center(
-          child: Text('暂无单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.record_voice_over, size: 64, color: skin.colors.text3),
+              const SizedBox(height: 16),
+              Text('暂无可听写单词', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+              const SizedBox(height: 8),
+              Text('该词书暂无合适的学习内容', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => NavUtils.goHome(context),
+                icon: const Icon(Icons.home, size: 20),
+                label: const Text('返回首页'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: skin.colors.accent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -212,7 +233,7 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
           IconButton(
             icon: const Icon(Icons.close, size: 24),
             color: skin.colors.text1,
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => NavUtils.safePop(context),
           ),
           Expanded(
             child: Text(
@@ -424,7 +445,7 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
                       ),
                       const SizedBox(width: 16),
                       ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => NavUtils.goHome(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: MistralColors.primary,
                           foregroundColor: Colors.white,

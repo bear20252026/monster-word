@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/router/nav_utils.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import '../../../widgets/animations.dart';
@@ -196,8 +197,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              // 退出应用
-              Navigator.pop(context);
+              // 安全返回：若栈中仅此一页则不崩溃
+              NavUtils.safePop(context);
             },
             child: const Text('确定'),
           ),

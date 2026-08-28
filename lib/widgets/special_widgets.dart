@@ -4,6 +4,7 @@
 // 特殊功能组件集合
 import 'package:flutter/material.dart';
 
+import '../core/router/nav_utils.dart';
 import '../theme/skin_system.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -300,8 +301,13 @@ class _GuideOverlayDialogState extends State<_GuideOverlayDialog> {
   @override
   Widget build(BuildContext context) {
     if (_currentStep >= widget.steps.length) {
-      Navigator.of(context).pop();
-      widget.onComplete?.call();
+      // 不能在 build 中直接 pop，延迟到首帧后
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          NavUtils.safePop(context);
+          widget.onComplete?.call();
+        }
+      });
       return const SizedBox.shrink();
     }
     final step = widget.steps[_currentStep];
@@ -310,7 +316,7 @@ class _GuideOverlayDialogState extends State<_GuideOverlayDialog> {
         if (_currentStep < widget.steps.length - 1) {
           setState(() => _currentStep++);
         } else {
-          Navigator.of(context).pop();
+          NavUtils.safePop(context);
           widget.onComplete?.call();
         }
       },
@@ -346,7 +352,7 @@ class _GuideOverlayDialogState extends State<_GuideOverlayDialog> {
               right: 16,
               child: TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  NavUtils.safePop(context);
                   widget.onComplete?.call();
                 },
                 child: const Text('跳过', style: TextStyle(color: Colors.white70)),

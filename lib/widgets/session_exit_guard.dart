@@ -1,6 +1,8 @@
 // 会话退出保护：拦截系统返回键/手势返回，防止误触丢失学习进度
 import 'package:flutter/material.dart';
 
+import '../core/router/nav_utils.dart';
+
 /// 学习类页面的返回保护。
 ///
 /// 用法：将页面的 Scaffold 用 [SessionExitGuard] 包裹：
@@ -46,7 +48,7 @@ class SessionExitGuard extends StatelessWidget {
         if (didPop) return;
         final exit = await _confirmExit(context);
         if (exit && context.mounted) {
-          Navigator.of(context).pop();
+          NavUtils.safePop(context);
         }
       },
       child: child,

@@ -18,6 +18,30 @@ Widget buildAccountFeatureScope({required Widget child}) {
         create: (context) => AccountProfileState(profileStore: context.read<AccountProfileStore>())..refresh(),
       ),
     ],
-    child: child,
+    child: _AccountFeatureInitializer(child: child),
   );
+}
+
+/// 延迟初始化会话状态（恢复登录态），避免在 build 期间调用 setState。
+class _AccountFeatureInitializer extends StatefulWidget {
+  const _AccountFeatureInitializer({required this.child});
+  final Widget child;
+
+  @override
+  State<_AccountFeatureInitializer> createState() => _AccountFeatureInitializerState();
+}
+
+class _AccountFeatureInitializerState extends State<_AccountFeatureInitializer> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<AppSessionState>().restore();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

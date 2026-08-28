@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
+import '../../../core/router/route_names.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import 'book_state.dart';
@@ -121,7 +122,7 @@ class BookDashboardPage extends StatelessWidget {
               child: _ActionCard(
                 icon: Icons.menu_book,
                 label: '选择词书',
-                onTap: () => Navigator.pushNamed(context, '/lib-select'),
+                onTap: () => Navigator.pushNamed(context, RouteNames.libSelect),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),

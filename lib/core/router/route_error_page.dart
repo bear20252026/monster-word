@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'nav_utils.dart';
+
 /// 未知路由或必要参数缺失时显示的友好错误页。
 class RouteErrorPage extends StatelessWidget {
   final String routeName;
@@ -32,14 +34,7 @@ class RouteErrorPage extends StatelessWidget {
               const SizedBox(height: 24),
               Builder(
                 builder: (ctx) => ElevatedButton.icon(
-                  onPressed: () {
-                    final nav = Navigator.of(ctx);
-                    if (nav.canPop()) {
-                      nav.pop();
-                    } else {
-                      nav.popUntil((route) => route.isFirst);
-                    }
-                  },
+                  onPressed: () => NavUtils.goHome(ctx),
                   icon: const Icon(Icons.home_outlined, size: 18),
                   label: const Text('返回首页'),
                   style: ElevatedButton.styleFrom(

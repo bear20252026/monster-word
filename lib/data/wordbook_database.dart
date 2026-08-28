@@ -43,6 +43,10 @@ class WordBookDatabase {
   Database? _db;
   bool _initialized = false;
 
+  /// 数据库是否已初始化完成。
+  /// 调用方可先检查此 getter 再访问 [db]，避免 StateError。
+  bool get isInitialized => _initialized && _db != null;
+
   Database get db {
     if (_db == null) {
       throw StateError('数据库尚未初始化，请先调用 initialize()');

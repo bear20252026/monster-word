@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/router/nav_utils.dart';
 import 'learning_preferences_state.dart';
 import '../../../hooks/responsive.dart';
 import '../../../theme/skin_system.dart';
@@ -41,7 +42,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       IconButton(
                         icon: const Icon(Icons.arrow_back_ios_new, size: 20),
                         color: skin.text1,
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => NavUtils.safePop(context),
                       ),
                       Expanded(
                         child: Center(
@@ -429,7 +430,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: () => NavUtils.safePop(context),
                   child: Container(
                     width: 36,
                     height: 36,

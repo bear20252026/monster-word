@@ -4,6 +4,7 @@
 // 单词列表基类：支持滑动删除、批量编辑、字母快速索引
 import 'package:flutter/material.dart';
 
+import '../core/router/route_names.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../models/word.dart';
@@ -225,6 +226,6 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
   }
 
   void _openWordDetail(Word word) {
-    Navigator.pushNamed(context, '/word_detail', arguments: word);
+    Navigator.pushNamed(context, RouteNames.wordDetail, arguments: word);
   }
 }

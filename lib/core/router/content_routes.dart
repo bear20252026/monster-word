@@ -32,7 +32,7 @@ abstract final class ContentRoutes {
       case RouteNames.immersiveSwipe:
         return const ImmersiveSwipePage();
       case RouteNames.wordDetail:
-        return const WordDetailPage();
+        return _buildWordDetailPage(args);
       default:
         return null;
     }
@@ -46,5 +46,14 @@ abstract final class ContentRoutes {
       translation: map?['translation'] as String?,
       source: map?['source'] as String?,
     );
+  }
+
+  static Widget _buildWordDetailPage(Object? args) {
+    // args 可能为 Word 对象（正常路径）或 Map（深链/序列化路径）；做安全回退
+    bool fromLearn = false;
+    if (args is Map<String, dynamic>) {
+      fromLearn = args['fromLearn'] == true;
+    }
+    return WordDetailPage(fromLearn: fromLearn);
   }
 }

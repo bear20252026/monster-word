@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 // wordbook_database.dart removed - not used in this file
 import '../core/audio/audio_playback_state.dart';
+import '../core/router/nav_utils.dart';
 import '../data/example_parser.dart';
 import 'package:provider/provider.dart';
 import '../models/word.dart';
@@ -137,7 +138,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
         if (mounted) {
           setState(() => _completed = true);
         }
-      } else {
+      } else if (mounted) {
         setState(() => _remaining--);
       }
     });
@@ -176,9 +177,28 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
     if (widget.words.isEmpty) {
       return Scaffold(
         backgroundColor: skin.colors.pageBg,
-        appBar: AppBar(backgroundColor: skin.colors.pageBg, elevation: 0),
         body: Center(
-          child: Text('暂无单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.keyboard, size: 64, color: skin.colors.text3),
+              const SizedBox(height: 16),
+              Text('暂无可拼写单词', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+              const SizedBox(height: 8),
+              Text('该词书暂无合适的学习内容', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => NavUtils.goHome(context),
+                icon: const Icon(Icons.home, size: 20),
+                label: const Text('返回首页'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: skin.colors.accent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -234,7 +254,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
             color: skin.colors.text1,
             onPressed: () {
               _countdownTimer?.cancel();
-              Navigator.pop(context);
+              NavUtils.safePop(context);
             },
           ),
           Expanded(
@@ -538,7 +558,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
                       ),
                       const SizedBox(width: 16),
                       ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => NavUtils.goHome(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: MistralColors.primary,
                           foregroundColor: Colors.white,

@@ -19,6 +19,7 @@ import '../widgets/word_lookup_popup.dart';
 import '../widgets/box_reveal.dart';
 import '../widgets/confetti.dart';
 import '../widgets/scratch_to_reveal.dart';
+import '../core/router/nav_utils.dart';
 import 'word_detail_page.dart';
 
 class LearnPage extends StatefulWidget {
@@ -134,7 +135,7 @@ class _TopBar extends StatelessWidget {
             icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             color: colors.text1,
             tooltip: '返回',
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => NavUtils.safePop(context),
           ),
           Text(
             '${state.currentIndex + 1}/${state.total}',
@@ -253,7 +254,7 @@ class _CompletionScreen extends StatelessWidget {
                     foregroundColor: colors.onGlassAccent,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => NavUtils.goHome(context),
                   child: const Text('返回首页', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
               ),

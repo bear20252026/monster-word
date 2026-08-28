@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/router/nav_utils.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
 import '../widgets/session_exit_guard.dart';
@@ -125,12 +126,12 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => NavUtils.goHome(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: skin.colors.accent,
                   foregroundColor: AppColors.white100,
                 ),
-                child: const Text('返回'),
+                child: const Text('返回首页'),
               ),
             ],
           ),
@@ -180,7 +181,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
         children: [
           IconButton(
             icon: Icon(Icons.close, color: skin.colors.text1, size: 24),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => NavUtils.safePop(context),
           ),
           const Spacer(),
           // 统计

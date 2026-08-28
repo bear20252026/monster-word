@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../core/audio/audio_playback_state.dart';
+import '../core/router/nav_utils.dart';
 import '../data/example_parser.dart';
 import '../hooks/responsive.dart';
 import '../models/word.dart';
@@ -389,7 +390,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
               ),
               const SizedBox(height: 12),
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () => NavUtils.goHome(context),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   decoration: BoxDecoration(color: GameBoyPalette.screenDark, borderRadius: BorderRadius.circular(4)),
@@ -709,7 +710,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
             children: [
               // B 键（返回）
               GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () => NavUtils.safePop(context),
                 child: Container(
                   width: 48,
                   height: 48,

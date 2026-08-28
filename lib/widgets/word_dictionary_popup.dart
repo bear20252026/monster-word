@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/audio/audio_playback_state.dart';
+import '../core/router/nav_utils.dart';
 import '../data/example_parser.dart';
 import '../models/word.dart';
 import '../features/learning/presentation/learning_favorites_state.dart';
@@ -207,7 +208,7 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
   Widget _buildDetailLink(BuildContext context, dynamic skin) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).pop(); // 先关闭弹窗
+        NavUtils.safePop(context); // 先关闭弹窗
         if (widget.onViewDetail != null) widget.onViewDetail!();
       },
       child: Container(

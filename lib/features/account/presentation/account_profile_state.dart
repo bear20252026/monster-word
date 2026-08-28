@@ -14,6 +14,17 @@ class AccountProfileState extends ChangeNotifier {
   AccountProfile _profile = const AccountProfile.empty();
   bool _isLoading = true;
   Object? _loadError;
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  void _safeNotify() {
+    if (!_disposed) notifyListeners();
+  }
 
   AccountProfile get profile => _profile;
   bool get isLoading => _isLoading;
@@ -29,7 +40,7 @@ class AccountProfileState extends ChangeNotifier {
   Future<void> refresh() async {
     _isLoading = true;
     _loadError = null;
-    notifyListeners();
+    _safeNotify();
     try {
       _profile = await _profileStore.load();
     } catch (error) {
@@ -37,7 +48,7 @@ class AccountProfileState extends ChangeNotifier {
       debugPrint('Account profile loading error: $error');
     } finally {
       _isLoading = false;
-      notifyListeners();
+      _safeNotify();
     }
   }
 
@@ -50,7 +61,7 @@ class AccountProfileState extends ChangeNotifier {
 
   Future<void> _update(AccountProfile next) async {
     _profile = next;
-    notifyListeners();
+    _safeNotify();
     try {
       await _profileStore.save(next);
     } catch (error) {
