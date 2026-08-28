@@ -5,9 +5,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
+import '../features/book/application/book_catalog_reader.dart';
 import '../features/learning/application/book_words_reader.dart';
-import '../repositories/book_repository.dart';
 import '../features/learning/presentation/learning_session_state.dart';
 import '../models/word.dart';
 import '../theme/skin_system.dart';
@@ -41,9 +40,7 @@ class _BookWordsPageState extends ListWordsPageState<BookWordsPage> {
     onTap: () async {
       // 使用与 LearnPage 一致的会话状态启动学习。
       final learnState = context.read<LearningSessionState>();
-      final bookRepo = sl<BookRepository>();
-      final books = await bookRepo.getBooks();
-      final book = books.where((b) => b.id == widget.bookId).firstOrNull;
+      final book = await context.read<BookCatalogReader>().findById(widget.bookId);
       if (book == null) return;
       await learnState.loadBook(book, shuffle: true);
       if (context.mounted) {
