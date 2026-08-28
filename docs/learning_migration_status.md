@@ -87,7 +87,7 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 `book` 功能域为词书选择页和词书内容页提供 `BookCatalogReader`。`RepositoryBookCatalogReader` 继续委托既有 `BookRepository` 读取词书目录，并提供按 ID 查找能力；适配器不缓存或复制词书数据，也不改变学习队列、学习会话或词书数据库的事实模型。
 
-应用根通过 `buildBookFeatureScope` 集中装配目录读取端口。`LibSelectPage` 通过端口加载和筛选词书，`BookWordsPage` 通过端口解析当前词书后再调用 `LearningSessionState` 启动学习，`HomeScreen` 的直接开始学习入口也通过同一端口读取第一本词书。词语导出页复用学习功能域提供的 `BookWordsReader` 加载当前词书单词，不直接依赖学习仓储。词书相关页面和首页不得重新导入 `BookRepository` 或服务定位器；架构测试对此保留负向门禁。
+应用根通过 `buildBookFeatureScope` 集中装配目录读取端口。`LibSelectPage` 通过端口加载和筛选词书，`BookWordsPage` 通过端口解析当前词书后再调用 `LearningSessionState` 启动学习，`HomeScreen` 的直接开始学习入口也通过同一端口读取第一本词书。词语导出页、词书选择页的听写/拼写入口以及泛听模式选择页复用学习功能域提供的 `BookWordsReader` 加载当前词书单词，不直接依赖 `LearningQueueRepository`。这些页面只消费只读词源，学习队列状态仍由 `LearningSessionState` 负责；词书相关页面和首页不得重新导入 `BookRepository`、`LearningQueueRepository` 或服务定位器，架构测试对此保留负向门禁。
 
 ## 设置偏好边界
 

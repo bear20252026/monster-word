@@ -27,6 +27,7 @@ import '../../services/user_service.dart';
 import '../../services/user_service_impl.dart';
 import '../../features/learning/application/book_words_reader.dart';
 import '../../features/learning/data/learning_progress_repository.dart';
+import '../../features/learning/data/repository_book_words_reader.dart';
 import '../../features/learning/data/learning_queue_repository.dart';
 import '../../features/learning/data/review_schedule_repository.dart';
 import '../../features/learning/application/mastered_words_reader.dart';
@@ -100,7 +101,7 @@ Future<void> setupServiceLocator() async {
 
   // BookWordsReader
   if (!sl.isRegistered<BookWordsReader>()) {
-    sl.registerLazySingleton<BookWordsReader>(() => BookWordsReader(wordRepository: sl<WordRepository>()));
+    sl.registerLazySingleton<BookWordsReader>(() => RepositoryBookWordsReader(repository: sl<WordRepository>()));
   }
 
   // MasteredWordsReader

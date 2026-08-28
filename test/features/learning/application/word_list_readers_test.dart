@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/features/learning/application/book_words_reader.dart';
+import 'package:word_app/features/learning/data/repository_book_words_reader.dart';
 import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 import 'package:word_app/features/learning/application/new_words_reader.dart';
 import 'package:word_app/models/new_word_record.dart';
@@ -106,7 +106,7 @@ void main() {
 
   test('词书读取器保留词书编号与列表加载上限', () async {
     final wordRepository = _FakeWordRepository();
-    final reader = BookWordsReader(wordRepository: wordRepository);
+    final reader = RepositoryBookWordsReader(repository: wordRepository);
 
     expect(await reader.loadWords(42), isEmpty);
     expect(wordRepository.requestedBookId, 42);

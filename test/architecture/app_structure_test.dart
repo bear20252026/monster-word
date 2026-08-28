@@ -253,16 +253,30 @@ void main() {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final selectPageSource = File('lib/pages/lib_select_page.dart').readAsStringSync();
       final wordsPageSource = File('lib/pages/book_words_page.dart').readAsStringSync();
+      final extensiveModeSource = File('lib/pages/extensive_model_select_page.dart').readAsStringSync();
       final homeSource = File('lib/screens/home_screen.dart').readAsStringSync();
       final providersSource = File('lib/features/book/presentation/book_feature_providers.dart').readAsStringSync();
 
       expect(appSource, contains('buildBookFeatureScope('));
       expect(File('lib/features/book/application/book_catalog_reader.dart').existsSync(), isTrue);
+      final bookWordsPortSource = File('lib/features/learning/application/book_words_reader.dart').readAsStringSync();
+      final bookWordsAdapterSource = File('lib/features/learning/data/repository_book_words_reader.dart')
+          .readAsStringSync();
+      expect(bookWordsPortSource, contains('abstract interface class BookWordsReader'));
+      expect(bookWordsPortSource, isNot(contains('WordRepository')));
+      expect(bookWordsAdapterSource, contains('implements BookWordsReader'));
+      expect(bookWordsAdapterSource, contains('WordRepository'));
       expect(providersSource, contains('sl<BookRepository>()'));
+      expect(selectPageSource, contains('BookWordsReader'));
+      expect(extensiveModeSource, contains('BookWordsReader'));
       for (final source in [selectPageSource, wordsPageSource, homeSource]) {
         expect(source, contains('BookCatalogReader'));
         expect(source, isNot(contains('sl<')));
         expect(source, isNot(contains('BookRepository')));
+      }
+      for (final source in [selectPageSource, extensiveModeSource]) {
+        expect(source, isNot(contains('LearningQueueRepository')));
+        expect(source, isNot(contains('learning_queue_repository.dart')));
       }
     });
   });
