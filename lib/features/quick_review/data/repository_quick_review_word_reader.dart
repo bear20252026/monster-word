@@ -4,7 +4,7 @@ import '../application/quick_review_word_reader.dart';
 
 /// 基于既有单词仓储的考试速刷词源适配器。
 class RepositoryQuickReviewWordReader implements QuickReviewWordReader {
-  RepositoryQuickReviewWordReader({required WordRepository repository}) : _repository = repository;
+  RepositoryQuickReviewWordReader({required this._repository});
 
   final WordRepository _repository;
 

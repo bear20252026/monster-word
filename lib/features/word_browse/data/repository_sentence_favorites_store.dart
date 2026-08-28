@@ -6,7 +6,7 @@ import '../application/sentence_favorites_store.dart';
 ///
 /// 适配器不保存额外收藏状态，确保 [FavRepository] 继续是唯一持久化事实来源。
 class RepositorySentenceFavoritesStore implements SentenceFavoritesStore {
-  RepositorySentenceFavoritesStore({required FavRepository repository}) : _repository = repository;
+  RepositorySentenceFavoritesStore({required this._repository});
 
   final FavRepository _repository;
 

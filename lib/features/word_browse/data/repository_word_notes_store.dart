@@ -6,7 +6,7 @@ import '../application/word_notes_store.dart';
 ///
 /// 适配器不缓存或复制笔记数据，确保 [NoteRepository] 继续是唯一持久化事实来源。
 class RepositoryWordNotesStore implements WordNotesStore {
-  RepositoryWordNotesStore({required NoteRepository repository}) : _repository = repository;
+  RepositoryWordNotesStore({required this._repository});
 
   final NoteRepository _repository;
 

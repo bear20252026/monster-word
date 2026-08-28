@@ -1,12 +1,13 @@
 import 'package:flutter/foundation.dart';
 
-import '../data/account_profile_repository.dart';
+import '../application/account_profile_store.dart';
+import '../domain/account_profile.dart';
 
 /// 账户功能域内的个人资料状态。
 ///
 /// 该状态只负责可展示的资料快照和资料编辑，不承接登录、令牌或首次引导职责。
 class AccountProfileState extends ChangeNotifier {
-  AccountProfileState({required AccountProfileStore profileStore}) : _profileStore = profileStore;
+  AccountProfileState({required this._profileStore});
 
   final AccountProfileStore _profileStore;
 

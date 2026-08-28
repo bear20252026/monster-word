@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/features/account/application/account_profile_store.dart';
 import 'package:word_app/features/account/data/account_profile_repository.dart';
+import 'package:word_app/features/account/domain/account_profile.dart';
 import 'package:word_app/features/account/presentation/account_profile_state.dart';
 import 'package:word_app/models/user_info_bean.dart';
 import 'package:word_app/services/user_service.dart';
