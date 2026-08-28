@@ -9,9 +9,11 @@ import '../application/mastered_words_reader.dart';
 import '../application/new_words_reader.dart';
 import '../application/review_audio_player.dart';
 import '../application/review_queue_reader.dart';
+import '../application/review_schedule_reader.dart';
 import '../application/review_rating_writer.dart';
 import '../data/learning_progress_repository.dart';
 import '../data/learning_queue_repository.dart';
+import '../data/repository_review_schedule_reader.dart';
 import '../data/review_schedule_repository.dart';
 import 'learning_collections_state.dart';
 import 'learning_favorites_state.dart';
@@ -35,6 +37,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
       ChangeNotifierProvider<ReviewScheduleRepository>.value(value: sl<ReviewScheduleRepository>()),
+      ChangeNotifierProvider<ReviewScheduleReader>(
+        create: (_) => RepositoryReviewScheduleReader(repository: sl<ReviewScheduleRepository>()),
+      ),
       Provider<LearningQueueRepository>.value(value: sl<LearningQueueRepository>()),
       ChangeNotifierProvider(
         create: (_) => LearningFavoritesState(
