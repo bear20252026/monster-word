@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/learning/learning_favorites_store.dart';
 import '../../../core/learning/learning_progress_reader.dart';
+import '../../../core/learning/learning_session_starter.dart';
 import '../../../core/learning/new_words_store.dart';
 import '../../../repositories/fav_repository.dart';
 import '../../../repositories/mastered_repository.dart';
@@ -17,6 +18,7 @@ import '../application/review_rating_writer.dart';
 import '../data/learning_progress_reader_impl.dart';
 import '../data/learning_progress_repository.dart';
 import '../data/learning_queue_repository.dart';
+import '../data/learning_session_starter_impl.dart';
 import '../data/repository_review_schedule_reader.dart';
 import '../data/review_schedule_repository.dart';
 import 'learning_collections_state.dart';
@@ -68,6 +70,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
           progressRepository: sl<LearningProgressRepository>(),
           reviewSchedule: sl<ReviewScheduleRepository>(),
         ),
+      ),
+      ProxyProvider<LearningSessionState, LearningSessionStarter>(
+        update: (_, session, _) => LearningSessionStarterImpl(session),
       ),
       ChangeNotifierProxyProvider<LearningSessionState, LearningQueueState>(
         create: (_) => LearningQueueState(),

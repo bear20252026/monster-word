@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../../../core/audio/audio_playback_state.dart';
 import '../../../core/learning/learning_favorites_store.dart';
+import '../../../core/learning/learning_session_starter.dart';
 import '../../../core/learning/new_words_store.dart';
-import '../../../features/learning/presentation/learning_session_state.dart';
 import '../../../models/book.dart';
 import '../../../models/word.dart';
 import '../../../pages/word_detail_page.dart';
@@ -26,8 +26,7 @@ class BookWordsPage extends StatelessWidget {
 
   /// 启动当前词书的学习会话并进入沉浸刷词页。
   Future<void> _startLearning(BuildContext context) async {
-    final session = context.read<LearningSessionState>();
-    await session.loadBook(book, limit: 50);
+    await context.read<LearningSessionStarter>().startBookSession(book, limit: 50);
     if (!context.mounted) return;
     Navigator.pushNamed(context, '/immersive_swipe');
   }
