@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../../data/app_preferences.dart';
 import '../../../engine/core_engine.dart';
 import '../../../engine/fsrs6_engine.dart';
 import '../../../engine/leitner_engine.dart';
@@ -61,12 +60,9 @@ class LearningSessionState extends ChangeNotifier {
     _replaceQueue(favorites.take(limit).toList(growable: false));
   }
 
-  Future<void> loadBook(Book book, {int? limit, bool shuffle = true}) async {
+  Future<void> loadBook(Book book, {int limit = 50, bool shuffle = true}) async {
     _currentBook = book;
-    // ✅ 使用每日学习目标作为默认限制
-    final dailyGoal = UserPreferences().getDailyGoal();
-    final actualLimit = limit ?? dailyGoal;
-    final queue = await _queueRepository.loadBook(book, limit: actualLimit, shuffle: shuffle);
+    final queue = await _queueRepository.loadBook(book, limit: limit, shuffle: shuffle);
     _replaceQueue(queue);
     unawaited(_saveProgress());
   }
