@@ -249,6 +249,19 @@ void main() {
       expect(pageSource, isNot(contains('WordRepository')));
     });
 
+    test('长按查词弹窗通过 WordSearchReader 访问精确单词', () {
+      final popupSource = File('lib/widgets/word_lookup_popup.dart').readAsStringSync();
+      final readerSource = File('lib/features/search/application/word_search_reader.dart').readAsStringSync();
+      final adapterSource = File('lib/features/search/data/repository_word_search_reader.dart').readAsStringSync();
+
+      expect(popupSource, contains('WordSearchReader'));
+      expect(popupSource, isNot(contains('sl<')));
+      expect(popupSource, isNot(contains('WordRepository')));
+      expect(popupSource, isNot(contains('service_locator')));
+      expect(readerSource, contains('findByText'));
+      expect(adapterSource, contains('getWordByText'));
+    });
+
     test('词书入口通过 BookCatalogReader 访问目录', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final selectPageSource = File('lib/pages/lib_select_page.dart').readAsStringSync();

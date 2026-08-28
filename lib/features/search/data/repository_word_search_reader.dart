@@ -12,4 +12,7 @@ class RepositoryWordSearchReader implements WordSearchReader {
   Future<List<Word>> search(String query, {int? limit}) {
     return _repository.searchWords(query, limit: limit);
   }
+
+  @override
+  Future<Word?> findByText(String word) => _repository.getWordByText(word);
 }
