@@ -1,5 +1,6 @@
 // 由 Claude 团队生成 | 内置字典查询服务
-// 封装字典相关查询：搜索单词、获取详情、派生词、词根词缀、近义词、真题例句、收藏管理
+// 封装字典相关查询：搜索单词、获取详情、词根词缀、收藏管理
+// 注：派生词/近义词/真题例句已迁移至 lib/features/dictionary/data/ 层
 
 import '../data/wordbook_database.dart';
 import '../data/user_database.dart';
@@ -126,18 +127,6 @@ class DictionaryService {
   // 3. 获取派生词
   // ============================================================
 
-  /// 获取派生词（通过 main_word 字段关联）
-  /// [word] 原词
-  Future<List<Word>> getDerivedWords(String word) async {
-    final rows = await _db.db.query(
-      'words',
-      where: 'main_word = ? AND word != ?',
-      whereArgs: [word, word],
-      orderBy: 'word',
-    );
-    return rows.map(Word.fromMap).toList();
-  }
-
   /// 获取单词的所有形式（原词 + 派生词）
   /// [word] 原词
   Future<List<Word>> getWordForms(String word) async {
@@ -180,29 +169,6 @@ class DictionaryService {
   // 5. 获取近义词
   // ============================================================
 
-  /// 获取近义词（通过 confuse 字段）
-  /// [word] 单词
-  Future<List<Word>> getSynonyms(String word) async {
-    final wordData = await _db.getWord(word);
-    if (wordData == null || wordData.confuse.isEmpty) return [];
-
-    // confuse 字段包含近义词列表（逗号分隔）
-    final synonyms = wordData.confuse.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
-
-    if (synonyms.isEmpty) return [];
-
-    // 查询近义词详情
-    final results = <Word>[];
-    for (final synonym in synonyms) {
-      final synonymWord = await _db.getWord(synonym);
-      if (synonymWord != null) {
-        results.add(synonymWord);
-      }
-    }
-
-    return results;
-  }
-
   /// 获取易混淆词
   /// [word] 单词
   Future<List<String>> getConfusingWords(String word) async {
@@ -212,27 +178,8 @@ class DictionaryService {
   }
 
   // ============================================================
-  // 6. 获取真题例句
+  // 6. 获取单词音频URL
   // ============================================================
-
-  /// 获取单词的真题例句
-  /// [word] 单词
-  Future<List<Map<String, String>>> getExamExamples(String word) async {
-    final wordData = await _db.getWord(word);
-    if (wordData == null || wordData.example.isEmpty) return [];
-
-    // 解析例句（格式：例句1\n例句2\n...）
-    final examples = wordData.example.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
-
-    return examples
-        .map(
-          (example) => {
-            'sentence': example,
-            'translation': '', // 翻译需要额外数据源
-          },
-        )
-        .toList();
-  }
 
   /// 获取单词的音频URL
   /// [word] 单词

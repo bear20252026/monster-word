@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -93,7 +95,7 @@ void main() {
 
     test('播放器功能域拥有播放状态，页面不再使用旧状态或直连音频服务', () {
       const audioConsumers = [
-        'lib/pages/dictionary_page.dart',
+        'lib/features/dictionary/presentation/dictionary_page.dart',
         'lib/pages/learn_page.dart',
         'lib/pages/search_page.dart',
         'lib/pages/spell_check_page.dart',
@@ -198,15 +200,20 @@ void main() {
 
     test('词典页通过 DictionaryContentReader 读取扩展内容', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      final pageSource = File('lib/pages/dictionary_page.dart').readAsStringSync();
+      final featurePageSource = File('lib/features/dictionary/presentation/dictionary_page.dart')
+          .readAsStringSync();
       final providersSource = File('lib/features/dictionary/presentation/dictionary_feature_providers.dart')
           .readAsStringSync();
 
       expect(appSource, contains('buildDictionaryFeatureScope('));
       expect(File('lib/features/dictionary/application/dictionary_content_reader.dart').existsSync(), isTrue);
-      expect(providersSource, contains('DictionaryService.instance'));
-      expect(pageSource, contains('DictionaryContentReader'));
-      expect(pageSource, isNot(contains('DictionaryService')));
+      expect(providersSource, contains('ServiceDictionaryContentReader'));
+      expect(featurePageSource, contains('DictionaryDetailState'));
+      expect(featurePageSource, isNot(contains('DictionaryService')));
+      // 四层齐全
+      expect(Directory('lib/features/dictionary/domain').existsSync(), isTrue);
+      expect(Directory('lib/features/dictionary/data').existsSync(), isTrue);
+      expect(Directory('lib/features/dictionary/presentation').existsSync(), isTrue);
     });
 
     test('签到历史页通过 CheckInHistoryReader 读取数据', () {
