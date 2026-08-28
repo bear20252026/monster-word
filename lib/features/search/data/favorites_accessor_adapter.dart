@@ -1,14 +1,14 @@
 // 搜索功能域 · 收藏访问适配器。
 //
-// 通过 LearningFavoritesState（learning feature presentation 层）实现收藏操作，
-// 但该引用仅在 data 适配器层；presentation 页面只依赖 FavoritesAccessor 端口。
+// 通过 LearningFavoritesStore（learning 经 core 契约暴露）实现收藏操作，
+// 该引用仅在 data 适配器层；presentation 页面只依赖 FavoritesAccessor 端口。
 
-import '../../learning/presentation/learning_favorites_state.dart';
+import '../../../core/learning/learning_favorites_store.dart';
 import '../application/favorites_accessor.dart';
 
-/// 将 LearningFavoritesState 适配为 FavoritesAccessor 端口。
+/// 将 LearningFavoritesStore（core 契约）适配为 FavoritesAccessor 端口。
 class FavoritesAccessorAdapter implements FavoritesAccessor {
-  final LearningFavoritesState _favorites;
+  final LearningFavoritesStore _favorites;
 
   const FavoritesAccessorAdapter(this._favorites);
 

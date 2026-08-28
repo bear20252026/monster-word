@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/learning/learning_favorites_store.dart';
 import '../../../core/learning/learning_progress_reader.dart';
 import '../../../repositories/fav_repository.dart';
 import '../../../repositories/mastered_repository.dart';
@@ -48,6 +49,11 @@ Widget buildLearningFeatureScope({required Widget child}) {
           favoriteRepository: sl<FavRepository>(),
           queueRepository: sl<LearningQueueRepository>(),
         ),
+      ),
+      // 以 core 契约类型暴露同一实例：search / book 等消费方仅依赖
+      // lib/core/learning 的 LearningFavoritesStore，不触 learning/presentation。
+      ProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
+        update: (_, state, _) => state,
       ),
       ChangeNotifierProvider(
         create: (_) => LearningMasteredState(

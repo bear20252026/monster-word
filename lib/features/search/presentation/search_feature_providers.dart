@@ -2,9 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/learning/learning_favorites_store.dart';
 import '../../../data/app_preferences.dart';
 import '../../../repositories/word_repository.dart';
-import '../../learning/presentation/learning_favorites_state.dart';
 import '../application/example_reader.dart';
 import '../application/favorites_accessor.dart';
 import '../application/search_history_store.dart';
@@ -23,7 +23,7 @@ Widget buildSearchFeatureScope({required Widget child}) {
       Provider<WordSearchReader>(create: (_) => RepositoryWordSearchReader(sl<WordRepository>())),
       Provider<SearchHistoryStore>(create: (_) => PreferencesSearchHistoryStore(AppPreferences())),
       Provider<ExampleReader>(create: (_) => const ExampleParserAdapter()),
-      ProxyProvider<LearningFavoritesState, FavoritesAccessor>(
+      ProxyProvider<LearningFavoritesStore, FavoritesAccessor>(
         update: (_, favorites, _) => FavoritesAccessorAdapter(favorites),
       ),
     ],

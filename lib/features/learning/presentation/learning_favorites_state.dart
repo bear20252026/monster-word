@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../core/learning/learning_favorites_store.dart';
 import '../../../models/word.dart';
 import '../../../repositories/fav_repository.dart';
 import '../data/learning_queue_repository.dart';
@@ -10,7 +11,7 @@ import '../data/learning_queue_repository.dart';
 ///
 /// 持久化仍完全委托 [FavRepository]；该状态只维护可供页面订阅的不可变词形集合、
 /// 收藏数和加载状态，并通过 [LearningQueueRepository] 解析完整词表中的收藏词。
-class LearningFavoritesState extends ChangeNotifier {
+class LearningFavoritesState extends ChangeNotifier implements LearningFavoritesStore {
   LearningFavoritesState({required this._favoriteRepository, required this._queueRepository}) {
     unawaited(refresh());
   }
@@ -21,12 +22,17 @@ class LearningFavoritesState extends ChangeNotifier {
   Set<String> _favoriteWords = const {};
   bool _isLoading = true;
 
+  @override
   Set<String> get favoriteWords => Set.unmodifiable(_favoriteWords);
+  @override
   int get favoriteCount => _favoriteWords.length;
+  @override
   bool get isLoading => _isLoading;
 
+  @override
   bool isFavorite(String word) => _favoriteWords.contains(word);
 
+  @override
   Future<void> refresh() async {
     _isLoading = true;
     notifyListeners();
@@ -38,6 +44,7 @@ class LearningFavoritesState extends ChangeNotifier {
     }
   }
 
+  @override
   Future<bool> toggle(String word) async {
     await _favoriteRepository.toggleFavorite(word);
     _favoriteWords = (await _favoriteRepository.getFavoriteWords()).toSet();
