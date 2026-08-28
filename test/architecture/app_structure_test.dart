@@ -249,6 +249,15 @@ void main() {
       expect(pageSource, isNot(contains('WordRepository')));
     });
 
+    test('掌握状态分离读取端口与写入仓储', () {
+      final stateSource = File('lib/features/learning/presentation/learning_mastered_state.dart').readAsStringSync();
+      expect(stateSource, contains('MasteredWordsReader'));
+      expect(stateSource, contains('MasteredRepository'));
+      expect(stateSource, contains('_masteredWordsReader.loadTexts()'));
+      expect(stateSource, contains('_masteredRepository.toggleMastered'));
+      expect(stateSource, isNot(contains('_masteredRepository.getMasteredWords')));
+    });
+
     test('生词本状态分离读取端口与写入仓储', () {
       final stateSource = File('lib/features/learning/presentation/new_words_state.dart').readAsStringSync();
       expect(stateSource, contains('NewWordsReader'));

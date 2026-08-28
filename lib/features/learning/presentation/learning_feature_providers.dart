@@ -47,7 +47,12 @@ Widget buildLearningFeatureScope({required Widget child}) {
           queueRepository: sl<LearningQueueRepository>(),
         ),
       ),
-      ChangeNotifierProvider(create: (_) => LearningMasteredState(masteredRepository: sl<MasteredRepository>())),
+      ChangeNotifierProvider(
+        create: (_) => LearningMasteredState(
+          masteredWordsReader: sl<MasteredWordsReader>(),
+          masteredRepository: sl<MasteredRepository>(),
+        ),
+      ),
       ChangeNotifierProvider(
         create: (_) => LearningSessionState(
           queueRepository: sl<LearningQueueRepository>(),

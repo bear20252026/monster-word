@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 import 'package:word_app/features/learning/data/learning_queue_repository.dart';
 import 'package:word_app/features/learning/presentation/learning_collections_state.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
@@ -38,7 +39,10 @@ void main() {
       favoriteRepository: favoriteRepository,
       queueRepository: LearningQueueRepository(wordSource: _UnusedQueueWordSource(), favRepository: favoriteRepository),
     );
-    final mastered = LearningMasteredState(masteredRepository: MasteredRepositoryImpl());
+    final mastered = LearningMasteredState(
+      masteredWordsReader: _FakeMasteredWordsReader(['cherry']),
+      masteredRepository: MasteredRepositoryImpl(),
+    );
     await Future.wait([favorites.refresh(), mastered.refresh()]);
 
     final collections = LearningCollectionsState()..synchronize(favorites: favorites, mastered: mastered);
@@ -52,6 +56,18 @@ void main() {
     expect(collections.favoriteCount, 3);
     expect(collections.masteredCount, 2);
   });
+}
+
+class _FakeMasteredWordsReader implements MasteredWordsReader {
+  _FakeMasteredWordsReader(this.texts);
+
+  final List<String> texts;
+
+  @override
+  Future<List<String>> loadTexts() async => texts;
+
+  @override
+  Future<List<Word>> loadWords() async => const [];
 }
 
 class _UnusedQueueWordSource implements LearningQueueWordSource {

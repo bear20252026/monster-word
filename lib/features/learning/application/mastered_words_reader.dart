@@ -6,4 +6,7 @@ import '../../../models/word.dart';
 /// [Word] 模型，页面和状态层不直接组合仓储。
 abstract interface class MasteredWordsReader {
   Future<List<Word>> loadWords();
+
+  /// 读取原始掌握词文本，供只关心字符串身份的状态使用。
+  Future<List<String>> loadTexts();
 }

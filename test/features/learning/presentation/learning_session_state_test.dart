@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/data/learning_progress_repository.dart';
 import 'package:word_app/features/learning/data/learning_queue_repository.dart';
+import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_reader.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
@@ -88,7 +89,10 @@ void main() {
 
   test('专用掌握词状态刷新并切换掌握标记时更新可订阅计数', () async {
     final repository = _FakeMasteredRepository({'saved'});
-    final mastered = LearningMasteredState(masteredRepository: repository);
+    final mastered = LearningMasteredState(
+      masteredWordsReader: _FakeMasteredWordsReader(repository),
+      masteredRepository: repository,
+    );
 
     await mastered.refresh();
     expect(mastered.masteredCount, 1);
@@ -177,6 +181,18 @@ class _FakeMasteredRepository implements MasteredRepository {
       _words.add(word);
     }
   }
+}
+
+class _FakeMasteredWordsReader implements MasteredWordsReader {
+  _FakeMasteredWordsReader(this.repository);
+
+  final MasteredRepository repository;
+
+  @override
+  Future<List<String>> loadTexts() => repository.getMasteredWords();
+
+  @override
+  Future<List<Word>> loadWords() async => const [];
 }
 
 class _FakeFavRepository implements FavRepository {
