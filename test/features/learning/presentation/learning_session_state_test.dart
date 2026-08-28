@@ -189,7 +189,7 @@ class _FakeMasteredWordsReader implements MasteredWordsReader {
   final MasteredRepository repository;
 
   @override
-  Future<List<String>> loadTexts() => repository.getMasteredWords();
+  Future<List<String>> loadTexts() async => (await repository.getMasteredWords()).toList();
 
   @override
   Future<List<Word>> loadWords() async => const [];
