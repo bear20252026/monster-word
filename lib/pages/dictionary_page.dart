@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/example_parser.dart';
+import '../features/dictionary/application/dictionary_content_reader.dart';
 import '../features/learning/presentation/new_words_state.dart';
 import '../features/player/presentation/audio_playback_state.dart';
 import '../models/word.dart';
-import '../services/dictionary_service.dart';
 import '../features/learning/presentation/learning_favorites_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -404,7 +404,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
 
   Widget _buildDerivativesTab(ThemeVars skin, Word word) {
     return FutureBuilder<List<Word>>(
-      future: DictionaryService.instance.getDerivedWords(word.word),
+      future: context.read<DictionaryContentReader>().getDerivedWords(word.word),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
@@ -517,7 +517,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
 
   Widget _buildSynonymsTab(ThemeVars skin, Word word) {
     return FutureBuilder<List<Word>>(
-      future: DictionaryService.instance.getSynonyms(word.word),
+      future: context.read<DictionaryContentReader>().getSynonyms(word.word),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(
@@ -622,7 +622,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
 
   Widget _buildExamTab(ThemeVars skin, Word word) {
     return FutureBuilder<List<Map<String, String>>>(
-      future: DictionaryService.instance.getExamExamples(word.word),
+      future: context.read<DictionaryContentReader>().getExamExamples(word.word),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Container(

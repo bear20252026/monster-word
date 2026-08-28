@@ -73,6 +73,10 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 应用根通过 `buildSearchFeatureScope` 集中装配搜索依赖。搜索页不得重新导入 `WordRepository`、`AppPreferences` 或服务定位器；架构测试对此保留负向门禁。搜索历史仍属于搜索功能域，不应为了统一设置而并入学习偏好状态。
 
+## 字典功能域边界
+
+`dictionary` 功能域为词典页提供 `DictionaryContentReader`，统一读取派生词、同义词和真题例句。`ServiceDictionaryContentReader` 委托现有 `DictionaryService`，不复制词库或字典内容事实；词典页不再直接访问 `DictionaryService.instance`。应用根通过 `buildDictionaryFeatureScope` 装配该端口，架构测试对页面直连服务保留负向门禁。
+
 ## 词书功能域边界
 
 `book` 功能域为词书选择页和词书内容页提供 `BookCatalogReader`。`RepositoryBookCatalogReader` 继续委托既有 `BookRepository` 读取词书目录，并提供按 ID 查找能力；适配器不缓存或复制词书数据，也不改变学习队列、学习会话或词书数据库的事实模型。
