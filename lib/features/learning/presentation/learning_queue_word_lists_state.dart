@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../models/word.dart';
-import '../data/review_schedule_repository.dart';
+import '../application/review_schedule_reader.dart';
 import '../domain/queue_word_lists.dart';
 import 'learning_queue_state.dart';
 
@@ -20,7 +20,7 @@ class LearningQueueWordListsSnapshot {
 
   factory LearningQueueWordListsSnapshot.fromSources({
     required LearningQueueSnapshot queue,
-    required ReviewScheduleRepository schedule,
+    required ReviewScheduleReader schedule,
   }) {
     final lists = QueueWordLists.fromQueue(
       queue: queue.words,
@@ -44,7 +44,7 @@ class LearningQueueWordListsSnapshot {
 
 /// 队列分类词表的过渡展示状态。
 ///
-/// 筛选组合 [LearningQueueSnapshot] 的当前队列与 [ReviewScheduleRepository] 的 FSRS
+/// 筛选组合 [LearningQueueSnapshot] 的当前队列与 [ReviewScheduleReader] 的 FSRS
 /// 卡片；页面通过该适配器读取快照，后续替换队列存储时无需重新引入遗留状态。
 class LearningQueueWordListsState extends ChangeNotifier {
   LearningQueueWordListsSnapshot _snapshot = const LearningQueueWordListsSnapshot.empty();
@@ -53,7 +53,7 @@ class LearningQueueWordListsState extends ChangeNotifier {
   List<Word> get notLearnedWords => _snapshot.notLearnedWords;
   List<Word> get reviewingWords => _snapshot.reviewingWords;
 
-  void synchronize({required LearningQueueSnapshot queue, required ReviewScheduleRepository schedule}) {
+  void synchronize({required LearningQueueSnapshot queue, required ReviewScheduleReader schedule}) {
     _snapshot = LearningQueueWordListsSnapshot.fromSources(queue: queue, schedule: schedule);
     notifyListeners();
   }

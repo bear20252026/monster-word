@@ -1,4 +1,5 @@
 import '../../../engine/fsrs6_engine.dart';
+import '../../../models/word.dart';
 import '../application/review_schedule_reader.dart';
 import 'review_schedule_repository.dart';
 
@@ -24,6 +25,18 @@ class RepositoryReviewScheduleReader extends ReviewScheduleReader {
 
   @override
   int get todayReviewCount => _repository.todayReviewCount;
+
+  @override
+  int get dueCount => _repository.dueCount;
+
+  @override
+  int get activeDateCount => _repository.activeDateCount;
+
+  @override
+  Map<String, int> get memoryStats => _repository.memoryStats;
+
+  @override
+  List<Word> dueWordsFor(Iterable<Word> words) => _repository.dueWordsFor(words);
 
   @override
   void dispose() {

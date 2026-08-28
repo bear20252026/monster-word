@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
 import '../../../data/wordbook_database.dart' show Book;
-import '../data/review_schedule_repository.dart';
+import '../application/review_schedule_reader.dart';
 import 'learning_queue_state.dart';
 
 /// 学习展示层使用的不可变统计快照。
@@ -35,7 +35,7 @@ class LearningStatisticsSnapshot {
 
   factory LearningStatisticsSnapshot.fromSources({
     required LearningQueueSnapshot queue,
-    required ReviewScheduleRepository schedule,
+    required ReviewScheduleReader schedule,
   }) {
     final memoryStats = schedule.memoryStats;
     return LearningStatisticsSnapshot(
@@ -69,7 +69,7 @@ class LearningStatisticsSnapshot {
 
 /// 学习统计的过渡展示状态。
 ///
-/// 当前由 [LearningQueueSnapshot] 与 [ReviewScheduleRepository] 同步：前者提供当前
+/// 当前由 [LearningQueueSnapshot] 与 [ReviewScheduleReader] 同步：前者提供当前
 /// 队列与词书，后者提供 FSRS 卡片和统计。当队列写入完成迁移后，只替换快照来源即可，
 /// 页面无需再次依赖遗留状态。
 class LearningStatisticsState extends ChangeNotifier {
@@ -91,7 +91,7 @@ class LearningStatisticsState extends ChangeNotifier {
 
   Map<String, int> get todayStats => _snapshot.todayStats;
 
-  void synchronize({required LearningQueueSnapshot queue, required ReviewScheduleRepository schedule}) {
+  void synchronize({required LearningQueueSnapshot queue, required ReviewScheduleReader schedule}) {
     _snapshot = LearningStatisticsSnapshot.fromSources(queue: queue, schedule: schedule);
     notifyListeners();
   }

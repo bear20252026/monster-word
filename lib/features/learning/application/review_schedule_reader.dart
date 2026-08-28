@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../engine/fsrs6_engine.dart';
+import '../../../models/word.dart';
 
 /// 正式复习 FSRS 展示信息的只读端口。
 ///
@@ -16,4 +17,12 @@ abstract class ReviewScheduleReader extends ChangeNotifier {
   int get todayLearnCount;
 
   int get todayReviewCount;
+
+  int get dueCount;
+
+  int get activeDateCount;
+
+  Map<String, int> get memoryStats;
+
+  List<Word> dueWordsFor(Iterable<Word> words);
 }
