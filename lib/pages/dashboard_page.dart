@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../features/learning/presentation/learning_statistics_state.dart';
+import '../features/scare_coin/application/scare_coin_store.dart';
 import '../hooks/responsive.dart';
 import '../models/book.dart';
-import '../pages/scare_coin_history_page.dart';
 import '../services/share_image_service.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -241,9 +241,9 @@ class DashboardPage extends StatelessWidget {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('正在生成分享图...'), duration: Duration(seconds: 1)));
 
-      // 获取用户数据（临时使用 ScareCoinLedger 获取签到数据）
-      final totalDays = (await ScareCoinLedger.checkinDates()).length;
-      final streakDays = await ScareCoinLedger.streak();
+      // 获取尖叫币功能域提供的签到数据
+      final totalDays = (await context.read<ScareCoinStore>().checkinDates()).length;
+      final streakDays = await context.read<ScareCoinStore>().streak();
 
       // 生成并分享
       await ShareImageService.generateAndShare(

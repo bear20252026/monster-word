@@ -291,13 +291,23 @@ void main() {
       final pageSource = File('lib/pages/scare_coin_history_page.dart').readAsStringSync();
       final calendarSource = File('lib/widgets/spring_check_in_calendar.dart').readAsStringSync();
       final profileSource = File('lib/screens/profile_screen.dart').readAsStringSync();
+      final classCheckInSource = File('lib/pages/class_checkin_page.dart').readAsStringSync();
+      final dashboardSource = File('lib/pages/dashboard_page.dart').readAsStringSync();
+      final mySpaceSource = File('lib/pages/my_space_page.dart').readAsStringSync();
 
       expect(portSource, contains('abstract interface class ScareCoinStore'));
       expect(adapterSource, contains('implements ScareCoinStore'));
       expect(adapterSource, contains('SharedPreferences'));
       expect(providerSource, contains('PreferencesScareCoinStore'));
       expect(appSource, contains('buildScareCoinFeatureScope('));
-      for (final source in [pageSource, calendarSource, profileSource]) {
+      for (final source in [
+        pageSource,
+        calendarSource,
+        profileSource,
+        classCheckInSource,
+        dashboardSource,
+        mySpaceSource,
+      ]) {
         expect(source, contains('ScareCoinStore'));
         expect(source, isNot(contains('ScareCoinLedger')));
         expect(source, isNot(contains('SharedPreferences')));

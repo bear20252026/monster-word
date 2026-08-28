@@ -5,10 +5,10 @@ import 'package:provider/provider.dart';
 
 import '../features/account/presentation/account_profile_state.dart';
 import '../hooks/responsive.dart';
+import '../features/scare_coin/application/scare_coin_store.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import 'message_page.dart';
-import 'scare_coin_history_page.dart';
 import 'settings_page.dart';
 import '../widgets/monster_icon.dart';
 
@@ -343,7 +343,7 @@ class _CoinCard extends StatelessWidget {
                   Text('尖叫币', style: MistralTypography.micro.copyWith(color: skin.text3)),
                   const SizedBox(height: 2),
                   FutureBuilder<int>(
-                    future: ScareCoinLedger.balance(),
+                    future: context.read<ScareCoinStore>().balance(),
                     builder: (context, snap) {
                       return Text(
                         '${snap.data ?? 0}',
