@@ -33,7 +33,7 @@ class WordLookupPopup extends StatelessWidget {
 
   void _showPopup(BuildContext context, Offset position) async {
     // 查询单词数据
-    final wordData = await _lookupWord(word);
+    final wordData = await _lookupWord(context, word);
     if (!context.mounted) return;
 
     // 计算弹窗位置（避免超出屏幕）
@@ -97,7 +97,7 @@ class WordLookupPopup extends StatelessWidget {
   }
 
   /// 查询单词数据
-  Future<Word?> _lookupWord(String word) async {
+  Future<Word?> _lookupWord(BuildContext context, String word) async {
     try {
       return await context.read<WordSearchReader>().findByText(word);
     } catch (e) {
