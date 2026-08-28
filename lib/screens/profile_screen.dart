@@ -7,7 +7,7 @@ import '../features/account/presentation/account_profile_state.dart';
 import '../hooks/responsive.dart';
 import '../pages/appearance_page.dart';
 import '../pages/more_settings_page.dart';
-import '../pages/scare_coin_history_page.dart';
+import '../features/scare_coin/application/scare_coin_store.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../tokens/func_colors.dart';
@@ -270,7 +270,7 @@ class _CoinCard extends StatelessWidget {
                 const MonsterAvatar(size: 32),
                 const SizedBox(width: 8),
                 FutureBuilder<int>(
-                  future: ScareCoinLedger.balance(),
+                  future: context.read<ScareCoinStore>().balance(),
                   builder: (context, snap) {
                     return Text(
                       '${snap.data ?? 0}',

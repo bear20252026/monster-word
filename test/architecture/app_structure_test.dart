@@ -281,6 +281,31 @@ void main() {
     });
   });
 
+  group('尖叫币功能域边界', () {
+    test('尖叫币页面和组件不持有本地账本实现', () {
+      final portSource = File('lib/features/scare_coin/application/scare_coin_store.dart').readAsStringSync();
+      final adapterSource = File('lib/features/scare_coin/data/preferences_scare_coin_store.dart').readAsStringSync();
+      final providerSource = File('lib/features/scare_coin/presentation/scare_coin_feature_providers.dart')
+          .readAsStringSync();
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final pageSource = File('lib/pages/scare_coin_history_page.dart').readAsStringSync();
+      final calendarSource = File('lib/widgets/spring_check_in_calendar.dart').readAsStringSync();
+      final profileSource = File('lib/screens/profile_screen.dart').readAsStringSync();
+
+      expect(portSource, contains('abstract interface class ScareCoinStore'));
+      expect(adapterSource, contains('implements ScareCoinStore'));
+      expect(adapterSource, contains('SharedPreferences'));
+      expect(providerSource, contains('PreferencesScareCoinStore'));
+      expect(appSource, contains('buildScareCoinFeatureScope('));
+      for (final source in [pageSource, calendarSource, profileSource]) {
+        expect(source, contains('ScareCoinStore'));
+        expect(source, isNot(contains('ScareCoinLedger')));
+        expect(source, isNot(contains('SharedPreferences')));
+        expect(source, isNot(contains('service_locator')));
+      }
+    });
+  });
+
   group('正式复习禁止依赖', () {
     test('路由页面不回流会话算法、遗留聚合状态或服务定位器', () {
       final pageSource = File('lib/pages/review_page.dart').readAsStringSync();

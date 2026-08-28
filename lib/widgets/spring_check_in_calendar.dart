@@ -4,11 +4,12 @@
 // 1) 日期格子以弹簧曲线错峰入场（scale 过冲回弹）
 // 2) 已签到日期显示弹跳对勾标记
 // 3) 连续签到期数「连击」特效：🔥 计数脉冲 + 今日签到后整卡弹跳、+10 浮层上升
-// 4) 接入现有 check-in 逻辑：ScareCoinLedger.checkIn()（每日 +10 尖叫币）
+// 4) 接入现有 check-in 逻辑：context.read<ScareCoinStore>().checkIn()（每日 +10 尖叫币）
 // 5) 颜色全部来自 SkinSystem，跟随全局主题切换
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../pages/scare_coin_history_page.dart' show ScareCoinLedger;
+import '../features/scare_coin/application/scare_coin_store.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import 'monster_icon.dart';
@@ -63,8 +64,8 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
   }
 
   Future<void> _refresh({bool animate = false}) async {
-    final dates = await ScareCoinLedger.checkinDates();
-    final streak = await ScareCoinLedger.streak();
+    final dates = await context.read<ScareCoinStore>().checkinDates();
+    final streak = await context.read<ScareCoinStore>().streak();
     if (!mounted) return;
     setState(() {
       _checkedDates = dates;
@@ -80,7 +81,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
 
   Future<void> _onCheckIn() async {
     if (_todayChecked) return;
-    final newBalance = await ScareCoinLedger.checkIn();
+    final newBalance = await context.read<ScareCoinStore>().checkIn();
     if (newBalance == null) return; // 已签过（并发保护）
     widget.onChecked?.call();
     if (!mounted) return;
@@ -308,7 +309,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
             onPressed: _todayChecked ? null : _onCheckIn,
             icon: Icon(_todayChecked ? Icons.check_circle_outline : Icons.redeem, size: 20),
             label: Text(
-              _todayChecked ? '今日已签到，明天再来～' : '签到领 ${ScareCoinLedger.checkInReward} 尖叫币',
+              _todayChecked ? '今日已签到，明天再来～' : '签到领 ${context.read<ScareCoinStore>().checkInReward} 尖叫币',
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ),
@@ -329,7 +330,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '+${ScareCoinLedger.checkInReward}',
+                      '+${context.read<ScareCoinStore>().checkInReward}',
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: skin.success),
                     ),
                     const SizedBox(width: 4),

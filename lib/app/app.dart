@@ -13,6 +13,7 @@ import '../features/player/presentation/player_feature_providers.dart';
 import '../features/quick_review/presentation/quick_review_feature_providers.dart';
 import '../features/settings/presentation/settings_feature_providers.dart';
 import '../features/search/presentation/search_feature_providers.dart';
+import '../features/scare_coin/presentation/scare_coin_feature_providers.dart';
 import '../features/word_browse/presentation/word_browse_feature_providers.dart';
 import '../pages/lib_select_page.dart';
 import '../screens/home_screen.dart';
@@ -41,14 +42,16 @@ class WordApp extends StatelessWidget {
               child: buildQuickReviewFeatureScope(
                 child: buildBookFeatureScope(
                   child: buildCheckInFeatureScope(
-                    child: buildDictionaryFeatureScope(
-                      child: buildWordBrowseFeatureScope(
-                        child: MultiProvider(
-                          providers: [
-                            ChangeNotifierProvider(create: (_) => SkinSystem()),
-                            ChangeNotifierProvider(create: (_) => WallpaperState()),
-                          ],
-                          child: const _AppLifecycle(),
+                    child: buildScareCoinFeatureScope(
+                      child: buildDictionaryFeatureScope(
+                        child: buildWordBrowseFeatureScope(
+                          child: MultiProvider(
+                            providers: [
+                              ChangeNotifierProvider(create: (_) => SkinSystem()),
+                              ChangeNotifierProvider(create: (_) => WallpaperState()),
+                            ],
+                            child: const _AppLifecycle(),
+                          ),
                         ),
                       ),
                     ),
