@@ -8,6 +8,7 @@ import '../features/account/presentation/account_feature_providers.dart';
 import '../features/learning/presentation/learning_feature_providers.dart';
 import '../features/player/presentation/player_feature_providers.dart';
 import '../features/settings/presentation/settings_feature_providers.dart';
+import '../features/search/presentation/search_feature_providers.dart';
 import '../features/word_browse/presentation/word_browse_feature_providers.dart';
 import '../pages/lib_select_page.dart';
 import '../screens/home_screen.dart';
@@ -32,13 +33,15 @@ class WordApp extends StatelessWidget {
       child: buildLearningFeatureScope(
         child: buildSettingsFeatureScope(
           child: buildPlayerFeatureScope(
-            child: buildWordBrowseFeatureScope(
-              child: MultiProvider(
-                providers: [
-                  ChangeNotifierProvider(create: (_) => SkinSystem()),
-                  ChangeNotifierProvider(create: (_) => WallpaperState()),
-                ],
-                child: const _AppLifecycle(),
+            child: buildSearchFeatureScope(
+              child: buildWordBrowseFeatureScope(
+                child: MultiProvider(
+                  providers: [
+                    ChangeNotifierProvider(create: (_) => SkinSystem()),
+                    ChangeNotifierProvider(create: (_) => WallpaperState()),
+                  ],
+                  child: const _AppLifecycle(),
+                ),
               ),
             ),
           ),
