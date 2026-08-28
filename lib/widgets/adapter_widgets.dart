@@ -426,6 +426,7 @@ class CandidateWordInfo {
   }
 
   List<Map<String, String>>? get _cachedDefs {
+    if (interpret.isEmpty) return null; // 提前返回，避免对空字符串做无意义的 jsonDecode
     try {
       final decoded = jsonDecode(interpret);
       if (decoded is List) {
