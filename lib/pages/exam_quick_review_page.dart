@@ -4,6 +4,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../features/quick_review/application/quick_review_word_reader.dart';
 import '../models/word.dart';
