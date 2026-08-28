@@ -39,9 +39,10 @@ void main() {
       favoriteRepository: favoriteRepository,
       queueRepository: LearningQueueRepository(wordSource: _UnusedQueueWordSource(), favRepository: favoriteRepository),
     );
+    final masteredRepository = MasteredRepositoryImpl();
     final mastered = LearningMasteredState(
-      masteredWordsReader: _FakeMasteredWordsReader(['cherry']),
-      masteredRepository: MasteredRepositoryImpl(),
+      masteredWordsReader: _FakeMasteredWordsReader(masteredRepository),
+      masteredRepository: masteredRepository,
     );
     await Future.wait([favorites.refresh(), mastered.refresh()]);
 
@@ -59,12 +60,12 @@ void main() {
 }
 
 class _FakeMasteredWordsReader implements MasteredWordsReader {
-  _FakeMasteredWordsReader(this.texts);
+  _FakeMasteredWordsReader(this.repository);
 
-  final List<String> texts;
+  final MasteredRepository repository;
 
   @override
-  Future<List<String>> loadTexts() async => texts;
+  Future<List<String>> loadTexts() async => (await repository.getMasteredWords()).toList();
 
   @override
   Future<List<Word>> loadWords() async => const [];
