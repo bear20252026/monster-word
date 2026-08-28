@@ -6,6 +6,7 @@ import 'package:word_app/features/learning/presentation/learning_collections_sta
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_mastered_state.dart';
 import 'package:word_app/models/word.dart';
+import 'package:word_app/repositories/mastered_repository.dart';
 import 'package:word_app/repositories/fav_repository_impl.dart';
 import 'package:word_app/repositories/mastered_repository_impl.dart';
 
