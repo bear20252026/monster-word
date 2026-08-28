@@ -3,8 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
-import '../repositories/book_repository.dart';
+import '../features/book/application/book_catalog_reader.dart';
 import '../hooks/responsive.dart';
 import '../pages/learn_page.dart';
 import '../pages/lib_select_page.dart';
@@ -142,8 +141,7 @@ class HomeScreen extends StatelessWidget {
       return;
     }
     // 否则加载第一本书
-    final bookRepo = sl<BookRepository>();
-    final books = await bookRepo.getBooks();
+    final books = await context.read<BookCatalogReader>().listBooks();
     if (books.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('暂无词书，请先添加词书')));
