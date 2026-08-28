@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/data/learning_progress_repository.dart';
 import 'package:word_app/features/learning/data/learning_queue_repository.dart';
+import 'package:word_app/features/learning/data/repository_review_schedule_reader.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_mastered_state.dart';
@@ -33,13 +34,15 @@ void main() {
 
     final queue = LearningQueueState()..synchronizeFrom(session);
     session.next();
-    final statistics = LearningStatisticsState()..synchronize(queue: queue.snapshot, schedule: schedule);
+    final scheduleReader = RepositoryReviewScheduleReader(repository: schedule);
+    final statistics = LearningStatisticsState()..synchronize(queue: queue.snapshot, schedule: scheduleReader);
 
     expect(queue.words.map((word) => word.word), ['first', 'later']);
     expect(queue.currentIndex, 0);
     expect(statistics.total, 2);
     expect(statistics.dueCount, 0);
     expect(statistics.memoryStats['total'], 0);
+    scheduleReader.dispose();
   });
 
   test('会话不向页面暴露可变队列，并在退出时清理会话导航状态', () async {
