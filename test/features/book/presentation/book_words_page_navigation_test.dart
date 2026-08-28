@@ -11,6 +11,8 @@ import 'package:word_app/features/learning/data/learning_queue_repository.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/new_words_state.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/core/learning/learning_favorites_store.dart';
+import 'package:word_app/core/learning/new_words_store.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/new_word_record.dart';
 import 'package:word_app/models/word.dart';
@@ -169,11 +171,17 @@ void main() {
                 ),
               ),
             ),
+            ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
+              update: (_, state, _) => state,
+            ),
             ChangeNotifierProvider<NewWordsState>(
               create: (_) => NewWordsState(
                 newWordsReader: MockNewWordsReader(),
                 newWordRepository: MockNewWordRepository(),
               ),
+            ),
+            ListenableProxyProvider<NewWordsState, NewWordsStore>(
+              update: (_, state, _) => state,
             ),
             ChangeNotifierProvider<AudioPlaybackState>(
               create: (_) => AudioPlaybackState(audioService: MockAudioService()),

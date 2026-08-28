@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/learning/learning_favorites_store.dart';
 import '../../../core/learning/learning_progress_reader.dart';
+import '../../../core/learning/new_words_store.dart';
 import '../../../repositories/fav_repository.dart';
 import '../../../repositories/mastered_repository.dart';
 import '../application/book_words_reader.dart';
@@ -52,7 +53,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
       ),
       // 以 core 契约类型暴露同一实例：search / book 等消费方仅依赖
       // lib/core/learning 的 LearningFavoritesStore，不触 learning/presentation。
-      ProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
+      ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
         update: (_, state, _) => state,
       ),
       ChangeNotifierProvider(
@@ -116,6 +117,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
         value: LearningProgressReaderImpl(masteredRepository: sl<MasteredRepository>()),
       ),
       ChangeNotifierProvider(create: (_) => sl<NewWordsState>()..initialize()),
+      ListenableProxyProvider<NewWordsState, NewWordsStore>(
+        update: (_, state, _) => state,
+      ),
     ],
     child: child,
   );

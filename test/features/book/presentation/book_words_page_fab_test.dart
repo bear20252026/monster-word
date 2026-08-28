@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/core/learning/learning_favorites_store.dart';
+import 'package:word_app/core/learning/new_words_store.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_selection_writer.dart';
 import 'package:word_app/features/book/application/book_words_reader.dart';
@@ -188,11 +190,17 @@ void main() {
             ),
           ),
         ),
+        ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
+          update: (_, state, _) => state,
+        ),
         ChangeNotifierProvider<NewWordsState>(
           create: (_) => NewWordsState(
             newWordsReader: MockNewWordsReader(),
             newWordRepository: MockNewWordRepository(),
           ),
+        ),
+        ListenableProxyProvider<NewWordsState, NewWordsStore>(
+          update: (_, state, _) => state,
         ),
         ChangeNotifierProvider<AudioPlaybackState>(
           create: (_) => AudioPlaybackState(audioService: MockAudioService()),
@@ -257,11 +265,17 @@ void main() {
                 ),
               ),
             ),
+            ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
+              update: (_, state, _) => state,
+            ),
             ChangeNotifierProvider<NewWordsState>(
               create: (_) => NewWordsState(
                 newWordsReader: MockNewWordsReader(),
                 newWordRepository: MockNewWordRepository(),
               ),
+            ),
+            ListenableProxyProvider<NewWordsState, NewWordsStore>(
+              update: (_, state, _) => state,
             ),
             ChangeNotifierProvider<AudioPlaybackState>(
               create: (_) => AudioPlaybackState(audioService: MockAudioService()),

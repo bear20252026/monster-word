@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/audio/audio_playback_state.dart';
-import '../../../features/learning/presentation/learning_favorites_state.dart';
+import '../../../core/learning/learning_favorites_store.dart';
+import '../../../core/learning/new_words_store.dart';
 import '../../../features/learning/presentation/learning_session_state.dart';
-import '../../../features/learning/presentation/new_words_state.dart';
 import '../../../models/book.dart';
 import '../../../models/word.dart';
 import '../../../pages/word_detail_page.dart';
@@ -92,8 +92,8 @@ class _WordCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
-    final favorites = context.watch<LearningFavoritesState>();
-    final newWords = context.watch<NewWordsState>();
+    final favorites = context.watch<LearningFavoritesStore>();
+    final newWords = context.watch<NewWordsStore>();
     final isFav = favorites.isFavorite(word.word);
     final isNew = newWords.isNewWord(word.id);
 
