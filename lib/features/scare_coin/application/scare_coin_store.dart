@@ -1,4 +1,4 @@
-import 'scare_coin_entry.dart';
+import '../domain/scare_coin_entry.dart';
 
 /// 尖叫币功能域的读写应用端口。
 ///

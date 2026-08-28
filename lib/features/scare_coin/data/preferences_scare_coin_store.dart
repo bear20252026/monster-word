@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../application/scare_coin_entry.dart';
+import '../domain/scare_coin_entry.dart';
 import '../application/scare_coin_store.dart';
 
 /// 基于 SharedPreferences 的尖叫币账本适配器。

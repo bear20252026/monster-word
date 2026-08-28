@@ -109,7 +109,7 @@ void main() {
       const audioConsumers = [
         'lib/features/dictionary/presentation/dictionary_page.dart',
         'lib/pages/learn_page.dart',
-        'lib/pages/search_page.dart',
+        'lib/features/search/presentation/search_page.dart',
         'lib/pages/spell_check_page.dart',
         'lib/pages/spell_session_page.dart',
         'lib/pages/word_detail_page.dart',
@@ -255,7 +255,7 @@ void main() {
 
     test('搜索页通过搜索功能域端口访问查询与历史记录', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      final pageSource = File('lib/pages/search_page.dart').readAsStringSync();
+      final pageSource = File('lib/features/search/presentation/search_page.dart').readAsStringSync();
       final providersSource = File('lib/features/search/presentation/search_feature_providers.dart').readAsStringSync();
 
       expect(appSource, contains('buildSearchFeatureScope('));

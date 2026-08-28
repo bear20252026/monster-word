@@ -1,15 +1,8 @@
-class ScareCoinEntry {
-  final DateTime time;
-  final int delta;
-  final String reason;
+// 由 Claude 团队生成 | Monster Word App
+//
+// 尖叫币流水值对象 — 应用层兼容入口
+//
+// 本文件保留在 application/ 以兼容既有 import 路径（边界约束：不得移动/改名）。
+// 实际定义已下沉至领域层 domain/scare_coin_entry.dart，本文件做 re-export。
 
-  ScareCoinEntry({required this.time, required this.delta, required this.reason});
-
-  Map<String, dynamic> toJson() => {'t': time.millisecondsSinceEpoch, 'd': delta, 'r': reason};
-
-  factory ScareCoinEntry.fromJson(Map<String, dynamic> json) => ScareCoinEntry(
-    time: DateTime.fromMillisecondsSinceEpoch(json['t'] as int),
-    delta: json['d'] as int,
-    reason: json['r'] as String,
-  );
-}
+export '../domain/scare_coin_entry.dart';
