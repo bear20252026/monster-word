@@ -188,6 +188,22 @@ void main() {
       expect(pageSource, isNot(contains('AppPreferences')));
       expect(pageSource, isNot(contains('WordRepository')));
     });
+
+    test('词书入口通过 BookCatalogReader 访问目录', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final selectPageSource = File('lib/pages/lib_select_page.dart').readAsStringSync();
+      final wordsPageSource = File('lib/pages/book_words_page.dart').readAsStringSync();
+      final providersSource = File('lib/features/book/presentation/book_feature_providers.dart').readAsStringSync();
+
+      expect(appSource, contains('buildBookFeatureScope('));
+      expect(File('lib/features/book/application/book_catalog_reader.dart').existsSync(), isTrue);
+      expect(providersSource, contains('sl<BookRepository>()'));
+      for (final source in [selectPageSource, wordsPageSource]) {
+        expect(source, contains('BookCatalogReader'));
+        expect(source, isNot(contains('sl<')));
+        expect(source, isNot(contains('BookRepository')));
+      }
+    });
   });
 
   group('正式复习禁止依赖', () {

@@ -72,6 +72,12 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 应用根通过 `buildSearchFeatureScope` 集中装配搜索依赖。搜索页不得重新导入 `WordRepository`、`AppPreferences` 或服务定位器；架构测试对此保留负向门禁。搜索历史仍属于搜索功能域，不应为了统一设置而并入学习偏好状态。
 
+## 词书功能域边界
+
+`book` 功能域为词书选择页和词书内容页提供 `BookCatalogReader`。`RepositoryBookCatalogReader` 继续委托既有 `BookRepository` 读取词书目录，并提供按 ID 查找能力；适配器不缓存或复制词书数据，也不改变学习队列、学习会话或词书数据库的事实模型。
+
+应用根通过 `buildBookFeatureScope` 集中装配目录读取端口。`LibSelectPage` 通过端口加载和筛选词书，`BookWordsPage` 通过端口解析当前词书后再调用 `LearningSessionState` 启动学习。词书页面不得重新导入 `BookRepository` 或服务定位器；架构测试对此保留负向门禁。
+
 ## 设置偏好边界
 
 `LearningPreferencesState` 是设置页唯一可订阅状态，`LearningPreferencesRepository` 是其唯一持久化边界。每日新学、自动发音、音标显示和深色模式继续使用既有 `daily_new_words_v1`、`auto_play_audio_v1`、`show_phonetic_v1`、`dark_mode_v1` 键；提醒、发音类型、例句发音、拼写、学习与复习节奏、题型和助记开关使用独立语义键。设置页不再保存这些值的本地副本，所有交互均以状态快照渲染并通过命令持久化。

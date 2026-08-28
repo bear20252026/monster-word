@@ -6,9 +6,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
 import '../models/book.dart';
-import '../repositories/book_repository.dart';
+import '../features/book/application/book_catalog_reader.dart';
 import '../hooks/responsive.dart';
 import '../pages/dictation_session_page.dart';
 import '../pages/quick_spell_page.dart';
@@ -48,8 +47,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   Future<List<Book>> _load() async {
-    final bookRepo = sl<BookRepository>();
-    final books = await bookRepo.getBooks();
+    final books = await context.read<BookCatalogReader>().listBooks();
     _allBooks = books;
     return books;
   }
