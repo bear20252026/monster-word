@@ -50,6 +50,18 @@ class HighlightPart {
 
 /// 解析词库 example 字段
 class ExampleParser {
+  /// 例句音频 CDN 域名
+  static const String _audioCdn = 'https://audio.beingfine.cn/';
+
+  /// 把例句音频相对路径归一为完整可播 URL。
+  /// 例：'/sentence/audio/abc.mp3' -> 'https://audio.beingfine.cn/sentence/audio/abc.mp3'
+  /// 已是 http(s) 开头或空则原样返回。
+  static String _normalizeAudioUrl(String url) {
+    if (url.isEmpty) return url;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return '$_audioCdn${url.replaceFirst(RegExp(r'^/+'), '')}';
+  }
+
   /// 提取所有例句（含释义分组）
   static List<ExampleSentence> parse(String raw) {
     final sentences = <ExampleSentence>[];
@@ -70,7 +82,14 @@ class ExampleParser {
             final en = (s['e'] as String?) ?? '';
             final cn = (s['c'] as String?) ?? '';
             final source = (s['b'] as String?) ?? '';
-            final audioUrl = (s['audio'] as String?) ?? (s['audioUrl'] as String?);
+            // 例句音频真实字段为 u（相对路径 /sentence/audio/xxx.mp3），
+            // 兼容 audio/audioUrl 旧写法；统一归一为完整可播放 URL。
+            var audioUrl = (s['u'] as String?) ??
+                (s['audio'] as String?) ??
+                (s['audioUrl'] as String?);
+            if (audioUrl != null && audioUrl.isNotEmpty) {
+              audioUrl = _normalizeAudioUrl(audioUrl);
+            }
             if (en.isNotEmpty) {
               sentences.add(ExampleSentence(en: en, cn: cn, source: source, audioUrl: audioUrl));
             }

@@ -1018,6 +1018,13 @@ class _ExampleTileState extends State<_ExampleTile> {
     }
   }
 
+  /// 播放例句音频（audio.beingfine.cn 的完整 URL）。
+  void _playExampleAudio() {
+    final url = widget.example.audioUrl;
+    if (url == null || url.isEmpty) return;
+    context.read<AudioPlaybackState>().playSentence(url);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1051,6 +1058,19 @@ class _ExampleTileState extends State<_ExampleTile> {
                   ),
                 ),
               ),
+              // 例句发音按钮（音频可用时显示）
+              if (widget.example.audioUrl != null && widget.example.audioUrl!.isNotEmpty)
+                GestureDetector(
+                  onTap: _playExampleAudio,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6, top: 2),
+                    child: Icon(
+                      Icons.volume_up_outlined,
+                      size: 18,
+                      color: widget.skin.colors.accent,
+                    ),
+                  ),
+                ),
               // 收藏按钮
               GestureDetector(
                 onTap: _toggleFav,

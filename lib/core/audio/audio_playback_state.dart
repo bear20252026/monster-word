@@ -50,6 +50,34 @@ class AudioPlaybackState extends ChangeNotifier {
     }
   }
 
+  /// 播放例句/句子音频（URL 已为完整可播地址，如 audio.beingfine.cn 的 mp3）。
+  Future<void> playSentence(String audioUrl) async {
+    if (audioUrl.isEmpty) return;
+    final request = ++_requestSequence;
+    _currentWord = '';
+    _currentAudioUrl = audioUrl;
+    _isLoading = true;
+    _isPlaying = false;
+    notifyListeners();
+
+    try {
+      await _audioService.playFromUrl(audioUrl);
+      if (request == _requestSequence) {
+        _isPlaying = true;
+      }
+    } catch (error) {
+      debugPrint('Sentence audio playback error: $error');
+      if (request == _requestSequence) {
+        _isPlaying = false;
+      }
+    } finally {
+      if (request == _requestSequence) {
+        _isLoading = false;
+        notifyListeners();
+      }
+    }
+  }
+
   Future<void> stop() async {
     ++_requestSequence;
     await _audioService.stop();
