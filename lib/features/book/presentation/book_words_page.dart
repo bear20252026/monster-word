@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/audio/audio_playback_state.dart';
 import '../../../features/learning/presentation/learning_favorites_state.dart';
+import '../../../features/learning/presentation/learning_session_state.dart';
 import '../../../features/learning/presentation/new_words_state.dart';
 import '../../../models/book.dart';
 import '../../../models/word.dart';
@@ -23,6 +24,14 @@ class BookWordsPage extends StatelessWidget {
 
   static const String routeName = '/book-words';
 
+  /// 启动当前词书的学习会话并进入沉浸刷词页。
+  Future<void> _startLearning(BuildContext context) async {
+    final session = context.read<LearningSessionState>();
+    await session.loadBook(book, limit: 50);
+    if (!context.mounted) return;
+    Navigator.pushNamed(context, '/immersive_swipe');
+  }
+
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
@@ -38,6 +47,11 @@ class BookWordsPage extends StatelessWidget {
           style: MistralTypography.heading5
               .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _startLearning(context),
+        icon: const Icon(Icons.play_arrow),
+        label: const Text('开始学习'),
       ),
       body: Consumer<BookState>(
         builder: (context, state, _) {
