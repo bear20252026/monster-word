@@ -292,6 +292,26 @@ void main() {
       expect(pageSource, isNot(contains('sl<AudioService>()')));
     });
 
+    test('FSRS 展示页面通过 ReviewScheduleReader 读取只读信息', () {
+      final portSource = File('lib/features/learning/application/review_schedule_reader.dart').readAsStringSync();
+      final adapterSource = File('lib/features/learning/data/repository_review_schedule_reader.dart')
+          .readAsStringSync();
+      final providerSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
+          .readAsStringSync();
+      final wordDetailSource = File('lib/pages/word_detail_page.dart').readAsStringSync();
+      final learnSessionSource = File('lib/screens/learn_session.dart').readAsStringSync();
+      final dialogSource = File('lib/widgets/review_dialog.dart').readAsStringSync();
+
+      expect(portSource, contains('abstract class ReviewScheduleReader extends ChangeNotifier'));
+      expect(adapterSource, contains('extends ReviewScheduleReader'));
+      expect(providerSource, contains('RepositoryReviewScheduleReader'));
+      for (final source in [wordDetailSource, learnSessionSource, dialogSource]) {
+        expect(source, contains('ReviewScheduleReader'));
+        expect(source, isNot(contains('ReviewScheduleRepository')));
+        expect(source, isNot(contains('review_schedule_repository.dart')));
+      }
+    });
+
     test('展示组件不读取会话状态，评分执行器不依赖页面', () {
       const widgetFiles = [
         'lib/features/learning/presentation/widgets/formal_review_session_layout.dart',
