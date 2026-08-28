@@ -126,7 +126,9 @@ Future<void> setupServiceLocator() async {
 
   // NewWordsState
   if (!sl.isRegistered<NewWordsState>()) {
-    sl.registerLazySingleton<NewWordsState>(() => NewWordsState(newWordRepository: sl<NewWordRepository>()));
+    sl.registerLazySingleton<NewWordsState>(
+      () => NewWordsState(newWordsReader: sl<NewWordsReader>(), newWordRepository: sl<NewWordRepository>()),
+    );
   }
 
   // ReviewQueueReader

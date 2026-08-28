@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/features/learning/application/new_words_reader.dart';
 import 'package:word_app/features/learning/presentation/new_words_state.dart';
 import 'package:word_app/models/new_word_record.dart';
 import 'package:word_app/models/word.dart';
@@ -48,9 +49,19 @@ class _MemoryNewWordRepository implements NewWordRepository {
   }
 }
 
+class _FakeNewWordsReader implements NewWordsReader {
+  _FakeNewWordsReader(this.words);
+
+  final List<Word> words;
+
+  @override
+  Future<List<Word>> loadWords({int? limit, int? offset}) async => words;
+}
+
 void main() {
   test('初始化后按仓储记录提供生词数量与状态', () async {
     final state = NewWordsState(
+      newWordsReader: _FakeNewWordsReader([Word(id: 1, word: 'apple')]),
       newWordRepository: _MemoryNewWordRepository([
         const NewWordRecord(wordId: 1, wordText: 'apple', source: 'dictionary', createdAt: 1),
       ]),
@@ -64,7 +75,10 @@ void main() {
   });
 
   test('切换和移除生词时同步更新展示状态', () async {
-    final state = NewWordsState(newWordRepository: _MemoryNewWordRepository(const []));
+    final state = NewWordsState(
+      newWordsReader: _FakeNewWordsReader(const []),
+      newWordRepository: _MemoryNewWordRepository(const []),
+    );
     await state.initialize();
     final word = Word(id: 2, word: 'banana');
 

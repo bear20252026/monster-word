@@ -93,7 +93,7 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 学习功能域将三个只读读取合同保持为独立应用端口：`MasteredWordsReader` 只负责把手动掌握标记解析为词库单词，`NewWordsReader` 只负责按生词本记录顺序解析可展示词条，`ReviewQueueReader` 只负责正式复习候选词的到期词、当前队列和有限词库回退优先级。三个端口不导入具体仓储，也不暴露写入能力。
 
-`RepositoryMasteredWordsReader`、`RepositoryNewWordsReader` 和 `RepositoryReviewQueueReader` 位于数据边界，分别组合既有掌握仓储、生词本仓储、词库仓储和正式复习快照。服务定位器只负责装配这些适配器；学习状态和正式复习会话通过端口消费，收藏、手动掌握、生词本、学习队列和 FSRS 仍保持不同事实模型。架构测试对应用端口的具体基础设施依赖保留负向门禁。
+`RepositoryMasteredWordsReader`、`RepositoryNewWordsReader` 和 `RepositoryReviewQueueReader` 位于数据边界，分别组合既有掌握仓储、生词本仓储、词库仓储和正式复习快照。服务定位器只负责装配这些适配器；学习状态和正式复习会话通过端口消费，收藏、手动掌握、生词本、学习队列和 FSRS 仍保持不同事实模型。`NewWordsState` 进一步把生词本读取交给 `NewWordsReader`，只把新增、切换和删除作为 `NewWordRepository` 命令，避免同一状态同时复制读取事实和写入事实。架构测试对应用端口的具体基础设施依赖保留负向门禁。
 
 ## 尖叫币账本功能域边界
 
