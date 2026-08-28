@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/learning/data/repository_book_words_reader.dart';
+import 'package:word_app/features/learning/data/repository_mastered_words_reader.dart';
+import 'package:word_app/features/learning/data/repository_new_words_reader.dart';
 import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 import 'package:word_app/features/learning/application/new_words_reader.dart';
 import 'package:word_app/models/new_word_record.dart';
@@ -98,7 +100,10 @@ class _FakeNewWordRepository implements NewWordRepository {
 void main() {
   test('已掌握标记为空时不查询单词仓储', () async {
     final wordRepository = _FakeWordRepository();
-    final reader = MasteredWordsReader(masteredRepository: _FakeMasteredRepository({}), wordRepository: wordRepository);
+    final reader = RepositoryMasteredWordsReader(
+      masteredRepository: _FakeMasteredRepository({}),
+      wordRepository: wordRepository,
+    );
 
     expect(await reader.loadWords(), isEmpty);
     expect(wordRepository.requestedTexts, isNull);
@@ -115,7 +120,7 @@ void main() {
 
   test('生词读取器按加入顺序解析可用词条', () async {
     final wordRepository = _FakeWordRepository()..wordsById = [Word(id: 5, word: 'banana'), Word(id: 2, word: 'apple')];
-    final reader = NewWordsReader(
+    final reader = RepositoryNewWordsReader(
       newWordRepository: _FakeNewWordRepository([
         const NewWordRecord(wordId: 2, wordText: 'apple', source: 'dictionary', createdAt: 2),
         const NewWordRecord(wordId: 5, wordText: 'banana', source: 'dictionary', createdAt: 1),
@@ -131,7 +136,7 @@ void main() {
 
   test('已掌握标记通过单词仓储批量解析', () async {
     final wordRepository = _FakeWordRepository();
-    final reader = MasteredWordsReader(
+    final reader = RepositoryMasteredWordsReader(
       masteredRepository: _FakeMasteredRepository({'apple', 'banana'}),
       wordRepository: wordRepository,
     );

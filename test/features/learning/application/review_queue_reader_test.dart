@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
+import 'package:word_app/features/learning/data/repository_review_queue_reader.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/repositories/word_repository.dart';
 
@@ -9,7 +10,7 @@ void main() {
     test('优先返回 FSRS 到期词且不查询词库', () async {
       final dueWord = Word(id: 1, word: 'due');
       final repository = _FakeWordRepository();
-      final reader = ReviewQueueReader(wordRepository: repository);
+      final reader = RepositoryReviewQueueReader(wordRepository: repository);
 
       final words = await reader.loadWords(
         ReviewQueueSnapshot(
@@ -25,7 +26,7 @@ void main() {
     test('没有到期词时返回当前学习队列且不查询词库', () async {
       final queuedWord = Word(id: 2, word: 'queued');
       final repository = _FakeWordRepository();
-      final reader = ReviewQueueReader(wordRepository: repository);
+      final reader = RepositoryReviewQueueReader(wordRepository: repository);
 
       final words = await reader.loadWords(ReviewQueueSnapshot(dueWords: const [], queueWords: [queuedWord]));
 
@@ -36,7 +37,7 @@ void main() {
     test('空状态先查询 a 样本，空结果再查询 the 样本', () async {
       final fallbackWord = Word(id: 3, word: 'the');
       final repository = _FakeWordRepository(theWords: [fallbackWord]);
-      final reader = ReviewQueueReader(wordRepository: repository);
+      final reader = RepositoryReviewQueueReader(wordRepository: repository);
 
       final words = await reader.loadWords(const ReviewQueueSnapshot.empty());
 
@@ -47,7 +48,7 @@ void main() {
     test('a 样本存在时不执行第二次回退查询', () async {
       final sampleWord = Word(id: 4, word: 'apple');
       final repository = _FakeWordRepository(aWords: [sampleWord]);
-      final reader = ReviewQueueReader(wordRepository: repository);
+      final reader = RepositoryReviewQueueReader(wordRepository: repository);
 
       final words = await reader.loadWords(const ReviewQueueSnapshot.empty());
 

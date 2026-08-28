@@ -28,6 +28,9 @@ import '../../services/user_service_impl.dart';
 import '../../features/learning/application/book_words_reader.dart';
 import '../../features/learning/data/learning_progress_repository.dart';
 import '../../features/learning/data/repository_book_words_reader.dart';
+import '../../features/learning/data/repository_mastered_words_reader.dart';
+import '../../features/learning/data/repository_new_words_reader.dart';
+import '../../features/learning/data/repository_review_queue_reader.dart';
 import '../../features/learning/data/learning_queue_repository.dart';
 import '../../features/learning/data/review_schedule_repository.dart';
 import '../../features/learning/application/mastered_words_reader.dart';
@@ -107,14 +110,17 @@ Future<void> setupServiceLocator() async {
   // MasteredWordsReader
   if (!sl.isRegistered<MasteredWordsReader>()) {
     sl.registerLazySingleton<MasteredWordsReader>(
-      () => MasteredWordsReader(masteredRepository: sl<MasteredRepository>(), wordRepository: sl<WordRepository>()),
+      () => RepositoryMasteredWordsReader(
+        masteredRepository: sl<MasteredRepository>(),
+        wordRepository: sl<WordRepository>(),
+      ),
     );
   }
 
   // NewWordsReader
   if (!sl.isRegistered<NewWordsReader>()) {
     sl.registerLazySingleton<NewWordsReader>(
-      () => NewWordsReader(newWordRepository: sl<NewWordRepository>(), wordRepository: sl<WordRepository>()),
+      () => RepositoryNewWordsReader(newWordRepository: sl<NewWordRepository>(), wordRepository: sl<WordRepository>()),
     );
   }
 
@@ -125,7 +131,9 @@ Future<void> setupServiceLocator() async {
 
   // ReviewQueueReader
   if (!sl.isRegistered<ReviewQueueReader>()) {
-    sl.registerLazySingleton<ReviewQueueReader>(() => ReviewQueueReader(wordRepository: sl<WordRepository>()));
+    sl.registerLazySingleton<ReviewQueueReader>(
+      () => RepositoryReviewQueueReader(wordRepository: sl<WordRepository>()),
+    );
   }
 
   // LearningQueueRepository（遗留学习会话队列加载命令边界）

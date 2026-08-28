@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
+import 'package:word_app/features/learning/data/repository_review_queue_reader.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
 import 'package:word_app/features/learning/presentation/review_session_state.dart';
 import 'package:word_app/models/word.dart';
@@ -12,7 +13,7 @@ void main() {
       String? persistedWord;
       FsrsRating? persistedRating;
       final state = ReviewSessionState(
-        queueReader: ReviewQueueReader(wordRepository: _UnusedWordRepository()),
+        queueReader: RepositoryReviewQueueReader(wordRepository: _UnusedWordRepository()),
         ratingWriter: ReviewRatingWriter(
           writeRating: ({required word, required rating}) async {
             persistedWord = word;
@@ -55,7 +56,7 @@ void main() {
 
     test('初始化读取失败后保留错误状态而不是把页面当作复习完成', () async {
       final state = ReviewSessionState(
-        queueReader: ReviewQueueReader(wordRepository: _ThrowingWordRepository()),
+        queueReader: RepositoryReviewQueueReader(wordRepository: _ThrowingWordRepository()),
         ratingWriter: ReviewRatingWriter(writeRating: ({required word, required rating}) async {}),
       );
 
