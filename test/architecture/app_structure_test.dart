@@ -173,6 +173,20 @@ void main() {
       expect(pageSource, isNot(contains('FavRepository')));
     });
 
+    test('签到历史页通过 CheckInHistoryReader 读取数据', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final pageSource = File('lib/pages/check_in_history_page.dart').readAsStringSync();
+      final providersSource = File('lib/features/checkin/presentation/check_in_feature_providers.dart')
+          .readAsStringSync();
+
+      expect(appSource, contains('buildCheckInFeatureScope('));
+      expect(File('lib/features/checkin/application/check_in_history_reader.dart').existsSync(), isTrue);
+      expect(providersSource, contains('sl<CheckInService>()'));
+      expect(pageSource, contains('CheckInHistoryReader'));
+      expect(pageSource, isNot(contains('sl<')));
+      expect(pageSource, isNot(contains('CheckInService')));
+    });
+
     test('句库页面通过例句收藏端口访问列表和删除', () {
       final pageSource = File('lib/pages/my_fav_sentence_page.dart').readAsStringSync();
 
