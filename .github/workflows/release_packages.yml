@@ -52,7 +52,18 @@ jobs:
               > android/key.properties
             echo "::notice::Using real release keystore from KEYSTORE_* secrets."
           else
-            echo "::warning::No KEYSTORE_* secrets set -> APK will be DEBUG-signed (fallback)."
+            # No secrets -> generate a throwaway DEBUG keystore matching the
+            # build.gradle.kts fallback conv (storepass/keypass=android,
+            # alias=androiddebugkey) so assembleRelease succeeds. The resulting
+            # APK is debug-signed: fine for internal installs, NOT for Play
+            # Store. Set the KEYSTORE_* secrets to produce a real signature.
+            mkdir -p android/app
+            "${JAVA_HOME}/bin/keytool" -genkeypair -v \
+              -keystore android/app/debug.keystore \
+              -alias androiddebugkey -storepass android -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+            echo "::warning::No KEYSTORE_* secrets set -> generated a DEBUG-signed APK."
           fi
 
       - name: Install dependencies
