@@ -89,6 +89,12 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 应用根通过 `buildBookFeatureScope` 集中装配目录读取端口。`LibSelectPage` 通过端口加载和筛选词书，`BookWordsPage` 通过端口解析当前词书后再调用 `LearningSessionState` 启动学习，`HomeScreen` 的直接开始学习入口也通过同一端口读取第一本词书。词语导出页、词书选择页的听写/拼写入口以及泛听模式选择页复用学习功能域提供的 `BookWordsReader` 加载当前词书单词，不直接依赖 `LearningQueueRepository`。这些页面只消费只读词源，学习队列状态仍由 `LearningSessionState` 负责；词书相关页面和首页不得重新导入 `BookRepository`、`LearningQueueRepository` 或服务定位器，架构测试对此保留负向门禁。
 
+## 尖叫币账本功能域边界
+
+`scare_coin` 功能域为尖叫币历史页、弹性签到日历和资料页余额卡提供 `ScareCoinStore`。`PreferencesScareCoinStore` 集中承接既有 `scare_coin.balance`、`scare_coin.history`、`scare_coin.last_checkin` 和 `scare_coin.checkin_dates` 键，保留每日一次签到、奖励流水排序及最近 200 条保留策略，不改变已有用户数据格式。
+
+尖叫币账本与 `CheckInService` 的签到记录、正式复习 FSRS 统计以及用户资料保持独立；本次只是把原先位于页面文件中的账本实现移动到数据适配器，不把不同语义的签到、余额和学习统计合并。页面和组件只消费 `ScareCoinStore`，应用根通过 `buildScareCoinFeatureScope` 统一装配。
+
 ## 设置偏好边界
 
 `LearningPreferencesState` 是设置页唯一可订阅状态，`LearningPreferencesRepository` 是其唯一持久化边界。每日新学、自动发音、音标显示和深色模式继续使用既有 `daily_new_words_v1`、`auto_play_audio_v1`、`show_phonetic_v1`、`dark_mode_v1` 键；提醒、发音类型、例句发音、拼写、学习与复习节奏、题型和助记开关使用独立语义键。设置页不再保存这些值的本地副本，所有交互均以状态快照渲染并通过命令持久化。
@@ -99,6 +105,6 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 `learning_feature_providers.dart` 依赖顺序为：正式复习排程仓储和队列仓储先创建，随后创建收藏、手动掌握和学习会话状态；队列、统计、收藏/掌握数量、队列分类和正式复习状态均从这些专用依赖组合。`ReviewScheduleReader` 由 `RepositoryReviewScheduleReader` 适配正式复习排程仓储，向详情页、学习会话和回顾弹窗提供只读 FSRS 卡片及今日统计；评分写入仍由 `ReviewRatingWriter` 负责。`LearningCollectionsState` 使用 `ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>` 装配，不再依赖兼容代理。播放器功能域单独提供 `AudioService` 和 `AudioPlaybackState`，应用根不再创建旧播放器状态或无消费者统计状态。旧 `LearnState`、`LearnService`、`ReviewState`、`ReviewService`、`PlayerState`、`UserStatsState`、`StatsService` 和 `StatsRepository` 及其实现均已删除，因此不会再形成平行的学习、复习、播放或统计事实来源。
 
-结构测试保留少量高价值负向门禁：应用根和生产 Provider/页面不得导入或创建 `LearningState`、`LearnState`、`ReviewState`、`SettingsState`、`PlayerState` 或 `UserStatsState`，相应遗留服务和仓储均不得恢复；账户资料展示和编辑页面不得直连 `UserService` 或调用同步空资料读取；设置页不得重新保存学习偏好本地副本或遗留的“待持久化”开关；播放页面不得直连 `AudioService`；正式复习页不得回流题目算法、会话状态或服务定位器；FSRS 展示页面和回顾弹窗不得直连 `ReviewScheduleRepository`；展示组件不得直接读取复习会话状态；历史深链不得重新创建旧 `ReviewSession`。学习状态测试覆盖专用会话加载与评分、只读队列与快照隔离、退出清理、空收藏队列保护、收藏状态和掌握状态的刷新/切换/计数，以及学习偏好旧键兼容和新字段持久化；账户资料测试覆盖统一加载与字段级保存；播放器测试覆盖播放、停止竞争和携带外部地址的恢复。
+结构测试保留少量高价值负向门禁：尖叫币页面、日历和资料卡不得重新持有 `ScareCoinLedger` 或直接访问 `SharedPreferences`；应用根和生产 Provider/页面不得导入或创建 `LearningState`、`LearnState`、`ReviewState`、`SettingsState`、`PlayerState` 或 `UserStatsState`，相应遗留服务和仓储均不得恢复；账户资料展示和编辑页面不得直连 `UserService` 或调用同步空资料读取；设置页不得重新保存学习偏好本地副本或遗留的“待持久化”开关；播放页面不得直连 `AudioService`；正式复习页不得回流题目算法、会话状态或服务定位器；FSRS 展示页面和回顾弹窗不得直连 `ReviewScheduleRepository`；展示组件不得直接读取复习会话状态；历史深链不得重新创建旧 `ReviewSession`。学习状态测试覆盖专用会话加载与评分、只读队列与快照隔离、退出清理、空收藏队列保护、收藏状态和掌握状态的刷新/切换/计数，以及学习偏好旧键兼容和新字段持久化；账户资料测试覆盖统一加载与字段级保存；播放器测试覆盖播放、停止竞争和携带外部地址的恢复。
 
 后续新增需求应首先定位其事实模型，并在该功能域的仓储、应用服务或专用状态中实现。不得以“方便页面读取”为由重新创建跨域聚合状态，或将会话、FSRS、手动标记、收藏、账号和持久化职责重新塞入单一 `ChangeNotifier`。

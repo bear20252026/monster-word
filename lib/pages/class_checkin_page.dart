@@ -2,9 +2,10 @@
 // 还原原版 v3.2 班级打卡功能入口
 // 完善版：Banner+班级活动指引+功能卡片+用户评论
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../hooks/responsive.dart';
-import '../pages/scare_coin_history_page.dart' show ScareCoinLedger;
+import '../features/scare_coin/application/scare_coin_store.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../tokens/func_colors.dart';
@@ -416,7 +417,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
             onTap: () async {
               if (_checkedInToday) return;
               // 接入真实签到逻辑：+10 尖叫币（与首页弹性日历共用账本）
-              await ScareCoinLedger.checkIn();
+              await context.read<ScareCoinStore>().checkIn();
               if (!context.mounted) return;
               setState(() => _checkedInToday = true);
               _showCheckInSuccess(context, skin);
@@ -1080,7 +1081,7 @@ class _SpringCalendarCardState extends State<_SpringCalendarCard> {
   }
 
   Future<void> _load() async {
-    final dates = await ScareCoinLedger.checkinDates();
+    final dates = await context.read<ScareCoinStore>().checkinDates();
     if (!mounted) return;
     setState(() {
       _dates = dates;

@@ -4,134 +4,15 @@
 // - 顶部：余额 + 每日签到（+10，一天一次）
 // - 中部：可滑动的历史流水
 // - 底部：《怪兽电力公司》电影渊源说明
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import '../core/di/service_locator.dart';
+import '../features/scare_coin/application/scare_coin_entry.dart';
+import '../features/scare_coin/application/scare_coin_store.dart';
 import '../hooks/responsive.dart';
-import '../services/checkin_service.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/monster_icon.dart';
-
-/// 尖叫币账本：余额、签到与流水的本地持久化（SharedPreferences JSON）
-class ScareCoinLedger {
-  ScareCoinLedger._();
-
-  static const String _kBalance = 'scare_coin.balance';
-  static const String _kHistory = 'scare_coin.history';
-  static const String _kLastCheckIn = 'scare_coin.last_checkin';
-
-  /// 全部签到日期（yyyy-MM-dd 集合），供弹性签到日历渲染
-  static const String _kCheckinDates = 'scare_coin.checkin_dates';
-  static const int checkInReward = 10;
-
-  /// 当前余额
-  static Future<int> balance() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kBalance) ?? 0;
-  }
-
-  /// 全部已签到日期（yyyy-MM-dd）
-  static Future<Set<String>> checkinDates() async {
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_kCheckinDates) ?? const [];
-    return list.toSet();
-  }
-
-  /// 连续签到天数：从今天（若今日已签）或昨天往回连续计数
-  static Future<int> streak() async {
-    final dates = await checkinDates();
-    if (dates.isEmpty) return 0;
-    var day = DateTime.now();
-    bool has(DateTime d) => dates.contains(_iso(d));
-    // 今天没签则从昨天起算（连击不断）
-    if (!has(day)) day = day.subtract(const Duration(days: 1));
-    var count = 0;
-    while (has(day)) {
-      count++;
-      day = day.subtract(const Duration(days: 1));
-    }
-    return count;
-  }
-
-  static String _iso(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
-  /// 流水列表（新→旧）
-  static Future<List<ScareCoinEntry>> history() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kHistory);
-    if (raw == null || raw.isEmpty) return [];
-    try {
-      final list = (jsonDecode(raw) as List).map((e) => ScareCoinEntry.fromJson(e as Map<String, dynamic>)).toList();
-      list.sort((a, b) => b.time.compareTo(a.time));
-      return list;
-    } catch (_) {
-      return [];
-    }
-  }
-
-  static Future<String> lastCheckInDate() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kLastCheckIn) ?? '';
-  }
-
-  static bool isSameDay(String isoDate, DateTime time) =>
-      isoDate == '${time.year}-${time.month.toString().padLeft(2, '0')}-${time.day.toString().padLeft(2, '0')}';
-
-  /// 今日签到；已签过返回 null，成功返回新余额
-  static Future<int?> checkIn() async {
-    final now = DateTime.now();
-    final last = await lastCheckInDate();
-    if (isSameDay(last, now)) return null;
-    final iso = _iso(now);
-    // 记入签到日历集合（弹性签到日历渲染用）
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final dates = (prefs.getStringList(_kCheckinDates) ?? const <String>[]).toSet()..add(iso);
-      await prefs.setStringList(_kCheckinDates, dates.toList()..sort());
-    } catch (_) {
-      // 日历集合写入失败不阻断主签到流程
-    }
-    return _apply(delta: checkInReward, reason: '每日签到', lastCheckInIso: iso);
-  }
-
-  /// 发放奖励（供学习/复习结算等场景调用）
-  static Future<int> grant({required int delta, required String reason}) => _apply(delta: delta, reason: reason);
-
-  static Future<int> _apply({required int delta, required String reason, String? lastCheckInIso}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final newBalance = (prefs.getInt(_kBalance) ?? 0) + delta;
-    await prefs.setInt(_kBalance, newBalance);
-    if (lastCheckInIso != null) {
-      await prefs.setString(_kLastCheckIn, lastCheckInIso);
-    }
-    final entries = await history();
-    entries.insert(0, ScareCoinEntry(time: DateTime.now(), delta: delta, reason: reason));
-    // 只保留最近 200 条，避免无限增长
-    await prefs.setString(_kHistory, jsonEncode(entries.take(200).map((e) => e.toJson()).toList()));
-    return newBalance;
-  }
-}
-
-/// 一条流水
-class ScareCoinEntry {
-  final DateTime time;
-  final int delta;
-  final String reason;
-  ScareCoinEntry({required this.time, required this.delta, required this.reason});
-
-  Map<String, dynamic> toJson() => {'t': time.millisecondsSinceEpoch, 'd': delta, 'r': reason};
-  factory ScareCoinEntry.fromJson(Map<String, dynamic> json) => ScareCoinEntry(
-    time: DateTime.fromMillisecondsSinceEpoch(json['t'] as int),
-    delta: json['d'] as int,
-    reason: json['r'] as String,
-  );
-}
 
 class ScareCoinHistoryPage extends StatefulWidget {
   const ScareCoinHistoryPage({super.key});
@@ -152,26 +33,26 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
   }
 
   Future<void> _refresh() async {
-    final balance = await ScareCoinLedger.balance();
-    final last = await ScareCoinLedger.lastCheckInDate();
-    final entries = await ScareCoinLedger.history();
+    final balance = await context.read<ScareCoinStore>().balance();
+    final last = await context.read<ScareCoinStore>().lastCheckInDate();
+    final entries = await context.read<ScareCoinStore>().history();
     if (!mounted) return;
     setState(() {
       _balance = balance;
-      _checkedToday = ScareCoinLedger.isSameDay(last, DateTime.now());
+      _checkedToday = context.read<ScareCoinStore>().isSameDay(last, DateTime.now());
       _entries = entries;
     });
   }
 
   Future<void> _onCheckIn() async {
-    final newBalance = await ScareCoinLedger.checkIn();
+    final newBalance = await context.read<ScareCoinStore>().checkIn();
     if (!mounted) return;
     if (newBalance == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('今天已经签到过啦，明天再来～')));
       return;
     }
     ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('签到成功！尖叫币 +${ScareCoinLedger.checkInReward} 👹')));
+        .showSnackBar(SnackBar(content: Text('签到成功！尖叫币 +${context.read<ScareCoinStore>().checkInReward} 👹')));
     await _refresh();
   }
 
