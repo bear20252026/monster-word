@@ -50,7 +50,6 @@ void main() {
 
     test('旧练习会话栈已删除，学习页面只依赖专用会话与各自的事实状态', () {
       const migratedPages = [
-        'lib/pages/book_words_page.dart',
         'lib/pages/immersive_swipe_page.dart',
         'lib/pages/learn_page.dart',
         'lib/pages/spell_session_page.dart',
@@ -71,6 +70,19 @@ void main() {
       }
       expect(sessionSource, contains('List.unmodifiable(_queue)'));
       expect(sessionSource, contains('void exitLearning()'));
+    });
+
+    test('词书功能域已垂直化，词单页只依赖词书事实状态与端口', () {
+      final adapter = File('lib/pages/book_words_page.dart').readAsStringSync();
+      final featurePage = File('lib/features/book/presentation/book_words_page.dart').readAsStringSync();
+      final stateSource = File('lib/features/book/presentation/book_state.dart').readAsStringSync();
+
+      expect(adapter, contains('BookCatalogReader'), reason: 'adapter 应通过应用端口查询词书');
+      expect(adapter, isNot(contains('LearningSessionState')));
+      expect(adapter, isNot(contains('LearnState')));
+      expect(featurePage, contains('BookState'));
+      expect(featurePage, isNot(contains('LearnState')));
+      expect(stateSource, isNot(contains('sl<')), reason: '词书状态不应直连服务定位器');
     });
 
     test('账户资料功能域拥有展示与编辑快照，资料页面不再直连用户服务', () {
@@ -219,7 +231,7 @@ void main() {
 
     test('签到历史页通过 CheckInHistoryReader 读取数据', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      final pageSource = File('lib/pages/check_in_history_page.dart').readAsStringSync();
+      final pageSource = File('lib/features/checkin/presentation/check_in_history_page.dart').readAsStringSync();
       final providersSource = File('lib/features/checkin/presentation/check_in_feature_providers.dart')
           .readAsStringSync();
 
@@ -341,7 +353,7 @@ void main() {
       final pageSource = File('lib/pages/scare_coin_history_page.dart').readAsStringSync();
       final calendarSource = File('lib/widgets/spring_check_in_calendar.dart').readAsStringSync();
       final profileSource = File('lib/screens/profile_screen.dart').readAsStringSync();
-      final classCheckInSource = File('lib/pages/class_checkin_page.dart').readAsStringSync();
+      final classCheckInSource = File('lib/features/checkin/presentation/class_checkin_page.dart').readAsStringSync();
       final dashboardSource = File('lib/pages/dashboard_page.dart').readAsStringSync();
       final mySpaceSource = File('lib/pages/my_space_page.dart').readAsStringSync();
 

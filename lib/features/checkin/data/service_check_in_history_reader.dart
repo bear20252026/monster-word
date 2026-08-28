@@ -3,7 +3,7 @@ import '../application/check_in_history_reader.dart';
 
 /// 基于既有签到服务的历史读取适配器。
 class ServiceCheckInHistoryReader implements CheckInHistoryReader {
-  ServiceCheckInHistoryReader({required CheckInService service}) : _service = service;
+  ServiceCheckInHistoryReader({required this._service});
 
   final CheckInService _service;
 

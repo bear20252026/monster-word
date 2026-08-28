@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../models/book.dart';
 import '../features/book/application/book_catalog_reader.dart';
+import '../features/book/presentation/books_page.dart';
 import '../hooks/responsive.dart';
 import '../pages/dictation_session_page.dart';
 import '../pages/quick_spell_page.dart';
@@ -334,6 +335,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
+                    _BottomToolItem(icon: Icons.dashboard_outlined, label: '词书主页', onTap: () => _openBookDashboard(context)),
                     _BottomToolItem(icon: Icons.style, label: '沉浸刷词', onTap: () => _onToolTap(context, 'immersive')),
                     _BottomToolItem(icon: Icons.headphones, label: '随身听', onTap: () => _onToolTap(context, 'listen')),
                     _BottomToolItem(icon: Icons.edit_note, label: '听写', onTap: () => _onToolTap(context, 'dictation')),
@@ -350,6 +352,14 @@ class _LibSelectPageState extends State<LibSelectPage> {
           ],
         ),
       ),
+    );
+  }
+
+  /// 打开词书主页（BookDashboardPage）。
+  void _openBookDashboard(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const BookDashboardPage()),
     );
   }
 

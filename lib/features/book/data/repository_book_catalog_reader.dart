@@ -4,7 +4,7 @@ import '../application/book_catalog_reader.dart';
 
 /// 基于既有词书仓储的目录读取适配器。
 class RepositoryBookCatalogReader implements BookCatalogReader {
-  RepositoryBookCatalogReader({required BookRepository repository}) : _repository = repository;
+  RepositoryBookCatalogReader({required this._repository});
 
   final BookRepository _repository;
 
