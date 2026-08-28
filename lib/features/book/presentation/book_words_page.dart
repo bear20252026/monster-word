@@ -7,6 +7,7 @@ import '../../../features/learning/presentation/learning_favorites_state.dart';
 import '../../../features/learning/presentation/new_words_state.dart';
 import '../../../models/book.dart';
 import '../../../models/word.dart';
+import '../../../pages/word_detail_page.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import 'book_state.dart';
@@ -82,15 +83,21 @@ class _WordCard extends StatelessWidget {
     final isFav = favorites.isFavorite(word.word);
     final isNew = newWords.isNewWord(word.id);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: skin.divider, width: 0.5),
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(
+        context,
+        WordDetailPage.routeName,
+        arguments: word,
       ),
-      child: Row(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: skin.cardBg,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: Border.all(color: skin.divider, width: 0.5),
+        ),
+        child: Row(
         children: [
           Expanded(
             child: Column(
@@ -142,6 +149,7 @@ class _WordCard extends StatelessWidget {
             onPressed: () => context.read<AudioPlaybackState>().playWord(word.word),
           ),
         ],
+      ),
       ),
     );
   }

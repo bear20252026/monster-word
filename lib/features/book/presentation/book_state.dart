@@ -104,4 +104,12 @@ class BookState extends ChangeNotifier {
 
   /// 重新加载单词（用于收藏/生词等操作后刷新）。
   Future<void> reloadWords() => loadWords();
+
+  /// 测试用：注入单词列表（绕过真实数据加载）。
+  @visibleForTesting
+  void setWordsForTest(List<Word> words) {
+    _words = words;
+    _currentBookId = 1;
+    notifyListeners();
+  }
 }
