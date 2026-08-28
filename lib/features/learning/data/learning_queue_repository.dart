@@ -12,7 +12,7 @@ abstract interface class LearningQueueWordSource {
 
 /// 基于既有词库数据库的学习队列词源适配器。
 class WordBookLearningQueueWordSource implements LearningQueueWordSource {
-  WordBookLearningQueueWordSource({required WordBookDatabase database}) : _database = database;
+  WordBookLearningQueueWordSource({required this._database});
 
   final WordBookDatabase _database;
 
@@ -32,9 +32,7 @@ class WordBookLearningQueueWordSource implements LearningQueueWordSource {
 /// 该仓储集中词书读取、收藏词解析、当前队列回退及可选乱序规则；它不保存会话索引，
 /// 也不决定 Leitner 或 FSRS 评分行为。
 class LearningQueueRepository {
-  LearningQueueRepository({required LearningQueueWordSource wordSource, required FavRepository favRepository})
-    : _wordSource = wordSource,
-      _favRepository = favRepository;
+  LearningQueueRepository({required this._wordSource, required this._favRepository});
 
   final LearningQueueWordSource _wordSource;
   final FavRepository _favRepository;

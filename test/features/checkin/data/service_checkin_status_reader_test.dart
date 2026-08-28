@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/checkin/data/service_checkin_status_reader.dart';
-import 'package:word_app/features/checkin/domain/checkin_status.dart';
 import 'package:word_app/services/checkin_service.dart';
 
 /// 模拟 CheckInService（仅实现读取相关方法）

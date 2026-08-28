@@ -20,13 +20,12 @@ enum ReviewSessionLoadPhase { idle, loading, ready, failed }
 /// 由 [ReviewRatingWriter] 负责；两者均不在此重复实现。
 class ReviewSessionState extends ChangeNotifier {
   ReviewSessionState({
-    required ReviewQueueReader queueReader,
+    required this._queueReader,
     required ReviewRatingWriter ratingWriter,
     SuperMemoryEngine? engine,
     ReviewSessionQuestionFactory? questionFactory,
-  }) : _queueReader = queueReader,
-       _engine = engine ?? SuperMemoryEngine(),
-       _questionFactory = questionFactory ?? const ReviewSessionQuestionFactory() {
+  })  : _engine = engine ?? SuperMemoryEngine(),
+        _questionFactory = questionFactory ?? const ReviewSessionQuestionFactory() {
     _ratingExecutor = ReviewSessionRatingExecutor(engine: _engine, ratingWriter: ratingWriter);
   }
 

@@ -8,7 +8,7 @@ import 'checkin_service.dart';
 class CheckInServiceImpl implements CheckInService {
   final UserRepository _userRepo;
 
-  CheckInServiceImpl({required UserRepository userRepo}) : _userRepo = userRepo;
+  CheckInServiceImpl({required this._userRepo});
 
   @override
   int get checkInReward => 10; // 签到奖励 10 尖叫币

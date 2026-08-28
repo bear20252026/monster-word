@@ -4,7 +4,7 @@ import '../application/book_words_reader.dart';
 
 /// 基于既有单词仓储的词书单词读取适配器。
 class RepositoryBookWordsReader implements BookWordsReader {
-  RepositoryBookWordsReader({required WordRepository repository}) : _repository = repository;
+  RepositoryBookWordsReader({required this._repository});
 
   final WordRepository _repository;
 

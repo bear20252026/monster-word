@@ -321,18 +321,25 @@ class _AppearancePageState extends State<AppearancePage> {
       context: context,
       builder: (ctx) => SimpleDialog(
         title: const Text('选择风格字体'),
-        children: _fontChoices.entries.map((entry) {
-          return RadioListTile<String?>(
-            value: entry.value,
+        children: [
+          RadioGroup<String?>(
             groupValue: current,
-            title: Text(entry.key),
-            activeColor: skin.colors.accent,
-            onChanged: (_) {
-              skin.setFontFamily(entry.value);
+            onChanged: (value) {
+              if (value != null) skin.setFontFamily(value);
               Navigator.pop(ctx);
             },
-          );
-        }).toList(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: _fontChoices.entries.map((entry) {
+                return RadioListTile<String?>(
+                  value: entry.value,
+                  title: Text(entry.key),
+                  activeColor: skin.colors.accent,
+                );
+              }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -18,7 +18,7 @@ import 'book_state.dart';
 /// 在需要使用词书功能的页面外层包裹此 Scope。
 ///
 /// 内部嵌套 [buildBookStateScope]，确保 [BookState] 在全局可用，
-/// 避免 Consumer<BookState> 运行时抛出 ProviderNotFoundException。
+/// 避免 Consumer\<BookState\> 运行时抛出 ProviderNotFoundException。
 Widget buildBookFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [

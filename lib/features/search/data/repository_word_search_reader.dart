@@ -4,7 +4,7 @@ import '../application/word_search_reader.dart';
 
 /// 基于既有词库仓储的搜索适配器。
 class RepositoryWordSearchReader implements WordSearchReader {
-  RepositoryWordSearchReader({required WordRepository repository}) : _repository = repository;
+  RepositoryWordSearchReader(this._repository);
 
   final WordRepository _repository;
 

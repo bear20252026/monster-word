@@ -473,7 +473,7 @@ class MessageSetData {
 
 /// 消息列表模型（翻译自 MessageModel.java）
 ///
-/// 继承 BaseListModel<MessageSetData>，支持刷新/加载更多
+/// 继承 BaseListModel\<MessageSetData\>，支持刷新/加载更多
 class MessageModel extends BaseListModel<MessageSetData> {
   MessageModel() {
     pageNum = 10;

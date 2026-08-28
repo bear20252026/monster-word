@@ -10,10 +10,9 @@ enum ReviewChoiceSelection { correct, wrong }
 /// [onChanged] 通知宿主状态刷新展示快照。
 class ReviewSessionAnswerState {
   ReviewSessionAnswerState({
-    required void Function() onChanged,
-    Duration wrongChoiceFeedback = const Duration(milliseconds: 300),
-  }) : _onChanged = onChanged,
-       _wrongChoiceFeedback = wrongChoiceFeedback;
+    required this._onChanged,
+    this._wrongChoiceFeedback = const Duration(milliseconds: 300),
+  });
 
   final void Function() _onChanged;
   final Duration _wrongChoiceFeedback;

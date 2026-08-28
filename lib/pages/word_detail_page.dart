@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../data/dictionary_extra.dart';
 import '../data/example_parser.dart';
 import '../hooks/responsive.dart';
-import '../models/sentence_models.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../features/learning/application/review_schedule_reader.dart';
 import '../features/learning/presentation/learning_session_state.dart';
@@ -65,11 +64,12 @@ class _WordDetailPageState extends State<WordDetailPage> {
 
     try {
       final notes = await context.read<WordNotesStore>().listForWord(word.id);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _notes = notes;
           _notesLoaded = true;
         });
+      }
     } catch (e) {
       debugPrint('Notes loading error: $e');
       if (mounted) setState(() => _notesLoaded = true);
@@ -80,6 +80,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
     final word = _resolveTargetWord(null);
     if (word == null) return;
 
+    final store = context.read<WordNotesStore>();
     final controller = TextEditingController();
     final result = await showDialog<String>(
       context: context,
@@ -87,24 +88,26 @@ class _WordDetailPageState extends State<WordDetailPage> {
     );
     if (result != null && result.trim().isNotEmpty) {
       final note = WordNote(wordId: word.id, word: word.word, content: result.trim());
-      await context.read<WordNotesStore>().add(note);
+      await store.add(note);
       await _loadNotes();
     }
   }
 
   Future<void> _editNote(WordNote note) async {
+    final store = context.read<WordNotesStore>();
     final controller = TextEditingController(text: note.content);
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => _NoteDialog(controller: controller, title: '编辑笔记'),
     );
     if (result != null && result.trim().isNotEmpty) {
-      await context.read<WordNotesStore>().update(note.copyWith(content: result.trim()));
+      await store.update(note.copyWith(content: result.trim()));
       await _loadNotes();
     }
   }
 
   Future<void> _deleteNote(WordNote note) async {
+    final store = context.read<WordNotesStore>();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -117,7 +120,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       ),
     );
     if (confirmed == true) {
-      await context.read<WordNotesStore>().deleteById(note.id!);
+      await store.deleteById(note.id!);
       await _loadNotes();
     }
   }
@@ -798,14 +801,13 @@ class _WordDetailPageState extends State<WordDetailPage> {
                   return GestureDetector(
                     onTap: () async {
                       if (player.isLoading) return;
+                      final messenger = ScaffoldMessenger.of(context);
                       try {
                         // 优先使用第三方服务器提供的音频 URL。
                         await player.playWord(word.word, audioUrl: word.audioUrls.isNotEmpty ? word.audioUrls : null);
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
+                          messenger.showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
                         }
                       }
                     },
@@ -987,15 +989,18 @@ class _ExampleTileState extends State<_ExampleTile> {
   void _checkFavStatus() {
     // 使用句子的唯一标识（英文内容的hash）作为sentenceId
     final sentenceId = widget.example.en.hashCode.toString();
-    context.read<SentenceFavoritesStore>().isFavorite(wordId: widget.wordId, sentenceId: sentenceId).then((v) {
+    final favStore = context.read<SentenceFavoritesStore>();
+    favStore.isFavorite(wordId: widget.wordId, sentenceId: sentenceId).then((v) {
       if (mounted) setState(() => _isFav = v);
     });
   }
 
   Future<void> _toggleFav() async {
     final sentenceId = widget.example.en.hashCode.toString();
+    final store = context.read<SentenceFavoritesStore>();
+    final messenger = ScaffoldMessenger.of(context);
 
-    await context.read<SentenceFavoritesStore>().toggle(
+    await store.toggle(
       wordId: widget.wordId,
       sentenceId: sentenceId,
       english: widget.example.en,
@@ -1005,14 +1010,10 @@ class _ExampleTileState extends State<_ExampleTile> {
 
     if (mounted) {
       // 直接获取新状态，不设中间值避免闪烁
-      final newStatus = await context.read<SentenceFavoritesStore>().isFavorite(
-        wordId: widget.wordId,
-        sentenceId: sentenceId,
-      );
+      final newStatus = await store.isFavorite(wordId: widget.wordId, sentenceId: sentenceId);
       if (mounted) setState(() => _isFav = newStatus);
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(_isFav ? '已收藏到句库' : '已取消收藏'), duration: const Duration(seconds: 1)));
+      messenger.showSnackBar(SnackBar(content: Text(_isFav ? '已收藏到句库' : '已取消收藏'), duration: const Duration(seconds: 1)));
     }
   }
 

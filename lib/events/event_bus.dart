@@ -10,11 +10,11 @@ import 'dart:async';
 ///   EventBus.instance.fire(CheckInEvent(checkDate: '2026-08-24'));
 ///
 ///   // 监听事件（在 initState 中订阅，在 dispose 中取消）
-///   final sub = EventBus.instance.on<CheckInEvent>().listen((event) { ... });
+///   final sub = EventBus.instance.on\<CheckInEvent\>().listen((event) { ... });
 ///   sub.cancel(); // dispose 时取消
 ///
 ///   // 或者使用 Widget 扩展
-///   context.onEvent<CheckInEvent>((event) { ... });
+///   context.onEvent\<CheckInEvent\>((event) { ... });
 class EventBus {
   EventBus._();
   static final EventBus instance = EventBus._();

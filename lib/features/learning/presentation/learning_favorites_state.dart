@@ -11,9 +11,7 @@ import '../data/learning_queue_repository.dart';
 /// 持久化仍完全委托 [FavRepository]；该状态只维护可供页面订阅的不可变词形集合、
 /// 收藏数和加载状态，并通过 [LearningQueueRepository] 解析完整词表中的收藏词。
 class LearningFavoritesState extends ChangeNotifier {
-  LearningFavoritesState({required FavRepository favoriteRepository, required LearningQueueRepository queueRepository})
-    : _favoriteRepository = favoriteRepository,
-      _queueRepository = queueRepository {
+  LearningFavoritesState({required this._favoriteRepository, required this._queueRepository}) {
     unawaited(refresh());
   }
 

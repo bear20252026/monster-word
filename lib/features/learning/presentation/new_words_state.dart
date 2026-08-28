@@ -8,9 +8,7 @@ import '../../../repositories/new_word_repository.dart';
 ///
 /// 该状态只协调界面展示和用户操作；读取通过 [NewWordsReader]，持久化写入事实由 [NewWordRepository] 管理。
 class NewWordsState extends ChangeNotifier {
-  NewWordsState({required NewWordsReader newWordsReader, required NewWordRepository newWordRepository})
-    : _newWordsReader = newWordsReader,
-      _newWordRepository = newWordRepository;
+  NewWordsState({required this._newWordsReader, required this._newWordRepository});
 
   final NewWordsReader _newWordsReader;
   final NewWordRepository _newWordRepository;

@@ -9,9 +9,7 @@ import 'review_rating_writer.dart';
 /// 它在引擎推进前接收已捕获的 [reviewedWord]，将 [RecallRating] 同时映射为
 /// 内存引擎命令和 FSRS 写入等级。会话状态负责交互清理、题目再生成、计数和通知。
 class ReviewSessionRatingExecutor {
-  ReviewSessionRatingExecutor({required SuperMemoryEngine engine, required ReviewRatingWriter ratingWriter})
-    : _engine = engine,
-      _ratingWriter = ratingWriter;
+  ReviewSessionRatingExecutor({required this._engine, required this._ratingWriter});
 
   final SuperMemoryEngine _engine;
   ReviewRatingWriter _ratingWriter;

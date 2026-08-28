@@ -7,7 +7,7 @@ import '../theme/skin_system.dart';
 /// 显示星巴克风格下拉菜单
 ///
 /// - [anchor] 触发行的 RenderBox（用于定位）
-/// - [items] Map<T, String> 键值对，T 为业务值，String 为显示文本
+/// - [items] `Map<T, String>` 键值对，T 为业务值，String 为显示文本
 /// - [selected] 当前选中值（高亮态：绿字 w600 + tint 底）
 /// - [label] 可选的前缀标签
 Future<T?> showSbDropdown<T>({

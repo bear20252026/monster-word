@@ -5,8 +5,8 @@
 ///
 /// 装配约定：learning 模块在 [lib/features/learning/...] 内实现本接口，
 /// 并在其 feature scope（见 lib/app/app.dart 的外层 buildLearningFeatureScope）
-/// 以 Provider<LearningProgressReader> 暴露；book 模块因嵌套于该 scope 之下，
-/// 可直接经 context.read<LearningProgressReader>() 获取，无需对 learning 形成编译期依赖。
+/// 以 Provider`<LearningProgressReader>` 暴露；book 模块因嵌套于该 scope 之下，
+/// 可直接经 context.read`<LearningProgressReader>()` 获取，无需对 learning 形成编译期依赖。
 abstract interface class LearningProgressReader {
   /// 统计 [wordTexts]（如某词书的全部单词文本）中已学习/掌握的单词数量。
   Future<int> countLearnedWords(Iterable<String> wordTexts);

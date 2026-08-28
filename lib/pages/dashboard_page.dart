@@ -242,8 +242,9 @@ class DashboardPage extends StatelessWidget {
           .showSnackBar(const SnackBar(content: Text('正在生成分享图...'), duration: Duration(seconds: 1)));
 
       // 获取尖叫币功能域提供的签到数据
-      final totalDays = (await context.read<ScareCoinStore>().checkinDates()).length;
-      final streakDays = await context.read<ScareCoinStore>().streak();
+      final scareCoinStore = context.read<ScareCoinStore>();
+      final totalDays = (await scareCoinStore.checkinDates()).length;
+      final streakDays = await scareCoinStore.streak();
 
       // 生成并分享
       await ShareImageService.generateAndShare(

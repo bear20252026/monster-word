@@ -44,12 +44,10 @@ class ReviewWordActionResult {
 /// 再写入幂等手动掌握标记。它不依赖 BuildContext、Navigator 或 SnackBar。
 class ReviewWordActionCoordinator {
   const ReviewWordActionCoordinator({
-    required ReviewWordActionsState wordActions,
-    required CurrentReviewWord currentWord,
-    required MarkCurrentReviewWordAsKnown markCurrentWordAsKnown,
-  }) : _wordActions = wordActions,
-       _currentWord = currentWord,
-       _markCurrentWordAsKnown = markCurrentWordAsKnown;
+    required this._wordActions,
+    required this._currentWord,
+    required this._markCurrentWordAsKnown,
+  });
 
   final ReviewWordActionsState _wordActions;
   final CurrentReviewWord _currentWord;

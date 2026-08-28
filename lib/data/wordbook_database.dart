@@ -3,7 +3,6 @@
 // 由账号4生成
 // 数据层：词库数据库初始化与查询
 // 跨平台支持：Windows (sqflite_common_ffi) / Android / iOS (sqflite)
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
@@ -30,7 +29,6 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 // ]
 
 // Definition, DefExample, Word, Book 已迁移到 lib/models/
-import '../models/definition.dart';
 import '../models/word.dart';
 import '../models/book.dart';
 export '../models/definition.dart' show Definition, DefExample;

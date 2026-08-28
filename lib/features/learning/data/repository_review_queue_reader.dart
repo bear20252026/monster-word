@@ -4,7 +4,7 @@ import '../application/review_queue_reader.dart';
 
 /// 基于既有词库仓储的正式复习队列读取适配器。
 class RepositoryReviewQueueReader implements ReviewQueueReader {
-  const RepositoryReviewQueueReader({required WordRepository wordRepository}) : _wordRepository = wordRepository;
+  const RepositoryReviewQueueReader({required this._wordRepository});
 
   final WordRepository _wordRepository;
 

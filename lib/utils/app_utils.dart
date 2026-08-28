@@ -160,11 +160,11 @@ class Tools {
 
 /// 发音工具（翻译自 PronounceUtils.dart）
 class PronounceUtils {
-  static const int PRON_US = 1;
-  static const int PRON_UK = 2;
+  static const int pronUs = 1;
+  static const int pronUk = 2;
 
-  static String getChineseName(int type) => type == PRON_UK ? '英' : '美';
-  static String getEnglishName(int type) => type == PRON_UK ? 'UK' : 'US';
+  static String getChineseName(int type) => type == pronUk ? '英' : '美';
+  static String getEnglishName(int type) => type == pronUk ? 'UK' : 'US';
 }
 
 /// Base64 编解码（兼容旧接口）

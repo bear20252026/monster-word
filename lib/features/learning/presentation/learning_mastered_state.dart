@@ -11,10 +11,9 @@ import '../../../repositories/mastered_repository.dart';
 /// `mastered_words_v1` 的字符串身份和已有用户数据兼容。该状态仅提供页面可订阅的掌握词集合与切换结果。
 class LearningMasteredState extends ChangeNotifier {
   LearningMasteredState({
-    required MasteredWordsReader masteredWordsReader,
-    required MasteredRepository masteredRepository,
-  }) : _masteredWordsReader = masteredWordsReader,
-       _masteredRepository = masteredRepository {
+    required this._masteredWordsReader,
+    required this._masteredRepository,
+  }) {
     unawaited(refresh());
   }
 

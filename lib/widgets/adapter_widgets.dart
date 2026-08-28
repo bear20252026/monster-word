@@ -1180,9 +1180,9 @@ class ListWordSortType {
 
 /// 单词列表分组模型（翻译自 ListWordResultModel.java）
 class ListWordResultModel {
-  final List<_SectionClass> _sectionList = [];
+  final List<SectionClass> _sectionList = [];
 
-  List<_SectionClass> get sections => _sectionList;
+  List<SectionClass> get sections => _sectionList;
   int get sectionCount => _sectionList.length;
 
   /// 解析单词列表，按指定类型分组
@@ -1203,7 +1203,7 @@ class ListWordResultModel {
       }
 
       if (indicator != lastIndicator) {
-        _sectionList.add(_SectionClass(indicator: indicator));
+        _sectionList.add(SectionClass(indicator: indicator));
       }
       _sectionList.last.rowList.add(word);
       lastIndicator = indicator;
@@ -1241,11 +1241,11 @@ class ListWordResultModel {
   }
 }
 
-class _SectionClass {
+class SectionClass {
   String indicator;
   List<dynamic> rowList = [];
 
-  _SectionClass({this.indicator = ''});
+  SectionClass({this.indicator = ''});
 }
 
 // ============================================================================
@@ -1254,9 +1254,9 @@ class _SectionClass {
 
 /// 句子列表分组模型（翻译自 SentenceSortResultModel.java）
 class SentenceSortResultModel {
-  final List<_SentenceSectionClass> _sectionList = [];
+  final List<SentenceSectionClass> _sectionList = [];
 
-  List<_SentenceSectionClass> get sections => _sectionList;
+  List<SentenceSectionClass> get sections => _sectionList;
   int get sectionCount => _sectionList.length;
 
   /// 解析句子列表，按日期分组
@@ -1268,7 +1268,7 @@ class SentenceSortResultModel {
       final indicator = sentence.updateDate ?? '';
 
       if (indicator != lastIndicator) {
-        _sectionList.add(_SentenceSectionClass(indicator: indicator));
+        _sectionList.add(SentenceSectionClass(indicator: indicator));
       }
       _sectionList.last.rowList.add(sentence);
       lastIndicator = indicator;
@@ -1306,11 +1306,11 @@ class SentenceSortResultModel {
   }
 }
 
-class _SentenceSectionClass {
+class SentenceSectionClass {
   String indicator;
   List<dynamic> rowList = [];
 
-  _SentenceSectionClass({this.indicator = ''});
+  SentenceSectionClass({this.indicator = ''});
 }
 
 // ============================================================================

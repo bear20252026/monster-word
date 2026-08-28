@@ -177,7 +177,7 @@ class Word {
     final buffer = StringBuffer();
     for (final def in defs) {
       if (def.partOfSpeech.isNotEmpty) {
-        buffer.writeln('${def.partOfSpeech}');
+        buffer.writeln(def.partOfSpeech);
       }
       if (def.cnDef.isNotEmpty) {
         buffer.writeln(def.cnDef);

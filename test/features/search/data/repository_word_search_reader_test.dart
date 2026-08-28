@@ -7,7 +7,7 @@ void main() {
   test('delegates query and limit to the existing word repository', () async {
     final results = [Word(id: 1, word: 'search')];
     final repository = _FakeWordRepository(results: results);
-    final reader = RepositoryWordSearchReader(repository: repository);
+    final reader = RepositoryWordSearchReader(repository);
 
     expect(await reader.search('search', limit: 12), same(results));
     expect(repository.lastQuery, 'search');

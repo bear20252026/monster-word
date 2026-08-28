@@ -62,11 +62,11 @@ void _testPair(String label, Color foreground, Color background, double threshol
 /// Alpha 合成：将前景色叠加到背景色上，返回等效实色
 /// 用于处理 rgba(r,g,b,α) 类型的半透明颜色
 Color _alphaComposite(Color fg, Color bg) {
-  if (fg.alpha == 255) return fg; // 不透明，无需合成
-  final a = fg.alpha / 255.0;
-  final r = (a * fg.red + (1 - a) * bg.red).round();
-  final g = (a * fg.green + (1 - a) * bg.green).round();
-  final b = (a * fg.blue + (1 - a) * bg.blue).round();
+  if (fg.a >= 1.0) return fg; // 不透明，无需合成
+  final a = fg.a;
+  final r = ((a * fg.r + (1 - a) * bg.r) * 255).round();
+  final g = ((a * fg.g + (1 - a) * bg.g) * 255).round();
+  final b = ((a * fg.b + (1 - a) * bg.b) * 255).round();
   return Color.fromARGB(255, r, g, b);
 }
 
@@ -77,14 +77,14 @@ String _failureMessage(String label, Color originalFg, Color bg, Color effective
   final effHex = '#${effectiveFg.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase()}';
 
   // 判断是否经过了 alpha 合成
-  final alphaNote = originalFg.alpha < 255 ? '  （α=${originalFg.alpha}，合成等效色：$effHex）\n' : '';
+  final alphaNote = originalFg.a < 1.0 ? '  （α=${(originalFg.a * 255).round()}，合成等效色：$effHex）\n' : '';
 
   return '''
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ❌ WCAG 对比度不达标：$label
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  前景色：$fgHex  (r=${originalFg.red}, g=${originalFg.green}, b=${originalFg.blue}, a=${originalFg.alpha})
-  背景色：$bgHex  (r=${bg.red}, g=${bg.green}, b=${bg.blue}, a=${bg.alpha})
+  前景色：$fgHex  (r=${(originalFg.r * 255).round()}, g=${(originalFg.g * 255).round()}, b=${(originalFg.b * 255).round()}, a=${(originalFg.a * 255).round()})
+  背景色：$bgHex  (r=${(bg.r * 255).round()}, g=${(bg.g * 255).round()}, b=${(bg.b * 255).round()}, a=${(bg.a * 255).round()})
 $alphaNote  实测对比度：${actual.toStringAsFixed(2)}:1
   要求阈值：${required.toStringAsFixed(1)}:1
   差距：${(required - actual).toStringAsFixed(2)}
@@ -116,9 +116,9 @@ double contrastRatio(Color a, Color b) {
 /// 阈值 0.03928 与人工审查脚本一致
 double relativeLuminance(Color c) {
   // sRGB 通道归一化到 [0, 1]
-  final r = c.red / 255.0;
-  final g = c.green / 255.0;
-  final b = c.blue / 255.0;
+  final r = c.r;
+  final g = c.g;
+  final b = c.b;
 
   // sRGB → 线性（WCAG 2.1 精确公式）
   final rLin = _srgbToLinear(r);

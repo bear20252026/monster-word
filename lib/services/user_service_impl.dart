@@ -17,9 +17,7 @@ class UserServiceImpl implements UserService {
 
   static const _userInfoKey = 'monster_word_user_info';
 
-  UserServiceImpl({required UserRepository userRepo, required NoteRepository noteRepo})
-    : _userRepo = userRepo,
-      _noteRepo = noteRepo;
+  UserServiceImpl({required this._userRepo, required this._noteRepo});
 
   @override
   Future<Map<String, dynamic>?> getUserInfo() async {

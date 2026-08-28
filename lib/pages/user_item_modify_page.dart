@@ -82,7 +82,7 @@ class _UserItemModifyPageState extends State<UserItemModifyPage> {
           TextButton(
             onPressed: () async {
               // 如果有未保存的修改，弹出确认框
-              if (_controller.text.trim() != (widget.initialValue ?? '')) {
+              if (_controller.text.trim() != widget.initialValue) {
                 final discard = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
@@ -96,7 +96,8 @@ class _UserItemModifyPageState extends State<UserItemModifyPage> {
                 );
                 if (discard != true) return;
               }
-              if (context.mounted) Navigator.pop(context);
+              if (!mounted) return;
+              Navigator.pop(context);
             },
             child: Text('取消', style: TextStyle(color: skin.colors.text3)),
           ),

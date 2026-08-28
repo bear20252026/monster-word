@@ -79,8 +79,8 @@ class LexisDaily {
 
 /// 学习时长数据（翻译自 LearnDurationData.java）
 class LearnDurationData {
-  final _LDStruct? today;
-  final _LDStruct? total;
+  final LDStruct? today;
+  final LDStruct? total;
 
   LearnDurationData({this.today, this.total});
 
@@ -88,19 +88,19 @@ class LearnDurationData {
   int get totalLearnDuration => total?.duration ?? 0;
 
   factory LearnDurationData.fromJson(Map<String, dynamic> json) => LearnDurationData(
-    today: json['today'] != null ? _LDStruct.fromJson(json['today'] as Map<String, dynamic>) : null,
-    total: json['total'] != null ? _LDStruct.fromJson(json['total'] as Map<String, dynamic>) : null,
+    today: json['today'] != null ? LDStruct.fromJson(json['today'] as Map<String, dynamic>) : null,
+    total: json['total'] != null ? LDStruct.fromJson(json['total'] as Map<String, dynamic>) : null,
   );
 }
 
-class _LDStruct {
+class LDStruct {
   final int duration;
   final int amount;
 
-  _LDStruct({this.duration = 0, this.amount = 0});
+  LDStruct({this.duration = 0, this.amount = 0});
 
-  factory _LDStruct.fromJson(Map<String, dynamic> json) =>
-      _LDStruct(duration: (json['duration'] as num?)?.toInt() ?? 0, amount: (json['amount'] as num?)?.toInt() ?? 0);
+  factory LDStruct.fromJson(Map<String, dynamic> json) =>
+      LDStruct(duration: (json['duration'] as num?)?.toInt() ?? 0, amount: (json['amount'] as num?)?.toInt() ?? 0);
 }
 
 /// 学习签到数据（翻译自 StudySignData.java）

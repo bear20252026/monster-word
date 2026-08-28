@@ -6,10 +6,9 @@ import '../application/mastered_words_reader.dart';
 /// 基于既有仓储的已掌握词读取适配器。
 class RepositoryMasteredWordsReader implements MasteredWordsReader {
   const RepositoryMasteredWordsReader({
-    required MasteredRepository masteredRepository,
-    required WordRepository wordRepository,
-  }) : _masteredRepository = masteredRepository,
-       _wordRepository = wordRepository;
+    required this._masteredRepository,
+    required this._wordRepository,
+  });
 
   final MasteredRepository _masteredRepository;
   final WordRepository _wordRepository;

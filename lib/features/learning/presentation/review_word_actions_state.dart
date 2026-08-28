@@ -8,9 +8,7 @@ import '../../../repositories/mastered_repository.dart';
 /// 收藏与手动掌握均保留各自独立的字符串集合语义。本状态只缓存展示所需
 /// 快照、转发操作并通知页面，避免 `ReviewPage` 自行维护未持久化的副本。
 class ReviewWordActionsState extends ChangeNotifier {
-  ReviewWordActionsState({required FavRepository favRepository, required MasteredRepository masteredRepository})
-    : _favRepository = favRepository,
-      _masteredRepository = masteredRepository;
+  ReviewWordActionsState({required this._favRepository, required this._masteredRepository});
 
   final FavRepository _favRepository;
   final MasteredRepository _masteredRepository;

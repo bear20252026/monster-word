@@ -20,11 +20,11 @@ import '../data/repository_word_search_reader.dart';
 Widget buildSearchFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
-      Provider<WordSearchReader>(create: (_) => RepositoryWordSearchReader(repository: sl<WordRepository>())),
-      Provider<SearchHistoryStore>(create: (_) => PreferencesSearchHistoryStore(preferences: AppPreferences())),
+      Provider<WordSearchReader>(create: (_) => RepositoryWordSearchReader(sl<WordRepository>())),
+      Provider<SearchHistoryStore>(create: (_) => PreferencesSearchHistoryStore(AppPreferences())),
       Provider<ExampleReader>(create: (_) => const ExampleParserAdapter()),
       ProxyProvider<LearningFavoritesState, FavoritesAccessor>(
-        update: (_, favorites, __) => FavoritesAccessorAdapter(favorites),
+        update: (_, favorites, _) => FavoritesAccessorAdapter(favorites),
       ),
     ],
     child: child,

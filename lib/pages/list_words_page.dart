@@ -3,7 +3,6 @@
 // 移植自 v3.2 ListWordsActviity（抽象基类）
 // 单词列表基类：支持滑动删除、批量编辑、字母快速索引
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';

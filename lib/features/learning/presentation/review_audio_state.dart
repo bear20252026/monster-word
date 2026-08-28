@@ -7,7 +7,7 @@ import '../application/review_audio_player.dart';
 /// 该状态仅维护当前播放请求的加载标识，并委托 [ReviewAudioPlayer] 执行发音。
 /// 失败会向页面抛出，由页面统一提供用户可见反馈。
 class ReviewAudioState extends ChangeNotifier {
-  ReviewAudioState({required ReviewAudioPlayer audioPlayer}) : _audioPlayer = audioPlayer;
+  ReviewAudioState({required this._audioPlayer});
 
   final ReviewAudioPlayer _audioPlayer;
   String? _loadingWord;

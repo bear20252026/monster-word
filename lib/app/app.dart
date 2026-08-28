@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/audio/word_audio_scope.dart';
-import '../core/di/service_locator.dart';
 import '../core/router/app_router.dart';
 import '../features/account/presentation/account_feature_providers.dart';
 import '../features/book/presentation/book_feature_providers.dart';

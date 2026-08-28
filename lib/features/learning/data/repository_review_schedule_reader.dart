@@ -5,7 +5,7 @@ import 'review_schedule_repository.dart';
 
 /// 基于正式复习排程仓储的只读展示适配器。
 class RepositoryReviewScheduleReader extends ReviewScheduleReader {
-  RepositoryReviewScheduleReader({required ReviewScheduleRepository repository}) : _repository = repository {
+  RepositoryReviewScheduleReader({required this._repository}) {
     _repository.addListener(notifyListeners);
   }
 

@@ -64,8 +64,9 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
   }
 
   Future<void> _refresh({bool animate = false}) async {
-    final dates = await context.read<ScareCoinStore>().checkinDates();
-    final streak = await context.read<ScareCoinStore>().streak();
+    final store = context.read<ScareCoinStore>();
+    final dates = await store.checkinDates();
+    final streak = await store.streak();
     if (!mounted) return;
     setState(() {
       _checkedDates = dates;

@@ -1,13 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/checkin/presentation/checkin_history_state.dart';
 import 'package:word_app/features/checkin/application/check_in_history_reader.dart';
-import 'package:word_app/features/checkin/domain/checkin_status.dart';
 
 /// 模拟 CheckInHistoryReader
 class FakeCheckInHistoryReader implements CheckInHistoryReader {
   Set<String> _dates = {};
   int _streak = 0;
-  int _reward = 10;
+  final int _reward = 10;
 
   void setDates(Set<String> dates) => _dates = dates;
   void setStreak(int streak) => _streak = streak;

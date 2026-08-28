@@ -9,6 +9,7 @@ import 'fav_repository.dart';
 /// 收藏仓库实现
 class FavRepositoryImpl implements FavRepository {
   static const _kFavoritesKey = 'favorite_words_v1';
+  // ignore: prefer_final_fields
   Set<String> _favoriteWords = {};
 
   FavRepositoryImpl() {

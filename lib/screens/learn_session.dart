@@ -213,7 +213,7 @@ class _LearnSessionState extends State<LearnSession> with TickerProviderStateMix
                     // SegmentTabs（原版 派生/词组搭配/词根/近义）
                     _buildSegmentTabs(skin),
                     // Tab 内容区域（根据选中 tab 显示不同内容）
-                    if (word != null) _buildTabContent(skin, word),
+                    _buildTabContent(skin, word),
                     // 底部按钮（原版 下一词 + 记错了 + 重学）— 弹性滑入动画
                     SlideTransition(position: _bottomBarAnim, child: _buildBottomActions(skin, state)),
                   ],

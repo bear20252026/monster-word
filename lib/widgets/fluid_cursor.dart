@@ -9,11 +9,11 @@ import 'package:flutter/material.dart';
 class FluidCursorController extends ChangeNotifier {
   Offset? _position;
   bool _isPressed = false;
-  final List<_FluidRipple> _ripples = [];
+  final List<FluidRipple> _ripples = [];
 
   Offset? get position => _position;
   bool get isPressed => _isPressed;
-  List<_FluidRipple> get ripples => _ripples;
+  List<FluidRipple> get ripples => _ripples;
 
   void updatePosition(Offset pos) {
     _position = pos;
@@ -23,7 +23,7 @@ class FluidCursorController extends ChangeNotifier {
   void setPressed(bool pressed) {
     _isPressed = pressed;
     if (pressed && _position != null) {
-      _ripples.add(_FluidRipple(position: _position!, startTime: DateTime.now(), color: _rippleColor));
+      _ripples.add(FluidRipple(position: _position!, startTime: DateTime.now(), color: _rippleColor));
       if (_ripples.length > 5) _ripples.removeAt(0);
     }
     notifyListeners();
@@ -38,12 +38,12 @@ class FluidCursorController extends ChangeNotifier {
   }
 }
 
-class _FluidRipple {
+class FluidRipple {
   final Offset position;
   final DateTime startTime;
   final Color color;
 
-  _FluidRipple({required this.position, required this.startTime, required this.color});
+  FluidRipple({required this.position, required this.startTime, required this.color});
 }
 
 /// 流体光标覆盖层（放在最上层，拦截触摸事件）
@@ -119,7 +119,7 @@ class _FluidCursorOverlayState extends State<FluidCursorOverlay> with SingleTick
               builder: (context, _) {
                 final now = DateTime.now();
                 return CustomPaint(
-                  painter: _FluidRipplePainter(
+                  painter: FluidRipplePainter(
                     ripples: _controller.ripples,
                     now: now,
                     maxRadius: widget.maxRadius,
@@ -135,13 +135,13 @@ class _FluidCursorOverlayState extends State<FluidCursorOverlay> with SingleTick
   }
 }
 
-class _FluidRipplePainter extends CustomPainter {
-  final List<_FluidRipple> ripples;
+class FluidRipplePainter extends CustomPainter {
+  final List<FluidRipple> ripples;
   final DateTime now;
   final double maxRadius;
   final Color color;
 
-  _FluidRipplePainter({required this.ripples, required this.now, required this.maxRadius, required this.color});
+  FluidRipplePainter({required this.ripples, required this.now, required this.maxRadius, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -175,7 +175,7 @@ class _FluidRipplePainter extends CustomPainter {
   double _easeOutCubic(double t) => 1 - math.pow(1 - t, 3).toDouble();
 
   @override
-  bool shouldRepaint(covariant _FluidRipplePainter oldDelegate) {
+  bool shouldRepaint(covariant FluidRipplePainter oldDelegate) {
     return ripples.length != oldDelegate.ripples.length ||
         now.millisecondsSinceEpoch != oldDelegate.now.millisecondsSinceEpoch;
   }

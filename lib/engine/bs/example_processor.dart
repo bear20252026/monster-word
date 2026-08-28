@@ -303,7 +303,7 @@ class ExampleProcessor {
   }
 
   /// 带原生高亮的句子封装（原版 encapsulateNativeHightLightSentence）
-  /// 返回 <myspan> 包裹的 HTML，高亮部分用 <highlight> 标记
+  /// 返回 `myspan` 包裹的 HTML，高亮部分用 `highlight` 标记
   static String encapsulateNativeHighlightSentence(String str, int wordPos) {
     if (StrUtils.isEmpty(str)) return str;
 

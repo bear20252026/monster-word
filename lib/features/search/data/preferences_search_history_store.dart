@@ -3,7 +3,7 @@ import '../application/search_history_store.dart';
 
 /// 基于既有应用偏好存储的搜索历史适配器。
 class PreferencesSearchHistoryStore implements SearchHistoryStore {
-  PreferencesSearchHistoryStore({required AppPreferences preferences}) : _preferences = preferences;
+  PreferencesSearchHistoryStore(this._preferences);
 
   final AppPreferences _preferences;
 

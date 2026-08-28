@@ -9,7 +9,7 @@ typedef ReviewRatingPersistence = Future<void> Function({required String word, r
 /// 应用根注入的 [ReviewRatingPersistence] 负责。这样迁移评分事实来源时无需
 /// 再次让页面直接依赖遗留学习状态，也不会在本地会话推进后错写下一词。
 class ReviewRatingWriter {
-  const ReviewRatingWriter({required ReviewRatingPersistence writeRating}) : _writeRating = writeRating;
+  const ReviewRatingWriter({required this._writeRating});
 
   final ReviewRatingPersistence _writeRating;
 

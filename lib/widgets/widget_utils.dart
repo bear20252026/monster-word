@@ -84,7 +84,7 @@ class _ScaleDownOnPressState extends State<ScaleDownOnPress> with SingleTickerPr
 }
 
 /// 滚动加载更多监听器（翻译自 OnScrollLoadMoreListener.java）
-/// 与 NotificationListener<ScrollNotification> 配合使用
+/// 与 `NotificationListener<ScrollNotification>` 配合使用
 class OnScrollLoadMoreNotification extends ScrollNotification {
   final VoidCallback onLoad;
   OnScrollLoadMoreNotification({required this.onLoad, required super.metrics, required BuildContext super.context});

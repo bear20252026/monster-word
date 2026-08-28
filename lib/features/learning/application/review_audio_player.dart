@@ -4,7 +4,7 @@
 typedef ReviewAudioCommand = Future<void> Function(String word);
 
 class ReviewAudioPlayer {
-  const ReviewAudioPlayer({required ReviewAudioCommand playAudio}) : _playAudio = playAudio;
+  const ReviewAudioPlayer({required this._playAudio});
 
   final ReviewAudioCommand _playAudio;
 

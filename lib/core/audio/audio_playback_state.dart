@@ -9,7 +9,7 @@ import '../../services/audio_service.dart';
 /// 而不再互相 import 某个功能域的内部实现。
 /// 请求序号保证较早播放请求的异步完成不会覆盖后续停止或新播放命令的状态。
 class AudioPlaybackState extends ChangeNotifier {
-  AudioPlaybackState({required AudioService audioService}) : _audioService = audioService;
+  AudioPlaybackState({required this._audioService});
 
   final AudioService _audioService;
 

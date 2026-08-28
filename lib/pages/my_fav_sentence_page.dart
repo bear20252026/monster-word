@@ -310,6 +310,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
   }
 
   Future<void> _deleteSelected() async {
+    final favStore = context.read<SentenceFavoritesStore>();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -324,6 +325,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
         ],
       ),
     );
+    if (!mounted) return;
 
     if (confirmed != true) return;
 
@@ -331,7 +333,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     final sortedIndices = _selectedIndices.toList()..sort((a, b) => b.compareTo(a));
     for (final index in sortedIndices) {
       final favSentence = _sentences[index];
-      await context.read<SentenceFavoritesStore>().remove(
+      await favStore.remove(
         wordId: favSentence.wordId,
         sentenceId: favSentence.sentenceId,
       );

@@ -21,12 +21,10 @@ import '../../../models/word.dart';
 /// 手动掌握或正式复习会话。
 class LearningSessionState extends ChangeNotifier {
   LearningSessionState({
-    required LearningQueueRepository queueRepository,
-    required LearningProgressRepository progressRepository,
-    required ReviewScheduleRepository reviewSchedule,
-  }) : _queueRepository = queueRepository,
-       _progressRepository = progressRepository,
-       _reviewSchedule = reviewSchedule {
+    required this._queueRepository,
+    required this._progressRepository,
+    required this._reviewSchedule,
+  }) {
     unawaited(_loadProgress());
   }
 

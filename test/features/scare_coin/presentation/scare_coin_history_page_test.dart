@@ -21,10 +21,8 @@ class FakeScareCoinStore implements ScareCoinStore {
   bool _checkedToday;
   final List<ScareCoinEntry> _entries;
 
-  FakeScareCoinStore({int balance = 0, bool checkedToday = false, List<ScareCoinEntry>? entries})
-      : _balance = balance,
-        _checkedToday = checkedToday,
-        _entries = entries ?? [];
+  FakeScareCoinStore({this._balance = 0, this._checkedToday = false, List<ScareCoinEntry>? entries})
+      : _entries = entries ?? [];
 
   @override
   int get checkInReward => 10;
