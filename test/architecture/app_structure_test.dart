@@ -249,6 +249,29 @@ void main() {
       expect(pageSource, isNot(contains('WordRepository')));
     });
 
+    test('学习词表读取端口隔离基础仓储依赖', () {
+      final masteredPort = File('lib/features/learning/application/mastered_words_reader.dart').readAsStringSync();
+      final newWordsPort = File('lib/features/learning/application/new_words_reader.dart').readAsStringSync();
+      final reviewQueuePort = File('lib/features/learning/application/review_queue_reader.dart').readAsStringSync();
+      final masteredAdapter = File('lib/features/learning/data/repository_mastered_words_reader.dart')
+          .readAsStringSync();
+      final newWordsAdapter = File('lib/features/learning/data/repository_new_words_reader.dart').readAsStringSync();
+      final reviewQueueAdapter = File('lib/features/learning/data/repository_review_queue_reader.dart')
+          .readAsStringSync();
+
+      expect(masteredPort, contains('abstract interface class MasteredWordsReader'));
+      expect(newWordsPort, contains('abstract interface class NewWordsReader'));
+      expect(reviewQueuePort, contains('abstract interface class ReviewQueueReader'));
+      for (final source in [masteredPort, newWordsPort, reviewQueuePort]) {
+        expect(source, isNot(contains('repositories/')));
+        expect(source, isNot(contains('service_locator')));
+        expect(source, isNot(contains('SharedPreferences')));
+      }
+      expect(masteredAdapter, contains('MasteredRepository'));
+      expect(newWordsAdapter, contains('NewWordRepository'));
+      expect(reviewQueueAdapter, contains('WordRepository'));
+    });
+
     test('词书入口通过 BookCatalogReader 访问目录', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final selectPageSource = File('lib/pages/lib_select_page.dart').readAsStringSync();

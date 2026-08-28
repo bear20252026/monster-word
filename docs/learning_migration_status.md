@@ -89,6 +89,12 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 应用根通过 `buildBookFeatureScope` 集中装配目录读取端口。`LibSelectPage` 通过端口加载和筛选词书，`BookWordsPage` 通过端口解析当前词书后再调用 `LearningSessionState` 启动学习，`HomeScreen` 的直接开始学习入口也通过同一端口读取第一本词书。词语导出页、词书选择页的听写/拼写入口以及泛听模式选择页复用学习功能域提供的 `BookWordsReader` 加载当前词书单词，不直接依赖 `LearningQueueRepository`。这些页面只消费只读词源，学习队列状态仍由 `LearningSessionState` 负责；词书相关页面和首页不得重新导入 `BookRepository`、`LearningQueueRepository` 或服务定位器，架构测试对此保留负向门禁。
 
+## 学习词表读取边界
+
+学习功能域将三个只读读取合同保持为独立应用端口：`MasteredWordsReader` 只负责把手动掌握标记解析为词库单词，`NewWordsReader` 只负责按生词本记录顺序解析可展示词条，`ReviewQueueReader` 只负责正式复习候选词的到期词、当前队列和有限词库回退优先级。三个端口不导入具体仓储，也不暴露写入能力。
+
+`RepositoryMasteredWordsReader`、`RepositoryNewWordsReader` 和 `RepositoryReviewQueueReader` 位于数据边界，分别组合既有掌握仓储、生词本仓储、词库仓储和正式复习快照。服务定位器只负责装配这些适配器；学习状态和正式复习会话通过端口消费，收藏、手动掌握、生词本、学习队列和 FSRS 仍保持不同事实模型。架构测试对应用端口的具体基础设施依赖保留负向门禁。
+
 ## 尖叫币账本功能域边界
 
 `scare_coin` 功能域为尖叫币历史页、弹性签到日历和资料页余额卡提供 `ScareCoinStore`。`PreferencesScareCoinStore` 集中承接既有 `scare_coin.balance`、`scare_coin.history`、`scare_coin.last_checkin` 和 `scare_coin.checkin_dates` 键，保留每日一次签到、奖励流水排序及最近 200 条保留策略，不改变已有用户数据格式。
