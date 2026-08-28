@@ -2,9 +2,9 @@
 // 句库页面：显示用户收藏的所有例句
 // 移植自 v3.2 MyFavSentenceActivity
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
-import '../repositories/fav_repository.dart';
+import '../features/word_browse/application/sentence_favorites_store.dart';
 import '../models/sentence_models.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -33,17 +33,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final favRepo = sl<FavRepository>();
-      final sentencesData = await favRepo.getFavoriteSentences();
-      final sentences = sentencesData
-          .map(
-            (s) => FavSentenceData(
-              wordId: s['wordId'] as int? ?? 0,
-              sentenceId: s['sentenceId'] as String? ?? '',
-              word: s['word'] as String? ?? '',
-            ),
-          )
-          .toList();
+      final sentences = await context.read<SentenceFavoritesStore>().list();
       if (mounted) {
         setState(() {
           _sentences = sentences;
@@ -341,7 +331,10 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     final sortedIndices = _selectedIndices.toList()..sort((a, b) => b.compareTo(a));
     for (final index in sortedIndices) {
       final favSentence = _sentences[index];
-      await sl<FavRepository>().removeFavoriteSentence(favSentence.wordId, favSentence.sentenceId);
+      await context.read<SentenceFavoritesStore>().remove(
+        wordId: favSentence.wordId,
+        sentenceId: favSentence.sentenceId,
+      );
     }
 
     setState(() {
