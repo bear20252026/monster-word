@@ -1,14 +1,18 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../models/word.dart';
+import '../application/new_words_reader.dart';
 import '../../../repositories/new_word_repository.dart';
 
 /// 生词本的可观察展示状态。
 ///
-/// 该状态只协调界面展示和用户操作，持久化事实始终由 [NewWordRepository] 管理。
+/// 该状态只协调界面展示和用户操作；读取通过 [NewWordsReader]，持久化写入事实由 [NewWordRepository] 管理。
 class NewWordsState extends ChangeNotifier {
-  NewWordsState({required NewWordRepository newWordRepository}) : _newWordRepository = newWordRepository;
+  NewWordsState({required NewWordsReader newWordsReader, required NewWordRepository newWordRepository})
+    : _newWordsReader = newWordsReader,
+      _newWordRepository = newWordRepository;
 
+  final NewWordsReader _newWordsReader;
   final NewWordRepository _newWordRepository;
   final Set<int> _wordIds = {};
   Future<void>? _initialization;
@@ -24,10 +28,10 @@ class NewWordsState extends ChangeNotifier {
   }
 
   Future<void> _loadInitialRecords() async {
-    final records = await _newWordRepository.getNewWords();
+    final words = await _newWordsReader.loadWords();
     _wordIds
       ..clear()
-      ..addAll(records.map((record) => record.wordId));
+      ..addAll(words.map((word) => word.id));
     _initialized = true;
     notifyListeners();
   }

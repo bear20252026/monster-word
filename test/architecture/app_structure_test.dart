@@ -249,6 +249,16 @@ void main() {
       expect(pageSource, isNot(contains('WordRepository')));
     });
 
+    test('生词本状态分离读取端口与写入仓储', () {
+      final stateSource = File('lib/features/learning/presentation/new_words_state.dart').readAsStringSync();
+      expect(stateSource, contains('NewWordsReader'));
+      expect(stateSource, contains('NewWordRepository'));
+      expect(stateSource, contains('_newWordsReader.loadWords()'));
+      expect(stateSource, contains('_newWordRepository.toggleNewWord'));
+      expect(stateSource, contains('_newWordRepository.removeNewWord'));
+      expect(stateSource, isNot(contains('_newWordRepository.getNewWords')));
+    });
+
     test('学习词表读取端口隔离基础仓储依赖', () {
       final masteredPort = File('lib/features/learning/application/mastered_words_reader.dart').readAsStringSync();
       final newWordsPort = File('lib/features/learning/application/new_words_reader.dart').readAsStringSync();
