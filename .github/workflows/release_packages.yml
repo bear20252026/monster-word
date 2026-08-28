@@ -5,9 +5,9 @@ name: Release Packages
 #   - workflow_dispatch  -> 仅产出 Actions artifacts（手动验证）
 # 产物：
 #   Android -> MonsterWord_vX.Y.Z.apk + MonsterWord_vX.Y.Z.aab
-#   Windows -> MonsterWord_vX.Y.Z_Windows_x64.zip
+#   Windows -> MonsterWord_Setup_vX.Y.Z.exe（Inno Setup 标准安装程序）
 # 签名：
-#   设置了 KEYSTORE_* secrets 则用正式 keystore 签名；否则回退 debug 签名并告警。
+#   Android：设置 KEYSTORE_* secrets 则用正式 keystore 签名；否则回退 debug 签名并告警。
 
 on:
   push:
@@ -93,7 +93,7 @@ jobs:
             MonsterWord_v*.aab
 
   # --------------------------------------------------------------------
-  # WINDOWS：生产 x64 ZIP
+  # WINDOWS：生产 Inno Setup 安装程序（.exe）
   # --------------------------------------------------------------------
   windows:
     runs-on: windows-latest
@@ -113,19 +113,21 @@ jobs:
       - name: Build Windows Release
         run: flutter build windows --release
 
-      - name: Package ZIP
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer (ISCC)
         shell: pwsh
         run: |
-          $verLine = Get-Content pubspec.yaml | Where-Object { $_ -match '^version:' } | Select-Object -First 1
-          $ver = ((($verLine -split ':')[1]).Trim()).Split('+')[0]
-          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "MonsterWord_v${ver}_Windows_x64.zip"
-          Write-Host "Packaged MonsterWord_v${ver}_Windows_x64.zip"
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Upload Windows package
+      - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: windows-package
-          path: MonsterWord_v*_Windows_x64.zip
+          name: windows-installer
+          path: build\installer\MonsterWord_Setup_v*.exe
 
   # --------------------------------------------------------------------
   # RELEASE：仅 tag 触发，把双端产物挂到 GitHub Release
@@ -147,7 +149,7 @@ jobs:
         with:
           files: |
             artifacts/android-packages/*
-            artifacts/windows-package/*
+            artifacts/windows-installer/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
