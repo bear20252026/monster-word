@@ -35,6 +35,9 @@ class _FakeBookRepository implements BookRepository {
   Future<Book?> getBookById(int id) => throw UnimplementedError();
 
   @override
+  Future<int> getWordCount(int bookId) => throw UnimplementedError();
+
+  @override
   Future<List<Book>> searchBooks(String query) => throw UnimplementedError();
 
   @override
