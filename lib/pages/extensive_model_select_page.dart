@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../features/learning/data/learning_queue_repository.dart';
+import '../features/learning/application/book_words_reader.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import 'listening_player_page.dart';
@@ -164,7 +164,7 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
   Future<void> _onConfirm() async {
     setState(() => _loading = true);
     try {
-      final words = await context.read<LearningQueueRepository>().loadWordsByBook(widget.bookId);
+      final words = await context.read<BookWordsReader>().loadWords(widget.bookId);
       if (!mounted) return;
       if (words.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));

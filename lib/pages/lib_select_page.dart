@@ -12,7 +12,7 @@ import '../hooks/responsive.dart';
 import '../pages/dictation_session_page.dart';
 import '../pages/quick_spell_page.dart';
 import '../pages/word_export_page.dart';
-import '../features/learning/data/learning_queue_repository.dart';
+import '../features/learning/application/book_words_reader.dart';
 import '../features/learning/presentation/learning_session_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -397,7 +397,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   Future<void> _startDictation(BuildContext context, Book book) async {
-    final words = await context.read<LearningQueueRepository>().loadWordsByBook(book.id);
+    final words = await context.read<BookWordsReader>().loadWords(book.id);
     if (!context.mounted) return;
     if (words.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));
@@ -412,7 +412,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   Future<void> _startQuickSpell(BuildContext context, Book book) async {
-    final words = await context.read<LearningQueueRepository>().loadWordsByBook(book.id);
+    final words = await context.read<BookWordsReader>().loadWords(book.id);
     if (!context.mounted) return;
     if (words.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));
