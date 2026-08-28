@@ -1,0 +1,142 @@
+name: Release Packages
+
+# 云端出包（承接 docs/release_pipeline.md §2）：
+#   - 推送 tag v*        -> 构建双端产物并自动挂到 GitHub Release
+#   - workflow_dispatch  -> 仅产出 Actions artifacts（手动验证）
+# 产物：
+#   Android -> MonsterWord_vX.Y.Z.apk + MonsterWord_vX.Y.Z.aab
+#   Windows -> MonsterWord_vX.Y.Z_Windows_x64.zip
+# 签名：
+#   设置了 KEYSTORE_* secrets 则用正式 keystore 签名；否则回退 debug 签名并告警。
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  # --------------------------------------------------------------------
+  # ANDROID：生产 APK + AAB
+  # --------------------------------------------------------------------
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Configure release signing (from KEYSTORE_* secrets)
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_STORE_PASSWORD: ${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
+          KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_STORE_PASSWORD" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/app/monster_word_release.jks
+            printf 'storeFile=monster_word_release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+              "$KEYSTORE_STORE_PASSWORD" "$KEYSTORE_KEY_ALIAS" "$KEYSTORE_KEY_PASSWORD" \
+              > android/key.properties
+            echo "::notice::Using real release keystore from KEYSTORE_* secrets."
+          else
+            echo "::warning::No KEYSTORE_* secrets set -> APK will be DEBUG-signed (fallback)."
+          fi
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Release APK
+        run: flutter build apk --release
+
+      - name: Build Release AAB
+        run: flutter build appbundle --release
+
+      - name: Rename packages to brand convention
+        shell: bash
+        run: |
+          ver=$(sed -n 's/^version: *\([^ ]*\)/\1/p' pubspec.yaml | head -n1)
+          ver=${ver%+*}
+          cp build/app/outputs/flutter-apk/app-release.apk "MonsterWord_v${ver}.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "MonsterWord_v${ver}.aab"
+          echo "android_version=$ver" >> "$GITHUB_ENV"
+
+      - name: Upload Android packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-packages
+          path: |
+            MonsterWord_v*.apk
+            MonsterWord_v*.aab
+
+  # --------------------------------------------------------------------
+  # WINDOWS：生产 x64 ZIP
+  # --------------------------------------------------------------------
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows Release
+        run: flutter build windows --release
+
+      - name: Package ZIP
+        shell: pwsh
+        run: |
+          $verLine = Get-Content pubspec.yaml | Where-Object { $_ -match '^version:' } | Select-Object -First 1
+          $ver = ((($verLine -split ':')[1]).Trim()).Split('+')[0]
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "MonsterWord_v${ver}_Windows_x64.zip"
+          Write-Host "Packaged MonsterWord_v${ver}_Windows_x64.zip"
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: MonsterWord_v*_Windows_x64.zip
+
+  # --------------------------------------------------------------------
+  # RELEASE：仅 tag 触发，把双端产物挂到 GitHub Release
+  # --------------------------------------------------------------------
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/android-packages/*
+            artifacts/windows-package/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
