@@ -222,10 +222,18 @@ class UserPreferences extends BaseSharedPreferences {
   static const String remindEnable = 'remind_user';
   static const String remindTime = 'remind_time';
   static const String feedbackUnreadCount = 'feedback_unread_count';
+  static const String dailyGoal = 'daily_learn_goal';
 
   @override
   Future<void> init() async {
     await super.init();
+  }
+
+  /// 每日学习目标（默认 10 个，范围 1-200）
+  int getDailyGoal() => getInt(dailyGoal, defaultValue: 10);
+  Future<bool> setDailyGoal(int value) {
+    final clamped = value.clamp(1, 200);
+    return setInt(dailyGoal, clamped);
   }
 
   /// 今日已学数量
