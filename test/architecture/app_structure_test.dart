@@ -173,6 +173,20 @@ void main() {
       expect(pageSource, isNot(contains('FavRepository')));
     });
 
+    test('考试速刷页通过 QuickReviewWordReader 读取词源', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final pageSource = File('lib/pages/exam_quick_review_page.dart').readAsStringSync();
+      final providersSource = File('lib/features/quick_review/presentation/quick_review_feature_providers.dart')
+          .readAsStringSync();
+
+      expect(appSource, contains('buildQuickReviewFeatureScope('));
+      expect(File('lib/features/quick_review/application/quick_review_word_reader.dart').existsSync(), isTrue);
+      expect(providersSource, contains('sl<WordRepository>()'));
+      expect(pageSource, contains('QuickReviewWordReader'));
+      expect(pageSource, isNot(contains('WordRepository')));
+      expect(pageSource, isNot(contains('sl<')));
+    });
+
     test('词语导出页通过 BookWordsReader 读取词书单词', () {
       final pageSource = File('lib/pages/word_export_page.dart').readAsStringSync();
 

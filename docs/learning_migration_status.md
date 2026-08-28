@@ -77,6 +77,12 @@ FSRS 卡片熟练度不等于 `mastered_words_v1`。已删除的旧 `LearnState.
 
 `dictionary` 功能域为词典页提供 `DictionaryContentReader`，统一读取派生词、同义词和真题例句。`ServiceDictionaryContentReader` 委托现有 `DictionaryService`，不复制词库或字典内容事实；词典页不再直接访问 `DictionaryService.instance`。应用根通过 `buildDictionaryFeatureScope` 装配该端口，架构测试对页面直连服务保留负向门禁。
 
+## 快速复习功能域边界
+
+`quick_review` 功能域为考试速刷页提供 `QuickReviewWordReader`。`RepositoryQuickReviewWordReader` 保留原有空查询、按 ID 倒序和最多 50 个候选词的速刷行为，并委托既有 `WordRepository`；该端口不复用正式复习的 FSRS 到期队列，也不改变正式复习评分和排程事实。
+
+应用根通过 `buildQuickReviewFeatureScope` 装配速刷词源端口。`ExamQuickReviewPage` 只通过该端口加载词源，页面仍负责速刷会话内的计时、选项生成和本地结果展示；架构测试对 `WordRepository` 和服务定位器直连保留负向门禁。
+
 ## 词书功能域边界
 
 `book` 功能域为词书选择页和词书内容页提供 `BookCatalogReader`。`RepositoryBookCatalogReader` 继续委托既有 `BookRepository` 读取词书目录，并提供按 ID 查找能力；适配器不缓存或复制词书数据，也不改变学习队列、学习会话或词书数据库的事实模型。

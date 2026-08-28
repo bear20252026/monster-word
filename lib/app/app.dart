@@ -10,6 +10,7 @@ import '../features/checkin/presentation/check_in_feature_providers.dart';
 import '../features/dictionary/presentation/dictionary_feature_providers.dart';
 import '../features/learning/presentation/learning_feature_providers.dart';
 import '../features/player/presentation/player_feature_providers.dart';
+import '../features/quick_review/presentation/quick_review_feature_providers.dart';
 import '../features/settings/presentation/settings_feature_providers.dart';
 import '../features/search/presentation/search_feature_providers.dart';
 import '../features/word_browse/presentation/word_browse_feature_providers.dart';
@@ -37,16 +38,18 @@ class WordApp extends StatelessWidget {
         child: buildSettingsFeatureScope(
           child: buildPlayerFeatureScope(
             child: buildSearchFeatureScope(
-              child: buildBookFeatureScope(
-                child: buildCheckInFeatureScope(
-                  child: buildDictionaryFeatureScope(
-                    child: buildWordBrowseFeatureScope(
-                      child: MultiProvider(
-                        providers: [
-                          ChangeNotifierProvider(create: (_) => SkinSystem()),
-                          ChangeNotifierProvider(create: (_) => WallpaperState()),
-                        ],
-                        child: const _AppLifecycle(),
+              child: buildQuickReviewFeatureScope(
+                child: buildBookFeatureScope(
+                  child: buildCheckInFeatureScope(
+                    child: buildDictionaryFeatureScope(
+                      child: buildWordBrowseFeatureScope(
+                        child: MultiProvider(
+                          providers: [
+                            ChangeNotifierProvider(create: (_) => SkinSystem()),
+                            ChangeNotifierProvider(create: (_) => WallpaperState()),
+                          ],
+                          child: const _AppLifecycle(),
+                        ),
                       ),
                     ),
                   ),

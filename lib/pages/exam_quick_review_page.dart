@@ -4,10 +4,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
+import '../features/quick_review/application/quick_review_word_reader.dart';
 import '../models/word.dart';
-import '../repositories/word_repository.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../tokens/func_colors.dart';
@@ -96,12 +96,9 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
     setState(() => _isLoading = true);
     try {
       // 加载高频词汇（按词频排序）
-      final wordRepo = sl<WordRepository>();
-      final words = await wordRepo.searchWords('');
-      // 按词频排序（模拟高频词优先）
-      words.sort((a, b) => b.id.compareTo(a.id)); // 用ID模拟词频
+      final words = await context.read<QuickReviewWordReader>().loadWords();
       setState(() {
-        _words = words.take(50).toList(); // 速刷模式只取50个词
+        _words = words;
         _isLoading = false;
       });
     } catch (e) {
