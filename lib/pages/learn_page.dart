@@ -19,6 +19,7 @@ import '../widgets/word_lookup_popup.dart';
 import '../widgets/box_reveal.dart';
 import '../widgets/confetti.dart';
 import '../widgets/scratch_to_reveal.dart';
+import 'word_detail_page.dart';
 
 class LearnPage extends StatefulWidget {
   const LearnPage({super.key});
@@ -483,6 +484,34 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
                   reveal: true,
                   child: _buildChoice(i),
                 ),
+              // 答对后出现"查看详解"按钮：进入词典详情页，详情页底部"下一词"推进学习
+              if (_correctIndex >= 0) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          settings: RouteSettings(arguments: widget.word),
+                          builder: (_) => const WordDetailPage(fromLearn: true),
+                        ),
+                      );
+                    },
+                    icon: Icon(Icons.arrow_forward, size: 20, color: Colors.white),
+                    label: Text(
+                      '查看详解',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.accent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

@@ -39,17 +39,23 @@ class LearningSessionState extends ChangeNotifier {
   bool _showAnswer = false;
   List<WordChoicePair> _choices = [];
 
+  /// 队列代际计数：每当用户主动加载新的词库/收藏（`_replaceQueue`）时自增，
+  /// 用于防止 `_loadProgress()` 异步返回的过期索引覆盖新会话的当前索引。
+  int _queueGeneration = 0;
+
   Book? get currentBook => _currentBook;
   List<Word> get queue => List.unmodifiable(_queue);
   int get currentIndex => _currentIndex;
   int get total => _queue.length;
   bool get hasMoreWords => _currentIndex < _queue.length - 1;
-  (int current, int total) get progress => _queue.isEmpty ? (0, 0) : (_currentIndex + 1, _queue.length);
+  (int current, int total) get progress => _queue.isEmpty
+      ? (0, 0)
+      : ((_currentIndex.clamp(0, _queue.length - 1)) + 1, _queue.length);
   bool get showAnswer => _showAnswer;
   List<WordChoicePair> get choices => _choices;
   int get learnedNum => _leitnerEngine.learnedNumber;
 
-  Word? get currentWord => _queue.isEmpty ? null : _queue[_currentIndex.clamp(0, _queue.length - 1)];
+  Word? get currentWord => (_queue.isEmpty || _currentIndex >= _queue.length) ? null : _queue[_currentIndex];
 
   Future<void> loadFavorites({int limit = 50}) async {
     final favorites = await _queueRepository.loadFavoriteWords(currentQueue: _queue);
@@ -102,8 +108,9 @@ class LearningSessionState extends ChangeNotifier {
 
     await _reviewSchedule.rateWord(word: word.word, rating: rating);
     _currentIndex++;
-    if (_currentIndex >= _queue.length) {
-      _currentIndex = _queue.length - 1;
+    // 完成整个队列：让 currentWord 变为 null，触发学习完成界面，而不是永远停在最后一个词。
+    if (_currentIndex > _queue.length) {
+      _currentIndex = _queue.length;
     }
     _regenerateChoices();
     notifyListeners();
@@ -151,10 +158,12 @@ class LearningSessionState extends ChangeNotifier {
   }
 
   Future<void> _loadProgress() async {
+    // 记录发起加载时的代际；若期间用户已加载新词库（代际改变），丢弃过期进度。
+    final generation = _queueGeneration;
     try {
       final saved = await _progressRepository.load();
-      if (saved != null) {
-        _currentIndex = saved.currentIndex;
+      if (saved != null && generation == _queueGeneration) {
+        _currentIndex = saved.currentIndex.clamp(0, _queue.length - 1);
       }
     } catch (error) {
       debugPrint('Load progress error: $error');
@@ -170,6 +179,7 @@ class LearningSessionState extends ChangeNotifier {
   }
 
   void _replaceQueue(List<Word> queue) {
+    _queueGeneration++; // 新会话开始：作废任何进行中的旧进度加载
     _queue = queue;
     _currentIndex = 0;
     _showAnswer = false;
