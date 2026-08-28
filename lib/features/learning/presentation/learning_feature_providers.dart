@@ -59,7 +59,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
         create: (_) => LearningQueueState(),
         update: (_, session, queue) => (queue ?? LearningQueueState())..synchronizeFrom(session),
       ),
-      ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, LearningStatisticsState>(
+      ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleReader, LearningStatisticsState>(
         create: (_) => LearningStatisticsState(),
         update: (_, queue, schedule, statistics) =>
             (statistics ?? LearningStatisticsState())..synchronize(queue: queue.snapshot, schedule: schedule),
@@ -69,12 +69,12 @@ Widget buildLearningFeatureScope({required Widget child}) {
         update: (_, favorites, mastered, collections) =>
             (collections ?? LearningCollectionsState())..synchronize(favorites: favorites, mastered: mastered),
       ),
-      ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, LearningQueueWordListsState>(
+      ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleReader, LearningQueueWordListsState>(
         create: (_) => LearningQueueWordListsState(),
         update: (_, queue, schedule, wordLists) =>
             (wordLists ?? LearningQueueWordListsState())..synchronize(queue: queue.snapshot, schedule: schedule),
       ),
-      ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleRepository, ReviewQueueState>(
+      ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleReader, ReviewQueueState>(
         create: (_) => ReviewQueueState(),
         update: (_, queue, schedule, reviewQueue) =>
             (reviewQueue ?? ReviewQueueState())..synchronize(queue: queue.snapshot, schedule: schedule),

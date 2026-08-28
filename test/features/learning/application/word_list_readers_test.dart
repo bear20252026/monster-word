@@ -2,8 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/learning/data/repository_book_words_reader.dart';
 import 'package:word_app/features/learning/data/repository_mastered_words_reader.dart';
 import 'package:word_app/features/learning/data/repository_new_words_reader.dart';
-import 'package:word_app/features/learning/application/mastered_words_reader.dart';
-import 'package:word_app/features/learning/application/new_words_reader.dart';
 import 'package:word_app/models/new_word_record.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/repositories/mastered_repository.dart';

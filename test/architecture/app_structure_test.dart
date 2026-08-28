@@ -359,11 +359,23 @@ void main() {
       final wordDetailSource = File('lib/pages/word_detail_page.dart').readAsStringSync();
       final learnSessionSource = File('lib/screens/learn_session.dart').readAsStringSync();
       final dialogSource = File('lib/widgets/review_dialog.dart').readAsStringSync();
+      final statisticsSource = File('lib/features/learning/presentation/learning_statistics_state.dart')
+          .readAsStringSync();
+      final wordListsSource = File('lib/features/learning/presentation/learning_queue_word_lists_state.dart')
+          .readAsStringSync();
+      final reviewQueueSource = File('lib/features/learning/presentation/review_queue_state.dart').readAsStringSync();
 
       expect(portSource, contains('abstract class ReviewScheduleReader extends ChangeNotifier'));
       expect(adapterSource, contains('extends ReviewScheduleReader'));
       expect(providerSource, contains('RepositoryReviewScheduleReader'));
-      for (final source in [wordDetailSource, learnSessionSource, dialogSource]) {
+      for (final source in [
+        wordDetailSource,
+        learnSessionSource,
+        dialogSource,
+        statisticsSource,
+        wordListsSource,
+        reviewQueueSource,
+      ]) {
         expect(source, contains('ReviewScheduleReader'));
         expect(source, isNot(contains('ReviewScheduleRepository')));
         expect(source, isNot(contains('review_schedule_repository.dart')));

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/engine/fsrs6_engine.dart';
+import 'package:word_app/features/learning/data/repository_review_schedule_reader.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 import 'package:word_app/features/learning/presentation/review_queue_state.dart';
@@ -49,8 +50,9 @@ void main() {
     final schedule = ReviewScheduleRepository();
     await schedule.initialize();
     final state = ReviewQueueState();
+    final scheduleReader = RepositoryReviewScheduleReader(repository: schedule);
     state.synchronize(
-      schedule: schedule,
+      schedule: scheduleReader,
       queue: LearningQueueSnapshot(
         currentBook: null,
         currentIndex: 0,
@@ -64,5 +66,6 @@ void main() {
 
     expect(state.snapshot.queueWords.map((word) => word.word), ['queue-only', 'due-word']);
     expect(state.snapshot.dueWords.map((word) => word.word), ['due-word']);
+    scheduleReader.dispose();
   });
 }
