@@ -7,6 +7,7 @@ import '../core/router/app_router.dart';
 import '../features/account/presentation/account_feature_providers.dart';
 import '../features/book/presentation/book_feature_providers.dart';
 import '../features/checkin/presentation/check_in_feature_providers.dart';
+import '../features/dictionary/presentation/dictionary_feature_providers.dart';
 import '../features/learning/presentation/learning_feature_providers.dart';
 import '../features/player/presentation/player_feature_providers.dart';
 import '../features/settings/presentation/settings_feature_providers.dart';
@@ -38,13 +39,15 @@ class WordApp extends StatelessWidget {
             child: buildSearchFeatureScope(
               child: buildBookFeatureScope(
                 child: buildCheckInFeatureScope(
-                  child: buildWordBrowseFeatureScope(
-                    child: MultiProvider(
-                      providers: [
-                        ChangeNotifierProvider(create: (_) => SkinSystem()),
-                        ChangeNotifierProvider(create: (_) => WallpaperState()),
-                      ],
-                      child: const _AppLifecycle(),
+                  child: buildDictionaryFeatureScope(
+                    child: buildWordBrowseFeatureScope(
+                      child: MultiProvider(
+                        providers: [
+                          ChangeNotifierProvider(create: (_) => SkinSystem()),
+                          ChangeNotifierProvider(create: (_) => WallpaperState()),
+                        ],
+                        child: const _AppLifecycle(),
+                      ),
                     ),
                   ),
                 ),

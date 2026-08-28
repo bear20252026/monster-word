@@ -173,6 +173,19 @@ void main() {
       expect(pageSource, isNot(contains('FavRepository')));
     });
 
+    test('词典页通过 DictionaryContentReader 读取扩展内容', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final pageSource = File('lib/pages/dictionary_page.dart').readAsStringSync();
+      final providersSource = File('lib/features/dictionary/presentation/dictionary_feature_providers.dart')
+          .readAsStringSync();
+
+      expect(appSource, contains('buildDictionaryFeatureScope('));
+      expect(File('lib/features/dictionary/application/dictionary_content_reader.dart').existsSync(), isTrue);
+      expect(providersSource, contains('DictionaryService.instance'));
+      expect(pageSource, contains('DictionaryContentReader'));
+      expect(pageSource, isNot(contains('DictionaryService')));
+    });
+
     test('签到历史页通过 CheckInHistoryReader 读取数据', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/pages/check_in_history_page.dart').readAsStringSync();
