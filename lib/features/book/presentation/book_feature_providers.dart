@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/di/service_locator.dart';
+import '../../../core/learning/learning_progress_reader.dart';
 import '../../../repositories/book_repository.dart';
 import '../application/book_catalog_reader.dart';
 import '../application/book_selection_writer.dart';
@@ -48,6 +49,7 @@ Widget buildBookStateScope({required Widget child}) {
       catalogReader: context.read<BookCatalogReader>(),
       selectionWriter: context.read<BookSelectionWriter>(),
       wordsReader: context.read<BookWordsReader>(),
+      progressReader: context.read<LearningProgressReader>(),
     )..load(),
     child: child,
   );

@@ -17,6 +17,7 @@ import 'package:word_app/models/word.dart';
 import 'package:word_app/repositories/fav_repository.dart';
 import 'package:word_app/repositories/new_word_repository.dart';
 import 'package:word_app/services/audio_service.dart';
+import '../test_helpers/fake_learning_progress_reader.dart';
 
 /// 模拟 BookCatalogReader
 class MockCatalogReader implements BookCatalogReader {
@@ -139,6 +140,7 @@ void main() {
       catalogReader: MockCatalogReader(),
       selectionWriter: MockSelectionWriter(),
       wordsReader: MockBookWordsReader(),
+      progressReader: FakeLearningProgressReader(learnedCount: 1),
     );
     bookState.setWordsForTest([word]);
 

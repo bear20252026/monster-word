@@ -8,6 +8,7 @@ import 'package:word_app/features/book/presentation/book_state.dart';
 import 'package:word_app/features/book/presentation/books_page.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
+import '../test_helpers/fake_learning_progress_reader.dart';
 
 /// 模拟 BookCatalogReader
 class MockCatalogReader implements BookCatalogReader {
@@ -52,6 +53,7 @@ void main() {
                 catalogReader: context.read<BookCatalogReader>(),
                 selectionWriter: context.read<BookSelectionWriter>(),
                 wordsReader: context.read<BookWordsReader>(),
+                progressReader: FakeLearningProgressReader(),
               )..load(),
             ),
           ],

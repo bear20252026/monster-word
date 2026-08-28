@@ -5,6 +5,7 @@ import 'package:word_app/features/book/application/book_words_reader.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
+import '../test_helpers/fake_learning_progress_reader.dart';
 
 /// 模拟 BookCatalogReader
 class FakeBookCatalogReader implements BookCatalogReader {
@@ -65,6 +66,7 @@ void main() {
         catalogReader: catalogReader,
         selectionWriter: selectionWriter,
         wordsReader: wordsReader,
+        progressReader: FakeLearningProgressReader(learnedCount: 42),
       );
     });
 
@@ -112,6 +114,23 @@ void main() {
       await state.loadWords();
 
       expect(state.words.length, 2);
+    });
+
+    test('loadWords 从 progressReader 获取已学数', () async {
+      selectionWriter.setCurrentBookId(1);
+      await state.load();
+      wordsReader.setWords([
+        Word(id: 1, word: 'apple'),
+        Word(id: 2, word: 'banana'),
+        Word(id: 3, word: 'cherry'),
+      ]);
+
+      await state.loadWords();
+
+      // FakeLearningProgressReader 预设 learnedCount = 42
+      expect(state.statistics!.learnedWords, 42);
+      expect(state.statistics!.totalWords, 3);
+      expect(state.statistics!.unlearnWords, 0); // 超过总量时 clamp 为 0
     });
   });
 }

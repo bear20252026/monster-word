@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../core/learning/learning_progress_reader.dart';
+import '../../../models/book.dart';
+import '../../../models/word.dart';
 import '../application/book_catalog_reader.dart';
 import '../application/book_selection_writer.dart';
 import '../application/book_words_reader.dart';
 import '../domain/book_statistics.dart';
-import '../../../models/book.dart';
-import '../../../models/word.dart';
 
 /// 词书模块聚合状态。
 ///
@@ -16,14 +17,17 @@ class BookState extends ChangeNotifier {
     required BookCatalogReader catalogReader,
     required BookSelectionWriter selectionWriter,
     required BookWordsReader wordsReader,
+    required LearningProgressReader progressReader,
   })  : _catalogReader = catalogReader,
         _selectionWriter = selectionWriter,
-        _wordsReader = wordsReader;
+        _wordsReader = wordsReader,
+        _progressReader = progressReader;
   // ignore_for_file: prefer_initializing_formals
 
   final BookCatalogReader _catalogReader;
   final BookSelectionWriter _selectionWriter;
   final BookWordsReader _wordsReader;
+  final LearningProgressReader _progressReader;
 
   // ── 词书目录 ──────────────────────────────────────────────
   List<Book> _books = const [];
@@ -90,9 +94,11 @@ class BookState extends ChangeNotifier {
 
     try {
       _words = await _wordsReader.loadWords(_currentBookId);
+      // 通过 learning 模块提供的契约读取真实已学数
+      final learned = await _progressReader.countLearnedWords(_words.map((w) => w.word));
       _statistics = BookStatistics(
         totalWords: _currentBook?.wordCount ?? _words.length,
-        learnedWords: 0, // 学习进度由 learning 模块维护，此处仅展示总量
+        learnedWords: learned,
       );
     } catch (e) {
       _words = const [];
