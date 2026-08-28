@@ -15,7 +15,7 @@ class RepositoryMasteredWordsReader implements MasteredWordsReader {
   final WordRepository _wordRepository;
 
   @override
-  Future<List<String>> loadTexts() => _masteredRepository.getMasteredWords();
+  Future<List<String>> loadTexts() async => (await _masteredRepository.getMasteredWords()).toList();
 
   @override
   Future<List<Word>> loadWords() async {
