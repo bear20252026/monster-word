@@ -12,6 +12,8 @@ void main() {
     expect(await reader.search('search', limit: 12), same(results));
     expect(repository.lastQuery, 'search');
     expect(repository.lastLimit, 12);
+    expect(await reader.findByText('search'), same(results.single));
+    expect(repository.lastText, 'search');
   });
 }
 
@@ -21,6 +23,7 @@ class _FakeWordRepository implements WordRepository {
   final List<Word> results;
   String? lastQuery;
   int? lastLimit;
+  String? lastText;
 
   @override
   Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset}) => throw UnimplementedError();
@@ -29,7 +32,10 @@ class _FakeWordRepository implements WordRepository {
   Future<Word?> getWordById(int id) => throw UnimplementedError();
 
   @override
-  Future<Word?> getWordByText(String text) => throw UnimplementedError();
+  Future<Word?> getWordByText(String text) {
+    lastText = text;
+    return Future.value(results.isEmpty ? null : results.single);
+  }
 
   @override
   Future<List<Word>> getWordsByTexts(Iterable<String> texts) => throw UnimplementedError();
