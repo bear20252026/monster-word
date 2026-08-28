@@ -328,7 +328,9 @@ class _WordArea extends StatelessWidget {
                 const SizedBox(width: 8),
                 GestureDetector(
                   // ✅ 修复：优先使用第三方服务器提供的音频 URL
-                  onTap: () => onPlayAudio(word.word, audioUrl: word.audioUrls.isNotEmpty ? word.audioUrls : null),
+                  // 单词发音走有道 TTS；word.audioUrls 实为"例句音频 JSON 数组串"并非单词发音 URL，
+                  // 传入会污染分支导致无声，故不传 audioUrl（回退到有道发音）。
+                  onTap: () => onPlayAudio(word.word),
                   child: SizedBox(
                     width: 44,
                     height: 44,

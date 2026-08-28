@@ -803,8 +803,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
                       if (player.isLoading) return;
                       final messenger = ScaffoldMessenger.of(context);
                       try {
-                        // 优先使用第三方服务器提供的音频 URL。
-                        await player.playWord(word.word, audioUrl: word.audioUrls.isNotEmpty ? word.audioUrls : null);
+                        // 单词发音走有道 TTS；word.audioUrls 实为"例句音频 JSON 数组串"而非单词发音 URL，
+                        // 传入会污染分支导致无声，故不传 audioUrl（回退到有道发音）。
+                        await player.playWord(word.word);
                       } catch (e) {
                         if (mounted) {
                           messenger.showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
