@@ -9,12 +9,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../engine/fsrs6_engine.dart' show FsrsRating;
+import '../core/audio/audio_playback_state.dart';
+import '../data/example_parser.dart';
 import '../hooks/responsive.dart';
+import '../models/word.dart';
 import '../player/audio_players.dart' show playWordAudio;
 import '../features/learning/presentation/learning_session_state.dart';
 import '../tokens/gameboy.dart';
 import '../widgets/session_exit_guard.dart';
 import '../widgets/text_generate_effect.dart';
+import '../widgets/word_root_tab.dart';
 import '../widgets/box_reveal.dart';
 
 /// 不背单词机页面
@@ -636,36 +640,59 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
                   ),
                   const SizedBox(height: 4),
                 ],
-                // 例句
-                if (word.example.isNotEmpty) ...[
-                  const Text(
-                    '📖 例句:',
-                    style: TextStyle(fontFamily: 'monospace', fontSize: 9, color: GameBoyPalette.screenMid),
-                  ),
-                  TextGenerateEffect(
-                    text: word.example.length > 80 ? '${word.example.substring(0, 80)}...' : word.example,
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 9, color: GameBoyPalette.screenLight),
-                    duration: const Duration(milliseconds: 800),
-                  ),
-                  const SizedBox(height: 4),
-                ],
-                // 词根
-                if (word.wordRoot.isNotEmpty) ...[
-                  const Text(
-                    '🌱 词根:',
-                    style: TextStyle(fontFamily: 'monospace', fontSize: 9, color: GameBoyPalette.screenMid),
-                  ),
-                  Text(
-                    word.wordRoot,
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 9, color: GameBoyPalette.screenLight),
-                  ),
-                ],
+                // 例句（结构化）
+                ..._buildExampleSection(word),
+                // 词根（结构化）
+                ..._buildWordRootSection(word),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  /// 例句结构化显示
+  List<Widget> _buildExampleSection(Word word) {
+    if (word.example.isEmpty) return const [];
+    final sentences = ExampleParser.parse(word.example);
+    if (sentences.isEmpty) return const [];
+    return [
+      const Text(
+        '📖 例句:',
+        style: TextStyle(fontFamily: 'monospace', fontSize: 9, color: GameBoyPalette.screenMid),
+      ),
+      ...sentences.map((s) => Padding(
+        padding: const EdgeInsets.only(bottom: 2),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                s.en,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 9, color: GameBoyPalette.screenLight),
+              ),
+            ),
+            if (s.audioUrl != null && s.audioUrl!.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.volume_up_outlined, color: GameBoyPalette.screenMid, size: 14),
+                onPressed: () => context.read<AudioPlaybackState>().playSentence(s.audioUrl!),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minHeight: 20, minWidth: 20),
+              ),
+          ],
+        ),
+      )),
+      const SizedBox(height: 4),
+    ];
+  }
+
+  /// 词根结构化显示
+  List<Widget> _buildWordRootSection(Word word) {
+    if (word.wordRoot.isEmpty) return const [];
+    return [
+      WordRootTab(wordRootJson: word.wordRoot),
+    ];
   }
 
   /// 按钮区域

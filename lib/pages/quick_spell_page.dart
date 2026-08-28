@@ -6,6 +6,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 // wordbook_database.dart removed - not used in this file
+import '../core/audio/audio_playback_state.dart';
+import '../data/example_parser.dart';
+import 'package:provider/provider.dart';
 import '../models/word.dart';
 import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
@@ -330,10 +333,44 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
                 color: skin.colors.cardBgAlt,
                 borderRadius: BorderRadius.circular(AppRadius.md),
               ),
-              child: Text(
-                _currentWord.example,
-                style: MistralTypography.bodySm.copyWith(color: skin.colors.text2, fontStyle: FontStyle.italic),
-                textAlign: TextAlign.center,
+              child: Column(
+                children: ExampleParser.parse(_currentWord.example).take(2).map((ex) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Column(
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(text: ex.cleanEn, style: MistralTypography.bodySm.copyWith(
+                                    color: skin.colors.text2,
+                                    fontStyle: FontStyle.italic,
+                                    height: 1.4,
+                                  )),
+                                  if (ex.cn.isNotEmpty) TextSpan(text: '\n${ex.cn}', style: MistralTypography.caption.copyWith(
+                                    color: skin.colors.text3,
+                                    height: 1.4,
+                                  )),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          if (ex.audioUrl != null && ex.audioUrl!.isNotEmpty)
+                            IconButton(
+                              icon: Icon(Icons.volume_up_outlined, color: skin.colors.accent, size: 18),
+                              onPressed: () => context.read<AudioPlaybackState>().playSentence(ex.audioUrl!),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minHeight: 24, minWidth: 24),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                )).toList(),
               ),
             ),
           ],

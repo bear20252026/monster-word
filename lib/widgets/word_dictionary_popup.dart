@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/audio/audio_playback_state.dart';
 import '../data/example_parser.dart';
 import '../models/word.dart';
 import '../features/learning/presentation/learning_favorites_state.dart';
@@ -186,6 +187,17 @@ class _WordDictionaryPopupState extends State<WordDictionaryPopup> {
             const SizedBox(height: 4),
             Text(example.cn, style: TextStyle(fontSize: 12, color: skin.colors.text3)),
           ],
+          if (example.audioUrl != null && example.audioUrl!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: IconButton(
+                icon: Icon(Icons.volume_up_outlined, color: skin.colors.accent, size: 20),
+                onPressed: () => context.read<AudioPlaybackState>().playSentence(example.audioUrl!),
+                tooltip: '播放例句',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minHeight: 32, minWidth: 32),
+              ),
+            ),
         ],
       ),
     );

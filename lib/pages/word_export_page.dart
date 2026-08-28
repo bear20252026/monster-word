@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../data/example_parser.dart';
+import '../data/phrase_parser.dart';
 import '../hooks/responsive.dart';
 import '../models/word.dart';
 import '../features/learning/application/book_words_reader.dart';
@@ -209,8 +211,21 @@ class _WordExportPageState extends State<WordExportPage> {
           buffer.write(w.word);
           if (_includePhonetic && w.usPron.isNotEmpty) buffer.write('  ${w.usPron}');
           buffer.write('  ${w.interpret}');
-          if (_includePhrase && w.phrase.isNotEmpty) buffer.write('\n  短语: ${w.phrase}');
-          if (_includeExample && w.example.isNotEmpty) buffer.write('\n  例句: ${w.example}');
+          if (_includePhrase && PhraseParser.hasData(w.phrase)) {
+            buffer.write('\n  短语:');
+            for (final p in PhraseParser.flatItems(w.phrase)) {
+              buffer.write('\n    ${p.en}　${p.cn}');
+              if (p.exams.isNotEmpty) buffer.write(' [${p.exams.join(', ')}]');
+            }
+          }
+          if (_includeExample && ExampleParser.parse(w.example).isNotEmpty) {
+            buffer.write('\n  例句:');
+            for (final ex in ExampleParser.parse(w.example)) {
+              buffer.write('\n    ${ex.cleanEn}');
+              if (ex.cn.isNotEmpty) buffer.write(' — ${ex.cn}');
+              if (ex.source.isNotEmpty) buffer.write(' (${ex.source})');
+            }
+          }
           buffer.writeln('\n');
         }
         break;
@@ -221,8 +236,24 @@ class _WordExportPageState extends State<WordExportPage> {
           buffer.write('"${w.word}"');
           buffer.write(_includePhonetic ? ',"${w.usPron}"' : ',""');
           buffer.write(',"${w.interpret}"');
-          if (_includePhrase) buffer.write(',"${w.phrase}"');
-          if (_includeExample) buffer.write(',"${w.example}"');
+          if (_includePhrase) {
+            final phrases = PhraseParser.flatItems(w.phrase);
+            if (phrases.isNotEmpty) {
+              final text = phrases.map((p) => '${p.en}　${p.cn}').join('; ');
+              buffer.write(',"$text"');
+            } else {
+              buffer.write(',""');
+            }
+          }
+          if (_includeExample) {
+            final examples = ExampleParser.parse(w.example);
+            if (examples.isNotEmpty) {
+              final text = examples.map((ex) => ex.cleanEn).join('; ');
+              buffer.write(',"$text"');
+            } else {
+              buffer.write(',""');
+            }
+          }
           buffer.writeln();
         }
         break;
@@ -236,8 +267,24 @@ class _WordExportPageState extends State<WordExportPage> {
           buffer.write('| ${w.word} | ');
           buffer.write(_includePhonetic ? (w.usPron.isNotEmpty ? w.usPron : '-') : '-');
           buffer.write(' | ${w.interpret} |');
-          if (_includePhrase) buffer.write(' ${w.phrase.isNotEmpty ? w.phrase : "-"} |');
-          if (_includeExample) buffer.write(' ${w.example.isNotEmpty ? w.example : "-"} |');
+          if (_includePhrase) {
+            final phrases = PhraseParser.flatItems(w.phrase);
+            if (phrases.isNotEmpty) {
+              final text = phrases.map((p) => '${p.en}　${p.cn}').join('<br>');
+              buffer.write(' $text |');
+            } else {
+              buffer.write(' - |');
+            }
+          }
+          if (_includeExample) {
+            final examples = ExampleParser.parse(w.example);
+            if (examples.isNotEmpty) {
+              final text = examples.map((ex) => ex.cleanEn).join('<br>');
+              buffer.write(' $text |');
+            } else {
+              buffer.write(' - |');
+            }
+          }
           buffer.writeln();
         }
         break;

@@ -5,6 +5,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 // wordbook_database.dart removed - not used in this file
+import '../core/audio/audio_playback_state.dart';
+import '../data/example_parser.dart';
+import 'package:provider/provider.dart';
 import '../models/word.dart';
 import '../hooks/responsive.dart';
 import '../player/system_tts.dart';
@@ -122,8 +125,10 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
       case ListeningMode.wordExample:
         await _tts.speakEnglish(word.word);
         if (word.example.isNotEmpty) {
+          final sentences = ExampleParser.parse(word.example);
+          final firstEn = sentences.isNotEmpty ? sentences.first.en : word.example;
           await Future.delayed(const Duration(milliseconds: 400));
-          await _tts.speakEnglish(word.example);
+          await _tts.speakEnglish(firstEn);
         }
         break;
     }
@@ -357,25 +362,81 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
               ),
             ],
           ],
-          // 例句
+          // 例句（结构化）
           if (_showMeaning && word.example.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: skin.colors.cardBgAlt,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: Text(
-                word.example,
-                style: MistralTypography.bodySm.copyWith(color: skin.colors.text2, fontStyle: FontStyle.italic),
-                textAlign: TextAlign.center,
-              ),
-            ),
+            ..._buildStructuredExample(word, skin),
           ],
         ],
       ),
     );
+  }
+
+  /// 结构化例句显示
+  List<Widget> _buildStructuredExample(Word word, SkinSystem skin) {
+    final sentences = ExampleParser.parse(word.example);
+    if (sentences.isEmpty) {
+      return [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: skin.colors.cardBgAlt,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          child: Text(
+            word.example,
+            style: MistralTypography.bodySm.copyWith(color: skin.colors.text2, fontStyle: FontStyle.italic),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ];
+    }
+    return [
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: skin.colors.cardBgAlt,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final s in sentences) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      s.en,
+                      style: MistralTypography.bodySm.copyWith(
+                        color: skin.colors.text1,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                  if (s.audioUrl != null && s.audioUrl!.isNotEmpty)
+                    IconButton(
+                      icon: Icon(Icons.volume_up_outlined, color: skin.colors.accent, size: 18),
+                      onPressed: () => context.read<AudioPlaybackState>().playSentence(s.audioUrl!),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minHeight: 24, minWidth: 24),
+                    ),
+                ],
+              ),
+              if (s.cn.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    s.cn,
+                    style: MistralTypography.caption.copyWith(color: skin.colors.text3),
+                  ),
+                ),
+              const SizedBox(height: 8),
+            ],
+          ],
+        ),
+      ),
+    ];
   }
 
   Widget _buildControls(SkinSystem skin, AppResponsive resp) {

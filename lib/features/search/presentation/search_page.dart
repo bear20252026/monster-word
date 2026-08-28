@@ -359,6 +359,17 @@ class _SearchPageState extends State<SearchPage> {
             const SizedBox(height: 4),
             Text(ex.cn, style: MistralTypography.caption.copyWith(color: skin.text3)),
           ],
+          if (ex.audioUrl != null && ex.audioUrl!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: IconButton(
+                icon: Icon(Icons.volume_up_outlined, color: skin.accent, size: 20),
+                onPressed: () => context.read<AudioPlaybackState>().playSentence(ex.audioUrl!),
+                tooltip: '播放例句',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minHeight: 32, minWidth: 32),
+              ),
+            ),
         ],
       ),
     );

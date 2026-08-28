@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/audio/audio_playback_state.dart';
 import '../data/example_parser.dart';
 import '../engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
@@ -619,6 +620,17 @@ class _ExampleCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(example.source, style: AppTypography.footnote.copyWith(color: skin.colors.text3)),
+            ),
+          if (example.audioUrl != null && example.audioUrl!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: IconButton(
+                icon: Icon(Icons.volume_up, color: skin.colors.teal, size: 20),
+                onPressed: () => context.read<AudioPlaybackState>().playSentence(example.audioUrl!),
+                tooltip: '播放例句',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minHeight: 32, minWidth: 32),
+              ),
             ),
         ],
       ),
