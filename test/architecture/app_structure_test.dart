@@ -172,6 +172,22 @@ void main() {
       expect(pageSource, isNot(contains('NoteRepository')));
       expect(pageSource, isNot(contains('FavRepository')));
     });
+
+    test('搜索页通过搜索功能域端口访问查询与历史记录', () {
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      final pageSource = File('lib/pages/search_page.dart').readAsStringSync();
+      final providersSource = File('lib/features/search/presentation/search_feature_providers.dart').readAsStringSync();
+
+      expect(appSource, contains('buildSearchFeatureScope('));
+      expect(File('lib/features/search/application/word_search_reader.dart').existsSync(), isTrue);
+      expect(File('lib/features/search/application/search_history_store.dart').existsSync(), isTrue);
+      expect(providersSource, contains('sl<WordRepository>()'));
+      expect(pageSource, contains('WordSearchReader'));
+      expect(pageSource, contains('SearchHistoryStore'));
+      expect(pageSource, isNot(contains('sl<')));
+      expect(pageSource, isNot(contains('AppPreferences')));
+      expect(pageSource, isNot(contains('WordRepository')));
+    });
   });
 
   group('正式复习禁止依赖', () {

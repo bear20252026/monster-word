@@ -2,16 +2,15 @@
 // 已接入 SkinSystem 主题
 import 'package:flutter/material.dart';
 
-import '../data/app_preferences.dart';
 import '../data/example_parser.dart';
 import '../hooks/responsive.dart';
 
 import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
 import '../models/word.dart';
-import '../repositories/word_repository.dart';
 import '../features/player/presentation/audio_playback_state.dart';
+import '../features/search/application/search_history_store.dart';
+import '../features/search/application/word_search_reader.dart';
 import '../features/learning/presentation/learning_favorites_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -51,17 +50,17 @@ class _SearchPageState extends State<SearchPage> {
 
   void _loadHistory() {
     setState(() {
-      _searchHistory = AppPreferences().getSearchHistory();
+      _searchHistory = context.read<SearchHistoryStore>().read();
     });
   }
 
   Future<void> _saveToHistory(String word) async {
-    await AppPreferences().addSearchHistory(word);
+    await context.read<SearchHistoryStore>().add(word);
     _loadHistory();
   }
 
   Future<void> _clearHistory() async {
-    await AppPreferences().clearSearchHistory();
+    await context.read<SearchHistoryStore>().clear();
     setState(() => _searchHistory = []);
   }
 
@@ -76,8 +75,7 @@ class _SearchPageState extends State<SearchPage> {
       return;
     }
     setState(() => _isLoading = true);
-    final wordRepo = sl<WordRepository>();
-    final results = await wordRepo.searchWords(query.trim());
+    final results = await context.read<WordSearchReader>().search(query.trim());
     if (mounted) {
       setState(() {
         _results = results;
