@@ -19,6 +19,7 @@
 | 账号资料读取与编辑 | `AccountProfileState` + `AccountProfileRepository` | 提供不含认证凭据的资料快照；昵称、微信名、个人 ID、签名、头像和手机号统一通过账户功能域持久化。 |
 | 单词发音请求、加载与播放标识 | `AudioPlaybackState` + `AudioService` | 播放器功能域唯一入口；共享设备服务不直接暴露给页面，迟到的异步播放回调不会覆盖停止或新播放命令。 |
 | 学习提醒、发音、拼写、节奏与题型偏好 | `LearningPreferencesState` + `LearningPreferencesRepository` | 设置功能域唯一入口；保留旧四项设置键，并持久化原先仅留在设置页内存中的选项。 |
+| 签到历史日期、连续天数与奖励展示 | `CheckInHistoryReader` + `CheckInService` | 签到功能域的只读页面端口；不复制签到记录、不改变签到奖励和持久化语义。 |
 
 ## 学习会话与队列读取边界
 

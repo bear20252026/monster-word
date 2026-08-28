@@ -4,9 +4,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/di/service_locator.dart';
+import '../features/checkin/application/check_in_history_reader.dart';
 import '../hooks/responsive.dart';
-import '../services/checkin_service.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/scale_down_on_press.dart';
@@ -62,9 +61,9 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with SingleTick
 
   Future<void> _refresh() async {
     try {
-      final checkInService = sl<CheckInService>();
-      final dates = await checkInService.getCheckinDates();
-      final streak = await checkInService.getStreak();
+      final checkInReader = context.read<CheckInHistoryReader>();
+      final dates = await checkInReader.getCheckedDates();
+      final streak = await checkInReader.getStreak();
       if (!mounted) return;
       setState(() {
         _checkedDates = dates;
@@ -583,7 +582,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with SingleTick
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '签到成功 +${sl<CheckInService>().checkInReward} 尖叫币',
+                          '签到成功 +${context.read<CheckInHistoryReader>().checkInReward} 尖叫币',
                           style: MistralTypography.caption.copyWith(color: skin.text3),
                         ),
                       ],
