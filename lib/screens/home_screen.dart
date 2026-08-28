@@ -14,6 +14,7 @@ import '../features/learning/presentation/learning_statistics_state.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/sb_card.dart';
+import '../widgets/daily_goal_picker.dart';
 import '../widgets/review_dialog.dart';
 import '../widgets/scale_down_on_press.dart';
 import '../widgets/spring_check_in_calendar.dart';
@@ -91,6 +92,11 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                            ),
+                            // 每日学习目标选择器（滚轮选择 1-200 个单词/天）
+                            _EntranceIn(
+                              delayMs: 320,
+                              child: const DailyGoalPicker(),
                             ),
                             // 每日一句励志语轮播（testimonial-slider，自动轮播+弹性滑动）
                             _EntranceIn(
