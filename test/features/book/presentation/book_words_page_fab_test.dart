@@ -15,7 +15,7 @@ import 'package:word_app/features/book/presentation/book_words_page.dart';
 import 'package:word_app/features/learning/application/new_words_reader.dart';
 import 'package:word_app/features/learning/data/learning_progress_repository.dart';
 import 'package:word_app/features/learning/data/learning_queue_repository.dart';
-import 'package:word_app/features/learning/data/learning_session_starter_impl.dart';
+import 'package:word_app/features/learning/presentation/learning_session_starter_impl.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';

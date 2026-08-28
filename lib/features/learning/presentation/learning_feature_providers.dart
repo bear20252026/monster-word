@@ -18,7 +18,7 @@ import '../application/review_rating_writer.dart';
 import '../data/learning_progress_reader_impl.dart';
 import '../data/learning_progress_repository.dart';
 import '../data/learning_queue_repository.dart';
-import '../data/learning_session_starter_impl.dart';
+import 'learning_session_starter_impl.dart';
 import '../data/repository_review_schedule_reader.dart';
 import '../data/review_schedule_repository.dart';
 import 'learning_collections_state.dart';

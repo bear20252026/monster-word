@@ -14,8 +14,8 @@ import '../../../hooks/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import '../../../widgets/monster_icon.dart';
-import '../application/scare_coin_store.dart';
-import '../domain/scare_coin_entry.dart';
+import '../../../core/scare_coin/scare_coin_store.dart';
+import '../../../models/scare_coin_entry.dart';
 
 class ScareCoinHistoryPage extends StatefulWidget {
   const ScareCoinHistoryPage({super.key});

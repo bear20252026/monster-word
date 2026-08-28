@@ -7,7 +7,7 @@ import '../features/account/presentation/account_profile_state.dart';
 import '../hooks/responsive.dart';
 import '../pages/appearance_page.dart';
 import '../pages/more_settings_page.dart';
-import '../features/scare_coin/application/scare_coin_store.dart';
+import '../core/scare_coin/scare_coin_store.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../tokens/func_colors.dart';

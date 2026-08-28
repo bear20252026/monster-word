@@ -8,9 +8,11 @@
    - `abstract class LearningSessionStarter`（**非** `ChangeNotifier`，纯动作契约）。
    - `Future<void> startBookSession(Book book, {int? limit, bool shuffle = true})`。
    - 只写不读：调用方只发起“启动会话”，不读取会话来推进/翻卡等。
-2. **learning/data 适配器** `lib/features/learning/data/learning_session_starter_impl.dart`
+2. **learning/presentation 适配器** `lib/features/learning/presentation/learning_session_starter_impl.dart`
    - `class LearningSessionStarterImpl implements LearningSessionStarter`，内部 hold 一个 `LearningSessionState`。
    - `startBookSession` → `_session.loadBook(book, limit: limit, shuffle: shuffle)` 原先样委托。
+   - 注：该适配器位于 presentation 而非 data，因为它包装的是展示层状态对象，属组合根；
+     放 data 会造成 `data -> presentation` 反向依赖，被 `import_guard`（WS-3）的 R3 规则拦截。
 3. **learning feature scope 暴露** `learning_feature_providers.dart`
    - 在 `LearningSessionState` 之后新增
      `ProxyProvider<LearningSessionState, LearningSessionStarter>(update: (_, s, _) => LearningSessionStarterImpl(s))`。

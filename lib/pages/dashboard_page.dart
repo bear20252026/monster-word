@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../features/learning/presentation/learning_statistics_state.dart';
-import '../features/scare_coin/application/scare_coin_store.dart';
+import '../core/scare_coin/scare_coin_store.dart';
 import '../hooks/responsive.dart';
 import '../models/book.dart';
 import '../services/share_image_service.dart';

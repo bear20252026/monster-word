@@ -10,7 +10,7 @@ import '../../../tokens/design_tokens.dart';
 import '../../../tokens/func_colors.dart';
 import '../../../tokens/star_gold.dart';
 import '../../../widgets/spring_calendar.dart';
-import '../../scare_coin/application/scare_coin_store.dart';
+import '../../../core/scare_coin/scare_coin_store.dart';
 
 /// 班级打卡页面
 ///
