@@ -35,8 +35,10 @@ import '../../features/learning/data/learning_queue_repository.dart';
 import '../../features/learning/data/review_schedule_repository.dart';
 import '../../features/learning/application/mastered_words_reader.dart';
 import '../../features/learning/application/new_words_reader.dart';
+import '../../features/learning/application/new_words_writer_port.dart';
 import '../../features/learning/application/review_audio_player.dart';
 import '../../features/learning/application/review_queue_reader.dart';
+import '../../features/learning/data/repository_new_words_writer_port.dart';
 import '../../features/learning/presentation/new_words_state.dart';
 
 /// 全局服务定位器实例
@@ -124,10 +126,17 @@ Future<void> setupServiceLocator() async {
     );
   }
 
+  // NewWordsWriterPort
+  if (!sl.isRegistered<NewWordsWriterPort>()) {
+    sl.registerLazySingleton<NewWordsWriterPort>(
+      () => RepositoryNewWordsWriterPort(sl<NewWordRepository>()),
+    );
+  }
+
   // NewWordsState
   if (!sl.isRegistered<NewWordsState>()) {
     sl.registerLazySingleton<NewWordsState>(
-      () => NewWordsState(newWordsReader: sl<NewWordsReader>(), newWordRepository: sl<NewWordRepository>()),
+      () => NewWordsState(newWordsReader: sl<NewWordsReader>(), writerPort: sl<NewWordsWriterPort>()),
     );
   }
 

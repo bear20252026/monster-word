@@ -1,9 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/di/service_locator.dart';
 import '../../../core/learning/learning_progress_reader.dart';
-import '../../../repositories/book_repository.dart';
 import '../application/book_catalog_reader.dart';
 import '../application/book_selection_writer.dart';
 import '../application/book_words_reader.dart';
@@ -23,9 +21,7 @@ Widget buildBookFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
       Provider<BookCatalogReader>(
-        create: (_) => RepositoryBookCatalogReader(
-          repository: sl<BookRepository>(),
-        ),
+        create: (_) => RepositoryBookCatalogReader.fromServiceLocator(),
       ),
       Provider<BookSelectionWriter>(
         create: (_) => RepositoryBookSelectionWriter(),

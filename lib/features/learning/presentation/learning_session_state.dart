@@ -2,14 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../../data/app_preferences.dart';
 import '../../../engine/core_engine.dart';
 import '../../../engine/fsrs6_engine.dart';
 import '../../../engine/leitner_engine.dart';
-import '../../../features/learning/data/learning_progress_repository.dart';
-import '../../../features/learning/data/learning_queue_repository.dart';
-import '../../../features/learning/data/review_schedule_repository.dart';
-import '../../../features/learning/domain/choice_generator.dart';
+import '../application/choice_generator_port.dart';
+import '../application/learning_progress_port.dart';
+import '../application/learning_queue_port.dart';
+import '../application/review_schedule_writer_port.dart';
 import '../../../models/bb_word_process.dart';
 import '../../../models/book.dart';
 import '../../../models/word.dart';
@@ -21,16 +20,18 @@ import '../../../models/word.dart';
 /// 手动掌握或正式复习会话。
 class LearningSessionState extends ChangeNotifier {
   LearningSessionState({
-    required this._queueRepository,
-    required this._progressRepository,
-    required this._reviewSchedule,
+    required this._queuePort,
+    required this._progressPort,
+    required this._reviewSchedulePort,
+    required this._choicePort,
   }) {
     unawaited(_loadProgress());
   }
 
-  final LearningQueueRepository _queueRepository;
-  final LearningProgressRepository _progressRepository;
-  final ReviewScheduleRepository _reviewSchedule;
+  final LearningQueuePort _queuePort;
+  final LearningProgressPort _progressPort;
+  final ReviewScheduleWriterPort _reviewSchedulePort;
+  final ChoiceGeneratorPort _choicePort;
   final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
 
   Book? _currentBook;
@@ -83,7 +84,7 @@ class LearningSessionState extends ChangeNotifier {
   Word? get currentWord => (_queue.isEmpty || _currentIndex >= _queue.length) ? null : _queue[_currentIndex];
 
   Future<void> loadFavorites({int limit = 50}) async {
-    final favorites = await _queueRepository.loadFavoriteWords(currentQueue: _queue);
+    final favorites = await _queuePort.loadFavoriteWords(currentQueue: _queue);
     if (favorites.isEmpty) return;
 
     _currentBook = null;
@@ -93,9 +94,7 @@ class LearningSessionState extends ChangeNotifier {
   Future<void> loadBook(Book book, {int? limit, bool shuffle = true}) async {
     _currentBook = book;
     // 使用每日学习目标作为默认限制
-    final dailyGoal = UserPreferences().getDailyGoal();
-    final actualLimit = limit ?? dailyGoal;
-    final queue = await _queueRepository.loadBook(book, limit: actualLimit, shuffle: shuffle);
+    final queue = await _queuePort.loadBook(book, limit: limit, shuffle: shuffle);
     _replaceQueue(queue);
     // 新会话开始，重置完成页数据
     _errorWords.clear();
@@ -144,7 +143,7 @@ class LearningSessionState extends ChangeNotifier {
           _leitnerEngine.tooEasy();
       }
 
-      await _reviewSchedule.rateWord(word: word.word, rating: rating);
+      await _reviewSchedulePort.rateWord(word: word.word, rating: rating);
       _currentIndex++;
       // 完成整个队列：让 currentWord 变为 null，触发学习完成界面，而不是永远停在最后一个词。
       if (_currentIndex > _queue.length) {
@@ -175,7 +174,7 @@ class LearningSessionState extends ChangeNotifier {
 
     _queue.removeAt(_currentIndex);
     _queue.insert(_currentIndex.clamp(0, _queue.length), word);
-    unawaited(_reviewSchedule.forget(word.word));
+    unawaited(_reviewSchedulePort.forget(word.word));
     if (_currentIndex >= _queue.length) {
       _currentIndex = _queue.length - 1;
     }
@@ -214,7 +213,7 @@ class LearningSessionState extends ChangeNotifier {
     // 记录发起加载时的代际；若期间用户已加载新词库（代际改变），丢弃过期进度。
     final generation = _queueGeneration;
     try {
-      final saved = await _progressRepository.load();
+      final saved = await _progressPort.load();
       if (saved != null && generation == _queueGeneration) {
         _currentIndex = saved.currentIndex.clamp(0, _queue.length - 1);
       }
@@ -225,7 +224,8 @@ class LearningSessionState extends ChangeNotifier {
 
   Future<void> _saveProgress() async {
     try {
-      await _progressRepository.save(currentBook: _currentBook, currentIndex: _currentIndex, queue: _queue);
+      if (_currentBook == null) return;
+      await _progressPort.save(currentBook: _currentBook!, currentIndex: _currentIndex, queue: _queue);
     } catch (error) {
       debugPrint('Save progress error: $error');
     }
@@ -261,9 +261,12 @@ class LearningSessionState extends ChangeNotifier {
       return;
     }
 
-    _choices = ChoiceGenerator.generate(
+    final generated = _choicePort.generate(
       correct: ChoiceCandidate(word: current.word, interpret: current.interpret),
       candidates: _queue.map((word) => ChoiceCandidate(word: word.word, interpret: word.interpret)),
-    ).map((choice) => WordChoicePair(choice.word, choice.interpret)).toList(growable: false);
+    );
+    _choices = generated
+        .map((c) => WordChoicePair(c.word, c.interpret))
+        .toList(growable: false);
   }
 }

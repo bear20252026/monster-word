@@ -11,7 +11,7 @@ void main() {
     test('reads and writes through the existing note repository', () async {
       final note = WordNote(id: 9, wordId: 7, word: 'learn', content: '记忆提示');
       final repository = _FakeNoteRepository(notes: [note]);
-      final store = RepositoryWordNotesStore(repository: repository);
+      final store = RepositoryWordNotesStore(repository);
 
       expect(await store.listForWord(7), same(repository.notes));
 
@@ -28,7 +28,7 @@ void main() {
   group('RepositorySentenceFavoritesStore', () {
     test('preserves sentence identity and payload when delegating', () async {
       final repository = _FakeFavRepository();
-      final store = RepositorySentenceFavoritesStore(repository: repository);
+      final store = RepositorySentenceFavoritesStore(repository);
 
       repository.favorite = true;
       expect(await store.isFavorite(wordId: 7, sentenceId: 'sentence-1'), isTrue);
@@ -63,7 +63,7 @@ void main() {
             'type': 0,
           },
         ];
-      final store = RepositorySentenceFavoritesStore(repository: repository);
+      final store = RepositorySentenceFavoritesStore(repository);
 
       final sentences = await store.list();
       expect(sentences.single.word, 'learn');

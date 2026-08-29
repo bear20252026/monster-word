@@ -1,9 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/di/service_locator.dart';
-import '../../../repositories/fav_repository.dart';
-import '../../../repositories/note_repository.dart';
 import '../application/sentence_favorites_store.dart';
 import '../application/word_notes_store.dart';
 import '../data/repository_sentence_favorites_store.dart';
@@ -15,9 +12,11 @@ import '../data/repository_word_notes_store.dart';
 Widget buildWordBrowseFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
-      Provider<WordNotesStore>(create: (_) => RepositoryWordNotesStore(repository: sl<NoteRepository>())),
+      Provider<WordNotesStore>(
+        create: (_) => RepositoryWordNotesStore.fromServiceLocator(),
+      ),
       Provider<SentenceFavoritesStore>(
-        create: (_) => RepositorySentenceFavoritesStore(repository: sl<FavRepository>()),
+        create: (_) => RepositorySentenceFavoritesStore.fromServiceLocator(),
       ),
     ],
     child: child,

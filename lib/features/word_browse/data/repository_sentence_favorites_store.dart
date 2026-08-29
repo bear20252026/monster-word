@@ -1,3 +1,4 @@
+import '../../../core/di/service_locator.dart';
 import '../../../models/sentence_models.dart';
 import '../../../repositories/fav_repository.dart';
 import '../application/sentence_favorites_store.dart';
@@ -6,7 +7,15 @@ import '../application/sentence_favorites_store.dart';
 ///
 /// 适配器不保存额外收藏状态，确保 [FavRepository] 继续是唯一持久化事实来源。
 class RepositorySentenceFavoritesStore implements SentenceFavoritesStore {
-  RepositorySentenceFavoritesStore({required this._repository});
+  /// 从 service_locator 自动解析依赖。
+  factory RepositorySentenceFavoritesStore.fromServiceLocator() =>
+      RepositorySentenceFavoritesStore._(sl<FavRepository>());
+
+  RepositorySentenceFavoritesStore._(this._repository);
+
+  /// 显式注入（供测试覆盖）。
+  RepositorySentenceFavoritesStore(FavRepository repository)
+      : _repository = repository;
 
   final FavRepository _repository;
 

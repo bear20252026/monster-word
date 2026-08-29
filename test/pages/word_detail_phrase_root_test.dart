@@ -3,12 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'dart:math';
+
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/features/word_browse/application/word_notes_store.dart';
+import 'package:word_app/features/learning/application/choice_generator_port.dart';
+import 'package:word_app/features/learning/application/learning_progress_port.dart';
+import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
-import 'package:word_app/features/learning/data/learning_progress_repository.dart';
-import 'package:word_app/features/learning/data/learning_queue_repository.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_reader.dart';
+import 'package:word_app/features/learning/data/repository_review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/models/book.dart';
@@ -124,9 +128,10 @@ void main() {
         ),
         ChangeNotifierProvider<LearningSessionState>(
           create: (_) => LearningSessionState(
-            queueRepository: _StubQueueRepo(),
-            progressRepository: _StubProgressRepo(),
-            reviewSchedule: _StubReviewScheduleRepo(),
+            queuePort: _StubQueuePort(),
+            progressPort: _StubProgressPort(),
+            reviewSchedulePort: RepositoryReviewScheduleWriterPort(_StubReviewScheduleRepo()),
+            choicePort: _StubChoicePort(),
           ),
         ),
         Provider<FavRepository>.value(value: _StubFavRepo()),
@@ -260,23 +265,30 @@ void main() {
 
 // ── 以下为 LearningSessionState 所需的 stub ──
 
-class _StubQueueRepo implements LearningQueueRepository {
+class _StubQueuePort implements LearningQueuePort {
   @override
-  Future<List<Word>> loadBook(Book book, {required int limit, bool shuffle = true}) async => const [];
+  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => const [];
 
   @override
-  Future<List<Word>> loadFavoriteWords({required Iterable<Word> currentQueue}) async => const [];
-
-  @override
-  Future<List<Word>> loadWordsByBook(int bookId) async => const [];
+  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
 }
 
-class _StubProgressRepo implements LearningProgressRepository {
+class _StubProgressPort implements LearningProgressPort {
   @override
-  Future<void> save({required Book? currentBook, required int currentIndex, required List<Word> queue}) async {}
+  Future<void> save({required Book currentBook, required int currentIndex, required List<Word> queue}) async {}
 
   @override
-  Future<LearningProgressSnapshot?> load() async => null;
+  Future<LearningProgress?> load() async => null;
+}
+
+class _StubChoicePort implements ChoiceGeneratorPort {
+  @override
+  List<ChoiceCandidate> generate({
+    required ChoiceCandidate correct,
+    required Iterable<ChoiceCandidate> candidates,
+    Random? random,
+  }) =>
+      [correct];
 }
 
 class _StubReviewScheduleRepo extends ReviewScheduleRepository {}

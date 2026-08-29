@@ -1,15 +1,17 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:word_app/core/learning/learning_session_starter.dart';
-import 'package:word_app/features/learning/data/learning_progress_repository.dart';
-import 'package:word_app/features/learning/data/learning_queue_repository.dart';
-import 'package:word_app/features/learning/data/review_schedule_repository.dart';
+import 'package:word_app/engine/fsrs6_engine.dart';
+import 'package:word_app/features/learning/application/choice_generator_port.dart';
+import 'package:word_app/features/learning/application/learning_progress_port.dart';
+import 'package:word_app/features/learning/application/learning_queue_port.dart';
+import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/presentation/learning_session_starter_impl.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/repositories/fav_repository.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -48,12 +50,10 @@ void main() {
 class _SpySession extends LearningSessionState {
   _SpySession()
       : super(
-          queueRepository: LearningQueueRepository(
-            wordSource: _MockWordSource(),
-            favRepository: _MockFavRepository(),
-          ),
-          progressRepository: LearningProgressRepository(),
-          reviewSchedule: ReviewScheduleRepository(),
+          queuePort: _MockQueuePort(),
+          progressPort: _MockProgressPort(),
+          reviewSchedulePort: _MockReviewScheduleWriterPort(),
+          choicePort: _MockChoicePort(),
         );
 
   Book? loadedBook;
@@ -69,36 +69,40 @@ class _SpySession extends LearningSessionState {
   }
 }
 
-class _MockWordSource implements LearningQueueWordSource {
+class _MockQueuePort implements LearningQueuePort {
   @override
-  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset}) async => [];
+  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => const [];
+
   @override
-  Future<List<Word>> getWordsByNames(Iterable<String> words) async => [];
+  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
 }
 
-class _MockFavRepository implements FavRepository {
+class _MockProgressPort implements LearningProgressPort {
   @override
-  Future<Set<String>> getFavoriteWords() async => {};
+  Future<LearningProgress?> load() async => null;
+
   @override
-  Future<void> addFavorite(String word) async {}
+  Future<void> save({
+    required Book currentBook,
+    required int currentIndex,
+    required List<Word> queue,
+  }) async {}
+}
+
+class _MockReviewScheduleWriterPort implements ReviewScheduleWriterPort {
   @override
-  Future<void> removeFavorite(String word) async {}
+  Future<void> rateWord({required String word, required FsrsRating rating}) async {}
+
   @override
-  Future<void> toggleFavorite(String word) async {}
+  Future<void> forget(String word) async {}
+}
+
+class _MockChoicePort implements ChoiceGeneratorPort {
   @override
-  bool isFavorite(String word) => false;
-  @override
-  int get favoriteCount => 0;
-  @override
-  Future<List<Map<String, dynamic>>> getFavoriteSentences() async => [];
-  @override
-  Future<bool> addFavoriteSentence({required int wordId, required String sentenceId, required String english, required String chinese, String source = ''}) async => true;
-  @override
-  Future<bool> removeFavoriteSentence(int wordId, String sentenceId) async => true;
-  @override
-  Future<bool> toggleFavoriteSentence({required int wordId, required String sentenceId, required String english, required String chinese, String source = ''}) async => true;
-  @override
-  Future<bool> isFavoriteSentence(int wordId, String sentenceId) async => false;
-  @override
-  int get favoriteSentenceCount => 0;
+  List<ChoiceCandidate> generate({
+    required ChoiceCandidate correct,
+    required Iterable<ChoiceCandidate> candidates,
+    Random? random,
+  }) =>
+      [correct];
 }

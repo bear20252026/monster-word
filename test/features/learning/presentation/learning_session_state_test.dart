@@ -1,11 +1,18 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/engine/fsrs6_engine.dart';
-import 'package:word_app/features/learning/data/learning_progress_repository.dart';
-import 'package:word_app/features/learning/data/learning_queue_repository.dart';
+import 'package:word_app/features/learning/application/choice_generator_port.dart';
+import 'package:word_app/features/learning/application/favorites_port.dart';
+import 'package:word_app/features/learning/application/learning_progress_port.dart';
+import 'package:word_app/features/learning/application/learning_queue_port.dart';
+import 'package:word_app/features/learning/application/mastered_writer_port.dart';
 import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_reader.dart';
+import 'package:word_app/features/learning/data/repository_review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
+import 'package:word_app/features/learning/domain/choice_generator.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_mastered_state.dart';
 import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
@@ -74,8 +81,8 @@ void main() {
     final repository = _FakeFavRepository();
     await repository.addFavorite('saved');
     final favorites = LearningFavoritesState(
-      favoriteRepository: repository,
-      queueRepository: LearningQueueRepository(wordSource: _FakeWordSource(const []), favRepository: repository),
+      favoritesPort: _FakeFavoritesPort(repository),
+      queuePort: _FakeQueuePort(const []),
     );
 
     await favorites.refresh();
@@ -90,8 +97,8 @@ void main() {
   test('专用掌握词状态刷新并切换掌握标记时更新可订阅计数', () async {
     final repository = _FakeMasteredRepository({'saved'});
     final mastered = LearningMasteredState(
-      masteredWordsReader: _FakeMasteredWordsReader(repository),
-      masteredRepository: repository,
+      masteredWordsReader: _FakeMasteredReader(repository),
+      writerPort: _FakeMasteredWriterPort(repository),
     );
 
     await mastered.refresh();
@@ -191,26 +198,92 @@ void main() {
 final _testBook = Book(id: 1, code: 'TEST', name: '测试', wordCount: 2);
 
 LearningSessionState _sessionWithWords({required List<Word> words, ReviewScheduleRepository? schedule}) {
-  final favorites = _FakeFavRepository();
+  final effectiveSchedule = schedule ?? ReviewScheduleRepository();
   return LearningSessionState(
-    queueRepository: LearningQueueRepository(wordSource: _FakeWordSource(words), favRepository: favorites),
-    progressRepository: LearningProgressRepository(),
-    reviewSchedule: schedule ?? ReviewScheduleRepository(),
+    queuePort: _FakeQueuePort(words),
+    progressPort: _FakeProgressPort(),
+    reviewSchedulePort: RepositoryReviewScheduleWriterPort(effectiveSchedule),
+    choicePort: _FakeChoicePort(),
   );
 }
 
-class _FakeWordSource implements LearningQueueWordSource {
-  _FakeWordSource(this._words);
+class _FakeQueuePort implements LearningQueuePort {
+  _FakeQueuePort(this._words);
 
   final List<Word> _words;
 
   @override
-  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset}) async {
-    return List<Word>.from(_words);
-  }
+  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
 
   @override
-  Future<List<Word>> getWordsByNames(Iterable<String> words) async => const [];
+  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async {
+    final queue = List<Word>.from(_words);
+    if (shuffle) {
+      queue.shuffle();
+    }
+    return (limit == null || limit >= queue.length)
+        ? queue
+        : queue.sublist(0, limit);
+  }
+}
+
+class _FakeProgressPort implements LearningProgressPort {
+  @override
+  Future<LearningProgress?> load() async => null;
+
+  @override
+  Future<void> save({
+    required Book currentBook,
+    required int currentIndex,
+    required List<Word> queue,
+  }) async {}
+}
+
+class _FakeChoicePort implements ChoiceGeneratorPort {
+  @override
+  List<ChoiceCandidate> generate({
+    required ChoiceCandidate correct,
+    required Iterable<ChoiceCandidate> candidates,
+    Random? random,
+  }) {
+    return ChoiceGenerator.generate(correct: correct, candidates: candidates, random: random);
+  }
+}
+
+class _FakeMasteredWriterPort implements MasteredWriterPort {
+  _FakeMasteredWriterPort(this._repository);
+
+  final MasteredRepository _repository;
+
+  @override
+  Future<void> toggleMastered(String word) => _repository.toggleMastered(word);
+}
+
+class _FakeMasteredReader implements MasteredWordsReader {
+  _FakeMasteredReader(this._repository);
+
+  final MasteredRepository _repository;
+
+  @override
+  Future<List<String>> loadTexts() async => (await _repository.getMasteredWords()).toList();
+
+  @override
+  Future<List<Word>> loadWords() async => const [];
+}
+
+class _FakeFavoritesPort implements FavoritesPort {
+  _FakeFavoritesPort(this._repository);
+
+  final FavRepository _repository;
+
+  @override
+  Future<Set<String>> getFavoriteWords() => _repository.getFavoriteWords();
+
+  @override
+  bool isFavorite(String word) => _repository.isFavorite(word);
+
+  @override
+  Future<void> toggleFavorite(String word) => _repository.toggleFavorite(word);
 }
 
 class _FakeMasteredRepository implements MasteredRepository {
@@ -235,18 +308,6 @@ class _FakeMasteredRepository implements MasteredRepository {
       _words.add(word);
     }
   }
-}
-
-class _FakeMasteredWordsReader implements MasteredWordsReader {
-  _FakeMasteredWordsReader(this.repository);
-
-  final MasteredRepository repository;
-
-  @override
-  Future<List<String>> loadTexts() async => (await repository.getMasteredWords()).toList();
-
-  @override
-  Future<List<Word>> loadWords() async => const [];
 }
 
 class _FakeFavRepository implements FavRepository {

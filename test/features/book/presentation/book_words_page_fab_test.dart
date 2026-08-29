@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,16 +14,21 @@ import 'package:word_app/features/book/application/book_selection_writer.dart';
 import 'package:word_app/features/book/application/book_words_reader.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
 import 'package:word_app/features/book/presentation/book_words_page.dart';
+import 'package:word_app/features/learning/application/choice_generator_port.dart';
+import 'package:word_app/features/learning/application/favorites_port.dart';
+import 'package:word_app/features/learning/application/learning_progress_port.dart';
+import 'package:word_app/features/learning/application/learning_queue_port.dart';
+import 'package:word_app/features/learning/application/mastered_writer_port.dart';
 import 'package:word_app/features/learning/application/new_words_reader.dart';
-import 'package:word_app/features/learning/data/learning_progress_repository.dart';
-import 'package:word_app/features/learning/data/learning_queue_repository.dart';
-import 'package:word_app/features/learning/presentation/learning_session_starter_impl.dart';
-import 'package:word_app/features/learning/data/review_schedule_repository.dart';
+import 'package:word_app/features/learning/application/new_words_writer_port.dart';
+import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/features/learning/presentation/learning_session_starter_impl.dart';
 import 'package:word_app/features/learning/presentation/new_words_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/new_word_record.dart';
+import 'package:word_app/engine/fsrs6_engine.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/repositories/fav_repository.dart';
 import 'package:word_app/repositories/new_word_repository.dart';
@@ -36,12 +43,10 @@ import '../test_helpers/fake_learning_progress_reader.dart';
 class SpyLearningSessionState extends LearningSessionState {
   SpyLearningSessionState()
       : super(
-          queueRepository: LearningQueueRepository(
-            wordSource: MockLearningQueueWordSource(),
-            favRepository: MockFavRepository(),
-          ),
-          progressRepository: LearningProgressRepository(),
-          reviewSchedule: ReviewScheduleRepository(),
+          queuePort: MockLearningQueuePort(),
+          progressPort: MockLearningProgressPort(),
+          reviewSchedulePort: MockReviewScheduleWriterPort(),
+          choicePort: MockChoiceGeneratorPort(),
         );
 
   Book? loadedBook;
@@ -139,14 +144,6 @@ class MockNewWordRepository implements NewWordRepository {
   Future<int> getNewWordCount() async => 0;
 }
 
-/// 模拟 LearningQueueWordSource
-class MockLearningQueueWordSource implements LearningQueueWordSource {
-  @override
-  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset}) async => [];
-  @override
-  Future<List<Word>> getWordsByNames(Iterable<String> words) async => [];
-}
-
 /// 模拟 NewWordsReader（learning 端口）
 class MockNewWordsReader implements NewWordsReader {
   @override
@@ -165,6 +162,77 @@ class MockAudioService implements AudioService {
   bool get isPlaying => false;
   @override
   void dispose() {}
+}
+
+/// Mock LearningQueuePort for tests.
+class MockLearningQueuePort implements LearningQueuePort {
+  @override
+  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => [];
+
+  @override
+  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => [];
+}
+
+/// Mock LearningProgressPort for tests.
+class MockLearningProgressPort implements LearningProgressPort {
+  @override
+  Future<LearningProgress?> load() async => null;
+
+  @override
+  Future<void> save({required Book currentBook, required int currentIndex, required List<Word> queue}) async {}
+}
+
+/// Mock ReviewScheduleWriterPort for tests.
+class MockReviewScheduleWriterPort implements ReviewScheduleWriterPort {
+  @override
+  Future<void> rateWord({required String word, required FsrsRating rating}) async {}
+
+  @override
+  Future<void> forget(String word) async {}
+}
+
+/// Mock ChoiceGeneratorPort for tests.
+class MockChoiceGeneratorPort implements ChoiceGeneratorPort {
+  @override
+  List<ChoiceCandidate> generate({
+    required ChoiceCandidate correct,
+    required Iterable<ChoiceCandidate> candidates,
+    Random? random,
+  }) =>
+      [];
+}
+
+/// Mock FavoritesPort for tests.
+class MockFavoritesPort implements FavoritesPort {
+  final Set<String> _favorites = {};
+
+  @override
+  Future<Set<String>> getFavoriteWords() async => _favorites;
+
+  @override
+  Future<void> toggleFavorite(String word) async {
+    if (!_favorites.add(word)) {
+      _favorites.remove(word);
+    }
+  }
+
+  @override
+  bool isFavorite(String word) => _favorites.contains(word);
+}
+
+/// Mock MasteredWriterPort for tests.
+class MockMasteredWriterPort implements MasteredWriterPort {
+  @override
+  Future<void> toggleMastered(String word) async {}
+}
+
+/// Mock NewWordsWriterPort for tests.
+class MockNewWordsWriterPort implements NewWordsWriterPort {
+  @override
+  Future<bool> toggleNewWord(Word word, {String source = 'manual'}) async => true;
+
+  @override
+  Future<bool> removeNewWord(int wordId) async => true;
 }
 
 void main() {
@@ -188,11 +256,8 @@ void main() {
         ),
         ChangeNotifierProvider<LearningFavoritesState>(
           create: (_) => LearningFavoritesState(
-            favoriteRepository: MockFavRepository(),
-            queueRepository: LearningQueueRepository(
-              wordSource: MockLearningQueueWordSource(),
-              favRepository: MockFavRepository(),
-            ),
+            favoritesPort: MockFavoritesPort(),
+            queuePort: MockLearningQueuePort(),
           ),
         ),
         ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
@@ -201,7 +266,7 @@ void main() {
         ChangeNotifierProvider<NewWordsState>(
           create: (_) => NewWordsState(
             newWordsReader: MockNewWordsReader(),
-            newWordRepository: MockNewWordRepository(),
+            writerPort: MockNewWordsWriterPort(),
           ),
         ),
         ListenableProxyProvider<NewWordsState, NewWordsStore>(
@@ -266,11 +331,8 @@ void main() {
             ),
             ChangeNotifierProvider<LearningFavoritesState>(
               create: (_) => LearningFavoritesState(
-                favoriteRepository: MockFavRepository(),
-                queueRepository: LearningQueueRepository(
-                  wordSource: MockLearningQueueWordSource(),
-                  favRepository: MockFavRepository(),
-                ),
+                favoritesPort: MockFavoritesPort(),
+                queuePort: MockLearningQueuePort(),
               ),
             ),
             ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
@@ -279,7 +341,7 @@ void main() {
             ChangeNotifierProvider<NewWordsState>(
               create: (_) => NewWordsState(
                 newWordsReader: MockNewWordsReader(),
-                newWordRepository: MockNewWordRepository(),
+                writerPort: MockNewWordsWriterPort(),
               ),
             ),
             ListenableProxyProvider<NewWordsState, NewWordsStore>(

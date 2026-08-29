@@ -1,10 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/di/service_locator.dart';
 import '../../../core/learning/learning_favorites_store.dart';
-import '../../../data/app_preferences.dart';
-import '../../../repositories/word_repository.dart';
 import '../application/example_reader.dart';
 import '../application/favorites_accessor.dart';
 import '../application/search_history_store.dart';
@@ -20,8 +17,12 @@ import '../data/repository_word_search_reader.dart';
 Widget buildSearchFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
-      Provider<WordSearchReader>(create: (_) => RepositoryWordSearchReader(sl<WordRepository>())),
-      Provider<SearchHistoryStore>(create: (_) => PreferencesSearchHistoryStore(AppPreferences())),
+      Provider<WordSearchReader>(
+        create: (_) => RepositoryWordSearchReader.fromServiceLocator(),
+      ),
+      Provider<SearchHistoryStore>(
+        create: (_) => PreferencesSearchHistoryStore.fromServiceLocator(),
+      ),
       Provider<ExampleReader>(create: (_) => const ExampleParserAdapter()),
       ProxyProvider<LearningFavoritesStore, FavoritesAccessor>(
         update: (_, favorites, _) => FavoritesAccessorAdapter(favorites),

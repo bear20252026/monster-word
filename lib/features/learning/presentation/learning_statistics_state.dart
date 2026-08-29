@@ -2,7 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 
-import '../../../data/wordbook_database.dart' show Book;
+import '../../../models/book.dart';
 import '../application/review_schedule_reader.dart';
 import 'learning_queue_state.dart';
 

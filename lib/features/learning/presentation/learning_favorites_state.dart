@@ -4,20 +4,20 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/learning/learning_favorites_store.dart';
 import '../../../models/word.dart';
-import '../../../repositories/fav_repository.dart';
-import '../data/learning_queue_repository.dart';
+import '../application/favorites_port.dart';
+import '../application/learning_queue_port.dart';
 
 /// 收藏单词的读取与操作状态。
 ///
 /// 持久化仍完全委托 [FavRepository]；该状态只维护可供页面订阅的不可变词形集合、
 /// 收藏数和加载状态，并通过 [LearningQueueRepository] 解析完整词表中的收藏词。
 class LearningFavoritesState extends ChangeNotifier implements LearningFavoritesStore {
-  LearningFavoritesState({required this._favoriteRepository, required this._queueRepository}) {
+  LearningFavoritesState({required this._favoritesPort, required this._queuePort}) {
     unawaited(refresh());
   }
 
-  final FavRepository _favoriteRepository;
-  final LearningQueueRepository _queueRepository;
+  final FavoritesPort _favoritesPort;
+  final LearningQueuePort _queuePort;
 
   Set<String> _favoriteWords = const {};
   bool _isLoading = true;
@@ -37,7 +37,7 @@ class LearningFavoritesState extends ChangeNotifier implements LearningFavorites
     _isLoading = true;
     notifyListeners();
     try {
-      _favoriteWords = (await _favoriteRepository.getFavoriteWords()).toSet();
+      _favoriteWords = await _favoritesPort.getFavoriteWords();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -46,13 +46,13 @@ class LearningFavoritesState extends ChangeNotifier implements LearningFavorites
 
   @override
   Future<bool> toggle(String word) async {
-    await _favoriteRepository.toggleFavorite(word);
-    _favoriteWords = (await _favoriteRepository.getFavoriteWords()).toSet();
+    await _favoritesPort.toggleFavorite(word);
+    _favoriteWords = await _favoritesPort.getFavoriteWords();
     notifyListeners();
     return _favoriteWords.contains(word);
   }
 
   Future<List<Word>> loadFavoriteWords({required Iterable<Word> currentQueue}) {
-    return _queueRepository.loadFavoriteWords(currentQueue: currentQueue);
+    return _queuePort.loadFavoriteWords(currentQueue: currentQueue.toList());
   }
 }

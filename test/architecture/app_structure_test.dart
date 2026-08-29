@@ -189,8 +189,8 @@ void main() {
       expect(appSource, contains('buildWordBrowseFeatureScope('));
       expect(File('lib/features/word_browse/application/word_notes_store.dart').existsSync(), isTrue);
       expect(File('lib/features/word_browse/application/sentence_favorites_store.dart').existsSync(), isTrue);
-      expect(providersSource, contains('sl<NoteRepository>()'));
-      expect(providersSource, contains('sl<FavRepository>()'));
+      expect(providersSource, contains('RepositoryWordNotesStore'));
+      expect(providersSource, contains('RepositorySentenceFavoritesStore'));
       expect(pageSource, contains('WordNotesStore'));
       expect(pageSource, contains('SentenceFavoritesStore'));
       expect(pageSource, isNot(contains('sl<')));
@@ -206,7 +206,7 @@ void main() {
 
       expect(appSource, contains('buildQuickReviewFeatureScope('));
       expect(File('lib/features/quick_review/application/quick_review_word_reader.dart').existsSync(), isTrue);
-      expect(providersSource, contains('sl<WordRepository>()'));
+      expect(providersSource, contains('RepositoryQuickReviewWordReader'));
       expect(pageSource, contains('QuickReviewWordReader'));
       expect(pageSource, isNot(contains('WordRepository')));
       expect(pageSource, isNot(contains('sl<')));
@@ -271,7 +271,7 @@ void main() {
       expect(appSource, contains('buildSearchFeatureScope('));
       expect(File('lib/features/search/application/word_search_reader.dart').existsSync(), isTrue);
       expect(File('lib/features/search/application/search_history_store.dart').existsSync(), isTrue);
-      expect(providersSource, contains('sl<WordRepository>()'));
+      expect(providersSource, contains('RepositoryWordSearchReader'));
       expect(pageSource, contains('WordSearchReader'));
       expect(pageSource, contains('SearchHistoryStore'));
       expect(pageSource, isNot(contains('sl<')));
@@ -282,19 +282,19 @@ void main() {
     test('掌握状态分离读取端口与写入仓储', () {
       final stateSource = File('lib/features/learning/presentation/learning_mastered_state.dart').readAsStringSync();
       expect(stateSource, contains('MasteredWordsReader'));
-      expect(stateSource, contains('MasteredRepository'));
+      expect(stateSource, contains('MasteredWriterPort'));
       expect(stateSource, contains('_masteredWordsReader.loadTexts()'));
-      expect(stateSource, contains('_masteredRepository.toggleMastered'));
+      expect(stateSource, contains('_writerPort.toggleMastered'));
       expect(stateSource, isNot(contains('_masteredRepository.getMasteredWords')));
     });
 
     test('生词本状态分离读取端口与写入仓储', () {
       final stateSource = File('lib/features/learning/presentation/new_words_state.dart').readAsStringSync();
       expect(stateSource, contains('NewWordsReader'));
-      expect(stateSource, contains('NewWordRepository'));
+      expect(stateSource, contains('NewWordsWriterPort'));
       expect(stateSource, contains('_newWordsReader.loadWords()'));
-      expect(stateSource, contains('_newWordRepository.toggleNewWord'));
-      expect(stateSource, contains('_newWordRepository.removeNewWord'));
+      expect(stateSource, contains('_writerPort.toggleNewWord'));
+      expect(stateSource, contains('_writerPort.removeNewWord'));
       expect(stateSource, isNot(contains('_newWordRepository.getNewWords')));
     });
 
@@ -338,7 +338,7 @@ void main() {
       expect(bookWordsPortSource, isNot(contains('WordRepository')));
       expect(bookWordsAdapterSource, contains('implements BookWordsReader'));
       expect(bookWordsAdapterSource, contains('WordRepository'));
-      expect(providersSource, contains('sl<BookRepository>()'));
+      expect(providersSource, contains('RepositoryBookCatalogReader'));
       expect(selectPageSource, contains('BookWordsReader'));
       expect(extensiveModeSource, contains('BookWordsReader'));
       for (final source in [selectPageSource, wordsPageSource, homeSource]) {

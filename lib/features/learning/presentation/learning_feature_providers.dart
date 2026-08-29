@@ -6,8 +6,6 @@ import '../../../core/learning/learning_favorites_store.dart';
 import '../../../core/learning/learning_progress_reader.dart';
 import '../../../core/learning/learning_session_starter.dart';
 import '../../../core/learning/new_words_store.dart';
-import '../../../repositories/fav_repository.dart';
-import '../../../repositories/mastered_repository.dart';
 import '../application/book_words_reader.dart';
 import '../application/mastered_words_reader.dart';
 import '../application/new_words_reader.dart';
@@ -15,12 +13,26 @@ import '../application/review_audio_player.dart';
 import '../application/review_queue_reader.dart';
 import '../application/review_schedule_reader.dart';
 import '../application/review_rating_writer.dart';
+import '../application/learning_queue_port.dart';
+import '../application/learning_progress_port.dart';
+import '../application/review_schedule_writer_port.dart';
+import '../application/choice_generator_port.dart';
+import '../application/favorites_port.dart';
+import '../application/mastered_writer_port.dart';
+import '../application/new_words_writer_port.dart';
 import '../data/learning_progress_reader_impl.dart';
 import '../data/learning_progress_repository.dart';
 import '../data/learning_queue_repository.dart';
-import 'learning_session_starter_impl.dart';
-import '../data/repository_review_schedule_reader.dart';
 import '../data/review_schedule_repository.dart';
+import '../data/repository_review_schedule_reader.dart';
+import '../data/repository_learning_queue_port.dart';
+import '../data/repository_learning_progress_port.dart';
+import '../data/repository_review_schedule_writer_port.dart';
+import '../data/repository_choice_generator_port.dart';
+import '../data/repository_favorites_port.dart';
+import '../data/repository_mastered_writer_port.dart';
+import '../data/repository_new_words_writer_port.dart';
+import 'learning_session_starter_impl.dart';
 import 'learning_collections_state.dart';
 import 'learning_favorites_state.dart';
 import 'learning_mastered_state.dart';
@@ -46,11 +58,31 @@ Widget buildLearningFeatureScope({required Widget child}) {
       ChangeNotifierProvider<ReviewScheduleReader>(
         create: (_) => RepositoryReviewScheduleReader(repository: sl<ReviewScheduleRepository>()),
       ),
-      Provider<LearningQueueRepository>.value(value: sl<LearningQueueRepository>()),
+      Provider<LearningQueuePort>.value(
+        value: RepositoryLearningQueuePort(sl<LearningQueueRepository>()),
+      ),
+      Provider<LearningProgressPort>.value(
+        value: RepositoryLearningProgressPort(sl<LearningProgressRepository>()),
+      ),
+      Provider<ReviewScheduleWriterPort>.value(
+        value: RepositoryReviewScheduleWriterPort(sl<ReviewScheduleRepository>()),
+      ),
+      Provider<ChoiceGeneratorPort>.value(
+        value: const RepositoryChoiceGeneratorPort(),
+      ),
+      Provider<FavoritesPort>.value(
+        value: RepositoryFavoritesPort.fromServiceLocator(),
+      ),
+      Provider<MasteredWriterPort>.value(
+        value: RepositoryMasteredWriterPort.fromServiceLocator(),
+      ),
+      Provider<NewWordsWriterPort>.value(
+        value: RepositoryNewWordsWriterPort.fromServiceLocator(),
+      ),
       ChangeNotifierProvider(
-        create: (_) => LearningFavoritesState(
-          favoriteRepository: sl<FavRepository>(),
-          queueRepository: sl<LearningQueueRepository>(),
+        create: (context) => LearningFavoritesState(
+          favoritesPort: context.read<FavoritesPort>(),
+          queuePort: context.read<LearningQueuePort>(),
         ),
       ),
       // 以 core 契约类型暴露同一实例：search / book 等消费方仅依赖
@@ -59,16 +91,17 @@ Widget buildLearningFeatureScope({required Widget child}) {
         update: (_, state, _) => state,
       ),
       ChangeNotifierProvider(
-        create: (_) => LearningMasteredState(
+        create: (context) => LearningMasteredState(
           masteredWordsReader: sl<MasteredWordsReader>(),
-          masteredRepository: sl<MasteredRepository>(),
+          writerPort: context.read<MasteredWriterPort>(),
         ),
       ),
       ChangeNotifierProvider(
-        create: (_) => LearningSessionState(
-          queueRepository: sl<LearningQueueRepository>(),
-          progressRepository: sl<LearningProgressRepository>(),
-          reviewSchedule: sl<ReviewScheduleRepository>(),
+        create: (context) => LearningSessionState(
+          queuePort: context.read<LearningQueuePort>(),
+          progressPort: context.read<LearningProgressPort>(),
+          reviewSchedulePort: context.read<ReviewScheduleWriterPort>(),
+          choicePort: context.read<ChoiceGeneratorPort>(),
         ),
       ),
       ProxyProvider<LearningSessionState, LearningSessionStarter>(
@@ -109,9 +142,11 @@ Widget buildLearningFeatureScope({required Widget child}) {
               ..updateRatingWriter(ratingWriter),
       ),
       ChangeNotifierProvider(
-        create: (_) =>
-            ReviewWordActionsState(favRepository: sl<FavRepository>(), masteredRepository: sl<MasteredRepository>())
-              ..initialize(),
+        create: (context) => ReviewWordActionsState(
+          favoritesPort: context.read<FavoritesPort>(),
+          masteredReader: sl<MasteredWordsReader>(),
+          masteredWriter: context.read<MasteredWriterPort>(),
+        )..initialize(),
       ),
       ChangeNotifierProvider(create: (_) => ReviewAudioState(audioPlayer: sl<ReviewAudioPlayer>())),
       Provider<BookWordsReader>.value(value: sl<BookWordsReader>()),
@@ -119,7 +154,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
       Provider<NewWordsReader>.value(value: sl<NewWordsReader>()),
       Provider<ReviewQueueReader>.value(value: sl<ReviewQueueReader>()),
       Provider<LearningProgressReader>.value(
-        value: LearningProgressReaderImpl(masteredRepository: sl<MasteredRepository>()),
+        value: LearningProgressReaderImpl.fromServiceLocator(),
       ),
       ChangeNotifierProvider(create: (_) => sl<NewWordsState>()..initialize()),
       ListenableProxyProvider<NewWordsState, NewWordsStore>(

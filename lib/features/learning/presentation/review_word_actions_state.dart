@@ -1,17 +1,23 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../repositories/fav_repository.dart';
-import '../../../repositories/mastered_repository.dart';
+import '../application/favorites_port.dart';
+import '../application/mastered_words_reader.dart';
+import '../application/mastered_writer_port.dart';
 
 /// 正式复习页按词用户操作的协调状态。
 ///
 /// 收藏与手动掌握均保留各自独立的字符串集合语义。本状态只缓存展示所需
 /// 快照、转发操作并通知页面，避免 `ReviewPage` 自行维护未持久化的副本。
 class ReviewWordActionsState extends ChangeNotifier {
-  ReviewWordActionsState({required this._favRepository, required this._masteredRepository});
+  ReviewWordActionsState({
+    required this._favoritesPort,
+    required this._masteredReader,
+    required this._masteredWriter,
+  });
 
-  final FavRepository _favRepository;
-  final MasteredRepository _masteredRepository;
+  final FavoritesPort _favoritesPort;
+  final MasteredWordsReader _masteredReader;
+  final MasteredWriterPort _masteredWriter;
 
   Set<String> _favoriteWords = const {};
   Set<String> _masteredWords = const {};
@@ -29,10 +35,10 @@ class ReviewWordActionsState extends ChangeNotifier {
 
   Future<void> _loadInitialSnapshots() async {
     try {
-      final favorites = await _favRepository.getFavoriteWords();
-      final mastered = await _masteredRepository.getMasteredWords();
+      final favorites = await _favoritesPort.getFavoriteWords();
+      final masteredTexts = await _masteredReader.loadTexts();
       _favoriteWords = Set.unmodifiable(favorites);
-      _masteredWords = Set.unmodifiable(mastered);
+      _masteredWords = Set.unmodifiable(masteredTexts);
       _initialized = true;
       notifyListeners();
     } finally {
@@ -43,8 +49,8 @@ class ReviewWordActionsState extends ChangeNotifier {
   /// 切换字符串收藏标记，并返回操作后的收藏状态。
   Future<bool> toggleFavorite(String word) async {
     await _ensureInitialized();
-    await _favRepository.toggleFavorite(word);
-    final isFavorite = _favRepository.isFavorite(word);
+    await _favoritesPort.toggleFavorite(word);
+    final isFavorite = _favoritesPort.isFavorite(word);
     _favoriteWords = {..._favoriteWords, if (isFavorite) word}..removeWhere((item) => !isFavorite && item == word);
     notifyListeners();
     return isFavorite;
@@ -55,7 +61,7 @@ class ReviewWordActionsState extends ChangeNotifier {
     await _ensureInitialized();
     if (_masteredWords.contains(word)) return false;
 
-    await _masteredRepository.toggleMastered(word);
+    await _masteredWriter.toggleMastered(word);
     _masteredWords = {..._masteredWords, word};
     notifyListeners();
     return true;

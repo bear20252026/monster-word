@@ -3,16 +3,16 @@ import 'package:flutter/foundation.dart';
 import '../../../core/learning/new_words_store.dart';
 import '../../../models/word.dart';
 import '../application/new_words_reader.dart';
-import '../../../repositories/new_word_repository.dart';
+import '../application/new_words_writer_port.dart';
 
 /// 生词本的可观察展示状态。
 ///
-/// 该状态只协调界面展示和用户操作；读取通过 [NewWordsReader]，持久化写入事实由 [NewWordRepository] 管理。
+/// 该状态只协调界面展示和用户操作；读取通过 [NewWordsReader]，持久化写入事实由 [NewWordsWriterPort] 管理。
 class NewWordsState extends ChangeNotifier implements NewWordsStore {
-  NewWordsState({required this._newWordsReader, required this._newWordRepository});
+  NewWordsState({required this._newWordsReader, required this._writerPort});
 
   final NewWordsReader _newWordsReader;
-  final NewWordRepository _newWordRepository;
+  final NewWordsWriterPort _writerPort;
   final Set<int> _wordIds = {};
   Future<void>? _initialization;
   bool _initialized = false;
@@ -42,7 +42,7 @@ class NewWordsState extends ChangeNotifier implements NewWordsStore {
   @override
   Future<bool> toggleNewWord(Word word, {String source = 'manual'}) async {
     await initialize();
-    final isAdded = await _newWordRepository.toggleNewWord(word, source: source);
+    final isAdded = await _writerPort.toggleNewWord(word, source: source);
     if (isAdded) {
       _wordIds.add(word.id);
     } else {
@@ -54,7 +54,7 @@ class NewWordsState extends ChangeNotifier implements NewWordsStore {
 
   Future<bool> removeNewWord(Word word) async {
     await initialize();
-    final wasRemoved = await _newWordRepository.removeNewWord(word.id);
+    final wasRemoved = await _writerPort.removeNewWord(word.id);
     if (wasRemoved) {
       _wordIds.remove(word.id);
       notifyListeners();

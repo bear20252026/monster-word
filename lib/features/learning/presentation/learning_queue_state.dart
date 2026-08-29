@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../data/wordbook_database.dart' show Book;
+import '../../../models/book.dart';
 import '../../../models/word.dart';
 import 'learning_session_state.dart';
 

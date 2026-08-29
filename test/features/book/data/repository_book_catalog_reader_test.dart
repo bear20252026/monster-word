@@ -10,7 +10,7 @@ void main() {
       Book(id: 2, code: 'CET6', name: '六级词书', wordCount: 5500),
     ];
     final repository = _FakeBookRepository(books);
-    final reader = RepositoryBookCatalogReader(repository: repository);
+    final reader = RepositoryBookCatalogReader(repository);
 
     expect(await reader.listBooks(), same(books));
     expect(await reader.findById(2), same(books[1]));

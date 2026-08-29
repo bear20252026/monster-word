@@ -2,19 +2,22 @@
 //
 // 修复前：dueCount==0 时直接进入空复习页面。
 // 修复后：dueCount==0 时展示友好空态「今天没有需要复习的单词」+ CTA。
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/engine/fsrs6_engine.dart';
+import 'package:word_app/features/learning/application/choice_generator_port.dart';
+import 'package:word_app/features/learning/application/learning_progress_port.dart';
+import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
-import 'package:word_app/features/learning/data/learning_progress_repository.dart';
-import 'package:word_app/features/learning/data/learning_queue_repository.dart';
-import 'package:word_app/features/learning/data/review_schedule_repository.dart';
+import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/repositories/fav_repository.dart';
 import 'package:word_app/widgets/review_dialog.dart';
 
 void main() {
@@ -125,16 +128,14 @@ class _StubScheduleReader extends ReviewScheduleReader {
 
 /// 测试替身：LearningSessionState
 ///
-/// 使用当前接口构造：queueRepository/progressRepository/reviewSchedule（公开名），
-/// 其中 progress/review 采用 no-arg 真实仓储，队列仓储用轻量假件（不使用真实 IO）。
+/// 通过端口构造：queuePort/progressPort/reviewSchedulePort/choicePort，
+/// 其中队列用假件，进度/评分用轻量假件（不使用真实 IO）。
 class _StubSessionState extends LearningSessionState {
   _StubSessionState() : super(
-        queueRepository: LearningQueueRepository(
-          wordSource: _FakeWordSource(),
-          favRepository: _FakeFavRepository(),
-        ),
-        progressRepository: LearningProgressRepository(),
-        reviewSchedule: ReviewScheduleRepository(),
+        queuePort: _StubQueuePort(),
+        progressPort: _StubProgressPort(),
+        reviewSchedulePort: _StubReviewScheduleWriterPort(),
+        choicePort: _StubChoicePort(),
       );
 
   @override
@@ -144,62 +145,40 @@ class _StubSessionState extends LearningSessionState {
   int get learnedNum => 30;
 }
 
-/// 假单词源（LearningQueueWordSource 为 interface class，需 implements）。
-class _FakeWordSource implements LearningQueueWordSource {
+class _StubQueuePort implements LearningQueuePort {
   @override
-  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset}) async => const [];
+  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => const [];
 
   @override
-  Future<List<Word>> getWordsByNames(Iterable<String> words) async => const [];
+  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
 }
 
-/// 假收藏仓库（FavRepository 抽象类，需实现全部成员）。
-class _FakeFavRepository implements FavRepository {
+class _StubProgressPort implements LearningProgressPort {
   @override
-  Future<Set<String>> getFavoriteWords() async => const {};
+  Future<void> save({
+    required Book currentBook,
+    required int currentIndex,
+    required List<Word> queue,
+  }) async {}
 
   @override
-  Future<void> addFavorite(String word) async {}
+  Future<LearningProgress?> load() async => null;
+}
+
+class _StubReviewScheduleWriterPort implements ReviewScheduleWriterPort {
+  @override
+  Future<void> rateWord({required String word, required FsrsRating rating}) async {}
 
   @override
-  Future<void> removeFavorite(String word) async {}
+  Future<void> forget(String word) async {}
+}
 
+class _StubChoicePort implements ChoiceGeneratorPort {
   @override
-  Future<void> toggleFavorite(String word) async {}
-
-  @override
-  bool isFavorite(String word) => false;
-
-  @override
-  int get favoriteCount => 0;
-
-  @override
-  Future<List<Map<String, dynamic>>> getFavoriteSentences() async => const [];
-
-  @override
-  Future<bool> addFavoriteSentence({
-    required int wordId,
-    required String sentenceId,
-    required String english,
-    required String chinese,
-    String source = '',
-  }) async => true;
-
-  @override
-  Future<bool> removeFavoriteSentence(int wordId, String sentenceId) async => true;
-
-  @override
-  Future<bool> toggleFavoriteSentence({
-    required int wordId,
-    required String sentenceId,
-    required String english,
-    required String chinese,
-    String source = '',
-  }) async => true;
-
-  @override
-  Future<bool> isFavoriteSentence(int wordId, String sentenceId) async => false;
-
-  @override
-  int get favoriteSentenceCount => 0;
+  List<ChoiceCandidate> generate({
+    required ChoiceCandidate correct,
+    required Iterable<ChoiceCandidate> candidates,
+    Random? random,
+  }) =>
+      [correct];
 }

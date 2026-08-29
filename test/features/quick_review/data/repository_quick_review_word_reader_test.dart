@@ -11,7 +11,7 @@ void main() {
       Word(id: 5, word: 'fifth'),
     ]);
 
-    final reader = RepositoryQuickReviewWordReader(repository: repository);
+    final reader = RepositoryQuickReviewWordReader(repository);
     final words = await reader.loadWords(limit: 2);
 
     expect(repository.lastQuery, '');

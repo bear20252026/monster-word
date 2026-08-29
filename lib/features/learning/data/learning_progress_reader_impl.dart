@@ -1,3 +1,4 @@
+import '../../../core/di/service_locator.dart';
 import '../../../core/learning/learning_progress_reader.dart';
 import '../../../repositories/mastered_repository.dart';
 
@@ -7,6 +8,9 @@ import '../../../repositories/mastered_repository.dart';
 /// 统计给定词集中已被掌握的单词数量。
 class LearningProgressReaderImpl implements LearningProgressReader {
   const LearningProgressReaderImpl({required this._masteredRepository});
+
+  factory LearningProgressReaderImpl.fromServiceLocator() =>
+      LearningProgressReaderImpl(masteredRepository: sl<MasteredRepository>());
 
   final MasteredRepository _masteredRepository;
 
