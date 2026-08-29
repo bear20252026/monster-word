@@ -1,4 +1,4 @@
-// 签到历史页面：双月日历视图 + 概览卡片 + 签到详情列表
+﻿// 签到历史页面：双月日历视图 + 概览卡片 + 签到详情列表
 // 参考 Calendar Interactive UI Kit (Penpot) 设计模式
 // 路由：/check_in_history
 import 'package:flutter/material.dart';
@@ -145,7 +145,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                     bottom: 30,
                     right: 30,
                     child: Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: EdgeInsets.all(6),
                       decoration: BoxDecoration(color: skin.accent, shape: BoxShape.circle),
                       child: const Icon(Icons.add, size: 18, color: Colors.white),
                     ),
@@ -153,11 +153,11 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             Text('还没有签到记录', style: MistralTypography.heading5.copyWith(color: skin.text1)),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text('每天签到，养成学习好习惯', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             SizedBox(
               width: 200,
               height: 48,
@@ -165,7 +165,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                 style: FilledButton.styleFrom(
                   backgroundColor: skin.accent,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                 ),
                 onPressed: () {
                   Navigator.pop(context);
@@ -209,7 +209,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
   // ── 导航栏 ──
   Widget _buildNavBar(ThemeVars skin, AppResponsive resp) {
     return Container(
-      height: AppSpacing.navH,
+      height: context.design.spacing.navH,
       padding: EdgeInsets.symmetric(horizontal: resp.horizontalPadding),
       child: Row(
         children: [
@@ -218,7 +218,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
             color: skin.text1,
             onPressed: () => Navigator.pop(context),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text('签到历史', style: MistralTypography.heading5.copyWith(color: skin.text1)),
         ],
       ),
@@ -230,10 +230,10 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
     return Padding(
       padding: EdgeInsets.fromLTRB(resp.pageMargin, 8, resp.pageMargin, 16),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: skin.cardBg,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(context.design.radius.xl),
           boxShadow: const [
             BoxShadow(color: Color(0x23000000), blurRadius: 0.5, offset: Offset(0, 0)),
             BoxShadow(color: Color(0x3D000000), blurRadius: 1, offset: Offset(0, 1)),
@@ -249,7 +249,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                     '$_totalDays',
                     style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: skin.accent),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text('累计天数', style: MistralTypography.caption.copyWith(color: skin.text3)),
                 ],
               ),
@@ -274,12 +274,12 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                       ),
                       if (_streak > 0)
                         Padding(
-                          padding: const EdgeInsets.only(left: 2, bottom: 4),
+                          padding: EdgeInsets.only(left: 2, bottom: 4),
                           child: Text('🔥', style: TextStyle(fontSize: _streak >= 7 ? 20 : 16)),
                         ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text('连续天数', style: MistralTypography.caption.copyWith(color: skin.text3)),
                 ],
               ),
@@ -326,7 +326,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text('本月进度', style: MistralTypography.caption.copyWith(color: skin.text3)),
                 ],
               ),
@@ -350,13 +350,13 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
             children: [
               const Spacer(),
               _MonthSwitchArrow(icon: Icons.chevron_left, onTap: () => _shiftMonth(-1), skin: skin),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               // 月份标签
               Text(
                 '${_currentMonth.year}年${_currentMonth.month}月',
                 style: MistralTypography.heading5.copyWith(color: skin.text1),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               _MonthSwitchArrow(
                 icon: Icons.chevron_right,
                 onTap: _currentMonth.month == DateTime.now().month && _currentMonth.year == DateTime.now().year
@@ -367,10 +367,10 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
               const Spacer(),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           // 上月日历（始终半透明的辅助视图）
           Opacity(opacity: 0.45, child: _buildMonthGrid(prevMonth, skin, isPrevious: true)),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           // 当月日历（主视图，带弹性入场动画）
           FadeTransition(
             opacity: _monthFadeAnim,
@@ -396,10 +396,10 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
     final todayIso = _iso(now);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(context.design.radius.lg),
         border: Border.all(color: skin.divider, width: 0.5),
       ),
       child: Column(
@@ -416,7 +416,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                 )
                 .toList(),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           // 日期网格
           for (var row = 0; row < rows; row++)
             Row(
@@ -445,7 +445,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
   ) {
     final index = row * 7 + col - leadingBlanks;
     if (index < 0 || index >= daysInMonth) {
-      return const SizedBox(height: 40);
+      return SizedBox(height: 40);
     }
 
     final date = DateTime(month.year, month.month, index + 1);
@@ -520,8 +520,8 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
         child: Padding(
           padding: EdgeInsets.all(resp.pageMargin),
           child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(AppRadius.lg)),
+            padding: EdgeInsets.all(24),
+            decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(context.design.radius.lg)),
             child: Center(
               child: Text('本月还没有签到记录', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
             ),
@@ -544,12 +544,12 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
           final isToday = iso == _iso(DateTime.now());
 
           return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.only(bottom: 8),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: skin.cardBg,
-                borderRadius: BorderRadius.circular(AppRadius.md),
+                borderRadius: BorderRadius.circular(context.design.radius.md),
                 border: Border.all(color: isToday ? skin.accent.withValues(alpha: 0.3) : skin.divider),
               ),
               child: Row(
@@ -561,7 +561,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                     decoration: BoxDecoration(color: skin.success.withValues(alpha: 0.12), shape: BoxShape.circle),
                     child: Icon(Icons.check_circle, size: 20, color: skin.success),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   // 日期信息
                   Expanded(
                     child: Column(
@@ -573,12 +573,12 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                               '$month月$day日',
                               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: skin.text1),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Text(weekday, style: MistralTypography.caption.copyWith(color: skin.text3)),
                             if (isToday) ...[
-                              const SizedBox(width: 8),
+                              SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: skin.accent.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(10),
@@ -591,7 +591,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                             ],
                           ],
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2),
                         Builder(
                           builder: (ctx) => Text(
                             '签到成功 +${ctx.watch<CheckInHistoryReader>().checkInReward} 尖叫币',

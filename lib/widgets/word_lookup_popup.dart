@@ -124,19 +124,19 @@ class _PopupCard extends StatelessWidget {
       child: Container(
         width: 280,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(context.design.radius.xl),
           boxShadow: [
             BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 16, offset: const Offset(0, 4)),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(context.design.radius.xl),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
               decoration: BoxDecoration(
                 color: skin.cardBg.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(AppRadius.xl),
+                borderRadius: BorderRadius.circular(context.design.radius.xl),
                 border: Border.all(color: skin.divider.withValues(alpha: 0.5), width: 0.5),
               ),
               padding: const EdgeInsets.all(16),

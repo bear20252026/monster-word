@@ -1,16 +1,15 @@
-// 我的空间页：顶部导航 + 头像区 + 昵称 + 会员入口 + 卡片
+﻿// 我的空间页：顶部导航 + 头像区 + 昵称 + 会员入口 + 卡片
 // 已接入 SkinSystem 主题
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/router/route_names.dart';
 import '../../../core/scare_coin/scare_coin_store.dart';
 import '../../../hooks/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import '../../../widgets/monster_icon.dart';
 import '../../account/presentation/account_profile_state.dart';
-import '../../../pages/message_page.dart';
-import '../../../pages/settings_page.dart';
 
 class MySpacePage extends StatelessWidget {
   const MySpacePage({super.key});
@@ -45,7 +44,7 @@ class MySpacePage extends StatelessWidget {
                 children: [
                   // 顶部导航栏
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: EdgeInsets.symmetric(horizontal: 4),
                     child: SizedBox(
                       height: 48,
                       child: Row(
@@ -62,7 +61,7 @@ class MySpacePage extends StatelessWidget {
                               IconButton(
                                 icon: const Icon(Icons.mail_outline, size: 22),
                                 color: skin.text1,
-                                onPressed: () => Navigator.pushNamed(context, MessagePage.routeName),
+                                onPressed: () => Navigator.pushNamed(context, RouteNames.messages),
                               ),
                               Positioned(
                                 right: 8,
@@ -82,7 +81,7 @@ class MySpacePage extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.settings, size: 22),
                             color: skin.text1,
-                            onPressed: () => Navigator.pushNamed(context, SettingsPage.routeName),
+                            onPressed: () => Navigator.pushNamed(context, RouteNames.settings),
                           ),
                         ],
                       ),
@@ -90,19 +89,19 @@ class MySpacePage extends StatelessWidget {
                   ),
                   // 头像 + VIP 徽章 + 用户 ID + 会员状态
                   _buildProfileHeader(context, skin, profile),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   // 尖叫币 + 装备卡片
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       children: [
                         Expanded(child: _CoinCard(skin: skin)),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Expanded(child: _EquipCard(skin: skin)),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                 ],
               ),
             ),
@@ -170,7 +169,7 @@ class MySpacePage extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               // 用户信息
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +232,7 @@ class MySpacePage extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Text(
                 profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
                 style: MistralTypography.bodyMd.copyWith(color: skin.text2),
@@ -253,21 +252,21 @@ class MySpacePage extends StatelessWidget {
           title: '外观 & 沉浸场景',
           subtitle: '主题、壁纸、字体',
           skin: skin,
-          onTap: () => Navigator.pushNamed(context, '/appearance'),
+          onTap: () => Navigator.pushNamed(context, RouteNames.appearance),
         ),
         _MenuItem(
           icon: Icons.school_outlined,
           title: '学习偏好',
           subtitle: '发音、节奏、题型',
           skin: skin,
-          onTap: () => Navigator.pushNamed(context, '/settings'),
+          onTap: () => Navigator.pushNamed(context, RouteNames.settings),
         ),
         _MenuItem(
           icon: Icons.tune,
           title: '更多设置',
           subtitle: '账号、通知、关于',
           skin: skin,
-          onTap: () => Navigator.pushNamed(context, '/more_settings'),
+          onTap: () => Navigator.pushNamed(context, RouteNames.moreSettings),
         ),
       ],
     );
@@ -286,14 +285,14 @@ class _MenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: skin.text1.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(
           width: 38,
           height: 38,
@@ -323,9 +322,9 @@ class _CoinCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/scare_coin_history'),
+      onTap: () => Navigator.pushNamed(context, RouteNames.scareCoinHistory),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
           color: skin.cardBg,
           borderRadius: BorderRadius.circular(16),
@@ -334,14 +333,14 @@ class _CoinCard extends StatelessWidget {
         child: Row(
           children: [
             const MonsterAvatar(size: 34),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('尖叫币', style: MistralTypography.micro.copyWith(color: skin.text3)),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   FutureBuilder<int>(
                     future: context.read<ScareCoinStore>().balance(),
                     builder: (context, snap) {
@@ -372,7 +371,7 @@ class _EquipCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {},
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
           color: skin.cardBg,
           borderRadius: BorderRadius.circular(16),
@@ -388,22 +387,22 @@ class _EquipCard extends StatelessWidget {
                   Row(
                     children: [
                       Text('装备', style: MistralTypography.micro.copyWith(color: skin.text3)),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Text(
                         '9/9',
                         style: MistralTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     children: [
                       _equipIcon(Icons.auto_awesome, skin),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       _equipIcon(Icons.menu_book, skin),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       _equipIcon(Icons.headphones, skin),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       _equipIcon(Icons.translate, skin),
                     ],
                   ),

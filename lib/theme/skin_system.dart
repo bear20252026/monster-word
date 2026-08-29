@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/app_preferences.dart';
+import '../tokens/design_language.dart';
 
 class ThemeVars {
   final Color pageBg;
@@ -323,10 +324,21 @@ class SkinSystem extends ChangeNotifier {
   String? _fontFamily;
   static const String _kFontPrefKey = 'app.font_family';
 
+  /// 用户选择的 B 档设计语言（与颜色主题正交；缺省星巴克）。
+  String _designLanguageId = 'starbucks';
+  static const String _kDesignPrefKey = 'app.design_language';
+
   String get themeId => _themeId;
   bool get followSystem => _followSystem;
   ThemePreset get currentTheme => themes[_themeId]!;
   ThemeVars get colors => currentTheme.vars;
+
+  /// 当前 B 档设计语言（皮肤(颜色)之外整套视觉/形态令牌）。
+  /// 切换设计语言 = 整套半径/间距/阴影/字体比例随之变化。
+  DesignLanguage get design => DesignLanguages.byId(_designLanguageId);
+
+  /// 用户当前选中的 B 档设计语言 id。
+  String get designLanguageId => _designLanguageId;
 
   /// 所有可用主题的摘要信息（供主题选择页展示）
   List<ThemeSummary> get availableThemes => themes.values
@@ -356,6 +368,7 @@ class SkinSystem extends ChangeNotifier {
     }
     // 异步恢复字体偏好（构造器是同步的，加载后通知刷新）
     _loadFontPreference();
+    _loadDesignPreference();
   }
 
   Future<void> _loadFontPreference() async {
@@ -392,6 +405,29 @@ class SkinSystem extends ChangeNotifier {
           }
         })
         .catchError((e) => false);
+  }
+
+  /// 切换 B 档设计语言（整套半径/间距/阴影/字体比例）。持久化并通知重建。
+  void setDesignLanguage(String id) {
+    if (!DesignLanguages.all.containsKey(id) || _designLanguageId == id) return;
+    _designLanguageId = id;
+    notifyListeners();
+    SharedPreferences.getInstance()
+        .then((p) => p.setString(_kDesignPrefKey, id))
+        .catchError((e) => false);
+  }
+
+  Future<void> _loadDesignPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_kDesignPrefKey);
+      if (saved != null && DesignLanguages.all.containsKey(saved) && saved != _designLanguageId) {
+        _designLanguageId = saved;
+        notifyListeners();
+      }
+    } catch (_) {
+      // 测试环境无插件时静默忽略
+    }
   }
 
   /// ChangeNotifier 挂载状态（测试环境中可能未绑定）
@@ -444,4 +480,10 @@ class SkinProvider extends InheritedNotifier<SkinSystem> {
 
 extension SkinExt on BuildContext {
   SkinSystem get skin => SkinProvider.of(this);
+
+  /// 当前 B 档设计语言（皮肤(颜色)之外的整套视觉/形态令牌）。
+  ///
+  /// 读取它即隐式订阅 SkinProvider，皮肤/设计语言变化时该 widget 重建 —— 这正是
+  /// 「B 档整体切换」的运行时生效点。未包裹 SkinProvider 的测试环境回退默认设计语言。
+  DesignLanguage get design => SkinProvider.of(this).design;
 }

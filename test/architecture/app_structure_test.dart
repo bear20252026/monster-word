@@ -48,10 +48,10 @@ void main() {
 
     test('旧练习会话栈已删除，学习页面只依赖专用会话与各自的事实状态', () {
       const migratedPages = [
-        'lib/pages/immersive_swipe_page.dart',
-        'lib/pages/learn_page.dart',
-        'lib/pages/spell_session_page.dart',
-        'lib/pages/word_machine_page.dart',
+        'lib/features/learning/presentation/immersive_swipe_page.dart',
+        'lib/features/learning/presentation/learn_page.dart',
+        'lib/features/learning/presentation/spell_session_page.dart',
+        'lib/features/learning/presentation/word_machine_page.dart',
         'lib/screens/home_screen.dart',
         'lib/screens/learn_session.dart',
       ];
@@ -75,19 +75,19 @@ void main() {
       final featurePage = File('lib/features/book/presentation/book_words_page.dart').readAsStringSync();
       final stateSource = File('lib/features/book/presentation/book_state.dart').readAsStringSync();
 
-      expect(adapter, contains('BookCatalogReader'), reason: 'adapter 应通过应用端口查询词书');
-      expect(adapter, isNot(contains('LearningSessionState')));
+      expect(adapter, isNot(contains('LearningSessionState')), reason: '适配器不应直连学习会话');
       expect(adapter, isNot(contains('LearnState')));
-      expect(featurePage, contains('BookState'));
+      expect(featurePage, contains('BookState'), reason: '词单页应通过词书状态消费数据');
+      expect(featurePage, isNot(contains('RepositoryBookCatalogReader')), reason: '词单页不应直连仓库适配器');
       expect(featurePage, isNot(contains('LearnState')));
       expect(stateSource, isNot(contains('sl<')), reason: '词书状态不应直连服务定位器');
     });
 
     test('账户资料功能域拥有展示与编辑快照，资料页面不再直连用户服务', () {
       const profileConsumers = [
-        'lib/pages/account_info_page.dart',
-        'lib/pages/user_info_manage_page.dart',
-        'lib/pages/my_space_page.dart',
+        'lib/features/account/presentation/account_info_page.dart',
+        'lib/features/account/presentation/user_info_manage_page.dart',
+        'lib/features/account/presentation/my_space_page.dart',
         'lib/screens/profile_screen.dart',
       ];
       final providersSource = File('lib/features/account/presentation/account_feature_providers.dart')
@@ -106,11 +106,11 @@ void main() {
     test('单词音频为应用级共享能力（core），各功能经共享状态消费、不直连音频服务', () {
       const audioConsumers = [
         'lib/features/dictionary/presentation/dictionary_page.dart',
-        'lib/pages/learn_page.dart',
+        'lib/features/learning/presentation/learn_page.dart',
         'lib/features/search/presentation/search_page.dart',
-        'lib/pages/spell_check_page.dart',
-        'lib/pages/spell_session_page.dart',
-        'lib/pages/word_detail_page.dart',
+        'lib/features/learning/presentation/spell_check_page.dart',
+        'lib/features/learning/presentation/spell_session_page.dart',
+        'lib/features/dictionary/presentation/word_detail_page.dart',
       ];
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
@@ -182,7 +182,7 @@ void main() {
   group('词条浏览依赖边界', () {
     test('详情页通过浏览功能域端口读写笔记和例句收藏', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      final pageSource = File('lib/pages/word_detail_page.dart').readAsStringSync();
+      final pageSource = File('lib/features/dictionary/presentation/word_detail_page.dart').readAsStringSync();
       final providersSource = File('lib/features/word_browse/presentation/word_browse_feature_providers.dart')
           .readAsStringSync();
 
@@ -200,7 +200,7 @@ void main() {
 
     test('考试速刷页通过 QuickReviewWordReader 读取词源', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      final pageSource = File('lib/pages/exam_quick_review_page.dart').readAsStringSync();
+      final pageSource = File('lib/features/quick_review/presentation/exam_quick_review_page.dart').readAsStringSync();
       final providersSource = File('lib/features/quick_review/presentation/quick_review_feature_providers.dart')
           .readAsStringSync();
 
@@ -213,7 +213,7 @@ void main() {
     });
 
     test('词语导出页通过 BookWordsReader 读取词书单词', () {
-      final pageSource = File('lib/pages/word_export_page.dart').readAsStringSync();
+      final pageSource = File('lib/features/book/presentation/word_export_page.dart').readAsStringSync();
 
       expect(pageSource, contains('BookWordsReader'));
       expect(pageSource, isNot(contains('LearningQueueRepository')));
@@ -254,7 +254,7 @@ void main() {
     });
 
     test('句库页面通过例句收藏端口访问列表和删除', () {
-      final pageSource = File('lib/pages/my_fav_sentence_page.dart').readAsStringSync();
+      final pageSource = File('lib/features/content/presentation/my_fav_sentence_page.dart').readAsStringSync();
 
       expect(pageSource, contains('SentenceFavoritesStore'));
       expect(pageSource, isNot(contains('sl<')));
@@ -323,9 +323,9 @@ void main() {
 
     test('词书入口通过 BookCatalogReader 访问目录', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      final selectPageSource = File('lib/pages/lib_select_page.dart').readAsStringSync();
-      final wordsPageSource = File('lib/pages/book_words_page.dart').readAsStringSync();
-      final extensiveModeSource = File('lib/pages/extensive_model_select_page.dart').readAsStringSync();
+      final selectPageSource = File('lib/features/book/presentation/lib_select_page.dart').readAsStringSync();
+      final wordsPageSource = File('lib/features/book/presentation/book_words_page.dart').readAsStringSync();
+      final extensiveModeSource = File('lib/features/book/presentation/extensive_model_select_page.dart').readAsStringSync();
       final homeSource = File('lib/screens/home_screen.dart').readAsStringSync();
       final providersSource = File('lib/features/book/presentation/book_feature_providers.dart').readAsStringSync();
 
@@ -341,11 +341,14 @@ void main() {
       expect(providersSource, contains('RepositoryBookCatalogReader'));
       expect(selectPageSource, contains('BookWordsReader'));
       expect(extensiveModeSource, contains('BookWordsReader'));
-      for (final source in [selectPageSource, wordsPageSource, homeSource]) {
+      for (final source in [selectPageSource, homeSource]) {
         expect(source, contains('BookCatalogReader'));
         expect(source, isNot(contains('sl<')));
         expect(source, isNot(contains('BookRepository')));
       }
+      expect(wordsPageSource, contains('BookState'), reason: '词单页消费词书状态而非直连仓库');
+      expect(wordsPageSource, isNot(contains('sl<')));
+      expect(wordsPageSource, isNot(contains('BookRepository')));
       for (final source in [selectPageSource, extensiveModeSource]) {
         expect(source, isNot(contains('LearningQueueRepository')));
         expect(source, isNot(contains('learning_queue_repository.dart')));
@@ -360,12 +363,12 @@ void main() {
       final providerSource = File('lib/features/scare_coin/presentation/scare_coin_feature_providers.dart')
           .readAsStringSync();
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      final pageSource = File('lib/pages/scare_coin_history_page.dart').readAsStringSync();
+      final pageSource = File('lib/features/scare_coin/presentation/scare_coin_history_page.dart').readAsStringSync();
       final calendarSource = File('lib/widgets/spring_check_in_calendar.dart').readAsStringSync();
       final profileSource = File('lib/screens/profile_screen.dart').readAsStringSync();
       final classCheckInSource = File('lib/features/checkin/presentation/class_checkin_page.dart').readAsStringSync();
-      final dashboardSource = File('lib/pages/dashboard_page.dart').readAsStringSync();
-      final mySpaceSource = File('lib/pages/my_space_page.dart').readAsStringSync();
+      final dashboardSource = File('lib/features/learning/presentation/dashboard_page.dart').readAsStringSync();
+      final mySpaceSource = File('lib/features/account/presentation/my_space_page.dart').readAsStringSync();
 
       expect(portSource, contains('abstract interface class ScareCoinStore'));
       expect(adapterSource, contains('implements ScareCoinStore'));
@@ -398,7 +401,7 @@ void main() {
 
   group('正式复习禁止依赖', () {
     test('路由页面不回流会话算法、遗留聚合状态或服务定位器', () {
-      final pageSource = File('lib/pages/review_page.dart').readAsStringSync();
+      final pageSource = File('lib/features/learning/presentation/review_page.dart').readAsStringSync();
 
       expect(pageSource, isNot(contains('LearningState')));
       expect(pageSource, isNot(contains('SuperMemoryEngine')));
@@ -413,7 +416,7 @@ void main() {
           .readAsStringSync();
       final providerSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
           .readAsStringSync();
-      final wordDetailSource = File('lib/pages/word_detail_page.dart').readAsStringSync();
+      final wordDetailSource = File('lib/features/dictionary/presentation/word_detail_page.dart').readAsStringSync();
       final learnSessionSource = File('lib/screens/learn_session.dart').readAsStringSync();
       final dialogSource = File('lib/widgets/review_dialog.dart').readAsStringSync();
       final statisticsSource = File('lib/features/learning/presentation/learning_statistics_state.dart')

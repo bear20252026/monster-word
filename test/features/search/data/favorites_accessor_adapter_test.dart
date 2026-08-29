@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/learning/learning_favorites_store.dart';
 import 'package:word_app/features/search/data/favorites_accessor_adapter.dart';
+import 'package:word_app/models/word.dart';
 
 /// 模拟 learning 侧经 core 契约暴露的收藏存储。
 ///
@@ -26,6 +27,11 @@ class _FakeFavoritesStore extends ChangeNotifier implements LearningFavoritesSto
 
   @override
   Future<void> refresh() async {}
+
+  @override
+  Future<List<Word>> loadFavoriteWords({required Iterable<Word> currentQueue}) async {
+    return currentQueue.where((w) => _words.contains(w.word)).toList();
+  }
 
   @override
   Future<bool> toggle(String word) async {

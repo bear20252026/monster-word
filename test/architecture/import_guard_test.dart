@@ -10,10 +10,22 @@ void main() {
 
     List<String> check(String from, String to) => guard.check(from: from, to: to);
 
-    test('R4: 跨功能 import 被拒绝', () {
+    test('R4: 跨功能 import 被拒绝(除 application 端口通道)', () {
+      // 跨 feature 引用对方具体实现层（presentation/data/domain）→ 拒绝。
+      expect(
+        check('features/account/presentation/my_space_page.dart', 'features/scare_coin/presentation/scare_coin_page.dart'),
+        anyElement(contains('跨功能 import 被禁止(R4)')),
+      );
+      expect(
+        check('features/account/presentation/my_space_page.dart', 'features/scare_coin/data/scare_coin_store.dart'),
+        anyElement(contains('跨功能 import 被禁止(R4)')),
+      );
+      // 跨 feature 仅引用对方 application 层抽象端口 → 允许。这是端口-适配器架构
+      // 允许的功能间通道（app_structure_test.dart 强制 word_detail/my_fav_sentence
+      // 消费 SentenceFavoritesStore / WordNotesStore / ReviewScheduleReader）。
       expect(
         check('features/account/presentation/my_space_page.dart', 'features/scare_coin/application/scare_coin_store.dart'),
-        anyElement(contains('跨功能 import 被禁止(R4)')),
+        isEmpty,
       );
     });
 
@@ -110,7 +122,10 @@ List<String> _scanLib() {
       .where((f) => f.path.endsWith('.dart'))
       .toList();
 
-  final realPaths = files.map((f) => f.path).toSet();
+  // 归一化为正向斜杠：Windows 下 File.path 用反斜杠，而逻辑路径用 '/'，
+  // 否则 _scanLib 会因 realPaths 与实际解析路径分隔符不一致而误跳过全部相对 import（假绿）。
+  final realPaths =
+      files.map((f) => f.path.replaceAll(r'\', '/')).toSet();
 
   for (final f in files) {
     final from = f.path.replaceAll(r'\', '/'); // e.g. "lib/features/.../x.dart"

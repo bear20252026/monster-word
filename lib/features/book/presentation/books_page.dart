@@ -25,14 +25,14 @@ class BookDashboardPage extends StatelessWidget {
       backgroundColor: skin.pageBg,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(context.design.spacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(context, skin),
-              const SizedBox(height: AppSpacing.lg),
+              SizedBox(height: context.design.spacing.lg),
               _buildCurrentBookCard(context, skin),
-              const SizedBox(height: AppSpacing.lg),
+              SizedBox(height: context.design.spacing.lg),
               _buildQuickActions(context, skin),
             ],
           ),
@@ -56,10 +56,10 @@ class BookDashboardPage extends StatelessWidget {
         final stats = state.statistics;
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(context.design.spacing.lg),
           decoration: BoxDecoration(
             color: skin.cardBg,
-            borderRadius: BorderRadius.circular(AppRadius.xl),
+            borderRadius: BorderRadius.circular(context.design.radius.xl),
             border: Border.all(color: skin.divider, width: 0.5),
           ),
           child: Column(
@@ -69,23 +69,23 @@ class BookDashboardPage extends StatelessWidget {
                 '当前词书',
                 style: MistralTypography.bodySm.copyWith(color: skin.text3),
               ),
-              const SizedBox(height: AppSpacing.xs),
+              SizedBox(height: context.design.spacing.xs),
               Text(
                 book?.name ?? '未选择',
                 style: MistralTypography.heading4.copyWith(
                     color: skin.text1, fontWeight: FontWeight.w600),
               ),
               if (book != null) ...[
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.design.spacing.sm),
                 Text(
                   '${book.wordCount} 词',
                   style: MistralTypography.bodyMd.copyWith(color: skin.text3),
                 ),
               ],
               if (stats != null) ...[
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.design.spacing.sm),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  borderRadius: BorderRadius.circular(context.design.radius.sm),
                   child: LinearProgressIndicator(
                     value: stats.progress,
                     backgroundColor: skin.divider,
@@ -93,7 +93,7 @@ class BookDashboardPage extends StatelessWidget {
                     minHeight: 6,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: context.design.spacing.xs),
                 Text(
                   '已学 ${stats.learnedWords} / ${stats.totalWords} (${stats.progressText})',
                   style: MistralTypography.bodySm.copyWith(color: skin.text3),
@@ -115,7 +115,7 @@ class BookDashboardPage extends StatelessWidget {
           style: MistralTypography.bodyMd
               .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: context.design.spacing.sm),
         Row(
           children: [
             Expanded(
@@ -125,7 +125,7 @@ class BookDashboardPage extends StatelessWidget {
                 onTap: () => Navigator.pushNamed(context, RouteNames.libSelect),
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            SizedBox(width: context.design.spacing.sm),
             Expanded(
               child: Consumer<BookState>(
                 builder: (context, state, _) {
@@ -171,16 +171,16 @@ class _ActionCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(context.design.spacing.md),
         decoration: BoxDecoration(
           color: skin.cardBg,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(context.design.radius.lg),
           border: Border.all(color: skin.divider, width: 0.5),
         ),
         child: Column(
           children: [
             Icon(icon, color: skin.accent, size: 28),
-            const SizedBox(height: AppSpacing.xs),
+            SizedBox(height: context.design.spacing.xs),
             Text(
               label,
               style: MistralTypography.bodySm.copyWith(color: skin.text1),

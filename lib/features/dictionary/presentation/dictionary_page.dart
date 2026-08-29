@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
 import 'package:provider/provider.dart';
@@ -54,16 +54,16 @@ class _DictionaryPageState extends State<DictionaryPage>
             _buildTopBar(context, skin, word),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: EdgeInsets.all(context.design.spacing.md),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildWordHeader(skin, word),
-                    const SizedBox(height: AppSpacing.lg),
+                    SizedBox(height: context.design.spacing.lg),
                     _buildPronunciation(skin, word),
-                    const SizedBox(height: AppSpacing.lg),
+                    SizedBox(height: context.design.spacing.lg),
                     _buildInterpretation(skin, word),
-                    const SizedBox(height: AppSpacing.lg),
+                    SizedBox(height: context.design.spacing.lg),
                     _buildTabs(skin, word),
                   ],
                 ),
@@ -78,8 +78,8 @@ class _DictionaryPageState extends State<DictionaryPage>
   Widget _buildTopBar(
       BuildContext context, ThemeVars skin, Word word) {
     return Container(
-      height: AppSpacing.navH,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      height: context.design.spacing.navH,
+      padding: EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: skin.cardBg,
         border: Border(bottom: BorderSide(color: skin.divider, width: 0.5)),
@@ -91,7 +91,7 @@ class _DictionaryPageState extends State<DictionaryPage>
             color: skin.text1,
             onPressed: () => Navigator.pop(context),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Expanded(
             child: Text(
               '字典',
@@ -163,7 +163,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                 style: MistralTypography.heading2
                     .copyWith(color: skin.text1, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: AppSpacing.xs),
+              SizedBox(height: context.design.spacing.xs),
               _buildCETTags(skin),
             ],
           ),
@@ -171,10 +171,10 @@ class _DictionaryPageState extends State<DictionaryPage>
         GestureDetector(
           onTap: () => _playAudio(word.word),
           child: Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
+            padding: EdgeInsets.all(context.design.spacing.sm),
             decoration: BoxDecoration(
               color: skin.cardBgAlt,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
+              borderRadius: BorderRadius.circular(context.design.radius.lg),
             ),
             child: Icon(Icons.volume_up, color: skin.accent, size: 24),
           ),
@@ -200,10 +200,10 @@ class _DictionaryPageState extends State<DictionaryPage>
 
   Widget _buildTag(String text, Color color, ThemeVars skin) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderRadius: BorderRadius.circular(context.design.radius.sm),
       ),
       child: Text(
         text,
@@ -224,10 +224,10 @@ class _DictionaryPageState extends State<DictionaryPage>
         final hasUs = phonetic.american.isNotEmpty;
         final hasUk = phonetic.english.isNotEmpty;
         return Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(context.design.spacing.md),
           decoration: BoxDecoration(
             color: skin.cardBg,
-            borderRadius: BorderRadius.circular(AppRadius.xl),
+            borderRadius: BorderRadius.circular(context.design.radius.xl),
             border: Border.all(color: skin.divider, width: 0.5),
           ),
           child: Column(
@@ -237,7 +237,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                 _buildPronunciationRow(
                     '美式', '/${phonetic.american}/', skin),
               if (hasUk) ...[
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.design.spacing.sm),
                 _buildPronunciationRow(
                     '英式', '/${phonetic.english}/', skin),
               ],
@@ -257,7 +257,7 @@ class _DictionaryPageState extends State<DictionaryPage>
           style: MistralTypography.bodySm
               .copyWith(color: skin.text3, fontWeight: FontWeight.w500),
         ),
-        const SizedBox(width: AppSpacing.sm),
+        SizedBox(width: context.design.spacing.sm),
         Text(phonetic,
             style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
       ],
@@ -271,10 +271,10 @@ class _DictionaryPageState extends State<DictionaryPage>
         if (defs.isEmpty) return const SizedBox.shrink();
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(context.design.spacing.md),
           decoration: BoxDecoration(
             color: skin.cardBg,
-            borderRadius: BorderRadius.circular(AppRadius.xl),
+            borderRadius: BorderRadius.circular(context.design.radius.xl),
             border: Border.all(color: skin.divider, width: 0.5),
           ),
           child: Column(
@@ -285,12 +285,12 @@ class _DictionaryPageState extends State<DictionaryPage>
                 style: MistralTypography.bodyMd
                     .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: context.design.spacing.sm),
               ...defs.expand((item) sync* {
                 if (item.partOfSpeech.isNotEmpty) {
                   yield Padding(
-                    padding: const EdgeInsets.only(
-                        top: AppSpacing.xs, bottom: 2),
+                    padding: EdgeInsets.only(
+                        top: context.design.spacing.xs, bottom: 2),
                     child: Text(
                       item.partOfSpeech,
                       style: MistralTypography.bodySm.copyWith(
@@ -300,7 +300,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                 }
                 for (final d in item.definitions) {
                   yield Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                    padding: EdgeInsets.only(bottom: context.design.spacing.xs),
                     child: Text(
                       d,
                       style: MistralTypography.bodyMd
@@ -322,7 +322,7 @@ class _DictionaryPageState extends State<DictionaryPage>
         Container(
           decoration: BoxDecoration(
             color: skin.cardBg,
-            borderRadius: BorderRadius.circular(AppRadius.xl),
+            borderRadius: BorderRadius.circular(context.design.radius.xl),
             border: Border.all(color: skin.divider, width: 0.5),
           ),
           child: TabBar(
@@ -333,7 +333,7 @@ class _DictionaryPageState extends State<DictionaryPage>
             indicatorColor: skin.accent,
             indicatorWeight: 3,
             indicatorSize: TabBarIndicatorSize.label,
-            indicatorPadding: const EdgeInsets.only(bottom: 2),
+            indicatorPadding: EdgeInsets.only(bottom: 2),
             labelStyle:
                 MistralTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
             unselectedLabelStyle: MistralTypography.bodySm,
@@ -347,7 +347,7 @@ class _DictionaryPageState extends State<DictionaryPage>
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: context.design.spacing.md),
         Expanded(
           child: TabBarView(
             controller: _tabController,
@@ -367,10 +367,10 @@ class _DictionaryPageState extends State<DictionaryPage>
 
   Widget _buildCollinsTab(ThemeVars skin, Word word) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(context.design.spacing.md),
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
         border: Border.all(color: skin.divider, width: 0.5),
       ),
       child: Column(
@@ -392,7 +392,7 @@ class _DictionaryPageState extends State<DictionaryPage>
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: context.design.spacing.sm),
           Text('暂无柯林斯释义数据',
               style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
         ],
@@ -406,10 +406,10 @@ class _DictionaryPageState extends State<DictionaryPage>
         final examples = state.examExamples;
         if (examples.isEmpty) {
           return Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(context.design.spacing.md),
             decoration: BoxDecoration(
               color: skin.cardBg,
-              borderRadius: BorderRadius.circular(AppRadius.xl),
+              borderRadius: BorderRadius.circular(context.design.radius.xl),
               border: Border.all(color: skin.divider, width: 0.5),
             ),
             child: Center(
@@ -426,11 +426,11 @@ class _DictionaryPageState extends State<DictionaryPage>
           itemBuilder: (context, index) {
             final ex = examples[index];
             return Container(
-              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-              padding: const EdgeInsets.all(AppSpacing.md),
+              margin: EdgeInsets.only(bottom: context.design.spacing.sm),
+              padding: EdgeInsets.all(context.design.spacing.md),
               decoration: BoxDecoration(
                 color: skin.cardBg,
-                borderRadius: BorderRadius.circular(AppRadius.xl),
+                borderRadius: BorderRadius.circular(context.design.radius.xl),
                 border: Border.all(color: skin.divider, width: 0.5),
               ),
               child: Column(
@@ -440,7 +440,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                       style: MistralTypography.bodyMd
                           .copyWith(color: skin.text1, height: 1.5)),
                   if (ex.chinese.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.xs),
+                    SizedBox(height: context.design.spacing.xs),
                     Text(ex.chinese,
                         style: MistralTypography.bodySm
                             .copyWith(color: skin.text3)),
@@ -460,10 +460,10 @@ class _DictionaryPageState extends State<DictionaryPage>
         final derived = state.derivedWords;
         if (derived.isEmpty) {
           return Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(context.design.spacing.md),
             decoration: BoxDecoration(
               color: skin.cardBg,
-              borderRadius: BorderRadius.circular(AppRadius.xl),
+              borderRadius: BorderRadius.circular(context.design.radius.xl),
               border: Border.all(color: skin.divider, width: 0.5),
             ),
             child: Column(
@@ -474,7 +474,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                   style: MistralTypography.bodyMd
                       .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.design.spacing.sm),
                 Text('暂无派生词',
                     style: MistralTypography.bodyMd
                         .copyWith(color: skin.text3)),
@@ -501,11 +501,11 @@ class _DictionaryPageState extends State<DictionaryPage>
                             )));
               },
               child: Container(
-                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                padding: const EdgeInsets.all(AppSpacing.md),
+                margin: EdgeInsets.only(bottom: context.design.spacing.sm),
+                padding: EdgeInsets.all(context.design.spacing.md),
                 decoration: BoxDecoration(
                   color: skin.cardBg,
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  borderRadius: BorderRadius.circular(context.design.radius.lg),
                   border: Border.all(color: skin.divider, width: 0.5),
                 ),
                 child: Row(
@@ -521,13 +521,13 @@ class _DictionaryPageState extends State<DictionaryPage>
                                 fontWeight: FontWeight.w600),
                           ),
                           if (w.usPron.isNotEmpty) ...[
-                            const SizedBox(height: 2),
+                            SizedBox(height: 2),
                             Text(w.usPron,
                                 style: MistralTypography.bodySm
                                     .copyWith(color: skin.text3)),
                           ],
                           if (firstInterp.isNotEmpty) ...[
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             Text(
                               firstInterp,
                               style: MistralTypography.bodySm
@@ -561,10 +561,10 @@ class _DictionaryPageState extends State<DictionaryPage>
         final synonyms = state.synonyms;
         if (synonyms.isEmpty) {
           return Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(context.design.spacing.md),
             decoration: BoxDecoration(
               color: skin.cardBg,
-              borderRadius: BorderRadius.circular(AppRadius.xl),
+              borderRadius: BorderRadius.circular(context.design.radius.xl),
               border: Border.all(color: skin.divider, width: 0.5),
             ),
             child: Column(
@@ -575,7 +575,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                   style: MistralTypography.bodyMd
                       .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.design.spacing.sm),
                 Text('暂无近义词数据',
                     style: MistralTypography.bodyMd
                         .copyWith(color: skin.text3)),
@@ -602,11 +602,11 @@ class _DictionaryPageState extends State<DictionaryPage>
                             )));
               },
               child: Container(
-                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                padding: const EdgeInsets.all(AppSpacing.md),
+                margin: EdgeInsets.only(bottom: context.design.spacing.sm),
+                padding: EdgeInsets.all(context.design.spacing.md),
                 decoration: BoxDecoration(
                   color: skin.cardBg,
-                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                  borderRadius: BorderRadius.circular(context.design.radius.xl),
                   border: Border.all(color: skin.divider, width: 0.5),
                 ),
                 child: Row(
@@ -622,7 +622,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                                 fontWeight: FontWeight.w600),
                           ),
                           if (firstInterpret.isNotEmpty) ...[
-                            const SizedBox(height: AppSpacing.xs),
+                            SizedBox(height: context.design.spacing.xs),
                             Text(
                               firstInterpret,
                               style: MistralTypography.bodySm
@@ -652,10 +652,10 @@ class _DictionaryPageState extends State<DictionaryPage>
         final examples = state.examExamples;
         if (examples.isEmpty) {
           return Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(context.design.spacing.md),
             decoration: BoxDecoration(
               color: skin.cardBg,
-              borderRadius: BorderRadius.circular(AppRadius.xl),
+              borderRadius: BorderRadius.circular(context.design.radius.xl),
               border: Border.all(color: skin.divider, width: 0.5),
             ),
             child: Column(
@@ -666,7 +666,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                   style: MistralTypography.bodyMd
                       .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.design.spacing.sm),
                 Text('暂无真题例句',
                     style: MistralTypography.bodyMd
                         .copyWith(color: skin.text3)),
@@ -681,11 +681,11 @@ class _DictionaryPageState extends State<DictionaryPage>
           itemBuilder: (context, index) {
             final ex = examples[index];
             return Container(
-              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-              padding: const EdgeInsets.all(AppSpacing.md),
+              margin: EdgeInsets.only(bottom: context.design.spacing.sm),
+              padding: EdgeInsets.all(context.design.spacing.md),
               decoration: BoxDecoration(
                 color: skin.cardBg,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
+                borderRadius: BorderRadius.circular(context.design.radius.lg),
                 border: Border.all(color: skin.divider, width: 0.5),
               ),
               child: Column(
@@ -695,7 +695,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                       style: MistralTypography.bodyMd
                           .copyWith(color: skin.text1, height: 1.5)),
                   if (ex.chinese.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.xs),
+                    SizedBox(height: context.design.spacing.xs),
                     Text(ex.chinese,
                         style: MistralTypography.bodySm
                             .copyWith(color: skin.text3)),

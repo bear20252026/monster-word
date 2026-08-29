@@ -1,4 +1,4 @@
-// 设置页：学习偏好 + 7 个底部弹窗交互
+﻿// 设置页：学习偏好 + 7 个底部弹窗交互
 // 已接入 SkinSystem 主题 — 所有颜色使用 context.skin.colors
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -36,7 +36,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 // 顶部导航栏
                 Container(
                   height: 48,
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 4),
                   child: Row(
                     children: [
                       IconButton(
@@ -52,7 +52,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 48),
+                      SizedBox(width: 48),
                     ],
                   ),
                 ),
@@ -69,7 +69,7 @@ class _SettingsPageState extends State<SettingsPage> {
   /// 「即将上线」标签
   Widget _comingSoonBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: Colors.orange.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
@@ -86,7 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
       children: [
         // --- 第一组：学习提醒 ---
         _SettingGroup([_Cell(title: '学习提醒', onTap: () => _showReminderDialog())]),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
 
         // --- 第二组：发音设置 ---
         _SettingGroup([
@@ -99,11 +99,11 @@ class _SettingsPageState extends State<SettingsPage> {
             onTap: () => _showAutoPronDialog(),
           ),
         ]),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
 
         // --- 第三组：拼写设置 ---
         _SettingGroup([_CellWithDesc(title: '拼写', desc: _spellDesc(settings), onTap: () => _showSpellDialog())]),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
 
         // --- 第四组：学习节奏 ---
         _SettingGroup([
@@ -111,7 +111,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _Cell(title: '学习节奏', value: '${settings.learnPace} 词/小结', onTap: () => _showLearnPaceDialog()),
           _Cell(title: '复习节奏', value: '${settings.reviewPace} 词/组', onTap: () => _showReviewPaceDialog()),
         ]),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
 
         // --- 第五组：题型/助记 ---
         _SettingGroup([
@@ -139,7 +139,7 @@ class _SettingsPageState extends State<SettingsPage> {
             onChanged: settings.setShowConfusableMeanings,
           ),
         ]),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
 
         // --- 第六组：更多设置 ---
         _SettingGroup([
@@ -361,19 +361,19 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               // 模式切换
               Text('复习模式', style: TextStyle(fontSize: 13, color: skin.text3)),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Row(
                 children: ['新模式', '旧模式'].map((m) {
                   final on = _preferences.reviewMode == m;
                   return Padding(
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: EdgeInsets.only(right: 8),
                     child: GestureDetector(
                       onTap: () async {
                         await _preferences.setReviewMode(m);
                         if (ctx.mounted) setSheetState(() {});
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: on ? skin.accent : skin.cardBgAlt,
                           borderRadius: BorderRadius.circular(24),
@@ -392,10 +392,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               // 词数组
               Text('每组词数', style: TextStyle(fontSize: 13, color: skin.text3)),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               ...[10, 15, 20, 40, 100].map(
                 (n) => _SheetOptionRow(
                   label: '$n 词/组',
@@ -435,7 +435,7 @@ class _SettingsPageState extends State<SettingsPage> {
             // 拖拽条 + 关闭按钮
             Row(
               children: [
-                const SizedBox(width: 36),
+                SizedBox(width: 36),
                 Expanded(
                   child: Center(
                     child: Container(
@@ -456,13 +456,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             // 标题
             Text(
               title,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: skin.text1),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             // 内容
             child,
           ],
@@ -509,7 +509,7 @@ class _Cell extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: Container(
           height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
               Expanded(
@@ -517,10 +517,10 @@ class _Cell extends StatelessWidget {
               ),
               if (value != null)
                 Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: EdgeInsets.only(right: 8),
                   child: Text(value!, style: TextStyle(fontSize: 14, color: skin.text3)),
                 ),
-              if (trailing != null) ...[trailing!, const SizedBox(width: 8)],
+              if (trailing != null) ...[trailing!, SizedBox(width: 8)],
               Icon(Icons.chevron_right, size: 20, color: skin.text3),
             ],
           ),
@@ -546,7 +546,7 @@ class _CellWithDesc extends StatelessWidget {
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
               Expanded(
@@ -554,7 +554,7 @@ class _CellWithDesc extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(desc, style: TextStyle(fontSize: 12, color: skin.text3)),
                   ],
                 ),
@@ -580,7 +580,7 @@ class _SwitchCell extends StatelessWidget {
     final skin = context.skin.colors;
     return Container(
       height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
           Expanded(
@@ -612,7 +612,7 @@ class _SwitchCellWithDesc extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           Expanded(
@@ -620,7 +620,7 @@ class _SwitchCellWithDesc extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(desc, style: TextStyle(fontSize: 12, color: skin.text3)),
               ],
             ),

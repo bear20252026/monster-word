@@ -1,4 +1,4 @@
-// 由 Claude 团队生成 | Monster Word App
+﻿// 由 Claude 团队生成 | Monster Word App
 
 // 移植自 v3.2 LoginActivity
 // 登录页：支持手机号登录、账号密码登录
@@ -221,25 +221,25 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           ),
           child: Icon(Icons.menu_book, size: 56, color: MistralColors.primary),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Text('不背单词', style: MistralTypography.heading3.copyWith(color: skin.colors.text1)),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         // Slogan（对应原版 tv_slogan）
         Text('在语境中学习单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
         const Spacer(flex: 1),
         // 上次登录信息（对应原版 mTvLastAccountInfoView）
         if (_lastLoginAccountInfo != null && _lastLoginAccountInfo!.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: EdgeInsets.symmetric(horizontal: 32),
             child: Text(
               '上次登录：$_lastLoginAccountInfo',
               style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
             ),
           ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         // 登录方式按钮组
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
+          padding: EdgeInsets.symmetric(horizontal: 32),
           child: Column(
             children: [
               // 手机号登录
@@ -254,7 +254,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   onTap: () => setState(() => _loginMode = 2),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               // 账号密码登录
               Semantics(
                 label: '账号密码登录',
@@ -271,10 +271,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         // 用户协议（对应原版 tv_user_rule）
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
+          padding: EdgeInsets.symmetric(horizontal: 32),
           child: Text.rich(
             TextSpan(
               text: '登录即同意 ',
@@ -294,7 +294,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             textAlign: TextAlign.center,
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
       ],
     );
   }
@@ -308,7 +308,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         // 顶部导航（对应原版 CustomHeadView）
         Container(
           height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: EdgeInsets.symmetric(horizontal: 4),
           child: Row(
             children: [
               IconButton(
@@ -319,18 +319,18 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               const Spacer(),
               Text(isPhone ? '手机号登录' : '账号密码登录', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
               const Spacer(),
-              const SizedBox(width: 48), // 占位，保持居中
+              SizedBox(width: 48), // 占位，保持居中
             ],
           ),
         ),
         Container(height: 1, color: skin.colors.divider),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
                 if (isPhone) ...[
                   _buildTextField(
                     controller: _phoneController,
@@ -339,7 +339,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     keyboardType: TextInputType.phone,
                     skin: skin,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
@@ -351,7 +351,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                           skin: skin,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       SizedBox(
                         height: 48,
                         child: ElevatedButton(
@@ -362,7 +362,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                           style: ElevatedButton.styleFrom(
                             backgroundColor: MistralColors.primary,
                             foregroundColor: AppColors.white100,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
                           ),
                           child: const Text('获取验证码'),
                         ),
@@ -376,7 +376,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     icon: Icons.person_outline,
                     skin: skin,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   _buildTextField(
                     controller: _passwordController,
                     hint: '请输入密码',
@@ -393,7 +393,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       },
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -404,7 +404,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     ),
                   ),
                 ],
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 // 登录按钮
                 SizedBox(
                   width: double.infinity,
@@ -423,10 +423,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       backgroundColor: MistralColors.primary,
                       foregroundColor: AppColors.white100,
                       disabledBackgroundColor: MistralColors.muted,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                     ),
                     child: _isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white100),
@@ -464,18 +464,18 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         filled: true,
         fillColor: skin.colors.cardBgAlt,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(context.design.radius.md),
           borderSide: BorderSide(color: skin.colors.divider),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(context.design.radius.md),
           borderSide: BorderSide(color: skin.colors.divider),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.circular(context.design.radius.md),
           borderSide: BorderSide(color: MistralColors.primary, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }
@@ -498,7 +498,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               label: Text(label, style: TextStyle(color: color)),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: skin.colors.divider),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
               ),
             )
           : ElevatedButton.icon(
@@ -507,7 +507,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               label: Text(label, style: const TextStyle(color: AppColors.white100)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: color,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
               ),
             ),
     );

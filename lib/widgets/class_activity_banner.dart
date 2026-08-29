@@ -1,6 +1,7 @@
 // 班级活动 Banner：橙色渐变 + 大标题 + 太阳装饰
 import 'package:flutter/material.dart';
 
+import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 
 /// 班级活动 Banner 组件
@@ -16,7 +17,7 @@ class ClassActivityBanner extends StatelessWidget {
       child: Container(
         width: double.infinity,
         height: 160,
-        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+        margin: EdgeInsets.symmetric(horizontal: context.design.spacing.page),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,

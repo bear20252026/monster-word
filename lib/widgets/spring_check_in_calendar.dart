@@ -114,7 +114,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
         border: Border.all(color: skin.divider),
       ),
       child: Column(
@@ -141,7 +141,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
             },
           ),
           const SizedBox(height: 16),
-          _buildCheckInButton(skin),
+          _buildCheckInButton(context, skin),
         ],
       ),
     );
@@ -295,7 +295,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
   }
 
   // ── 底部签到按钮 ──
-  Widget _buildCheckInButton(dynamic skin) {
+  Widget _buildCheckInButton(BuildContext context, dynamic skin) {
     return Column(
       children: [
         SizedBox(
@@ -305,7 +305,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
             style: FilledButton.styleFrom(
               backgroundColor: _todayChecked ? skin.divider : skin.accent,
               foregroundColor: _todayChecked ? skin.text3 : AppColors.white100,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
             ),
             onPressed: _todayChecked ? null : _onCheckIn,
             icon: Icon(_todayChecked ? Icons.check_circle_outline : Icons.redeem, size: 20),

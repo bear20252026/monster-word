@@ -576,7 +576,7 @@ class _PhoneticPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(AppRadius.control)),
+      decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(context.design.radius.control)),
       child: Text(label, style: AppTypography.footnote.copyWith(color: skin.colors.onGlassText2)),
     );
   }
@@ -596,7 +596,7 @@ class _ExampleCard extends StatelessWidget {
       decoration: BoxDecoration(
         // 奶油半透明底（适配深色模式）
         color: skin.colors.cardBg.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(context.design.radius.card),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -660,7 +660,7 @@ class _DerivedWordsCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: skin.colors.cardBg.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(context.design.radius.card),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

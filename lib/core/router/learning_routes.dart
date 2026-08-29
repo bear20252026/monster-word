@@ -95,7 +95,7 @@ abstract final class LearningRoutes {
     if (map == null) {
       return const RouteErrorPage(routeName: 'listen_mode_select', message: '缺少必要参数');
     }
-    final bookId = (map['bookId'] as num?)?.toInt() ?? 0;
+    final bookId = (map['bookId'] as String?) ?? '';
     return ExtensiveModelSelectPage(bookId: bookId, bookName: map['bookName'] as String? ?? '');
   }
 
@@ -118,21 +118,13 @@ abstract final class LearningRoutes {
   }
 
   static Widget _buildDictationSessionPage(Object? args) {
-    final map = args is Map<String, dynamic> ? args : null;
-    if (map == null) {
-      return const RouteErrorPage(routeName: 'dictation_session', message: '缺少必要参数');
-    }
-    final words = (map['words'] as List?)?.map((entry) => entry as Word).toList() ?? [];
-    return DictationSessionPage(words: words, bookName: map['bookName'] as String? ?? '');
+    // 页面构造后自身从 LearningSessionState 读取词表队列
+    return const DictationSessionPage();
   }
 
   static Widget _buildQuickSpellPage(Object? args) {
-    final map = args is Map<String, dynamic> ? args : null;
-    if (map == null) {
-      return const RouteErrorPage(routeName: 'quick_spell', message: '缺少必要参数');
-    }
-    final words = (map['words'] as List?)?.map((entry) => entry as Word).toList() ?? [];
-    return QuickSpellPage(words: words, bookName: map['bookName'] as String? ?? '');
+    // 页面构造后自身从 LearningSessionState 读取词表队列
+    return const QuickSpellPage();
   }
 
   static Widget _buildWordExportPage(Object? args) {

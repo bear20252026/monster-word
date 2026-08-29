@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/learning/learning_favorites_store.dart';
 import '../../../core/learning/learning_progress_reader.dart';
+import '../../../core/learning/learning_session_reader.dart';
 import '../../../core/learning/learning_session_starter.dart';
+import '../../../core/learning/learning_collections_reader.dart';
+import '../../../core/learning/learning_statistics_reader.dart';
 import '../../../core/learning/new_words_store.dart';
 import '../application/book_words_reader.dart';
 import '../application/mastered_words_reader.dart';
@@ -107,6 +110,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
       ProxyProvider<LearningSessionState, LearningSessionStarter>(
         update: (_, session, _) => LearningSessionStarterImpl(session),
       ),
+      ProxyProvider<LearningSessionState, LearningSessionReader>(
+        update: (_, session, _) => LearningSessionStarterImpl(session),
+      ),
       ChangeNotifierProxyProvider<LearningSessionState, LearningQueueState>(
         create: (_) => LearningQueueState(),
         update: (_, session, queue) => (queue ?? LearningQueueState())..synchronizeFrom(session),
@@ -116,10 +122,20 @@ Widget buildLearningFeatureScope({required Widget child}) {
         update: (_, queue, schedule, statistics) =>
             (statistics ?? LearningStatisticsState())..synchronize(queue: queue.snapshot, schedule: schedule),
       ),
+      // 只读统计端口：暴露给其它 feature（如 word_browse 的 foot_mark）读取统计。
+      // 装配为具体状态实现 core 只读契约，消费方经类型注入依赖 core，而非 learning/presentation。
+      ListenableProxyProvider<LearningStatisticsState, LearningStatisticsReader>(
+        update: (_, state, _) => state,
+      ),
       ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>(
         create: (_) => LearningCollectionsState(),
         update: (_, favorites, mastered, collections) =>
             (collections ?? LearningCollectionsState())..synchronize(favorites: favorites, mastered: mastered),
+      ),
+      // 只读集合端口：暴露给其它 feature（如 content 的 my_content_page、word_browse 的
+      // foot_mark）读取收藏/掌握数量，消费方依赖 core 而非 learning/presentation。
+      ListenableProxyProvider<LearningCollectionsState, LearningCollectionsReader>(
+        update: (_, state, _) => state,
       ),
       ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleReader, LearningQueueWordListsState>(
         create: (_) => LearningQueueWordListsState(),

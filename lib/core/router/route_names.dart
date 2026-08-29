@@ -52,6 +52,8 @@ class RouteNames {
   static const String spellCheck = '/spell_check';
   static const String spellSession = '/spell_session';
   static const String checkInHistory = '/check_in_history';
+  static const String classCheckin = '/class_checkin';
+  static const String classActivity = '/class_activity';
   static const String linkedMe = '/linked_me';
   static const String wordDetail = '/word_detail';
   static const String dictionary = '/dictionary';

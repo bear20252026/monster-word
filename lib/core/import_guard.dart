@@ -27,13 +27,32 @@ class ImportGuard {
     final fromLayer = _layerOf(from);
     final toLayer = _layerOf(to);
 
-    // R4：跨功能 import 禁止 —— 一个 feature 不得 import 另一个 feature 的内部。
-    if (fromFeature.isNotEmpty && toFeature.isNotEmpty && toFeature != fromFeature) {
-      violations.add('跨功能 import 被禁止(R4): $from -> $to');
+    // R4：跨功能 import 禁止 —— 一个 feature 不得 import 另一个 feature 的
+    // domain / data / presentation 内部实现。
+    //
+    // 例外（sanctioned port/channel，见 test/architecture/app_structure_test.dart）：
+    // 允许跨 feature 仅 import 对方 feature 的 `application/` 层抽象端口。这是
+    // 端口-适配器架构允许的功能间通道（如 SentenceFavoritesStore、WordNotesStore、
+    // ReviewScheduleReader 由其它 feature 的 presentation 消费）。application 层
+    // 只暴露抽象契约、不承载具体页面/仓储实现，因此这种跨 feature 引用是安全的。
+    final isCrossFeature =
+        fromFeature.isNotEmpty && toFeature.isNotEmpty && toFeature != fromFeature;
+    if (isCrossFeature) {
+      final isPortChannel = toLayer == 'application';
+      if (!isPortChannel) {
+        violations.add('跨功能 import 被禁止(R4): $from -> $to');
+      }
     }
 
     // core 依赖方向：core 不得反向依赖 features。
-    if (from.startsWith('core/') && to.startsWith('features/')) {
+    // 例外：core/di 与 core/router 是 IoC 组合根/装配边界，按其设计必须引用
+    // feature 的实现（DI 注册表注册各 feature 的端口实现；路由协调器装配各页面）。
+    // 它们只做「组装」，不承载业务逻辑，因此豁免 R-core，避免依赖方向误报。
+    final isCompositionRoot = from.startsWith('core/di/') ||
+        from.startsWith('core/router/');
+    if (!isCompositionRoot &&
+        from.startsWith('core/') &&
+        to.startsWith('features/')) {
       violations.add('core 不得 import features(R-core): $from -> $to');
     }
 

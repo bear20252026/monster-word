@@ -34,7 +34,7 @@ class FormalReviewHeader extends StatelessWidget {
     final skin = context.skin.colors;
     final responsive = context.responsive;
     return Container(
-      height: AppSpacing.navH,
+      height: context.design.spacing.navH,
       margin: const EdgeInsets.only(top: 4),
       padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding * 0.5),
       child: Row(

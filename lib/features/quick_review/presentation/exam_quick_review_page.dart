@@ -5,7 +5,7 @@
 // 本页面完整包含考试速刷的 UI 与交互逻辑，遵循 R1-R6 分层：
 // - 读：通过 QuickReviewWordReader 端口（application 层）
 // - 领域：ExamType / QuickReviewStats（domain 层）
-// - 不直接接触 WordRepository 或任何基础设施
+// - 不直接接触数据仓库实现或任何基础设施
 
 import 'dart:async';
 
@@ -346,7 +346,7 @@ class _StatBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderRadius: BorderRadius.circular(context.design.radius.sm),
         border: Border.all(color: skin.divider),
       ),
       child: Column(
@@ -395,7 +395,7 @@ class _SimpleWordCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
         border: Border.all(color: skin.divider),
       ),
       child: Column(

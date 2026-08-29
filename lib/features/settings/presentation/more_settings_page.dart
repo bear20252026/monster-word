@@ -1,4 +1,4 @@
-// 由 Claude 团队生成 | Monster Word App
+﻿// 由 Claude 团队生成 | Monster Word App
 
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
 // 还原原版 v3.2 个人中心 → 更多设置入口
@@ -7,15 +7,13 @@ import 'package:provider/provider.dart';
 
 import '../../../core/auth/app_session_controller.dart';
 import '../../../core/router/nav_utils.dart';
+import '../../../core/router/route_names.dart';
 import '../../../hooks/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import '../../../widgets/sb_button.dart';
 import '../../../widgets/sb_modal.dart';
 import '../../../widgets/scale_down_on_press.dart';
-import '../../../pages/account_info_page.dart';
-import '../../../pages/feedback_page.dart';
-import '../../../pages/redemption_center_page.dart';
 
 /// 更多设置页
 class MoreSettingsPage extends StatefulWidget {
@@ -46,7 +44,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           title: Column(
             children: [
               const Text('⭐', style: TextStyle(fontSize: 36)),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text('给个好评吧！', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
             ],
           ),
@@ -54,14 +52,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('您的支持是我们前进的动力', style: MistralTypography.body.copyWith(color: context.skin.colors.text2)),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(5, (i) {
                   return GestureDetector(
                     onTap: () => setDialogState(() => rating = i + 1),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: EdgeInsets.symmetric(horizontal: 4),
                       child: Icon(
                         i < rating ? Icons.star : Icons.star_border,
                         color: const Color(0xFFFFC107),
@@ -110,7 +108,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         title: Column(
           children: [
             const Text('🎉', style: TextStyle(fontSize: 36)),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text('已是最新版本', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
           ],
         ),
@@ -160,19 +158,19 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text('👹', style: TextStyle(fontSize: 48)),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Text(
                     'Monster Word',
                     style: MistralTypography.heading5.copyWith(color: context.skin.colors.onGlassAccent),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     '背单词，so easy！',
                     style: MistralTypography.bodySm.copyWith(color: context.skin.colors.onGlassAccent.withValues(alpha: 0.9)),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
                       color: context.skin.colors.onGlassAccent,
                       borderRadius: BorderRadius.circular(20),
@@ -182,7 +180,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text('扫码下载 Monster Word', style: MistralTypography.body.copyWith(color: context.skin.colors.text2)),
           ],
         ),
@@ -210,7 +208,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             _buildNav(skin),
             Expanded(
               child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: resp.pageMargin, vertical: AppleSpacing.md),
+                padding: EdgeInsets.symmetric(horizontal: resp.pageMargin, vertical: context.design.spacing.md),
                 children: [
                   // 账号信息
                   _SettingGroup([
@@ -219,10 +217,10 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       iconColor: skin.colors.accent,
                       title: '账号信息',
                       subtitle: '点击设置',
-                      onTap: () => Navigator.pushNamed(context, AccountInfoPage.routeName),
+                      onTap: () => Navigator.pushNamed(context, RouteNames.accountInfo),
                     ),
                   ]),
-                  const SizedBox(height: AppleSpacing.md),
+                  SizedBox(height: context.design.spacing.md),
 
                   // 主页壁纸随动
                   _SettingGroup([
@@ -235,7 +233,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       onChanged: (v) => setState(() => _wallpaperParallax = v),
                     ),
                   ]),
-                  const SizedBox(height: AppleSpacing.md),
+                  SizedBox(height: context.design.spacing.md),
 
                   // 帮助与反馈 / 评价应用 / 检查更新 / 推荐给好友
                   _SettingGroup([
@@ -243,7 +241,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       icon: Icons.help_outline,
                       iconColor: MistralColors.success,
                       title: '帮助与反馈',
-                      onTap: () => Navigator.pushNamed(context, FeedbackPage.routeName),
+                      onTap: () => Navigator.pushNamed(context, RouteNames.feedback),
                     ),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
@@ -268,7 +266,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       onTap: () => _showShareDialog(context),
                     ),
                   ]),
-                  const SizedBox(height: AppleSpacing.md),
+                  SizedBox(height: context.design.spacing.md),
 
                   // 兑换中心 / 举报
                   _SettingGroup([
@@ -276,7 +274,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       icon: Icons.redeem_outlined,
                       iconColor: MistralColors.primary,
                       title: '兑换中心',
-                      onTap: () => Navigator.pushNamed(context, RedemptionCenterPage.routeName),
+                      onTap: () => Navigator.pushNamed(context, RouteNames.redemption),
                     ),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
@@ -286,7 +284,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       onTap: () => _showComingSoon('举报'),
                     ),
                   ]),
-                  const SizedBox(height: AppleSpacing.md),
+                  SizedBox(height: context.design.spacing.md),
 
                   // 服务条款 / 隐私协议
                   _SettingGroup([
@@ -302,7 +300,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       onTap: () {},
                     ),
                   ]),
-                  const SizedBox(height: AppleSpacing.xxl),
+                  SizedBox(height: context.design.spacing.xxl),
 
                   // 退出登录
                   SizedBox(
@@ -314,7 +312,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       textColor: skin.colors.danger,
                     ),
                   ),
-                  const SizedBox(height: AppleSpacing.xxl),
+                  SizedBox(height: context.design.spacing.xxl),
                 ],
               ),
             ),
@@ -350,8 +348,8 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
 
   Widget _buildNav(SkinSystem skin) {
     return Container(
-      height: AppSpacing.navH,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      height: context.design.spacing.navH,
+      padding: EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: skin.colors.cardBg,
         border: Border(bottom: BorderSide(color: skin.colors.divider, width: 0.5)),
@@ -363,7 +361,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             color: skin.colors.text1,
             onPressed: () => NavUtils.safePop(context),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text('更多设置', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
@@ -386,7 +384,7 @@ class _SettingGroup extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(context.design.radius.lg),
         boxShadow: const [
           BoxShadow(offset: Offset.zero, blurRadius: 0.5, color: Color(0x24000000)),
           BoxShadow(offset: Offset(0, 1), blurRadius: 1, color: Color(0x3D000000)),
@@ -414,17 +412,17 @@ class _Cell extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: AppleSpacing.md),
+        padding: EdgeInsets.symmetric(horizontal: context.design.spacing.md),
         child: Row(
           children: [
             Icon(icon, color: iconColor, size: 22),
-            const SizedBox(width: AppleSpacing.sm),
+            SizedBox(width: context.design.spacing.sm),
             Expanded(
               child: Text(title, style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
             ),
             if (subtitle != null)
               Padding(
-                padding: const EdgeInsets.only(right: AppleSpacing.xs),
+                padding: EdgeInsets.only(right: context.design.spacing.xs),
                 child: Text(subtitle!, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
               ),
             Icon(Icons.chevron_right, size: 18, color: skin.text3),
@@ -458,11 +456,11 @@ class _SwitchCell extends StatelessWidget {
     final skin = context.skin.colors;
     return Container(
       height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: AppleSpacing.md),
+      padding: EdgeInsets.symmetric(horizontal: context.design.spacing.md),
       child: Row(
         children: [
           Icon(icon, color: iconColor, size: 22),
-          const SizedBox(width: AppleSpacing.sm),
+          SizedBox(width: context.design.spacing.sm),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

@@ -1,4 +1,4 @@
-// 班级签到页：加入班级 + 每日签到 + 班级排行榜 + 学习数据
+﻿// 班级签到页：加入班级 + 每日签到 + 班级排行榜 + 学习数据
 // 还原原版 v3.2 班级签到功能入口
 // 完善版：Banner+班级活动指引+功能卡片+用户评论
 import 'package:flutter/material.dart';
@@ -57,8 +57,8 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
 
   Widget _buildTopBar(BuildContext context, ThemeVars skin) {
     return Container(
-      height: AppSpacing.navH,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      height: context.design.spacing.navH,
+      padding: EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
           IconButton(
@@ -66,7 +66,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
             color: skin.text1,
             onPressed: () => NavUtils.safePop(context),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text('班级签到', style: MistralTypography.heading5.copyWith(color: skin.text1)),
           const Spacer(),
           if (_hasJoinedClass)
@@ -95,25 +95,25 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: context.design.spacing.lg),
           // 1. 班级活动 Banner
           _buildBanner(skin),
-          const SizedBox(height: AppSpacing.xxl),
+          SizedBox(height: context.design.spacing.xxl),
           // 2. 班级活动指引
           _buildActivityGuide(skin),
-          const SizedBox(height: AppSpacing.xxl),
+          SizedBox(height: context.design.spacing.xxl),
           // 3. 功能卡片
           _buildFeatureCards(skin),
-          const SizedBox(height: AppSpacing.xxl),
+          SizedBox(height: context.design.spacing.xxl),
           // 4. 加入/创建班级按钮
           _buildActionButtons(context, skin),
-          const SizedBox(height: AppSpacing.xxl),
+          SizedBox(height: context.design.spacing.xxl),
           // 5. 热门班级
           _buildHotClasses(skin),
-          const SizedBox(height: AppSpacing.xxl),
+          SizedBox(height: context.design.spacing.xxl),
           // 6. 用户评论
           _buildUserComments(skin),
-          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: context.design.spacing.xl),
         ],
       ),
     );
@@ -133,7 +133,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
             Color(0xFF764BA2), // 装饰渐变 - 保留
           ],
         ),
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF667EEA).withValues(alpha: 0.3), // 装饰阴影 - 保留
@@ -165,35 +165,35 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
           ),
           // 内容
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: EdgeInsets.all(context.design.spacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.white100.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    borderRadius: BorderRadius.circular(context.design.radius.pill),
                   ),
                   child: Text('限时活动', style: MistralTypography.micro.copyWith(color: AppColors.white100)),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                SizedBox(height: context.design.spacing.sm),
                 Text(
                   '班级签到挑战赛',
                   style: MistralTypography.heading3.copyWith(color: AppColors.white100, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: context.design.spacing.xs),
                 Text(
                   '连续签到7天，赢取学习徽章',
                   style: MistralTypography.bodySm.copyWith(color: AppColors.white100.withValues(alpha: 0.9)),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: context.design.spacing.md),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: AppColors.white100,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    borderRadius: BorderRadius.circular(context.design.radius.pill),
                   ),
                   child: Text(
                     '立即参与',
@@ -214,7 +214,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('如何参与班级活动', style: MistralTypography.heading5.copyWith(color: skin.text1)),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: context.design.spacing.md),
         _GuideStep(number: '1', title: '加入班级', description: '输入班级口令或扫描二维码加入班级', icon: Icons.group_add, skin: skin),
         _GuideStep(number: '2', title: '每日签到', description: '每天学习单词后点击签到，记录学习进度', icon: Icons.touch_app, skin: skin),
         _GuideStep(number: '3', title: '查看排行', description: '与班级同学比拼学习进度，互相激励', icon: Icons.leaderboard, skin: skin),
@@ -236,7 +236,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('班级功能', style: MistralTypography.heading5.copyWith(color: skin.text1)),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: context.design.spacing.md),
         Row(
           children: [
             Expanded(
@@ -248,7 +248,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 skin: skin,
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            SizedBox(width: context.design.spacing.sm),
             Expanded(
               child: _FeatureCard(
                 icon: Icons.leaderboard,
@@ -260,7 +260,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: context.design.spacing.sm),
         Row(
           children: [
             Expanded(
@@ -272,7 +272,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 skin: skin,
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            SizedBox(width: context.design.spacing.sm),
             Expanded(
               child: _FeatureCard(
                 icon: Icons.emoji_events,
@@ -303,13 +303,13 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
               foregroundColor: AppColors.white100,
               elevation: 2,
               shadowColor: MistralColors.primary.withValues(alpha: 0.3),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.xl)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.group_add, size: 20),
-                const SizedBox(width: AppSpacing.xs),
+                SizedBox(width: context.design.spacing.xs),
                 Text(
                   '加入班级',
                   style: MistralTypography.bodyMd.copyWith(color: AppColors.white100, fontWeight: FontWeight.w600),
@@ -318,7 +318,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: context.design.spacing.sm),
         // 创建班级按钮
         SizedBox(
           width: double.infinity,
@@ -330,13 +330,13 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
             style: OutlinedButton.styleFrom(
               foregroundColor: MistralColors.primary,
               side: const BorderSide(color: MistralColors.primary, width: 1.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.xl)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.add_circle_outline, size: 20),
-                const SizedBox(width: AppSpacing.xs),
+                SizedBox(width: context.design.spacing.xs),
                 Text(
                   '创建班级',
                   style: MistralTypography.bodyMd.copyWith(color: MistralColors.primary, fontWeight: FontWeight.w600),
@@ -367,7 +367,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
             Text('查看全部', style: MistralTypography.bodySm.copyWith(color: MistralColors.primary)),
           ],
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: context.design.spacing.md),
         ...comments.map((comment) => _CommentCard(comment: comment, skin: skin)),
       ],
     );
@@ -384,10 +384,10 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('热门班级', style: MistralTypography.heading5.copyWith(color: skin.text1)),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: context.design.spacing.sm),
         ...hotClasses.map(
           (c) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: EdgeInsets.only(bottom: context.design.spacing.sm),
             child: _HotClassTile(
               data: c,
               skin: skin,
@@ -414,7 +414,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
         children: [
           // 班级信息卡片
           _ClassInfoCard(skin: skin, className: _className, memberCount: _classMemberCount, streakDays: _streakDays),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: context.design.spacing.lg),
           // 每日签到按钮
           _CheckInButton(
             skin: skin,
@@ -428,18 +428,18 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
               _showCheckInSuccess(context, skin);
             },
           ),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: context.design.spacing.lg),
           // 签到统计
           _CheckInStats(skin: skin, totalDays: _streakDays, rank: _classRank),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: context.design.spacing.lg),
           // 弹性签到日历（spring_calendar，数据来自尖叫币账本）
           _SpringCalendarCard(skin: skin),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: context.design.spacing.lg),
           // 班级排行榜
           Text('班级排行榜', style: MistralTypography.heading5.copyWith(color: skin.text1)),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: context.design.spacing.sm),
           _ClassRankList(skin: skin, members: _members),
-          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: context.design.spacing.xl),
         ],
       ),
     );
@@ -454,20 +454,20 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: skin.cardBg,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(context.design.radius.xl))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          top: AppSpacing.lg,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + AppSpacing.lg,
+          left: context.design.spacing.lg,
+          right: context.design.spacing.lg,
+          top: context.design.spacing.lg,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + context.design.spacing.lg,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('加入班级', style: MistralTypography.heading4.copyWith(color: skin.text1)),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.design.spacing.md),
             TextField(
               controller: codeController,
               decoration: InputDecoration(
@@ -476,13 +476,13 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 filled: true,
                 fillColor: skin.pageBg,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  borderRadius: BorderRadius.circular(context.design.radius.lg),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                contentPadding: EdgeInsets.symmetric(horizontal: context.design.spacing.md, vertical: context.design.spacing.sm),
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: context.design.spacing.md),
             SizedBox(
               width: double.infinity,
               height: 44,
@@ -494,7 +494,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: MistralColors.primary,
                   foregroundColor: AppColors.white100,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
                 ),
                 child: Text(
                   '加入',
@@ -514,13 +514,13 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
         content: Row(
           children: [
             const Icon(Icons.check_circle, color: AppColors.white100, size: 20),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text('签到成功！连续 $_streakDays 天'),
           ],
         ),
         backgroundColor: MistralColors.success,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -547,14 +547,14 @@ class _ClassInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(context.design.spacing.lg),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [MistralColors.primary.withValues(alpha: 0.85), MistralColors.primaryDeep.withValues(alpha: 0.75)],
         ),
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -563,16 +563,16 @@ class _ClassInfoCard extends StatelessWidget {
             className,
             style: MistralTypography.heading4.copyWith(color: AppColors.white100, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          SizedBox(height: context.design.spacing.xs),
           Text(
             '$memberCount 名成员',
             style: MistralTypography.bodySm.copyWith(color: AppColors.white100.withValues(alpha: 0.8)),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: context.design.spacing.md),
           Row(
             children: [
               _StatItem(label: '连续签到', value: '$streakDays 天'),
-              const SizedBox(width: AppSpacing.xl),
+              SizedBox(width: context.design.spacing.xl),
               _StatItem(label: '班级排名', value: '第 $memberCount 名'),
             ],
           ),
@@ -598,7 +598,7 @@ class _StatItem extends StatelessWidget {
           value,
           style: MistralTypography.heading3.copyWith(color: AppColors.white100, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 2),
+        SizedBox(height: 2),
         Text(label, style: MistralTypography.bodySm.copyWith(color: AppColors.white100.withValues(alpha: 0.7))),
       ],
     );
@@ -622,7 +622,7 @@ class _CheckInButton extends StatelessWidget {
         height: 56,
         decoration: BoxDecoration(
           color: checkedIn ? skin.cardBg : MistralColors.primary,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(context.design.radius.xl),
           border: checkedIn ? Border.all(color: skin.divider) : null,
         ),
         child: Center(
@@ -634,7 +634,7 @@ class _CheckInButton extends StatelessWidget {
                 color: checkedIn ? MistralColors.success : AppColors.white100,
                 size: 22,
               ),
-              const SizedBox(width: AppSpacing.xs),
+              SizedBox(width: context.design.spacing.xs),
               Text(
                 checkedIn ? '今日已签到' : '立即签到',
                 style: MistralTypography.bodyMd.copyWith(
@@ -661,10 +661,10 @@ class _CheckInStats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(context.design.spacing.md),
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
         border: Border.all(color: skin.divider),
       ),
       child: Row(
@@ -696,7 +696,7 @@ class _StatColumn extends StatelessWidget {
           value,
           style: MistralTypography.heading5.copyWith(color: skin.text1, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(label, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
       ],
     );
@@ -714,10 +714,10 @@ class _ClassRankList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (members.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+        padding: EdgeInsets.all(context.design.spacing.xl),
         decoration: BoxDecoration(
           color: skin.cardBg,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(context.design.radius.xl),
           border: Border.all(color: skin.divider),
         ),
         child: Center(
@@ -729,7 +729,7 @@ class _ClassRankList extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
         border: Border.all(color: skin.divider),
       ),
       child: Column(
@@ -756,7 +756,7 @@ class _RankTile extends StatelessWidget {
     final rankColors = [StarGold.gold, StarGold.silver, StarGold.bronze];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: EdgeInsets.symmetric(horizontal: context.design.spacing.md, vertical: context.design.spacing.sm),
       child: Row(
         children: [
           // 排名
@@ -776,14 +776,14 @@ class _RankTile extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: context.design.spacing.sm),
           // 头像
           CircleAvatar(
             radius: 16,
             backgroundColor: skin.pageBg,
             child: Text(name.isNotEmpty ? name[0] : '?', style: MistralTypography.bodySm.copyWith(color: skin.text1)),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: context.design.spacing.sm),
           // 名字
           Expanded(
             child: Text(name, style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
@@ -809,10 +809,10 @@ class _HotClassTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(context.design.spacing.md),
         decoration: BoxDecoration(
           color: skin.cardBg,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(context.design.radius.xl),
           border: Border.all(color: skin.divider),
         ),
         child: Row(
@@ -822,11 +822,11 @@ class _HotClassTile extends StatelessWidget {
               height: 44,
               decoration: BoxDecoration(
                 color: MistralColors.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppRadius.lg),
+                borderRadius: BorderRadius.circular(context.design.radius.lg),
               ),
               child: Icon(data.icon, color: MistralColors.primary, size: 24),
             ),
-            const SizedBox(width: AppSpacing.md),
+            SizedBox(width: context.design.spacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -835,7 +835,7 @@ class _HotClassTile extends StatelessWidget {
                     data.name,
                     style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text('${data.members} 人已加入', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
                 ],
               ),
@@ -905,7 +905,7 @@ class _GuideStep extends StatelessWidget {
             if (!isLast) Container(width: 2, height: 40, color: MistralColors.primary.withValues(alpha: 0.3)),
           ],
         ),
-        const SizedBox(width: AppSpacing.md),
+        SizedBox(width: context.design.spacing.md),
         // 内容
         Expanded(
           child: Column(
@@ -914,16 +914,16 @@ class _GuideStep extends StatelessWidget {
               Row(
                 children: [
                   Icon(icon, size: 18, color: MistralColors.primary),
-                  const SizedBox(width: AppSpacing.xs),
+                  SizedBox(width: context.design.spacing.xs),
                   Text(
                     title,
                     style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               Text(description, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
-              if (!isLast) const SizedBox(height: AppSpacing.md),
+              if (!isLast) SizedBox(height: context.design.spacing.md),
             ],
           ),
         ),
@@ -951,10 +951,10 @@ class _FeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(context.design.spacing.md),
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(context.design.radius.lg),
         border: Border.all(color: skin.divider),
         boxShadow: [BoxShadow(color: MistralColors.black15, blurRadius: 10, offset: const Offset(0, 4))],
       ),
@@ -966,16 +966,16 @@ class _FeatureCard extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderRadius: BorderRadius.circular(context.design.radius.md),
             ),
             child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: context.design.spacing.sm),
           Text(
             title,
             style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(description, style: MistralTypography.micro.copyWith(color: skin.text3)),
         ],
       ),
@@ -1010,11 +1010,11 @@ class _CommentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: EdgeInsets.only(bottom: context.design.spacing.sm),
+      padding: EdgeInsets.all(context.design.spacing.md),
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(context.design.radius.lg),
         border: Border.all(color: skin.divider),
       ),
       child: Column(
@@ -1031,7 +1031,7 @@ class _CommentCard extends StatelessWidget {
                   style: MistralTypography.bodySm.copyWith(color: MistralColors.primary, fontWeight: FontWeight.w600),
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: context.design.spacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1052,7 +1052,7 @@ class _CommentCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: context.design.spacing.sm),
           // 评论内容
           Text(comment.content, style: MistralTypography.bodySm.copyWith(color: skin.text2, height: 1.5)),
         ],
@@ -1114,7 +1114,7 @@ class _SpringCalendarCardState extends State<_SpringCalendarCard> {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(16),
@@ -1130,9 +1130,9 @@ class _SpringCalendarCardState extends State<_SpringCalendarCard> {
               Icon(Icons.auto_awesome, size: 16, color: skin.accent),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           if (!_loaded)
-            const SizedBox(height: 120, child: Center(child: CircularProgressIndicator(strokeWidth: 2)))
+            SizedBox(height: 120, child: Center(child: CircularProgressIndicator(strokeWidth: 2)))
           else
             // ValueKey：签到数变化时重建组件，重放弹性入场动画
             SpringCalendar(

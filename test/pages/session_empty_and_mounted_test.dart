@@ -16,12 +16,12 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: SkinProvider(
           skin: SkinSystem(),
-          child: DictationSessionPage(words: const []),
+          child: DictationSessionPage(),
         ),
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('暂无可听写单词'), findsOneWidget);
+      expect(find.text('暂无待学习单词'), findsOneWidget);
       expect(find.text('返回首页'), findsOneWidget);
       expect(find.byIcon(Icons.record_voice_over), findsOneWidget);
     });
@@ -40,12 +40,12 @@ void main() {
       navKey.currentState!.push(MaterialPageRoute(
         builder: (_) => SkinProvider(
           skin: SkinSystem(),
-          child: DictationSessionPage(words: const []),
+          child: DictationSessionPage(),
         ),
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('暂无可听写单词'), findsOneWidget);
+      expect(find.text('暂无待学习单词'), findsOneWidget);
 
       await tester.tap(find.text('返回首页'));
       await tester.pumpAndSettle();
@@ -63,12 +63,12 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: SkinProvider(
           skin: SkinSystem(),
-          child: QuickSpellPage(words: const []),
+          child: QuickSpellPage(),
         ),
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('暂无可拼写单词'), findsOneWidget);
+      expect(find.text('暂无待学习单词'), findsOneWidget);
       expect(find.text('返回首页'), findsOneWidget);
       expect(find.byIcon(Icons.keyboard), findsOneWidget);
     });
@@ -87,12 +87,12 @@ void main() {
       navKey.currentState!.push(MaterialPageRoute(
         builder: (_) => SkinProvider(
           skin: SkinSystem(),
-          child: QuickSpellPage(words: const []),
+          child: QuickSpellPage(),
         ),
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('暂无可拼写单词'), findsOneWidget);
+      expect(find.text('暂无待学习单词'), findsOneWidget);
 
       await tester.tap(find.text('返回首页'));
       await tester.pumpAndSettle();

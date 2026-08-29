@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../core/learning/learning_collections_reader.dart';
 import 'learning_favorites_state.dart';
 import 'learning_mastered_state.dart';
 
@@ -26,11 +27,15 @@ class LearningCollectionsSnapshot {
 ///
 /// 页面依赖此状态以读取数量，而收藏与掌握词的写入分别走专用状态，避免形成新的
 /// 持久化或可变集合事实来源。
-class LearningCollectionsState extends ChangeNotifier {
+/// 其只读部分通过 [LearningCollectionsReader] 在 core 层暴露（供 content / word_browse
+/// 等其它 feature 消费），具体实现仍保留在本聚合状态中。
+class LearningCollectionsState extends ChangeNotifier implements LearningCollectionsReader {
   LearningCollectionsSnapshot _snapshot = const LearningCollectionsSnapshot.empty();
 
   LearningCollectionsSnapshot get snapshot => _snapshot;
+  @override
   int get favoriteCount => _snapshot.favoriteCount;
+  @override
   int get masteredCount => _snapshot.masteredCount;
 
   void synchronize({required LearningFavoritesState favorites, required LearningMasteredState mastered}) {

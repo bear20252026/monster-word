@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
 
 /// 签到概览统计卡片
 /// 显示总签到天数、连续天数、本月进度
@@ -27,7 +26,7 @@ class CheckInStatsCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
         boxShadow: const [
           BoxShadow(color: Color(0x23000000), blurRadius: 0.5, offset: Offset(0, 0)),
           BoxShadow(color: Color(0x3D000000), blurRadius: 1.0, offset: Offset(0, 1)),

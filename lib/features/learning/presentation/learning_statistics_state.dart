@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../core/learning/learning_statistics_reader.dart';
 import '../../../models/book.dart';
 import '../application/review_schedule_reader.dart';
 import 'learning_queue_state.dart';
@@ -72,19 +73,23 @@ class LearningStatisticsSnapshot {
 /// 当前由 [LearningQueueSnapshot] 与 [ReviewScheduleReader] 同步：前者提供当前
 /// 队列与词书，后者提供 FSRS 卡片和统计。当队列写入完成迁移后，只替换快照来源即可，
 /// 页面无需再次依赖遗留状态。
-class LearningStatisticsState extends ChangeNotifier {
+class LearningStatisticsState extends ChangeNotifier implements LearningStatisticsReader {
   LearningStatisticsSnapshot _snapshot = LearningStatisticsSnapshot.empty();
 
   LearningStatisticsSnapshot get snapshot => _snapshot;
 
   Book? get currentBook => _snapshot.currentBook;
 
+  @override
   int get total => _snapshot.total;
 
+  @override
   int get dueCount => _snapshot.dueCount;
 
+  @override
   int get learnedCount => _snapshot.learnedCount;
 
+  @override
   int get totalLearnedDays => _snapshot.totalLearnedDays;
 
   Map<String, int> get memoryStats => _snapshot.memoryStats;

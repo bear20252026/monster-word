@@ -17,6 +17,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../theme/skin_system.dart';
 
 // ============================================================================
 // IndexPath - 索引路径（section + row）
@@ -943,12 +944,12 @@ class _SentenceCardPageViewState extends State<SentenceCardPageView> {
       itemCount: widget.sentences.length,
       itemBuilder: (context, index) {
         final sentence = widget.sentences[index];
-        return _buildSentenceCard(sentence);
+        return _buildSentenceCard(context, sentence);
       },
     );
   }
 
-  Widget _buildSentenceCard(SentenceData sentence) {
+  Widget _buildSentenceCard(BuildContext context, SentenceData sentence) {
     return GestureDetector(
       onTap: widget.onSentenceTap,
       child: Container(
@@ -956,7 +957,7 @@ class _SentenceCardPageViewState extends State<SentenceCardPageView> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: AppColors.white100,
-          borderRadius: BorderRadius.circular(AppleRadius.lg),
+          borderRadius: BorderRadius.circular(context.design.radius.lg),
           boxShadow: [BoxShadow(color: AppColors.black12, blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Column(
@@ -1085,7 +1086,7 @@ class FavSentencePageView extends StatelessWidget {
           onTap: () => onItemTap?.call(index),
           child: Container(
             margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppleRadius.lg), color: AppColors.white100),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(context.design.radius.lg), color: AppColors.white100),
             child: Column(
               children: [
                 // 封面图
@@ -1093,12 +1094,12 @@ class FavSentencePageView extends StatelessWidget {
                   flex: 3,
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(AppleRadius.lg)),
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(context.design.radius.lg)),
                       color: _black12,
                     ),
                     child: sentence.image.isNotEmpty
                         ? ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppleRadius.lg)),
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(context.design.radius.lg)),
                             child: Image.network(
                               'https://img.beingfine.cn/${sentence.image}',
                               fit: BoxFit.cover,
@@ -1705,17 +1706,17 @@ class WordListenPageView extends StatelessWidget {
       itemCount: words.length,
       itemBuilder: (context, index) {
         final wordData = words[index];
-        return _buildWordListenCard(wordData);
+        return _buildWordListenCard(context, wordData);
       },
     );
   }
 
-  Widget _buildWordListenCard(WordListenData wordData) {
+  Widget _buildWordListenCard(BuildContext context, WordListenData wordData) {
     final meaningText = wordData.hasStructuredDefinitions ? wordData.formattedDefinitions : wordData.interpret;
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColors.white100, borderRadius: BorderRadius.circular(AppleRadius.lg)),
+      decoration: BoxDecoration(color: AppColors.white100, borderRadius: BorderRadius.circular(context.design.radius.lg)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

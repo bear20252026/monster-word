@@ -1,4 +1,4 @@
-// 账号信息页：还原 v3.2 原版账号信息页布局
+﻿// 账号信息页：还原 v3.2 原版账号信息页布局
 // 包含：头像 + 相机图标、ID账号、账号、昵称、手机号、绑定平台
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -95,16 +95,16 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             _buildNavBar(context, skin),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
+                padding: EdgeInsets.symmetric(horizontal: context.design.spacing.page),
                 child: Column(
                   children: [
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                     _buildAvatarSection(skin),
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
                     _buildInfoCard(context, skin, profile),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     _buildBindCard(context, skin, profile),
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -117,8 +117,8 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
 
   Widget _buildNavBar(BuildContext context, ThemeVars skin) {
     return Container(
-      height: AppSpacing.navH,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      height: context.design.spacing.navH,
+      padding: EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
           IconButton(
@@ -129,7 +129,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
           const Spacer(),
           Text('账号信息', style: MistralTypography.heading5.copyWith(color: skin.text1)),
           const Spacer(),
-          const SizedBox(width: 48),
+          SizedBox(width: 48),
         ],
       ),
     );
@@ -174,7 +174,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
 
   Widget _buildInfoCard(BuildContext context, ThemeVars skin, AccountProfileState profile) {
     return Container(
-      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(AppRadius.xl)),
+      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(context.design.radius.xl)),
       child: Column(
         children: [
           _buildInfoRow(
@@ -206,7 +206,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
 
   Widget _buildBindCard(BuildContext context, ThemeVars skin, AccountProfileState profile) {
     return Container(
-      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(AppRadius.xl)),
+      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(context.design.radius.xl)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -250,7 +250,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             isBound: false,
             onTap: () {},
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
         ],
       ),
     );
@@ -259,16 +259,16 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
   Widget _buildInfoRow(ThemeVars skin, {required String label, required String value, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.xl),
+      borderRadius: BorderRadius.circular(context.design.radius.xl),
       child: Container(
-        height: AppSpacing.rowH,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        height: context.design.spacing.rowH,
+        padding: EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
             Text(label, style: MistralTypography.body.copyWith(color: skin.text1)),
             const Spacer(),
             Text(value, style: MistralTypography.body.copyWith(color: skin.text2)),
-            const SizedBox(width: 4),
+            SizedBox(width: 4),
             Icon(Icons.chevron_right, size: 18, color: skin.text3),
           ],
         ),
@@ -287,10 +287,10 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.xl),
+      borderRadius: BorderRadius.circular(context.design.radius.xl),
       child: Container(
-        height: AppSpacing.rowH,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        height: context.design.spacing.rowH,
+        padding: EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
             Container(
@@ -302,14 +302,14 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
               ),
               child: Icon(icon, size: 16, color: iconColor),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Text(platform, style: MistralTypography.body.copyWith(color: skin.text1)),
             const Spacer(),
             if (isBound && boundName != null)
               Text(boundName, style: MistralTypography.body.copyWith(color: skin.text2))
             else
               Text('未绑定', style: MistralTypography.body.copyWith(color: skin.text3)),
-            const SizedBox(width: 4),
+            SizedBox(width: 4),
             Icon(Icons.chevron_right, size: 18, color: skin.text3),
           ],
         ),

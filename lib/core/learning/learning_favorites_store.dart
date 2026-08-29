@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../../models/word.dart';
+
 /// 收藏单词状态的跨 feature 共享契约（core 层，单向依赖）。
 ///
 /// 由 learning 模块的展示状态实现（见
@@ -27,4 +29,10 @@ abstract class LearningFavoritesStore extends ChangeNotifier {
 
   /// 切换某个单词的收藏状态，返回切换后是否仍为收藏。
   Future<bool> toggle(String word);
+
+  /// 依据给定队列 [currentQueue] 解析全部收藏词的完整 [Word] 词条。
+  ///
+  /// 供 content 的收藏页展示详单使用；实现方（learning 的收藏状态）会通过其
+  /// 词队列端口将收藏词形解析为完整词条对象。
+  Future<List<Word>> loadFavoriteWords({required Iterable<Word> currentQueue});
 }

@@ -14,7 +14,7 @@ import '../../../tokens/design_tokens.dart';
 import '../../../widgets/halo_search.dart';
 import '../../../widgets/path_marquee.dart';
 import '../../../widgets/scale_down_on_press.dart';
-import '../../dictionary/presentation/dictionary_page.dart';
+import '../../../core/router/route_names.dart';
 import '../application/example_reader.dart';
 import '../application/favorites_accessor.dart';
 import '../application/search_history_store.dart';
@@ -209,7 +209,7 @@ class _SearchPageState extends State<SearchPage> {
         return ScaleDownOnPress(
           onTap: () {
             _saveToHistory(w.word);
-            Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: w)));
+            Navigator.pushNamed(context, RouteNames.dictionary, arguments: w);
           },
           child: Material(
             color: _selectedWord?.word == w.word
@@ -328,13 +328,13 @@ class _SearchPageState extends State<SearchPage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: word)));
+                Navigator.pushNamed(context, RouteNames.dictionary, arguments: word);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: skin.accent,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
               ),
               child: Text(
                 '查看完整字典',
@@ -351,7 +351,7 @@ class _SearchPageState extends State<SearchPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(AppRadius.md)),
+      decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(context.design.radius.md)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

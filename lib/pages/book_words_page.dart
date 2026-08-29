@@ -1,43 +1,23 @@
-// 词书单词列表页。
-//
-// 本文件已迁移至 `lib/features/book/presentation/book_words_page.dart`，
-// 作为教科书式垂直功能模块的一部分。此处保留为兼容 adapter，
-// 将旧构造参数（bookId/bookName）转换为 Book 对象后委托给 feature 页面。
-
+// Adapter — 从路由参数（bookId/bookName）解析为 Book 对象，委托给 feature 的 BookWordsPage
+// 保留此文件作为路由兼容层，核心实现已在 features/book/presentation/book_words_page.dart
 import 'package:flutter/material.dart';
 
-import 'package:provider/provider.dart';
-
-import '../features/book/application/book_catalog_reader.dart';
 import '../features/book/presentation/book_words_page.dart' as feature;
 import '../models/book.dart';
 
-/// 兼容旧路由参数的 adapter 页面。
-///
-/// 旧路由通过 `bookId` + `bookName` 传参，新 feature 页面需要 `Book` 对象。
-/// 此处通过 [BookCatalogReader] 查询完整 Book 后委托给 feature 页面。
+/// 路由兼容适配器：将 Map 参数（bookId + bookName）转为 Book 对象并委托给 feature BookWordsPage
 class BookWordsPage extends StatelessWidget {
   const BookWordsPage({super.key, required this.bookId, required this.bookName});
 
   final int bookId;
   final String bookName;
 
-  static const String routeName = '/book-words';
+  static const routeName = feature.BookWordsPage.routeName;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: context.read<BookCatalogReader>().findById(bookId),
-      builder: (context, snapshot) {
-        final book = snapshot.data ??
-            Book(
-              id: bookId,
-              code: bookName,
-              name: bookName,
-              wordCount: 0,
-            );
-        return feature.BookWordsPage(book: book);
-      },
-    );
+    // 构造一个最小 Book 对象用于路由兼容；真实 BookWordsPage 通过 BookState 读取完整数据
+    final book = Book(id: bookId, name: bookName, wordCount: 0, code: '');
+    return feature.BookWordsPage(book: book);
   }
 }

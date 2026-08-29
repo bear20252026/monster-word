@@ -52,6 +52,7 @@ class LearningFavoritesState extends ChangeNotifier implements LearningFavorites
     return _favoriteWords.contains(word);
   }
 
+  @override
   Future<List<Word>> loadFavoriteWords({required Iterable<Word> currentQueue}) {
     return _queuePort.loadFavoriteWords(currentQueue: currentQueue.toList());
   }

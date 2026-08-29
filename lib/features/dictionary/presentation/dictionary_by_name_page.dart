@@ -1,4 +1,4 @@
-// 由 Claude 团队生成 | Monster Word App
+﻿// 由 Claude 团队生成 | Monster Word App
 import 'package:flutter/material.dart';
 
 import '../../../core/di/service_locator.dart';
@@ -98,7 +98,7 @@ class _NotFoundScaffold extends StatelessWidget {
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -107,7 +107,7 @@ class _NotFoundScaffold extends StatelessWidget {
                 size: 56,
                 color: const Color(0xFFB0885A),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
                 failed ? '查询失败' : '未找到「$wordName」',
                 style: const TextStyle(
@@ -116,12 +116,12 @@ class _NotFoundScaffold extends StatelessWidget {
                   color: Color(0xFF3D3630),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text(
                 failed ? '请稍后重试' : '该单词可能不在当前词库中',
                 style: const TextStyle(fontSize: 13, color: Color(0xFF8A8078)),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               Builder(
                 builder: (ctx) => ElevatedButton.icon(
                   onPressed: () => NavUtils.goHome(ctx),
@@ -130,7 +130,7 @@ class _NotFoundScaffold extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF006241),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),

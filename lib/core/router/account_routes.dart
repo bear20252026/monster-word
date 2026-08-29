@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../pages/account_info_page.dart';
 import '../../pages/appearance_page.dart';
 import '../../pages/check_in_history_page.dart';
+import '../../pages/class_activity_page.dart';
+import '../../pages/class_checkin_page.dart';
 import '../../pages/dashboard_page.dart';
 import '../../pages/feedback_page.dart';
 import '../../pages/foot_mark_page.dart';
@@ -67,6 +69,10 @@ abstract final class AccountRoutes {
         return const RedemptionCenterPage();
       case RouteNames.checkInHistory:
         return const CheckInHistoryPage();
+      case RouteNames.classCheckin:
+        return const ClassCheckInPage();
+      case RouteNames.classActivity:
+        return const ClassActivityPage();
       case RouteNames.linkedMe:
         return _buildLinkedMePage(args);
       default:

@@ -6,9 +6,9 @@ import '../../../core/audio/audio_playback_state.dart';
 import '../../../core/learning/learning_favorites_store.dart';
 import '../../../core/learning/learning_session_starter.dart';
 import '../../../core/learning/new_words_store.dart';
+import '../../../core/router/route_names.dart';
 import '../../../models/book.dart';
 import '../../../models/word.dart';
-import '../../../pages/word_detail_page.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import 'book_state.dart';
@@ -28,7 +28,7 @@ class BookWordsPage extends StatelessWidget {
   Future<void> _startLearning(BuildContext context) async {
     await context.read<LearningSessionStarter>().startBookSession(book, limit: 50);
     if (!context.mounted) return;
-    Navigator.pushNamed(context, '/immersive_swipe');
+    Navigator.pushNamed(context, RouteNames.immersiveSwipe);
   }
 
   @override
@@ -67,7 +67,7 @@ class BookWordsPage extends StatelessWidget {
             );
           }
           return ListView.builder(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(context.design.spacing.md),
             itemCount: words.length,
             addAutomaticKeepAlives: false,
             addRepaintBoundaries: true,
@@ -99,15 +99,15 @@ class _WordCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.pushNamed(
         context,
-        WordDetailPage.routeName,
+        RouteNames.wordDetail,
         arguments: word,
       ),
       child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.all(AppSpacing.md),
+        margin: EdgeInsets.only(bottom: context.design.spacing.sm),
+        padding: EdgeInsets.all(context.design.spacing.md),
         decoration: BoxDecoration(
           color: skin.cardBg,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(context.design.radius.xl),
           border: Border.all(color: skin.divider, width: 0.5),
         ),
         child: Row(

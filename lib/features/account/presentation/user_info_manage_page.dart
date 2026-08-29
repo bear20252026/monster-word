@@ -1,4 +1,4 @@
-// 由 Claude 团队生成 | Monster Word App
+﻿// 由 Claude 团队生成 | Monster Word App
 
 // 移植自 v3.2 UserInfoManageActivity
 // 用户信息管理：修改头像、昵称、签名等个人信息
@@ -38,7 +38,7 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                     // 头像
                     Semantics(
                       label: '更换头像',
@@ -58,9 +58,9 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text('点击更换头像', style: MistralTypography.micro.copyWith(color: MistralColors.link)),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                     _buildInfoTile(
                       skin,
                       '昵称',
@@ -94,7 +94,7 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
   Widget _buildNavBar(SkinSystem skin) {
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
           IconButton(
@@ -102,7 +102,7 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
             color: skin.colors.text1,
             onPressed: () => NavUtils.safePop(context),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text('个人信息', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
@@ -113,7 +113,7 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
     return GestureDetector(
       onTap: isReadOnly ? null : onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: skin.colors.divider)),
         ),

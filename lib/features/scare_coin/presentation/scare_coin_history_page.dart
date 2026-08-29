@@ -5,7 +5,7 @@
 // 本页面完整包含尖叫币历史页的 UI 与交互逻辑，遵循 R1-R6 分层：
 // - 读：通过 ScareCoinStore 端口（application 层）
 // - 写：通过 ScareCoinStore.checkIn() 端口
-// - 不直接接触 SharedPreferences 或任何基础设施
+// - 不直接接触偏好存储或任何基础设施
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -88,7 +88,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: skin.cardBg,
-                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                  borderRadius: BorderRadius.circular(context.design.radius.xl),
                   border: Border.all(color: skin.divider),
                 ),
                 child: Row(
@@ -159,7 +159,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: skin.cardBg,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            borderRadius: BorderRadius.circular(context.design.radius.md),
                             border: Border.all(color: skin.divider),
                           ),
                           child: Row(
@@ -199,7 +199,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
               width: double.infinity,
               margin: EdgeInsets.fromLTRB(context.responsive.pageMargin, 4, context.responsive.pageMargin, 16),
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(AppRadius.lg)),
+              decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(context.design.radius.lg)),
               child: Text(
                 '🎬 关于「尖叫币」\n\n'
                 '设定致敬皮克斯经典动画《怪兽电力公司》（Monsters, Inc., 2001）：'

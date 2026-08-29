@@ -1,4 +1,4 @@
-// 由 Claude 团队生成 | Monster Word App
+﻿// 由 Claude 团队生成 | Monster Word App
 
 // 移植自 v3.2 SplashActivity
 // 启动页：品牌动画 → 检查登录状态 → 跳转首页或登录页
@@ -150,7 +150,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     // 品牌名
                     Text(
                       'Monster Word',
@@ -161,9 +161,9 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                         letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text('背单词 · 从未如此有趣', style: TextStyle(fontSize: 13, color: skin.colors.text3)),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                     // 波浪滚动文字装饰
                     PathMarquee(
                       text: 'Monster Word · 背单词 · 从未如此有趣 · ',
@@ -203,7 +203,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding: const EdgeInsets.all(32),
+                    padding: EdgeInsets.all(32),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -216,12 +216,12 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                             child: Center(child: Icon(_getGuideIcon(index), size: 120, color: skin.colors.accent)),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: 24),
                         Text(
                           _getGuideTitle(index),
                           style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Text(
                           _getGuideDesc(index),
                           textAlign: TextAlign.center,
@@ -235,7 +235,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
             ),
             // 圆点指示器 + 开始按钮
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24),
               child: Column(
                 children: [
                   Row(
@@ -244,7 +244,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                       return Container(
                         width: 8,
                         height: 8,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        margin: EdgeInsets.symmetric(horizontal: 4),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: i == _currentPage ? skin.colors.accent : skin.colors.divider,
@@ -252,7 +252,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                       );
                     }),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   if (_currentPage == _introAssets.length - 1)
                     SizedBox(
                       width: double.infinity,
@@ -262,7 +262,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                         style: ElevatedButton.styleFrom(
                           backgroundColor: skin.colors.accent,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                         ),
                         child: const Text('开始使用'),
                       ),
