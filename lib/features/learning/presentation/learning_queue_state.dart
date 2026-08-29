@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../models/book.dart';
-import '../../../models/word.dart';
-import 'learning_session_state.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 
 /// 学习队列的只读快照。
 ///

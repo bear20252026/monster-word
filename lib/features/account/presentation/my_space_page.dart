@@ -3,13 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/router/route_names.dart';
-import '../../../core/scare_coin/scare_coin_store.dart';
+import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/core/scare_coin/scare_coin_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import '../../../widgets/monster_icon.dart';
-import '../../account/presentation/account_profile_state.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/monster_icon.dart';
+import 'package:word_app/features/account/presentation/account_profile_state.dart';
 
 class MySpacePage extends StatelessWidget {
   const MySpacePage({super.key});

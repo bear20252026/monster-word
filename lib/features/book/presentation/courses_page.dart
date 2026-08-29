@@ -3,11 +3,11 @@
 // 课程页面：展示课程列表，支持课程签到和活动
 import 'package:flutter/material.dart';
 
-import '../../../core/router/nav_utils.dart';
-import '../../../core/router/route_names.dart';
+import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});

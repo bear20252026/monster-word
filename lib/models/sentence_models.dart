@@ -3,7 +3,7 @@
 // 数据模型层：翻译自 bean/sentence/（v3.2 源码 1:1）
 // 文件：SentenceData + AcceptationSentence + NormalAcceptationSentence + OldAcceptationSentence + Acceptation + SentenceUsage + FavSentenceData + FavSentenceSyncData
 
-import 'lexis_dict.dart';
+import 'package:word_app/models/lexis_dict.dart';
 
 /// 例句数据（翻译自 SentenceData.java）
 class SentenceData {

@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/engine/fsrs6_engine.dart';
-import '../../../models/word.dart';
+import 'package:word_app/core/engine/fsrs6_engine.dart';
+import 'package:word_app/models/word.dart';
 
 /// 正式复习的 FSRS 调度与统计事实来源。
 ///

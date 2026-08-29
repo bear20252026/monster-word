@@ -4,7 +4,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../tokens/motion_tokens.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 
 /// 星巴克标准按压反馈包装器
 ///

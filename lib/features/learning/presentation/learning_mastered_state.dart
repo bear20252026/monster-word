@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../application/mastered_words_reader.dart';
-import '../application/mastered_writer_port.dart';
+import 'package:word_app/features/learning/application/mastered_words_reader.dart';
+import 'package:word_app/features/learning/application/mastered_writer_port.dart';
 
 /// 手动掌握标记的读取与操作状态。
 ///

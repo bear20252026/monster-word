@@ -1,7 +1,7 @@
-import '../../../core/di/service_locator.dart';
-import '../../../models/word.dart';
+import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
-import '../application/quick_review_word_reader.dart';
+import 'package:word_app/features/quick_review/application/quick_review_word_reader.dart';
 
 /// 基于既有单词仓储的考试速刷词源适配器。
 class RepositoryQuickReviewWordReader implements QuickReviewWordReader {

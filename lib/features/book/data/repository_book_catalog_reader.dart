@@ -1,7 +1,7 @@
-import '../../../core/di/service_locator.dart';
-import '../../../models/book.dart';
-import 'book_repository.dart';
-import '../application/book_catalog_reader.dart';
+import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/features/book/data/book_repository.dart';
+import 'package:word_app/features/book/application/book_catalog_reader.dart';
 
 /// 基于既有词书仓储的目录读取适配器。
 class RepositoryBookCatalogReader implements BookCatalogReader {

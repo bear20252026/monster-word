@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'nav_utils.dart';
+import 'package:word_app/core/router/nav_utils.dart';
 
 /// 未知路由或必要参数缺失时显示的友好错误页。
 class RouteErrorPage extends StatelessWidget {

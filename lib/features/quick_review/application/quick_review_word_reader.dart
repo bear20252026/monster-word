@@ -1,4 +1,4 @@
-import '../../../models/word.dart';
+import 'package:word_app/models/word.dart';
 
 /// 考试速刷流程的词源读取端口。
 ///

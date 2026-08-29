@@ -4,8 +4,8 @@
 // 随身听：碎片时间听记单词
 import 'package:flutter/material.dart';
 
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class PersonalStereoPage extends StatelessWidget {
   const PersonalStereoPage({super.key});

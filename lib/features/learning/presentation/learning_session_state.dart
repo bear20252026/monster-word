@@ -2,16 +2,16 @@
 
 import 'package:flutter/foundation.dart';
 
-import '../../../core/engine/core_engine.dart';
-import '../../../core/engine/fsrs6_engine.dart';
-import '../../../core/engine/leitner_engine.dart';
-import '../application/choice_generator_port.dart';
-import '../application/learning_progress_port.dart';
-import '../application/learning_queue_port.dart';
-import '../application/review_schedule_writer_port.dart';
-import '../../../models/bb_word_process.dart';
-import '../../../models/book.dart';
-import '../../../models/word.dart';
+import 'package:word_app/core/engine/core_engine.dart';
+import 'package:word_app/core/engine/fsrs6_engine.dart';
+import 'package:word_app/core/engine/leitner_engine.dart';
+import 'package:word_app/features/learning/application/choice_generator_port.dart';
+import 'package:word_app/features/learning/application/learning_progress_port.dart';
+import 'package:word_app/features/learning/application/learning_queue_port.dart';
+import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/word.dart';
 
 /// 遗留学习流程的专用会话状态。
 ///

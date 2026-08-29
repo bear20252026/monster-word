@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 // NoteRepository — 笔记数据访问抽象
 
-import '../../models/word_note.dart';
+import 'package:word_app/models/word_note.dart';
 
 /// 笔记数据仓库接口
 ///

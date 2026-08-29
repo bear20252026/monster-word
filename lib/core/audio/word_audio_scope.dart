@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
-import '../di/service_locator.dart';
-import 'audio_playback_state.dart';
-import 'audio_service.dart';
+import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/core/audio/audio_service.dart';
 
 /// 应用级「单词音频播放」能力的共享装配。
 ///

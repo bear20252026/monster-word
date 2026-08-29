@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../models/bb_word_process.dart';
-import 'formal_review_state_views.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/features/learning/presentation/widgets/formal_review_state_views.dart';
 
 /// 正式复习页面内容的当前阶段。
 enum FormalReviewPagePhase { loading, failed, complete, reviewing }

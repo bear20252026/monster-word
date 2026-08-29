@@ -3,7 +3,7 @@
 // 翻译自 Figma useResponsive.js
 import 'package:flutter/material.dart';
 
-import '../../tokens/design_tokens.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 屏幕类型枚举
 enum ScreenType { mobile, tablet, desktop }

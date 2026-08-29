@@ -2,7 +2,7 @@
 //
 // 页面只读取此端口；具体解析由 data 层适配器实现。
 
-import '../domain/search_example.dart';
+import 'package:word_app/features/search/domain/search_example.dart';
 
 /// 从词库原始 JSON 字符串中提取结构化例句。
 abstract interface class ExampleReader {

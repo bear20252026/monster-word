@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/learning_preferences_repository.dart';
-import 'learning_preferences_state.dart';
+import 'package:word_app/features/settings/data/learning_preferences_repository.dart';
+import 'package:word_app/features/settings/presentation/learning_preferences_state.dart';
 
 /// 为设置功能创建一个 MultiProvider 作用域。
 ///

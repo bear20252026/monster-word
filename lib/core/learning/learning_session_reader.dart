@@ -1,5 +1,5 @@
-import '../../models/book.dart';
-import '../../models/word.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/word.dart';
 
 /// 「当前学习会话」只读视图的共享 core 契约（只读）。
 ///

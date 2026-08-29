@@ -1,4 +1,4 @@
-import '../domain/learning_preferences.dart';
+import 'package:word_app/features/settings/domain/learning_preferences.dart';
 
 /// 写入学习偏好的抽象端口。
 ///

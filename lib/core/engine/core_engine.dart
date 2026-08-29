@@ -7,8 +7,8 @@
 import 'dart:convert';
 import 'dart:math';
 
-import '../../models/bb_word_process.dart';
-import '../../models/lexis_dict.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/lexis_dict.dart';
 
 /// 数据准备状态（原版常量）
 enum DataPreparedState {

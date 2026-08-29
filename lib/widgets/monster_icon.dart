@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'dart:math' as math;
 
-import '../theme/skin_system.dart';
+import 'package:word_app/theme/skin_system.dart';
 
 /// 怪兽尖叫币图标组件
 /// 使用 CustomPainter 绘制可爱的独角怪兽头像

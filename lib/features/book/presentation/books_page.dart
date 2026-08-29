@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import '../../../core/router/route_names.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import 'book_state.dart';
-import 'book_words_page.dart';
+import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/features/book/presentation/book_state.dart';
+import 'package:word_app/features/book/presentation/book_words_page.dart';
 
 /// 词书模块首页（仪表盘）。
 ///

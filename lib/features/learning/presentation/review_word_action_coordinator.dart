@@ -1,5 +1,5 @@
-import '../../../models/bb_word_process.dart';
-import 'review_word_actions_state.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/features/learning/presentation/review_word_actions_state.dart';
 
 /// 从当前正式复习会话读取词条的只读端口。
 typedef CurrentReviewWord = BBWordProcess? Function();

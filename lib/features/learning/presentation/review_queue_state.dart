@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../application/review_queue_reader.dart';
-import '../application/review_schedule_reader.dart';
-import 'learning_queue_state.dart';
+import 'package:word_app/features/learning/application/review_queue_reader.dart';
+import 'package:word_app/features/learning/application/review_schedule_reader.dart';
+import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 
 /// 正式复习队列的展示快照。
 ///

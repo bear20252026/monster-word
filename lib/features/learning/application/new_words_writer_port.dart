@@ -1,4 +1,4 @@
-import '../../../models/word.dart';
+import 'package:word_app/models/word.dart';
 
 /// Port: new-words mutations (toggle / remove).
 /// Presentation states depend on this abstraction, not on

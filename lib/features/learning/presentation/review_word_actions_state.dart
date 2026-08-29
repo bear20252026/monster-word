@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../application/favorites_port.dart';
-import '../application/mastered_words_reader.dart';
-import '../application/mastered_writer_port.dart';
+import 'package:word_app/features/learning/application/favorites_port.dart';
+import 'package:word_app/features/learning/application/mastered_words_reader.dart';
+import 'package:word_app/features/learning/application/mastered_writer_port.dart';
 
 /// 正式复习页按词用户操作的协调状态。
 ///

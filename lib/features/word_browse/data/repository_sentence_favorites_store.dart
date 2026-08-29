@@ -1,7 +1,7 @@
-import '../../../core/di/service_locator.dart';
-import '../../../models/sentence_models.dart';
+import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
-import '../application/sentence_favorites_store.dart';
+import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
 
 /// 基于既有收藏仓储的例句收藏适配器。
 ///

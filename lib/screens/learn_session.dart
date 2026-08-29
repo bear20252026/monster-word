@@ -6,23 +6,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/audio/audio_playback_state.dart';
-import '../core/router/nav_utils.dart';
+import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
-import '../core/engine/fsrs6_engine.dart' show FsrsRating;
+import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/presentation/responsive.dart';
-import '../features/learning/application/review_schedule_reader.dart';
-import '../features/learning/presentation/learning_favorites_state.dart';
-import '../features/learning/presentation/learning_mastered_state.dart';
-import '../features/learning/presentation/learning_session_state.dart';
-import '../models/word.dart';
-import '../features/dictionary/presentation/word_detail_page.dart';
-import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
-import '../widgets/animations.dart';
-import '../widgets/glass_widgets.dart';
-import '../widgets/session_exit_guard.dart';
-import '../widgets/word_dictionary_popup.dart';
+import 'package:word_app/features/learning/application/review_schedule_reader.dart';
+import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
+import 'package:word_app/features/learning/presentation/learning_mastered_state.dart';
+import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/dictionary/presentation/word_detail_page.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/animations.dart';
+import 'package:word_app/widgets/glass_widgets.dart';
+import 'package:word_app/widgets/session_exit_guard.dart';
+import 'package:word_app/widgets/word_dictionary_popup.dart';
 
 class LearnSession extends StatefulWidget {
   const LearnSession({super.key});

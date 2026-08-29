@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../core/learning/learning_collections_reader.dart';
-import 'learning_favorites_state.dart';
-import 'learning_mastered_state.dart';
+import 'package:word_app/core/learning/learning_collections_reader.dart';
+import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
+import 'package:word_app/features/learning/presentation/learning_mastered_state.dart';
 
 /// 收藏与掌握标记的不可变展示快照。
 ///

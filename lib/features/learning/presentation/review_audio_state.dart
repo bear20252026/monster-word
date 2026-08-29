@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../application/review_audio_player.dart';
+import 'package:word_app/features/learning/application/review_audio_player.dart';
 
 /// 正式复习页的单词发音展示状态。
 ///

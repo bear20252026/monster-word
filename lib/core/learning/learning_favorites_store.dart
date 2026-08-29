@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../models/word.dart';
+import 'package:word_app/models/word.dart';
 
 /// 收藏单词状态的跨 feature 共享契约（core 层，单向依赖）。
 ///

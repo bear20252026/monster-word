@@ -5,10 +5,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../application/new_words_reader.dart';
-import 'new_words_state.dart';
-import '../../../models/word.dart';
-import 'list_words_page.dart';
+import 'package:word_app/features/learning/application/new_words_reader.dart';
+import 'package:word_app/features/learning/presentation/new_words_state.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/presentation/list_words_page.dart';
 
 class NewWordsPage extends ListWordsPage {
   const NewWordsPage({super.key});

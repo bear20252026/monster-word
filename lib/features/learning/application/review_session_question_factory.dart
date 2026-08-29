@@ -1,8 +1,8 @@
 ﻿import '../../../core/engine/core_engine.dart' show WordChoicePair;
-import '../../../core/engine/super_memory_engine.dart';
-import '../../../models/bb_word_process.dart';
-import '../../../models/word.dart';
-import '../domain/choice_generator.dart';
+import 'package:word_app/core/engine/super_memory_engine.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/domain/choice_generator.dart';
 
 /// 正式复习会话的题目数据工厂。
 ///

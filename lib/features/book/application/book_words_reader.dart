@@ -1,4 +1,4 @@
-import '../../../models/word.dart';
+import 'package:word_app/models/word.dart';
 
 /// 词书单词列表端口（读）。
 ///

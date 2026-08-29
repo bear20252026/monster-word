@@ -5,10 +5,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/router/nav_utils.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import 'account_profile_state.dart';
+import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/features/account/presentation/account_profile_state.dart';
 
 class UserInfoManagePage extends StatefulWidget {
   const UserInfoManagePage({super.key});

@@ -4,8 +4,8 @@
 // 单词听写：播放单词语音，用户拼写练习
 import 'package:flutter/material.dart';
 
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class ListWordListenPage extends StatefulWidget {
   const ListWordListenPage({super.key});

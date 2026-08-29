@@ -1,4 +1,4 @@
-import '../../../models/user_info_bean.dart';
+import 'package:word_app/models/user_info_bean.dart';
 
 /// 账号资料值对象（纯领域层）。
 ///

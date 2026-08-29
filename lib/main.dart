@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
-import 'app/app.dart';
-import 'app/app_bootstrap.dart';
+import 'package:word_app/app/app.dart';
+import 'package:word_app/app/app_bootstrap.dart';
 
 Future<void> main() async {
   await bootstrapApp();

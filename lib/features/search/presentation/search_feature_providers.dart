@@ -1,15 +1,15 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/learning/learning_favorites_store.dart';
-import '../application/example_reader.dart';
-import '../application/favorites_accessor.dart';
-import '../application/search_history_store.dart';
-import '../application/word_search_reader.dart';
-import '../data/example_parser_adapter.dart';
-import '../data/favorites_accessor_adapter.dart';
-import '../data/preferences_search_history_store.dart';
-import '../data/repository_word_search_reader.dart';
+import 'package:word_app/core/learning/learning_favorites_store.dart';
+import 'package:word_app/features/search/application/example_reader.dart';
+import 'package:word_app/features/search/application/favorites_accessor.dart';
+import 'package:word_app/features/search/application/search_history_store.dart';
+import 'package:word_app/features/search/application/word_search_reader.dart';
+import 'package:word_app/features/search/data/example_parser_adapter.dart';
+import 'package:word_app/features/search/data/favorites_accessor_adapter.dart';
+import 'package:word_app/features/search/data/preferences_search_history_store.dart';
+import 'package:word_app/features/search/data/repository_word_search_reader.dart';
 
 /// 搜索功能域的依赖装配入口。
 ///

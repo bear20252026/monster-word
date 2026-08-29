@@ -3,7 +3,7 @@
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'user_repository.dart';
+import 'package:word_app/core/repositories/user_repository.dart';
 
 /// 用户数据仓库的具体实现
 ///

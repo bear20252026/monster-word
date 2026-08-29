@@ -4,8 +4,8 @@
 // 消息中心：显示系统通知、学习提醒等消息列表
 import 'package:flutter/material.dart';
 
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class MessageItem {
   final String id;

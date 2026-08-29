@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'definition.dart';
+import 'package:word_app/models/definition.dart';
 
 /// 单词数据模型
 ///

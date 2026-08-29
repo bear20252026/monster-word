@@ -4,8 +4,8 @@
 // SuperMemory 复习引擎：翻译自 coreengine/SuperMemoryInMemoryImp.java（v3.2 源码 1:1）
 // 复习调度：到期词 + 测试模式（英译中/四选一/拼写/完成）+ 评分等级 0-6
 
-import '../../models/bb_word_process.dart';
-import 'core_engine.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/core/engine/core_engine.dart';
 
 /// 测试模式（原版 TEST_MODE_* 常量）
 enum TestMode {

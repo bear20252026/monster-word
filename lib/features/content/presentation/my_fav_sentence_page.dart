@@ -4,10 +4,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../features/word_browse/application/sentence_favorites_store.dart';
-import '../../../models/sentence_models.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
+import 'package:word_app/models/sentence_models.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class MyFavSentencePage extends StatefulWidget {
   const MyFavSentencePage({super.key});

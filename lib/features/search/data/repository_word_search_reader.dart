@@ -1,7 +1,7 @@
-import '../../../core/di/service_locator.dart';
-import '../../../models/word.dart';
+import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
-import '../application/word_search_reader.dart';
+import 'package:word_app/features/search/application/word_search_reader.dart';
 
 /// 基于既有词库仓储的搜索适配器。
 class RepositoryWordSearchReader implements WordSearchReader {

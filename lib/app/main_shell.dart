@@ -3,8 +3,8 @@
 // 手机/平板同构，差异仅在图标尺寸和栏高（由 responsive 生成）
 import 'package:flutter/material.dart';
 
-import '../tokens/starbucks_tokens.dart';
-import '../widgets/app_dock.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
+import 'package:word_app/widgets/app_dock.dart';
 
 /// Tab 定义（原版 TABS）
 class TabDef {

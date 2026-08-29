@@ -1,16 +1,16 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
-import '../../../models/word.dart';
-import '../application/dictionary_content_reader.dart';
-import '../application/dictionary_favorite_writer.dart';
-import '../application/dictionary_new_word_writer.dart';
-import '../application/dictionary_search_reader.dart';
-import '../data/service_dictionary_content_reader.dart';
-import '../data/service_dictionary_favorite_writer.dart';
-import '../data/service_dictionary_new_word_writer.dart';
-import '../data/service_dictionary_search_reader.dart';
-import 'dictionary_detail_state.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/dictionary/application/dictionary_content_reader.dart';
+import 'package:word_app/features/dictionary/application/dictionary_favorite_writer.dart';
+import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
+import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
+import 'package:word_app/features/dictionary/data/service_dictionary_content_reader.dart';
+import 'package:word_app/features/dictionary/data/service_dictionary_favorite_writer.dart';
+import 'package:word_app/features/dictionary/data/service_dictionary_new_word_writer.dart';
+import 'package:word_app/features/dictionary/data/service_dictionary_search_reader.dart';
+import 'package:word_app/features/dictionary/presentation/dictionary_detail_state.dart';
 
 /// 装配字典功能域的全部依赖。
 ///

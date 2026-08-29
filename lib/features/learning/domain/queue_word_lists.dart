@@ -1,4 +1,4 @@
-import '../../../models/word.dart';
+import 'package:word_app/models/word.dart';
 
 /// 当前学习队列按学习卡片状态划分后的只读词表快照。
 class QueueWordLists {

@@ -4,9 +4,9 @@
 
 import 'package:flutter/material.dart';
 
-import '../theme/skin_system.dart';
-import '../tokens/starbucks_tokens.dart';
-import 'scale_down_on_press.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
+import 'package:word_app/widgets/scale_down_on_press.dart';
 
 /// 星巴克胶囊按钮变体
 enum SbButtonVariant {

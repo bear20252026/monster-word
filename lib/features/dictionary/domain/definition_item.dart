@@ -1,4 +1,4 @@
-import '../../../models/definition.dart';
+import 'package:word_app/models/definition.dart';
 
 /// 单条释义值对象。
 ///

@@ -4,7 +4,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
-import 'book_repository.dart';
+import 'package:word_app/features/book/data/book_repository.dart';
 
 /// 词书数据仓库的具体实现
 ///

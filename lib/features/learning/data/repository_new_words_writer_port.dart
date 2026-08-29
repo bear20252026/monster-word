@@ -1,7 +1,7 @@
-import '../../../core/di/service_locator.dart';
-import '../../../models/word.dart';
+import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/new_word_repository.dart';
-import '../application/new_words_writer_port.dart';
+import 'package:word_app/features/learning/application/new_words_writer_port.dart';
 
 /// Adapts [NewWordRepository] (legacy repositories) to [NewWordsWriterPort] (application layer).
 class RepositoryNewWordsWriterPort implements NewWordsWriterPort {

@@ -4,18 +4,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../../core/audio/audio_playback_state.dart';
-import '../../../core/router/nav_utils.dart';
+import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:provider/provider.dart';
-import '../../../models/word.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../core/audio/system_tts.dart';
-import '../../../theme/skin_system.dart';
-import '../../../core/learning/listening_mode.dart';
-export '../../../core/learning/listening_mode.dart';
-import '../../../tokens/design_tokens.dart';
-import '../../../widgets/sb_card.dart';
+import 'package:word_app/core/audio/system_tts.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/core/learning/listening_mode.dart';
+export 'package:word_app/core/learning/listening_mode.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/sb_card.dart';
 
 class ListeningPlayerPage extends StatefulWidget {
   final List<Word> words;

@@ -5,9 +5,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../application/mastered_words_reader.dart';
-import '../../../models/word.dart';
-import 'list_words_page.dart';
+import 'package:word_app/features/learning/application/mastered_words_reader.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/presentation/list_words_page.dart';
 
 class MasteredWordsPage extends ListWordsPage {
   const MasteredWordsPage({super.key});

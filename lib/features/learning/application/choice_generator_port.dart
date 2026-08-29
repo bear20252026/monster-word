@@ -1,8 +1,8 @@
 import 'dart:math';
 
-import '../domain/choice_generator.dart';
+import 'package:word_app/features/learning/domain/choice_generator.dart';
 
-export '../domain/choice_generator.dart' show ChoiceCandidate;
+export 'package:word_app/features/learning/domain/choice_generator.dart' show ChoiceCandidate;
 
 /// Port: distractor choice generation for quizzes.
 /// Presentation states depend on this abstraction, not on

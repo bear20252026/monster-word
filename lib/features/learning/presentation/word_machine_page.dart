@@ -4,14 +4,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/audio/audio_playback_state.dart';
-import '../../../core/router/nav_utils.dart';
+import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../models/word.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import 'learning_session_state.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 
 class WordMachinePage extends StatefulWidget {
   const WordMachinePage({super.key});

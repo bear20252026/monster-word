@@ -5,9 +5,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../core/router/route_names.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 外观 & 沉浸场景页
 class AppearancePage extends StatefulWidget {

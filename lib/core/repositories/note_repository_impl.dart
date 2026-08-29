@@ -5,8 +5,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../models/word_note.dart';
-import 'note_repository.dart';
+import 'package:word_app/models/word_note.dart';
+import 'package:word_app/core/repositories/note_repository.dart';
 
 /// 笔记数据仓库的具体实现
 ///

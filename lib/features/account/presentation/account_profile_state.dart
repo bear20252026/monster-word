@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../application/account_profile_store.dart';
-import '../domain/account_profile.dart';
+import 'package:word_app/features/account/application/account_profile_store.dart';
+import 'package:word_app/features/account/domain/account_profile.dart';
 
 /// 账户功能域内的个人资料状态。
 ///

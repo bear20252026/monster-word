@@ -1,5 +1,5 @@
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
-import '../application/dictionary_search_reader.dart';
+import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
 
 /// 基于 WordBookDatabase 的词典搜索适配器。
 ///

@@ -1,4 +1,4 @@
-import '../../../models/word.dart';
+import 'package:word_app/models/word.dart';
 
 /// 将用户生词本记录解析为可展示词条的应用端口。
 ///

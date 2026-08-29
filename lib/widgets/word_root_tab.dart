@@ -5,8 +5,8 @@
 
 import 'package:flutter/material.dart';
 
-import '../models/word_root_model.dart';
-import '../theme/skin_system.dart';
+import 'package:word_app/models/word_root_model.dart';
+import 'package:word_app/theme/skin_system.dart';
 
 /// 词根词缀Tab组件
 class WordRootTab extends StatelessWidget {

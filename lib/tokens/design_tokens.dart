@@ -2,7 +2,7 @@
 // 旧类名保留，内部实现指向星巴克 token
 import 'package:flutter/material.dart';
 
-import 'starbucks_tokens.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 /// 过渡期颜色（旧名新值）
 class MistralColors {

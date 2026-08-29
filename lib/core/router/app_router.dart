@@ -2,14 +2,14 @@
 
 import 'package:flutter/material.dart';
 
-import '../../widgets/transition_widgets.dart';
-import 'account_routes.dart';
-import 'content_routes.dart';
-import 'learning_routes.dart';
-import 'route_error_page.dart';
-import 'route_names.dart';
+import 'package:word_app/widgets/transition_widgets.dart';
+import 'package:word_app/core/router/account_routes.dart';
+import 'package:word_app/core/router/content_routes.dart';
+import 'package:word_app/core/router/learning_routes.dart';
+import 'package:word_app/core/router/route_error_page.dart';
+import 'package:word_app/core/router/route_names.dart';
 
-export 'route_names.dart';
+export 'package:word_app/core/router/route_names.dart';
 
 /// 应用路由协调器。
 ///

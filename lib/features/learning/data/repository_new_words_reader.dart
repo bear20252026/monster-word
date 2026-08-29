@@ -1,7 +1,7 @@
-import '../../../models/word.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/new_word_repository.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
-import '../application/new_words_reader.dart';
+import 'package:word_app/features/learning/application/new_words_reader.dart';
 
 /// 基于既有仓储的生词本读取适配器。
 class RepositoryNewWordsReader implements NewWordsReader {

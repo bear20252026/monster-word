@@ -2,11 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../features/learning/application/review_schedule_reader.dart';
-import '../features/learning/presentation/learning_session_state.dart';
-import '../features/learning/presentation/review_page.dart';
-import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
+import 'package:word_app/features/learning/application/review_schedule_reader.dart';
+import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/features/learning/presentation/review_page.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 显示回顾弹窗
 void showReviewDialog(BuildContext context) {

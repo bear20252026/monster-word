@@ -1,6 +1,6 @@
-import 'checkin_service.dart';
-import '../application/checkin_status_reader.dart';
-import '../domain/checkin_status.dart';
+import 'package:word_app/features/checkin/data/checkin_service.dart';
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
+import 'package:word_app/features/checkin/domain/checkin_status.dart';
 
 /// 基于 CheckInService 的签到状态读取适配器。
 class ServiceCheckinStatusReader implements CheckinStatusReader {

@@ -3,13 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/router/nav_utils.dart';
-import '../../../core/router/route_names.dart';
-import '../../../tokens/design_language.dart';
-import 'learning_preferences_state.dart';
+import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/tokens/design_language.dart';
+import 'package:word_app/features/settings/presentation/learning_preferences_state.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../theme/skin_system.dart';
-import '../../../widgets/scale_down_on_press.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/widgets/scale_down_on_press.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});

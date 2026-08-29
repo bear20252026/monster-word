@@ -1,8 +1,8 @@
 import 'package:word_app/core/infrastructure/app_preferences.dart';
-import '../../../models/book.dart';
-import '../../../models/word.dart';
-import '../application/learning_queue_port.dart';
-import 'learning_queue_repository.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/application/learning_queue_port.dart';
+import 'package:word_app/features/learning/data/learning_queue_repository.dart';
 
 /// Adapts [LearningQueueRepository] (data layer) to [LearningQueuePort] (application layer).
 class RepositoryLearningQueuePort implements LearningQueuePort {

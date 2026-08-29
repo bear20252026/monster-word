@@ -4,8 +4,8 @@
 // 我的装备：显示已解锁的学习装备/道具
 import 'package:flutter/material.dart';
 
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class MyEquipPage extends StatelessWidget {
   const MyEquipPage({super.key});

@@ -1,4 +1,4 @@
-import '../../../models/word_note.dart';
+import 'package:word_app/models/word_note.dart';
 
 /// 词条浏览流程所需的笔记读写能力。
 ///

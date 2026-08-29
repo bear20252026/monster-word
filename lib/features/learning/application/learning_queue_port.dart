@@ -1,5 +1,5 @@
-import '../../../models/book.dart';
-import '../../../models/word.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/word.dart';
 
 /// Port: learning queue operations (favorites + book loading).
 /// Presentation states depend on this abstraction, not on

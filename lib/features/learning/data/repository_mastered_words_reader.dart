@@ -1,7 +1,7 @@
-import '../../../models/word.dart';
-import 'mastered_repository.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/data/mastered_repository.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
-import '../application/mastered_words_reader.dart';
+import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 
 /// 基于既有仓储的已掌握词读取适配器。
 class RepositoryMasteredWordsReader implements MasteredWordsReader {

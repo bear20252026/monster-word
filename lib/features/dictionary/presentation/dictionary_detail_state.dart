@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../models/word.dart';
-import '../application/dictionary_content_reader.dart';
-import '../application/dictionary_favorite_writer.dart';
-import '../application/dictionary_new_word_writer.dart';
-import '../application/dictionary_search_reader.dart';
-import '../domain/definition_item.dart';
-import '../domain/example_sentence.dart';
-import '../domain/phonetic_info.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/dictionary/application/dictionary_content_reader.dart';
+import 'package:word_app/features/dictionary/application/dictionary_favorite_writer.dart';
+import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
+import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
+import 'package:word_app/features/dictionary/domain/definition_item.dart';
+import 'package:word_app/features/dictionary/domain/example_sentence.dart';
+import 'package:word_app/features/dictionary/domain/phonetic_info.dart';
 
 /// 词典详情页状态。
 ///

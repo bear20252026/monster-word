@@ -3,8 +3,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/infrastructure/fav_sentence_dao.dart';
-import '../../models/sentence_models.dart';
-import 'fav_repository.dart';
+import 'package:word_app/models/sentence_models.dart';
+import 'package:word_app/core/repositories/fav_repository.dart';
 
 /// 收藏仓库实现
 class FavRepositoryImpl implements FavRepository {

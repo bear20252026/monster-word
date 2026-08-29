@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../models/word.dart';
-import '../application/review_schedule_reader.dart';
-import '../domain/queue_word_lists.dart';
-import 'learning_queue_state.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/application/review_schedule_reader.dart';
+import 'package:word_app/features/learning/domain/queue_word_lists.dart';
+import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 
 /// 学习队列分类词表的不可变展示快照。
 class LearningQueueWordListsSnapshot {

@@ -1,8 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../application/settings_reader.dart';
-import '../application/settings_writer.dart';
-import '../domain/learning_preferences.dart';
+import 'package:word_app/features/settings/application/settings_reader.dart';
+import 'package:word_app/features/settings/application/settings_writer.dart';
+import 'package:word_app/features/settings/domain/learning_preferences.dart';
 
 /// 学习偏好的 SharedPreferences 持久化边界。
 ///

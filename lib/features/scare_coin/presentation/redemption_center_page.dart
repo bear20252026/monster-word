@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/scare_coin/scare_coin_store.dart';
+import 'package:word_app/core/scare_coin/scare_coin_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 兑换中心页面（遵循星巴克设计规范）
 /// 用户可以使用尖叫币兑换主题、壁纸、会员等

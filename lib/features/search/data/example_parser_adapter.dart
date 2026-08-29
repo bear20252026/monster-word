@@ -4,8 +4,8 @@
 // 页面通过 ExampleReader 端口访问，不直连旧 data 层。
 
 import 'package:word_app/core/parsers/example_parser.dart' as legacy;
-import '../application/example_reader.dart';
-import '../domain/search_example.dart';
+import 'package:word_app/features/search/application/example_reader.dart';
+import 'package:word_app/features/search/domain/search_example.dart';
 
 /// 将旧 ExampleParser 适配为 ExampleReader 端口。
 class ExampleParserAdapter implements ExampleReader {

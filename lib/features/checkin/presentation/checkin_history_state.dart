@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../application/check_in_history_reader.dart';
+import 'package:word_app/features/checkin/application/check_in_history_reader.dart';
 
 /// 签到历史页面的状态管理。
 class CheckinHistoryState extends ChangeNotifier {

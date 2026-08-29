@@ -3,12 +3,12 @@ import 'package:flutter/services.dart' show HapticFeedback;
 
 import 'package:provider/provider.dart';
 
-import '../../../models/word.dart';
-import '../../../core/audio/audio_playback_state.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import '../../../widgets/word_root_tab.dart';
-import 'dictionary_detail_state.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/word_root_tab.dart';
+import 'package:word_app/features/dictionary/presentation/dictionary_detail_state.dart';
 
 /// 词典详情页。
 ///

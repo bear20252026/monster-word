@@ -6,20 +6,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/audio/audio_playback_state.dart';
+import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../models/word.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import '../../../widgets/halo_search.dart';
-import '../../../widgets/path_marquee.dart';
-import '../../../widgets/scale_down_on_press.dart';
-import '../../../core/router/route_names.dart';
-import '../application/example_reader.dart';
-import '../application/favorites_accessor.dart';
-import '../application/search_history_store.dart';
-import '../application/word_search_reader.dart';
-import '../domain/search_example.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/halo_search.dart';
+import 'package:word_app/widgets/path_marquee.dart';
+import 'package:word_app/widgets/scale_down_on_press.dart';
+import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/features/search/application/example_reader.dart';
+import 'package:word_app/features/search/application/favorites_accessor.dart';
+import 'package:word_app/features/search/application/search_history_store.dart';
+import 'package:word_app/features/search/application/word_search_reader.dart';
+import 'package:word_app/features/search/domain/search_example.dart';
 
 /// 搜索页路由名。
 const String searchRouteName = '/search';

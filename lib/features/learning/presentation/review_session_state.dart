@@ -1,14 +1,14 @@
 ﻿import 'package:flutter/foundation.dart';
 
-import '../../../core/engine/core_engine.dart' show WordChoicePair;
-import '../../../core/engine/srs_engine.dart' show RecallRating;
-import '../../../core/engine/super_memory_engine.dart';
-import '../../../models/bb_word_process.dart';
-import '../application/review_queue_reader.dart';
-import '../application/review_rating_writer.dart';
-import '../application/review_session_question_factory.dart';
-import '../application/review_session_rating_executor.dart';
-import 'review_session_answer_state.dart';
+import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
+import 'package:word_app/core/engine/srs_engine.dart' show RecallRating;
+import 'package:word_app/core/engine/super_memory_engine.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/features/learning/application/review_queue_reader.dart';
+import 'package:word_app/features/learning/application/review_rating_writer.dart';
+import 'package:word_app/features/learning/application/review_session_question_factory.dart';
+import 'package:word_app/features/learning/application/review_session_rating_executor.dart';
+import 'package:word_app/features/learning/presentation/review_session_answer_state.dart';
 
 /// 正式复习队列加载的当前阶段。
 enum ReviewSessionLoadPhase { idle, loading, ready, failed }

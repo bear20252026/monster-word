@@ -5,10 +5,10 @@
 // 归属：learning 功能域（仅被本域单词列表子页继承）
 import 'package:flutter/material.dart';
 
-import '../../../core/router/route_names.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import '../../../models/word.dart';
+import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/models/word.dart';
 
 /// 单词列表页基类，具体子类通过 [loadWordsForContext] 提供数据
 abstract class ListWordsPage extends StatefulWidget {

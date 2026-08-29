@@ -1,14 +1,14 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/di/service_locator.dart';
-import '../data/checkin_service.dart';
-import '../application/check_in_history_reader.dart';
-import '../application/checkin_status_reader.dart';
-import '../application/checkin_writer.dart';
-import '../data/service_check_in_history_reader.dart';
-import '../data/service_checkin_status_reader.dart';
-import '../data/service_checkin_writer.dart';
+import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/features/checkin/data/checkin_service.dart';
+import 'package:word_app/features/checkin/application/check_in_history_reader.dart';
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
+import 'package:word_app/features/checkin/application/checkin_writer.dart';
+import 'package:word_app/features/checkin/data/service_check_in_history_reader.dart';
+import 'package:word_app/features/checkin/data/service_checkin_status_reader.dart';
+import 'package:word_app/features/checkin/data/service_checkin_writer.dart';
 
 /// 装配签到功能域所需的全部应用端口。
 ///

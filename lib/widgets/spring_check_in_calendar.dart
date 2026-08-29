@@ -9,10 +9,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/scare_coin/scare_coin_store.dart';
-import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
-import 'monster_icon.dart';
+import 'package:word_app/core/scare_coin/scare_coin_store.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/monster_icon.dart';
 
 /// 弹性签到日历
 ///

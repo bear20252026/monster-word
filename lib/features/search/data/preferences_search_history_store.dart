@@ -1,6 +1,6 @@
-import '../../../core/di/service_locator.dart';
+import 'package:word_app/core/di/service_locator.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
-import '../application/search_history_store.dart';
+import 'package:word_app/features/search/application/search_history_store.dart';
 
 /// 基于既有应用偏好存储的搜索历史适配器。
 class PreferencesSearchHistoryStore implements SearchHistoryStore {

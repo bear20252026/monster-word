@@ -5,15 +5,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/auth/app_session_controller.dart';
-import '../../../core/router/nav_utils.dart';
-import '../../../core/router/route_names.dart';
+import 'package:word_app/core/auth/app_session_controller.dart';
+import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import '../../../widgets/sb_button.dart';
-import '../../../widgets/sb_modal.dart';
-import '../../../widgets/scale_down_on_press.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/sb_button.dart';
+import 'package:word_app/widgets/sb_modal.dart';
+import 'package:word_app/widgets/scale_down_on_press.dart';
 
 /// 更多设置页
 class MoreSettingsPage extends StatefulWidget {

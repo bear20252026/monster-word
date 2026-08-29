@@ -29,11 +29,11 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 // ]
 
 // Definition, DefExample, Word, Book 已迁移到 lib/models/
-import '../../models/word.dart';
-import '../../models/book.dart';
-export '../../models/definition.dart' show Definition, DefExample;
-export '../../models/word.dart' show Word;
-export '../../models/book.dart' show Book;
+import 'package:word_app/models/word.dart';
+import 'package:word_app/models/book.dart';
+export 'package:word_app/models/definition.dart' show Definition, DefExample;
+export 'package:word_app/models/word.dart' show Word;
+export 'package:word_app/models/book.dart' show Book;
 
 /// 词库数据库管理器（单例）
 class WordBookDatabase {

@@ -1,6 +1,6 @@
-import 'user_service.dart';
-import '../application/account_profile_store.dart';
-import '../domain/account_profile.dart';
+import 'package:word_app/features/account/data/user_service.dart';
+import 'package:word_app/features/account/application/account_profile_store.dart';
+import 'package:word_app/features/account/domain/account_profile.dart';
 
 /// 基于既有 UserService 的账号资料持久化适配器。
 ///

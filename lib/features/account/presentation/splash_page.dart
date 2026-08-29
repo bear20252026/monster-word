@@ -7,14 +7,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import '../../../widgets/animations.dart';
-import '../../../widgets/liquid_logo.dart';
-import '../../../widgets/path_marquee.dart';
-import '../../../widgets/meteors.dart';
-import 'app_session_state.dart';
-import 'login_page.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/animations.dart';
+import 'package:word_app/widgets/liquid_logo.dart';
+import 'package:word_app/widgets/path_marquee.dart';
+import 'package:word_app/widgets/meteors.dart';
+import 'package:word_app/features/account/presentation/app_session_state.dart';
+import 'package:word_app/features/account/presentation/login_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});

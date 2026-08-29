@@ -1,4 +1,4 @@
-import '../../../models/word.dart';
+import 'package:word_app/models/word.dart';
 
 /// 搜索流程所需的单词查询能力。
 abstract interface class WordSearchReader {

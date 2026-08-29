@@ -3,8 +3,8 @@
 // 通知所有依赖 context.design 的页面即时重建 —— 这就是设计语言动态切换的可见入口。
 import 'package:flutter/material.dart';
 
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_language.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_language.dart';
 
 class DesignLanguageSelectPage extends StatelessWidget {
   const DesignLanguageSelectPage({super.key});

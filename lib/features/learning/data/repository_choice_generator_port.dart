@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import '../application/choice_generator_port.dart';
-import '../domain/choice_generator.dart';
+import 'package:word_app/features/learning/application/choice_generator_port.dart';
+import 'package:word_app/features/learning/domain/choice_generator.dart';
 
 /// Adapts [ChoiceGenerator] (domain) to [ChoiceGeneratorPort] (application layer).
 class RepositoryChoiceGeneratorPort implements ChoiceGeneratorPort {

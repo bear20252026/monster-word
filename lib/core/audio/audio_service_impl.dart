@@ -2,8 +2,8 @@
 
 import 'package:flutter/foundation.dart';
 
-import 'audio_players.dart';
-import 'audio_service.dart';
+import 'package:word_app/core/audio/audio_players.dart';
+import 'package:word_app/core/audio/audio_service.dart';
 
 /// 音频播放服务实现
 ///

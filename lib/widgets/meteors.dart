@@ -5,7 +5,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../tokens/design_tokens.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class Meteor {
   Offset position;

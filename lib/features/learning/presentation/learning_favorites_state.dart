@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../../core/learning/learning_favorites_store.dart';
-import '../../../models/word.dart';
-import '../application/favorites_port.dart';
-import '../application/learning_queue_port.dart';
+import 'package:word_app/core/learning/learning_favorites_store.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/application/favorites_port.dart';
+import 'package:word_app/features/learning/application/learning_queue_port.dart';
 
 /// 收藏单词的读取与操作状态。
 ///

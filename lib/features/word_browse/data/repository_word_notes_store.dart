@@ -1,7 +1,7 @@
-import '../../../core/di/service_locator.dart';
-import '../../../models/word_note.dart';
+import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/models/word_note.dart';
 import 'package:word_app/core/repositories/note_repository.dart';
-import '../application/word_notes_store.dart';
+import 'package:word_app/features/word_browse/application/word_notes_store.dart';
 
 /// 基于既有笔记仓储的词条浏览笔记适配器。
 ///

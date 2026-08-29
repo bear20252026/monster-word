@@ -4,14 +4,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/router/nav_utils.dart';
+import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import '../../../tokens/func_colors.dart';
-import '../../../tokens/star_gold.dart';
-import '../../../widgets/spring_calendar.dart';
-import '../../../core/scare_coin/scare_coin_store.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/func_colors.dart';
+import 'package:word_app/tokens/star_gold.dart';
+import 'package:word_app/widgets/spring_calendar.dart';
+import 'package:word_app/core/scare_coin/scare_coin_store.dart';
 
 /// 班级签到页面
 ///

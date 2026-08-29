@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 // WordRepository — 单词数据访问抽象
 
-import '../../models/word.dart';
+import 'package:word_app/models/word.dart';
 
 /// 单词数据仓库接口
 ///

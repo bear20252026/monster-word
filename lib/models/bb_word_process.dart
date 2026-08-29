@@ -6,7 +6,7 @@
 
 import 'dart:convert';
 
-import 'lexis_dict.dart';
+import 'package:word_app/models/lexis_dict.dart';
 
 /// 单词学习进度（翻译自 BBWordProcess.java）
 class BBWordProcess {

@@ -4,12 +4,12 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
-import 'app_error_widget.dart';
-import '../core/di/service_locator.dart';
+import 'package:word_app/app/app_error_widget.dart';
+import 'package:word_app/core/di/service_locator.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/infrastructure/user_database.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
-import '../core/audio/audio_players.dart';
+import 'package:word_app/core/audio/audio_players.dart';
 
 /// A-3: 冷启动进度回调 — 各初始化阶段完成后回调，用于上报/日志/未来接 UI 进度条。
 ///

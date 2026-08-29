@@ -1,7 +1,7 @@
 ﻿import '../../../core/engine/fsrs6_engine.dart';
-import '../../../models/word.dart';
-import '../application/review_schedule_reader.dart';
-import 'review_schedule_repository.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/application/review_schedule_reader.dart';
+import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 
 /// 基于正式复习排程仓储的只读展示适配器。
 class RepositoryReviewScheduleReader extends ReviewScheduleReader {

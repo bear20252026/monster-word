@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-import '../../features/account/presentation/splash_page.dart';
-import '../../features/content/presentation/my_content_page.dart';
-import '../../features/content/presentation/my_fav_page.dart';
-import '../../features/content/presentation/my_fav_sentence_page.dart';
-import '../../features/content/presentation/sentence_detail_page.dart';
-import '../../features/dictionary/presentation/word_detail_page.dart';
-import '../../features/learning/presentation/immersive_swipe_page.dart';
-import '../../features/search/presentation/search_page.dart';
-import '../../features/dictionary/presentation/dictionary_by_name_page.dart';
-import '../../features/dictionary/presentation/dictionary_page.dart';
-import '../../models/word.dart';
-import '../../screens/home_screen.dart';
-import 'route_error_page.dart';
-import 'route_names.dart';
+import 'package:word_app/features/account/presentation/splash_page.dart';
+import 'package:word_app/features/content/presentation/my_content_page.dart';
+import 'package:word_app/features/content/presentation/my_fav_page.dart';
+import 'package:word_app/features/content/presentation/my_fav_sentence_page.dart';
+import 'package:word_app/features/content/presentation/sentence_detail_page.dart';
+import 'package:word_app/features/dictionary/presentation/word_detail_page.dart';
+import 'package:word_app/features/learning/presentation/immersive_swipe_page.dart';
+import 'package:word_app/features/search/presentation/search_page.dart';
+import 'package:word_app/features/dictionary/presentation/dictionary_by_name_page.dart';
+import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/screens/home_screen.dart';
+import 'package:word_app/core/router/route_error_page.dart';
+import 'package:word_app/core/router/route_names.dart';
 
 /// 内容与词典功能域的页面映射和参数解析。
 abstract final class ContentRoutes {

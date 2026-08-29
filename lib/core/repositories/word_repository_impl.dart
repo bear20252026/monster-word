@@ -2,7 +2,7 @@
 // WordRepositoryImpl — 单词数据仓库实现
 
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
-import 'word_repository.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 
 /// 单词数据仓库的具体实现
 class WordRepositoryImpl implements WordRepository {

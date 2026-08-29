@@ -3,23 +3,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../features/book/application/book_catalog_reader.dart';
+import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../features/learning/presentation/learn_page.dart';
-import '../features/book/presentation/lib_select_page.dart';
-import '../features/search/presentation/search_page.dart';
-import '../features/learning/presentation/word_machine_page.dart';
-import '../features/learning/presentation/learning_session_state.dart';
-import '../features/learning/presentation/learning_statistics_state.dart';
-import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
-import '../widgets/sb_card.dart';
-import '../widgets/daily_goal_picker.dart';
-import '../widgets/review_dialog.dart';
-import '../widgets/scale_down_on_press.dart';
-import '../widgets/spring_check_in_calendar.dart';
-import '../widgets/testimonial_slider.dart';
-import '../widgets/text_reveal_card.dart';
+import 'package:word_app/features/learning/presentation/learn_page.dart';
+import 'package:word_app/features/book/presentation/lib_select_page.dart';
+import 'package:word_app/features/search/presentation/search_page.dart';
+import 'package:word_app/features/learning/presentation/word_machine_page.dart';
+import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/sb_card.dart';
+import 'package:word_app/widgets/daily_goal_picker.dart';
+import 'package:word_app/widgets/review_dialog.dart';
+import 'package:word_app/widgets/scale_down_on_press.dart';
+import 'package:word_app/widgets/spring_check_in_calendar.dart';
+import 'package:word_app/widgets/testimonial_slider.dart';
+import 'package:word_app/widgets/text_reveal_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

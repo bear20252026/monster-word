@@ -1,5 +1,5 @@
-import '../../../models/bb_word_process.dart';
-import '../../../models/word.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/word.dart';
 
 /// 正式复习词条的详情页适配器。
 ///

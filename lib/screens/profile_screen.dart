@@ -3,17 +3,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../features/account/presentation/account_profile_state.dart';
+import 'package:word_app/features/account/presentation/account_profile_state.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../features/account/presentation/appearance_page.dart';
-import '../features/settings/presentation/more_settings_page.dart';
-import '../core/scare_coin/scare_coin_store.dart';
-import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
-import '../tokens/func_colors.dart';
-import '../widgets/sb_card.dart';
-import '../widgets/scale_down_on_press.dart';
-import '../widgets/monster_icon.dart';
+import 'package:word_app/features/account/presentation/appearance_page.dart';
+import 'package:word_app/features/settings/presentation/more_settings_page.dart';
+import 'package:word_app/core/scare_coin/scare_coin_store.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/func_colors.dart';
+import 'package:word_app/widgets/sb_card.dart';
+import 'package:word_app/widgets/scale_down_on_press.dart';
+import 'package:word_app/widgets/monster_icon.dart';
 
 // 功能图标色（使用 FuncColors token）
 // _iconPurple → FuncColors.purple

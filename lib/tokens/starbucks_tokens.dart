@@ -3,7 +3,7 @@
 // 来源：docs/starbucks_tokens_draft.md
 import 'package:flutter/material.dart';
 
-export 'motion_tokens.dart'; // 导出动效 Token
+export 'package:word_app/tokens/motion_tokens.dart'; // 导出动效 Token
 
 /// 星巴克奶油主题颜色（亮色）
 class StarbucksCreamColors {

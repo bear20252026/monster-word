@@ -1,6 +1,6 @@
-import '../../../core/di/service_locator.dart';
-import 'mastered_repository.dart';
-import '../application/mastered_writer_port.dart';
+import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/features/learning/data/mastered_repository.dart';
+import 'package:word_app/features/learning/application/mastered_writer_port.dart';
 
 /// Adapts [MasteredRepository] (legacy repositories) to [MasteredWriterPort] (application layer).
 class RepositoryMasteredWriterPort implements MasteredWriterPort {

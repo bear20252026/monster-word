@@ -1,8 +1,8 @@
 ﻿import '../../../core/engine/fsrs6_engine.dart' show FsrsRating;
-import '../../../core/engine/srs_engine.dart' show RecallRating;
-import '../../../core/engine/super_memory_engine.dart';
-import '../../../models/bb_word_process.dart';
-import 'review_rating_writer.dart';
+import 'package:word_app/core/engine/srs_engine.dart' show RecallRating;
+import 'package:word_app/core/engine/super_memory_engine.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/features/learning/application/review_rating_writer.dart';
 
 /// 正式复习评分执行器。
 ///

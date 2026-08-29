@@ -1,4 +1,4 @@
-import '../domain/checkin_status.dart';
+import 'package:word_app/features/checkin/domain/checkin_status.dart';
 
 /// 签到状态读取端口。
 ///

@@ -3,8 +3,8 @@
 // 由账号4生成
 // Leitner 学习引擎：翻译自 coreengine/LeitnerCardInMemoryImp.java（v3.2 源码 1:1）
 // 学习分组：按等级 0-4 分层（listLevel0..4），每组 GROUP_SIZE 个单词
-import '../../models/bb_word_process.dart';
-import 'core_engine.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/core/engine/core_engine.dart';
 
 /// 学习策略（原版 LearnUtils.LearnStrategy）
 class LearnStrategy {

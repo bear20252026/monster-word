@@ -4,8 +4,8 @@
 // 主题选择：切换应用主题/皮肤
 import 'package:flutter/material.dart';
 
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class UIThemeSelectPage extends StatelessWidget {
   const UIThemeSelectPage({super.key});

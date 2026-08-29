@@ -1,4 +1,4 @@
-import '../../../models/sentence_models.dart';
+import 'package:word_app/models/sentence_models.dart';
 
 /// 词条浏览流程所需的例句收藏能力。
 ///

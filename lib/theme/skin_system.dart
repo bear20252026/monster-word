@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/infrastructure/app_preferences.dart';
-import '../tokens/design_language.dart';
+import 'package:word_app/tokens/design_language.dart';
 
 class ThemeVars {
   final Color pageBg;

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/auth/app_session_controller.dart';
+import 'package:word_app/core/auth/app_session_controller.dart';
 
 /// 应用账号与首次引导的会话状态。
 ///

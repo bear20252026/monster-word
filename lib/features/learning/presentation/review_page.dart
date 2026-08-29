@@ -2,20 +2,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../application/review_session_starter.dart';
-import '../application/review_word_details.dart';
-import 'review_audio_state.dart';
-import 'review_queue_state.dart';
-import 'review_word_action_coordinator.dart';
-import 'review_word_action_feedback.dart';
-import 'review_session_state.dart';
-import 'review_word_actions_state.dart';
-import 'widgets/formal_review_widgets.dart';
-import '../../../models/bb_word_process.dart';
-import '../../../core/router/route_names.dart';
+import 'package:word_app/features/learning/application/review_session_starter.dart';
+import 'package:word_app/features/learning/application/review_word_details.dart';
+import 'package:word_app/features/learning/presentation/review_audio_state.dart';
+import 'package:word_app/features/learning/presentation/review_queue_state.dart';
+import 'package:word_app/features/learning/presentation/review_word_action_coordinator.dart';
+import 'package:word_app/features/learning/presentation/review_word_action_feedback.dart';
+import 'package:word_app/features/learning/presentation/review_session_state.dart';
+import 'package:word_app/features/learning/presentation/review_word_actions_state.dart';
+import 'package:word_app/features/learning/presentation/widgets/formal_review_widgets.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/infrastructure/wallpaper_state.dart';
-import '../../../core/router/nav_utils.dart';
-import '../../../widgets/session_exit_guard.dart';
+import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/widgets/session_exit_guard.dart';
 
 class ReviewPage extends StatefulWidget {
   const ReviewPage({super.key});

@@ -1,6 +1,6 @@
 import 'package:word_app/core/infrastructure/wordbook_database.dart' show WordBookDatabase;
-import '../../../models/book.dart';
-import '../../../models/word.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
 
 /// 学习队列所需的词库读取端口。

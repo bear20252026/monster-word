@@ -1,5 +1,5 @@
-import 'checkin_service.dart';
-import '../application/checkin_writer.dart';
+import 'package:word_app/features/checkin/data/checkin_service.dart';
+import 'package:word_app/features/checkin/application/checkin_writer.dart';
 
 /// 基于 CheckInService 的签到写入适配器。
 class ServiceCheckinWriter implements CheckinWriter {

@@ -4,8 +4,8 @@
 // 播放顺序：设置随身听的单词播放顺序
 import 'package:flutter/material.dart';
 
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 enum PlayOrder {
   sequential('顺序播放', Icons.format_list_numbered),

@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../core/learning/new_words_store.dart';
-import '../../../models/word.dart';
-import '../application/new_words_reader.dart';
-import '../application/new_words_writer_port.dart';
+import 'package:word_app/core/learning/new_words_store.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/application/new_words_reader.dart';
+import 'package:word_app/features/learning/application/new_words_writer_port.dart';
 
 /// 生词本的可观察展示状态。
 ///

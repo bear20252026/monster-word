@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import '../../../core/learning/learning_collections_reader.dart';
+import 'package:word_app/core/learning/learning_collections_reader.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/func_colors.dart';
-import '../../../tokens/design_tokens.dart';
-import 'my_fav_page.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/func_colors.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/features/content/presentation/my_fav_page.dart';
 
 class MyContentPage extends StatelessWidget {
   const MyContentPage({super.key});

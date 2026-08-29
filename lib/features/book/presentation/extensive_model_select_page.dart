@@ -4,14 +4,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/learning/listening_mode.dart';
-import '../../../core/router/nav_utils.dart';
-import '../../../core/router/route_names.dart';
+import 'package:word_app/core/learning/listening_mode.dart';
+import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../models/word.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import '../application/book_words_reader.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/features/book/application/book_words_reader.dart';
 
 class ExtensiveModelSelectPage extends StatefulWidget {
   final String bookId;

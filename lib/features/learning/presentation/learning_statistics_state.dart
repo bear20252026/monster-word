@@ -2,10 +2,10 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 
-import '../../../core/learning/learning_statistics_reader.dart';
-import '../../../models/book.dart';
-import '../application/review_schedule_reader.dart';
-import 'learning_queue_state.dart';
+import 'package:word_app/core/learning/learning_statistics_reader.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/features/learning/application/review_schedule_reader.dart';
+import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 
 /// 学习展示层使用的不可变统计快照。
 ///

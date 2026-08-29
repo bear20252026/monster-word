@@ -1,4 +1,4 @@
-import 'review_queue_reader.dart';
+import 'package:word_app/features/learning/application/review_queue_reader.dart';
 
 /// 正式复习会话初始化命令。
 typedef ReviewSessionInitializer = Future<void> Function(ReviewQueueSnapshot snapshot);

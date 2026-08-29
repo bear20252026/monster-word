@@ -6,21 +6,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/audio/audio_playback_state.dart';
-import '../../../core/engine/fsrs6_engine.dart' show FsrsRating;
+import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../core/router/route_names.dart';
-import '../../../theme/skin_system.dart';
+import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/theme/skin_system.dart';
 
-import '../../../tokens/star_gold.dart';
-import '../../../widgets/animations.dart';
-import '../../../widgets/word_lookup_popup.dart';
-import '../../../widgets/box_reveal.dart';
-import '../../../widgets/confetti.dart';
-import '../../../widgets/scratch_to_reveal.dart';
-import '../../../core/router/nav_utils.dart';
-import 'learning_favorites_state.dart';
-import 'learning_session_state.dart';
+import 'package:word_app/tokens/star_gold.dart';
+import 'package:word_app/widgets/animations.dart';
+import 'package:word_app/widgets/word_lookup_popup.dart';
+import 'package:word_app/widgets/box_reveal.dart';
+import 'package:word_app/widgets/confetti.dart';
+import 'package:word_app/widgets/scratch_to_reveal.dart';
+import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
+import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 
 class LearnPage extends StatefulWidget {
   const LearnPage({super.key});

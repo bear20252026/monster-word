@@ -1,6 +1,6 @@
 ﻿import '../../../core/engine/fsrs6_engine.dart';
-import '../application/review_schedule_writer_port.dart';
-import 'review_schedule_repository.dart';
+import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
+import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 
 /// Adapts [ReviewScheduleRepository] (data layer) to [ReviewScheduleWriterPort] (application layer).
 class RepositoryReviewScheduleWriterPort implements ReviewScheduleWriterPort {

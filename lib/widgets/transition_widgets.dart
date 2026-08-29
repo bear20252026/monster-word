@@ -6,7 +6,7 @@
 
 import 'package:flutter/material.dart';
 
-import 'animations.dart';
+import 'package:word_app/widgets/animations.dart';
 
 /// 启动页转场动画（翻译自 SplashTransition.dart）
 /// 向上滑动 + 渐隐

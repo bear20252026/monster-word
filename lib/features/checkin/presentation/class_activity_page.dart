@@ -2,8 +2,8 @@
 // 还原原版 v3.2 班级活动页面
 import 'package:flutter/material.dart';
 
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 班级活动页面
 class ClassActivityPage extends StatelessWidget {

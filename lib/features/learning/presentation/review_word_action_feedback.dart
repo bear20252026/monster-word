@@ -1,4 +1,4 @@
-import 'review_word_action_coordinator.dart';
+import 'package:word_app/features/learning/presentation/review_word_action_coordinator.dart';
 
 /// 词条操作结果对应的页面反馈文案。
 ///

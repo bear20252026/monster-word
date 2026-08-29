@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../application/settings_reader.dart';
-import '../application/settings_writer.dart';
-import '../domain/learning_preferences.dart';
+import 'package:word_app/features/settings/application/settings_reader.dart';
+import 'package:word_app/features/settings/application/settings_writer.dart';
+import 'package:word_app/features/settings/domain/learning_preferences.dart';
 
 /// 设置页的可订阅学习偏好状态。
 ///

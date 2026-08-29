@@ -2,7 +2,7 @@
 // CheckInServiceImpl — 签到服务实现
 
 import 'package:word_app/core/repositories/user_repository.dart';
-import 'checkin_service.dart';
+import 'package:word_app/features/checkin/data/checkin_service.dart';
 
 /// 签到服务实现
 class CheckInServiceImpl implements CheckInService {

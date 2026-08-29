@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../../theme/skin_system.dart';
-import '../../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 顶部进度和词条操作栏。
 ///

@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'definition_formatter.dart';
+import 'package:word_app/features/learning/domain/definition_formatter.dart';
 
 /// 供学习与复习流程共享的最小候选词值对象。
 class ChoiceCandidate {

@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import '../../../core/audio/audio_playback_state.dart';
-import '../../../core/learning/learning_favorites_store.dart';
-import '../../../core/learning/learning_session_starter.dart';
-import '../../../core/learning/new_words_store.dart';
-import '../../../core/router/route_names.dart';
-import '../../../models/book.dart';
-import '../../../models/word.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import 'book_state.dart';
+import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/core/learning/learning_favorites_store.dart';
+import 'package:word_app/core/learning/learning_session_starter.dart';
+import 'package:word_app/core/learning/new_words_store.dart';
+import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/features/book/presentation/book_state.dart';
 
 /// 词书单词列表页。
 ///

@@ -3,14 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/audio/audio_playback_state.dart';
-import '../core/router/nav_utils.dart';
+import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
-import '../models/word.dart';
-import '../features/learning/presentation/learning_favorites_state.dart';
-import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
-import '../tokens/func_colors.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/func_colors.dart';
 
 /// 单词字典弹出框
 /// 显示：单词 + 音标 + 释义 + 例句 + 收藏按钮 + 查看详情入口

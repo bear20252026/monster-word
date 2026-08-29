@@ -2,8 +2,8 @@
 // 联想记忆中间页：展示单词的联想记忆方法
 import 'package:flutter/material.dart';
 
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class LinkedMeMiddlePage extends StatelessWidget {
   final String word;

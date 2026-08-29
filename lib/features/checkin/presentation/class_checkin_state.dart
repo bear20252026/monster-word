@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../application/checkin_status_reader.dart';
-import '../application/checkin_writer.dart';
-import '../domain/checkin_status.dart';
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
+import 'package:word_app/features/checkin/application/checkin_writer.dart';
+import 'package:word_app/features/checkin/domain/checkin_status.dart';
 
 /// 班级签到页面的状态管理。
 class ClassCheckinState extends ChangeNotifier {

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:word_app/core/infrastructure/wallpaper_data.dart' show WallpaperType;
-import '../../../../core/engine/core_engine.dart' show WordChoicePair;
+import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../../models/bb_word_process.dart';
-import '../../../../theme/skin_system.dart';
-import 'formal_review_header.dart';
-import 'formal_review_question.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/features/learning/presentation/widgets/formal_review_header.dart';
+import 'package:word_app/features/learning/presentation/widgets/formal_review_question.dart';
 
 /// 正式复习进行中的响应式展示容器。
 ///

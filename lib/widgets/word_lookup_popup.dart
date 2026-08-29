@@ -5,11 +5,11 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../core/di/service_locator.dart';
-import '../models/word.dart';
+import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
-import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 长按单词弹出的释义小框
 ///

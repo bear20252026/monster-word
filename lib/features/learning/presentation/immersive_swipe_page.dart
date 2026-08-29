@@ -5,13 +5,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/router/nav_utils.dart';
-import '../../../core/engine/fsrs6_engine.dart' show FsrsRating;
+import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../widgets/session_exit_guard.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import 'learning_session_state.dart';
+import 'package:word_app/widgets/session_exit_guard.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 
 class ImmersiveSwipePage extends StatefulWidget {
   const ImmersiveSwipePage({super.key});

@@ -1,6 +1,6 @@
-import '../../../models/word.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
-import '../application/review_queue_reader.dart';
+import 'package:word_app/features/learning/application/review_queue_reader.dart';
 
 /// 基于既有词库仓储的正式复习队列读取适配器。
 class RepositoryReviewQueueReader implements ReviewQueueReader {

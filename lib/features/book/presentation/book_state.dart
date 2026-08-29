@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../core/learning/learning_progress_reader.dart';
-import '../../../models/book.dart';
-import '../../../models/word.dart';
-import '../application/book_catalog_reader.dart';
-import '../application/book_selection_writer.dart';
-import '../application/book_words_reader.dart';
-import '../domain/book_statistics.dart';
+import 'package:word_app/core/learning/learning_progress_reader.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/book/application/book_catalog_reader.dart';
+import 'package:word_app/features/book/application/book_selection_writer.dart';
+import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/domain/book_statistics.dart';
 
 /// 词书模块聚合状态。
 ///

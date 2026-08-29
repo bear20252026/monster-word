@@ -1,9 +1,9 @@
 ﻿import '../../../core/learning/learning_session_reader.dart';
-import '../../../core/learning/learning_session_starter.dart';
-import '../../../core/engine/fsrs6_engine.dart' show FsrsRating;
-import '../../../models/book.dart';
-import '../../../models/word.dart';
-import 'learning_session_state.dart';
+import 'package:word_app/core/learning/learning_session_starter.dart';
+import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 
 /// 【学习功能域 · presentation 装配】把「启动会话」动作收敛为 core 契约的适配器。
 ///

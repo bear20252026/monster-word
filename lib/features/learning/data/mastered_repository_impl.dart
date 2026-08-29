@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'mastered_repository.dart';
+import 'package:word_app/features/learning/data/mastered_repository.dart';
 
 /// 基于 SharedPreferences 的已掌握单词标记仓储。
 ///

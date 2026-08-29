@@ -6,22 +6,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../models/book.dart';
-import '../../../core/learning/learning_session_reader.dart';
-import '../../../core/learning/learning_session_starter.dart';
-import '../../../core/router/nav_utils.dart';
-import '../../../core/router/route_names.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/core/learning/learning_session_reader.dart';
+import 'package:word_app/core/learning/learning_session_starter.dart';
+import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../theme/skin_system.dart';
-import '../../../tokens/design_tokens.dart';
-import '../../../widgets/bending_gallery.dart';
-import '../../../widgets/morphing_tabs.dart';
-import '../../../widgets/word_globe.dart';
-import '../application/book_catalog_reader.dart';
-import '../application/book_words_reader.dart';
-import 'books_page.dart';
-import 'extensive_model_select_page.dart';
-import 'word_export_page.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/bending_gallery.dart';
+import 'package:word_app/widgets/morphing_tabs.dart';
+import 'package:word_app/widgets/word_globe.dart';
+import 'package:word_app/features/book/application/book_catalog_reader.dart';
+import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/presentation/books_page.dart';
+import 'package:word_app/features/book/presentation/extensive_model_select_page.dart';
+import 'package:word_app/features/book/presentation/word_export_page.dart';
 
 class LibSelectPage extends StatefulWidget {
   const LibSelectPage({super.key});

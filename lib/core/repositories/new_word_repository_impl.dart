@@ -1,9 +1,9 @@
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:word_app/core/infrastructure/user_database.dart';
-import '../../models/new_word_record.dart';
-import '../../models/word.dart';
-import 'new_word_repository.dart';
+import 'package:word_app/models/new_word_record.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/core/repositories/new_word_repository.dart';
 
 class NewWordRepositoryImpl implements NewWordRepository {
   NewWordRepositoryImpl(this._database);

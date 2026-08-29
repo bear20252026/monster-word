@@ -5,9 +5,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'learning_queue_word_lists_state.dart';
-import '../../../models/word.dart';
-import 'list_words_page.dart';
+import 'package:word_app/features/learning/presentation/learning_queue_word_lists_state.dart';
+import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/presentation/list_words_page.dart';
 
 class MyWordsPage extends ListWordsPage {
   const MyWordsPage({super.key});

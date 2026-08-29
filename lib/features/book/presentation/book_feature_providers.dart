@@ -1,14 +1,14 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/learning/learning_progress_reader.dart';
-import '../application/book_catalog_reader.dart';
-import '../application/book_selection_writer.dart';
-import '../application/book_words_reader.dart';
-import '../data/repository_book_catalog_reader.dart';
-import '../data/repository_book_selection_writer.dart';
-import '../data/repository_book_words_reader.dart';
-import 'book_state.dart';
+import 'package:word_app/core/learning/learning_progress_reader.dart';
+import 'package:word_app/features/book/application/book_catalog_reader.dart';
+import 'package:word_app/features/book/application/book_selection_writer.dart';
+import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/data/repository_book_catalog_reader.dart';
+import 'package:word_app/features/book/data/repository_book_selection_writer.dart';
+import 'package:word_app/features/book/data/repository_book_words_reader.dart';
+import 'package:word_app/features/book/presentation/book_state.dart';
 
 /// 装配词书功能域的全部依赖。
 ///

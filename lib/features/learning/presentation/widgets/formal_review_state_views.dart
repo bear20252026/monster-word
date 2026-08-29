@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../theme/skin_system.dart';
-import '../../../../tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 正式复习加载中的统一页面。
 class FormalReviewLoadingView extends StatelessWidget {

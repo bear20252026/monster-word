@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/engine/core_engine.dart' show WordChoicePair;
+import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/presentation/responsive.dart';
-import '../../../../models/bb_word_process.dart';
-import '../../../../theme/skin_system.dart';
-import 'formal_review_choice_card.dart';
+import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/features/learning/presentation/widgets/formal_review_choice_card.dart';
 
 /// 单词、音标和发音入口。
 class FormalReviewWordPrompt extends StatelessWidget {

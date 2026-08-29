@@ -1,4 +1,4 @@
-import '../domain/account_profile.dart';
+import 'package:word_app/features/account/domain/account_profile.dart';
 
 /// 账号资料读写端口（应用层）。
 ///

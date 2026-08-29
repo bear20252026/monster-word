@@ -1,4 +1,4 @@
-import '../../../models/book.dart';
+import 'package:word_app/models/book.dart';
 
 /// 词书选择操作端口（写）。
 ///
