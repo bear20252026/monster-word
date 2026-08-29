@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'learning_queue_word_lists_state.dart';
 import '../../../models/word.dart';
-import '../../../pages/list_words_page.dart';
+import 'list_words_page.dart';
 
 class MyWordsPage extends ListWordsPage {
   const MyWordsPage({super.key});

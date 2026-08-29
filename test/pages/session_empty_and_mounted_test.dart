@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:word_app/pages/dictation_session_page.dart';
-import 'package:word_app/pages/quick_spell_page.dart';
+import 'package:word_app/features/learning/presentation/dictation_session_page.dart';
+import 'package:word_app/features/learning/presentation/quick_spell_page.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/theme/skin_system.dart';
 

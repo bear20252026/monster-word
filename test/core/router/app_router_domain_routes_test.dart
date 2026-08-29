@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/router/app_router.dart';
 import 'package:word_app/core/router/route_error_page.dart';
-import 'package:word_app/pages/learn_page.dart';
-import 'package:word_app/pages/search_page.dart';
-import 'package:word_app/pages/settings_page.dart';
-import 'package:word_app/pages/review_page.dart';
+import 'package:word_app/features/learning/presentation/learn_page.dart';
+import 'package:word_app/features/search/presentation/search_page.dart';
+import 'package:word_app/features/settings/presentation/settings_page.dart';
+import 'package:word_app/features/learning/presentation/review_page.dart';
 
 void main() {
   group('AppRouter 功能域委托', () {

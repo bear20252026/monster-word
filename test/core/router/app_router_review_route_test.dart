@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/router/app_router.dart';
 import 'package:word_app/core/router/route_error_page.dart';
-import 'package:word_app/pages/review_page.dart';
+import 'package:word_app/features/learning/presentation/review_page.dart';
 import 'package:word_app/widgets/transition_widgets.dart';
 
 void main() {

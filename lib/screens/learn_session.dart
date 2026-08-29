@@ -16,7 +16,7 @@ import '../features/learning/presentation/learning_favorites_state.dart';
 import '../features/learning/presentation/learning_mastered_state.dart';
 import '../features/learning/presentation/learning_session_state.dart';
 import '../models/word.dart';
-import '../pages/word_detail_page.dart';
+import '../features/dictionary/presentation/word_detail_page.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 import '../widgets/animations.dart';

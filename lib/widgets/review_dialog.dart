@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../features/learning/application/review_schedule_reader.dart';
 import '../features/learning/presentation/learning_session_state.dart';
-import '../pages/review_page.dart';
+import '../features/learning/presentation/review_page.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 

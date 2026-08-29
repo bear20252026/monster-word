@@ -5,10 +5,10 @@ import 'package:provider/provider.dart';
 
 import '../features/book/application/book_catalog_reader.dart';
 import '../hooks/responsive.dart';
-import '../pages/learn_page.dart';
-import '../pages/lib_select_page.dart';
-import '../pages/search_page.dart';
-import '../pages/word_machine_page.dart';
+import '../features/learning/presentation/learn_page.dart';
+import '../features/book/presentation/lib_select_page.dart';
+import '../features/search/presentation/search_page.dart';
+import '../features/learning/presentation/word_machine_page.dart';
 import '../features/learning/presentation/learning_session_state.dart';
 import '../features/learning/presentation/learning_statistics_state.dart';
 import '../theme/skin_system.dart';

@@ -7,7 +7,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:word_app/core/router/route_names.dart';
-import 'package:word_app/pages/book_words_page.dart';
+import 'package:word_app/features/book/presentation/book_words_page.dart';
 
 void main() {
   group('页面 routeName 与 RouteNames 注册名一致性', () {

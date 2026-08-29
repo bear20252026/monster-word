@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../../../core/learning/learning_favorites_store.dart';
 import '../../../core/learning/learning_session_reader.dart';
 import '../../../core/learning/learning_session_starter.dart';
-import '../../../screens/learn_session.dart';
 import '../../../core/router/route_names.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
@@ -102,7 +101,7 @@ class _MyFavPageState extends State<MyFavPage> {
   Future<void> _startLearning() async {
     await context.read<LearningSessionStarter>().startFavoritesSession(limit: 50);
     if (mounted) {
-      Navigator.pushNamed(context, LearnSession.routeName);
+      Navigator.pushNamed(context, RouteNames.learnSession);
     }
   }
 

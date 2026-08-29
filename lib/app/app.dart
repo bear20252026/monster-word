@@ -15,7 +15,7 @@ import '../features/search/presentation/search_feature_providers.dart';
 import '../features/scare_coin/presentation/scare_coin_feature_providers.dart';
 import '../features/word_browse/presentation/word_browse_feature_providers.dart';
 import '../features/account/presentation/splash_page.dart';
-import '../pages/lib_select_page.dart';
+import '../features/book/presentation/lib_select_page.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
 import '../shell/main_shell.dart';

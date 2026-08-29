@@ -21,7 +21,7 @@ import 'package:word_app/features/learning/presentation/learning_session_state.d
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/models/word_note.dart';
-import 'package:word_app/pages/word_detail_page.dart';
+import 'package:word_app/features/dictionary/presentation/word_detail_page.dart';
 import 'package:word_app/repositories/fav_repository.dart';
 import 'package:word_app/repositories/note_repository.dart';
 import 'package:word_app/services/audio_service.dart';

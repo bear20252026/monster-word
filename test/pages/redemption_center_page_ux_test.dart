@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:word_app/core/scare_coin/scare_coin_store.dart';
 import 'package:word_app/models/scare_coin_entry.dart';
-import 'package:word_app/pages/redemption_center_page.dart';
+import 'package:word_app/features/scare_coin/presentation/redemption_center_page.dart';
 
 class _FakeScareCoinStore implements ScareCoinStore {
   int _balance;

@@ -14,7 +14,7 @@ import 'package:word_app/features/learning/domain/choice_generator.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/pages/learn_page.dart';
+import 'package:word_app/features/learning/presentation/learn_page.dart';
 import 'package:word_app/services/audio_service.dart';
 import 'package:word_app/theme/skin_system.dart';
 

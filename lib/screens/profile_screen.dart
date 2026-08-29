@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 
 import '../features/account/presentation/account_profile_state.dart';
 import '../hooks/responsive.dart';
-import '../pages/appearance_page.dart';
-import '../pages/more_settings_page.dart';
+import '../features/account/presentation/appearance_page.dart';
+import '../features/settings/presentation/more_settings_page.dart';
 import '../core/scare_coin/scare_coin_store.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
