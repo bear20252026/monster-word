@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/router/nav_utils.dart';
+import '../../../core/router/route_names.dart';
+import '../../../tokens/design_language.dart';
 import 'learning_preferences_state.dart';
 import '../../../hooks/responsive.dart';
 import '../../../theme/skin_system.dart';
@@ -97,6 +99,16 @@ class _SettingsPageState extends State<SettingsPage> {
                 ? (settings.autoPlayExampleAudio ? '单词、词义页面例句' : '单词')
                 : (settings.autoPlayExampleAudio ? '词义页面例句' : '已关闭'),
             onTap: () => _showAutoPronDialog(),
+          ),
+        ]),
+        SizedBox(height: 16),
+
+        // --- 设计语言（B档：字体/圆角/间距/阴影整体风格，运行时切换） ---
+        _SettingGroup([
+          _Cell(
+            title: '设计语言',
+            value: DesignLanguages.byId(context.skin.designLanguageId).name,
+            onTap: () => Navigator.pushNamed(context, RouteNames.designLanguage),
           ),
         ]),
         SizedBox(height: 16),

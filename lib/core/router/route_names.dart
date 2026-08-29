@@ -42,6 +42,7 @@ class RouteNames {
   static const String listenModeSelect = '/listen_mode_select';
   static const String sentenceQuiz = '/sentence_quiz';
   static const String appearance = '/appearance';
+  static const String designLanguage = '/design_language';
   static const String moreSettings = '/more_settings';
   static const String accountInfo = '/account_info';
   static const String feedback = '/feedback';

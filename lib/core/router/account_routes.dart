@@ -6,6 +6,7 @@ import '../../pages/check_in_history_page.dart';
 import '../../pages/class_activity_page.dart';
 import '../../pages/class_checkin_page.dart';
 import '../../pages/dashboard_page.dart';
+import '../../pages/design_language_select_page.dart';
 import '../../pages/feedback_page.dart';
 import '../../pages/foot_mark_page.dart';
 import '../../pages/help_page.dart';
@@ -53,6 +54,8 @@ abstract final class AccountRoutes {
         return const UserInfoManagePage();
       case RouteNames.themeSelect:
         return const UIThemeSelectPage();
+      case RouteNames.designLanguage:
+        return const DesignLanguageSelectPage();
       case RouteNames.personalStereo:
         return const PersonalStereoPage();
       case RouteNames.playOrder:

@@ -37,6 +37,7 @@ abstract final class AppRouter {
       case RouteNames.moreSettings:
       case RouteNames.wordMachine:
       case RouteNames.themeSelect:
+      case RouteNames.designLanguage:
       case RouteNames.userInfoManage:
       case RouteNames.help:
       case RouteNames.netDiagnosis:
