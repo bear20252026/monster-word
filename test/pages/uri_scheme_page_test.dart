@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:word_app/pages/uri_scheme_page.dart';
+import 'package:word_app/core/web/uri_scheme_page.dart';
 
 void main() {
   testWidgets('UriSchemePage 处理无效 URI 时不抛异常', (tester) async {

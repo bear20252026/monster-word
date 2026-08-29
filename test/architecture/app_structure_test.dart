@@ -71,12 +71,9 @@ void main() {
     });
 
     test('词书功能域已垂直化，词单页只依赖词书事实状态与端口', () {
-      final adapter = File('lib/pages/book_words_page.dart').readAsStringSync();
       final featurePage = File('lib/features/book/presentation/book_words_page.dart').readAsStringSync();
       final stateSource = File('lib/features/book/presentation/book_state.dart').readAsStringSync();
 
-      expect(adapter, isNot(contains('LearningSessionState')), reason: '适配器不应直连学习会话');
-      expect(adapter, isNot(contains('LearnState')));
       expect(featurePage, contains('BookState'), reason: '词单页应通过词书状态消费数据');
       expect(featurePage, isNot(contains('RepositoryBookCatalogReader')), reason: '词单页不应直连仓库适配器');
       expect(featurePage, isNot(contains('LearnState')));
@@ -142,7 +139,7 @@ void main() {
 
     test('设置功能域拥有学习偏好，设置页不再保留可丢失的本地偏好副本', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      // 页面逻辑已迁入 feature，lib/pages 仅为薄 re-export，断言指向 feature 内部页
+      // 页面逻辑已迁入 feature，断言指向 feature 内部页
       final settingsPageSource = File('lib/features/settings/presentation/settings_page.dart').readAsStringSync();
       final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
 
@@ -154,15 +151,10 @@ void main() {
       expect(locatorSource, isNot(contains('SettingsState')));
     });
 
-    test('设置功能域已垂直化，页面迁入 feature 且 lib/pages 为薄适配', () {
-      final featurePage = 'lib/features/settings/presentation/settings_page.dart';
-      final adapter = 'lib/pages/settings_page.dart';
-      final featureSource = File(featurePage).readAsStringSync();
-      final adapterSource = File(adapter).readAsStringSync();
+    test('设置功能域已垂直化，页面迁入 feature', () {
+      final featureSource = File('lib/features/settings/presentation/settings_page.dart').readAsStringSync();
       expect(featureSource, contains('class SettingsPage'));
       expect(featureSource, contains("routeName = '/settings'"));
-      // 薄适配：只 re-export，不含业务逻辑
-      expect(adapterSource, contains('export'));
     });
 
     test('遗留复习会话栈已删除，功能域装配不再注册旧状态或服务', () {

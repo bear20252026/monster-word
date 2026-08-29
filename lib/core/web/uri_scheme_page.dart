@@ -4,10 +4,10 @@
 // URI Scheme 处理：处理 deep link 跳转
 import 'package:flutter/material.dart';
 
-import '../core/router/nav_utils.dart';
-import '../core/router/route_names.dart';
-import '../theme/skin_system.dart';
-import '../tokens/design_tokens.dart';
+import '../router/nav_utils.dart';
+import '../router/route_names.dart';
+import '../../theme/skin_system.dart';
+import '../../tokens/design_tokens.dart';
 import 'base_web_page.dart';
 
 class UriSchemePage extends StatelessWidget {

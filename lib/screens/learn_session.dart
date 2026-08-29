@@ -238,7 +238,7 @@ class _LearnSessionState extends State<LearnSession> with TickerProviderStateMix
     final isMastered = word != null && mastered.isMastered(word.word);
 
     return Container(
-      height: AppSpacing.navH,
+      height: context.design.spacing.navH,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
