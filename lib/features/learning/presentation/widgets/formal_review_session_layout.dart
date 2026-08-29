@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/core/infrastructure/wallpaper_data.dart' show WallpaperType;
 import '../../../../core/engine/core_engine.dart' show WordChoicePair;
-import '../../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../../models/bb_word_process.dart';
 import '../../../../theme/skin_system.dart';
 import 'formal_review_header.dart';

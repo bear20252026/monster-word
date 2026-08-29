@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../features/book/application/book_catalog_reader.dart';
-import '../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../features/learning/presentation/learn_page.dart';
 import '../features/book/presentation/lib_select_page.dart';
 import '../features/search/presentation/search_page.dart';

@@ -1,4 +1,4 @@
-﻿// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队生成 | Monster Word App
 
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
 // 还原原版 v3.2 个人中心 → 更多设置入口
@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../../../core/auth/app_session_controller.dart';
 import '../../../core/router/nav_utils.dart';
 import '../../../core/router/route_names.dart';
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import '../../../widgets/sb_button.dart';

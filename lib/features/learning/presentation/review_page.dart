@@ -13,7 +13,7 @@ import 'review_word_actions_state.dart';
 import 'widgets/formal_review_widgets.dart';
 import '../../../models/bb_word_process.dart';
 import '../../../core/router/route_names.dart';
-import '../../../state/wallpaper_state.dart';
+import 'package:word_app/core/infrastructure/wallpaper_state.dart';
 import '../../../core/router/nav_utils.dart';
 import '../../../widgets/session_exit_guard.dart';
 

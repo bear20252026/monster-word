@@ -1,11 +1,11 @@
-﻿// 我的内容页：还原原版"我的内容"页面
+// 我的内容页：还原原版"我的内容"页面
 // 横向卡片（随身听/听写）+ 列表项（在学词书/近日已学/全部已学/单词本/句库/笔记）
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
 import '../../../core/learning/learning_collections_reader.dart';
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/func_colors.dart';
 import '../../../tokens/design_tokens.dart';

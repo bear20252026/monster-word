@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/audio/audio_playback_state.dart';
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../models/word.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';

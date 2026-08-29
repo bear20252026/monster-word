@@ -1,4 +1,4 @@
-﻿// 设置页：学习偏好 + 7 个底部弹窗交互
+// 设置页：学习偏好 + 7 个底部弹窗交互
 // 已接入 SkinSystem 主题 — 所有颜色使用 context.skin.colors
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,7 +7,7 @@ import '../../../core/router/nav_utils.dart';
 import '../../../core/router/route_names.dart';
 import '../../../tokens/design_language.dart';
 import 'learning_preferences_state.dart';
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../widgets/scale_down_on_press.dart';
 

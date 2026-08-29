@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/core/parsers/phrase_parser.dart';
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../models/word.dart';
 import '../application/book_words_reader.dart';
 import '../../../theme/skin_system.dart';

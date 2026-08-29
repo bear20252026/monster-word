@@ -1,4 +1,4 @@
-﻿// 字典详情页：单词详解（释义+音标+例句+常见用法+词根+形近词+笔记）
+// 字典详情页：单词详解（释义+音标+例句+常见用法+词根+形近词+笔记）
 // 从学习页答题后进入，看完后点击"下一词"返回学习
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import '../data/dictionary_extra.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/core/parsers/phrase_parser.dart';
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../core/engine/fsrs6_engine.dart' show FsrsRating;
 import '../../../features/learning/application/review_schedule_reader.dart';
 import '../../../core/learning/learning_session_reader.dart';

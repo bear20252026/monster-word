@@ -1,7 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../core/engine/core_engine.dart' show WordChoicePair;
-import '../../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../../theme/skin_system.dart';
 
 /// 毛玻璃候选卡片。

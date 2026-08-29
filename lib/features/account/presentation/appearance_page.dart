@@ -1,10 +1,10 @@
-﻿// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队生成 | Monster Word App
 
 // 外观 & 沉浸场景页：壁纸选择 + 主题切换 + 实时预览
 // 还原原版 v3.2 个人中心 → 外观&沉浸场景入口
 import 'package:flutter/material.dart';
 
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../core/router/route_names.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';

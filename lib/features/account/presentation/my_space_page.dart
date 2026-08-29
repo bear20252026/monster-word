@@ -1,11 +1,11 @@
-﻿// 我的空间页：顶部导航 + 头像区 + 昵称 + 会员入口 + 卡片
+// 我的空间页：顶部导航 + 头像区 + 昵称 + 会员入口 + 卡片
 // 已接入 SkinSystem 主题
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/router/route_names.dart';
 import '../../../core/scare_coin/scare_coin_store.dart';
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import '../../../widgets/monster_icon.dart';

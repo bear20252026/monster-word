@@ -1,4 +1,4 @@
-﻿// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队生成 | Monster Word App
 
 // 移植自 lib/pages/immersive_swipe_page.dart
 // 沉浸刷词：全屏单词卡片，上滑=认识，下滑=不认识，纯记忆测试
@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/router/nav_utils.dart';
 import '../../../core/engine/fsrs6_engine.dart' show FsrsRating;
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../widgets/session_exit_guard.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';

@@ -1,10 +1,10 @@
-﻿// 签到历史页面：双月日历视图 + 概览卡片 + 签到详情列表
+// 签到历史页面：双月日历视图 + 概览卡片 + 签到详情列表
 // 参考 Calendar Interactive UI Kit (Penpot) 设计模式
 // 路由：/check_in_history
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import '../../../widgets/scale_down_on_press.dart';

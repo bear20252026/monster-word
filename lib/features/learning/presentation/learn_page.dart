@@ -1,4 +1,4 @@
-﻿// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队生成 | Monster Word App
 
 // 由账号4生成
 // 学习页：Mistral AI 设计风格
@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/audio/audio_playback_state.dart';
 import '../../../core/engine/fsrs6_engine.dart' show FsrsRating;
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../core/router/route_names.dart';
 import '../../../theme/skin_system.dart';
 

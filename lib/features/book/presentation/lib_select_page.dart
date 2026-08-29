@@ -11,7 +11,7 @@ import '../../../core/learning/learning_session_reader.dart';
 import '../../../core/learning/learning_session_starter.dart';
 import '../../../core/router/nav_utils.dart';
 import '../../../core/router/route_names.dart';
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import '../../../widgets/bending_gallery.dart';

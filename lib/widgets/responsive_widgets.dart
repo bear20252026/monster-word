@@ -2,7 +2,7 @@
 // 包含：响应式网格、响应式卡片、响应式文字、响应式按钮
 import 'package:flutter/material.dart';
 
-import '../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 
 /// 响应式文字：根据屏幕类型自动缩放字号
 class ResponsiveText extends StatelessWidget {

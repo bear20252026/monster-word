@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/router/nav_utils.dart';
 import '../../../models/word.dart';
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../core/audio/system_tts.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';

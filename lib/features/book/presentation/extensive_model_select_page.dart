@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../core/learning/listening_mode.dart';
 import '../../../core/router/nav_utils.dart';
 import '../../../core/router/route_names.dart';
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../models/word.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';

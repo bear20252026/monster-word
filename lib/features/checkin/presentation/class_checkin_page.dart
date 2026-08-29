@@ -1,11 +1,11 @@
-﻿// 班级签到页：加入班级 + 每日签到 + 班级排行榜 + 学习数据
+// 班级签到页：加入班级 + 每日签到 + 班级排行榜 + 学习数据
 // 还原原版 v3.2 班级签到功能入口
 // 完善版：Banner+班级活动指引+功能卡片+用户评论
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/router/nav_utils.dart';
-import '../../../hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import '../../../tokens/func_colors.dart';

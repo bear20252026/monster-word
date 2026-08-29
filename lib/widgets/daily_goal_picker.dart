@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
-import 'package:word_app/hooks/responsive.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/sb_card.dart';
 

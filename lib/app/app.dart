@@ -19,7 +19,7 @@ import '../features/book/presentation/lib_select_page.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
 import 'main_shell.dart';
-import '../state/wallpaper_state.dart';
+import 'package:word_app/core/infrastructure/wallpaper_state.dart';
 import '../theme/skin_system.dart';
 import '../utils/screen_utils.dart';
 import '../widgets/adaptive_scale.dart';
