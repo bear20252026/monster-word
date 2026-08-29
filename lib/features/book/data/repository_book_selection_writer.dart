@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/di/service_locator.dart';
 import '../../../models/book.dart';
-import '../../../repositories/book_repository.dart';
+import 'book_repository.dart';
 import '../application/book_selection_writer.dart';
 
 /// 基于 SharedPreferences + BookRepository 的词书选择适配器。

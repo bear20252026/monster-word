@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/book/data/repository_book_catalog_reader.dart';
 import 'package:word_app/models/book.dart';
-import 'package:word_app/repositories/book_repository.dart';
+import 'package:word_app/features/book/data/book_repository.dart';
 
 void main() {
   test('reads the book catalog and resolves books by id', () async {

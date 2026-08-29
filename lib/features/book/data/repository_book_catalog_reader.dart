@@ -1,6 +1,6 @@
 import '../../../core/di/service_locator.dart';
 import '../../../models/book.dart';
-import '../../../repositories/book_repository.dart';
+import 'book_repository.dart';
 import '../application/book_catalog_reader.dart';
 
 /// 基于既有词书仓储的目录读取适配器。

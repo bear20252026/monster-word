@@ -5,8 +5,8 @@ import 'package:get_it/get_it.dart';
 
 import '../../data/user_database.dart';
 import '../../data/wordbook_database.dart';
-import '../../repositories/book_repository.dart';
-import '../../repositories/book_repository_impl.dart';
+import '../../features/book/data/book_repository.dart';
+import '../../features/book/data/book_repository_impl.dart';
 import '../../repositories/word_repository.dart';
 import '../../repositories/word_repository_impl.dart';
 import '../../repositories/user_repository.dart';
