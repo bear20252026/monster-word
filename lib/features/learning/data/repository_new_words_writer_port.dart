@@ -1,6 +1,6 @@
 import '../../../core/di/service_locator.dart';
 import '../../../models/word.dart';
-import '../../../repositories/new_word_repository.dart';
+import 'package:word_app/core/repositories/new_word_repository.dart';
 import '../application/new_words_writer_port.dart';
 
 /// Adapts [NewWordRepository] (legacy repositories) to [NewWordsWriterPort] (application layer).

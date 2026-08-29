@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../core/di/service_locator.dart';
 import '../models/word.dart';
-import '../repositories/word_repository.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
 

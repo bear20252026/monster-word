@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/quick_review/data/repository_quick_review_word_reader.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/repositories/word_repository.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 
 void main() {
   test('loads quick-review words using the existing repository ordering contract', () async {

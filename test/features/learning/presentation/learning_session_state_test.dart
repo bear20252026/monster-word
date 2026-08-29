@@ -1,4 +1,4 @@
-﻿import 'dart:math';
+import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,7 +20,7 @@ import 'package:word_app/features/learning/presentation/learning_session_state.d
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/repositories/fav_repository.dart';
+import 'package:word_app/core/repositories/fav_repository.dart';
 import 'package:word_app/features/learning/data/mastered_repository.dart';
 
 void main() {

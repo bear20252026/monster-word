@@ -30,8 +30,8 @@ import 'package:word_app/models/book.dart';
 import 'package:word_app/models/new_word_record.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/repositories/fav_repository.dart';
-import 'package:word_app/repositories/new_word_repository.dart';
+import 'package:word_app/core/repositories/fav_repository.dart';
+import 'package:word_app/core/repositories/new_word_repository.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 
 import '../test_helpers/fake_learning_progress_reader.dart';

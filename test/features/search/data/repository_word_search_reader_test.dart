@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/search/data/repository_word_search_reader.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/repositories/word_repository.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 
 void main() {
   test('delegates query and limit to the existing word repository', () async {

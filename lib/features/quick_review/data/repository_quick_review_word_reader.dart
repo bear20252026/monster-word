@@ -1,6 +1,6 @@
 import '../../../core/di/service_locator.dart';
 import '../../../models/word.dart';
-import '../../../repositories/word_repository.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 import '../application/quick_review_word_reader.dart';
 
 /// 基于既有单词仓储的考试速刷词源适配器。

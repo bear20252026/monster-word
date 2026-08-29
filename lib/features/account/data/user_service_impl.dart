@@ -6,8 +6,8 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../models/user_info_bean.dart';
-import '../../../repositories/user_repository.dart';
-import '../../../repositories/note_repository.dart';
+import 'package:word_app/core/repositories/user_repository.dart';
+import 'package:word_app/core/repositories/note_repository.dart';
 import 'user_service.dart';
 
 /// 用户服务实现

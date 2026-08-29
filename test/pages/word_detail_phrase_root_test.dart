@@ -22,8 +22,8 @@ import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/models/word_note.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail_page.dart';
-import 'package:word_app/repositories/fav_repository.dart';
-import 'package:word_app/repositories/note_repository.dart';
+import 'package:word_app/core/repositories/fav_repository.dart';
+import 'package:word_app/core/repositories/note_repository.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/theme/skin_system.dart';
 

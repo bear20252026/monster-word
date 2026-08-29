@@ -1,6 +1,6 @@
 import '../../../core/di/service_locator.dart';
 import '../../../models/word.dart';
-import '../../../repositories/word_repository.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 import '../application/word_search_reader.dart';
 
 /// 基于既有词库仓储的搜索适配器。

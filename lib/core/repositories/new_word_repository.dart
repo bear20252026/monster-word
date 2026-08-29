@@ -1,5 +1,5 @@
-import '../models/new_word_record.dart';
-import '../models/word.dart';
+import '../../models/new_word_record.dart';
+import '../../models/word.dart';
 
 /// 用户生词本的数据访问抽象。
 ///

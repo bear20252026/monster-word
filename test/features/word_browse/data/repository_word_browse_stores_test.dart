@@ -3,8 +3,8 @@ import 'package:word_app/features/word_browse/data/repository_sentence_favorites
 import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/features/word_browse/data/repository_word_notes_store.dart';
 import 'package:word_app/models/word_note.dart';
-import 'package:word_app/repositories/fav_repository.dart';
-import 'package:word_app/repositories/note_repository.dart';
+import 'package:word_app/core/repositories/fav_repository.dart';
+import 'package:word_app/core/repositories/note_repository.dart';
 
 void main() {
   group('RepositoryWordNotesStore', () {

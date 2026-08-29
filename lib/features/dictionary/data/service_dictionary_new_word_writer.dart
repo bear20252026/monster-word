@@ -1,6 +1,6 @@
 import '../../../data/user_database.dart';
 import '../../../models/word.dart';
-import '../../../repositories/new_word_repository_impl.dart';
+import 'package:word_app/core/repositories/new_word_repository_impl.dart';
 import '../application/dictionary_new_word_writer.dart';
 
 /// 基于 NewWordRepository 的生词本操作适配器。

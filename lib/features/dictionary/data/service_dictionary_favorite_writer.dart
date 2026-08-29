@@ -1,5 +1,5 @@
-import '../../../repositories/fav_repository.dart';
-import '../../../repositories/fav_repository_impl.dart';
+import 'package:word_app/core/repositories/fav_repository.dart';
+import 'package:word_app/core/repositories/fav_repository_impl.dart';
 import '../application/dictionary_favorite_writer.dart';
 
 /// 基于 FavRepository 的收藏操作适配器。

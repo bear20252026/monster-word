@@ -1,10 +1,10 @@
-﻿// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队生成 | Monster Word App
 import 'package:flutter/material.dart';
 
 import '../../../core/di/service_locator.dart';
 import '../../../core/router/nav_utils.dart';
 import '../../../models/word.dart';
-import '../../../repositories/word_repository.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 import 'dictionary_page.dart';
 
 /// 按单词名深链进入词典（P2-7）。

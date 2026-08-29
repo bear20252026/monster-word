@@ -1,5 +1,5 @@
 import '../../../core/di/service_locator.dart';
-import '../../../repositories/fav_repository.dart';
+import 'package:word_app/core/repositories/fav_repository.dart';
 import '../application/favorites_port.dart';
 
 /// Adapts [FavRepository] (legacy repositories) to [FavoritesPort] (application layer).

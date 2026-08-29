@@ -9,7 +9,7 @@ import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_by_name_page.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/repositories/word_repository.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 
 /// 仅承接 getWordByText 的轻量 Fake，其余方法返回空/空值（测试不触达）。
 class _FakeWordRepository implements WordRepository {

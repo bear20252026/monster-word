@@ -1,7 +1,7 @@
 import '../../../data/wordbook_database.dart' show WordBookDatabase;
 import '../../../models/book.dart';
 import '../../../models/word.dart';
-import '../../../repositories/fav_repository.dart';
+import 'package:word_app/core/repositories/fav_repository.dart';
 
 /// 学习队列所需的词库读取端口。
 abstract interface class LearningQueueWordSource {

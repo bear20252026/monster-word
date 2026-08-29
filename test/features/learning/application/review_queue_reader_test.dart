@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_queue_reader.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/repositories/word_repository.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 
 void main() {
   group('ReviewQueueReader', () {

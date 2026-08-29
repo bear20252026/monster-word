@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/learning/data/learning_queue_repository.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/repositories/fav_repository.dart';
+import 'package:word_app/core/repositories/fav_repository.dart';
 
 void main() {
   group('LearningQueueRepository', () {

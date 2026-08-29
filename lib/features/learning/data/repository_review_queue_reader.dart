@@ -1,5 +1,5 @@
 import '../../../models/word.dart';
-import '../../../repositories/word_repository.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 import '../application/review_queue_reader.dart';
 
 /// 基于既有词库仓储的正式复习队列读取适配器。

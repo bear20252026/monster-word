@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 // WordRepositoryImpl — 单词数据仓库实现
 
-import '../data/wordbook_database.dart';
+import '../../data/wordbook_database.dart';
 import 'word_repository.dart';
 
 /// 单词数据仓库的具体实现

@@ -1,5 +1,5 @@
 import '../../../models/word.dart';
-import '../../../repositories/word_repository.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 import '../application/book_words_reader.dart';
 
 /// 基于既有单词仓储的词书单词读取适配器。
