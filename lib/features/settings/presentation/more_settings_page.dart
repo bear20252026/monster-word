@@ -5,8 +5,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/auth/app_session_controller.dart';
 import '../../../core/router/nav_utils.dart';
-import '../../../features/account/presentation/app_session_state.dart';
 import '../../../hooks/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
@@ -340,7 +340,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           label: '退出',
           onTap: () {
             Navigator.pop(context);
-            context.read<AppSessionState>().logout();
+            context.read<AppSessionController>().logout();
           },
           fillColor: context.skin.colors.danger,
         ),
