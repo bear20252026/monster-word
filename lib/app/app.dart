@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/word_audio_scope.dart';
 import 'package:word_app/core/router/app_router.dart';
+import 'package:word_app/core/router/global_nav_history_bar.dart';
+import 'package:word_app/core/router/navigation_history.dart';
 import 'package:word_app/features/account/presentation/account_feature_providers.dart';
 import 'package:word_app/features/book/presentation/book_feature_providers.dart';
 import 'package:word_app/features/checkin/presentation/check_in_feature_providers.dart';
@@ -113,9 +115,12 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
   Widget build(BuildContext context) {
     return Consumer<SkinSystem>(
       builder: (context, skin, _) {
+        final history = NavigationHistoryService.instance;
         return MaterialApp(
           title: 'Monster Word',
           debugShowCheckedModeBanner: false,
+          navigatorKey: history.navigatorKey,
+          navigatorObservers: [history.observer],
           theme: ThemeData(
             brightness: skin.effectiveUiBrightness,
             fontFamily: skin.effectiveFontFamily,
@@ -138,7 +143,13 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
               rippleColor: skin.colors.accent.withValues(alpha: 0.4),
               maxRadius: 60,
               enabled: false,
-              child: SkinProvider(skin: skin, child: child!),
+              child: SkinProvider(
+                skin: skin,
+                child: GlobalNavHistoryBar(
+                  history: history,
+                  child: child!,
+                ),
+              ),
             );
           },
           // A-1: Splash 复位为真正启动入口 — 品牌动画 → 登录态检查 → 首次引导 → 落地页。
