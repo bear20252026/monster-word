@@ -463,6 +463,10 @@ class PhoneticAudioPlayer {
     _instance._needPlay = need;
   }
 
+  /// 仅供回归测试观察播放开关默认值（REG-AUDIO-001）。
+  @visibleForTesting
+  static bool get needPlayForTest => _instance._needPlay;
+
   /// 暂停（原版 pause）
   static void pause() {
     _instance._audioPlayer.pause();
