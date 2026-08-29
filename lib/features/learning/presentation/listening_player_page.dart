@@ -10,7 +10,7 @@ import '../../../data/example_parser.dart';
 import 'package:provider/provider.dart';
 import '../../../models/word.dart';
 import '../../../hooks/responsive.dart';
-import '../../../player/system_tts.dart';
+import '../../../core/audio/system_tts.dart';
 import '../../../theme/skin_system.dart';
 import '../../../core/learning/listening_mode.dart';
 export '../../../core/learning/listening_mode.dart';

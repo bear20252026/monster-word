@@ -18,7 +18,7 @@ import '../features/account/presentation/splash_page.dart';
 import '../features/book/presentation/lib_select_page.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
-import '../shell/main_shell.dart';
+import 'main_shell.dart';
 import '../state/wallpaper_state.dart';
 import '../theme/skin_system.dart';
 import '../utils/screen_utils.dart';

@@ -9,7 +9,7 @@ import '../core/di/service_locator.dart';
 import '../data/app_preferences.dart';
 import '../data/user_database.dart';
 import '../data/wordbook_database.dart';
-import '../player/audio_players.dart';
+import '../core/audio/audio_players.dart';
 
 /// A-3: 冷启动进度回调 — 各初始化阶段完成后回调，用于上报/日志/未来接 UI 进度条。
 ///

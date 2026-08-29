@@ -6,7 +6,7 @@
 
 import 'package:flutter/services.dart';
 
-import '../player/audio_players.dart';
+import '../core/audio/audio_players.dart';
 
 /// 锁屏学习控制（翻译自 lock/ 包核心逻辑）
 /// 原版 lock 包含 25 个类（锁屏界面/锁屏学习卡片/锁屏播放控制等）
