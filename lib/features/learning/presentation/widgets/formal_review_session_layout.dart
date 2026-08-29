@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:word_app/core/infrastructure/wallpaper_data.dart' show WallpaperType;
+import 'package:word_app/theme/wallpaper_data.dart' show WallpaperType;
 import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/models/bb_word_process.dart';

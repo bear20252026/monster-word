@@ -13,7 +13,7 @@ import 'package:word_app/features/learning/presentation/review_word_actions_stat
 import 'package:word_app/features/learning/presentation/widgets/formal_review_widgets.dart';
 import 'package:word_app/models/bb_word_process.dart';
 import 'package:word_app/core/router/route_names.dart';
-import 'package:word_app/core/infrastructure/wallpaper_state.dart';
+import 'package:word_app/theme/wallpaper_state.dart';
 import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
 
