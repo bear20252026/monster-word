@@ -3,7 +3,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:word_app/data/app_preferences.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 
 void main() {
   group('UserPreferences.dailyGoal', () {

@@ -2,7 +2,7 @@
 // 基于 SharedPreferences（单词收藏）和 FavSentenceDao（句子收藏）
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../data/fav_sentence_dao.dart';
+import 'package:word_app/core/infrastructure/fav_sentence_dao.dart';
 import '../../models/sentence_models.dart';
 import 'fav_repository.dart';
 

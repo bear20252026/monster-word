@@ -1,4 +1,4 @@
-import '../../../data/user_database.dart';
+import 'package:word_app/core/infrastructure/user_database.dart';
 import '../../../models/word.dart';
 import 'package:word_app/core/repositories/new_word_repository_impl.dart';
 import '../application/dictionary_new_word_writer.dart';

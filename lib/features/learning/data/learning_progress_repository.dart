@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../data/wordbook_database.dart' show Book;
+import 'package:word_app/core/infrastructure/wordbook_database.dart' show Book;
 import '../../../models/word.dart';
 
 /// 已保存的学习队列进度。

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../data/app_preferences.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import '../tokens/design_language.dart';
 
 class ThemeVars {

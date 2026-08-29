@@ -6,7 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import '../models/word_note.dart';
+import '../../models/word_note.dart';
 
 /// 笔记数据库管理器（单例）
 class NoteDatabase {

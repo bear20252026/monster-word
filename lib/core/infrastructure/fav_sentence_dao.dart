@@ -6,7 +6,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/sentence_models.dart';
+import '../../models/sentence_models.dart';
 
 /// 收藏例句 DAO（数据访问对象）
 class FavSentenceDao {

@@ -3,8 +3,8 @@
 
 import 'package:get_it/get_it.dart';
 
-import '../../data/user_database.dart';
-import '../../data/wordbook_database.dart';
+import 'package:word_app/core/infrastructure/user_database.dart';
+import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import '../../features/book/data/book_repository.dart';
 import '../../features/book/data/book_repository_impl.dart';
 import 'package:word_app/core/repositories/word_repository.dart';

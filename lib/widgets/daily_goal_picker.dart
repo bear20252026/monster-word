@@ -2,7 +2,7 @@
 // 用户可通过滚动选择每天学习的单词数量（1-200）
 
 import 'package:flutter/material.dart';
-import 'package:word_app/data/app_preferences.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/hooks/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/sb_card.dart';

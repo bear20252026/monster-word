@@ -25,7 +25,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' show MediaType;
 
-import '../data/app_preferences.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import '../utils/crypto_utils.dart';
 
 /// Release 包禁用 print，防止 token/URL/参数泄露到 logcat

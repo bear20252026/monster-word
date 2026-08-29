@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:word_app/data/wordbook_database.dart';
+import 'package:word_app/core/infrastructure/wordbook_database.dart';
 
 /// Use temp directory to replace system app dir
 class _FakePathProvider extends PathProviderPlatform {

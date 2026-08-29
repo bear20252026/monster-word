@@ -1,4 +1,4 @@
-import '../../../data/app_preferences.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import '../../../models/book.dart';
 import '../../../models/word.dart';
 import '../application/learning_queue_port.dart';

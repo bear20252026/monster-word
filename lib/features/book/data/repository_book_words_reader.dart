@@ -1,4 +1,4 @@
-import '../../../data/wordbook_database.dart';
+import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import '../application/book_words_reader.dart';
 
 /// 基于 WordBookDatabase 的词书单词列表适配器。

@@ -1,11 +1,11 @@
-﻿// 壁纸选择页面：展示可用壁纸列表，支持预览、选择和自定义上传
+// 壁纸选择页面：展示可用壁纸列表，支持预览、选择和自定义上传
 // 对应原版 App 的"外观&沉浸场景"设置
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
-import '../../../data/wallpaper_data.dart';
+import 'package:word_app/core/infrastructure/wallpaper_data.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 

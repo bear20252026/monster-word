@@ -1,4 +1,4 @@
-import '../../../data/wordbook_database.dart' show WordBookDatabase;
+import 'package:word_app/core/infrastructure/wordbook_database.dart' show WordBookDatabase;
 import '../../../models/book.dart';
 import '../../../models/word.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
