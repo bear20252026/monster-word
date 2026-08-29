@@ -5,6 +5,8 @@
 // - 前进：NavigationHistoryService.goForward()（按快照重新 push）。
 // - 仅桌面端（windows/macos/linux）渲染悬浮 pill；移动端依赖系统返回手势，
 //   但快捷键与历史栈仍在（供后续接入）。
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -101,39 +103,50 @@ class _GlobalNavHistoryBarState extends State<GlobalNavHistoryBar> {
     return AnimatedOpacity(
       opacity: (canBack || canForward) ? 1 : 0.25,
       duration: const Duration(milliseconds: 200),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors.cardBg.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: colors.divider),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF000000).withValues(alpha: 0.12),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            decoration: BoxDecoration(
+              color: colors.cardBg.withValues(alpha: 0.82),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: colors.divider),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF000000).withValues(alpha: 0.08),
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
+                ),
+                BoxShadow(
+                  color: const Color(0xFF000000).withValues(alpha: 0.10),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _NavButton(
-              icon: Icons.arrow_back_ios_new_rounded,
-              tooltip: '返回 (Alt+←)',
-              enabled: canBack,
-              color: colors,
-              onTap: _goBack,
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _NavButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  tooltip: '返回 (Alt+←)',
+                  enabled: canBack,
+                  color: colors,
+                  onTap: _goBack,
+                ),
+                const SizedBox(width: 2),
+                _NavButton(
+                  icon: Icons.arrow_forward_ios_rounded,
+                  tooltip: '前进 (Alt+→)',
+                  enabled: canForward,
+                  color: colors,
+                  onTap: _goForward,
+                ),
+              ],
             ),
-            const SizedBox(width: 2),
-            _NavButton(
-              icon: Icons.arrow_forward_ios_rounded,
-              tooltip: '前进 (Alt+→)',
-              enabled: canForward,
-              color: colors,
-              onTap: _goForward,
-            ),
-          ],
+          ),
         ),
       ),
     );
