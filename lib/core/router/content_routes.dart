@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../pages/immersive_swipe_page.dart';
-import '../../pages/my_content_page.dart';
-import '../../pages/my_fav_page.dart';
-import '../../pages/my_fav_sentence_page.dart';
-import '../../pages/search_page.dart';
-import '../../pages/sentence_detail_page.dart';
-import '../../pages/splash_page.dart';
-import '../../pages/word_detail_page.dart';
+import '../../features/account/presentation/splash_page.dart';
+import '../../features/content/presentation/my_content_page.dart';
+import '../../features/content/presentation/my_fav_page.dart';
+import '../../features/content/presentation/my_fav_sentence_page.dart';
+import '../../features/content/presentation/sentence_detail_page.dart';
+import '../../features/dictionary/presentation/word_detail_page.dart';
+import '../../features/learning/presentation/immersive_swipe_page.dart';
+import '../../features/search/presentation/search_page.dart';
 import '../../features/dictionary/presentation/dictionary_by_name_page.dart';
 import '../../features/dictionary/presentation/dictionary_page.dart';
 import '../../models/word.dart';

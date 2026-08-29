@@ -2,26 +2,26 @@ import 'package:flutter/material.dart';
 
 import '../../models/book.dart';
 import '../../models/word.dart';
-import '../../pages/book_words_page.dart';
-import '../../pages/courses_page.dart';
-import '../../pages/dictation_session_page.dart';
-import '../../pages/extensive_model_select_page.dart';
-import '../../pages/learn_page.dart';
-import '../../pages/lib_select_page.dart';
-import '../../pages/list_word_listen_page.dart';
-import '../../pages/listening_player_page.dart';
-import '../../pages/mastered_words_page.dart';
-import '../../pages/my_words_page.dart';
-import '../../pages/new_words_page.dart';
-import '../../pages/not_learned_words_page.dart';
-import '../../pages/quick_spell_page.dart';
-import '../../pages/review_page.dart';
-import '../../pages/reviewing_words_page.dart';
-import '../../pages/sentence_quiz_page.dart';
-import '../../pages/spell_check_page.dart';
-import '../../pages/spell_session_page.dart';
-import '../../pages/word_export_page.dart';
-import '../../pages/word_machine_page.dart';
+import '../../features/book/presentation/book_words_page.dart';
+import '../../features/book/presentation/courses_page.dart';
+import '../../features/book/presentation/extensive_model_select_page.dart';
+import '../../features/book/presentation/lib_select_page.dart';
+import '../../features/book/presentation/word_export_page.dart';
+import '../../features/learning/presentation/dictation_session_page.dart';
+import '../../features/learning/presentation/learn_page.dart';
+import '../../features/learning/presentation/list_word_listen_page.dart';
+import '../../features/learning/presentation/listening_player_page.dart';
+import '../../features/learning/presentation/mastered_words_page.dart';
+import '../../features/learning/presentation/my_words_page.dart';
+import '../../features/learning/presentation/new_words_page.dart';
+import '../../features/learning/presentation/not_learned_words_page.dart';
+import '../../features/learning/presentation/quick_spell_page.dart';
+import '../../features/learning/presentation/review_page.dart';
+import '../../features/learning/presentation/reviewing_words_page.dart';
+import '../../features/learning/presentation/sentence_quiz_page.dart';
+import '../../features/learning/presentation/spell_check_page.dart';
+import '../../features/learning/presentation/spell_session_page.dart';
+import '../../features/learning/presentation/word_machine_page.dart';
 import '../../screens/learn_session.dart';
 import 'route_error_page.dart';
 import 'route_names.dart';
@@ -84,10 +84,16 @@ abstract final class LearningRoutes {
 
   static Widget _buildBookWordsPage(Object? args) {
     if (args is Book) {
-      return BookWordsPage(bookId: args.id, bookName: args.name);
+      return BookWordsPage(book: args);
     }
     final map = args is Map<String, dynamic> ? args : const <String, dynamic>{};
-    return BookWordsPage(bookId: (map['bookId'] as num?)?.toInt() ?? 0, bookName: (map['bookName'] as String?) ?? '词书');
+    final book = Book(
+      id: (map['bookId'] as num?)?.toInt() ?? 0,
+      name: (map['bookName'] as String?) ?? '词书',
+      wordCount: 0,
+      code: '',
+    );
+    return BookWordsPage(book: book);
   }
 
   static Widget _buildListenModeSelectPage(Object? args) {
