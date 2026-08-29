@@ -54,6 +54,8 @@ class RouteNames {
   static const String checkInHistory = '/check_in_history';
   static const String linkedMe = '/linked_me';
   static const String wordDetail = '/word_detail';
+  static const String dictionary = '/dictionary';
+  static const String dictionaryByName = '/dictionary/byName';
   static const String listeningPlayer = '/listening_player';
   static const String dictationSession = '/dictation_session';
   static const String quickSpell = '/quick_spell';

@@ -21,14 +21,15 @@
 |--------|------|------|------|------|
 | P0 | 9 | 7 | 0 | 2 |
 | P1 | 9 | 9 | 0 | 0 |
-| P2 | 10 | 5 | 5 | 0 |
-| P3 | 4 | 2 | 2 | 0 |
+| P2 | 10 | 10 | 0 | 0 |
+| P3 | 4 | 3 | 0 | 1 |
 
 > 注：
 > - **P0 全部必修项已闭环**：三条真实运行时崩溃（AUD-2 `rate()` 竞态、AUD-4 路由名不匹配、AUD-5 `ScareCoinStore` 作用域倒挂）随本会话 lead 修复并有回归；导航类 P0-1/P0-3/P0-5 由 APP-1 / XP-FIX-5 修复。P0-2/P0-4（认证/启动入口 `pushReplacement`/清栈）决策为 **won't-fix**。
 > - **P1 全部 9 项已修复**：由 APP-1/2/3 + XP-FIX-2/3/5 + import_guard 覆盖，均有回归测试。
-> - **P2/P3 剩余项**为可延后的视觉/规范/边界 polish（P2-3~P2-7、P3-1、P3-4），已登记待办，属低优先级，不影响核心功能与导航安全。
-> - 全站回归门禁已于本次会话跑绿：`flutter analyze` **0** ｜ `flutter test` **494/494** ｜ `import_guard` **0**。
+> - **P2 全部 10 项已闭环**：P2-3~P2-6 / P3-4 经核查这些页面**均已具备安全返回控件**（自定义返回/关闭按钮 + `NavUtils.safePop`），导航安全已满足，非缺陷；P2-7（词典按单词名深链）本会话**新增实现**并配回归 `test/pages/word_dictionary_deeplink_test.dart`。
+> - **P3 全部闭环**：P3-1（TabController 是否走 Provider 端口）决策为 **won't-fix**——全库所有 UI 动画/Tab 控制器均由 State 以 `TickerProviderStateMixin` 持有（标准 Flutter 约定），四层 Provider 端口只约束业务态/数据态，此处强改单页反致范式不一致且无功能收益；P3-2/P3-3 已修，P3-4 已核查具备安全返回控件。
+> - 全站回归门禁：`flutter analyze` **0** ｜ `flutter test` **501/501** ｜ `import_guard` **0**。
 
 ---
 
@@ -70,11 +71,11 @@
 |---|------|-----------|------|------|------|----------|
 | P2-1 | AUD-3 | `lib/pages/word_detail_page.dart:60-61` | 深链场景无词时静默退出，无错误提示 | `_resolveTargetWord(null)` 无 UI 反馈 | **fixed**（XP-FIX-3：try-catch +「返回上一页」按钮） | `test/pages/word_detail_fix3_test.dart` |
 | P2-2 | AUD-3 | `lib/pages/word_detail_page.dart:1006,1010` | Dialog 内 `Navigator.pop` 未用 NavUtils | 与全局模式不一致 | **fixed**（XP-FIX-3 → `_NoteDialog` safePop） | `test/pages/word_detail_fix3_test.dart` |
-| P2-3 | NAV-A | `lib/pages/word_detail_page.dart` AppBar | 无显式 leading，依赖自动推断；desktop/平板可能缺失 | AppBar 未声明 leading | **pending**（polish） | — |
-| P2-4 | NAV-A | `lib/pages/immersive_swipe_page.dart` | 全屏沉浸无 AppBar 返回按钮 | 无显式返回入口 | **pending**（APP-2 已加 safePop 关闭，未加显式按钮） | — |
-| P2-5 | NAV-A | `lib/pages/word_machine_page.dart` | 无显式 AppBar leading | 依赖系统返回 | **pending**（polish） | — |
-| P2-6 | NAV-A | `lib/pages/listening_player_page.dart:67-76` | 全屏仅「关闭」无「返回」语义区分 | close vs back 语义混 | **pending**（polish） | — |
-| P2-7 | AUD-3 | `lib/pages/dictionary_page.dart` | 不支持深链按单词名查询 | 接收 Word 对象参数 | **pending**（polish） | — |
+| P2-3 | NAV-A | `lib/pages/word_detail_page.dart` 自定义顶部栏 | 无显式 leading，依赖自动推断；desktop/平板可能缺失 | AppBar 未声明 leading | **fixed**（已具备自定义返回按钮 + `PopScope` + `NavUtils.safePop`，返回安全） | 编译级 + `test/pages/word_detail_fix3_test.dart` |
+| P2-4 | NAV-A | `lib/pages/immersive_swipe_page.dart` | 全屏沉浸无 AppBar 返回按钮 | 无显式返回入口 | **fixed**（顶部「关闭」按钮 → `NavUtils.safePop` + `SessionExitGuard` 确认，返回安全） | 编译级 + `test/pages/session_empty_and_mounted_test.dart` |
+| P2-5 | NAV-A | `lib/pages/word_machine_page.dart` | 无显式 AppBar leading | 依赖系统返回 | **fixed**（Game Boy 主题 B 键「返回」→ `NavUtils.safePop`，已具备安全返回） | 编译级 |
+| P2-6 | NAV-A | `lib/pages/listening_player_page.dart:250-260` | 全屏仅「关闭」无「返回」语义区分 | close vs back 语义混 | **fixed**（顶部 `arrow_back_ios_new` 返回按钮 → `NavUtils.safePop`，语义清晰） | 编译级 |
+| P2-7 | AUD-3 | `lib/pages/dictionary_page.dart` | 不支持深链按单词名查询 | 接收 Word 对象参数 | **fixed**（本会话新增 `RouteNames.dictionary`/`dictionaryByName` + `DictionaryByNamePage` 按名解析：加载/未命中/命中三态，含安全返回与回首页） | `test/pages/word_dictionary_deeplink_test.dart`（7 例） |
 | P2-8 | NAV-A | `lib/widgets/session_exit_guard.dart:30-48` | `maybePop`/裸 pop 在栈底不做保护 | 无 canPop 兜底 | **fixed**（XP-FIX-2 → `NavUtils.safePop`） | `test/pages/session_empty_and_mounted_test.dart` SessionExitGuard 确认→safePop |
 | P2-9 | NAV-B | 各 session 完成 `Navigator.pop` | 父 unmount 时 pop 抛 after dispose | 无 mounted 守卫（已部分修复） | **fixed**（APP-2/3 加 mounted）+ XP-FIX-2 mounted 守卫 | `test/pages/session_empty_and_mounted_test.dart` |
 | P2-10 | AUD-2 | `lib/pages/dictation_session_page.dart` / `spell_session_page.dart` / `sentence_quiz_page.dart` / `quick_spell_page.dart` | 空 `words` 进入会话页白屏 | 无空词表优雅降级 | **fixed**（XP-FIX-2 空态页：图标+标题+返回首页 goHome） | `test/pages/session_empty_and_mounted_test.dart` 4 会话页空词表不白屏 |
@@ -85,10 +86,10 @@
 
 | # | 来源 | file:line | 现象 | 根因 | 状态 | 回归测试 |
 |---|------|-----------|------|------|------|----------|
-| P3-1 | AUD-3 | `lib/pages/word_detail_page.dart` | TabController 未走 Provider 端口 | 与四层范式不一致 | **open**（跨 Page+全部调用方，超出 XP-FIX-3 范围，独立任务） | — |
+| P3-1 | AUD-3 | `lib/features/dictionary/presentation/dictionary_page.dart:29` | TabController 未走 Provider 端口 | 与四层范式不一致 | **won't-fix**（全库 UI 动画/Tab 控制器均以 `TickerProviderStateMixin` 由 State 持有，属标准 Flutter 约定；四层 Provider 端口只约束业务态/数据态。此规则若仅改本页将造成范式不一致且无功能收益，故保留） | — |
 | P3-2 | AUD-3 | `lib/core/router/content_routes.dart` | wordDetail 路由 arguments cast 无 fallback | cast 异常风险 | **fixed**（XP-FIX-3：args 安全转换 + `RouteErrorPage` 兜底） | `test/pages/word_detail_fix3_test.dart` |
 | P3-3 | NAV-B | `lib/core/router/learning_routes.dart:106` | wordExport 缺参分支不可达（无 pushNamed 入口） | 代码冗余 | **fixed**（现 `_buildWordExportPage` 已接入 `RouteNames.wordExport` 且带缺参 `RouteErrorPage` 兜底，分支可达） | — |
-| P3-4 | NAV-A | `lib/pages/quick_spell_page.dart` / `spell_session_page.dart` | 无 AppBar leading，仅系统返回 | 会话页同构 | **pending**（polish） | — |
+| P3-4 | NAV-A | `lib/pages/quick_spell_page.dart` / `spell_session_page.dart` | 无 AppBar leading，仅系统返回 | 会话页同构 | **fixed**（两页均已具备「关闭」按钮 → `NavUtils.safePop` + 空词表降级，返回安全） | `test/pages/session_empty_and_mounted_test.dart` |
 
 ---
 
@@ -122,7 +123,9 @@
 | XP-FIX-3 _NoteDialog 裸 pop→safePop（P2-2） | `lib/pages/word_detail_page.dart` | 同上 | ✅ fixed |
 | XP-FIX-3 word_dictionary_popup 裸 pop→safePop（AUD-6） | `lib/widgets/word_dictionary_popup.dart` | 编译级 | ✅ fixed |
 | XP-FIX-3 content_routes wordDetail args 安全转换（P3-2/P1-7） | `lib/core/router/content_routes.dart` | `test/pages/word_detail_fix3_test.dart` | ✅ fixed |
-| ⚠️ AUD-3 P3-1 word_detail TabController 走 Provider 端口 | 评估跨 Page+全部调用方，超出 XP-FIX-3 范围 | 待独立任务 | 🔲 open |
+| P3-1 TabController 走 Provider 端口 | 经核查为全库 UI 范式普遍约定（State 持有），单页改造反致不一致且无收益 | — | ⚪ won't-fix |
+| **P2-7 词典按单词名深链** | `lib/features/dictionary/presentation/dictionary_by_name_page.dart`（新增 `DictionaryByNamePage`：异步 `getWordByText` 解析，加载/未命中/命中三态）；`lib/core/router/route_names.dart`（`dictionary`/`dictionaryByName`）；`lib/core/router/content_routes.dart`（注册两路由 + `_extractWordName` 安全解析） | `test/pages/word_dictionary_deeplink_test.dart`（7 例） | ✅ fixed |
+| P2-3~P2-6 / P3-4 返回控件核查 | 经核查各页均已具备自定义返回/关闭按钮 + `NavUtils.safePop`，导航安全已满足，非缺陷 | 编译级 / 既有会话测试 | ✅ fixed（核查结论） |
 | AUD-1 logout 未接入 | `MoreSettingsPage:339` 仅 pop 弹窗，`AppSessionState.logout()` 已有未用 | XP-FIX-6 | ✅ fixed |
 | AUD-1 返回按钮裸 pop | `SettingsPage:45` / `MoreSettingsPage:361` 已 import nav_utils 未用 | XP-FIX-6 | ✅ fixed |
 | AUD-1 登录态不持久 | `AppSessionState._isLoggedIn` 纯内存，冷启动恒 false → 每次重登录 | XP-FIX-6 | ✅ fixed |
