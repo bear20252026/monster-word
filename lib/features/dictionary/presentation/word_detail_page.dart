@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:provider/provider.dart';
 
-import '../../../data/dictionary_extra.dart';
+import '../data/dictionary_extra.dart';
 import '../../../data/example_parser.dart';
 import '../../../data/phrase_parser.dart';
 import '../../../hooks/responsive.dart';
