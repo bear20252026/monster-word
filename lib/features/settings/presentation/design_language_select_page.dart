@@ -37,7 +37,7 @@ class DesignLanguageSelectPage extends StatelessWidget {
                     style: TextStyle(fontSize: 12, color: skin.text3),
                   ),
                   SizedBox(height: design.spacing.md),
-                  // 动态渲染所有可用设计语言
+                  // 动态渲染所有可用设计语言；选中即整站换肤（A 档品牌色 + B 档形态联动）
                   ...DesignLanguages.all.values.map((lang) {
                     final isSelected = context.skin.designLanguageId == lang.id;
                     return Padding(
@@ -46,7 +46,7 @@ class DesignLanguageSelectPage extends StatelessWidget {
                         context: context,
                         lang: lang,
                         isSelected: isSelected,
-                        onTap: () => context.skin.setDesignLanguage(lang.id),
+                        onTap: () => context.skin.setBrandStyle(lang.id),
                       ),
                     );
                   }),
@@ -188,17 +188,17 @@ class DesignLanguageSelectPage extends StatelessWidget {
   String _langDescription(String id) {
     switch (id) {
       case 'starbucks':
-        return '星巴克 · 温润大圆角，柔和亲和';
+        return '星巴克 · 奶油画布品牌绿，12px 卡片 + 全胶囊按钮';
       case 'airbnb':
-        return 'Airbnb · 自然圆润，开放包容';
+        return 'Airbnb · 纯白画布 Rausch 珊瑚，圆润亲和';
       case 'nike':
-        return 'Nike · 硬朗锐利，力量动感';
+        return 'Nike · 黑白单色零圆角卡片 + 全胶囊按钮';
       case 'clickhouse':
-        return 'ClickHouse · 高密度，数据感';
+        return 'ClickHouse · 近纯黑夜 + 电光黄，高密度';
       case 'apple':
-        return 'Apple · 极简克制，精密致密';
+        return 'Apple · 珍珠白羊皮纸 + 单一蓝，精密克制';
       case 'claude':
-        return 'Claude · 人文暖调，斯文雅致';
+        return 'Claude · 暖奶油 + 赤陶珊瑚，衬线人文';
       default:
         return '';
     }

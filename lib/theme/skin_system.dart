@@ -313,6 +313,200 @@ final themes = <String, ThemePreset>{
       profileDecor: const [Color(0xFFFFE0B2), Color(0xFFFFF3E8)], // 浅橙+暖白
     ),
   ),
+  // ============================================================
+  // 6 大品牌风格主题（A 档，配色 1:1 取自 design/<brand>/DESIGN.md）
+  // 与 B 档设计语言联动切换见 SkinSystem.setBrandStyle
+  // ============================================================
+  // Claude：奶油画布 + 珊瑚赤陶 accent + 暗色产品面
+  'claude_cream': ThemePreset(
+    id: 'claude_cream',
+    name: 'Claude 奶油',
+    uiBrightness: Brightness.light,
+    statusBarBrightness: Brightness.dark,
+    vars: ThemeVars(
+      pageBg: const Color(0xFFFAF9F5), // canvas 奶油
+      cardBg: const Color(0xFFF5F0E8), // surface-soft
+      cardBgAlt: const Color(0xFFEFE9DE), // surface-card
+      text1: const Color(0xFF141413), // ink
+      text2: const Color(0xFF6C6A64), // muted
+      text3: const Color(0xFF6C6A64), // muted 加深（原 muted-soft 仅 3.2:1）
+      divider: const Color(0xFFE6DFD8), // hairline
+      accent: const Color(0xFFA05438), // primary-active 再加深（#A9583E 在卡片底 4.46:1）
+      success: const Color(0xFF2E7D32),
+      danger: const Color(0xFFBF2020),
+      teal: const Color(0xFF00695C), // accent-teal 加深（原 #5DB8A6 仅 2.3:1）
+      tabBarIcon: const Color(0xFF141413),
+      onGlassText1: const Color(0xFF141413),
+      onGlassText2: const Color(0xFF6C6A64),
+      onGlassAccent: const Color(0xFFA05438), // 同 accent
+      glassBg: const Color(0xFFF5F0E8),
+      glassBgStrong: const Color(0xFFEFE9DE),
+      glassBorder: const Color(0xFFE6DFD8),
+      wallpaperScrim: const Color(0xFFFAF9F5),
+      modalGlassBg: const Color(0xFFFFFFFF),
+      modalText1: const Color(0xFF141413),
+      modalText2: const Color(0xFF6C6A64),
+      quizCorrectBg: const Color(0xFFD1FAE5),
+      quizCorrectText: const Color(0xFF1B5E20),
+      quizWrongBg: const Color(0xFFFEE2E2),
+      quizWrongText: const Color(0xFF9B1515),
+      vipGoldBg: const Color(0xFFE8A55A), // accent-amber
+      vipGoldText: const Color(0xFF141413),
+      profileDecor: const [Color(0xFFF5F0E8), Color(0xFFEFE9DE)],
+    ),
+  ),
+  // Airbnb：纯白画布 + Rausch 珊瑚红 accent
+  'airbnb_light': ThemePreset(
+    id: 'airbnb_light',
+    name: 'Airbnb 珊瑚',
+    uiBrightness: Brightness.light,
+    statusBarBrightness: Brightness.dark,
+    vars: ThemeVars(
+      pageBg: const Color(0xFFFFFFFF), // canvas 纯白
+      cardBg: const Color(0xFFFFFFFF),
+      cardBgAlt: const Color(0xFFF7F7F7), // surface-soft
+      text1: const Color(0xFF222222), // ink
+      text2: const Color(0xFF6A6A6A), // muted（WCAG AA 5.3:1）
+      text3: const Color(0xFF6A6A6A), // muted 同级（原 muted-soft 仅 3.0:1）
+      divider: const Color(0xFFDDDDDD), // hairline
+      accent: const Color(0xFFE00B41), // primary-active 加深（原 #FF385C 仅 3.7:1）
+      success: const Color(0xFF067D06),
+      danger: const Color(0xFFC13515), // primary-error-text
+      teal: const Color(0xFF2563EB), // legal-link 加深（原 #428BFF 仅 3.1:1）
+      tabBarIcon: const Color(0xFF222222),
+      onGlassText1: const Color(0xFF222222),
+      onGlassText2: const Color(0xFF6A6A6A),
+      onGlassAccent: const Color(0xFFE00B41), // primary-active
+      glassBg: const Color(0xFFFFFFFF),
+      glassBgStrong: const Color(0xFFF7F7F7),
+      glassBorder: const Color(0xFFDDDDDD),
+      wallpaperScrim: const Color(0xFFFFFFFF),
+      modalGlassBg: const Color(0xFFFFFFFF),
+      modalText1: const Color(0xFF222222),
+      modalText2: const Color(0xFF6A6A6A),
+      quizCorrectBg: const Color(0xFFD1FAE5),
+      quizCorrectText: const Color(0xFF1B5E20),
+      quizWrongBg: const Color(0xFFFEE2E2),
+      quizWrongText: const Color(0xFF9B1515),
+      vipGoldBg: const Color(0xFFFFD06A),
+      vipGoldText: const Color(0xFF222222),
+      profileDecor: const [Color(0xFFF7F7F7), Color(0xFFFFE8EC)],
+    ),
+  ),
+  // Nike：黑白单色 + 软云灰（chrome 不抢戏，色彩留给语义）
+  'nike_mono': ThemePreset(
+    id: 'nike_mono',
+    name: 'Nike 黑白',
+    uiBrightness: Brightness.light,
+    statusBarBrightness: Brightness.dark,
+    vars: ThemeVars(
+      pageBg: const Color(0xFFFFFFFF), // canvas
+      cardBg: const Color(0xFFFFFFFF),
+      cardBgAlt: const Color(0xFFF5F5F5), // soft-cloud
+      text1: const Color(0xFF111111), // ink
+      text2: const Color(0xFF707072), // mute（WCAG AA 4.9:1）
+      text3: const Color(0xFF707072), // mute 同级（原 stone 仅 2.8:1）
+      divider: const Color(0xFFCACACB), // hairline
+      accent: const Color(0xFF111111), // Nike Black
+      success: const Color(0xFF007D48),
+      danger: const Color(0xFFD30005), // sale
+      teal: const Color(0xFF1151FF), // info
+      tabBarIcon: const Color(0xFF111111),
+      onGlassText1: const Color(0xFF111111),
+      onGlassText2: const Color(0xFF707072),
+      onGlassAccent: const Color(0xFF111111),
+      glassBg: const Color(0xFFFFFFFF),
+      glassBgStrong: const Color(0xFFF5F5F5),
+      glassBorder: const Color(0xFFCACACB),
+      wallpaperScrim: const Color(0xFFFFFFFF),
+      modalGlassBg: const Color(0xFFFFFFFF),
+      modalText1: const Color(0xFF111111),
+      modalText2: const Color(0xFF707072),
+      quizCorrectBg: const Color(0xFFD1FAE5),
+      quizCorrectText: const Color(0xFF007D48),
+      quizWrongBg: const Color(0xFFFEE2E2),
+      quizWrongText: const Color(0xFFB71C1C),
+      vipGoldBg: const Color(0xFF111111), // Nike 无金色 → 黑金反差：黑底
+      vipGoldText: const Color(0xFFFFFFFF),
+      profileDecor: const [Color(0xFFF5F5F5), Color(0xFFE5E5E5)],
+    ),
+  ),
+  // Apple：珍珠白/羊皮纸画布 + 单一 Action Blue
+  'apple_light': ThemePreset(
+    id: 'apple_light',
+    name: 'Apple 蓝调',
+    uiBrightness: Brightness.light,
+    statusBarBrightness: Brightness.dark,
+    vars: ThemeVars(
+      pageBg: const Color(0xFFF5F5F7), // canvas-parchment
+      cardBg: const Color(0xFFFFFFFF),
+      cardBgAlt: const Color(0xFFFAFAFC), // surface-pearl
+      text1: const Color(0xFF1D1D1F), // ink
+      text2: const Color(0xFF6E6E73), // ink-muted（WCAG AA 5.3:1）
+      text3: const Color(0xFF6E6E73), // 同级加深（原 #86868B 仅 3.4:1）
+      divider: const Color(0xFFE0E0E0), // hairline
+      accent: const Color(0xFF0066CC), // Action Blue
+      success: const Color(0xFF1D7A33),
+      danger: const Color(0xFFD70015),
+      teal: const Color(0xFF0066CC), // 与 accent 同级（原 focus 蓝在羊皮纸底 4.3:1）
+      tabBarIcon: const Color(0xFF1D1D1F),
+      onGlassText1: const Color(0xFF1D1D1F),
+      onGlassText2: const Color(0xFF6E6E73),
+      onGlassAccent: const Color(0xFF0066CC),
+      glassBg: const Color(0xFFFFFFFF),
+      glassBgStrong: const Color(0xFFFAFAFC),
+      glassBorder: const Color(0xFFE0E0E0),
+      wallpaperScrim: const Color(0xFFF5F5F7),
+      modalGlassBg: const Color(0xFFFFFFFF),
+      modalText1: const Color(0xFF1D1D1F),
+      modalText2: const Color(0xFF6E6E73),
+      quizCorrectBg: const Color(0xFFD1FAE5),
+      quizCorrectText: const Color(0xFF1B5E20),
+      quizWrongBg: const Color(0xFFFEE2E2),
+      quizWrongText: const Color(0xFF9B1515),
+      vipGoldBg: const Color(0xFFD2D2D7), // surface-chip-translucent（Apple 无金）
+      vipGoldText: const Color(0xFF1D1D1F),
+      profileDecor: const [Color(0xFFFAFAFC), Color(0xFFF0F0F0)],
+    ),
+  ),
+  // ClickHouse：近纯黑画布 + 电光黄 voltage（唯一的暗色品牌主题）
+  'clickhouse_dark': ThemePreset(
+    id: 'clickhouse_dark',
+    name: 'ClickHouse 电光',
+    uiBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light,
+    vars: ThemeVars(
+      pageBg: const Color(0xFF0A0A0A), // canvas 近纯黑
+      cardBg: const Color(0xFF1A1A1A), // surface-card
+      cardBgAlt: const Color(0xFF242424), // surface-elevated
+      text1: const Color(0xFFFFFFFF), // ink
+      text2: const Color(0xFFCCCCCC), // body
+      text3: const Color(0xFF9A9A9A), // muted 加深（原 #888888 在 elevated 底 4.4:1）
+      divider: const Color(0xFF2A2A2A), // hairline
+      accent: const Color(0xFFFAFF69), // 电光黄
+      success: const Color(0xFF22C55E),
+      danger: const Color(0xFFEF4444),
+      teal: const Color(0xFF3B82F6), // accent-blue
+      tabBarIcon: const Color(0xFFFFFFFF),
+      onGlassText1: const Color(0xFFFFFFFF),
+      onGlassText2: const Color(0xFFCCCCCC),
+      onGlassAccent: const Color(0xFFFAFF69),
+      glassBg: const Color(0xFF1A1A1A),
+      glassBgStrong: const Color(0xFF242424),
+      glassBorder: const Color(0xFF3A3A3A), // hairline-strong
+      wallpaperScrim: const Color(0xFF0A0A0A),
+      modalGlassBg: const Color(0xFF242424),
+      modalText1: const Color(0xFFFFFFFF),
+      modalText2: const Color(0xFFCCCCCC),
+      quizCorrectBg: const Color(0xFF14261A),
+      quizCorrectText: const Color(0xFF22C55E),
+      quizWrongBg: const Color(0xFF2B1212),
+      quizWrongText: const Color(0xFFEF4444),
+      vipGoldBg: const Color(0xFFFAFF69), // 黄即金
+      vipGoldText: const Color(0xFF0A0A0A), // on-yellow
+      profileDecor: const [Color(0xFF121212), Color(0xFF1A1A1A)],
+    ),
+  ),
 };
 
 class SkinSystem extends ChangeNotifier {
@@ -415,6 +609,29 @@ class SkinSystem extends ChangeNotifier {
     SharedPreferences.getInstance()
         .then((p) => p.setString(_kDesignPrefKey, id))
         .catchError((e) => false);
+  }
+
+  /// 品牌风格 → 默认颜色主题映射（整站换肤 A/B 联动用）。
+  static const Map<String, String> brandThemeMap = {
+    'starbucks': 'starbucks_cream',
+    'airbnb': 'airbnb_light',
+    'nike': 'nike_mono',
+    'apple': 'apple_light',
+    'clickhouse': 'clickhouse_dark',
+    'claude': 'claude_cream',
+  };
+
+  /// 一键品牌换肤：同时切换 A 档颜色主题 + B 档设计语言。
+  /// 颜色主题取 [brandThemeMap] 的品牌默认色；无映射则只切 B 档。
+  void setBrandStyle(String designId) {
+    setDesignLanguage(designId);
+    final themeId = brandThemeMap[designId];
+    if (themeId != null && themes.containsKey(themeId) && effectiveThemeId != themeId) {
+      _themeId = themeId;
+      if (_followSystem) setFollowSystem(false); // 手动品牌选择即退出跟随
+      notifyListeners();
+      AppPreferences().setSkinThemeId(_themeId);
+    }
   }
 
   Future<void> _loadDesignPreference() async {

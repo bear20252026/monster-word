@@ -116,6 +116,16 @@ class UIThemeSelectPage extends StatelessWidget {
         return '纯黑模式，OLED 省电';
       case 'warm_orange':
         return '暖阳橙，活力温暖，适合日间';
+      case 'claude_cream':
+        return 'Claude 风格，暖奶油画布 + 赤陶珊瑚';
+      case 'airbnb_light':
+        return 'Airbnb 风格，纯白画布 + Rausch 珊瑚红';
+      case 'nike_mono':
+        return 'Nike 风格，黑白单色，运动锐利';
+      case 'apple_light':
+        return 'Apple 风格，珍珠白 + 单一动作蓝';
+      case 'clickhouse_dark':
+        return 'ClickHouse 风格，近纯黑夜 + 电光黄';
       default:
         return '';
     }
