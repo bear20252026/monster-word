@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/data/example_parser.dart';
+import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/widgets/word_root_tab.dart';
 

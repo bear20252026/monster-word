@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../core/audio/audio_playback_state.dart';
 import '../core/router/nav_utils.dart';
-import '../data/example_parser.dart';
+import 'package:word_app/core/parsers/example_parser.dart';
 import '../models/word.dart';
 import '../features/learning/presentation/learning_favorites_state.dart';
 import '../theme/skin_system.dart';

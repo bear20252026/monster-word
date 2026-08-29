@@ -1,6 +1,6 @@
 // 由 Claude 团队生成 | Monster Word App
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/data/phrase_parser.dart';
+import 'package:word_app/core/parsers/phrase_parser.dart';
 
 void main() {
   group('PhraseParser.parse', () {

@@ -7,8 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../../data/example_parser.dart';
-import '../../../data/phrase_parser.dart';
+import 'package:word_app/core/parsers/example_parser.dart';
+import 'package:word_app/core/parsers/phrase_parser.dart';
 import '../../../hooks/responsive.dart';
 import '../../../models/word.dart';
 import '../application/book_words_reader.dart';

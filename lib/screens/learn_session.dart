@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../core/audio/audio_playback_state.dart';
 import '../core/router/nav_utils.dart';
-import '../data/example_parser.dart';
+import 'package:word_app/core/parsers/example_parser.dart';
 import '../core/engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
 import '../features/learning/application/review_schedule_reader.dart';

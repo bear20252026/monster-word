@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/router/nav_utils.dart';
-import '../../../data/example_parser.dart';
+import 'package:word_app/core/parsers/example_parser.dart';
 import '../../../hooks/responsive.dart';
 import '../../../models/word.dart';
 import '../../../theme/skin_system.dart';

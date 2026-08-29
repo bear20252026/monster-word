@@ -5,8 +5,8 @@ import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:provider/provider.dart';
 
 import '../data/dictionary_extra.dart';
-import '../../../data/example_parser.dart';
-import '../../../data/phrase_parser.dart';
+import 'package:word_app/core/parsers/example_parser.dart';
+import 'package:word_app/core/parsers/phrase_parser.dart';
 import '../../../hooks/responsive.dart';
 import '../../../core/engine/fsrs6_engine.dart' show FsrsRating;
 import '../../../features/learning/application/review_schedule_reader.dart';

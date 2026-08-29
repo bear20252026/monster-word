@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/data/example_parser.dart';
+import 'package:word_app/core/parsers/example_parser.dart';
 
 void main() {
   group('ExampleParser.parse', () {

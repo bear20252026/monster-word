@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
-import 'package:word_app/data/example_parser.dart';
+import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/services/audio_service.dart';
 import 'package:word_app/theme/skin_system.dart';
 

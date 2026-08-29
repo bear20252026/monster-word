@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/data/example_parser.dart';
-import 'package:word_app/data/phrase_parser.dart';
+import 'package:word_app/core/parsers/example_parser.dart';
+import 'package:word_app/core/parsers/phrase_parser.dart';
 
 /// 模拟词库 phrase 原始 JSON 格式
 const _rawPhrase =
