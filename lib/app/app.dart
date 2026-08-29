@@ -17,6 +17,7 @@ import 'package:word_app/features/search/presentation/search_feature_providers.d
 import 'package:word_app/features/scare_coin/presentation/scare_coin_feature_providers.dart';
 import 'package:word_app/features/word_browse/presentation/word_browse_feature_providers.dart';
 import 'package:word_app/features/account/presentation/splash_page.dart';
+import 'package:word_app/widgets/common/mw_error_boundary.dart';
 import 'package:word_app/features/book/presentation/lib_select_page.dart';
 import 'package:word_app/screens/home_screen.dart';
 import 'package:word_app/screens/profile_screen.dart';
@@ -124,6 +125,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
           theme: _buildTheme(skin),
           builder: (context, child) {
             ScreenUtils.init(context);
+            installMwErrorBoundary(); // release 全局兜底（debug 走下方 ErrorBoundary）
             return FluidCursorOverlay(
               rippleColor: skin.colors.accent.withValues(alpha: 0.4),
               maxRadius: 60,
