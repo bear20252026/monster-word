@@ -1,4 +1,4 @@
-import '../../../services/checkin_service.dart';
+import 'checkin_service.dart';
 import '../application/checkin_status_reader.dart';
 import '../domain/checkin_status.dart';
 

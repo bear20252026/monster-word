@@ -1,4 +1,4 @@
-import '../../../services/checkin_service.dart';
+import 'checkin_service.dart';
 import '../application/checkin_writer.dart';
 
 /// 基于 CheckInService 的签到写入适配器。

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/checkin/data/service_checkin_writer.dart';
-import 'package:word_app/services/checkin_service.dart';
+import 'package:word_app/features/checkin/data/checkin_service.dart';
 
 /// 模拟 CheckInService（仅实现写入相关方法）
 class FakeCheckInService implements CheckInService {

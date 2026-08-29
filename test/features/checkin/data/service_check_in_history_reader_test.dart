@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/checkin/data/service_check_in_history_reader.dart';
-import 'package:word_app/services/checkin_service.dart';
+import 'package:word_app/features/checkin/data/checkin_service.dart';
 
 void main() {
   test('reads history values and reward through the existing service', () async {

@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/di/service_locator.dart';
-import '../../../services/checkin_service.dart';
+import '../data/checkin_service.dart';
 import '../application/check_in_history_reader.dart';
 import '../application/checkin_status_reader.dart';
 import '../application/checkin_writer.dart';

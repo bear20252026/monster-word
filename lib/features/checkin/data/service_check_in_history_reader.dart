@@ -1,4 +1,4 @@
-import '../../../services/checkin_service.dart';
+import 'checkin_service.dart';
 import '../application/check_in_history_reader.dart';
 
 /// 基于既有签到服务的历史读取适配器。

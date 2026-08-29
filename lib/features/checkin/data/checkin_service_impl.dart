@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 // CheckInServiceImpl — 签到服务实现
 
-import '../../repositories/user_repository.dart';
+import '../../../repositories/user_repository.dart';
 import 'checkin_service.dart';
 
 /// 签到服务实现
