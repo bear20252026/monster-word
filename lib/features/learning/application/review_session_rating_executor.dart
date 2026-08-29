@@ -1,6 +1,6 @@
-import '../../../engine/fsrs6_engine.dart' show FsrsRating;
-import '../../../engine/srs_engine.dart' show RecallRating;
-import '../../../engine/super_memory_engine.dart';
+﻿import '../../../core/engine/fsrs6_engine.dart' show FsrsRating;
+import '../../../core/engine/srs_engine.dart' show RecallRating;
+import '../../../core/engine/super_memory_engine.dart';
 import '../../../models/bb_word_process.dart';
 import 'review_rating_writer.dart';
 

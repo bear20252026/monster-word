@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../../../data/wallpaper_data.dart' show WallpaperType;
-import '../../../../engine/core_engine.dart' show WordChoicePair;
+import '../../../../core/engine/core_engine.dart' show WordChoicePair;
 import '../../../../hooks/responsive.dart';
 import '../../../../models/bb_word_process.dart';
 import '../../../../theme/skin_system.dart';

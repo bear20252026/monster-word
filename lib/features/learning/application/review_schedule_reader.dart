@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 
-import '../../../engine/fsrs6_engine.dart';
+import '../../../core/engine/fsrs6_engine.dart';
 import '../../../models/word.dart';
 
 /// 正式复习 FSRS 展示信息的只读端口。

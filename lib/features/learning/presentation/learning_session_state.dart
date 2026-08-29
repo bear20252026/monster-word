@@ -1,10 +1,10 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../../engine/core_engine.dart';
-import '../../../engine/fsrs6_engine.dart';
-import '../../../engine/leitner_engine.dart';
+import '../../../core/engine/core_engine.dart';
+import '../../../core/engine/fsrs6_engine.dart';
+import '../../../core/engine/leitner_engine.dart';
 import '../application/choice_generator_port.dart';
 import '../application/learning_progress_port.dart';
 import '../application/learning_queue_port.dart';

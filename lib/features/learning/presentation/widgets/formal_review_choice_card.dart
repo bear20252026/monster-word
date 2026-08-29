@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
-import '../../../../engine/core_engine.dart' show WordChoicePair;
+import '../../../../core/engine/core_engine.dart' show WordChoicePair;
 import '../../../../hooks/responsive.dart';
 import '../../../../theme/skin_system.dart';
 

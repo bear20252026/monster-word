@@ -8,7 +8,7 @@ import '../../../data/dictionary_extra.dart';
 import '../../../data/example_parser.dart';
 import '../../../data/phrase_parser.dart';
 import '../../../hooks/responsive.dart';
-import '../../../engine/fsrs6_engine.dart' show FsrsRating;
+import '../../../core/engine/fsrs6_engine.dart' show FsrsRating;
 import '../../../features/learning/application/review_schedule_reader.dart';
 import '../../../core/learning/learning_session_reader.dart';
 import '../../../core/learning/learning_session_starter.dart';

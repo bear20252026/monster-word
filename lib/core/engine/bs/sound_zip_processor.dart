@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../data/app_preferences.dart';
+import '../../../data/app_preferences.dart';
 
 /// 语音包下载回调（翻译自 SoundZipProcessor.Callback）
 abstract class SoundZipCallback {

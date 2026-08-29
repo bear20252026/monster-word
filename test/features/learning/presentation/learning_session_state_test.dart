@@ -1,8 +1,8 @@
-import 'dart:math';
+﻿import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:word_app/engine/fsrs6_engine.dart';
+import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/favorites_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';

@@ -1,7 +1,7 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/engine/fsrs6_engine.dart';
-import 'package:word_app/engine/srs_engine.dart';
-import 'package:word_app/engine/super_memory_engine.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/core/engine/fsrs6_engine.dart';
+import 'package:word_app/core/engine/srs_engine.dart';
+import 'package:word_app/core/engine/super_memory_engine.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
 import 'package:word_app/features/learning/application/review_session_rating_executor.dart';
 import 'package:word_app/models/bb_word_process.dart';

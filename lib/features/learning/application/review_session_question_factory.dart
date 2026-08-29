@@ -1,5 +1,5 @@
-import '../../../engine/core_engine.dart' show WordChoicePair;
-import '../../../engine/super_memory_engine.dart';
+﻿import '../../../core/engine/core_engine.dart' show WordChoicePair;
+import '../../../core/engine/super_memory_engine.dart';
 import '../../../models/bb_word_process.dart';
 import '../../../models/word.dart';
 import '../domain/choice_generator.dart';

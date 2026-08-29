@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 
-import '../../../engine/core_engine.dart' show WordChoicePair;
-import '../../../engine/srs_engine.dart' show RecallRating;
-import '../../../engine/super_memory_engine.dart';
+import '../../../core/engine/core_engine.dart' show WordChoicePair;
+import '../../../core/engine/srs_engine.dart' show RecallRating;
+import '../../../core/engine/super_memory_engine.dart';
 import '../../../models/bb_word_process.dart';
 import '../application/review_queue_reader.dart';
 import '../application/review_rating_writer.dart';

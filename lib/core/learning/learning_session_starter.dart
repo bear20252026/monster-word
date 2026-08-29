@@ -1,5 +1,5 @@
-import '../../models/book.dart';
-import '../../engine/fsrs6_engine.dart' show FsrsRating;
+﻿import '../../models/book.dart';
+import '../../core/engine/fsrs6_engine.dart' show FsrsRating;
 import '../../models/word.dart';
 
 /// 「启动一个词书会话」的共享 core 契约（只写不读）。

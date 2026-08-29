@@ -1,4 +1,4 @@
-// 测试：A-5 review_dialog dueCount==0 空态展示。
+﻿// 测试：A-5 review_dialog dueCount==0 空态展示。
 //
 // 修复前：dueCount==0 时直接进入空复习页面。
 // 修复后：dueCount==0 时展示友好空态「今天没有需要复习的单词」+ CTA。
@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:word_app/engine/fsrs6_engine.dart';
+import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
 import 'package:word_app/features/learning/application/learning_queue_port.dart';

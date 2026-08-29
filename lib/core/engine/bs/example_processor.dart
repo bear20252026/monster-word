@@ -4,10 +4,10 @@
 
 import 'dart:convert';
 
-import '../../models/lexis_dict.dart';
-import '../../models/sentence_models.dart';
-import '../../utils/app_utils.dart';
-import '../../utils/data_utils.dart';
+import '../../../models/lexis_dict.dart';
+import '../../../models/sentence_models.dart';
+import '../../../utils/app_utils.dart';
+import '../../../utils/data_utils.dart';
 
 /// 例句处理器（翻译自 ExampleProcessor.java）
 class ExampleProcessor {

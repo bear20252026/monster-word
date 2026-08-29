@@ -1,6 +1,6 @@
-import '../../../core/learning/learning_session_reader.dart';
+﻿import '../../../core/learning/learning_session_reader.dart';
 import '../../../core/learning/learning_session_starter.dart';
-import '../../../engine/fsrs6_engine.dart' show FsrsRating;
+import '../../../core/engine/fsrs6_engine.dart' show FsrsRating;
 import '../../../models/book.dart';
 import '../../../models/word.dart';
 import 'learning_session_state.dart';

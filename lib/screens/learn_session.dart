@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import '../core/audio/audio_playback_state.dart';
 import '../core/router/nav_utils.dart';
 import '../data/example_parser.dart';
-import '../engine/fsrs6_engine.dart' show FsrsRating;
+import '../core/engine/fsrs6_engine.dart' show FsrsRating;
 import '../hooks/responsive.dart';
 import '../features/learning/application/review_schedule_reader.dart';
 import '../features/learning/presentation/learning_favorites_state.dart';
