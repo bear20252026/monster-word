@@ -93,7 +93,23 @@ void main() {
       expect(check('features/learning/domain/choice_generator.dart', 'package:word_app/models/word.dart'), isEmpty);
     });
 
-    test('legacy 页面薄适配（lib/pages）依赖 feature 允许', () {
+    test('R6: feature 不得 import 壳层 screens/app', () {
+      expect(
+        check('features/learning/presentation/learn_session.dart', 'screens/learn_session.dart'),
+        anyElement(contains('feature 不得 import 壳层 screens/app(R6)')),
+      );
+      expect(
+        check('features/account/presentation/my_page.dart', 'app/app.dart'),
+        anyElement(contains('feature 不得 import 壳层 screens/app(R6)')),
+      );
+      // 组合根不受限：core/router 可装配 feature 页面
+      expect(
+        check('core/router/learning_routes.dart', 'features/learning/presentation/learn_session.dart'),
+        isEmpty,
+      );
+    });
+
+    test('非 feature、非 core 壳层（遗留薄适配）依赖 feature 允许', () {
       expect(
         check('pages/book_words_page.dart', 'features/learning/presentation/state.dart'),
         isEmpty,

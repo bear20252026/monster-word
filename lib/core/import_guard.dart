@@ -56,6 +56,14 @@ class ImportGuard {
       violations.add('core 不得 import features(R-core): $from -> $to');
     }
 
+    // R6：feature 不得反向依赖壳层 —— feature 不得 import screens/ 或 app/（组合根）。
+    // 壳层只有组合根（app/app.dart、core/router）可以引用 feature；feature 只能
+    // 通过 core 的 routeNames 等契约做跨功能导航，不得 import 壳层实现。
+    if (fromFeature.isNotEmpty &&
+        (to.startsWith('screens/') || to.startsWith('app/'))) {
+      violations.add('feature 不得 import 壳层 screens/app(R6): $from -> $to');
+    }
+
     // R3：分层只向内 —— 仅对同一 feature 内的层间 import 生效。
     final sameFeature = fromFeature.isNotEmpty && fromFeature == toFeature;
     if (sameFeature) {
