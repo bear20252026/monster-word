@@ -55,10 +55,14 @@ class ExampleParser {
 
   /// 把例句音频相对路径归一为完整可播 URL。
   /// 例：'/sentence/audio/abc.mp3' -> 'https://audio.beingfine.cn/sentence/audio/abc.mp3'
-  /// 已是 http(s) 开头或空则原样返回。
+  ///
+  /// 注意：词库存的是 http:// 明文 URL。Android 9+ 默认禁明文流量（manifest 未开
+  /// usesCleartextTraffic），http:// 例句会被系统静默拦截——这是「例句有的响有的不响」
+  /// 的真凶（Windows 无此限制所以能响）。服务器已验证支持 https，此处统一升级。
   static String _normalizeAudioUrl(String url) {
     if (url.isEmpty) return url;
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('https://')) return url;
+    if (url.startsWith('http://')) return 'https://${url.substring(7)}';
     return '$_audioCdn${url.replaceFirst(RegExp(r'^/+'), '')}';
   }
 

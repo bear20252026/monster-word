@@ -13,6 +13,8 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+
+import 'package:word_app/core/audio/system_tts.dart';
 import 'package:path/path.dart' as p;
 
 /// 移动端音频会话初始化（确保手机能正常发音）
@@ -390,7 +392,11 @@ class PhoneticAudioPlayer {
   final BBAudioPlayer _audioPlayer = BBAudioPlayer();
   PlayAudioListener? playStateListener;
   bool _isPronounceUK = false;
-  bool _needPlay = false;
+
+  /// 默认允许播放。原默认 false 且全仓库无 setNeedPlay(true) 调用点，
+  /// 导致 _playFile 的 if (!_needPlay) return 把所有单词发音静默丢弃
+  /// （症状：例句响、单词不响）。
+  bool _needPlay = true;
 
   /// 播放单词发音（原版 playAudio 静态方法）
   static Future<void> playAudio(String word, {bool? isUK}) async {
@@ -442,6 +448,8 @@ class PhoneticAudioPlayer {
       _playFile(result.file!);
     } else {
       playStateListener?.onLoadError(primaryUrl);
+      // 兜底：网络音频不可用时改用系统 TTS 念出单词（离线可用，不再静默）
+      await SystemTts().speakEnglish(word);
     }
   }
 
@@ -588,6 +596,8 @@ class SentenceAudioPlayer {
       _playFile(result.file!, speed);
     } else {
       playStateListener?.onLoadError(fullUrl);
+      // 注意：此层拿不到句子文本（URL 文件名可能是哈希），不做 TTS 兜底，
+      // 避免念出乱码；句子文本兜底应由调用方（持有例句文本）负责。
     }
   }
 

@@ -33,8 +33,8 @@ void main() {
     await schedule.initialize();
     final session = _sessionWithWords(
       words: [
-        Word(id: 1, word: 'first'),
-        Word(id: 2, word: 'later'),
+        Word(id: 1, word: 'first', interpret: '中文释义'),
+        Word(id: 2, word: 'later', interpret: '中文释义'),
       ],
       schedule: schedule,
     );
@@ -56,15 +56,15 @@ void main() {
   test('会话不向页面暴露可变队列，并在退出时清理会话导航状态', () async {
     final session = _sessionWithWords(
       words: [
-        Word(id: 1, word: 'first'),
-        Word(id: 2, word: 'second'),
+        Word(id: 1, word: 'first', interpret: '中文释义'),
+        Word(id: 2, word: 'second', interpret: '中文释义'),
       ],
     );
     await session.loadBook(_testBook, shuffle: false);
 
     expect(session.progress, (1, 2));
     expect(session.hasMoreWords, isTrue);
-    expect(() => session.queue.add(Word(id: 3, word: 'unexpected')), throwsUnsupportedError);
+    expect(() => session.queue.add(Word(id: 3, word: 'unexpected', interpret: '中文释义')), throwsUnsupportedError);
 
     session.next();
     expect(session.progress, (2, 2));
@@ -131,7 +131,7 @@ void main() {
   });
 
   test('专用学习会话在收藏词为空时保留当前队列与词书', () async {
-    final session = _sessionWithWords(words: [Word(id: 1, word: 'first')]);
+    final session = _sessionWithWords(words: [Word(id: 1, word: 'first', interpret: '中文释义')]);
     await session.loadBook(_testBook, shuffle: false);
 
     await session.loadFavorites();
@@ -143,7 +143,7 @@ void main() {
   test('评分推进到最后一词后 currentWord 变为 null，触发学习完成信号', () async {
     // 回归测试：rate() 在队列末尾曾经 clamp 回最后一个词，导致永远无法进入完成界面。
     final session = _sessionWithWords(
-      words: [Word(id: 1, word: 'first'), Word(id: 2, word: 'second')],
+      words: [Word(id: 1, word: 'first', interpret: '中文释义'), Word(id: 2, word: 'second', interpret: '中文释义')],
     );
     await session.loadBook(_testBook, shuffle: false);
 
@@ -160,7 +160,7 @@ void main() {
   test('加载新词库时丢弃异步返回的过期进度，避免覆盖新会话索引', () async {
     // 回归测试：_loadProgress() 异步返回的旧索引曾经覆盖 loadBook 重置的索引 0。
     final session = _sessionWithWords(
-      words: [Word(id: 1, word: 'first'), Word(id: 2, word: 'second'), Word(id: 3, word: 'third')],
+      words: [Word(id: 1, word: 'first', interpret: '中文释义'), Word(id: 2, word: 'second', interpret: '中文释义'), Word(id: 3, word: 'third', interpret: '中文释义')],
     );
     await session.loadBook(_testBook, shuffle: false);
     await session.rate(FsrsRating.good); // 推进到 second，索引 1
@@ -176,9 +176,9 @@ void main() {
     // 回归：rate() 在 await 评分间隙是异步的，用户连点会二次进索引而跳词/越界。
     final session = _sessionWithWords(
       words: [
-        Word(id: 1, word: 'first'),
-        Word(id: 2, word: 'second'),
-        Word(id: 3, word: 'third'),
+        Word(id: 1, word: 'first', interpret: '中文释义'),
+        Word(id: 2, word: 'second', interpret: '中文释义'),
+        Word(id: 3, word: 'third', interpret: '中文释义'),
       ],
     );
     await session.loadBook(_testBook, shuffle: false);

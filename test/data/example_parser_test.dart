@@ -20,14 +20,14 @@ void main() {
       expect(s.audioUrl, 'https://audio.beingfine.cn/sentence/audio/6389561345574934.mp3');
     });
 
-    test('完整的 http URL 保持原样（不再重复拼接域名）', () {
+    test('完整的 http URL 升级为 https（Android 9+ 禁明文流量，http 例句被静默拦截）', () {
       const raw =
           '{"v":1,"data":[{"i":{"e":"test","c":"测试"},"g":[{"u":"用法","s":[{"eid":9,'
           '"e":"This is a test.","c":"这是测试。","b":"","u":"http://audio.beingfine.cn/sentence/audio/abc.mp3"}]}]}]}';
 
       final sentences = ExampleParser.parse(raw);
 
-      expect(sentences.first.audioUrl, 'http://audio.beingfine.cn/sentence/audio/abc.mp3');
+      expect(sentences.first.audioUrl, 'https://audio.beingfine.cn/sentence/audio/abc.mp3');
     });
 
     test('无音频字段的例句 audioUrl 为 null', () {

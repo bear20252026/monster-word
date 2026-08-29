@@ -1,6 +1,7 @@
 // 设置页：学习偏好 + 7 个底部弹窗交互
 // 已接入 SkinSystem 主题 — 所有颜色使用 context.skin.colors
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/router/nav_utils.dart';
@@ -305,29 +306,64 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   // ===========================================================================
-  // 弹窗 5：每日新学词数（5/10/15/20/30/50 词）
+  // 弹窗 5：每日新学词数（滑条 1-100 + 数字输入，原为 6 个固定档位）
   // ===========================================================================
   void _showDailyNewWordsDialog() {
     _showBottomSheet(
       title: '每日新学',
       child: StatefulBuilder(
-        builder: (ctx, setSheetState) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [5, 10, 15, 20, 30, 50]
-              .map(
-                (n) => _SheetOptionRow(
-                  label: '$n 词',
-                  selected: _preferences.dailyNewWords == n,
-                  onTap: () async {
-                    await _preferences.setDailyNewWords(n);
-                    if (ctx.mounted) {
-                      setSheetState(() {});
+        builder: (ctx, setSheetState) {
+          final value = _preferences.dailyNewWords;
+          final textCtrl = TextEditingController(text: '$value');
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 大号当前值展示
+              Center(
+                child: Text(
+                  '$value 词',
+                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
+                ),
+              ),
+              Slider(
+                value: value.clamp(1, 100).toDouble(),
+                min: 1,
+                max: 100,
+                divisions: 99,
+                label: '$value',
+                onChanged: (v) async {
+                  final n = v.round();
+                  await _preferences.setDailyNewWords(n);
+                  textCtrl.text = '$n';
+                  if (ctx.mounted) setSheetState(() {});
+                },
+              ),
+              // 数字输入（自由输入，1-100）
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: TextField(
+                  controller: textCtrl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  textAlign: TextAlign.center,
+                  decoration: const InputDecoration(
+                    hintText: '1-100',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onSubmitted: (s) async {
+                    final n = int.tryParse(s) ?? value;
+                    if (n >= 1 && n <= 100) {
+                      await _preferences.setDailyNewWords(n);
+                      if (ctx.mounted) setSheetState(() {});
                     }
                   },
                 ),
-              )
-              .toList(),
-        ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          );
+        },
       ),
     );
   }

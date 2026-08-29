@@ -9,6 +9,7 @@ import 'package:word_app/features/learning/application/choice_generator_port.dar
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
+import 'package:word_app/features/learning/domain/definition_formatter.dart';
 import 'package:word_app/models/bb_word_process.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
@@ -231,7 +232,12 @@ class LearningSessionState extends ChangeNotifier {
     }
   }
 
-  void _replaceQueue(List<Word> queue) {
+  void _replaceQueue(List<Word> rawQueue) {
+    // 过滤无中文释义的空壳词：词库约 55% 词条缺 interpret（数据源如此），
+    // 空词进队列会导致四选一残缺、详情页空白。宁少勿缺。
+    final queue = rawQueue
+        .where((w) => DefinitionFormatter.extractChinese(w.interpret).isNotEmpty)
+        .toList(growable: false);
     _queueGeneration++; // 新会话开始：作废任何进行中的旧进度加载
     _queue = queue;
     _currentIndex = 0;
