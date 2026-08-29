@@ -1,4 +1,4 @@
-import '../../../services/user_service.dart';
+import 'user_service.dart';
 import '../application/account_profile_store.dart';
 import '../domain/account_profile.dart';
 

@@ -4,7 +4,7 @@ import 'package:word_app/features/account/data/account_profile_repository.dart';
 import 'package:word_app/features/account/domain/account_profile.dart';
 import 'package:word_app/features/account/presentation/account_profile_state.dart';
 import 'package:word_app/models/user_info_bean.dart';
-import 'package:word_app/services/user_service.dart';
+import 'package:word_app/features/account/data/user_service.dart';
 
 void main() {
   test('账号资料状态加载无凭据展示快照并通知订阅者', () async {

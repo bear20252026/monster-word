@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/auth/app_session_controller.dart';
 import '../../../core/di/service_locator.dart';
-import '../../../services/user_service.dart';
+import '../data/user_service.dart';
 import '../application/account_profile_store.dart';
 import '../data/account_profile_repository.dart';
 import 'account_profile_state.dart';

@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 // UserService — 用户状态管理
 
-import '../models/user_info_bean.dart';
+import '../../../models/user_info_bean.dart';
 
 /// 用户服务接口
 abstract class UserService {
