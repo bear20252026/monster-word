@@ -35,17 +35,29 @@ class WordApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return buildWordAudioScope(
+      // [1] WordAudio — core/audio 音频会话/播放态。✅ 被全部下游会话页（learn/review/spell/dictation）消费；无上游 provider 依赖，故放最外。
       child: buildAccountFeatureScope(
+        // [2] Account — AppSessionState(implements AppSessionController) + AccountProfile。✅ settings(更多设置)经 AppSessionController.logout 消费；Splash 登录检查依赖。无上游依赖。
         child: buildLearningFeatureScope(
+          // [3] Learning — LearningSession/LearningQueue*/Review*/Favorites/NewWords/LearningProgressReader。✅ 是 book(G3.2)、search(FavoritesAccessor)、词书会话的上游渠道；已核实【不依赖 Account】，置于 Account 内层为 DAG 链序选择，非依赖驱动。
           child: buildSettingsFeatureScope(
+            // [4] Settings — LearningPreferencesState。✅ 消费 Account(logout)；被 profile/school preference 消费。已核实【不依赖 learning feature】，位于 learning 内层为链序选择，非依赖驱动。
             child: buildSearchFeatureScope(
+              // [5] Search — WordSearchReader/SearchHistoryStore/ExampleReader/FavoritesAccessor(经 LearningFavoritesStore)。✅ 依赖 learning 祖先(收藏)；无自身上游。
               child: buildQuickReviewFeatureScope(
+                // [6] QuickReview — QuickReviewWordReader。仅读词；依赖较浅。
                 child: buildBookFeatureScope(
+                  // [7] Book — BookCatalogReader/BookWordsReader(book 侧)/BookState。✅ 必须位于 learning 内层：BookState 消费 learning 祖先的 LearningProgressReader + LearningSessionStarter。
                   child: buildScareCoinFeatureScope(
+                    // [8] ScareCoin — ScareCoinStore。✅ 是 checkin 的上游渠道；亦被 profile/redemption/日历消费。
                     child: buildCheckInFeatureScope(
+                      // [9] CheckIn — CheckInHistoryReader/CheckinStatusReader/CheckinWriter。✅ 消费 [8] ScareCoinStore，故必须在其内层；[8]→[9] 即渠道方向。
                       child: buildDictionaryFeatureScope(
+                        // [10] Dictionary — 词典 Reader/Writer。被 word_detail/查词页消费；✅ 已核实【无上游 feature 依赖】。
                         child: buildWordBrowseFeatureScope(
+                          // [11] WordBrowse — WordNotesStore/SentenceFavoritesStore。被 word_detail/my_fav 消费；无上游 feature 依赖，最内层 feature scope。
                           child: MultiProvider(
+                            // MultiProvider[SkinSystem, WallpaperState] — 主题皮肤/墙纸。被 MaterialApp(_AppLifecycle) 与所有页面消费；位于所有 feature scope 之后（feature 层无法 context.read<SkinSystem>()，当前无此需求，保留）。
                             providers: [
                               ChangeNotifierProvider(create: (_) => SkinSystem()),
                               ChangeNotifierProvider(create: (_) => WallpaperState()),
