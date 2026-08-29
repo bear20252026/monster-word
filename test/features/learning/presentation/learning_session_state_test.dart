@@ -21,7 +21,7 @@ import 'package:word_app/features/learning/presentation/learning_statistics_stat
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/repositories/fav_repository.dart';
-import 'package:word_app/repositories/mastered_repository.dart';
+import 'package:word_app/features/learning/data/mastered_repository.dart';
 
 void main() {
   setUp(() {

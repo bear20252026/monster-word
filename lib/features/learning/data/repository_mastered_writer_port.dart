@@ -1,5 +1,5 @@
 import '../../../core/di/service_locator.dart';
-import '../../../repositories/mastered_repository.dart';
+import 'mastered_repository.dart';
 import '../application/mastered_writer_port.dart';
 
 /// Adapts [MasteredRepository] (legacy repositories) to [MasteredWriterPort] (application layer).

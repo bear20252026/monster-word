@@ -4,7 +4,7 @@ import 'package:word_app/features/learning/data/repository_mastered_words_reader
 import 'package:word_app/features/learning/data/repository_new_words_reader.dart';
 import 'package:word_app/models/new_word_record.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/repositories/mastered_repository.dart';
+import 'package:word_app/features/learning/data/mastered_repository.dart';
 import 'package:word_app/repositories/new_word_repository.dart';
 import 'package:word_app/repositories/word_repository.dart';
 

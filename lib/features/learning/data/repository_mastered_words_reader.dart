@@ -1,5 +1,5 @@
 import '../../../models/word.dart';
-import '../../../repositories/mastered_repository.dart';
+import 'mastered_repository.dart';
 import '../../../repositories/word_repository.dart';
 import '../application/mastered_words_reader.dart';
 

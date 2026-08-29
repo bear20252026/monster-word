@@ -1,6 +1,6 @@
 import '../../../core/di/service_locator.dart';
 import '../../../core/learning/learning_progress_reader.dart';
-import '../../../repositories/mastered_repository.dart';
+import 'mastered_repository.dart';
 
 /// [LearningProgressReader] 的具体实现。
 ///

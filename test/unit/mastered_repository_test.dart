@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:word_app/repositories/mastered_repository_impl.dart';
+import 'package:word_app/features/learning/data/mastered_repository_impl.dart';
 
 void main() {
   test('MasteredRepositoryImpl 读取并继续写入既有 mastered_words_v1 数据', () async {

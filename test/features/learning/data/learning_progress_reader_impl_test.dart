@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/repositories/mastered_repository.dart';
+import 'package:word_app/features/learning/data/mastered_repository.dart';
 
 import 'package:word_app/features/learning/data/learning_progress_reader_impl.dart';
 
