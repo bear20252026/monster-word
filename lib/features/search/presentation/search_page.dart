@@ -10,6 +10,8 @@ import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/widgets/common/mw_empty_state.dart';
+import 'package:word_app/widgets/common/mw_skeleton.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/halo_search.dart';
 import 'package:word_app/widgets/path_marquee.dart';
@@ -185,15 +187,11 @@ class _SearchPageState extends State<SearchPage> {
   // ─── 加载中 ──────────────────────────────────────────────────────────────
 
   Widget _buildLoading(ThemeVars skin) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircularProgressIndicator(color: skin.accent),
-          const SizedBox(height: 12),
-          Text('搜索中…', style: TextStyle(color: skin.text3, fontSize: 14)),
-        ],
-      ),
+    // 骨架屏：用结果列表的形状预判加载后的样子，替代转圈
+    return ListView.builder(
+      itemCount: 6,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      itemBuilder: (_, _) => const MwSkeletonListItem(),
     );
   }
 
@@ -438,28 +436,12 @@ class _SearchPageState extends State<SearchPage> {
   // ─── 无结果 ──────────────────────────────────────────────────────────────
 
   Widget _buildNoResults(ThemeVars skin) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.search_off, size: 64, color: skin.divider),
-          const SizedBox(height: 16),
-          Text('未找到匹配的单词', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
-          const SizedBox(height: 8),
-          Text('请检查拼写，或尝试搜索其他关键词', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
-          if (_lastQuery.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Text(
-              '搜索词: "$_lastQuery"',
-              style: MistralTypography.bodySm.copyWith(color: MistralColors.muted, fontStyle: FontStyle.italic),
-            ),
-          ],
-        ],
-      ),
+    return MwEmptyState(
+      kind: MwEmptyKind.search,
+      title: '未找到匹配的单词',
+      subtitle: _lastQuery.isNotEmpty ? '搜索词: "$_lastQuery"，试试其他关键词' : '请检查拼写，或尝试搜索其他关键词',
     );
   }
-
-  // ─── 空状态 ──────────────────────────────────────────────────────────────
 
   Widget _buildEmpty(ThemeVars skin) {
     return Center(

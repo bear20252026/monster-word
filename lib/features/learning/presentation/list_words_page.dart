@@ -9,6 +9,8 @@ import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/models/word.dart';
+import 'package:word_app/widgets/common/mw_empty_state.dart';
+import 'package:word_app/widgets/common/mw_skeleton.dart';
 
 /// 单词列表页基类，具体子类通过 [loadWordsForContext] 提供数据
 abstract class ListWordsPage extends StatefulWidget {
@@ -102,7 +104,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: _isLoading
-                  ? Center(child: CircularProgressIndicator(color: MistralColors.primary))
+                  ? const MwSkeletonPage()
                   : _words.isEmpty
                   ? _buildEmptyView(skin)
                   : _buildWordList(skin),
@@ -151,23 +153,15 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
   }
 
   Widget _buildEmptyView(SkinSystem skin) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.inbox_outlined, size: 64, color: skin.colors.text3),
-          const SizedBox(height: 16),
-          Text('暂无单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
-          const SizedBox(height: 16),
-          TextButton.icon(
-            onPressed: () => _loadData(),
-            icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('刷新'),
-          ),
-        ],
-      ),
+    return MwEmptyState(
+      kind: MwEmptyKind.empty,
+      title: '暂无单词',
+      subtitle: '去学习或收藏一些单词，这里就会显示',
+      actionLabel: '刷新',
+      onAction: () => _loadData(),
     );
   }
+
 
   Widget _buildWordList(SkinSystem skin) {
     return ListView.builder(
