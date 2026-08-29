@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 移植自 v3.2 LoginActivity
-// 登录页：支持手机号登录、账号密码登录、第三方登录（微信/QQ/微博/华为）
+// 登录页：支持手机号登录、账号密码登录
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,7 +9,6 @@ import '../../../core/router/nav_utils.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import '../../../widgets/animations.dart';
-import '../../../widgets/scale_down_on_press.dart';
 import 'app_session_state.dart';
 
 class LoginPage extends StatefulWidget {
@@ -238,57 +237,41 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             ),
           ),
         const SizedBox(height: 24),
-        // 第三方登录按钮组
+        // 登录方式按钮组
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Column(
             children: [
-              // 微信登录
-              _buildSocialLoginButton(
-                skin: skin,
-                icon: Icons.wechat,
-                label: '微信登录',
-                color: const Color(0xFF07C160),
-                onTap: () => _socialLogin('wechat'),
-              ),
-              const SizedBox(height: 12),
               // 手机号登录
-              _buildSocialLoginButton(
-                skin: skin,
-                icon: Icons.phone_android,
+              Semantics(
                 label: '手机号登录',
-                color: MistralColors.primary,
-                onTap: () => setState(() => _loginMode = 2),
+                button: true,
+                child: _buildSocialLoginButton(
+                  skin: skin,
+                  icon: Icons.phone_android,
+                  label: '手机号登录',
+                  color: MistralColors.primary,
+                  onTap: () => setState(() => _loginMode = 2),
+                ),
               ),
               const SizedBox(height: 12),
               // 账号密码登录
-              _buildSocialLoginButton(
-                skin: skin,
-                icon: Icons.email_outlined,
+              Semantics(
                 label: '账号密码登录',
-                color: skin.colors.text1,
-                onTap: () => setState(() => _loginMode = 1),
-                outlined: true,
+                button: true,
+                child: _buildSocialLoginButton(
+                  skin: skin,
+                  icon: Icons.email_outlined,
+                  label: '账号密码登录',
+                  color: skin.colors.text1,
+                  onTap: () => setState(() => _loginMode = 1),
+                  outlined: true,
+                ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 16),
-        // 其他登录方式（对应原版 mFbOther）
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildSocialIcon(Icons.chat_bubble, 'QQ', () => _socialLogin('qq')),
-              const SizedBox(width: 24),
-              _buildSocialIcon(Icons.public, '微博', () => _socialLogin('weibo')),
-              const SizedBox(width: 24),
-              _buildSocialIcon(Icons.phone_android, '华为', () => _socialLogin('huawei')),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
         // 用户协议（对应原版 tv_user_rule）
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -530,32 +513,4 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildSocialIcon(IconData icon, String label, VoidCallback onTap) {
-    return ScaleDownOnPress(
-      onTap: onTap,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Column(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: MistralColors.hairline),
-              ),
-              child: Icon(icon, size: 22, color: MistralColors.stone),
-            ),
-            const SizedBox(height: 4),
-            Text(label, style: MistralTypography.micro.copyWith(color: MistralColors.stone)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _socialLogin(String platform) {
-    // TODO: 接入第三方登录 SDK
-    _showToast('$platform 登录功能开发中');
-  }
 }

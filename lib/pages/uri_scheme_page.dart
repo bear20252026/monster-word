@@ -24,17 +24,52 @@ class UriSchemePage extends StatelessWidget {
       _processUri(context);
     });
 
+    // A-6: 深链冷启动走品牌过渡（品牌色 + 品牌标识），而非生硬白屏+转圈。
     return Scaffold(
       backgroundColor: context.skin.colors.pageBg,
-      body: Center(child: CircularProgressIndicator(color: MistralColors.primary)),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Monster Word',
+              style: MistralTypography.heading4.copyWith(
+                color: MistralColors.primary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: MistralColors.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  /// A-6: 安全回首页 — 冷启动深链时 UriSchemePage 是根路由，
+  /// NavUtils.goHome（popUntil isFirst）会无效导致卡死；此时用 pushReplacement 跳到首页。
+  void _goHomeSafe(BuildContext context) {
+    final nav = Navigator.of(context);
+    if (nav.canPop()) {
+      NavUtils.goHome(context);
+    } else {
+      nav.pushReplacementNamed('/');
+    }
   }
 
   void _processUri(BuildContext context) {
     try {
       final uriObj = Uri.tryParse(uri);
       if (uriObj == null) {
-        NavUtils.goHome(context);
+        _goHomeSafe(context);
         return;
       }
 
@@ -56,14 +91,14 @@ class UriSchemePage extends StatelessWidget {
             Navigator.pushReplacementNamed(context, RouteNames.review);
             break;
           default:
-            NavUtils.goHome(context);
+            _goHomeSafe(context);
         }
       } else {
-        NavUtils.goHome(context);
+        _goHomeSafe(context);
       }
     } catch (_) {
       // 解析异常时兜底回首页
-      NavUtils.goHome(context);
+      _goHomeSafe(context);
     }
   }
 }

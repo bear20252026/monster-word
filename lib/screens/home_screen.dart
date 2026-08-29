@@ -26,8 +26,8 @@ class HomeScreen extends StatelessWidget {
 
   String _formatDate() {
     final now = DateTime.now();
-    const weekdays = ['Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.', 'Sun.'];
-    return '${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')} ${weekdays[now.weekday - 1]}';
+    const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    return '${now.month}月${now.day}日 ${weekdays[now.weekday - 1]}';
   }
 
   @override
@@ -149,8 +149,21 @@ class HomeScreen extends StatelessWidget {
     // 否则加载第一本书
     final books = await context.read<BookCatalogReader>().listBooks();
     if (books.isEmpty) {
+      // B-1 空态引导：无词书时引导去选词书页，而非仅弹 SnackBar
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('暂无词书，请先添加词书')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('还没有词书，先去选一本吧'),
+            action: SnackBarAction(
+              label: '去选词书',
+              onPressed: () {
+                if (context.mounted) {
+                  Navigator.pushNamed(context, LibSelectPage.routeName);
+                }
+              },
+            ),
+          ),
+        );
       }
       return;
     }
@@ -270,7 +283,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// 签到卡片（TextRevealCard：点击揭示每日一句）；右上角「打卡」角标打开弹性签到日历
+  /// 签到卡片（TextRevealCard：点击揭示每日一句）；右上角「签到」角标打开弹性签到日历
   Widget _buildCheckInCard(BuildContext context, SkinSystem skin) {
     return Center(
       child: Stack(
@@ -313,7 +326,7 @@ class HomeScreen extends StatelessWidget {
                     Icon(Icons.redeem_rounded, size: 14, color: AppColors.white100),
                     SizedBox(width: 4),
                     Text(
-                      '打卡 +10',
+                      '签到 +10',
                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white100),
                     ),
                   ],

@@ -186,9 +186,10 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
       );
     }
 
-    // 返回保护：系统返回需确认，防止误触丢失拼写进度
+    // 返回保护：仅在有拼写进度时拦截退出，无进度/已完成直接退出
     return SessionExitGuard(
       subject: '拼写练习',
+      shouldIntercept: () => _currentIndex > 0 && _currentIndex < _totalWords,
       child: Scaffold(
         backgroundColor: skin.colors.pageBg,
         body: SafeArea(

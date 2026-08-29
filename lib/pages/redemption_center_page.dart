@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
+
+import '../../core/scare_coin/scare_coin_store.dart';
 import '../hooks/responsive.dart';
 import '../theme/skin_system.dart';
 import '../tokens/design_tokens.dart';
@@ -15,7 +18,21 @@ class RedemptionCenterPage extends StatefulWidget {
 }
 
 class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
-  int _coins = 1280; // 示例尖叫币余额
+  int _coins = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCoins();
+  }
+
+  void _loadCoins() {
+    final store = context.read<ScareCoinStore>();
+    store.balance().then((value) {
+      if (!mounted) return;
+      setState(() => _coins = value);
+    });
+  }
 
   final _items = const [
     _RedeemItem(
@@ -70,7 +87,8 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
 
   void _redeem(_RedeemItem item) {
     if (_coins < item.cost) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('尖叫币不足，快去签到赚取吧！')));
+      final need = item.cost - _coins;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('还差 $need 币，快去签到赚取吧！')));
       return;
     }
     showDialog(
@@ -92,10 +110,12 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
               backgroundColor: SkinProvider.of(context).colors.accent,
               foregroundColor: SkinProvider.of(context).colors.onGlassAccent,
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              setState(() => _coins -= item.cost);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！${item.title} 已到账')));
+              await context.read<ScareCoinStore>().grant(delta: -item.cost, reason: '兑换 ${item.title}');
+              if (!mounted) return;
+              setState(() {});
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！${item.title} 已解锁')));
             },
             child: const Text('确认兑换'),
           ),

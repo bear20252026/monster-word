@@ -136,7 +136,18 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
             Expanded(
               child: _entries.isEmpty
                   ? Center(
-                      child: Text('还没有记录，先去签到吧～', style: TextStyle(fontSize: 14, color: skin.text3)),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('还没有记录，先去签到吧～', style: TextStyle(fontSize: 14, color: skin.text3)),
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.check_circle_outline, size: 18),
+                            label: const Text('去签到'),
+                          ),
+                        ],
+                      ),
                     )
                   : ListView.separated(
                       padding: EdgeInsets.fromLTRB(context.responsive.pageMargin, 0, context.responsive.pageMargin, 8),

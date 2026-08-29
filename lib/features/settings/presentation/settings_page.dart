@@ -47,7 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       Expanded(
                         child: Center(
                           child: Text(
-                            '学习偏好',
+                            '设置',
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
                           ),
                         ),
@@ -63,6 +63,18 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
+    );
+  }
+
+  /// 「即将上线」标签
+  Widget _comingSoonBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: const Text('即将上线', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w500)),
     );
   }
 
@@ -107,9 +119,11 @@ class _SettingsPageState extends State<SettingsPage> {
           _Cell(
             title: '助记顺序',
             value: '派生词 - 词组搭配 - 特殊变形 - …',
+            trailing: _comingSoonBadge(),
             onTap: () {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text('助记顺序设置开发中...'), duration: Duration(seconds: 1)));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('助记顺序设置即将上线，敬请期待'), duration: Duration(seconds: 1)),
+              );
             },
           ),
           _SwitchCellWithDesc(
@@ -131,9 +145,11 @@ class _SettingsPageState extends State<SettingsPage> {
         _SettingGroup([
           _Cell(
             title: '更多学习偏好',
+            trailing: _comingSoonBadge(),
             onTap: () {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text('更多学习偏好开发中...'), duration: Duration(seconds: 1)));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('更多学习偏好即将上线，敬请期待'), duration: Duration(seconds: 1)),
+              );
             },
           ),
         ]),
@@ -480,7 +496,8 @@ class _Cell extends StatelessWidget {
   final String title;
   final String? value;
   final VoidCallback? onTap;
-  const _Cell({required this.title, this.value, this.onTap});
+  final Widget? trailing;
+  const _Cell({required this.title, this.value, this.onTap, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -503,6 +520,7 @@ class _Cell extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: Text(value!, style: TextStyle(fontSize: 14, color: skin.text3)),
                 ),
+              if (trailing != null) ...[trailing!, const SizedBox(width: 8)],
               Icon(Icons.chevron_right, size: 20, color: skin.text3),
             ],
           ),

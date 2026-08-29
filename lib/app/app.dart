@@ -14,6 +14,7 @@ import '../features/settings/presentation/settings_feature_providers.dart';
 import '../features/search/presentation/search_feature_providers.dart';
 import '../features/scare_coin/presentation/scare_coin_feature_providers.dart';
 import '../features/word_browse/presentation/word_browse_feature_providers.dart';
+import '../features/account/presentation/splash_page.dart';
 import '../pages/lib_select_page.dart';
 import '../screens/home_screen.dart';
 import '../screens/profile_screen.dart';
@@ -128,7 +129,10 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
               child: SkinProvider(skin: skin, child: child!),
             );
           },
-          home: const AdaptiveScale(child: _HomeShell()),
+          // A-1: Splash 复位为真正启动入口 — 品牌动画 → 登录态检查 → 首次引导 → 落地页。
+          // SplashPage 内部通过 pushReplacementNamed('/') 进入 _HomeShell，
+          // 保证冷启动时品牌/登录/引导流程完整展示。
+          home: const AdaptiveScale(child: SplashPage()),
           onGenerateRoute: _onGenerateRoute,
         );
       },

@@ -160,8 +160,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('退出当前练习？'), findsOneWidget);
 
-      // Tap "退出" button
-      await tester.tap(find.text('退出'));
+      // Tap "暂停并保存" button
+      await tester.tap(find.text('暂停并保存'));
       await tester.pumpAndSettle();
 
       // Should have popped back to root

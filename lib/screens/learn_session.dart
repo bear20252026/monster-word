@@ -75,9 +75,10 @@ class _LearnSessionState extends State<LearnSession> with TickerProviderStateMix
       return const Scaffold(body: Center(child: Text('暂无单词')));
     }
 
-    // 返回保护：系统返回需确认，防止误触丢失学习进度
+    // 返回保护：仅在有学习进度时拦截退出，无进度/已完成直接退出
     return SessionExitGuard(
       subject: '本次学习',
+      shouldIntercept: () => state.hasProgress,
       child: Scaffold(
         body: GlassBg(
           child: SafeArea(

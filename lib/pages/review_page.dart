@@ -77,6 +77,7 @@ class _ReviewPageState extends State<ReviewPage> {
   }) {
     return SessionExitGuard(
       subject: '本次复习',
+      shouldIntercept: () => session.done == 0 && session.total > 0,
       child: Scaffold(
         body: FormalReviewSessionLayout(
           word: word,

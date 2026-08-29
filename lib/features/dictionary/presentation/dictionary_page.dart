@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 
 import 'package:provider/provider.dart';
 
@@ -134,7 +135,11 @@ class _DictionaryPageState extends State<DictionaryPage>
                           state.isFavorite ? MistralColors.primary : skin.text3,
                       size: 24,
                     ),
-                    onPressed: () => state.toggleFavorite(),
+                    tooltip: state.isFavorite ? '取消收藏' : '收藏单词',
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      state.toggleFavorite();
+                    },
                   ),
                 ],
               );
@@ -326,8 +331,9 @@ class _DictionaryPageState extends State<DictionaryPage>
             labelColor: skin.accent,
             unselectedLabelColor: skin.text3,
             indicatorColor: skin.accent,
-            indicatorWeight: 2,
+            indicatorWeight: 3,
             indicatorSize: TabBarIndicatorSize.label,
+            indicatorPadding: const EdgeInsets.only(bottom: 2),
             labelStyle:
                 MistralTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
             unselectedLabelStyle: MistralTypography.bodySm,

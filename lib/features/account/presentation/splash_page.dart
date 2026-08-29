@@ -32,6 +32,8 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   bool _showGuide = false;
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  // A-2: 持有导航 Timer 以便在 dispose 时取消，避免测试/快速退出时留下 pending Timer。
+  Timer? _navTimer;
 
   // 引导页图片（对应原版 introImages）
   final List<String> _introAssets = [
@@ -57,10 +59,15 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   }
 
   Future<void> _checkLoginAndNavigate() async {
-    // 等待动画播放 + 模拟网络检查
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
+    // 等待动画播放 + 模拟网络检查。Timer 持有引用，dispose 时取消，避免 pending Timer。
+    _navTimer?.cancel();
+    _navTimer = Timer(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      _proceedToRoute();
+    });
+  }
 
+  Future<void> _proceedToRoute() async {
     final session = context.read<AppSessionState>();
     final isLoggedIn = session.isLoggedIn;
 
@@ -68,8 +75,9 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
       // 已登录 → 检查是否首次启动（显示引导页）
       final hasShownGuide = session.hasShownInitGuide;
       if (!hasShownGuide) {
-        setState(() => _showGuide = true);
         await session.setHasShownInitGuide(true);
+        if (!mounted) return;
+        setState(() => _showGuide = true);
       } else {
         _goToMain();
       }
@@ -91,6 +99,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    _navTimer?.cancel();
     _animController.dispose();
     _pageController.dispose();
     super.dispose();
@@ -134,9 +143,11 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                         const Color(0xFF1E3932),
                         const Color(0xFFcba258),
                       ],
-                      child: const Text(
-                        '怪',
-                        style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white, height: 1.0),
+                      child: ExcludeSemantics(
+                        child: Text(
+                          '怪',
+                          style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white, height: 1.0),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),

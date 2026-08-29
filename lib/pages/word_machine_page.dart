@@ -173,6 +173,7 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
 
     return SessionExitGuard(
       subject: '单词机',
+      shouldIntercept: () => context.read<LearningSessionState>().hasProgress,
       child: Scaffold(
         backgroundColor: GameBoyPalette.pageBackdrop,
         body: SafeArea(
@@ -625,6 +626,18 @@ class _WordMachinePageState extends State<WordMachinePage> with TickerProviderSt
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 拖拽提示条
+                Center(
+                  child: Container(
+                    width: 24,
+                    height: 3,
+                    margin: const EdgeInsets.only(bottom: 6),
+                    decoration: BoxDecoration(
+                      color: GameBoyPalette.screenMid,
+                      borderRadius: BorderRadius.circular(1.5),
+                    ),
+                  ),
+                ),
                 // 音标
                 if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[
                   Text(

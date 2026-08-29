@@ -79,7 +79,12 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
       debugPrint('[CheckInHistory] refresh error: $e');
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('加载签到数据失败，请重试')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('加载签到数据失败，请重试'),
+            action: SnackBarAction(label: '重试', onPressed: _refresh),
+          ),
+        );
       }
     }
   }
@@ -162,7 +167,10 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)),
                 ),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/class_checkin');
+                },
                 icon: const Icon(Icons.redeem, size: 20),
                 label: const Text('去签到', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               ),
@@ -282,37 +290,40 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
             Expanded(
               child: Column(
                 children: [
-                  SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // 背景环
-                        CircularProgressIndicator(value: 1.0, strokeWidth: 5, color: skin.divider),
-                        // 进度环（带入场动画）
-                        AnimatedBuilder(
-                          animation: _progressAnim,
-                          builder: (context, child) {
-                            return CircularProgressIndicator(
-                              value: _monthlyProgress * _progressAnim.value,
-                              strokeWidth: 5,
-                              color: skin.accent,
-                              strokeCap: StrokeCap.round,
-                            );
-                          },
-                        ),
-                        // 中心文字
-                        AnimatedBuilder(
-                          animation: _progressAnim,
-                          builder: (context, child) {
-                            return Text(
-                              '${(_monthlyProgress * _progressAnim.value * 100).round()}%',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: skin.text1),
-                            );
-                          },
-                        ),
-                      ],
+                  Semantics(
+                    label: '本月进度 ${(_monthlyProgress * 100).round()}%',
+                    child: SizedBox(
+                      width: 52,
+                      height: 52,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // 背景环
+                          CircularProgressIndicator(value: 1.0, strokeWidth: 5, color: skin.divider),
+                          // 进度环（带入场动画）
+                          AnimatedBuilder(
+                            animation: _progressAnim,
+                            builder: (context, child) {
+                              return CircularProgressIndicator(
+                                value: _monthlyProgress * _progressAnim.value,
+                                strokeWidth: 5,
+                                color: skin.accent,
+                                strokeCap: StrokeCap.round,
+                              );
+                            },
+                          ),
+                          // 中心文字
+                          AnimatedBuilder(
+                            animation: _progressAnim,
+                            builder: (context, child) {
+                              return Text(
+                                '${(_monthlyProgress * _progressAnim.value * 100).round()}%',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: skin.text1),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),

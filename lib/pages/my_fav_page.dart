@@ -198,7 +198,21 @@ class _MyFavPageState extends State<MyFavPage> {
           const SizedBox(height: 8),
           Text('学习时点击 ❤️ 收藏单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
           const SizedBox(height: 16),
-          TextButton.icon(onPressed: _loadData, icon: const Icon(Icons.refresh, size: 18), label: const Text('刷新')),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/lib_select');
+                },
+                icon: const Icon(Icons.explore_outlined, size: 18),
+                label: const Text('去选词书'),
+              ),
+              const SizedBox(width: 12),
+              TextButton.icon(onPressed: _loadData, icon: const Icon(Icons.refresh, size: 18), label: const Text('刷新')),
+            ],
+          ),
         ],
       ),
     );

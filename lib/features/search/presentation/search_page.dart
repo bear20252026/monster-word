@@ -211,19 +211,34 @@ class _SearchPageState extends State<SearchPage> {
             _saveToHistory(w.word);
             Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: w)));
           },
-          child: ListTile(
-            title: Text(
-              w.word,
-              style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
+          child: Material(
+            color: _selectedWord?.word == w.word
+                ? skin.accent.withValues(alpha: 0.08)
+                : Colors.transparent,
+            child: Container(
+              decoration: _selectedWord?.word == w.word
+                  ? BoxDecoration(
+                      border: Border(
+                        left: BorderSide(color: skin.accent, width: 3),
+                      ),
+                    )
+                  : null,
+              child: ListTile(
+                title: Text(
+                  w.word,
+                  style: MistralTypography.bodyMd.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: _selectedWord?.word == w.word ? skin.accent : skin.text1,
+                  ),
+                ),
+                subtitle: Text(
+                  w.firstInterpretLine,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: MistralTypography.caption.copyWith(color: skin.text3),
+                ),
+              ),
             ),
-            subtitle: Text(
-              w.firstInterpretLine,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: MistralTypography.caption.copyWith(color: skin.text3),
-            ),
-            selected: _selectedWord?.word == w.word,
-            selectedTileColor: skin.cardBgAlt,
           ),
         );
       },

@@ -119,6 +119,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                   IconButton(
                     icon: Icon(_showDescription ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 22),
                     color: colors.text1,
+                    tooltip: _showDescription ? '隐藏词书描述' : '显示词书描述',
                     onPressed: () {
                       setState(() => _showDescription = !_showDescription);
                     },
@@ -498,6 +499,20 @@ class _LibItem extends StatelessWidget {
     return isDark ? _coverColorsDark[index] : _coverColorsLight[index];
   }
 
+  /// 从词书 code 推断描述标签（如 'CET4 | 1200词'），替代硬编码文本
+  static String _categoryOf(String code) {
+    if (RegExp(r'CET4|四级').hasMatch(code)) return 'CET4';
+    if (RegExp(r'CET6|六级').hasMatch(code)) return 'CET6';
+    if (RegExp(r'GK|高考|GKCJ|GKHX|GKSG').hasMatch(code)) return '高考';
+    if (RegExp(r'KY|考研|KAOYAN|LLYC|KYSG').hasMatch(code)) return '考研';
+    if (RegExp(r'IELTS|雅思').hasMatch(code)) return '雅思';
+    if (RegExp(r'TOEFL|托福|GDTOEFL').hasMatch(code)) return '托福';
+    if (RegExp(r'GRE|GMAT|SAT|BEC|TEM|专四|专八|PRO4|PRO8|XHPRO|PETS').hasMatch(code)) {
+      return '专业出国';
+    }
+    return '其他';
+  }
+
   String _coverText() {
     final name = book.name.replaceAll(RegExp(r'MonsterWord_'), '');
     return name.length > 4 ? name.substring(0, 4) : name;
@@ -586,7 +601,7 @@ class _LibItem extends StatelessWidget {
                   const SizedBox(height: 8),
                   if (showDescription)
                     Text(
-                      '考研核心高频 | 2026',
+                      '${_categoryOf(book.code)} | ${book.wordCount}词',
                       style: TextStyle(fontSize: 12, color: colors.text3),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

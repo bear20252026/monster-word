@@ -1,6 +1,7 @@
 // 字典详情页：单词详解（释义+音标+例句+常见用法+词根+形近词+笔记）
 // 从学习页答题后进入，看完后点击"下一词"返回学习
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:provider/provider.dart';
 
 import '../data/dictionary_extra.dart';
@@ -1156,13 +1157,31 @@ class _ExampleTile extends StatefulWidget {
   State<_ExampleTile> createState() => _ExampleTileState();
 }
 
-class _ExampleTileState extends State<_ExampleTile> {
+class _ExampleTileState extends State<_ExampleTile> with SingleTickerProviderStateMixin {
   bool _isFav = false;
+  late AnimationController _favAnimController;
+  late Animation<double> _favScaleAnim;
 
   @override
   void initState() {
     super.initState();
+    _favAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+      lowerBound: 0.0,
+      upperBound: 1.0,
+    );
+    _favScaleAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.4).chain(CurveTween(curve: Curves.easeOut)), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.4, end: 1.0).chain(CurveTween(curve: Curves.easeIn)), weight: 50),
+    ]).animate(_favAnimController);
     _checkFavStatus();
+  }
+
+  @override
+  void dispose() {
+    _favAnimController.dispose();
+    super.dispose();
   }
 
   void _checkFavStatus() {
@@ -1178,6 +1197,10 @@ class _ExampleTileState extends State<_ExampleTile> {
     final sentenceId = widget.example.en.hashCode.toString();
     final store = context.read<SentenceFavoritesStore>();
     final messenger = ScaffoldMessenger.of(context);
+
+    // 触觉反馈 + 弹性动画
+    HapticFeedback.lightImpact();
+    _favAnimController.forward(from: 0.0);
 
     await store.toggle(
       wordId: widget.wordId,
@@ -1254,10 +1277,20 @@ class _ExampleTileState extends State<_ExampleTile> {
                 onTap: _toggleFav,
                 child: Padding(
                   padding: const EdgeInsets.only(left: 8),
-                  child: Icon(
-                    _isFav ? Icons.favorite : Icons.favorite_border,
-                    size: 18,
-                    color: _isFav ? widget.skin.colors.danger : widget.skin.colors.text3,
+                  child: AnimatedBuilder(
+                    animation: _favScaleAnim,
+                    builder: (context, child) => Transform.scale(
+                      scale: _favScaleAnim.value,
+                      child: child,
+                    ),
+                    child: Tooltip(
+                      message: _isFav ? '取消收藏' : '收藏例句',
+                      child: Icon(
+                        _isFav ? Icons.favorite : Icons.favorite_border,
+                        size: 18,
+                        color: _isFav ? widget.skin.colors.danger : widget.skin.colors.text3,
+                      ),
+                    ),
                   ),
                 ),
               ),

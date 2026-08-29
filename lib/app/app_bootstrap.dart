@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
+
 import 'app_error_widget.dart';
 import '../core/di/service_locator.dart';
 import '../data/app_preferences.dart';
@@ -7,20 +11,63 @@ import '../data/user_database.dart';
 import '../data/wordbook_database.dart';
 import '../player/audio_players.dart';
 
+/// A-3: 冷启动进度回调 — 各初始化阶段完成后回调，用于上报/日志/未来接 UI 进度条。
+///
+/// 参数为 [当前步骤, 总步骤, 步骤名称]。调用方不可修改 SplashPage 内部，
+/// 但可通过此回调对接骨架屏或上报初始化耗时。
+typedef BootProgressCallback = void Function(int step, int total, String label);
+
 /// 初始化应用运行所需的基础设施。
 ///
 /// 这里是应用的组合根之一：只负责平台初始化、持久化基础设施、
 /// 音频会话和依赖注册，不承载任何页面或业务流程逻辑。
-Future<void> bootstrapApp() async {
+///
+/// [onProgress] 可选：冷启动各阶段进度回调，用于日志/监控/未来骨架屏。
+/// 注意：bootstrapApp 在 runApp 之前执行，此阶段无 Flutter UI，
+/// 品牌骨架由 A-1 的 SplashPage（home）在 runApp 后展示。
+Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
   WidgetsFlutterBinding.ensureInitialized();
   _configureGlobalErrorHandling();
 
-  await WordBookDatabase.ensurePlatform();
-  await WordBookDatabase.instance.initialize();
-  await UserDatabase.instance.initialize();
-  await AppPreferences().init();
-  await initMobileAudioSession();
-  await setupServiceLocator();
+  // 初始化步骤清单 — 每步完成后回调进度。
+  final steps = <Future<void> Function()>[
+    () => WordBookDatabase.ensurePlatform(),
+    () => WordBookDatabase.instance.initialize(),
+    () => UserDatabase.instance.initialize(),
+    () => AppPreferences().init(),
+    () => initMobileAudioSession(),
+    () => setupServiceLocator(),
+  ];
+  final labels = const [
+    '词书数据库平台',
+    '词书数据库',
+    '用户数据库',
+    '偏好设置',
+    '音频会话',
+    '依赖注册',
+  ];
+
+  final total = steps.length;
+  for (var i = 0; i < total; i++) {
+    await steps[i]();
+    // ignore: avoid_print
+    print('[Bootstrap] 初始化进度 ${i + 1}/$total: ${labels[i]}');
+    onProgress?.call(i + 1, total, labels[i]);
+  }
+}
+
+/// A-2: 用 runZonedGuarded 包裹 runApp — 异步异常不再无兜底崩溃，统一上报/友好兜底。
+///
+/// 顶层异步异常（Future 错误、Timer 回调等）会被此 zone 捕获，避免直接闪退；
+/// 生产环境可将 onZoneError 替换为 Crashlytics/Sentry 上报。
+void runAppGuarded(Widget app) {
+  runZonedGuarded(
+    () => runApp(app),
+    (error, stack) {
+      debugPrint('[runZonedGuarded] 未捕获异常: $error');
+      debugPrint('$stack');
+    },
+  );
 }
 
 void _configureGlobalErrorHandling() {

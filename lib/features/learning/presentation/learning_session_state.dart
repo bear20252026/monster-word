@@ -41,6 +41,11 @@ class LearningSessionState extends ChangeNotifier {
   bool _isRating = false;
   List<WordChoicePair> _choices = [];
 
+  // 完成页总结数据
+  final List<Word> _errorWords = [];
+  int _totalAnswered = 0;
+  DateTime? _sessionStartTime;
+
   /// 队列代际计数：每当用户主动加载新的词库/收藏（`_replaceQueue`）时自增，
   /// 用于防止 `_loadProgress()` 异步返回的过期索引覆盖新会话的当前索引。
   int _queueGeneration = 0;
@@ -50,12 +55,30 @@ class LearningSessionState extends ChangeNotifier {
   int get currentIndex => _currentIndex;
   int get total => _queue.length;
   bool get hasMoreWords => _currentIndex < _queue.length - 1;
+
+  /// 是否有未保存的学习进度（已翻过至少 1 张卡且未完成全部）。
+  /// 用于 SessionExitGuard 智能拦截：无进度时不打扰用户。
+  bool get hasProgress => _queue.isNotEmpty && _currentIndex > 0 && _currentIndex < _queue.length;
   (int current, int total) get progress => _queue.isEmpty
       ? (0, 0)
       : ((_currentIndex.clamp(0, _queue.length - 1)) + 1, _queue.length);
   bool get showAnswer => _showAnswer;
   List<WordChoicePair> get choices => _choices;
   int get learnedNum => _leitnerEngine.learnedNumber;
+
+  /// 本次学习答错的单词列表（用于完成页回顾）
+  List<Word> get errorWords => List.unmodifiable(_errorWords);
+
+  /// 本次学习已答题数
+  int get totalAnswered => _totalAnswered;
+
+  /// 本次学习用时（秒），未开始为 null
+  int? get sessionDurationSeconds =>
+      _sessionStartTime == null ? null : DateTime.now().difference(_sessionStartTime!).inSeconds;
+
+  /// 本次学习正确率（0.0 ~ 1.0），无答题记录为 null
+  double? get accuracy =>
+      _totalAnswered == 0 ? null : (_totalAnswered - _errorWords.length) / _totalAnswered;
 
   Word? get currentWord => (_queue.isEmpty || _currentIndex >= _queue.length) ? null : _queue[_currentIndex];
 
@@ -74,6 +97,10 @@ class LearningSessionState extends ChangeNotifier {
     final actualLimit = limit ?? dailyGoal;
     final queue = await _queueRepository.loadBook(book, limit: actualLimit, shuffle: shuffle);
     _replaceQueue(queue);
+    // 新会话开始，重置完成页数据
+    _errorWords.clear();
+    _totalAnswered = 0;
+    _sessionStartTime = DateTime.now();
     unawaited(_saveProgress());
   }
 
@@ -90,6 +117,9 @@ class LearningSessionState extends ChangeNotifier {
     _showAnswer = false;
     _choices = [];
     _leitnerEngine.init(const <BBWordProcess>[]);
+    _errorWords.clear();
+    _totalAnswered = 0;
+    _sessionStartTime = null;
     notifyListeners();
   }
 
@@ -101,9 +131,11 @@ class LearningSessionState extends ChangeNotifier {
     _isRating = true;
 
     try {
+      _totalAnswered++;
       switch (rating) {
         case FsrsRating.again:
           _leitnerEngine.iDontKnow();
+          _errorWords.add(word); // 记录答错的词
         case FsrsRating.hard:
           _leitnerEngine.iMayKnow();
         case FsrsRating.good:
@@ -123,6 +155,18 @@ class LearningSessionState extends ChangeNotifier {
     } finally {
       _isRating = false;
     }
+  }
+
+  /// 从指定单词列表加载学习队列（用于错题复习）。
+  void loadFromWords(List<Word> words, {Book? book}) {
+    if (words.isEmpty) return;
+    // 打乱顺序，避免按错误顺序重复
+    final shuffled = List<Word>.from(words)..shuffle();
+    _replaceQueue(shuffled);
+    _errorWords.clear();
+    _totalAnswered = 0;
+    _sessionStartTime = DateTime.now();
+    notifyListeners();
   }
 
   void relearn() {

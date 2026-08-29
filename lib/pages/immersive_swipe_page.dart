@@ -141,6 +141,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
 
     return SessionExitGuard(
       subject: '沉浸刷词',
+      shouldIntercept: () => state.hasProgress,
       child: Scaffold(
         backgroundColor: skin.colors.pageBg,
         body: SafeArea(

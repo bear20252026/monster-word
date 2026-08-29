@@ -40,17 +40,22 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                   children: [
                     const SizedBox(height: 24),
                     // 头像
-                    GestureDetector(
-                      onTap: _changeAvatar,
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(colors: [MistralColors.cream, MistralColors.creamDeeper]),
-                          border: Border.all(color: MistralColors.hairline, width: 2),
+                    Semantics(
+                      label: '更换头像',
+                      button: true,
+                      child: InkWell(
+                        onTap: _changeAvatar,
+                        borderRadius: BorderRadius.circular(40),
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(colors: [MistralColors.cream, MistralColors.creamDeeper]),
+                            border: Border.all(color: MistralColors.hairline, width: 2),
+                          ),
+                          child: Icon(Icons.person, size: 40, color: MistralColors.stone),
                         ),
-                        child: Icon(Icons.person, size: 40, color: MistralColors.stone),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -95,7 +100,7 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             color: skin.colors.text1,
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => NavUtils.safePop(context),
           ),
           const SizedBox(width: 4),
           Text('个人信息', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),

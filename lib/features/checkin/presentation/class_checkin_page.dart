@@ -1,9 +1,10 @@
-// 班级打卡页：加入班级 + 每日打卡 + 班级排行榜 + 学习数据
-// 还原原版 v3.2 班级打卡功能入口
+// 班级签到页：加入班级 + 每日签到 + 班级排行榜 + 学习数据
+// 还原原版 v3.2 班级签到功能入口
 // 完善版：Banner+班级活动指引+功能卡片+用户评论
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/router/nav_utils.dart';
 import '../../../hooks/responsive.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
@@ -12,9 +13,9 @@ import '../../../tokens/star_gold.dart';
 import '../../../widgets/spring_calendar.dart';
 import '../../../core/scare_coin/scare_coin_store.dart';
 
-/// 班级打卡页面
+/// 班级签到页面
 ///
-/// 功能：加入班级、每日打卡、班级排行榜、学习数据共享
+/// 功能：加入班级、每日签到、班级排行榜、学习数据共享
 class ClassCheckInPage extends StatefulWidget {
   const ClassCheckInPage({super.key});
 
@@ -63,18 +64,22 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, size: 20),
             color: skin.text1,
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => NavUtils.safePop(context),
           ),
           const SizedBox(width: 4),
-          Text('班级打卡', style: MistralTypography.heading5.copyWith(color: skin.text1)),
+          Text('班级签到', style: MistralTypography.heading5.copyWith(color: skin.text1)),
           const Spacer(),
           if (_hasJoinedClass)
             IconButton(
-              icon: const Icon(Icons.settings, size: 20),
-              color: skin.text1,
+              icon: Badge(
+                label: const Text('即将', style: TextStyle(fontSize: 8, color: Colors.white)),
+                backgroundColor: Colors.orange,
+                child: Icon(Icons.settings, size: 20, color: skin.text1),
+              ),
               onPressed: () {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(const SnackBar(content: Text('班级设置功能开发中...'), duration: Duration(seconds: 1)));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('班级设置功能即将上线，敬请期待'), duration: Duration(seconds: 1)),
+                );
               },
             ),
         ],
@@ -175,12 +180,12 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '班级打卡挑战赛',
+                  '班级签到挑战赛',
                   style: MistralTypography.heading3.copyWith(color: AppColors.white100, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  '连续打卡7天，赢取学习徽章',
+                  '连续签到7天，赢取学习徽章',
                   style: MistralTypography.bodySm.copyWith(color: AppColors.white100.withValues(alpha: 0.9)),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -211,7 +216,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
         Text('如何参与班级活动', style: MistralTypography.heading5.copyWith(color: skin.text1)),
         const SizedBox(height: AppSpacing.md),
         _GuideStep(number: '1', title: '加入班级', description: '输入班级口令或扫描二维码加入班级', icon: Icons.group_add, skin: skin),
-        _GuideStep(number: '2', title: '每日打卡', description: '每天学习单词后点击打卡，记录学习进度', icon: Icons.touch_app, skin: skin),
+        _GuideStep(number: '2', title: '每日签到', description: '每天学习单词后点击签到，记录学习进度', icon: Icons.touch_app, skin: skin),
         _GuideStep(number: '3', title: '查看排行', description: '与班级同学比拼学习进度，互相激励', icon: Icons.leaderboard, skin: skin),
         _GuideStep(
           number: '4',
@@ -237,7 +242,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
             Expanded(
               child: _FeatureCard(
                 icon: Icons.calendar_today,
-                title: '每日打卡',
+                title: '每日签到',
                 description: '记录学习天数',
                 color: skin.success,
                 skin: skin,
@@ -347,7 +352,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
   /// 用户评论
   Widget _buildUserComments(ThemeVars skin) {
     final comments = [
-      _CommentData(userName: '用户A', avatar: 'A', content: '班级打卡功能让我更有动力学习了，每天和同学一起比拼，进步很快！', rating: 5, time: '3天前'),
+      _CommentData(userName: '用户A', avatar: 'A', content: '班级签到功能让我更有动力学习了，每天和同学一起比拼，进步很快！', rating: 5, time: '3天前'),
       _CommentData(userName: '用户B', avatar: 'B', content: '排行榜功能很棒，可以看到自己的学习进度，激励我继续努力。', rating: 5, time: '1周前'),
       _CommentData(userName: '用户C', avatar: 'C', content: '和同学们一起学习的感觉真好，互相监督，共同进步！', rating: 4, time: '2周前'),
     ];
@@ -399,7 +404,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
     );
   }
 
-  // ── 已加入班级：显示打卡界面 ──
+  // ── 已加入班级：显示签到界面 ──
 
   Widget _buildJoinedContent(BuildContext context, ThemeVars skin) {
     return SingleChildScrollView(
@@ -410,7 +415,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
           // 班级信息卡片
           _ClassInfoCard(skin: skin, className: _className, memberCount: _classMemberCount, streakDays: _streakDays),
           const SizedBox(height: AppSpacing.lg),
-          // 每日打卡按钮
+          // 每日签到按钮
           _CheckInButton(
             skin: skin,
             checkedIn: _checkedInToday,
@@ -424,7 +429,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
             },
           ),
           const SizedBox(height: AppSpacing.lg),
-          // 打卡统计
+          // 签到统计
           _CheckInStats(skin: skin, totalDays: _streakDays, rank: _classRank),
           const SizedBox(height: AppSpacing.lg),
           // 弹性签到日历（spring_calendar，数据来自尖叫币账本）
@@ -510,7 +515,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
           children: [
             const Icon(Icons.check_circle, color: AppColors.white100, size: 20),
             const SizedBox(width: 8),
-            Text('打卡成功！连续 $_streakDays 天'),
+            Text('签到成功！连续 $_streakDays 天'),
           ],
         ),
         backgroundColor: MistralColors.success,
@@ -566,7 +571,7 @@ class _ClassInfoCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              _StatItem(label: '连续打卡', value: '$streakDays 天'),
+              _StatItem(label: '连续签到', value: '$streakDays 天'),
               const SizedBox(width: AppSpacing.xl),
               _StatItem(label: '班级排名', value: '第 $memberCount 名'),
             ],
@@ -600,7 +605,7 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-/// 每日打卡按钮
+/// 每日签到按钮
 class _CheckInButton extends StatelessWidget {
   final ThemeVars skin;
   final bool checkedIn;
@@ -631,7 +636,7 @@ class _CheckInButton extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.xs),
               Text(
-                checkedIn ? '今日已打卡' : '立即打卡',
+                checkedIn ? '今日已签到' : '立即签到',
                 style: MistralTypography.bodyMd.copyWith(
                   color: checkedIn ? MistralColors.success : AppColors.white100,
                   fontWeight: FontWeight.w600,
@@ -645,7 +650,7 @@ class _CheckInButton extends StatelessWidget {
   }
 }
 
-/// 打卡统计
+/// 签到统计
 class _CheckInStats extends StatelessWidget {
   final ThemeVars skin;
   final int totalDays;
@@ -665,11 +670,11 @@ class _CheckInStats extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _StatColumn(label: '累计打卡', value: '$totalDays', skin: skin),
+          _StatColumn(label: '累计签到', value: '$totalDays', skin: skin),
           Container(width: 1, height: 32, color: skin.divider),
           _StatColumn(label: '班级排名', value: '第$rank', skin: skin),
           Container(width: 1, height: 32, color: skin.divider),
-          _StatColumn(label: '今日状态', value: '已打卡', skin: skin),
+          _StatColumn(label: '今日状态', value: '已签到', skin: skin),
         ],
       ),
     );
@@ -1120,7 +1125,7 @@ class _SpringCalendarCardState extends State<_SpringCalendarCard> {
         children: [
           Row(
             children: [
-              Text('我的打卡日历', style: MistralTypography.heading5.copyWith(color: skin.text1)),
+              Text('我的签到日历', style: MistralTypography.heading5.copyWith(color: skin.text1)),
               const Spacer(),
               Icon(Icons.auto_awesome, size: 16, color: skin.accent),
             ],

@@ -64,7 +64,19 @@ class _LearnPageState extends State<LearnPage> {
       child: Scaffold(
         backgroundColor: skin.colors.pageBg, // 奶油画布（batch4c: 壁纸→cream canvas）
         body: word == null
-            ? _CompletionScreen(skin: skin)
+            ? _CompletionScreen(
+                skin: skin,
+                errorCount: state.errorWords.length,
+                totalAnswered: state.totalAnswered,
+                durationSeconds: state.sessionDurationSeconds,
+                accuracy: state.accuracy,
+                onReviewErrors: state.errorWords.isEmpty
+                    ? null
+                    : () {
+                        // 用错词重新加载学习队列
+                        state.loadFromWords(state.errorWords, book: state.currentBook);
+                      },
+              )
             : SafeArea(
                 child: Center(
                   child: ConstrainedBox(
@@ -209,16 +221,28 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-/// 完成学习后的总结页面
+/// 完成学习后的总结页面（含错题回顾 + 数据总结）
 class _CompletionScreen extends StatelessWidget {
   final SkinSystem skin;
-  const _CompletionScreen({required this.skin});
+  final int errorCount;
+  final int totalAnswered;
+  final int? durationSeconds;
+  final double? accuracy;
+  final VoidCallback? onReviewErrors;
+  const _CompletionScreen({
+    required this.skin,
+    this.errorCount = 0,
+    this.totalAnswered = 0,
+    this.durationSeconds,
+    this.accuracy,
+    this.onReviewErrors,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = skin.colors;
     return SafeArea(
-      child: Center(
+      child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
@@ -231,8 +255,15 @@ class _CompletionScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colors.text1),
               ),
               const SizedBox(height: 12),
-              Text('你已经完成了今天的所有单词', style: TextStyle(fontSize: 16, color: colors.text2)),
-              const SizedBox(height: 32),
+              Text(
+                onReviewErrors != null && errorCount > 0
+                    ? '本次学习了 $totalAnswered 个单词，错了 $errorCount 个'
+                    : '你已经完成了今天的所有单词，太棒了！',
+                style: TextStyle(fontSize: 16, color: colors.text2),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // 数据总结卡片
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -240,10 +271,23 @@ class _CompletionScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: colors.divider),
                 ),
-                child: Column(
-                  children: [Text('继续加油，每天进步一点点！', style: TextStyle(fontSize: 14, color: colors.text2))],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _StatItem(label: '答对率', value: accuracy == null ? '--' : '${(accuracy! * 100).round()}%', colors: colors),
+                    _StatItem(label: '用时', value: durationSeconds == null ? '--' : _formatDuration(durationSeconds!), colors: colors),
+                    _StatItem(label: '答错', value: '$errorCount', colors: colors),
+                  ],
                 ),
               ),
+              if (onReviewErrors != null && errorCount > 0) ...[
+                const SizedBox(height: 16),
+                TextButton.icon(
+                  onPressed: onReviewErrors,
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: const Text('复习错题'),
+                ),
+              ],
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
@@ -262,6 +306,36 @@ class _CompletionScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  static String _formatDuration(int seconds) {
+    if (seconds < 60) return '$seconds秒';
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    if (minutes < 60) {
+      return remainingSeconds > 0 ? '$minutes分$remainingSeconds秒' : '$minutes分钟';
+    }
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes % 60;
+    return remainingMinutes > 0 ? '$hours时$remainingMinutes分' : '$hours小时';
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final dynamic colors;
+  const _StatItem({required this.label, required this.value, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colors.text1)),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 12, color: colors.text3)),
+      ],
     );
   }
 }

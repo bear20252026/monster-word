@@ -231,7 +231,7 @@ class ProfileScreen extends StatelessWidget {
               Expanded(
                 child: Text(label, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1)),
               ),
-              Icon(Icons.chevron_right, size: 18, color: skin.colors.text3),
+              if (onTap != null) Icon(Icons.chevron_right, size: 18, color: skin.colors.text3),
             ],
           ),
         ),
@@ -247,40 +247,47 @@ class _CoinCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/scare_coin_history'),
-      child: SbCard(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  '尖叫币',
-                  style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w600),
-                ),
-                const Spacer(),
-                Icon(Icons.chevron_right, color: skin.colors.text3, size: 16),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const MonsterAvatar(size: 32),
-                const SizedBox(width: 8),
-                FutureBuilder<int>(
-                  future: context.read<ScareCoinStore>().balance(),
-                  builder: (context, snap) {
-                    return Text(
-                      '${snap.data ?? 0}',
-                      style: MistralTypography.heading4.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w700),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
+    return Tooltip(
+      message: '尖叫币是学习奖励货币，签到/学词可赚取，可用于兑换主题装备',
+      child: GestureDetector(
+        onTap: () => Navigator.pushNamed(context, '/scare_coin_history'),
+        child: SbCard(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    '尖叫币',
+                    style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.help_outline_rounded, color: skin.colors.text3, size: 14),
+                  const Spacer(),
+                  Icon(Icons.chevron_right, color: skin.colors.text3, size: 16),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const MonsterAvatar(size: 32),
+                  const SizedBox(width: 8),
+                  FutureBuilder<int>(
+                    future: context.read<ScareCoinStore>().balance(),
+                    builder: (context, snap) {
+                      return Text(
+                        '${snap.data ?? 0}',
+                        style: MistralTypography.heading4.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w700),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  Text('学习奖励', style: TextStyle(fontSize: 12, color: skin.colors.text3)),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -307,8 +314,6 @@ class _EquipCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text('9/9', style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
-              const Spacer(),
-              Icon(Icons.chevron_right, color: skin.colors.text3, size: 16),
             ],
           ),
           const SizedBox(height: 12),
