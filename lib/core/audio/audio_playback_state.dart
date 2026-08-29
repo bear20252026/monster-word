@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../services/audio_service.dart';
+import 'audio_service.dart';
 
 /// 应用级共享的「单词音频播放」状态（跨功能基础设施）。
 ///

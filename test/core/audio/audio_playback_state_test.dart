@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
-import 'package:word_app/services/audio_service.dart';
+import 'package:word_app/core/audio/audio_service.dart';
 
 void main() {
   test('播放器状态在播放完成后公开当前词和播放标识', () async {

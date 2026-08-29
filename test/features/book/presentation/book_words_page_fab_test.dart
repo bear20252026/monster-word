@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -32,7 +32,7 @@ import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/repositories/fav_repository.dart';
 import 'package:word_app/repositories/new_word_repository.dart';
-import 'package:word_app/services/audio_service.dart';
+import 'package:word_app/core/audio/audio_service.dart';
 
 import '../test_helpers/fake_learning_progress_reader.dart';
 

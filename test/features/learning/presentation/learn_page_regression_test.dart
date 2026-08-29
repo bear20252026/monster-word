@@ -15,7 +15,7 @@ import 'package:word_app/features/learning/presentation/learning_session_state.d
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/presentation/learn_page.dart';
-import 'package:word_app/services/audio_service.dart';
+import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 /// 假音频服务。

@@ -17,7 +17,7 @@ import 'package:word_app/core/learning/learning_favorites_store.dart';
 import 'package:word_app/core/learning/new_words_store.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/services/audio_service.dart';
+import 'package:word_app/core/audio/audio_service.dart';
 import '../test_helpers/fake_learning_progress_reader.dart';
 
 /// 模拟 BookCatalogReader
