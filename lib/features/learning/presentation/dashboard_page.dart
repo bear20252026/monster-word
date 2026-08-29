@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import '../../../core/scare_coin/scare_coin_store.dart';
 import '../../../hooks/responsive.dart';
 import '../../../models/book.dart';
-import '../../../services/share_image_service.dart';
+import 'package:word_app/core/services/share_image_service.dart';
 import '../../../theme/skin_system.dart';
 import '../../../tokens/design_tokens.dart';
 import 'learning_statistics_state.dart';

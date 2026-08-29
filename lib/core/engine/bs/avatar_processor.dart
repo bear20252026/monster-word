@@ -7,7 +7,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import 'package:word_app/core/infrastructure/app_preferences.dart';
-import '../../../services/api_services.dart';
+import 'package:word_app/core/services/api_services.dart';
 
 /// 用户头像处理器（翻译自 AvatarProcessor.java）
 ///
