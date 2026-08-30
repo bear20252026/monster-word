@@ -146,7 +146,6 @@ class HomeScreen extends StatelessWidget {
       }
       return;
     }
-    // 否则加载第一本书
     final books = await context.read<BookCatalogReader>().listBooks();
     if (books.isEmpty) {
       // B-1 空态引导：无词书时引导去选词书页，而非仅弹 SnackBar
@@ -167,7 +166,52 @@ class HomeScreen extends StatelessWidget {
       }
       return;
     }
-    // 加载第一本书（乱序）
+    // 本次冷启动还没有选过书：先给引导弹层（明确选择感），
+    // 用户可"去选词书"或"随便学一本"（保留旧的自动第一本快捷路径）。
+    if (state.currentBook == null && context.mounted) {
+      final goPick = await showModalBottomSheet<bool>(
+        context: context,
+        builder: (sheetCtx) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('开始今天的学习', style: Theme.of(sheetCtx).textTheme.titleLarge),
+                const SizedBox(height: 8),
+                Text('选择一本词书，或直接从第一本开始',
+                    style: Theme.of(sheetCtx).textTheme.bodyMedium),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => Navigator.pop(sheetCtx, true),
+                    icon: const Icon(Icons.menu_book_rounded, size: 18),
+                    label: const Text('去选词书'),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(sheetCtx, false),
+                    child: const Text('随便学一本'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      if (goPick == true) {
+        if (context.mounted) {
+          Navigator.pushNamed(context, LibSelectPage.routeName);
+        }
+        return;
+      }
+    }
+    // 加载第一本书（乱序）——"随便学一本"路径
     await state.loadBook(books.first, shuffle: true);
     if (context.mounted) {
       Navigator.pushNamed(context, LearnPage.routeName);
