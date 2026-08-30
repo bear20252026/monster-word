@@ -119,6 +119,13 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: flutter build windows --release --dart-define=SENTRY_DSN=$env:SENTRY_DSN
 
+      - name: Bundle VC++ Redistributable
+        shell: pwsh
+        run: |
+          $dst = "build/windows/x64/runner/Release/vc_redist.x64.exe"
+          Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile $dst
+          if (-not (Test-Path $dst)) { throw "vc_redist download failed" }
+
       - name: Install Inno Setup
         shell: pwsh
         run: choco install innosetup --no-progress -y
@@ -128,7 +135,6 @@ jobs:
         run: |
           $ver = (Get-Content pubspec.yaml | Select-String '^version: ').Line -replace 'version: ','' -replace '\+.*',''
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$ver installer.iss
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload Windows installer

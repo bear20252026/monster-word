@@ -31,7 +31,13 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
   _configureGlobalErrorHandling();
   // 桌面端 just_audio 后端（media_kit/mpv）：Windows/Linux 上 just_audio
   // 无原生实现，缺此行发音完全无声（手机端不受影响）。iOS/Android/macOS/Web 自动跳过。
-  JustAudioMediaKit.ensureInitialized();
+  // 必须容错：mpv 组件加载失败（缺 VC++ 运行库/DLL 缺失）绝不能拖垮 app 启动，
+  // 降级为电脑端无声，其余功能照常。
+  try {
+    JustAudioMediaKit.ensureInitialized();
+  } catch (e) {
+    debugPrint('[Bootstrap] 桌面音频后端初始化失败（降级为无声）: $e');
+  }
 
   // 初始化步骤清单 — 每步完成后回调进度。
   final steps = <Future<void> Function()>[
