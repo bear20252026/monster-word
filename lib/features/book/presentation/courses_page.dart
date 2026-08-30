@@ -3,6 +3,7 @@
 // 课程页面：展示课程列表，支持课程签到和活动
 import 'package:flutter/material.dart';
 
+import 'package:word_app/widgets/common/mw_skeleton.dart';
 import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
@@ -82,7 +83,7 @@ class _CoursesPageState extends State<CoursesPage> {
     if (_loading) {
       return Scaffold(
         backgroundColor: skin.colors.pageBg,
-        body: const Center(child: CircularProgressIndicator()),
+        body: SafeArea(child: const MwSkeletonPage(rows: 3)),
       );
     }
 

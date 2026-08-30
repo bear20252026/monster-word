@@ -9,6 +9,7 @@ import 'package:word_app/core/learning/new_words_store.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
+import 'package:word_app/widgets/common/mw_skeleton.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
@@ -55,7 +56,7 @@ class BookWordsPage extends StatelessWidget {
       body: Consumer<BookState>(
         builder: (context, state, _) {
           if (state.wordsLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const MwSkeletonPage(rows: 6);
           }
           final words = state.words;
           if (words.isEmpty) {

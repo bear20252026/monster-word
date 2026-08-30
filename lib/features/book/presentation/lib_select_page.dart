@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/models/book.dart';
+import 'package:word_app/widgets/common/mw_empty_state.dart';
+import 'package:word_app/widgets/common/mw_skeleton.dart';
 import 'package:word_app/core/learning/learning_session_reader.dart';
 import 'package:word_app/core/learning/learning_session_starter.dart';
 import 'package:word_app/core/router/nav_utils.dart';
@@ -158,10 +160,14 @@ class _LibSelectPageState extends State<LibSelectPage> {
                 builder: (context, snapshot) {
                   final skin = context.skin.colors;
                   if (snapshot.connectionState != ConnectionState.done) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const MwSkeletonGrid(count: 6);
                   }
                   if (snapshot.hasError) {
-                    return Center(child: Text('加载失败: ${snapshot.error}'));
+                    return const MwEmptyState(
+                      kind: MwEmptyKind.error,
+                      title: '词书加载失败',
+                      subtitle: '检查网络后重试，或稍后再来',
+                    );
                   }
                   final books = _filterByTab(_allBooks, _tabIndex);
                   if (books.isEmpty) {
