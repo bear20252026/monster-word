@@ -524,6 +524,8 @@ class _LibItem extends StatelessWidget {
 
     return GestureDetector(
       onTap: () async {
+        // 选择页语义（2026-08-31 交互分离）：点书 = 选中该书并直接开始学习；
+        // 查看单词列表走卡片右侧「查看单词」入口进词书展示页。
         try {
           await context.read<LearningSessionStarter>().startBookSession(book, limit: 50);
           if (context.mounted) {
@@ -534,11 +536,7 @@ class _LibItem extends StatelessWidget {
               );
               return;
             }
-            Navigator.pushNamed(
-              context,
-              RouteNames.bookWords,
-              arguments: {'bookId': book.id, 'bookName': book.name},
-            );
+            Navigator.pushNamed(context, RouteNames.immersiveSwipe);
           }
         } catch (e) {
           if (context.mounted) {
@@ -605,7 +603,7 @@ class _LibItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   const Spacer(),
-                  // 底部行：单词量（原版底部对齐）
+                  // 底部行：单词量 + 查看单词入口（进词书展示页浏览全部单词）
                   Row(
                     children: [
                       Text('单词量', style: TextStyle(fontSize: 12, color: colors.text3)),
@@ -613,6 +611,25 @@ class _LibItem extends StatelessWidget {
                       Text(
                         '${book.wordCount}',
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.text3),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          RouteNames.bookWords,
+                          arguments: {'bookId': book.id, 'bookName': book.name},
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.list_alt, size: 16, color: colors.accent),
+                            const SizedBox(width: 4),
+                            Text(
+                              '查看单词',
+                              style: TextStyle(fontSize: 12, color: colors.accent, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

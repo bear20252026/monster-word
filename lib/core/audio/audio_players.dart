@@ -10,6 +10,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:audioplayers/audioplayers.dart' as ap;
 import 'package:just_audio/just_audio.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -124,6 +125,15 @@ class BBAudioPlayer {
   String _currentFileName = '';
   bool _lock = false;
 
+  /// Windows/Linux 桌面端：just_audio 无原生实现（历史无声根因），
+  /// 改用 audioplayers（有 Windows 原生插件，随安装包分发）。
+  /// 移动端保持 just_audio（锁屏控制等既有能力不变）。
+  final bool _useAudioPlayersDesktop = Platform.isWindows || Platform.isLinux;
+  ap.AudioPlayer? _apPlayerInstance;
+
+  /// 惰性创建：纯 Dart 测试环境无 audioplayers 插件，构造期创建会抛
+  ap.AudioPlayer get _apPlayer => _apPlayerInstance ??= ap.AudioPlayer();
+
   BBAudioPlayer() {
     debugPrint('[BBAudioPlayer] Created new player instance');
     // 监听播放状态变化
@@ -154,6 +164,17 @@ class BBAudioPlayer {
     _currentFileName = url;
     debugPrint('[BBAudioPlayer] play() URL: $url');
     playStateListener?.onPlayStart(url);
+    if (_useAudioPlayersDesktop) {
+      try {
+        await _apPlayer.stop();
+        await _apPlayer.play(ap.UrlSource(url));
+        debugPrint('[BBAudioPlayer] desktop play() started successfully');
+      } catch (e) {
+        debugPrint('[BBAudioPlayer] ERROR in desktop play(): $e');
+        playStateListener?.onPlayError(url);
+      }
+      return;
+    }
     try {
       await _player.stop(); // 先停止当前播放
       await _player.setUrl(url);
@@ -176,6 +197,18 @@ class BBAudioPlayer {
     _currentFileName = p.basename(file.path);
     debugPrint('[BBAudioPlayer] playFile() path: ${file.path}, speed: $speed');
     playStateListener?.onPlayStart(_currentFileName);
+    if (_useAudioPlayersDesktop) {
+      try {
+        await _apPlayer.stop();
+        if (speed != 1.0) await _apPlayer.setPlaybackRate(speed);
+        await _apPlayer.play(ap.DeviceFileSource(file.path));
+        debugPrint('[BBAudioPlayer] desktop playFile() started successfully');
+      } catch (e) {
+        debugPrint('[BBAudioPlayer] ERROR in desktop playFile(): $e');
+        playStateListener?.onPlayError(_currentFileName);
+      }
+      return;
+    }
     try {
       await _player.stop();
       await _player.setSpeed(speed);
