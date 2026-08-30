@@ -448,25 +448,29 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// 左上角查词入口按钮
+  /// 左上角查词入口按钮（点击打开词典查询界面）
   Widget _buildSearchButton(BuildContext context, dynamic skin) {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.only(left: 12, top: 12),
         child: ScaleDownOnPress(
           onTap: () => Navigator.pushNamed(context, SearchPage.routeName),
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: skin.colors.cardBg,
-              shape: BoxShape.circle,
-              boxShadow: const [
-                BoxShadow(color: Color(0x23000000), blurRadius: 0.5),
-                BoxShadow(color: Color(0x3D000000), blurRadius: 1.0, offset: Offset(0, 1)),
-              ],
+          child: Tooltip(
+            message: '词典查询',
+            triggerMode: TooltipTriggerMode.longPress,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: skin.colors.cardBg,
+                shape: BoxShape.circle,
+                boxShadow: const [
+                  BoxShadow(color: Color(0x23000000), blurRadius: 0.5),
+                  BoxShadow(color: Color(0x3D000000), blurRadius: 1.0, offset: Offset(0, 1)),
+                ],
+              ),
+              child: Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 24),
             ),
-            child: Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 24),
           ),
         ),
       ),
