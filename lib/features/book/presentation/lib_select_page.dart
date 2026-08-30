@@ -21,6 +21,7 @@ import 'package:word_app/widgets/morphing_tabs.dart';
 import 'package:word_app/widgets/word_globe.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/presentation/book_state.dart';
 import 'package:word_app/features/book/presentation/books_page.dart';
 import 'package:word_app/features/book/presentation/extensive_model_select_page.dart';
 import 'package:word_app/features/book/presentation/word_export_page.dart';
@@ -516,6 +517,40 @@ class _LibItem extends StatelessWidget {
     return name.length > 4 ? name.substring(0, 4) : name;
   }
 
+  /// 底部行：单词量 + 「查看单词」入口（进词书展示页浏览全部单词）
+  Widget _buildWordCountRow(BuildContext context, Book book) {
+    final colors = context.skin.colors;
+    return Row(
+      children: [
+        Text('单词量', style: TextStyle(fontSize: 12, color: colors.text3)),
+        const SizedBox(width: 5),
+        Text(
+          '${book.wordCount}',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.text3),
+        ),
+        const Spacer(),
+        GestureDetector(
+          onTap: () => Navigator.pushNamed(
+            context,
+            RouteNames.bookWords,
+            arguments: {'bookId': book.id, 'bookName': book.name},
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.list_alt, size: 16, color: colors.accent),
+              const SizedBox(width: 4),
+              Text(
+                '查看单词',
+                style: TextStyle(fontSize: 12, color: colors.accent, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = context.read<LearningSessionReader>();
@@ -524,19 +559,20 @@ class _LibItem extends StatelessWidget {
 
     return GestureDetector(
       onTap: () async {
-        // 选择页语义（2026-08-31 交互分离）：点书 = 选中该书并直接开始学习；
-        // 查看单词列表走卡片右侧「查看单词」入口进词书展示页。
+        // 选择页语义（2026-08-31 交互分离最终版）：
+        // 点书 = 直接完成选中并生效（填充学习队列 + 同步词书聚合状态 + 持久化选中），
+        // 然后返回首页；查看单词列表走卡片右侧「查看单词」进词书详情页。
         try {
           await context.read<LearningSessionStarter>().startBookSession(book, limit: 50);
           if (context.mounted) {
-            // 空词表守卫：currentWord 为 null 说明词书无单词，提示而非跳转（避免白屏）。
-            if (session.currentWord == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('本地词库暂无该书数据，可在 设置 → 更多设置 → 更新词库数据 一键重建')),
-              );
-              return;
-            }
-            Navigator.pushNamed(context, RouteNames.immersiveSwipe);
+            // 同步词书聚合状态（currentBook 标记 + selectBook 持久化 + 全量词表）
+            await context.read<BookState>().selectAndLoad(book);
+          }
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('已选中《${book.name}》，回首页即可开始学习')),
+            );
+            Navigator.pop(context); // 选中完成，返回首页
           }
         } catch (e) {
           if (context.mounted) {
@@ -603,36 +639,7 @@ class _LibItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   const Spacer(),
-                  // 底部行：单词量 + 查看单词入口（进词书展示页浏览全部单词）
-                  Row(
-                    children: [
-                      Text('单词量', style: TextStyle(fontSize: 12, color: colors.text3)),
-                      const SizedBox(width: 5),
-                      Text(
-                        '${book.wordCount}',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.text3),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () => Navigator.pushNamed(
-                          context,
-                          RouteNames.bookWords,
-                          arguments: {'bookId': book.id, 'bookName': book.name},
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.list_alt, size: 16, color: colors.accent),
-                            const SizedBox(width: 4),
-                            Text(
-                              '查看单词',
-                              style: TextStyle(fontSize: 12, color: colors.accent, fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildWordCountRow(context, book),
                 ],
               ),
             ),

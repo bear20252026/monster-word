@@ -30,7 +30,7 @@ void main() {
 
   /// build() 超长存量豁免：文件名 -> 豁免的 build 起始行号集合
   const kBuildAllowlist = {
-    'lib/features/book/presentation/lib_select_page.dart': {83, 520},
+    'lib/features/book/presentation/lib_select_page.dart': {84},
     'lib/features/learning/presentation/spell_check_page.dart': {84},
     'lib/features/scare_coin/presentation/scare_coin_history_page.dart': {65},
     'lib/features/settings/presentation/more_settings_page.dart': {260},
