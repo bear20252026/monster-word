@@ -17,7 +17,7 @@ import 'package:word_app/features/book/presentation/book_state.dart';
 ///
 /// 展示当前选中词书的单词列表，支持发音、收藏、生词标记。
 /// 通过 [BookState] 获取数据，通过 learning 模块状态管理收藏/生词。
-class BookWordsPage extends StatelessWidget {
+class BookWordsPage extends StatefulWidget {
   const BookWordsPage({super.key, required this.book});
 
   final Book book;
@@ -25,8 +25,36 @@ class BookWordsPage extends StatelessWidget {
   static const String routeName = '/book-words';
 
   /// 启动当前词书的学习会话并进入沉浸刷词页。
+  @override
+  State<BookWordsPage> createState() => _BookWordsPageState();
+}
+
+class _BookWordsPageState extends State<BookWordsPage> {
+  @override
+  void initState() {
+    super.initState();
+    // 核心修复（2026-08-31）：此前本页从不加载词书数据——state.words 永远是空的
+    // （v2.4.3 前"暂无单词数据"的真正根因：只有走过选书流程才会填充）。
+    // 进入详情页即加载该词书全部单词。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<BookState>().selectAndLoad(widget.book);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant BookWordsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.book.id != widget.book.id) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.read<BookState>().selectAndLoad(widget.book);
+      });
+    }
+  }
+
   Future<void> _startLearning(BuildContext context) async {
-    await context.read<LearningSessionStarter>().startBookSession(book, limit: 50);
+    await context.read<LearningSessionStarter>().startBookSession(widget.book, limit: 50);
     if (!context.mounted) return;
     Navigator.pushNamed(context, RouteNames.immersiveSwipe);
   }
@@ -34,6 +62,7 @@ class BookWordsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
+    final book = widget.book;
 
     return Scaffold(
       backgroundColor: skin.pageBg,
@@ -144,24 +173,30 @@ class _WordCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  word.word,
-                  style: MistralTypography.bodyMd.copyWith(
-                      color: skin.text1, fontWeight: FontWeight.w600),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      word.word,
+                      style: MistralTypography.bodyMd.copyWith(
+                          color: skin.text1, fontWeight: FontWeight.w600),
+                    ),
+                    if (word.usPron.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        '/${word.usPron}/',
+                        style: MistralTypography.bodySm.copyWith(color: skin.text3),
+                      ),
+                    ],
+                  ],
                 ),
-                if (word.usPron.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    word.usPron,
-                    style: MistralTypography.bodySm.copyWith(color: skin.text3),
-                  ),
-                ],
                 if (word.firstInterpretLine.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     word.firstInterpretLine,
                     style: MistralTypography.bodySm.copyWith(color: skin.text3),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],

@@ -38,10 +38,10 @@ class MockSelectionWriter implements BookSelectionWriter {
   Future<void> selectBook(int bookId) async {}
 }
 
-/// 模拟 BookWordsReader（book 端口）
+/// 模拟 BookWordsReader（book 端口）——全量语义，返回测试词
 class MockBookWordsReader implements BookWordsReader {
   @override
-  Future<List<Word>> loadWords(int bookId, {int limit = 50, int offset = 0}) async => [];
+  Future<List<Word>> loadWords(int bookId) async => [Word(id: 1, word: 'apple')];
 }
 
 /// 模拟 FavoritesPort（learning 端口）
@@ -95,7 +95,7 @@ class MockAudioService implements AudioService {
 void main() {
   testWidgets('点击单词卡片触发导航到 WordDetailPage', (tester) async {
     final word = Word(id: 1, word: 'apple');
-    final book = Book(id: 1, code: 'cet4', name: 'CET-4', wordCount: 4000);
+    final book = Book(id: 1, code: 'cet4', name: 'CET-4', wordCount: 1);
 
     String? navigatedRoute;
     dynamic navigatedArguments;
@@ -107,7 +107,6 @@ void main() {
       wordsReader: MockBookWordsReader(),
       progressReader: FakeLearningProgressReader(learnedCount: 1),
     );
-    bookState.setWordsForTest([word]);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -164,6 +163,6 @@ void main() {
 
     // 验证导航
     expect(navigatedRoute, '/word_detail');
-    expect(navigatedArguments, word);
+    expect((navigatedArguments as Word).word, word.word);
   });
 }
