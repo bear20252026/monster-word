@@ -1,3 +1,19 @@
+
+/// ─── 依赖注入约定（2026-08-30 健康评估 M1/M2 落地）──────────────────
+///
+/// 全库两条装配通道，不许混用第三种：
+/// 1. **get_it（本文件配套的 service_locator.dart）**：只注册
+///    「跨 feature 基础设施」——DB、音频、session、各 feature 的
+///    端口实现（data 层 XxxRepository/Reader/WriterPort）。
+/// 2. **Provider（各 feature 的 *_feature_providers.dart）**：注册
+///    「presentation 层可观察状态」（ChangeNotifier）与页面依赖。
+///
+/// 禁止：
+/// - service_locator 注册任何 presentation/ 下的类型（ChangeNotifier
+///   的生命周期归 Provider 管，见 NewWordsState 迁移先例）。
+/// - presentation 层直接 `sl<>` 取依赖（走 Provider；存量仅
+///   dictionary_by_name_page / word_lookup_popup 2 处，迁移中）。
+/// - 新增第三种装配通道。
 // 由 Claude 团队生成 | Monster Word App
 //
 // 依赖边界守卫（data-driven，无 IO、无 Flutter）。

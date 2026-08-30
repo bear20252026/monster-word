@@ -39,7 +39,6 @@ import 'package:word_app/features/learning/application/new_words_writer_port.dar
 import 'package:word_app/features/learning/application/review_audio_player.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/data/repository_new_words_writer_port.dart';
-import 'package:word_app/features/learning/presentation/new_words_state.dart';
 
 /// 全局服务定位器实例
 final GetIt sl = GetIt.instance;
@@ -130,13 +129,6 @@ Future<void> setupServiceLocator() async {
   if (!sl.isRegistered<NewWordsWriterPort>()) {
     sl.registerLazySingleton<NewWordsWriterPort>(
       () => RepositoryNewWordsWriterPort(sl<NewWordRepository>()),
-    );
-  }
-
-  // NewWordsState
-  if (!sl.isRegistered<NewWordsState>()) {
-    sl.registerLazySingleton<NewWordsState>(
-      () => NewWordsState(newWordsReader: sl<NewWordsReader>(), writerPort: sl<NewWordsWriterPort>()),
     );
   }
 

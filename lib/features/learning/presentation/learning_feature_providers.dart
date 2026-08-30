@@ -172,7 +172,12 @@ Widget buildLearningFeatureScope({required Widget child}) {
       Provider<LearningProgressReader>.value(
         value: LearningProgressReaderImpl.fromServiceLocator(),
       ),
-      ChangeNotifierProvider(create: (_) => sl<NewWordsState>()..initialize()),
+      ChangeNotifierProvider(
+        create: (_) => NewWordsState(
+          newWordsReader: sl<NewWordsReader>(),
+          writerPort: sl<NewWordsWriterPort>(),
+        )..initialize(),
+      ),
       ListenableProxyProvider<NewWordsState, NewWordsStore>(
         update: (_, state, _) => state,
       ),
