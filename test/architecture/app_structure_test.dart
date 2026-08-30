@@ -175,6 +175,11 @@ void main() {
     test('详情页通过浏览功能域端口读写笔记和例句收藏', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/features/dictionary/presentation/word_detail_page.dart').readAsStringSync();
+      // 2026-08-30 拆分后，笔记/例句收藏的实际使用点在 word_detail/ 子目录
+      final notesSectionSource =
+          File('lib/features/dictionary/presentation/word_detail/word_detail_notes_section.dart').readAsStringSync();
+      final exampleTileSource =
+          File('lib/features/dictionary/presentation/word_detail/word_detail_example_tile.dart').readAsStringSync();
       final providersSource = File('lib/features/word_browse/presentation/word_browse_feature_providers.dart')
           .readAsStringSync();
 
@@ -183,8 +188,8 @@ void main() {
       expect(File('lib/features/word_browse/application/sentence_favorites_store.dart').existsSync(), isTrue);
       expect(providersSource, contains('RepositoryWordNotesStore'));
       expect(providersSource, contains('RepositorySentenceFavoritesStore'));
-      expect(pageSource, contains('WordNotesStore'));
-      expect(pageSource, contains('SentenceFavoritesStore'));
+      expect(notesSectionSource, contains('WordNotesStore'));
+      expect(exampleTileSource, contains('SentenceFavoritesStore'));
       expect(pageSource, isNot(contains('sl<')));
       expect(pageSource, isNot(contains('NoteRepository')));
       expect(pageSource, isNot(contains('FavRepository')));
