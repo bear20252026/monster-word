@@ -62,7 +62,7 @@ class BookWordsPage extends StatelessWidget {
           if (words.isEmpty) {
             return Center(
               child: Text(
-                '暂无单词数据',
+                '词库数据需要更新',
                 style: MistralTypography.bodyMd.copyWith(color: skin.text3),
               ),
             );

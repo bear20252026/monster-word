@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 
@@ -26,6 +27,7 @@ void main() {
   late Directory tmp;
 
   setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
     tmp = await Directory.systemTemp.createTemp('wordbook_data_test');
     PathProviderPlatform.instance = _FakePathProvider(tmp.path);
     await WordBookDatabase.instance.initialize();

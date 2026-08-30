@@ -9,6 +9,7 @@ import 'package:word_app/core/di/service_locator.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/infrastructure/user_database.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:word_app/core/audio/audio_players.dart';
 
 /// A-3: 冷启动进度回调 — 各初始化阶段完成后回调，用于上报/日志/未来接 UI 进度条。
@@ -28,6 +29,9 @@ typedef BootProgressCallback = void Function(int step, int total, String label);
 Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
   WidgetsFlutterBinding.ensureInitialized();
   _configureGlobalErrorHandling();
+  // 桌面端 just_audio 后端（media_kit/mpv）：Windows/Linux 上 just_audio
+  // 无原生实现，缺此行发音完全无声（手机端不受影响）。iOS/Android/macOS/Web 自动跳过。
+  JustAudioMediaKit.ensureInitialized();
 
   // 初始化步骤清单 — 每步完成后回调进度。
   final steps = <Future<void> Function()>[

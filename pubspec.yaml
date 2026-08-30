@@ -57,6 +57,7 @@ dependencies:
   share_plus: ^10.1.4      # 导出分享词表
   file_selector: ^1.0.3     # 文件选择器（自定义壁纸上传，Flutter 官方维护）
   sentry_flutter: 9.22.0
+  just_audio_media_kit: ^2.1.0
 
 dev_dependencies:
   flutter_test:

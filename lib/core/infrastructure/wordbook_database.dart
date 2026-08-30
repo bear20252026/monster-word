@@ -4,11 +4,14 @@
 // 数据层：词库数据库初始化与查询
 // 跨平台支持：Windows (sqflite_common_ffi) / Android / iOS (sqflite)
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:archive/archive.dart';
+import 'package:crypto/crypto.dart' show md5;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // === 释义 JSON 解析器 ===
@@ -62,7 +65,14 @@ class WordBookDatabase {
     }
   }
 
-  /// 初始化：解压词库（首次）+ 打开数据库
+  static const String _kDbHashKey = 'wordbook_db_asset_hash';
+
+  /// 初始化：解压词库 + 打开数据库。
+  ///
+  /// 版本管理（2026-08-30 根治"暂无单词数据"）：只检查文件存在会导致
+  /// 旧版本 app 解压的旧词库永远不被新资产替换（旧库词书关联缺失 →
+  /// 词书详情"暂无单词数据"、背单词 queue 为空）。现改为比对资产
+  /// 词库的内容哈希，不一致即重新解压。
   Future<void> initialize() async {
     if (_initialized) return;
     await ensurePlatform();
@@ -71,12 +81,30 @@ class WordBookDatabase {
     final dbPath = p.join(dir.path, 'wordbook.db');
     final gzAsset = 'assets/db/wordbook.db.gz';
 
-    // 首次启动：解压 gzip 词库
-    if (!File(dbPath).existsSync()) {
-      final data = await rootBundle.load(gzAsset);
-      final bytes = data.buffer.asUint8List();
+    final data = await rootBundle.load(gzAsset);
+    final bytes = data.buffer.asUint8List();
+    final assetHash = base64.encode(md5.convert(bytes).bytes);
+
+    String? extractedHash;
+    var canPersist = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      extractedHash = prefs.getString(_kDbHashKey);
+      canPersist = true;
+    } catch (_) {
+      // prefs 不可用（测试环境/异常）时退化为"文件存在即跳过解压"
+    }
+    final needsExtract = !File(dbPath).existsSync() || extractedHash != assetHash;
+
+    if (needsExtract) {
       final dbBytes = GZipDecoder().decodeBytes(bytes);
       await File(dbPath).writeAsBytes(dbBytes, flush: true);
+      if (canPersist) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_kDbHashKey, assetHash);
+        } catch (_) {}
+      }
     }
 
     _db = await openDatabase(dbPath, readOnly: true);
