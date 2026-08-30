@@ -3,8 +3,12 @@
 // Flutter 默认的 widget 异常界面是红底黄字（debug）/灰字（release），
 // 商业产品必须兜住：任何页面组件崩溃只降级该页面，不吓用户。
 // 通过覆盖 ErrorWidget.builder 全局生效（在 MaterialApp.builder 里调用一次）。
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 /// 接管 Flutter 全局 widget 异常渲染。
 ///
@@ -19,7 +23,28 @@ void installMwErrorBoundary() {
 /// 友好错误页 builder（公开以便测试直接注入）。
 Widget mwErrorBuilder(FlutterErrorDetails details) {
   debugPrint('[ErrorBoundary] ${details.exception}');
+  _logToFile(details);
   return const _MwErrorPage();
+}
+
+/// 异常落盘（release 排障关键路径）：app_support/logs/error_boundary.log
+/// 截图无法提供异常栈时，用户回传此文件即可精确定位。
+Future<void> _logToFile(FlutterErrorDetails details) async {
+  try {
+    final dir = await getApplicationSupportDirectory();
+    final logDir = Directory(p.join(dir.path, 'logs'));
+    if (!logDir.existsSync()) logDir.createSync(recursive: true);
+    final f = File(p.join(logDir.path, 'error_boundary.log'));
+    final stamp = DateTime.now().toIso8601String();
+    final sb = StringBuffer()
+      ..writeln('==== $stamp ====')
+      ..writeln(details.exception.toString())
+      ..writeln(details.stack?.toString() ?? '(no stack)')
+      ..writeln();
+    await f.writeAsString(sb.toString(), mode: FileMode.append, flush: true);
+  } catch (_) {
+    // 日志失败静默（兜底不能二次崩溃）
+  }
 }
 
 class _MwErrorPage extends StatelessWidget {
