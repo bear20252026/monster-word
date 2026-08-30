@@ -48,6 +48,7 @@ class WordBookDatabase {
 
   Database? _db;
   bool _initialized = false;
+  bool _rebuilding = false;
 
   /// 数据库是否已初始化完成。
   /// 调用方可先检查此 getter 再访问 [db]，避免 StateError。
@@ -120,12 +121,38 @@ class WordBookDatabase {
     }
 
     // 打开失败（如上次解压中断留下损坏文件）→ 删库重解压一次再试
+    var reopened = false;
     try {
       _db = await openDatabase(dbPath, readOnly: true);
     } catch (e) {
       debugPrint('[WordBookDatabase] 打开失败，删除损坏库并重建: $e');
       await _extractTo(dbPath, bytes);
       _db = await openDatabase(dbPath, readOnly: true);
+      reopened = true;
+    }
+
+    // 完整性自检：三表任一为 0 = 坏库（哈希相等但内容损坏的死锁场景），
+    // 强制全量重建并自检，保证离线状态下词库必然可用。
+    if (!reopened) {
+      var c = 0, w = 0, l = 0;
+      try {
+        c = (await db.rawQuery('SELECT COUNT(*) AS c FROM books')).first['c'] as int? ?? 0;
+        w = (await db.rawQuery('SELECT COUNT(*) AS c FROM words')).first['c'] as int? ?? 0;
+        l = (await db.rawQuery('SELECT COUNT(*) AS c FROM word_books')).first['c'] as int? ?? 0;
+      } catch (_) {}
+      if (c == 0 || w == 0 || l == 0) {
+        debugPrint('[WordBookDatabase] 检测到空库/坏库(books=$c words=$w links=$l)，强制重建');
+        await _db!.close();
+        _db = null;
+        await _extractTo(dbPath, bytes);
+        _db = await openDatabase(dbPath, readOnly: true);
+        if (canPersist) {
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString(_kDbHashKey, assetHash);
+          } catch (_) {}
+        }
+      }
     }
     _initialized = true;
   }
@@ -152,6 +179,34 @@ class WordBookDatabase {
   /// （含 -wal/-shm 残留）→ 从最新资产整体解压覆盖 → 重开 → 完整性统计。
   /// 返回 [DbRebuildResult]，包含三张表的计数供 UI 展示验证。
   Future<DbRebuildResult> forceRebuild() async {
+    if (_rebuilding) {
+      throw StateError('词库重建正在进行中，请稍候');
+    }
+    _rebuilding = true;
+    try {
+      return await _forceRebuildInner();
+    } finally {
+      _rebuilding = false;
+    }
+  }
+
+  /// 删除文件（Windows 占用 errno=32 为瞬态：指数退避重试 5 次）
+  Future<void> _deleteWithRetry(String path) async {
+    for (var i = 0; i < 5; i++) {
+      final f = File(path);
+      if (!f.existsSync()) return;
+      try {
+        f.deleteSync();
+        return;
+      } catch (e) {
+        debugPrint('[WordBookDatabase] 删除失败(${i + 1}/5): $path — $e');
+        await Future.delayed(Duration(milliseconds: 150 * (i + 1)));
+      }
+    }
+    throw FileSystemException('文件被占用，重试 5 次仍失败', path);
+  }
+
+  Future<DbRebuildResult> _forceRebuildInner() async {
     await ensurePlatform();
 
     // 1) 关闭现有连接（Windows 文件锁：不 close 无法覆盖文件）
@@ -159,14 +214,12 @@ class WordBookDatabase {
     _db = null;
     _initialized = false;
 
-    // 2) 删除旧库与 journal 残留——零旧数据残留
+    // 2) 删除旧库与 journal 残留——零旧数据残留（占用时重试）
     final dir = await getApplicationSupportDirectory();
     final dbPath = p.join(dir.path, 'wordbook.db');
-    final old = File(dbPath);
-    if (old.existsSync()) old.deleteSync();
+    await _deleteWithRetry(dbPath);
     for (final suffix in ['-wal', '-shm', '-journal']) {
-      final j = File('$dbPath$suffix');
-      if (j.existsSync()) j.deleteSync();
+      await _deleteWithRetry('$dbPath$suffix');
     }
 
     // 3) 从最新资产整体解压覆盖
