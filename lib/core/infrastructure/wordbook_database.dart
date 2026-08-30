@@ -210,6 +210,41 @@ class WordBookDatabase {
     return rows.isNotEmpty ? (rows.first['c'] as int? ?? 0) : 0;
   }
 
+  /// 词库诊断信息（词书详情空态展示，用于远程定位"暂无数据"根因）
+  Future<DbDiagnostics> diagnostics() async {
+    var books = 0, words = 0, links = 0;
+    String? error;
+    var dbFileBytes = 0;
+    var dbModifiedAt = '';
+
+    try {
+      final dir = await getApplicationSupportDirectory();
+      final f = File(p.join(dir.path, 'wordbook.db'));
+      if (f.existsSync()) {
+        dbFileBytes = f.lengthSync();
+        dbModifiedAt = f.lastModifiedSync().toIso8601String();
+      } else {
+        error = '本地词库文件不存在';
+      }
+      books = await _count('books');
+      words = await _count('words');
+      links = await _count('word_books');
+    } catch (e) {
+      error = e.toString();
+    }
+
+    final healthy = error == null && books > 0 && words > 0 && links > 0;
+    return DbDiagnostics(
+      books: books,
+      words: words,
+      links: links,
+      dbFileBytes: dbFileBytes,
+      dbModifiedAt: dbModifiedAt,
+      healthy: healthy,
+      error: error,
+    );
+  }
+
   /// 词书列表
   Future<List<Book>> getBooks() async {
     final rows = await db.query('books', orderBy: 'word_count DESC');
@@ -300,4 +335,26 @@ class DbRebuildResult {
 
   @override
   String toString() => '重建结果: $books 本词书 / $words 词条 / $links 条关联 — $message';
+}
+
+
+/// 词库诊断快照
+class DbDiagnostics {
+  final bool healthy;
+  final int books;
+  final int words;
+  final int links;
+  final int dbFileBytes;
+  final String dbModifiedAt;
+  final String? error;
+
+  const DbDiagnostics({
+    required this.healthy,
+    required this.books,
+    required this.words,
+    required this.links,
+    required this.dbFileBytes,
+    required this.dbModifiedAt,
+    this.error,
+  });
 }

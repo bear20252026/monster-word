@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
-import 'package:word_app/widgets/common/mw_empty_state.dart';
 import 'package:word_app/core/learning/learning_favorites_store.dart';
 import 'package:word_app/core/learning/learning_session_starter.dart';
 import 'package:word_app/core/learning/new_words_store.dart';
@@ -60,14 +59,14 @@ class BookWordsPage extends StatelessWidget {
           }
           final words = state.words;
           if (words.isEmpty) {
-            // 词库 100% 内置离线，此处为空 = 本地库残留旧数据。
-            // 现场提供全量重建（不联网），完成即自动刷新。
-            return MwEmptyState(
-              kind: MwEmptyKind.empty,
-              title: '本地词库暂无该书数据',
-              subtitle: '点击下方按钮，用内置词库完整重建本地数据（不联网，需数秒）',
-              actionLabel: '重建词库',
-              onAction: () async {
+            // 词库 100% 内置离线，此处为空 = 本地库残留旧数据或查询异常。
+            // 展示真实错误与诊断信息（books/words/word_books 计数），提供
+            // 一键全量重建（不联网）。
+            return _WordListEmptyDiagnostics(
+              error: state.error,
+              bookId: book.id,
+              bookName: book.name,
+              onRebuild: () async {
                 final messenger = ScaffoldMessenger.maybeOf(context);
                 final bookState = context.read<BookState>();
                 try {
@@ -184,6 +183,80 @@ class _WordCard extends StatelessWidget {
         ],
       ),
       ),
+    );
+  }
+}
+
+
+/// 词书单词列表空态 + 诊断信息（词库异常时可远程定位根因）
+class _WordListEmptyDiagnostics extends StatelessWidget {
+  final String? error;
+  final int bookId;
+  final String bookName;
+  final Future<void> Function() onRebuild;
+
+  const _WordListEmptyDiagnostics({
+    required this.error,
+    required this.bookId,
+    required this.bookName,
+    required this.onRebuild,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.skin;
+    return FutureBuilder<DbDiagnostics>(
+      future: WordBookDatabase.instance.diagnostics(),
+      builder: (context, snap) {
+        final diag = snap.data;
+        final diagText = diag == null
+            ? '诊断信息加载中…'
+            : 'bookId=$bookId\n'
+                '${diag.books} 本词书 / ${diag.words} 词条 / ${diag.links} 条关联\n'
+                '库文件: ${(diag.dbFileBytes / 1048576).toStringAsFixed(1)} MB\n'
+                '更新时间: ${diag.dbModifiedAt}'
+                '${diag.error == null ? '' : '\n异常: ${diag.error}'}';
+        return Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(context.design.spacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.storage_outlined, size: 48, color: skin.colors.text3),
+                SizedBox(height: context.design.spacing.md),
+                Text('本地词库暂无该书数据', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+                SizedBox(height: context.design.spacing.sm),
+                Text('词库 100% 内置于安装包，此问题不需要联网。',
+                    style: MistralTypography.bodySm.copyWith(color: skin.colors.text2)),
+                if (error != null) ...[
+                  SizedBox(height: context.design.spacing.sm),
+                  Text('错误详情: $error',
+                      style: MistralTypography.micro.copyWith(color: skin.colors.danger),
+                      textAlign: TextAlign.center),
+                ],
+                SizedBox(height: context.design.spacing.md),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: skin.colors.cardBgAlt,
+                    borderRadius: BorderRadius.circular(skin.design.radius.md),
+                    border: Border.all(color: skin.colors.divider),
+                  ),
+                  child: Text(diagText,
+                      style: MistralTypography.micro.copyWith(color: skin.colors.text2, height: 1.6)),
+                ),
+                SizedBox(height: context.design.spacing.md),
+                FilledButton.icon(
+                  onPressed: onRebuild,
+                  icon: const Icon(Icons.build_outlined, size: 18),
+                  label: const Text('一键重建词库（不联网）'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
