@@ -4,11 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/search/application/example_reader.dart';
-import 'package:word_app/features/search/application/favorites_accessor.dart';
 import 'package:word_app/features/search/application/search_history_store.dart';
 import 'package:word_app/features/search/application/word_search_reader.dart';
 import 'package:word_app/features/search/data/example_parser_adapter.dart';
-import 'package:word_app/features/search/data/repository_word_search_reader.dart';
 import 'package:word_app/features/search/presentation/search_page.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/models/book.dart';

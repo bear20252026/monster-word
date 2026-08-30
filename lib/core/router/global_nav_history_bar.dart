@@ -170,19 +170,20 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      waitDuration: const Duration(milliseconds: 400),
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Icon(
-            icon,
-            size: 16,
-            color: enabled ? color.text1 : color.text3.withValues(alpha: 0.5),
-          ),
+    // 注意：本组件渲染于 MaterialApp.builder 层（Navigator/Overlay 之外）。
+    // 此处任何依赖 Overlay 的组件（Tooltip/SnackBar/Popup…）都会抛
+    // "No Overlay widget found"，且异常未被隔离时会全屏替换为错误页
+    // （2026-08-31 用户实测：鼠标划过导航按钮即触发全屏"页面出错了"）。
+    // 因此这里禁止使用 Tooltip，悬停提示改由 InkWell 无提示处理。
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Icon(
+          icon,
+          size: 16,
+          color: enabled ? color.text1 : color.text3.withValues(alpha: 0.5),
         ),
       ),
     );
