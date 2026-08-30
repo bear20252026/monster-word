@@ -70,10 +70,14 @@ jobs:
         run: flutter pub get
 
       - name: Build Release APK
-        run: flutter build apk --release
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: flutter build apk --release --dart-define=SENTRY_DSN=$SENTRY_DSN
 
       - name: Build Release AAB
-        run: flutter build appbundle --release
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: flutter build appbundle --release --dart-define=SENTRY_DSN=$SENTRY_DSN
 
       - name: Rename packages to brand convention
         shell: bash
@@ -111,7 +115,9 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows Release
-        run: flutter build windows --release
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: flutter build windows --release --dart-define=SENTRY_DSN=$env:SENTRY_DSN
 
       - name: Install Inno Setup
         shell: pwsh
