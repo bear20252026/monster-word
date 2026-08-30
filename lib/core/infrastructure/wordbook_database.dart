@@ -5,8 +5,10 @@
 // 跨平台支持：Windows (sqflite_common_ffi) / Android / iOS (sqflite)
 import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:crypto/crypto.dart' show md5;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
@@ -67,6 +69,10 @@ class WordBookDatabase {
 
   static const String _kDbHashKey = 'wordbook_db_asset_hash';
 
+  /// 仅供测试：覆盖资产词库 bytes（绕过 rootBundle，测试环境无 assets）
+  @visibleForTesting
+  static Uint8List Function()? gzBytesOverrideForTest;
+
   /// 初始化：解压词库 + 打开数据库。
   ///
   /// 版本管理（2026-08-30 根治"暂无单词数据"）：只检查文件存在会导致
@@ -81,8 +87,14 @@ class WordBookDatabase {
     final dbPath = p.join(dir.path, 'wordbook.db');
     final gzAsset = 'assets/db/wordbook.db.gz';
 
-    final data = await rootBundle.load(gzAsset);
-    final bytes = data.buffer.asUint8List();
+    final Uint8List bytes;
+    final override = gzBytesOverrideForTest;
+    if (override != null) {
+      bytes = override();
+    } else {
+      final data = await rootBundle.load(gzAsset);
+      bytes = data.buffer.asUint8List();
+    }
     final assetHash = base64.encode(md5.convert(bytes).bytes);
 
     String? extractedHash;
@@ -109,6 +121,70 @@ class WordBookDatabase {
 
     _db = await openDatabase(dbPath, readOnly: true);
     _initialized = true;
+  }
+
+  /// 全量覆盖重建词库（用户手动触发）。
+  ///
+  /// 不做任何新旧对比、不保留任何旧数据：关闭连接 → 删除本地旧库
+  /// （含 -wal/-shm 残留）→ 从最新资产整体解压覆盖 → 重开 → 完整性统计。
+  /// 返回 [DbRebuildResult]，包含三张表的计数供 UI 展示验证。
+  Future<DbRebuildResult> forceRebuild() async {
+    await ensurePlatform();
+
+    // 1) 关闭现有连接（Windows 文件锁：不 close 无法覆盖文件）
+    await _db?.close();
+    _db = null;
+    _initialized = false;
+
+    // 2) 删除旧库与 journal 残留——零旧数据残留
+    final dir = await getApplicationSupportDirectory();
+    final dbPath = p.join(dir.path, 'wordbook.db');
+    final old = File(dbPath);
+    if (old.existsSync()) old.deleteSync();
+    for (final suffix in ['-wal', '-shm', '-journal']) {
+      final j = File('$dbPath$suffix');
+      if (j.existsSync()) j.deleteSync();
+    }
+
+    // 3) 从最新资产整体解压覆盖
+    final Uint8List gzBytes;
+    final rebuildOverride = gzBytesOverrideForTest;
+    if (rebuildOverride != null) {
+      gzBytes = rebuildOverride();
+    } else {
+      final data = await rootBundle.load('assets/db/wordbook.db.gz');
+      gzBytes = data.buffer.asUint8List();
+    }
+    final dbBytes = GZipDecoder().decodeBytes(gzBytes);
+    await File(dbPath).writeAsBytes(dbBytes, flush: true);
+
+    // 4) 记录哈希，避免下次自动更新重复重建
+    final assetHash = base64.encode(md5.convert(gzBytes).bytes);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kDbHashKey, assetHash);
+    } catch (_) {}
+
+    // 5) 重开并做完整性验证
+    _db = await openDatabase(dbPath, readOnly: true);
+    _initialized = true;
+
+    final books = await _count('books');
+    final words = await _count('words');
+    final links = await _count('word_books');
+    final ok = books > 0 && words > 0 && links > 0;
+    return DbRebuildResult(
+      books: books,
+      words: words,
+      links: links,
+      success: ok,
+      message: ok ? '词库重建完成，数据完整' : '重建后数据校验异常，请重试或反馈',
+    );
+  }
+
+  Future<int> _count(String table) async {
+    final rows = await db.rawQuery('SELECT COUNT(*) AS c FROM $table');
+    return rows.isNotEmpty ? (rows.first['c'] as int? ?? 0) : 0;
   }
 
   /// 词书列表
@@ -180,4 +256,25 @@ class WordBookDatabase {
     _db = null;
     _initialized = false;
   }
+}
+
+
+/// 词库全量重建结果（含完整性验证统计）
+class DbRebuildResult {
+  final bool success;
+  final int books;
+  final int words;
+  final int links;
+  final String message;
+
+  const DbRebuildResult({
+    required this.success,
+    required this.books,
+    required this.words,
+    required this.links,
+    required this.message,
+  });
+
+  @override
+  String toString() => '重建结果: $books 本词书 / $words 词条 / $links 条关联 — $message';
 }

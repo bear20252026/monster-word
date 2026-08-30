@@ -9,6 +9,7 @@ import 'package:word_app/core/auth/app_session_controller.dart';
 import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
+import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/sb_button.dart';
@@ -130,6 +131,66 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         ],
       ),
     );
+  }
+
+  /// 词库全量覆盖重建：确认 → 执行（不可取消的进度弹窗）→ 完整性结果
+  Future<void> _showRebuildWordbookDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('更新词库数据'),
+        content: const Text(
+          '将以最新词库完整覆盖本地数据（约 133MB，需数秒），'
+          '本地旧词库数据将被全部替换，且不影响学习进度。确定继续吗？',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('立即重建')),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    // 不可取消的进度弹窗
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const PopScope(
+        canPop: false,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+    );
+
+    DbRebuildResult result;
+    try {
+      result = await WordBookDatabase.instance.forceRebuild();
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('词库重建失败: $e')),
+        );
+      }
+      return;
+    }
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          icon: Icon(
+            result.success ? Icons.check_circle_outline : Icons.error_outline,
+            color: result.success ? Colors.green : Colors.red,
+            size: 48,
+          ),
+          title: Text(result.success ? '更新成功' : '更新失败'),
+          content: Text(
+            '${result.books} 本词书 / ${result.words} 词条 / ${result.links} 条关联\n\n${result.message}',
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('好的'))],
+        ),
+      );
+    }
   }
 
   /// 分享给好友弹窗（宣传海报）
@@ -257,6 +318,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       iconColor: MistralColors.link,
                       title: '检查更新',
                       onTap: () => _showUpdateDialog(context),
+                    ),
+                    Divider(height: 1, color: skin.colors.divider, indent: 52),
+                    _Cell(
+                      icon: Icons.storage_outlined,
+                      iconColor: MistralColors.link,
+                      title: '更新词库数据',
+                      subtitle: '全量覆盖重建本地词库（含全部词条与索引）',
+                      onTap: () => _showRebuildWordbookDialog(context),
                     ),
                     Divider(height: 1, color: skin.colors.divider, indent: 52),
                     _Cell(
