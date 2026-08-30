@@ -55,7 +55,15 @@ class ImportGuard {
         fromFeature.isNotEmpty && toFeature.isNotEmpty && toFeature != fromFeature;
     if (isCrossFeature) {
       final isPortChannel = toLayer == 'application';
-      if (!isPortChannel) {
+      // 聚合页豁免（2026-08-30 screens/ 迁移产物）：home/profile 是壳级聚合页，
+      // 天然需要导航到查词/词书/账号外观等各域，迁移前作为 screens/ 壳层本就豁免。
+      // 保持豁免直至后续按域拆分（见 docs/code_health_report_20260830.md H2）。
+      const aggregatorPages = <String>{
+        'features/learning/presentation/home_screen.dart',
+        'features/settings/presentation/profile_screen.dart',
+      };
+      final isAggregatorPage = aggregatorPages.contains(from);
+      if (!isPortChannel && !isAggregatorPage) {
         violations.add('跨功能 import 被禁止(R4): $from -> $to');
       }
     }

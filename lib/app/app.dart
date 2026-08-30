@@ -19,8 +19,8 @@ import 'package:word_app/features/word_browse/presentation/word_browse_feature_p
 import 'package:word_app/features/account/presentation/splash_page.dart';
 import 'package:word_app/widgets/common/mw_error_boundary.dart';
 import 'package:word_app/features/book/presentation/lib_select_page.dart';
-import 'package:word_app/screens/home_screen.dart';
-import 'package:word_app/screens/profile_screen.dart';
+import 'package:word_app/features/learning/presentation/home_screen.dart';
+import 'package:word_app/features/settings/presentation/profile_screen.dart';
 import 'package:word_app/app/main_shell.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/theme/wallpaper_state.dart';

@@ -11,7 +11,7 @@ import 'package:word_app/features/search/presentation/search_page.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_by_name_page.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/screens/home_screen.dart';
+import 'package:word_app/features/learning/presentation/home_screen.dart';
 import 'package:word_app/core/router/route_error_page.dart';
 import 'package:word_app/core/router/route_names.dart';
 

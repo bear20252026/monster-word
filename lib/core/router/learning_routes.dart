@@ -8,7 +8,7 @@ import 'package:word_app/features/book/presentation/extensive_model_select_page.
 import 'package:word_app/features/book/presentation/lib_select_page.dart';
 import 'package:word_app/features/book/presentation/word_export_page.dart';
 import 'package:word_app/features/learning/presentation/dictation_session_page.dart';
-import 'package:word_app/features/learning/presentation/learn_page.dart';
+
 import 'package:word_app/features/learning/presentation/list_word_listen_page.dart';
 import 'package:word_app/features/learning/presentation/listening_player_page.dart';
 import 'package:word_app/features/learning/presentation/mastered_words_page.dart';
@@ -21,8 +21,9 @@ import 'package:word_app/features/learning/presentation/reviewing_words_page.dar
 import 'package:word_app/features/learning/presentation/sentence_quiz_page.dart';
 import 'package:word_app/features/learning/presentation/spell_check_page.dart';
 import 'package:word_app/features/learning/presentation/spell_session_page.dart';
+import 'package:word_app/features/learning/presentation/learn_page.dart';
 import 'package:word_app/features/learning/presentation/word_machine_page.dart';
-import 'package:word_app/screens/learn_session.dart';
+
 import 'package:word_app/core/router/route_error_page.dart';
 import 'package:word_app/core/router/route_names.dart';
 
@@ -44,7 +45,7 @@ abstract final class LearningRoutes {
       case RouteNames.reviewSession:
         return const ReviewPage();
       case RouteNames.learnSession:
-        return const LearnSession();
+        return const LearnPage();
       case RouteNames.course:
         return const CoursesPage();
       case RouteNames.myWords:

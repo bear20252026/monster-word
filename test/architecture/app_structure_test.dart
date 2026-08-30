@@ -52,8 +52,7 @@ void main() {
         'lib/features/learning/presentation/learn_page.dart',
         'lib/features/learning/presentation/spell_session_page.dart',
         'lib/features/learning/presentation/word_machine_page.dart',
-        'lib/screens/home_screen.dart',
-        'lib/screens/learn_session.dart',
+        'lib/features/learning/presentation/home_screen.dart',
       ];
       final sessionSource = File('lib/features/learning/presentation/learning_session_state.dart').readAsStringSync();
 
@@ -85,7 +84,7 @@ void main() {
         'lib/features/account/presentation/account_info_page.dart',
         'lib/features/account/presentation/user_info_manage_page.dart',
         'lib/features/account/presentation/my_space_page.dart',
-        'lib/screens/profile_screen.dart',
+        'lib/features/settings/presentation/profile_screen.dart',
       ];
       final providersSource = File('lib/features/account/presentation/account_feature_providers.dart')
           .readAsStringSync();
@@ -323,7 +322,7 @@ void main() {
       final selectPageSource = File('lib/features/book/presentation/lib_select_page.dart').readAsStringSync();
       final wordsPageSource = File('lib/features/book/presentation/book_words_page.dart').readAsStringSync();
       final extensiveModeSource = File('lib/features/book/presentation/extensive_model_select_page.dart').readAsStringSync();
-      final homeSource = File('lib/screens/home_screen.dart').readAsStringSync();
+      final homeSource = File('lib/features/learning/presentation/home_screen.dart').readAsStringSync();
       final providersSource = File('lib/features/book/presentation/book_feature_providers.dart').readAsStringSync();
 
       expect(appSource, contains('buildBookFeatureScope('));
@@ -362,7 +361,7 @@ void main() {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/features/scare_coin/presentation/scare_coin_history_page.dart').readAsStringSync();
       final calendarSource = File('lib/widgets/spring_check_in_calendar.dart').readAsStringSync();
-      final profileSource = File('lib/screens/profile_screen.dart').readAsStringSync();
+      final profileSource = File('lib/features/settings/presentation/profile_screen.dart').readAsStringSync();
       final classCheckInSource = File('lib/features/checkin/presentation/class_checkin_page.dart').readAsStringSync();
       final dashboardSource = File('lib/features/learning/presentation/dashboard_page.dart').readAsStringSync();
       final mySpaceSource = File('lib/features/account/presentation/my_space_page.dart').readAsStringSync();
@@ -414,7 +413,6 @@ void main() {
       final providerSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
           .readAsStringSync();
       final wordDetailSource = File('lib/features/dictionary/presentation/word_detail_page.dart').readAsStringSync();
-      final learnSessionSource = File('lib/screens/learn_session.dart').readAsStringSync();
       final dialogSource = File('lib/widgets/review_dialog.dart').readAsStringSync();
       final statisticsSource = File('lib/features/learning/presentation/learning_statistics_state.dart')
           .readAsStringSync();
@@ -427,7 +425,6 @@ void main() {
       expect(providerSource, contains('RepositoryReviewScheduleReader'));
       for (final source in [
         wordDetailSource,
-        learnSessionSource,
         dialogSource,
         statisticsSource,
         wordListsSource,
