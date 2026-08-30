@@ -9,6 +9,7 @@ import 'package:word_app/core/auth/app_session_controller.dart';
 /// 已登录。真正的账号认证接入时应替换这里的登录实现，而不再向学习状态添加账号字段。
 class AppSessionState extends ChangeNotifier implements AppSessionController {
   static const String _keyIsLoggedIn = 'session_is_logged_in';
+  static const String _keyInitGuide = 'session_init_guide_shown';
 
   bool _isLoggedIn = false;
   bool _hasShownInitGuide = false;
@@ -21,6 +22,8 @@ class AppSessionState extends ChangeNotifier implements AppSessionController {
   Future<void> restore() async {
     final prefs = await SharedPreferences.getInstance();
     _isLoggedIn = prefs.getBool(_keyIsLoggedIn) ?? false;
+    // 引导页展示标记必须持久化，否则每次重启都强制重看引导
+    _hasShownInitGuide = prefs.getBool(_keyInitGuide) ?? false;
     notifyListeners();
   }
 
@@ -47,6 +50,9 @@ class AppSessionState extends ChangeNotifier implements AppSessionController {
 
   Future<void> setHasShownInitGuide(bool value) async {
     _hasShownInitGuide = value;
+    // 持久化：否则重启后 hasShownInitGuide 回到 false，引导页反复出现
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyInitGuide, value);
     notifyListeners();
   }
 
@@ -56,6 +62,9 @@ class AppSessionState extends ChangeNotifier implements AppSessionController {
   }
 
   void _clearPersist() {
-    SharedPreferences.getInstance().then((prefs) => prefs.remove(_keyIsLoggedIn));
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.remove(_keyIsLoggedIn);
+      prefs.remove(_keyInitGuide);
+    });
   }
 }

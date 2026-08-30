@@ -68,22 +68,35 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   }
 
   Future<void> _proceedToRoute() async {
-    final session = context.read<AppSessionState>();
-    final isLoggedIn = session.isLoggedIn;
-
-    if (isLoggedIn) {
-      // 已登录 → 检查是否首次启动（显示引导页）
-      final hasShownGuide = session.hasShownInitGuide;
-      if (!hasShownGuide) {
-        await session.setHasShownInitGuide(true);
-        if (!mounted) return;
-        setState(() => _showGuide = true);
-      } else {
-        _goToMain();
-      }
-    } else {
-      // 未登录 → 跳转登录页
+    // fail-safe：启动导航绝不允许卡在 Splash。任何异常都强制跳到
+    // 登录页（未登录）或主页（已登录），让用户继续操作而非卡死。
+    var isLoggedIn = false;
+    var hasShownGuide = false;
+    try {
+      final session = context.read<AppSessionState>();
+      isLoggedIn = session.isLoggedIn;
+      hasShownGuide = session.hasShownInitGuide;
+    } catch (e) {
+      debugPrint('[Splash] 读取会话状态失败（fail-safe → 登录页）: $e');
       _goToLogin();
+      return;
+    }
+
+    try {
+      if (isLoggedIn) {
+        if (!hasShownGuide) {
+          await context.read<AppSessionState>().setHasShownInitGuide(true);
+          if (!mounted) return;
+          setState(() => _showGuide = true);
+        } else {
+          _goToMain();
+        }
+      } else {
+        _goToLogin();
+      }
+    } catch (e) {
+      debugPrint('[Splash] 启动导航失败（fail-safe → 登录页）: $e');
+      if (mounted) _goToLogin();
     }
   }
 

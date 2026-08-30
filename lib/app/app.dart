@@ -140,9 +140,10 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
             );
           },
           // A-1: Splash 复位为真正启动入口 — 品牌动画 → 登录态检查 → 首次引导 → 落地页。
-          // SplashPage 内部通过 pushReplacementNamed('/') 进入 _HomeShell，
-          // 保证冷启动时品牌/登录/引导流程完整展示。
-          home: const AdaptiveScale(child: SplashPage()),
+          // 注意：不能用 home: SplashPage——MaterialApp 中 home 恒占 '/' 路由，
+          // 导致 pushReplacementNamed('/') 永远跳回 Splash 而非主页（启动卡死根因）。
+          // Splash 改用专属路由 /splash，'/' 明确映射 _HomeShell 主页。
+          initialRoute: '/splash',
           onGenerateRoute: _onGenerateRoute,
         );
       },
@@ -276,11 +277,21 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
   }
 
   Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
-    final page = settings.name == '/' ? const _HomeShell() : AppRouter.buildPage(settings);
-    if (page == null) {
-      return null;
+    final name = settings.name ?? '/';
+    final Widget page;
+    switch (name) {
+      case '/':
+        page = const AdaptiveScale(child: _HomeShell());
+      case '/splash':
+        page = const AdaptiveScale(child: SplashPage());
+      default:
+        final resolved = AppRouter.buildPage(settings);
+        if (resolved == null) {
+          return null;
+        }
+        page = resolved;
     }
-    return AppRouter.buildPageRoute(settings.name, page);
+    return AppRouter.buildPageRoute(name, page);
   }
 }
 
