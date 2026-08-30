@@ -233,11 +233,22 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                 },
               ),
             ),
-            // 圆点指示器 + 开始按钮
+            // 圆点指示器 + 前进按钮（每页都有，桌面端无滑动手势也能走完引导）
             Padding(
               padding: EdgeInsets.all(24),
               child: Column(
                 children: [
+                  // 跳过：右上角，非最后页显示
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (_currentPage < _introAssets.length - 1)
+                        TextButton(
+                          onPressed: _goToMain,
+                          child: Text('跳过', style: TextStyle(color: skin.colors.text3)),
+                        ),
+                    ],
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(_introAssets.length, (i) {
@@ -253,20 +264,34 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                     }),
                   ),
                   SizedBox(height: 24),
-                  if (_currentPage == _introAssets.length - 1)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _goToMain,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: skin.colors.accent,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
-                        ),
-                        child: const Text('开始使用'),
-                      ),
-                    ),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: _currentPage == _introAssets.length - 1
+                        ? ElevatedButton(
+                            onPressed: _goToMain,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: skin.colors.accent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
+                            ),
+                            child: const Text('开始使用'),
+                          )
+                        : ElevatedButton(
+                            onPressed: () {
+                              _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic,
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: skin.colors.accent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
+                            ),
+                            child: const Text('下一步'),
+                          ),
+                  ),
                 ],
               ),
             ),

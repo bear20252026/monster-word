@@ -222,7 +222,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           child: Icon(Icons.menu_book, size: 56, color: MistralColors.primary),
         ),
         SizedBox(height: 16),
-        Text('不背单词', style: MistralTypography.heading3.copyWith(color: skin.colors.text1)),
+        Text('Monster Word', style: MistralTypography.heading3.copyWith(letterSpacing: 0.5, color: skin.colors.text1)),
         SizedBox(height: 8),
         // Slogan（对应原版 tv_slogan）
         Text('在语境中学习单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
