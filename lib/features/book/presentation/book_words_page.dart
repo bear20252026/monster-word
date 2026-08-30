@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/core/infrastructure/wordbook_database.dart';
+import 'package:word_app/widgets/common/mw_empty_state.dart';
 import 'package:word_app/core/learning/learning_favorites_store.dart';
 import 'package:word_app/core/learning/learning_session_starter.dart';
 import 'package:word_app/core/learning/new_words_store.dart';
 import 'package:word_app/core/router/route_names.dart';
-import 'package:word_app/models/book.dart';
-import 'package:word_app/models/word.dart';
 import 'package:word_app/widgets/common/mw_skeleton.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -60,11 +60,30 @@ class BookWordsPage extends StatelessWidget {
           }
           final words = state.words;
           if (words.isEmpty) {
-            return Center(
-              child: Text(
-                '词库数据需要更新',
-                style: MistralTypography.bodyMd.copyWith(color: skin.text3),
-              ),
+            // 词库 100% 内置离线，此处为空 = 本地库残留旧数据。
+            // 现场提供全量重建（不联网），完成即自动刷新。
+            return MwEmptyState(
+              kind: MwEmptyKind.empty,
+              title: '本地词库暂无该书数据',
+              subtitle: '点击下方按钮，用内置词库完整重建本地数据（不联网，需数秒）',
+              actionLabel: '重建词库',
+              onAction: () async {
+                final messenger = ScaffoldMessenger.maybeOf(context);
+                final bookState = context.read<BookState>();
+                try {
+                  final result = await WordBookDatabase.instance.forceRebuild();
+                  await bookState.reloadWords();
+                  messenger?.showSnackBar(
+                    SnackBar(
+                      content: Text(result.success
+                          ? '重建成功: ${result.books} 本词书 / ${result.words} 词条'
+                          : result.message),
+                    ),
+                  );
+                } catch (e) {
+                  messenger?.showSnackBar(SnackBar(content: Text('重建失败: $e')));
+                }
+              },
             );
           }
           return ListView.builder(

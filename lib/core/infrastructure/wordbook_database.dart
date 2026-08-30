@@ -10,6 +10,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:crypto/crypto.dart' show md5;
+import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -109,8 +110,7 @@ class WordBookDatabase {
     final needsExtract = !File(dbPath).existsSync() || extractedHash != assetHash;
 
     if (needsExtract) {
-      final dbBytes = GZipDecoder().decodeBytes(bytes);
-      await File(dbPath).writeAsBytes(dbBytes, flush: true);
+      await _extractTo(dbPath, bytes);
       if (canPersist) {
         try {
           final prefs = await SharedPreferences.getInstance();
@@ -119,8 +119,31 @@ class WordBookDatabase {
       }
     }
 
-    _db = await openDatabase(dbPath, readOnly: true);
+    // 打开失败（如上次解压中断留下损坏文件）→ 删库重解压一次再试
+    try {
+      _db = await openDatabase(dbPath, readOnly: true);
+    } catch (e) {
+      debugPrint('[WordBookDatabase] 打开失败，删除损坏库并重建: $e');
+      await _extractTo(dbPath, bytes);
+      _db = await openDatabase(dbPath, readOnly: true);
+    }
     _initialized = true;
+  }
+
+  /// 解压资产词库到目标路径（失败自动清理半成品文件并重试一次）
+  Future<void> _extractTo(String dbPath, Uint8List gzBytes) async {
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        final dbBytes = GZipDecoder().decodeBytes(gzBytes);
+        await File(dbPath).writeAsBytes(dbBytes, flush: true);
+        return;
+      } catch (e) {
+        debugPrint('[WordBookDatabase] 解压失败 (attempt ${attempt + 1}): $e');
+        final f = File(dbPath);
+        if (f.existsSync()) f.deleteSync();
+        if (attempt == 1) rethrow;
+      }
+    }
   }
 
   /// 全量覆盖重建词库（用户手动触发）。

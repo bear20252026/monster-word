@@ -530,7 +530,7 @@ class _LibItem extends StatelessWidget {
             // 空词表守卫：currentWord 为 null 说明词书无单词，提示而非跳转（避免白屏）。
             if (session.currentWord == null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('该词书暂无单词数据，请升级到最新版本以更新词库')),
+                const SnackBar(content: Text('本地词库暂无该书数据，可在 设置 → 更多设置 → 更新词库数据 一键重建')),
               );
               return;
             }
