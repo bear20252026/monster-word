@@ -99,6 +99,11 @@ class BookState extends ChangeNotifier {
 
     try {
       _words = await _wordsReader.loadWords(_currentBookId);
+      // 验收守护：词书标注词数必须与实际加载数一致，不一致立即暴露
+      final expected = _currentBook?.wordCount ?? 0;
+      if (expected > 0 && _words.length != expected) {
+        debugPrint('[BookState] 词数不一致! book=$_currentBookId 标注=$expected 实载=${_words.length}');
+      }
       // 通过 learning 模块提供的契约读取真实已学数
       final learned = await _progressReader.countLearnedWords(_words.map((w) => w.word));
       _statistics = BookStatistics(

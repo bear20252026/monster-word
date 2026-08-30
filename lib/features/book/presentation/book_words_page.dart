@@ -41,11 +41,7 @@ class BookWordsPage extends StatelessWidget {
         backgroundColor: skin.cardBg,
         elevation: 0,
         iconTheme: IconThemeData(color: skin.text1),
-        title: Text(
-          book.name,
-          style: MistralTypography.heading5
-              .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
-        ),
+        title: Text(book.name, style: MistralTypography.heading5.copyWith(color: skin.text1)),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _startLearning(context),
@@ -87,11 +83,24 @@ class BookWordsPage extends StatelessWidget {
           }
           return ListView.builder(
             padding: EdgeInsets.all(context.design.spacing.md),
-            itemCount: words.length,
+            // +1：首项为词数统计头（验收标准：总数与词书标注一致）
+            itemCount: words.length + 1,
             addAutomaticKeepAlives: false,
             addRepaintBoundaries: true,
             itemBuilder: (context, index) {
-              final word = words[index];
+              if (index == 0) {
+                return Padding(
+                  padding: EdgeInsets.only(bottom: context.design.spacing.sm),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '共 ${words.length} 词（按字母排序）',
+                      style: MistralTypography.micro.copyWith(color: skin.text3),
+                    ),
+                  ),
+                );
+              }
+              final word = words[index - 1];
               return _WordCard(word: word, book: book);
             },
           );

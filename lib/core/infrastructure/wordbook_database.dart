@@ -305,16 +305,21 @@ class WordBookDatabase {
   }
 
   /// 按词书 ID 取单词（分页）
-  Future<List<Word>> getWordsByBook(int bookId, {int limit = 50, int offset = 0}) async {
+  /// 指定词书的单词，按单词字母序 A-Z 排列（大小写不敏感）。
+  ///
+  /// [limit] 为 null 时全量返回——词书列表页标注的词数（books.word_count）
+  /// 与词书详情页的查询结果长度必须一致，不允许任何分页截断。
+  /// learning 学习队列分批加载时显式传 limit/offset。
+  Future<List<Word>> getWordsByBook(int bookId, {int? limit, int offset = 0}) async {
     final rows = await db.rawQuery(
       '''
       SELECT w.* FROM words w
       JOIN word_books wb ON wb.word_id = w.id
       WHERE wb.book_id = ?
-      ORDER BY wb.rowid
-      LIMIT ? OFFSET ?
+      ORDER BY w.word COLLATE NOCASE ASC
+      ${limit != null ? 'LIMIT ? OFFSET ?' : ''}
     ''',
-      [bookId, limit, offset],
+      limit != null ? [bookId, limit, offset] : [bookId],
     );
     return rows.map(Word.fromMap).toList();
   }
