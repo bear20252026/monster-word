@@ -14,7 +14,13 @@ import 'package:word_app/core/audio/system_tts.dart';
 /// 播放优先级：audioUrl > 音标音频(本地缓存→Youdao下载) > 系统 TTS 兜底。
 class AudioServiceImpl implements AudioService {
   final BBAudioPlayer _bbPlayer = BBAudioPlayer();
+  final PhoneticAudioPlayer _phoneticPlayer;
+  final SentenceAudioPlayer _sentencePlayer;
   bool _disposed = false;
+
+  AudioServiceImpl({PhoneticAudioPlayer? phoneticPlayer, SentenceAudioPlayer? sentencePlayer})
+      : _phoneticPlayer = phoneticPlayer ?? PhoneticAudioPlayer(),
+        _sentencePlayer = sentencePlayer ?? SentenceAudioPlayer();
 
   @override
   Future<void> playWordAudio(String word, {String accent = 'us', String? audioUrl}) async {
@@ -25,7 +31,7 @@ class AudioServiceImpl implements AudioService {
         await playFromUrl(audioUrl);
       } else {
         // 回退到 Youdao 发音（内部含本地缓存；下载失败时会自行 TTS 兜底）
-        await PhoneticAudioPlayer.playAudio(word, isUK: accent == 'uk');
+        await _phoneticPlayer.playAudio(word, isUK: accent == 'uk');
       }
     } catch (e) {
       debugPrint('[AudioService] Failed to play word audio: $e');
@@ -39,7 +45,7 @@ class AudioServiceImpl implements AudioService {
     if (_disposed) return;
     try {
       // 使用 SentenceAudioPlayer 播放网络音频
-      await SentenceAudioPlayer.playAudio(url);
+      await _sentencePlayer.playAudio(url);
     } catch (e) {
       debugPrint('[AudioService] Failed to play from URL: $e');
     }

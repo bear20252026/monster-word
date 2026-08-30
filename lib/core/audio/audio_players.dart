@@ -396,11 +396,11 @@ class PhoneticAudioPlayer {
   /// 默认允许播放。原默认 false 且全仓库无 setNeedPlay(true) 调用点，
   /// 导致 _playFile 的 if (!_needPlay) return 把所有单词发音静默丢弃
   /// （症状：例句响、单词不响）。
-  bool _needPlay = true;
+  final bool _needPlay = true;
 
-  /// 播放单词发音（原版 playAudio 静态方法）
-  static Future<void> playAudio(String word, {bool? isUK}) async {
-    await _instance._playPhoneticAudio(word, isUK ?? _instance._isPronounceUK);
+  /// 播放单词发音（原版 playAudio；DI 化后由 AudioServiceImpl 注入调用）
+  Future<void> playAudio(String word, {bool? isUK}) async {
+    await _playPhoneticAudio(word, isUK ?? _isPronounceUK);
   }
 
   /// 内部播放（原版 playPhoneticAudio）
@@ -453,23 +453,13 @@ class PhoneticAudioPlayer {
     }
   }
 
-  /// 设置是否使用英音（原版 setPronounceUK）
-  static void setPronounceUK(bool isUK) {
-    _instance._isPronounceUK = isUK;
-  }
-
-  /// 设置是否需要播放（原版 setNeedPlay）
-  static void setNeedPlay(bool need) {
-    _instance._needPlay = need;
-  }
-
   /// 仅供回归测试观察播放开关默认值（REG-AUDIO-001）。
   @visibleForTesting
-  static bool get needPlayForTest => _instance._needPlay;
+  bool get needPlayForTest => _needPlay;
 
   /// 暂停（原版 pause）
-  static void pause() {
-    _instance._audioPlayer.pause();
+  void pause() {
+    _audioPlayer.pause();
   }
 
   /// 设置监听（原版 setPhoneticAudioPlayListener）
@@ -519,7 +509,7 @@ class SentenceAudioPlayer {
   SentencePlayListener? _sentenceListener;
   String _currentUrl = '';
   String _oldUrl = '';
-  bool _needPlay = false;
+  final bool _needPlay = false;
 
   /// 获取完整的音频 URL
   String _getCompleteAudioUrl(String url) {
@@ -534,9 +524,9 @@ class SentenceAudioPlayer {
   }
 
   /// 播放例句音频（原版 playAudio 静态方法）
-  static Future<void> playAudio(String url, {double speed = 1.0}) async {
+  Future<void> playAudio(String url, {double speed = 1.0}) async {
     if (url.isNotEmpty) {
-      await getInstance()._playSentenceAudio(url, speed);
+      await _playSentenceAudio(url, speed);
     }
   }
 
@@ -605,29 +595,21 @@ class SentenceAudioPlayer {
     }
   }
 
-  /// 获取单例
-  static SentenceAudioPlayer getInstance() => _instance;
-
   /// 获取监听（原版 getListener）
-  static SentencePlayListener? getListener() => getInstance()._sentenceListener;
+  SentencePlayListener? getListener() => _sentenceListener;
 
   /// 设置监听（原版 setListener）
-  static void setListener(SentencePlayListener? listener) {
-    getInstance()._sentenceListener = listener;
-  }
-
-  /// 设置是否需要播放（原版 setNeedPlay）
-  static void setNeedPlay(bool need) {
-    getInstance()._needPlay = need;
+  void setListener(SentencePlayListener? listener) {
+    _sentenceListener = listener;
   }
 
   /// 暂停（原版 pause）
-  static void pause() {
-    getInstance()._audioPlayer.pause();
+  void pause() {
+    _audioPlayer.pause();
   }
 
   /// 是否正在播放（原版 isPlaying）
-  static bool isPlaying() => getInstance()._audioPlayer.isPlaying;
+  bool isPlaying() => _audioPlayer.isPlaying;
 
   /// 设置播放状态监听（原版 setSentencePlayStateListener）
   void setSentencePlayStateListener(PlayAudioListener? listener) {
@@ -737,15 +719,6 @@ class TextAudioPlayer {
 // 便捷全局函数
 // ============================================================
 
-/// 便捷：播放单词发音（原版 PhoneticAudioPlayer.playAudio）
-Future<void> playWordAudio(String word, {bool isUK = false}) {
-  return PhoneticAudioPlayer.playAudio(word, isUK: isUK);
-}
-
-/// 便捷：播放例句
-Future<void> playSentenceAudio(String url, {double speed = 1.0}) {
-  return SentenceAudioPlayer.playAudio(url, speed: speed);
-}
 
 /// 便捷：播放 TTS 文本
 Future<void> playTextAudio(String text, {double speed = 1.0}) {
