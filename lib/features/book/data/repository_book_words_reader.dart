@@ -14,6 +14,6 @@ class RepositoryBookWordsReader implements BookWordsReader {
 
   @override
   Future<List<Word>> loadWords(int bookId) {
-    return _db.getWordsByBook(bookId);
+    return _db.getWordsByBook(bookId, lightweight: true);
   }
 }

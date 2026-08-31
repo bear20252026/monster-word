@@ -338,10 +338,17 @@ class WordBookDatabase {
   /// [limit] 为 null 时全量返回——词书列表页标注的词数（books.word_count）
   /// 与词书详情页的查询结果长度必须一致，不允许任何分页截断。
   /// learning 学习队列分批加载时显式传 limit/offset。
-  Future<List<Word>> getWordsByBook(int bookId, {int? limit, int offset = 0}) async {
+  /// [lightweight] 列表浏览模式：不含 example/audio_urls/image_urls/phrase
+  /// 大字段（实测省 ~95% 内存：example 均值 3KB）。性能审计 P1。
+  /// 点进词典详情时由详情页按需重查完整词。
+  Future<List<Word>> getWordsByBook(int bookId,
+      {int? limit, int offset = 0, bool lightweight = false}) async {
+    final columns = lightweight
+        ? 'w.id, w.word, w.interpret, w.uk_pron, w.us_pron, w.confuse, w.word_root'
+        : 'w.*';
     final rows = await db.rawQuery(
       '''
-      SELECT w.* FROM words w
+      SELECT $columns FROM words w
       JOIN word_books wb ON wb.word_id = w.id
       WHERE wb.book_id = ?
       ORDER BY w.word COLLATE NOCASE ASC

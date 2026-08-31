@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:word_app/features/dictionary/data/dictionary_extra.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_example_tile.dart';
@@ -16,7 +17,6 @@ import 'package:word_app/features/learning/application/review_schedule_reader.da
 import 'package:word_app/core/learning/learning_session_reader.dart';
 import 'package:word_app/core/learning/learning_session_starter.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
-import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/box_reveal.dart';
@@ -56,7 +56,23 @@ class _WordDetailPageState extends State<WordDetailPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _loadExtra();
+      _ensureFullWord();
     });
+  }
+
+  /// 性能审计 P1：词书列表传入的 Word 为轻量对象（不含 example/phrase 等大字段）。
+  /// 进入详情页后按需重查完整词，保证释义/例句/词根等内容完整展示。
+  Word? _fullWord;
+
+  Future<void> _ensureFullWord() async {
+    final word = _resolveTargetWord(null);
+    if (word == null || word.example.isNotEmpty) return; // 已是完整词
+    try {
+      final full = await WordBookDatabase.instance.getWord(word.word);
+      if (full != null && mounted) setState(() => _fullWord = full);
+    } catch (e) {
+      debugPrint('[WordDetail] 完整词重查失败: $e');
+    }
   }
 
   Future<void> _loadExtra() async {
@@ -78,7 +94,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
     final session = context.read<LearningSessionReader>();
     final sessionStarter = context.read<LearningSessionStarter>();
     context.watch<ReviewScheduleReader>();
-    final word = _resolveTargetWord(session);
+    final word = _fullWord ?? _resolveTargetWord(session);
 
     if (word == null) {
       return Scaffold(
