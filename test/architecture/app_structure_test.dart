@@ -354,7 +354,7 @@ void main() {
 
   group('尖叫币功能域边界', () {
     test('尖叫币页面和组件不持有本地账本实现', () {
-      final portSource = File('lib/core/scare_coin/scare_coin_store.dart').readAsStringSync();
+      final portSource = File('lib/features/scare_coin/application/scare_coin_store.dart').readAsStringSync();
       final adapterSource = File('lib/features/scare_coin/data/preferences_scare_coin_store.dart').readAsStringSync();
       final providerSource = File('lib/features/scare_coin/presentation/scare_coin_feature_providers.dart')
           .readAsStringSync();

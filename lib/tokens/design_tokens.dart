@@ -98,7 +98,7 @@ class MistralTypography {
   // 中西文混排回退链（font_strategy.md）
   static const List<String> _fallback = ['Inter', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC'];
 
-  static TextStyle heroDisplay = TextStyle(
+  static const TextStyle heroDisplay = TextStyle(
     fontFamily: 'Charter',
     fontFamilyFallback: _fallback,
     fontSize: 64,
@@ -107,7 +107,7 @@ class MistralTypography {
     letterSpacing: -1.0,
     color: StarbucksCreamColors.greenHouse, // 标题绿
   );
-  static TextStyle heading1 = TextStyle(
+  static const TextStyle heading1 = TextStyle(
     fontFamily: 'Charter',
     fontFamilyFallback: _fallback,
     fontSize: 52,
@@ -116,7 +116,7 @@ class MistralTypography {
     letterSpacing: -0.5,
     color: StarbucksCreamColors.greenHouse,
   );
-  static TextStyle heading2 = TextStyle(
+  static const TextStyle heading2 = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 36,
@@ -125,7 +125,7 @@ class MistralTypography {
     letterSpacing: -0.5,
     color: StarbucksCreamColors.greenHouse,
   );
-  static TextStyle heading3 = TextStyle(
+  static const TextStyle heading3 = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 28,
@@ -133,7 +133,7 @@ class MistralTypography {
     height: 1.25,
     color: StarbucksCreamColors.greenHouse,
   );
-  static TextStyle heading4 = TextStyle(
+  static const TextStyle heading4 = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 22,
@@ -141,7 +141,7 @@ class MistralTypography {
     height: 1.30,
     color: StarbucksCreamColors.greenHouse,
   );
-  static TextStyle heading5 = TextStyle(
+  static const TextStyle heading5 = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 18,
@@ -149,7 +149,7 @@ class MistralTypography {
     height: 1.40,
     color: StarbucksCreamColors.greenHouse,
   );
-  static TextStyle bodyMd = TextStyle(
+  static const TextStyle bodyMd = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 16,
@@ -157,7 +157,7 @@ class MistralTypography {
     height: 1.55,
     color: StarbucksCreamColors.text1,
   );
-  static TextStyle bodySm = TextStyle(
+  static const TextStyle bodySm = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 14,
@@ -165,7 +165,7 @@ class MistralTypography {
     height: 1.50,
     color: StarbucksCreamColors.text1,
   );
-  static TextStyle caption = TextStyle(
+  static const TextStyle caption = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 13,
@@ -173,7 +173,7 @@ class MistralTypography {
     height: 1.40,
     color: StarbucksCreamColors.text2,
   );
-  static TextStyle captionBold = TextStyle(
+  static const TextStyle captionBold = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 13,
@@ -181,7 +181,7 @@ class MistralTypography {
     height: 1.40,
     color: StarbucksCreamColors.text1,
   );
-  static TextStyle body = TextStyle(
+  static const TextStyle body = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 16,
@@ -189,7 +189,7 @@ class MistralTypography {
     height: 1.55,
     color: StarbucksCreamColors.text1,
   );
-  static TextStyle bodyBold = TextStyle(
+  static const TextStyle bodyBold = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 16,
@@ -197,7 +197,7 @@ class MistralTypography {
     height: 1.55,
     color: StarbucksCreamColors.text1,
   );
-  static TextStyle micro = TextStyle(
+  static const TextStyle micro = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 12,
@@ -205,7 +205,7 @@ class MistralTypography {
     height: 1.40,
     color: StarbucksCreamColors.text2,
   );
-  static TextStyle buttonMd = TextStyle(
+  static const TextStyle buttonMd = TextStyle(
     fontFamily: 'Inter',
     fontFamilyFallback: _fallback,
     fontSize: 14,

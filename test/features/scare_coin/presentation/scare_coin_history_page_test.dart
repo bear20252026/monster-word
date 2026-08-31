@@ -10,7 +10,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:word_app/core/scare_coin/scare_coin_store.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/features/scare_coin/presentation/scare_coin_history_page.dart';
 import 'package:word_app/models/scare_coin_entry.dart';
 

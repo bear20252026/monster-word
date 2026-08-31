@@ -1,3 +1,4 @@
+// 字惊币账本端口（从 data 层上提，跨 feature 引用走 application）
 import 'package:word_app/models/scare_coin_entry.dart';
 
 /// 尖叫币功能域的读写应用端口（共享 core 契约）。

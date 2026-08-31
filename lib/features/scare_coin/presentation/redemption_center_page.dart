@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/scare_coin/scare_coin_store.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';

@@ -14,7 +14,7 @@ import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
-import 'package:word_app/core/scare_coin/scare_coin_store.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/models/scare_coin_entry.dart';
 
 class ScareCoinHistoryPage extends StatefulWidget {

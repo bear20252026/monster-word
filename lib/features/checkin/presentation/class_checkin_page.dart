@@ -11,7 +11,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/func_colors.dart';
 import 'package:word_app/tokens/star_gold.dart';
 import 'package:word_app/widgets/spring_calendar.dart';
-import 'package:word_app/core/scare_coin/scare_coin_store.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 
 /// 班级签到页面
 ///

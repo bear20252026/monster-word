@@ -6,7 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/scare_coin/scare_coin_store.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/features/learning/data/share_image_service.dart';

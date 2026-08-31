@@ -42,10 +42,6 @@ void main() {
 
     test('feature 依赖 core/models 允许；core 依赖 features 被拒绝', () {
       expect(
-        check('features/account/presentation/my_space_page.dart', 'core/scare_coin/scare_coin_store.dart'),
-        isEmpty,
-      );
-      expect(
         check('features/account/presentation/my_space_page.dart', 'models/scare_coin_entry.dart'),
         isEmpty,
       );
