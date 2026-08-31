@@ -255,6 +255,10 @@ class _CompletionScreenState extends State<_CompletionScreen> {
     super.initState();
     // 会话结算（发币）只在完成页首次展示时执行一次；失败静默——奖励不应阻塞完成页。
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 复习错题后再次完成会重挂载本页；每会话只结算一次
+      final sessionState = context.read<LearningSessionState>();
+      if (sessionState.sessionRewardSettled) return;
+      sessionState.markSessionRewardSettled();
       final store = context.read<ScareCoinStore>();
       final service = LearningRewardService(store);
       try {

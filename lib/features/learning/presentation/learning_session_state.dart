@@ -134,8 +134,15 @@ class LearningSessionState extends ChangeNotifier {
     _errorWords.clear();
     _totalAnswered = 0;
     _sessionStartTime = DateTime.now();
+    // 尖叫币会话奖励每会话只结算一次；复习错题（relearn）不重置此标记
+    _sessionRewardSettled = false;
     unawaited(_saveProgress());
   }
+
+  /// 本会话尖叫币奖励是否已结算（防复习错题后二次完成页重复发币）
+  bool _sessionRewardSettled = false;
+  bool get sessionRewardSettled => _sessionRewardSettled;
+  void markSessionRewardSettled() => _sessionRewardSettled = true;
 
   void flip() {
     _showAnswer = !_showAnswer;
