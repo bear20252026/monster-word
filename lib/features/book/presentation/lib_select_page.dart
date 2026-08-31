@@ -36,6 +36,21 @@ class LibSelectPage extends StatefulWidget {
   State<LibSelectPage> createState() => _LibSelectPageState();
 }
 
+/// 按 book code hash 稳定分配三档封面色——基于当前皮肤 accent 的
+/// HSL 明度变体（本色/提亮/加深），跟随主题适配（用户反馈修复：
+/// 此前是星巴克绿硬编码色表，任何皮肤下都是绿色）。
+Color coverColorFor(BuildContext context, String code) {
+  final accent = context.skin.colors.accent;
+  final hsl = HSLColor.fromColor(accent);
+  final index = code.hashCode.abs() % 3;
+  final isDark = context.skin.currentTheme.uiBrightness == Brightness.dark;
+  // 明度偏移量（深色画布整体提亮一档，避免封面与背景混淆）
+  final lightnessDelta = isDark ? [0.06, 0.14, -0.02] : [0.0, 0.10, -0.12];
+  return hsl
+      .withLightness((hsl.lightness + lightnessDelta[index]).clamp(0.15, 0.85))
+      .toColor();
+}
+
 class _LibSelectPageState extends State<LibSelectPage> {
   late Future<List<Book>> _booksFuture;
   List<Book> _allBooks = [];
@@ -256,10 +271,9 @@ class _LibSelectPageState extends State<LibSelectPage> {
                           curvature: 0.35,
                           activeColor: colors.accent,
                           items: featured.map((book) {
-                            final idx = featured.indexOf(book);
                             return BendingGalleryItem(
                               label: book.name,
-                              color: _LibItem._coverColorsLight[idx % _LibItem._coverColorsLight.length],
+                              color: coverColorFor(context, book.code),
                               onTap: () => _openBookFromGallery(context, book),
                               // 画廊单元格固定约 112×122，放不下完整卡片，
                               // 这里用紧凑封面内容（图标 + 编码 + 词数）
@@ -476,25 +490,7 @@ class _LibItem extends StatelessWidget {
   const _LibItem({required this.book, this.showDescription = true});
 
   // 三档绿（亮色模式）—— 星巴克品牌绿轮换
-  static const _coverColorsLight = [
-    Color(0xFF006241), // Starbucks Green
-    Color(0xFF00754A), // House Green
-    Color(0xFF1E3932), // 墨绿
-  ];
 
-  // 三档绿（深色模式：绿-3 提亮，避免与深色画布混淆）
-  static const _coverColorsDark = [
-    Color(0xFF006241),
-    Color(0xFF00754A),
-    Color(0xFF2b5148), // 墨绿提亮（替代 #1E3932）
-  ];
-
-  /// 按 book code hash 稳定分配三档绿
-  Color _coverColor(BuildContext context, String code) {
-    final index = code.hashCode.abs() % 3;
-    final isDark = context.skin.currentTheme.uiBrightness == Brightness.dark;
-    return isDark ? _coverColorsDark[index] : _coverColorsLight[index];
-  }
 
   /// 从词书 code 推断描述标签（如 'CET4 | 1200词'），替代硬编码文本
   static String _categoryOf(String code) {
@@ -605,7 +601,7 @@ class _LibItem extends StatelessWidget {
               width: 72,
               height: 88,
               decoration: BoxDecoration(
-                color: _coverColor(context, book.code),
+                color: coverColorFor(context, book.code),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Center(

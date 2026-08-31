@@ -29,7 +29,7 @@ void main() {
 
   /// build() 超长存量豁免：文件名 -> 豁免的 build 起始行号集合
   const kBuildAllowlist = {
-    'lib/features/book/presentation/lib_select_page.dart': {85}, // 280 行
+    'lib/features/book/presentation/lib_select_page.dart': {100}, // 279 行
     'lib/features/learning/presentation/spell_check_page.dart': {84}, // 169 行
     'lib/features/learning/presentation/list_word_listen_page.dart': {64}, // 121 行
     'lib/features/scare_coin/presentation/scare_coin_history_page.dart': {64}, // 154 行

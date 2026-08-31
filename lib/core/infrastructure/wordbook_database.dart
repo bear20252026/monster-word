@@ -342,13 +342,17 @@ class WordBookDatabase {
   /// [lightweight] 列表浏览模式：不含 example/audio_urls/image_urls/phrase
   /// 大字段（实测省 ~95% 内存：example 均值 3KB）。性能审计 P1。
   /// 点进词典详情时由详情页按需重查完整词。
-  Future<List<Word>> getWordsByBook(int bookId, {int? limit, int offset = 0, bool lightweight = false}) async {
+  Future<List<Word>> getWordsByBook(
+      int bookId, {int? limit, int offset = 0, bool lightweight = false, bool randomOrder = false}) async {
     final columns = lightweight ? 'w.id, w.word, w.interpret, w.uk_pron, w.us_pron, w.confuse, w.word_root' : 'w.*';
+    // 用户反馈修复（2026-08-31）：学习取样必须随机——字母序取前 N 会得到
+    // 一整批同首字母（如全部 A 开头），事后 shuffle 无法弥补。
+    final orderBy = randomOrder ? 'RANDOM()' : 'w.word COLLATE NOCASE ASC';
     final rows = await db.rawQuery('''
       SELECT $columns FROM words w
       JOIN word_books wb ON wb.word_id = w.id
       WHERE wb.book_id = ?
-      ORDER BY w.word COLLATE NOCASE ASC
+      ORDER BY $orderBy
       ${limit != null ? 'LIMIT ? OFFSET ?' : ''}
     ''', limit != null ? [bookId, limit, offset] : [bookId]);
     return rows.map(Word.fromMap).toList();

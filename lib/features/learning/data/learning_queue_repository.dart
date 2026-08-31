@@ -5,7 +5,7 @@ import 'package:word_app/core/repositories/fav_repository.dart';
 
 /// 学习队列所需的词库读取端口。
 abstract interface class LearningQueueWordSource {
-  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset});
+  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset, bool randomOrder = false});
 
   Future<List<Word>> getWordsByNames(Iterable<String> words);
 }
@@ -17,8 +17,8 @@ class WordBookLearningQueueWordSource implements LearningQueueWordSource {
   final WordBookDatabase _database;
 
   @override
-  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset}) {
-    return _database.getWordsByBook(bookId, limit: limit, offset: offset);
+  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset, bool randomOrder = false}) {
+    return _database.getWordsByBook(bookId, limit: limit, offset: offset, randomOrder: randomOrder);
   }
 
   @override
@@ -38,7 +38,9 @@ class LearningQueueRepository {
   final FavRepository _favRepository;
 
   Future<List<Word>> loadBook(Book book, {required int limit, required bool shuffle}) async {
-    final queue = await _wordSource.getWordsByBook(book.id, limit: limit, offset: 0);
+    // shuffle=true 时 SQL 层随机取样（随机取 50 个），再交给上层字母分散洗牌
+    final queue = await _wordSource.getWordsByBook(book.id,
+        limit: limit, offset: 0, randomOrder: shuffle);
     if (shuffle) queue.shuffle();
     return queue;
   }
