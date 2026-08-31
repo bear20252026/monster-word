@@ -42,9 +42,13 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
   bool _celebrated = false;
   int? _grantedCoins;
 
-  /// 会话结算发币（每会话一次，由 _celebrated 保证）；失败静默不打断完成页。
+  /// 会话结算发币（每会话一次）；失败静默不打断完成页。
   Future<void> _settleRewards(BuildContext context, LearningSessionState state, int total) async {
     try {
+      // 队列未重载再次进入（如皮肤页「立即体验」）会重挂载本页；
+      // 会话级标记保证只在真正的新会话结算一次
+      if (state.sessionRewardSettled) return;
+      state.markSessionRewardSettled();
       final store = context.read<ScareCoinStore>();
       final service = LearningRewardService(store);
       final result = await service.settleSession(wordsLearned: total, dailyGoalAchieved: state.dailyGoalAchieved);
