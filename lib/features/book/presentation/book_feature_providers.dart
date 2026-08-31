@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/learning/learning_progress_reader.dart';
+import 'package:word_app/features/learning/application/learning_progress_reader.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_selection_writer.dart';
 import 'package:word_app/features/book/application/book_words_reader.dart';

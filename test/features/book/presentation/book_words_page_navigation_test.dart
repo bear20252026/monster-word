@@ -13,8 +13,8 @@ import 'package:word_app/features/learning/application/learning_queue_port.dart'
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/new_words_state.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
-import 'package:word_app/core/learning/learning_favorites_store.dart';
-import 'package:word_app/core/learning/new_words_store.dart';
+import 'package:word_app/features/learning/application/learning_favorites_store.dart';
+import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/audio/audio_service.dart';

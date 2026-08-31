@@ -1,4 +1,4 @@
-﻿import '../../models/book.dart';
+﻿import 'package:word_app/models/book.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/models/word.dart';
 

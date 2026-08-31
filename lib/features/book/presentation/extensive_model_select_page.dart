@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/learning/listening_mode.dart';
+import 'package:word_app/features/learning/application/listening_mode.dart';
 import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';

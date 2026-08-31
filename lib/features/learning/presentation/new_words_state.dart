@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import 'package:word_app/core/learning/new_words_store.dart';
+import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/application/new_words_reader.dart';
 import 'package:word_app/features/learning/application/new_words_writer_port.dart';

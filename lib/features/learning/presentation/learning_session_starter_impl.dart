@@ -1,5 +1,5 @@
-﻿import '../../../core/learning/learning_session_reader.dart';
-import 'package:word_app/core/learning/learning_session_starter.dart';
+﻿import '../application/learning_session_reader.dart';
+import 'package:word_app/features/learning/application/learning_session_starter.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';

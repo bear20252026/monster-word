@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/learning/learning_collections_reader.dart';
+import 'package:word_app/features/learning/application/learning_collections_reader.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/func_colors.dart';

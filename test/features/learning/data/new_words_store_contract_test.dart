@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/core/learning/new_words_store.dart';
+import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/models/word.dart';
 
 /// 模拟学习侧经 core 契约暴露的生词本。

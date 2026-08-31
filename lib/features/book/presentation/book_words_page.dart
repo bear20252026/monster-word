@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
-import 'package:word_app/core/learning/learning_favorites_store.dart';
-import 'package:word_app/core/learning/learning_session_starter.dart';
-import 'package:word_app/core/learning/new_words_store.dart';
+import 'package:word_app/features/learning/application/learning_favorites_store.dart';
+import 'package:word_app/features/learning/application/learning_session_starter.dart';
+import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/widgets/common/mw_skeleton.dart';
 import 'package:word_app/theme/skin_system.dart';

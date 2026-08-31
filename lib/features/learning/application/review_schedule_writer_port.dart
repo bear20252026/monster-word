@@ -1,4 +1,4 @@
-﻿import '../../../core/engine/fsrs6_engine.dart';
+﻿import 'package:word_app/core/engine/fsrs6_engine.dart';
 
 /// Port: review schedule mutations (rate / forget).
 /// Presentation states depend on this abstraction, not on

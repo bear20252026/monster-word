@@ -12,8 +12,8 @@ import 'package:word_app/models/word.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/audio/system_tts.dart';
 import 'package:word_app/theme/skin_system.dart';
-import 'package:word_app/core/learning/listening_mode.dart';
-export 'package:word_app/core/learning/listening_mode.dart';
+import 'package:word_app/features/learning/application/listening_mode.dart';
+export 'package:word_app/features/learning/application/listening_mode.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/mw_card.dart';
 

@@ -1,5 +1,5 @@
 import 'package:word_app/core/di/service_locator.dart';
-import 'package:word_app/core/learning/learning_progress_reader.dart';
+import 'package:word_app/features/learning/application/learning_progress_reader.dart';
 import 'package:word_app/features/learning/data/mastered_repository.dart';
 
 /// [LearningProgressReader] 的具体实现。

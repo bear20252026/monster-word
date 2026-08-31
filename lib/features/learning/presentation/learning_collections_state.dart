@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import 'package:word_app/core/learning/learning_collections_reader.dart';
+import 'package:word_app/features/learning/application/learning_collections_reader.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_mastered_state.dart';
 

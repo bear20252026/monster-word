@@ -6,8 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
-import 'package:word_app/core/learning/learning_session_reader.dart';
-import 'package:word_app/core/learning/learning_session_starter.dart';
+import 'package:word_app/features/learning/application/learning_session_reader.dart';
+import 'package:word_app/features/learning/application/learning_session_starter.dart';
 import 'package:word_app/features/learning/presentation/learning_session_starter_impl.dart';
 import 'package:word_app/features/word_browse/application/word_notes_store.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';

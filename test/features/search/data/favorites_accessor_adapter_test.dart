@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/core/learning/learning_favorites_store.dart';
+import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 import 'package:word_app/features/search/data/favorites_accessor_adapter.dart';
 import 'package:word_app/models/word.dart';
 
