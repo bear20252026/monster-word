@@ -200,6 +200,7 @@ final _testBook = Book(id: 1, code: 'TEST', name: '测试', wordCount: 2);
 LearningSessionState _sessionWithWords({required List<Word> words, ReviewScheduleRepository? schedule}) {
   final effectiveSchedule = schedule ?? ReviewScheduleRepository();
   return LearningSessionState(
+    shuffler: (words) => words, // 确定性顺序（顺序无关断言由其他用例覆盖）
     queuePort: _FakeQueuePort(words),
     progressPort: _FakeProgressPort(),
     reviewSchedulePort: RepositoryReviewScheduleWriterPort(effectiveSchedule),

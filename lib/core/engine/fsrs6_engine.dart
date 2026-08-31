@@ -1,6 +1,14 @@
 // FSRS-6 间隔重复算法引擎（Free Spaced Repetition Scheduler v6）
-// 参考: https://github.com/open-spaced-repetition/free-spaced-repetition-scheduler
-// FSRS-6 核心改进：短时记忆模型 + 改进的难度计算 + 更准确的记忆预测
+// 参考: https://github.com/open-spaced-repetition/py-fsrs（官方 main 分支源码）
+//
+// 2026-08-31 算法升级（对照官方源码逐公式重写）：
+// - 遗忘曲线修正：DECAY = -w20（默认 0.1542 → DECAY = -0.1542），
+//   FACTOR = 0.9^(1/DECAY) - 1 = 0.981。旧实现 factor=0.0741 导致
+//   stability 语义偏移 3.17 倍（R=0.9 需要 3.17·S 天而非 S 天）。
+// - 全部公式对照 py-fsrs scheduler.py：初始难度指数式、难度更新
+//   线性阻尼+均值回归、hard/easy 惩罚奖励改用 w15/w16、遗忘稳定
+//   性取长短期 min、同日短时稳定性 w17/w18/w19。
+// - 默认权重更新为官方最新机器学习优化值。
 import 'dart:math';
 
 /// FSRS-6 评分等级
@@ -18,7 +26,7 @@ enum FsrsRating {
 /// FSRS-6 卡片状态
 class FsrsCard {
   final String word;
-  double stability; // 记忆稳定性（天）
+  double stability; // 记忆稳定性（天）：R 降至 90% 所需天数
   double difficulty; // 难度 (1-10)
   int elapsedDays; // 距上次复习的天数
   int scheduledDays; // 计划间隔天数
@@ -76,151 +84,169 @@ class FsrsCard {
   FsrsCard copy() => FsrsCard.fromJson(toJson());
 }
 
-/// FSRS-6 算法引擎
-/// 核心改进：
-/// 1. 短时记忆模型 - 同一天内的复习使用不同的稳定性计算
-/// 2. 改进的难度计算 - 更准确地评估单词难度
-/// 3. 更准确的记忆预测 - 基于遗忘曲线的精确概率计算
+/// FSRS-6 算法引擎（对照 py-fsrs 官方源码逐公式实现）
 class Fsrs6Engine {
-  // FSRS-6 默认参数（21 个权重 - 通过机器学习优化）
+  // FSRS-6 官方默认参数（py-fsrs main 分支 DEFAULT_PARAMETERS，21 个权重）
   static const List<double> _defaultWeights = [
-    0.40255,
-    1.18385,
-    3.173,
-    15.69105,
-    7.1949,
-    0.5345,
-    1.4604,
-    0.0046,
-    1.54575,
-    0.1192,
-    1.01925,
-    1.9395,
-    0.11,
-    0.29605,
-    2.2698,
-    0.2315,
-    2.9898,
-    0.51655,
-    0.6621,
-    0.0294,
-    0.0805,
+    0.212,
+    1.2931,
+    2.3065,
+    8.2956,
+    6.4133,
+    0.8334,
+    3.0194,
+    0.001,
+    1.8722,
+    0.1666,
+    0.796,
+    1.4835,
+    0.0614,
+    0.2629,
+    1.6483,
+    0.6014,
+    1.8729,
+    0.5425,
+    0.0912,
+    0.0658,
+    0.1542, // w20：官方 FSRS_DEFAULT_DECAY
   ];
 
   // 参数
   final List<double> weights;
-  final double decay; // 遗忘衰减因子 (-0.5)
-  final double factor; // 稳定性增长因子
+  final double decay; // 遗忘衰减指数 DECAY = -w20
+  final double factor; // FACTOR = 0.9^(1/DECAY) - 1（保证 R(S,S)=0.9）
   final double desiredRetention; // 目标记忆保持率
 
-  Fsrs6Engine({List<double>? weights, this.decay = -0.5, this.desiredRetention = 0.9})
+  Fsrs6Engine({List<double>? weights, double? desiredRetention})
     : weights = weights ?? _defaultWeights,
-      factor = 1.0 / (9.0 * (1.0 - (-0.5)));
+      decay = -((weights ?? _defaultWeights)[20]),
+      factor = pow(0.9, 1 / -((weights ?? _defaultWeights)[20])).toDouble() - 1,
+      desiredRetention = desiredRetention ?? 0.9;
 
-  /// 计算 retrievability（记忆提取概率）- FSRS-6 精确公式
-  /// 返回 0.0-1.0 之间的值，表示记住该单词的概率
+  // factor 为 final，由初始化列表按官方公式计算：FACTOR = 0.9^(1/DECAY) - 1
+
+  double _clampStability(double s) => s.clamp(0.001, 36500.0);
+  double _clampDifficulty(double d) => d.clamp(1.0, 10.0);
+
+  /// 计算 retrievability（记忆提取概率）——官方公式：
+  /// R = (1 + FACTOR · elapsed / S) ^ DECAY
   double _retrievability(int elapsedDays, double stability) {
     if (stability <= 0 || elapsedDays <= 0) return 1.0;
-    // FSRS-6 遗忘曲线: R = (1 + factor * elapsed / stability) ^ decay
     return pow(1.0 + factor * elapsedDays / stability, decay).toDouble();
   }
 
-  /// 计算新的短时记忆稳定性（FSRS-6 新增）
-  /// 同一天内的复习使用短时模型
-  double _nextShortTermStability(double stability, double difficulty, FsrsRating rating) {
-    switch (rating) {
-      case FsrsRating.again:
-        return weights[0] * pow(difficulty / 10.0, -weights[16]) * pow(stability + 1, weights[17]);
-      case FsrsRating.hard:
-        return stability * exp(weights[14]);
-      case FsrsRating.good:
-        return stability * exp(weights[14]) * (1 + exp(weights[15]) * (11 - difficulty));
-      case FsrsRating.easy:
-        return stability * exp(weights[14]) * (1 + exp(weights[15]) * (11 - difficulty)) * weights[18];
-    }
+  /// 初始稳定性 S0(G) = w[G-1]
+  double _initialStability(FsrsRating rating) =>
+      _clampStability(weights[rating.value - 1]);
+
+  /// 初始难度 D0(G) = w4 - e^(w5·(G-1)) + 1
+  double _initialDifficulty(FsrsRating rating, {bool clamp = true}) {
+    final d =
+        weights[4] - exp(weights[5] * (rating.value - 1)) + 1;
+    return clamp ? _clampDifficulty(d) : d;
   }
 
-  /// 计算新的长时记忆稳定性
-  double _nextLongTermStability(double stability, double difficulty, double retrievability, FsrsRating rating) {
-    final hardPenalty = rating == FsrsRating.hard ? 0.8 : 1.0;
-    final easyBonus = rating == FsrsRating.easy ? 1.3 : 1.0;
-
-    if (rating == FsrsRating.again) {
-      // 忘记：稳定性下降
-      return stability * (1.0 + exp(3.45) * pow(stability, -0.1) * (exp((1 - retrievability) * 2.95) - 1) * 0.85);
-    }
-
-    // Good/Hard/Easy：稳定性增长
-    final growth =
-        exp(weights[8]) *
-        (11 - difficulty) *
-        pow(stability, -weights[9]) *
-        (exp((1 - retrievability) * weights[10]) - 1) *
-        hardPenalty *
-        easyBonus;
-
-    return stability + growth;
+  /// 同日复习的短时稳定性：S·e^(w17·(G-3+w18))·S^(-w19)，Hard/Good/Easy 时增长下限 1
+  double _shortTermStability(double stability, FsrsRating rating) {
+    var inc =
+        exp(weights[17] * (rating.value - 3 + weights[18])) *
+        pow(stability, -weights[19]);
+    if (rating != FsrsRating.again) inc = max(inc, 1.0);
+    return _clampStability(stability * inc);
   }
 
-  /// 计算新的难度 - FSRS-6 改进公式
+  /// 难度更新：线性阻尼 + 均值回归（官方公式）
   double _nextDifficulty(double difficulty, FsrsRating rating) {
-    // 均值回归：难度趋向于中间值
-    final meanReversion = weights[4] * (weights[5] - difficulty);
-
-    // 评分对难度的影响
-    final delta = rating == FsrsRating.again
-        ? weights[6]
-        : rating == FsrsRating.hard
-        ? weights[7]
-        : rating == FsrsRating.good
-        ? 0
-        : -weights[7];
-
-    return (difficulty + meanReversion + delta).clamp(1.0, 10.0);
+    final delta = -weights[6] * (rating.value - 3);
+    final damping = (10.0 - difficulty) * delta / 9.0;
+    final arg1 = _initialDifficulty(FsrsRating.easy, clamp: false);
+    final next = weights[7] * arg1 + (1 - weights[7]) * (difficulty + damping);
+    return _clampDifficulty(next);
   }
 
-  /// 计算下次间隔天数
-  double _nextInterval(double stability) {
-    // FSRS-6 间隔公式: I = S / 0.9 * (R^(1/decay) - 1)
-    return (stability / desiredRetention * (pow(desiredRetention, 1.0 / decay) - 1)).clamp(1.0, 365.0);
+  /// 回忆成功后的长时稳定性：
+  /// S·(1 + e^w8·(11-D)·S^(-w9)·(e^((1-R)·w10)-1)·hardPenalty(w15)·easyBonus(w16))
+  double _nextRecallStability(
+    double stability,
+    double difficulty,
+    double retrievability,
+    FsrsRating rating,
+  ) {
+    final hardPenalty = rating == FsrsRating.hard ? weights[15] : 1.0;
+    final easyBonus = rating == FsrsRating.easy ? weights[16] : 1.0;
+    return stability *
+        (1 +
+            exp(weights[8]) *
+                (11 - difficulty) *
+                pow(stability, -weights[9]) *
+                (exp((1 - retrievability) * weights[10]) - 1) *
+                hardPenalty *
+                easyBonus);
   }
 
-  /// 评分一个卡片，返回更新后的卡片
+  /// 遗忘后的长时稳定性：取长短期模型较小值
+  /// long = w11·D^(-w12)·((S+1)^w13 - 1)·e^((1-R)·w14)
+  /// short = S / e^(w17·w18)
+  double _nextForgetStability(
+    double stability,
+    double difficulty,
+    double retrievability,
+  ) {
+    final longTerm =
+        weights[11] *
+        pow(difficulty, -weights[12]) *
+        (pow(stability + 1, weights[13]) - 1) *
+        exp((1 - retrievability) * weights[14]);
+    final shortTerm = stability / exp(weights[17] * weights[18]);
+    return min(longTerm, shortTerm);
+  }
+
+  /// 下次间隔天数：round(S / FACTOR · (r^(1/DECAY) - 1))，1~36500 天
+  int _nextInterval(double stability) {
+    final raw =
+        stability /
+        factor *
+        (pow(desiredRetention, 1 / decay).toDouble() - 1);
+    return raw.round().clamp(1, 36500);
+  }
+
+  /// 评分一个卡片，返回更新后的卡片（官方 FSRS-6 流程）
   FsrsCard review(FsrsCard card, FsrsRating rating) {
     final updated = card.copy();
     final now = DateTime.now();
 
-    // 计算距上次复习的天数
+    // 距上次复习的天数（同日 = 0 → 短时模型）
     final elapsed = now.difference(card.lastReview).inDays;
     updated.elapsedDays = elapsed;
 
-    // 计算当前 retrievability
-    final retrievability = _retrievability(elapsed, card.stability);
-
     if (card.isNew) {
       // 新卡片初始化
-      updated.difficulty = _initDifficulty(rating);
-      updated.stability = _initStability(rating);
+      updated.difficulty = _initialDifficulty(rating);
+      updated.stability = _initialStability(rating);
       updated.shortTermStability = updated.stability;
     } else {
-      // 复习卡片更新
+      final retrievability = _retrievability(elapsed, card.stability);
       updated.difficulty = _nextDifficulty(card.difficulty, rating);
 
-      // FSRS-6: 区分短时和长时记忆
       final isSameDay = elapsed == 0;
       if (isSameDay) {
-        // 同一天复习：使用短时记忆模型
-        updated.shortTermStability = _nextShortTermStability(card.shortTermStability, card.difficulty, rating);
-        updated.stability = updated.shortTermStability;
+        // 同一天复习：短时稳定性模型
+        updated.stability = _shortTermStability(card.stability, rating);
+        updated.shortTermStability = updated.stability;
       } else {
-        // 跨天复习：使用长时记忆模型
-        updated.stability = _nextLongTermStability(card.stability, card.difficulty, retrievability, rating);
+        // 跨天复习：长时模型（again → forget；其余 → recall）
+        updated.stability = _nextStability(
+          card.stability,
+          card.difficulty,
+          retrievability,
+          rating,
+        );
         updated.shortTermStability = updated.stability;
       }
     }
 
     // 计算下次间隔
-    updated.scheduledDays = _nextInterval(updated.stability).round();
+    updated.scheduledDays = _nextInterval(updated.stability);
     updated.dueDate = now.add(Duration(days: updated.scheduledDays));
     updated.lastReview = now;
     updated.isNew = false;
@@ -235,6 +261,19 @@ class Fsrs6Engine {
     return updated;
   }
 
+  /// 长时稳定性统一入口（again → forget，否则 recall）
+  double _nextStability(
+    double stability,
+    double difficulty,
+    double retrievability,
+    FsrsRating rating,
+  ) {
+    final next = rating == FsrsRating.again
+        ? _nextForgetStability(stability, difficulty, retrievability)
+        : _nextRecallStability(stability, difficulty, retrievability, rating);
+    return _clampStability(next);
+  }
+
   /// 首次学习一个单词
   FsrsCard learn(String word, FsrsRating rating) {
     final card = FsrsCard(word: word, lastReview: DateTime.now(), dueDate: DateTime.now());
@@ -247,32 +286,17 @@ class Fsrs6Engine {
     return cards.where((c) => !c.isNew && !c.dueDate.isAfter(now)).toList();
   }
 
-  /// 初始稳定性（基于评分）
-  double _initStability(FsrsRating rating) {
-    switch (rating) {
-      case FsrsRating.again:
-        return weights[0];
-      case FsrsRating.hard:
-        return weights[1];
-      case FsrsRating.good:
-        return weights[2];
-      case FsrsRating.easy:
-        return weights[3];
-    }
-  }
-
-  /// 初始难度（基于评分）
-  double _initDifficulty(FsrsRating rating) {
-    switch (rating) {
-      case FsrsRating.again:
-        return weights[4] + 2.0;
-      case FsrsRating.hard:
-        return weights[4] + 1.0;
-      case FsrsRating.good:
-        return weights[4];
-      case FsrsRating.easy:
-        return weights[4] - 1.0;
-    }
+  /// 记忆预测快照（review_schedule_repository.predictionFor 消费）
+  Map<String, dynamic> getPrediction(FsrsCard card) {
+    final r = getRetrievability(card);
+    return {
+      'stability': card.stability,
+      'difficulty': card.difficulty,
+      'retrievability': r,
+      'state': getStatusText(card),
+      'scheduledDays': card.scheduledDays,
+      'dueDate': card.dueDate.toIso8601String(),
+    };
   }
 
   /// 获取记忆提取概率（0.0-1.0）
@@ -307,22 +331,7 @@ class Fsrs6Engine {
     final days = card.scheduledDays;
     if (days <= 1) return '明天';
     if (days <= 7) return '$days 天后';
-    if (days <= 30) return '${(days / 7).ceil()} 周后';
-    return '${(days / 30).ceil()} 月后';
-  }
-
-  /// 获取记忆预测信息（用于详情页显示）
-  Map<String, dynamic> getPrediction(FsrsCard card) {
-    return {
-      'retrievability': getRetrievability(card),
-      'status': getStatusText(card),
-      'difficulty': card.difficulty,
-      'difficultyText': getDifficultyText(card),
-      'stability': card.stability,
-      'scheduledDays': card.scheduledDays,
-      'nextReview': getNextReviewText(card),
-      'repetitions': card.repetitions,
-      'reviewCount': card.reviewCount,
-    };
+    if (days <= 30) return '${(days / 7).round()} 周后';
+    return '${(days / 30).round()} 月后';
   }
 }

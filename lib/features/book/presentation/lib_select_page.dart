@@ -17,6 +17,7 @@ import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/bending_gallery.dart';
+import 'package:word_app/widgets/daily_goal_picker.dart';
 import 'package:word_app/widgets/morphing_tabs.dart';
 import 'package:word_app/widgets/word_globe.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
@@ -570,9 +571,32 @@ class _LibItem extends StatelessWidget {
           }
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('已选中《${book.name}》，回首页即可开始学习')),
+              SnackBar(content: Text('已选中《${book.name}》')),
             );
-            Navigator.pop(context); // 选中完成，返回首页
+            // 用户需求：选书后提供每日学习目标设置（如每天背 50 个单词）
+            await showModalBottomSheet<void>(
+              context: context,
+              builder: (sheetCtx) => SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('设置每日学习目标',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      const DailyGoalPicker(),
+                      const SizedBox(height: 8),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(sheetCtx),
+                        child: const Text('完成，回首页开始学习'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+            if (context.mounted) Navigator.pop(context); // 选中完成，返回首页
           }
         } catch (e) {
           if (context.mounted) {

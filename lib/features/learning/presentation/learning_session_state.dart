@@ -6,6 +6,8 @@ import 'package:word_app/core/engine/core_engine.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/core/engine/leitner_engine.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/features/learning/application/alphabet_spread_shuffle.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
@@ -25,12 +27,14 @@ class LearningSessionState extends ChangeNotifier {
     required this._progressPort,
     required this._reviewSchedulePort,
     required this._choicePort,
-  }) {
+    List<Word> Function(List<Word>)? shuffler,
+  })  : _shuffler = shuffler ?? alphabetSpreadShuffle {
     unawaited(_loadProgress());
   }
 
   final LearningQueuePort _queuePort;
   final LearningProgressPort _progressPort;
+  final List<Word> Function(List<Word>) _shuffler;
   final ReviewScheduleWriterPort _reviewSchedulePort;
   final ChoiceGeneratorPort _choicePort;
   final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
@@ -46,6 +50,29 @@ class LearningSessionState extends ChangeNotifier {
   // 完成页总结数据
   final List<Word> _errorWords = [];
   int _totalAnswered = 0;
+
+  /// 今日已学计数（跨会话持久化，跨天自动清零）——Learning 卡剩余联动
+  int _todayLearned = 0;
+  String _todayLearnedDate = '';
+  int get todayLearned => _todayLearned;
+
+  Future<void> _loadTodayLearned() async {
+    try {
+      final prefs = AppPreferences();
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      _todayLearnedDate = today;
+      _todayLearned = prefs.getTodayLearned();
+      final savedDate = prefs.getTodayLearnedDate();
+      if (savedDate != today) _todayLearned = 0; // 跨天清零
+    } catch (_) {}
+  }
+
+  Future<void> _incrementTodayLearned() async {
+    _todayLearned++;
+    try {
+      await AppPreferences().setTodayLearned(_todayLearned, date: _todayLearnedDate);
+    } catch (_) {}
+  }
   DateTime? _sessionStartTime;
 
   /// 队列代际计数：每当用户主动加载新的词库/收藏（`_replaceQueue`）时自增，
@@ -96,7 +123,8 @@ class LearningSessionState extends ChangeNotifier {
     _currentBook = book;
     // 使用每日学习目标作为默认限制
     final queue = await _queuePort.loadBook(book, limit: limit, shuffle: shuffle);
-    _replaceQueue(queue);
+    // shuffle=false（测试/确定场景）跳过字母分散洗牌
+    _replaceQueue(queue, shuffle: shuffle);
     // 新会话开始，重置完成页数据
     _errorWords.clear();
     _totalAnswered = 0;
@@ -132,6 +160,7 @@ class LearningSessionState extends ChangeNotifier {
 
     try {
       _totalAnswered++;
+      unawaited(_incrementTodayLearned());
       switch (rating) {
         case FsrsRating.again:
           _leitnerEngine.iDontKnow();
@@ -211,6 +240,7 @@ class LearningSessionState extends ChangeNotifier {
   }
 
   Future<void> _loadProgress() async {
+    await _loadTodayLearned();
     // 记录发起加载时的代际；若期间用户已加载新词库（代际改变），丢弃过期进度。
     final generation = _queueGeneration;
     try {
@@ -232,12 +262,14 @@ class LearningSessionState extends ChangeNotifier {
     }
   }
 
-  void _replaceQueue(List<Word> rawQueue) {
+  void _replaceQueue(List<Word> rawQueue, {bool shuffle = true}) {
     // 过滤无中文释义的空壳词：词库约 55% 词条缺 interpret（数据源如此），
     // 空词进队列会导致四选一残缺、详情页空白。宁少勿缺。
-    final queue = rawQueue
+    final filtered = rawQueue
         .where((w) => DefinitionFormatter.extractChinese(w.interpret).isNotEmpty)
         .toList(growable: false);
+    // 用户需求：单词顺序打乱，避免同一首字母连续出现
+    final queue = shuffle ? _shuffler(filtered) : filtered;
     _queueGeneration++; // 新会话开始：作废任何进行中的旧进度加载
     _queue = queue;
     _currentIndex = 0;

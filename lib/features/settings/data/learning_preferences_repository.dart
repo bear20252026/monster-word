@@ -9,7 +9,7 @@ import 'package:word_app/features/settings/domain/learning_preferences.dart';
 /// 原全局设置状态已使用的四个键保持不变。原先仅留在设置页面内存中的选项采用
 /// 独立、语义化键名，首次读取时返回页面过去的默认值。
 class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
-  static const dailyNewWordsKey = 'daily_new_words_v1';
+  static const dailyNewWordsKey = 'daily_new_words_v1'; // 与 AppPreferences.dailyNewWordsKey 同 key
   static const autoPlayAudioKey = 'auto_play_audio_v1';
   static const showPhoneticKey = 'show_phonetic_v1';
   static const darkModeKey = 'dark_mode_v1';

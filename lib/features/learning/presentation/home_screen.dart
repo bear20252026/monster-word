@@ -68,14 +68,15 @@ class HomeScreen extends StatelessWidget {
                               child: Padding(
                                 padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
                                 // Selector 只订阅学习统计快照，避免会话状态变化导致整页 rebuild。
-                                child: Selector<LearningStatisticsState, ({int total, int dueCount})>(
-                                  selector: (_, s) => (total: s.total, dueCount: s.dueCount),
+                                child: Selector<LearningStatisticsState, ({int remaining, int dueCount})>(
+                                  // 用户需求：Learn 显示「今日目标 - 今日已学」剩余量，与 Review 动态联动
+                                  selector: (_, s) => (remaining: s.todayRemaining, dueCount: s.dueCount),
                                   builder: (context, state, _) => Row(
                                     children: [
                                       Expanded(
                                         child: _EntryCard(
                                           title: 'Learn',
-                                          count: state.total > 0 ? state.total : 0,
+                                          count: state.remaining,
                                           // 直接开始背单词（不再跳转到选书页）
                                           onTap: () => _startLearning(context),
                                         ),
@@ -263,14 +264,14 @@ class HomeScreen extends StatelessWidget {
                 delayMs: 200,
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
-                  child: Selector<LearningStatisticsState, ({int total, int dueCount})>(
-                    selector: (_, s) => (total: s.total, dueCount: s.dueCount),
+                  child: Selector<LearningStatisticsState, ({int remaining, int dueCount})>(
+                    selector: (_, s) => (remaining: s.todayRemaining, dueCount: s.dueCount),
                     builder: (context, state, _) => Row(
                       children: [
                         Expanded(
                           child: _EntryCard(
                             title: 'Learn',
-                            count: state.total,
+                            count: state.remaining,
                             // 横屏布局也直接开始背单词
                             onTap: () => _startLearning(context),
                           ),

@@ -31,6 +31,7 @@ abstract class BaseSharedPreferences {
 
   double getDouble(String key, {double defaultValue = 0.0}) => _prefs?.getDouble(key) ?? defaultValue;
 
+
   List<String> getStringList(String key, {List<String>? defaultValue}) =>
       _prefs?.getStringList(key) ?? defaultValue ?? [];
 
@@ -111,6 +112,26 @@ class SecureTokenStorage {
 
 /// 应用配置（翻译自 AppPreferences.java，key = "sysData"）
 class AppPreferences extends BaseSharedPreferences {
+  /// 每日新学单词数（settings 与 learning 共享 key，架构审计后上提）
+  static const dailyNewWordsKey = 'daily_new_words_v1';
+  static const todayLearnedKey = 'learning_today_learned_count';
+  static const todayLearnedDateKey = 'learning_today_learned_date';
+
+  /// 读取每日新学目标（默认 10，与 LearningPreferencesRepository.defaults 一致）
+  int getDailyNewWords() => getInt(dailyNewWordsKey, defaultValue: 10);
+
+  /// 今日已学数（跨天由调用方负责清零）
+  int getTodayLearned() => getInt(todayLearnedKey, defaultValue: 0);
+
+  /// 保存今日已学数与日期
+  Future<void> setTodayLearned(int count, {required String date}) async {
+    await setInt(todayLearnedKey, count);
+    await setString(todayLearnedDateKey, date);
+  }
+
+  /// 已存日期（用于跨天判断）
+  String getTodayLearnedDate() => getString(todayLearnedDateKey);
+
   static final AppPreferences _instance = AppPreferences._();
   factory AppPreferences() => _instance;
   AppPreferences._();
