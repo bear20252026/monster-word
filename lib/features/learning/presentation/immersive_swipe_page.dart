@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
@@ -40,6 +41,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
   DateTime? _sessionStart;
   late ConfettiController _confettiController;
   bool _celebrated = false;
+  bool _emptyAtEntry = false;
   int? _grantedCoins;
 
   /// 会话结算发币（每会话一次）；失败静默不打断完成页。
@@ -71,6 +73,15 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
     _fadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(_fadeController);
+    // 入口即空队列（如皮肤页「立即体验」且无进行中会话）：
+    // 展示引导空页而非「刷词完成」，避免 0 词完成页误导
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final sessionState = context.read<LearningSessionState>();
+      if (sessionState.queue.isEmpty && mounted) {
+        setState(() => _emptyAtEntry = true);
+      }
+    });
   }
 
   @override
@@ -147,6 +158,57 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
     final hours = minutes ~/ 60;
     final remainingMinutes = minutes % 60;
     return remainingMinutes > 0 ? '$hours时$remainingMinutes分' : '$hours小时';
+  }
+
+  /// 入口空队列引导页：没有可刷的词时给明确指引，而非误导性的「刷词完成」
+  Widget _buildEmptyEntry(BuildContext context, SkinSystem skin) {
+    final colors = skin.colors;
+    return Scaffold(
+      backgroundColor: colors.pageBg,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.style_outlined, size: 72, color: colors.accent),
+                const SizedBox(height: 20),
+                Text(
+                  '还没有可刷的单词',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colors.text1),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '先去选择一本词书，再来体验沉浸刷词吧',
+                  style: TextStyle(fontSize: 15, color: colors.text2),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.accent,
+                      foregroundColor: colors.onGlassAccent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, RouteNames.libSelect);
+                    },
+                    child: const Text('去选词书', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('返回')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   /// 完成页：对齐 Learn 页规格（庆祝动画 + 目标达成横幅 + 统计卡 + 主操作按钮）
@@ -291,6 +353,10 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
     final word = state.currentWord;
 
     if (word == null) {
+      // 入口即空队列：引导先去选词书，而非展示 0 词完成页
+      if (_emptyAtEntry) {
+        return _buildEmptyEntry(context, skin);
+      }
       return _buildCompletion(context, skin, state);
     }
 
