@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/presentation/responsive.dart';
+import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
@@ -168,8 +169,8 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                 ),
                 onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/class_checkin');
+                  // 真实签到入口在首页签到卡片（弹性签到日历），返回首页即可签到。
+                  NavUtils.safePop(context);
                 },
                 icon: const Icon(Icons.redeem, size: 20),
                 label: const Text('去签到', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),

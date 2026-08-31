@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/book/presentation/book_words_page.dart';
-import 'package:word_app/features/book/presentation/courses_page.dart';
 import 'package:word_app/features/book/presentation/extensive_model_select_page.dart';
 import 'package:word_app/features/book/presentation/lib_select_page.dart';
 import 'package:word_app/features/book/presentation/word_export_page.dart';
@@ -46,8 +45,6 @@ abstract final class LearningRoutes {
         return const ReviewPage();
       case RouteNames.learnSession:
         return const LearnPage();
-      case RouteNames.course:
-        return const CoursesPage();
       case RouteNames.myWords:
         return const MyWordsPage();
       case RouteNames.newWords:

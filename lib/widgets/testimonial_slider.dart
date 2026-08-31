@@ -158,7 +158,13 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
           Expanded(
             child: Text(
               item.text,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.5, color: Colors.black87),
+              // 深色适配：跟随主题明暗，而非硬编码黑色（体验审计 P1）
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 1.5,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.87),
+              ),
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
@@ -167,7 +173,7 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
             const SizedBox(height: 4),
             Text(
               '— ${item.author}${item.source != null ? ' · ${item.source}' : ''}',
-              style: TextStyle(fontSize: 11, color: Colors.grey),
+              style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45)),
             ),
           ],
         ],

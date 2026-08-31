@@ -1,10 +1,13 @@
 // Monster Word — 首页（星巴克改造 batch4a）
 // 星巴克设计方案：奶油画布 + 白卡 + 圆润温润
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/features/learning/presentation/learn_page.dart';
 import 'package:word_app/features/learning/presentation/word_machine_page.dart';
@@ -339,38 +342,7 @@ class HomeScreen extends StatelessWidget {
             borderRadius: 16,
           ),
           // 弹性签到日历入口（不干扰卡片自身的每日一句揭示交互）
-          Positioned(
-            top: -8,
-            right: -8,
-            child: ScaleDownOnPress(
-              onTap: () => _showCheckInSheet(context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [AppColors.highlightOrange, MistralColors.sunshine500]),
-                  borderRadius: BorderRadius.circular(999),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.highlightOrange.withValues(alpha: 0.35),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.redeem_rounded, size: 14, color: AppColors.white100),
-                    SizedBox(width: 4),
-                    Text(
-                      '签到 +10',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white100),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          Positioned(top: -8, right: -8, child: _CheckInBadge(skin: skin)),
           // 查看签到历史按钮
           Positioned(
             top: -8,
@@ -392,19 +364,6 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  /// 弹性签到日历底部弹层
-  void _showCheckInSheet(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetCtx) => Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 12, bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 24),
-        child: const SpringCheckInCalendar(),
       ),
     );
   }
@@ -528,6 +487,119 @@ class _EntryCard extends StatelessWidget {
             Text(
               title == 'Learn' ? '待学' : '待复习',
               style: TextStyle(fontSize: 12 * resp.fontScale, color: skin.colors.text3),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 签到角标：根据签到状态自适应展示。
+/// 未签到 → 橙色高亮「签到 +10」；已签到 → 中性态「已签 N 天」并把连签天数前置展示。
+/// 角标自行打开弹性签到日历，弹层关闭后自动刷新状态。
+class _CheckInBadge extends StatefulWidget {
+  const _CheckInBadge({required this.skin});
+
+  final SkinSystem skin;
+
+  @override
+  State<_CheckInBadge> createState() => _CheckInBadgeState();
+}
+
+class _CheckInBadgeState extends State<_CheckInBadge> {
+  bool? _checkedToday;
+  int _streakDays = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  Future<void> _reload() async {
+    final reader = context.read<CheckinStatusReader>();
+    final results = await Future.wait([reader.hasCheckedInToday(), reader.getStreakDays()]);
+    if (!mounted) return;
+    setState(() {
+      _checkedToday = results[0] as bool;
+      _streakDays = results[1] as int;
+    });
+  }
+
+  Future<void> _openSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetCtx) => Padding(
+        padding: EdgeInsets.only(left: 20, right: 20, top: 12, bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 24),
+        child: const SpringCheckInCalendar(),
+      ),
+    );
+    unawaited(_reload());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final checked = _checkedToday;
+    if (checked == null) {
+      // 加载中：占位避免布局跳动
+      return const SizedBox(width: 84, height: 32);
+    }
+    final skin = widget.skin.colors;
+    final isDark = widget.skin.effectiveUiBrightness == Brightness.dark;
+
+    if (checked) {
+      // 已签到：中性胶囊 + 连签天数前置
+      return ScaleDownOnPress(
+        onTap: _openSheet,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: skin.cardBg,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: skin.divider),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🔥', style: TextStyle(fontSize: 12)),
+              const SizedBox(width: 4),
+              Text(
+                '已签 $_streakDays 天',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: isDark ? skin.text1 : skin.text2),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 未签到：橙色高亮召唤
+    return ScaleDownOnPress(
+      onTap: _openSheet,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [AppColors.highlightOrange, MistralColors.sunshine500]),
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.highlightOrange.withValues(alpha: 0.35),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.redeem_rounded, size: 14, color: AppColors.white100),
+            SizedBox(width: 4),
+            Text(
+              '签到 +10',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white100),
             ),
           ],
         ),

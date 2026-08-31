@@ -128,12 +128,19 @@ class _SpringCalendarState extends State<SpringCalendar> with TickerProviderStat
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: const ['日', '一', '二', '三', '四', '五', '六']
+              children: ['日', '一', '二', '三', '四', '五', '六']
                   .map(
                     (d) => SizedBox(
                       width: 44,
                       child: Center(
-                        child: Text(d, style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        // 深色适配：跟随主题明暗（体验审计 P1）
+                        child: Text(
+                          d,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
+                          ),
+                        ),
                       ),
                     ),
                   )
@@ -194,7 +201,12 @@ class _SpringCalendarState extends State<SpringCalendar> with TickerProviderStat
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: day.isCheckedIn ? FontWeight.w700 : FontWeight.w400,
-                      color: day.isCheckedIn ? Colors.white : (day.isCurrentMonth ? Colors.black87 : Colors.grey),
+                      // 深色适配：跟随主题明暗，而非硬编码黑色（体验审计 P1）
+                      color: day.isCheckedIn
+                          ? Colors.white
+                          : (day.isCurrentMonth
+                                ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.87)
+                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.38)),
                     ),
                   ),
                   if (day.isCheckedIn && day.scareCoins > 0)

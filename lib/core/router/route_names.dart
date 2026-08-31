@@ -13,7 +13,6 @@ class RouteNames {
   @Deprecated('Use RouteNames.review. The legacy route redirects to the formal review flow.')
   static const String reviewSession = '/review_session';
   static const String learnSession = '/learn_session';
-  static const String course = '/course';
   static const String mySpace = '/my_space';
   static const String dashboard = '/dashboard';
   static const String settings = '/settings';
@@ -53,8 +52,6 @@ class RouteNames {
   static const String spellCheck = '/spell_check';
   static const String spellSession = '/spell_session';
   static const String checkInHistory = '/check_in_history';
-  static const String classCheckin = '/class_checkin';
-  static const String classActivity = '/class_activity';
   static const String linkedMe = '/linked_me';
   static const String wordDetail = '/word_detail';
   static const String dictionary = '/dictionary';

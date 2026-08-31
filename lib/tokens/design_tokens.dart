@@ -95,12 +95,8 @@ class AppleSpacing {
 
 /// 字体（过渡期：指向 StarbucksTypography 的回退链）
 class MistralTypography {
-  // 中西文混排回退链（font_strategy.md）
-  static const List<String> _fallback = ['Inter', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC'];
-
   static const TextStyle heroDisplay = TextStyle(
     fontFamily: 'Charter',
-    fontFamilyFallback: _fallback,
     fontSize: 64,
     fontWeight: FontWeight.w400,
     height: 1.10,
@@ -109,7 +105,6 @@ class MistralTypography {
   );
   static const TextStyle heading1 = TextStyle(
     fontFamily: 'Charter',
-    fontFamilyFallback: _fallback,
     fontSize: 52,
     fontWeight: FontWeight.w400,
     height: 1.15,
@@ -117,8 +112,6 @@ class MistralTypography {
     color: StarbucksCreamColors.greenHouse,
   );
   static const TextStyle heading2 = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 36,
     fontWeight: FontWeight.w500,
     height: 1.20,
@@ -126,88 +119,66 @@ class MistralTypography {
     color: StarbucksCreamColors.greenHouse,
   );
   static const TextStyle heading3 = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 28,
     fontWeight: FontWeight.w500,
     height: 1.25,
     color: StarbucksCreamColors.greenHouse,
   );
   static const TextStyle heading4 = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 22,
     fontWeight: FontWeight.w500,
     height: 1.30,
     color: StarbucksCreamColors.greenHouse,
   );
   static const TextStyle heading5 = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 18,
     fontWeight: FontWeight.w500,
     height: 1.40,
     color: StarbucksCreamColors.greenHouse,
   );
   static const TextStyle bodyMd = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 16,
     fontWeight: FontWeight.w400,
     height: 1.55,
     color: StarbucksCreamColors.text1,
   );
   static const TextStyle bodySm = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 14,
     fontWeight: FontWeight.w400,
     height: 1.50,
     color: StarbucksCreamColors.text1,
   );
   static const TextStyle caption = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 13,
     fontWeight: FontWeight.w400,
     height: 1.40,
     color: StarbucksCreamColors.text2,
   );
   static const TextStyle captionBold = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 13,
     fontWeight: FontWeight.w600,
     height: 1.40,
     color: StarbucksCreamColors.text1,
   );
   static const TextStyle body = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 16,
     fontWeight: FontWeight.w400,
     height: 1.55,
     color: StarbucksCreamColors.text1,
   );
   static const TextStyle bodyBold = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 16,
     fontWeight: FontWeight.w600,
     height: 1.55,
     color: StarbucksCreamColors.text1,
   );
   static const TextStyle micro = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 12,
     fontWeight: FontWeight.w500,
     height: 1.40,
     color: StarbucksCreamColors.text2,
   );
   static const TextStyle buttonMd = TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 14,
     fontWeight: FontWeight.w500,
     height: 1.30,
@@ -236,36 +207,21 @@ class AppColors {
 
 class AppTypography {
   static TextStyle get heroWord => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: MistralTypography._fallback,
     fontSize: 38,
     fontWeight: FontWeight.w700,
     height: 1.20,
     color: StarbucksCreamColors.greenHouse, // 标题绿
   );
-  static TextStyle get phonetic => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: MistralTypography._fallback,
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    height: 1.40,
-    color: StarbucksCreamColors.text2,
-  );
+  static TextStyle get phonetic =>
+      TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.40, color: StarbucksCreamColors.text2);
   static TextStyle get body => MistralTypography.bodyMd;
   static TextStyle get tabActive => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: MistralTypography._fallback,
     fontSize: 14,
     fontWeight: FontWeight.w600,
     color: StarbucksCreamColors.greenBrand, // 品牌绿
   );
-  static TextStyle get tabInactive => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: MistralTypography._fallback,
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    color: StarbucksCreamColors.text2,
-  );
+  static TextStyle get tabInactive =>
+      TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: StarbucksCreamColors.text2);
   static TextStyle get metricLg => MistralTypography.heading2;
   static TextStyle get metric => MistralTypography.heading3;
   static TextStyle get titlePage => MistralTypography.heading5;

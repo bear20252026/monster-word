@@ -135,20 +135,10 @@ class StarbucksShape {
   ];
 }
 
-/// 文字样式集（基于 Inter 字体）
+/// 文字样式集（字体统一：不再硬编码 fontFamily，全部继承 MaterialApp 主题字体）
 class StarbucksTypography {
-  // 中西文混排回退链
-  static const List<String> _fallback = [
-    'Inter',
-    'PingFang SC', // macOS / iOS
-    'Microsoft YaHei', // Windows
-    'Noto Sans SC', // Android / Linux
-  ];
-
   // 标题（绿色）
   static TextStyle get heroWord => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 38,
     fontWeight: FontWeight.w700,
     height: 1.20,
@@ -157,8 +147,6 @@ class StarbucksTypography {
   );
 
   static TextStyle get heading1 => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 52,
     fontWeight: FontWeight.w400,
     height: 1.15,
@@ -167,8 +155,6 @@ class StarbucksTypography {
   );
 
   static TextStyle get heading2 => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 36,
     fontWeight: FontWeight.w500,
     height: 1.20,
@@ -176,94 +162,38 @@ class StarbucksTypography {
     letterSpacing: -0.36,
   );
 
-  static TextStyle get heading3 => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
-    fontSize: 28,
-    fontWeight: FontWeight.w500,
-    height: 1.25,
-    color: StarbucksCreamColors.greenHouse,
-  );
+  static TextStyle get heading3 =>
+      TextStyle(fontSize: 28, fontWeight: FontWeight.w500, height: 1.25, color: StarbucksCreamColors.greenHouse);
 
-  static TextStyle get heading4 => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
-    fontSize: 22,
-    fontWeight: FontWeight.w500,
-    height: 1.30,
-    color: StarbucksCreamColors.greenHouse,
-  );
+  static TextStyle get heading4 =>
+      TextStyle(fontSize: 22, fontWeight: FontWeight.w500, height: 1.30, color: StarbucksCreamColors.greenHouse);
 
-  static TextStyle get heading5 => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
-    fontSize: 18,
-    fontWeight: FontWeight.w500,
-    height: 1.40,
-    color: StarbucksCreamColors.greenHouse,
-  );
+  static TextStyle get heading5 =>
+      TextStyle(fontSize: 18, fontWeight: FontWeight.w500, height: 1.40, color: StarbucksCreamColors.greenHouse);
 
   // 正文
-  static TextStyle get bodyMd => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    height: 1.55,
-    color: StarbucksCreamColors.text1,
-  );
+  static TextStyle get bodyMd =>
+      TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.55, color: StarbucksCreamColors.text1);
 
-  static TextStyle get bodySm => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    height: 1.50,
-    color: StarbucksCreamColors.text1,
-  );
+  static TextStyle get bodySm =>
+      TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.50, color: StarbucksCreamColors.text1);
 
-  static TextStyle get caption => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
-    fontSize: 13,
-    fontWeight: FontWeight.w400,
-    height: 1.40,
-    color: StarbucksCreamColors.text2,
-  );
+  static TextStyle get caption =>
+      TextStyle(fontSize: 13, fontWeight: FontWeight.w400, height: 1.40, color: StarbucksCreamColors.text2);
 
-  static TextStyle get captionBold => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
-    fontSize: 13,
-    fontWeight: FontWeight.w600,
-    height: 1.40,
-    color: StarbucksCreamColors.text1,
-  );
+  static TextStyle get captionBold =>
+      TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: 1.40, color: StarbucksCreamColors.text1);
 
   static TextStyle get body => bodyMd;
 
-  static TextStyle get bodyBold => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    height: 1.55,
-    color: StarbucksCreamColors.text1,
-  );
+  static TextStyle get bodyBold =>
+      TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.55, color: StarbucksCreamColors.text1);
 
-  static TextStyle get micro => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
-    height: 1.40,
-    color: StarbucksCreamColors.text2,
-  );
+  static TextStyle get micro =>
+      TextStyle(fontSize: 12, fontWeight: FontWeight.w500, height: 1.40, color: StarbucksCreamColors.text2);
 
   // 按钮
   static TextStyle get buttonMd => TextStyle(
-    fontFamily: 'Inter',
-    fontFamilyFallback: _fallback,
     fontSize: 14,
     fontWeight: FontWeight.w500,
     height: 1.30,

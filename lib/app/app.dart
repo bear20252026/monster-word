@@ -157,7 +157,10 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
 
     return ThemeData(
       brightness: skin.effectiveUiBrightness,
-      fontFamily: skin.effectiveFontFamily,
+      // 字体统一（体验审计 P1）：全 app 唯一字体入口。
+      // 未选择皮肤字体时默认 Inter（打包资产），token 层不再硬编码 fontFamily，
+      // 所有文本（含导航栏/Dock/页面标题）继承此值，消除双字体系统。
+      fontFamily: skin.effectiveFontFamily ?? 'Inter',
       useMaterial3: true,
       visualDensity: VisualDensity.standard,
       materialTapTargetSize: MaterialTapTargetSize.padded,

@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/presentation/responsive.dart';
+import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -34,10 +35,15 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
   int _unknownCount = 0;
   bool _isDragging = false;
   double _dragOffset = 0;
+  DateTime? _sessionStart;
+  late ConfettiController _confettiController;
+  bool _celebrated = false;
 
   @override
   void initState() {
     super.initState();
+    _sessionStart = DateTime.now();
+    _confettiController = ConfettiController();
     _slideController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     _fadeController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
     _slideAnimation = Tween<Offset>(
@@ -51,6 +57,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
   void dispose() {
     _slideController.dispose();
     _fadeController.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -110,6 +117,128 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
     });
   }
 
+  static String _formatDuration(int seconds) {
+    if (seconds < 60) return '$seconds秒';
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    if (minutes < 60) {
+      return remainingSeconds > 0 ? '$minutes分$remainingSeconds秒' : '$minutes分钟';
+    }
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes % 60;
+    return remainingMinutes > 0 ? '$hours时$remainingMinutes分' : '$hours小时';
+  }
+
+  /// 完成页：对齐 Learn 页规格（庆祝动画 + 目标达成横幅 + 统计卡 + 主操作按钮）
+  Widget _buildCompletion(BuildContext context, SkinSystem skin, LearningSessionState state) {
+    if (!_celebrated) {
+      _celebrated = true;
+      unawaited(HapticFeedback.mediumImpact());
+      WidgetsBinding.instance.addPostFrameCallback((_) => _confettiController.play());
+    }
+    final total = _knownCount + _unknownCount;
+    final duration = _sessionStart == null ? null : DateTime.now().difference(_sessionStart!).inSeconds;
+
+    return Scaffold(
+      backgroundColor: skin.colors.pageBg,
+      body: ConfettiOverlay(
+        controller: _confettiController,
+        particleCount: 40,
+        direction: ConfettiDirection.down,
+        duration: const Duration(seconds: 3),
+        colors: const [Color(0xFF006241), Color(0xFF00754A), Color(0xFFcba258), Color(0xFFFFD93D), Color(0xFF6BCB77)],
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.celebration, size: 80, color: skin.colors.accent),
+                const SizedBox(height: 24),
+                Text(
+                  '🎉 刷词完成！',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: skin.colors.text1),
+                ),
+                const SizedBox(height: 12),
+                // 今日目标达成庆祝横幅
+                if (state.dailyGoalAchieved) ...[_buildGoalAchievedBanner(skin, state), const SizedBox(height: 12)],
+                Text(
+                  '本次共刷过 $total 个单词',
+                  style: TextStyle(fontSize: 16, color: skin.colors.text2),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: skin.colors.cardBg,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: skin.colors.divider),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _ImmersiveStatItem(
+                        label: '答对率',
+                        value: total == 0 ? '--' : '${((_knownCount / total) * 100).round()}%',
+                        colors: skin.colors,
+                      ),
+                      _ImmersiveStatItem(
+                        label: '用时',
+                        value: duration == null ? '--' : _formatDuration(duration),
+                        colors: skin.colors,
+                      ),
+                      _ImmersiveStatItem(label: '不认识', value: '$_unknownCount', colors: skin.colors),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: skin.colors.accent,
+                      foregroundColor: skin.colors.onGlassAccent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => NavUtils.goHome(context),
+                    child: const Text('返回首页', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 今日目标达成横幅（🏅 已学 X / 目标 Y）
+  Widget _buildGoalAchievedBanner(SkinSystem skin, LearningSessionState state) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: skin.colors.accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: skin.colors.accent.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('🏅', style: TextStyle(fontSize: 16)),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              '今日目标达成！已学 ${state.todayLearned} / 目标 ${state.dailyGoal}',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: skin.colors.accent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
@@ -118,33 +247,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
     final word = state.currentWord;
 
     if (word == null) {
-      return Scaffold(
-        backgroundColor: skin.colors.pageBg,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.check_circle_outline, size: 64, color: skin.colors.success),
-              const SizedBox(height: 16),
-              Text('刷词完成！', style: MistralTypography.heading4.copyWith(color: skin.colors.text1)),
-              const SizedBox(height: 8),
-              Text(
-                '认识 $_knownCount · 不认识 $_unknownCount',
-                style: MistralTypography.body.copyWith(color: skin.colors.text3),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => NavUtils.goHome(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: skin.colors.accent,
-                  foregroundColor: AppColors.white100,
-                ),
-                child: const Text('返回首页'),
-              ),
-            ],
-          ),
-        ),
-      );
+      return _buildCompletion(context, skin, state);
     }
 
     return SessionExitGuard(
@@ -286,6 +389,29 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
           Text('不认识', style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
         ],
       ),
+    );
+  }
+}
+
+/// 沉浸刷词完成页统计项（对齐 Learn 页规格）
+class _ImmersiveStatItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final dynamic colors;
+
+  const _ImmersiveStatItem({required this.label, required this.value, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colors.accent),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 12, color: colors.text3)),
+      ],
     );
   }
 }

@@ -68,6 +68,9 @@ class _LearnPageState extends State<LearnPage> {
                 totalAnswered: state.totalAnswered,
                 durationSeconds: state.sessionDurationSeconds,
                 accuracy: state.accuracy,
+                goalAchieved: state.dailyGoalAchieved,
+                todayLearned: state.todayLearned,
+                dailyGoal: state.dailyGoal,
                 onReviewErrors: state.errorWords.isEmpty
                     ? null
                     : () {
@@ -227,7 +230,15 @@ class _CompletionScreen extends StatelessWidget {
     this.durationSeconds,
     this.accuracy,
     this.onReviewErrors,
+    this.goalAchieved = false,
+    this.todayLearned = 0,
+    this.dailyGoal = 0,
   });
+
+  /// 今日目标达成（显示庆祝横幅）
+  final bool goalAchieved;
+  final int todayLearned;
+  final int dailyGoal;
 
   @override
   Widget build(BuildContext context) {
@@ -246,6 +257,31 @@ class _CompletionScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colors.text1),
               ),
               const SizedBox(height: 12),
+              // 今日目标达成庆祝横幅
+              if (goalAchieved) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: colors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: colors.accent.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('🏅', style: TextStyle(fontSize: 16)),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          '今日目标达成！已学 $todayLearned / 目标 $dailyGoal',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.accent),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               Text(
                 onReviewErrors != null && errorCount > 0
                     ? '本次学习了 $totalAnswered 个单词，错了 $errorCount 个'

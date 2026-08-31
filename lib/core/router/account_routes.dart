@@ -11,8 +11,6 @@ import 'package:word_app/features/account/presentation/my_equip_page.dart';
 import 'package:word_app/features/account/presentation/my_space_page.dart';
 import 'package:word_app/features/account/presentation/user_info_manage_page.dart';
 import 'package:word_app/features/checkin/presentation/check_in_history_page.dart';
-import 'package:word_app/features/checkin/presentation/class_activity_page.dart';
-import 'package:word_app/features/checkin/presentation/class_checkin_page.dart';
 import 'package:word_app/features/learning/presentation/dashboard_page.dart';
 import 'package:word_app/features/learning/presentation/personal_stereo_page.dart';
 import 'package:word_app/features/learning/presentation/play_order_page.dart';
@@ -72,10 +70,6 @@ abstract final class AccountRoutes {
         return const RedemptionCenterPage();
       case RouteNames.checkInHistory:
         return const CheckInHistoryPage();
-      case RouteNames.classCheckin:
-        return const ClassCheckInPage();
-      case RouteNames.classActivity:
-        return const ClassActivityPage();
       case RouteNames.linkedMe:
         return _buildLinkedMePage(args);
       default:

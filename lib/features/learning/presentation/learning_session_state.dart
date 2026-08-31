@@ -56,6 +56,12 @@ class LearningSessionState extends ChangeNotifier {
   String _todayLearnedDate = '';
   int get todayLearned => _todayLearned;
 
+  /// 每日学习目标（个），来自偏好设置
+  int get dailyGoal => UserPreferences().getDailyGoal();
+
+  /// 今日目标是否已达成（今日已学 >= 目标）——完成页庆祝横幅依据
+  bool get dailyGoalAchieved => _todayLearned >= dailyGoal;
+
   Future<void> _loadTodayLearned() async {
     try {
       final prefs = AppPreferences();
