@@ -3,9 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/features/account/presentation/account_profile_state.dart';
+import 'package:word_app/features/account/application/account_profile_state.dart';
+import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import 'package:word_app/features/account/presentation/appearance_page.dart';
 import 'package:word_app/features/settings/presentation/more_settings_page.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -190,7 +190,7 @@ class ProfileScreen extends StatelessWidget {
               FuncColors.success, // #4CAF50 → token
               '外观 & 沉浸场景',
               skin,
-              onTap: () => Navigator.pushNamed(context, AppearancePage.routeName),
+              onTap: () => Navigator.pushNamed(context, RouteNames.appearance),
             ),
             Divider(height: 1, color: skin.colors.divider),
             _menuRow(Icons.tune, FuncColors.purple, '学习偏好', skin),

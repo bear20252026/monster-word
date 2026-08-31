@@ -6,7 +6,7 @@ import 'package:word_app/core/di/service_locator.dart';
 import 'package:word_app/features/account/data/user_service.dart';
 import 'package:word_app/features/account/application/account_profile_store.dart';
 import 'package:word_app/features/account/data/account_profile_repository.dart';
-import 'package:word_app/features/account/presentation/account_profile_state.dart';
+import 'package:word_app/features/account/application/account_profile_state.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 
 /// 账号功能域的根状态装配入口。

@@ -9,9 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// 存量豁免清单：健康评估（2026-08-30）已记录、待按 Top5 清单逐步拆分的文件。
 /// 新增违规不允许进入此清单；每拆完一个，从此处删除对应条目。
-const Set<String> _kFileAllowlist = {
-  'lib/features/checkin/presentation/class_checkin_page.dart', // 1149 行，评估 H 级
-};
+/// 2026-08-31 清空（class_checkin_page 已拆分为 part 文件，全库 ≤900 行达标）。
+const Set<String> _kFileAllowlist = {};
 
 void main() {
   test('lib/ 下 dart 文件不超过 900 行', () {

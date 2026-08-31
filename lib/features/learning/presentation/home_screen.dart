@@ -3,11 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/features/learning/presentation/learn_page.dart';
-import 'package:word_app/features/book/presentation/lib_select_page.dart';
-import 'package:word_app/features/search/presentation/search_page.dart';
 import 'package:word_app/features/learning/presentation/word_machine_page.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
@@ -44,7 +43,7 @@ class HomeScreen extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onVerticalDragEnd: (details) {
         final v = details.primaryVelocity ?? 0;
-        if (v > 160) Navigator.pushNamed(context, SearchPage.routeName);
+        if (v > 160) Navigator.pushNamed(context, RouteNames.search);
       },
       child: Container(
         color: skin.colors.pageBg,
@@ -158,7 +157,7 @@ class HomeScreen extends StatelessWidget {
               label: '去选词书',
               onPressed: () {
                 if (context.mounted) {
-                  Navigator.pushNamed(context, LibSelectPage.routeName);
+                  Navigator.pushNamed(context, RouteNames.libSelect);
                 }
               },
             ),
@@ -207,7 +206,7 @@ class HomeScreen extends StatelessWidget {
       );
       if (goPick == true) {
         if (context.mounted) {
-          Navigator.pushNamed(context, LibSelectPage.routeName);
+          Navigator.pushNamed(context, RouteNames.libSelect);
         }
         return;
       }
@@ -222,7 +221,7 @@ class HomeScreen extends StatelessWidget {
   /// 底部词书选择器（点击跳转到词书选择页）
   Widget _buildBookSelector(BuildContext context, SkinSystem skin, AppResponsive resp) {
     return ScaleDownOnPress(
-      onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
+      onTap: () => Navigator.pushNamed(context, RouteNames.libSelect),
       child: MwCard(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Row(
@@ -455,7 +454,7 @@ class HomeScreen extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.only(left: 12, top: 12),
         child: ScaleDownOnPress(
-          onTap: () => Navigator.pushNamed(context, SearchPage.routeName),
+          onTap: () => Navigator.pushNamed(context, RouteNames.search),
           child: Tooltip(
             message: '词典查询',
             triggerMode: TooltipTriggerMode.longPress,

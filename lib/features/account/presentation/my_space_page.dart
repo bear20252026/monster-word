@@ -9,7 +9,7 @@ import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
-import 'package:word_app/features/account/presentation/account_profile_state.dart';
+import 'package:word_app/features/account/application/account_profile_state.dart';
 
 class MySpacePage extends StatelessWidget {
   const MySpacePage({super.key});
