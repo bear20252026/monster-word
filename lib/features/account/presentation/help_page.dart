@@ -44,7 +44,9 @@ class _HelpPageState extends State<HelpPage> {
           // 安全加固：仅允许 beingfine.cn 域名导航，阻止跳转到外部恶意站点
           onNavigationRequest: (request) {
             final uri = Uri.tryParse(request.url);
-            if (uri != null && uri.host.endsWith('beingfine.cn')) {
+            // 安全审计 S3：与 BaseWebPage 一致的严格白名单（防 evil-beingfine.cn 绕过）
+            if (uri != null &&
+                (uri.host == 'beingfine.cn' || uri.host.endsWith('.beingfine.cn'))) {
               return NavigationDecision.navigate;
             }
             return NavigationDecision.prevent;

@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/models/user_info_bean.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart' hide UserInfoBean;
 import 'package:word_app/core/repositories/user_repository.dart';
 import 'package:word_app/core/repositories/note_repository.dart';
 import 'package:word_app/features/account/data/user_service.dart';
@@ -43,8 +44,16 @@ class UserServiceImpl implements UserService {
 
   @override
   Future<bool> setUserInfoBean(UserInfoBean bean) async {
+    // 安全审计 S1：token/secret 只入平台安全存储，SharedPreferences 不落凭证
+    if (bean.token.isNotEmpty) {
+      await SecureTokenStorage().setToken(bean.token);
+    }
+    if (bean.secret.isNotEmpty) {
+      await SecureTokenStorage().setSecret(bean.secret);
+    }
+    final sanitized = UserInfoBean.fromJson(bean.toJson())..token = ''..secret = '';
     final prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_userInfoKey, jsonEncode(bean.toJson()));
+    return prefs.setString(_userInfoKey, jsonEncode(sanitized.toJson()));
   }
 
   @override

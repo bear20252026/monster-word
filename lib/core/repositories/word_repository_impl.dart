@@ -106,7 +106,8 @@ class WordRepositoryImpl implements WordRepository {
   @override
   Future<List<Word>> getRandomWords(int count, {int? excludeBookId}) async {
     final db = _database.db;
-    final where = excludeBookId != null ? 'book_id != ?' : null;
+    // 安全审计 R4：words 表无 book_id 列（关联在 word_books），用子查询排除
+    final where = excludeBookId != null ? 'id NOT IN (SELECT word_id FROM word_books WHERE book_id = ?)' : null;
     final whereArgs = excludeBookId != null ? [excludeBookId] : null;
     final maps = await db.query('words', where: where, whereArgs: whereArgs, orderBy: 'RANDOM()', limit: count);
     return maps.map((m) => Word.fromMap(m)).toList();

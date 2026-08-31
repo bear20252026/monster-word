@@ -43,7 +43,8 @@ class BookRepositoryImpl implements BookRepository {
     try {
       if (!_database.isInitialized) return 0;
       final db = _database.db;
-      final result = await db.rawQuery('SELECT COUNT(*) as cnt FROM words WHERE book_id = ?', [bookId]);
+      // 安全审计 R4：关联在 word_books 表（words 无 book_id 列）
+      final result = await db.rawQuery('SELECT COUNT(*) as cnt FROM word_books WHERE book_id = ?', [bookId]);
       return (result.first['cnt'] as int?) ?? 0;
     } catch (e) {
       debugPrint('BookRepositoryImpl.getWordCount failed: $e');
