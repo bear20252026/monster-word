@@ -6,26 +6,25 @@ import 'package:word_app/models/book.dart';
 void main() {
   group('B-1: Learn 空态引导 — SnackBar 含「去选词书」CTA', () {
     testWidgets('无词书时显示带 CTA 的 SnackBar', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (ctx) => ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(
-                    content: Text('还没有词书，先去选一本吧'),
-                    action: SnackBarAction(
-                      label: '去选词书',
-                      onPressed: _noopAction,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                      content: Text('还没有词书，先去选一本吧'),
+                      action: SnackBarAction(label: '去选词书', onPressed: _noopAction),
                     ),
-                  ),
-                );
-              },
-              child: const Text('Test'),
+                  );
+                },
+                child: const Text('Test'),
+              ),
             ),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Test'));
       await tester.pumpAndSettle();

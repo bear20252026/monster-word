@@ -91,12 +91,8 @@ void main() {
 
     group('按名解析页面', () {
       testWidgets('未命中 → 友好错误态，可返回首页', (tester) async {
-        sl.registerLazySingleton<WordRepository>(
-          () => _FakeWordRepository(found: null),
-        );
-        await tester.pumpWidget(const MaterialApp(
-          home: DictionaryByNamePage(wordName: 'zzz_not_exist'),
-        ));
+        sl.registerLazySingleton<WordRepository>(() => _FakeWordRepository(found: null));
+        await tester.pumpWidget(const MaterialApp(home: DictionaryByNamePage(wordName: 'zzz_not_exist')));
         await tester.pumpAndSettle();
 
         expect(find.textContaining('未找到'), findsOneWidget);

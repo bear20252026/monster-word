@@ -16,8 +16,7 @@ class _FakeScareCoinStore implements ScareCoinStore {
   final bool _checkedToday = false;
   final List<ScareCoinEntry> _entries;
 
-  _FakeScareCoinStore({this._balance = 0, List<ScareCoinEntry>? entries})
-      : _entries = entries ?? [];
+  _FakeScareCoinStore({this._balance = 0, List<ScareCoinEntry>? entries}) : _entries = entries ?? [];
 
   @override
   int get checkInReward => 10;
@@ -59,10 +58,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Provider<ScareCoinStore>.value(
-            value: store,
-            child: const ScareCoinHistoryPage(),
-          ),
+          home: Provider<ScareCoinStore>.value(value: store, child: const ScareCoinHistoryPage()),
         ),
       );
 
@@ -84,10 +80,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Provider<ScareCoinStore>.value(
-            value: store,
-            child: const ScareCoinHistoryPage(),
-          ),
+          home: Provider<ScareCoinStore>.value(value: store, child: const ScareCoinHistoryPage()),
         ),
       );
 

@@ -13,7 +13,10 @@ void main() {
     test('R4: 跨功能 import 被拒绝(除 application 端口通道)', () {
       // 跨 feature 引用对方具体实现层（presentation/data/domain）→ 拒绝。
       expect(
-        check('features/account/presentation/my_space_page.dart', 'features/scare_coin/presentation/scare_coin_page.dart'),
+        check(
+          'features/account/presentation/my_space_page.dart',
+          'features/scare_coin/presentation/scare_coin_page.dart',
+        ),
         anyElement(contains('跨功能 import 被禁止(R4)')),
       );
       expect(
@@ -24,27 +27,21 @@ void main() {
       // 允许的功能间通道（app_structure_test.dart 强制 word_detail/my_fav_sentence
       // 消费 SentenceFavoritesStore / WordNotesStore / ReviewScheduleReader）。
       expect(
-        check('features/account/presentation/my_space_page.dart', 'features/scare_coin/application/scare_coin_store.dart'),
+        check(
+          'features/account/presentation/my_space_page.dart',
+          'features/scare_coin/application/scare_coin_store.dart',
+        ),
         isEmpty,
       );
     });
 
     test('同功能内部 import 允许', () {
-      expect(
-        check('features/learning/presentation/page.dart', 'features/learning/data/repo.dart'),
-        isEmpty,
-      );
-      expect(
-        check('features/learning/data/repo.dart', 'features/learning/application/port.dart'),
-        isEmpty,
-      );
+      expect(check('features/learning/presentation/page.dart', 'features/learning/data/repo.dart'), isEmpty);
+      expect(check('features/learning/data/repo.dart', 'features/learning/application/port.dart'), isEmpty);
     });
 
     test('feature 依赖 core/models 允许；core 依赖 features 被拒绝', () {
-      expect(
-        check('features/account/presentation/my_space_page.dart', 'models/scare_coin_entry.dart'),
-        isEmpty,
-      );
+      expect(check('features/account/presentation/my_space_page.dart', 'models/scare_coin_entry.dart'), isEmpty);
       expect(
         check('core/learning/learning_session_starter.dart', 'features/learning/presentation/state.dart'),
         anyElement(contains('core 不得 import features(R-core)')),
@@ -99,25 +96,18 @@ void main() {
         anyElement(contains('feature 不得 import 壳层 screens/app(R6)')),
       );
       // 组合根不受限：core/router 可装配 feature 页面
-      expect(
-        check('core/router/learning_routes.dart', 'features/learning/presentation/learn_session.dart'),
-        isEmpty,
-      );
+      expect(check('core/router/learning_routes.dart', 'features/learning/presentation/learn_session.dart'), isEmpty);
     });
 
     test('非 feature、非 core 壳层（遗留薄适配）依赖 feature 允许', () {
-      expect(
-        check('pages/book_words_page.dart', 'features/learning/presentation/state.dart'),
-        isEmpty,
-      );
+      expect(check('pages/book_words_page.dart', 'features/learning/presentation/state.dart'), isEmpty);
     });
   });
 
   group('ImportGuard 全库扫描 harness', () {
     test('lib/**/*.dart 不存在依赖边界违规', () {
       final violations = _scanLib();
-      expect(violations, isEmpty,
-          reason: violations.isEmpty ? null : '发现依赖边界违规：\n${violations.join('\n')}');
+      expect(violations, isEmpty, reason: violations.isEmpty ? null : '发现依赖边界违规：\n${violations.join('\n')}');
     });
   });
 }
@@ -136,16 +126,13 @@ List<String> _scanLib() {
 
   // 归一化为正向斜杠：Windows 下 File.path 用反斜杠，而逻辑路径用 '/'，
   // 否则 _scanLib 会因 realPaths 与实际解析路径分隔符不一致而误跳过全部相对 import（假绿）。
-  final realPaths =
-      files.map((f) => f.path.replaceAll(r'\', '/')).toSet();
+  final realPaths = files.map((f) => f.path.replaceAll(r'\', '/')).toSet();
 
   for (final f in files) {
     final from = f.path.replaceAll(r'\', '/'); // e.g. "lib/features/.../x.dart"
     // 归一化为 lib/ 相对逻辑路径
     final fromLogical = from.startsWith('lib/') ? from.substring('lib/'.length) : from;
-    final fromDir = fromLogical.contains('/')
-        ? fromLogical.substring(0, fromLogical.lastIndexOf('/'))
-        : '';
+    final fromDir = fromLogical.contains('/') ? fromLogical.substring(0, fromLogical.lastIndexOf('/')) : '';
 
     final lines = f.readAsLinesSync();
     for (final line in lines) {

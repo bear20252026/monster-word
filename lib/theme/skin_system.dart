@@ -606,9 +606,7 @@ class SkinSystem extends ChangeNotifier {
     if (!DesignLanguages.all.containsKey(id) || _designLanguageId == id) return;
     _designLanguageId = id;
     notifyListeners();
-    SharedPreferences.getInstance()
-        .then((p) => p.setString(_kDesignPrefKey, id))
-        .catchError((e) => false);
+    SharedPreferences.getInstance().then((p) => p.setString(_kDesignPrefKey, id)).catchError((e) => false);
   }
 
   /// 品牌风格 → 默认颜色主题映射（整站换肤 A/B 联动用）。

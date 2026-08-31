@@ -1,4 +1,5 @@
-﻿import '../application/learning_session_reader.dart';
+import '../application/learning_session_reader.dart';
+
 import 'package:word_app/features/learning/application/learning_session_starter.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/models/book.dart';
@@ -14,8 +15,7 @@ import 'package:word_app/features/learning/presentation/learning_session_state.d
 /// 属于功能的装配/组合根；若放在 data 会造成 data -> presentation 的反向依赖，
 /// 被 import_guard 的依赖方向规则拦截。消费方只看到 [LearningSessionStarter] 与
 /// [LearningSessionReader]，不暴露可变会话对象。
-class LearningSessionStarterImpl
-    implements LearningSessionStarter, LearningSessionReader {
+class LearningSessionStarterImpl implements LearningSessionStarter, LearningSessionReader {
   LearningSessionStarterImpl(this._session);
 
   final LearningSessionState _session;

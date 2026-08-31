@@ -1,4 +1,4 @@
-﻿import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
+import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 
 /// 正式复习评分的持久化动作。
 typedef ReviewRatingPersistence = Future<void> Function({required String word, required FsrsRating rating});

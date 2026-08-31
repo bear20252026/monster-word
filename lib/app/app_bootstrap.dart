@@ -48,14 +48,7 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
     () => initMobileAudioSession(),
     () => setupServiceLocator(),
   ];
-  final labels = const [
-    '词书数据库平台',
-    '词书数据库',
-    '用户数据库',
-    '偏好设置',
-    '音频会话',
-    '依赖注册',
-  ];
+  final labels = const ['词书数据库平台', '词书数据库', '用户数据库', '偏好设置', '音频会话', '依赖注册'];
 
   final total = steps.length;
   for (var i = 0; i < total; i++) {
@@ -71,13 +64,10 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
 /// 顶层异步异常（Future 错误、Timer 回调等）会被此 zone 捕获，避免直接闪退；
 /// 生产环境可将 onZoneError 替换为 Crashlytics/Sentry 上报。
 void runAppGuarded(Widget app) {
-  runZonedGuarded(
-    () => runApp(app),
-    (error, stack) {
-      debugPrint('[runZonedGuarded] 未捕获异常: $error');
-      debugPrint('$stack');
-    },
-  );
+  runZonedGuarded(() => runApp(app), (error, stack) {
+    debugPrint('[runZonedGuarded] 未捕获异常: $error');
+    debugPrint('$stack');
+  });
 }
 
 void _configureGlobalErrorHandling() {

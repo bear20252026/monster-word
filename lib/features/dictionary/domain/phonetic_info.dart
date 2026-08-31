@@ -2,12 +2,7 @@
 ///
 /// 封装英式/美式音标及其音频 URL，纯数据，无外部依赖。
 class PhoneticInfo {
-  const PhoneticInfo({
-    required this.english,
-    required this.american,
-    this.ukAudio,
-    this.usAudio,
-  });
+  const PhoneticInfo({required this.english, required this.american, this.ukAudio, this.usAudio});
 
   /// 英式音标
   final String english;
@@ -25,8 +20,7 @@ class PhoneticInfo {
   bool get hasPhonetic => english.isNotEmpty || american.isNotEmpty;
 
   /// 是否至少有一种音频
-  bool get hasAudio => (ukAudio != null && ukAudio!.isNotEmpty) ||
-      (usAudio != null && usAudio!.isNotEmpty);
+  bool get hasAudio => (ukAudio != null && ukAudio!.isNotEmpty) || (usAudio != null && usAudio!.isNotEmpty);
 
   /// 从 `DictionaryService.getAudioUrls` 返回的 Map 创建音标信息。
   ///
@@ -41,17 +35,7 @@ class PhoneticInfo {
   }
 
   /// 从 interpret 与 audioUrls 创建音标信息。
-  factory PhoneticInfo.fromRaw({
-    required String english,
-    required String american,
-    String? ukAudio,
-    String? usAudio,
-  }) {
-    return PhoneticInfo(
-      english: english.trim(),
-      american: american.trim(),
-      ukAudio: ukAudio,
-      usAudio: usAudio,
-    );
+  factory PhoneticInfo.fromRaw({required String english, required String american, String? ukAudio, String? usAudio}) {
+    return PhoneticInfo(english: english.trim(), american: american.trim(), ukAudio: ukAudio, usAudio: usAudio);
   }
 }

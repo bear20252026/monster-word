@@ -1,4 +1,4 @@
-﻿// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队生成 | Monster Word App
 // 句库页面：显示用户收藏的所有例句
 // 移植自 v3.2 MyFavSentenceActivity
 import 'package:flutter/material.dart';
@@ -333,10 +333,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     final sortedIndices = _selectedIndices.toList()..sort((a, b) => b.compareTo(a));
     for (final index in sortedIndices) {
       final favSentence = _sentences[index];
-      await favStore.remove(
-        wordId: favSentence.wordId,
-        sentenceId: favSentence.sentenceId,
-      );
+      await favStore.remove(wordId: favSentence.wordId, sentenceId: favSentence.sentenceId);
     }
 
     setState(() {
@@ -351,4 +348,3 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     }
   }
 }
-

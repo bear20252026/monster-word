@@ -17,11 +17,7 @@ class ExtensiveModelSelectPage extends StatefulWidget {
   final String bookId;
   final String bookName;
 
-  const ExtensiveModelSelectPage({
-    super.key,
-    required this.bookId,
-    required this.bookName,
-  });
+  const ExtensiveModelSelectPage({super.key, required this.bookId, required this.bookName});
 
   static const routeName = '/extensive_model_select';
 
@@ -55,20 +51,13 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
 
   void _startListening(ListeningMode mode) {
     if (_words.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('暂无单词可播放')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('暂无单词可播放')));
       return;
     }
     Navigator.pushNamed(
       context,
       RouteNames.listeningPlayer,
-      arguments: {
-        'words': _words,
-        'startIndex': 0,
-        'mode': mode,
-        'bookName': widget.bookName,
-      },
+      arguments: {'words': _words, 'startIndex': 0, 'mode': mode, 'bookName': widget.bookName},
     );
   }
 
@@ -100,15 +89,9 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          '选择泛听模式',
-                          style: MistralTypography.heading3.copyWith(color: skin.colors.text1),
-                        ),
+                        Text('选择泛听模式', style: MistralTypography.heading3.copyWith(color: skin.colors.text1)),
                         const SizedBox(height: 8),
-                        Text(
-                          widget.bookName,
-                          style: MistralTypography.body.copyWith(color: skin.colors.text3),
-                        ),
+                        Text(widget.bookName, style: MistralTypography.body.copyWith(color: skin.colors.text3)),
                         const SizedBox(height: 48),
                         _ModeCard(
                           icon: Icons.text_fields,

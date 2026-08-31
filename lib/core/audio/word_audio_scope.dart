@@ -17,9 +17,7 @@ Widget buildWordAudioScope({required Widget child}) {
   return MultiProvider(
     providers: [
       Provider<AudioService>.value(value: sl<AudioService>()),
-      ChangeNotifierProvider<AudioPlaybackState>(
-        create: (_) => AudioPlaybackState(audioService: sl<AudioService>()),
-      ),
+      ChangeNotifierProvider<AudioPlaybackState>(create: (_) => AudioPlaybackState(audioService: sl<AudioService>())),
     ],
     child: child,
   );

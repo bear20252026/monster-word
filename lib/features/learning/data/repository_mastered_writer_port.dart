@@ -8,8 +8,7 @@ class RepositoryMasteredWriterPort implements MasteredWriterPort {
 
   RepositoryMasteredWriterPort(this._repository);
 
-  factory RepositoryMasteredWriterPort.fromServiceLocator() =>
-      RepositoryMasteredWriterPort(sl<MasteredRepository>());
+  factory RepositoryMasteredWriterPort.fromServiceLocator() => RepositoryMasteredWriterPort(sl<MasteredRepository>());
 
   @override
   Future<void> toggleMastered(String word) => _repository.toggleMastered(word);

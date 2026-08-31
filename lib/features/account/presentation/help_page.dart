@@ -1,4 +1,4 @@
-﻿// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队生成 | Monster Word App
 
 // 移植自 v3.2 HelpActivity
 // 帮助页：WebView 加载帮助文档
@@ -45,8 +45,7 @@ class _HelpPageState extends State<HelpPage> {
           onNavigationRequest: (request) {
             final uri = Uri.tryParse(request.url);
             // 安全审计 S3：与 BaseWebPage 一致的严格白名单（防 evil-beingfine.cn 绕过）
-            if (uri != null &&
-                (uri.host == 'beingfine.cn' || uri.host.endsWith('.beingfine.cn'))) {
+            if (uri != null && (uri.host == 'beingfine.cn' || uri.host.endsWith('.beingfine.cn'))) {
               return NavigationDecision.navigate;
             }
             return NavigationDecision.prevent;

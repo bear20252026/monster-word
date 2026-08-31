@@ -99,9 +99,7 @@ class _BookWordsPageState extends State<BookWordsPage> {
                   await bookState.reloadWords();
                   messenger?.showSnackBar(
                     SnackBar(
-                      content: Text(result.success
-                          ? '重建成功: ${result.books} 本词书 / ${result.words} 词条'
-                          : result.message),
+                      content: Text(result.success ? '重建成功: ${result.books} 本词书 / ${result.words} 词条' : result.message),
                     ),
                   );
                 } catch (e) {
@@ -154,11 +152,7 @@ class _WordCard extends StatelessWidget {
     final isNew = newWords.isNewWord(word.id);
 
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(
-        context,
-        RouteNames.wordDetail,
-        arguments: word,
-      ),
+      onTap: () => Navigator.pushNamed(context, RouteNames.wordDetail, arguments: word),
       child: Container(
         margin: EdgeInsets.only(bottom: context.design.spacing.sm),
         padding: EdgeInsets.all(context.design.spacing.md),
@@ -168,69 +162,63 @@ class _WordCard extends StatelessWidget {
           border: Border.all(color: skin.divider, width: 0.5),
         ),
         child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      word.word,
-                      style: MistralTypography.bodyMd.copyWith(
-                          color: skin.text1, fontWeight: FontWeight.w600),
-                    ),
-                    if (word.usPron.isNotEmpty) ...[
-                      const SizedBox(width: 6),
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
                       Text(
-                        '/${word.usPron}/',
-                        style: MistralTypography.bodySm.copyWith(color: skin.text3),
+                        word.word,
+                        style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                       ),
+                      if (word.usPron.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        Text('/${word.usPron}/', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                      ],
                     ],
-                  ],
-                ),
-                if (word.firstInterpretLine.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    word.firstInterpretLine,
-                    style: MistralTypography.bodySm.copyWith(color: skin.text3),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
+                  if (word.firstInterpretLine.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      word.firstInterpretLine,
+                      style: MistralTypography.bodySm.copyWith(color: skin.text3),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          IconButton(
-            icon: Icon(
-              isFav ? Icons.star : Icons.star_border,
-              color: isFav ? MistralColors.primary : skin.text3,
-              size: 22,
+            IconButton(
+              icon: Icon(
+                isFav ? Icons.star : Icons.star_border,
+                color: isFav ? MistralColors.primary : skin.text3,
+                size: 22,
+              ),
+              onPressed: () => favorites.toggle(word.word),
             ),
-            onPressed: () => favorites.toggle(word.word),
-          ),
-          IconButton(
-            icon: Icon(
-              isNew ? Icons.bookmark_added : Icons.bookmark_add_outlined,
-              color: isNew ? MistralColors.primary : skin.text3,
-              size: 22,
+            IconButton(
+              icon: Icon(
+                isNew ? Icons.bookmark_added : Icons.bookmark_add_outlined,
+                color: isNew ? MistralColors.primary : skin.text3,
+                size: 22,
+              ),
+              onPressed: () => newWords.toggleNewWord(word, source: 'book-${book.id}'),
             ),
-            onPressed: () =>
-                newWords.toggleNewWord(word, source: 'book-${book.id}'),
-          ),
-          IconButton(
-            icon: Icon(Icons.volume_up, color: skin.accent, size: 22),
-            onPressed: () => context.read<AudioPlaybackState>().playWord(word.word),
-          ),
-        ],
-      ),
+            IconButton(
+              icon: Icon(Icons.volume_up, color: skin.accent, size: 22),
+              onPressed: () => context.read<AudioPlaybackState>().playWord(word.word),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
 
 /// 词书单词列表空态 + 诊断信息（词库异常时可远程定位根因）
 class _WordListEmptyDiagnostics extends StatelessWidget {
@@ -256,10 +244,10 @@ class _WordListEmptyDiagnostics extends StatelessWidget {
         final diagText = diag == null
             ? '诊断信息加载中…'
             : 'bookId=$bookId\n'
-                '${diag.books} 本词书 / ${diag.words} 词条 / ${diag.links} 条关联\n'
-                '库文件: ${(diag.dbFileBytes / 1048576).toStringAsFixed(1)} MB\n'
-                '更新时间: ${diag.dbModifiedAt}'
-                '${diag.error == null ? '' : '\n异常: ${diag.error}'}';
+                  '${diag.books} 本词书 / ${diag.words} 词条 / ${diag.links} 条关联\n'
+                  '库文件: ${(diag.dbFileBytes / 1048576).toStringAsFixed(1)} MB\n'
+                  '更新时间: ${diag.dbModifiedAt}'
+                  '${diag.error == null ? '' : '\n异常: ${diag.error}'}';
         return Center(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(context.design.spacing.xl),
@@ -270,13 +258,14 @@ class _WordListEmptyDiagnostics extends StatelessWidget {
                 SizedBox(height: context.design.spacing.md),
                 Text('本地词库暂无该书数据', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
                 SizedBox(height: context.design.spacing.sm),
-                Text('词库 100% 内置于安装包，此问题不需要联网。',
-                    style: MistralTypography.bodySm.copyWith(color: skin.colors.text2)),
+                Text('词库 100% 内置于安装包，此问题不需要联网。', style: MistralTypography.bodySm.copyWith(color: skin.colors.text2)),
                 if (error != null) ...[
                   SizedBox(height: context.design.spacing.sm),
-                  Text('错误详情: $error',
-                      style: MistralTypography.micro.copyWith(color: skin.colors.danger),
-                      textAlign: TextAlign.center),
+                  Text(
+                    '错误详情: $error',
+                    style: MistralTypography.micro.copyWith(color: skin.colors.danger),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
                 SizedBox(height: context.design.spacing.md),
                 Container(
@@ -287,8 +276,7 @@ class _WordListEmptyDiagnostics extends StatelessWidget {
                     borderRadius: BorderRadius.circular(skin.design.radius.md),
                     border: Border.all(color: skin.colors.divider),
                   ),
-                  child: Text(diagText,
-                      style: MistralTypography.micro.copyWith(color: skin.colors.text2, height: 1.6)),
+                  child: Text(diagText, style: MistralTypography.micro.copyWith(color: skin.colors.text2, height: 1.6)),
                 ),
                 SizedBox(height: context.design.spacing.md),
                 FilledButton.icon(

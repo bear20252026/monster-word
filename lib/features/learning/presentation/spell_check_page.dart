@@ -216,7 +216,9 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                             },
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(color: skin.colors.divider),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(context.design.radius.md),
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: const Text('查看答案'),
@@ -229,7 +231,9 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: MistralColors.primary,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(context.design.radius.md),
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: Text(_hasChecked ? '再试一次' : '检查'),

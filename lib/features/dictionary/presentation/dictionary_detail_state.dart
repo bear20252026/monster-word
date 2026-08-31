@@ -177,19 +177,11 @@ class DictionaryDetailState extends ChangeNotifier {
           map[keyValue[0].trim()] = keyValue[1].trim();
         }
       }
-      return PhoneticInfo(
-        english: word.ukPron,
-        american: word.usPron,
-        ukAudio: map['uk'],
-        usAudio: map['us'],
-      );
+      return PhoneticInfo(english: word.ukPron, american: word.usPron, ukAudio: map['uk'], usAudio: map['us']);
     }
     // 从音标字段直接构建
     if (word.ukPron.isNotEmpty || word.usPron.isNotEmpty) {
-      return PhoneticInfo.fromRaw(
-        english: word.ukPron,
-        american: word.usPron,
-      );
+      return PhoneticInfo.fromRaw(english: word.ukPron, american: word.usPron);
     }
     return null;
   }

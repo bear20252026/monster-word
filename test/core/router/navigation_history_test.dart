@@ -9,16 +9,11 @@ void main() {
     final service = NavigationHistoryService.instance;
     service.reset(); // 单例跨测试残留防护
 
-
     await tester.pumpWidget(
       MaterialApp(
         navigatorKey: service.navigatorKey,
         navigatorObservers: [service.observer],
-        routes: {
-          '/': (c) => const Text('home'),
-          '/a': (c) => const Text('a'),
-          '/b': (c) => const Text('b'),
-        },
+        routes: {'/': (c) => const Text('home'), '/a': (c) => const Text('a'), '/b': (c) => const Text('b')},
         initialRoute: '/',
       ),
     );

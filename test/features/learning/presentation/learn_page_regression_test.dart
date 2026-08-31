@@ -63,10 +63,7 @@ void main() {
         ],
         // 把 Provider 放在 MaterialApp 之上，使 push 出来的 WordDetailPage 路由也能访问。
         child: MaterialApp(
-          home: SkinProvider(
-            skin: SkinSystem(),
-            child: const LearnPage(),
-          ),
+          home: SkinProvider(skin: SkinSystem(), child: const LearnPage()),
         ),
       ),
     );
@@ -85,10 +82,7 @@ void main() {
     expect(find.text('查看详解'), findsOneWidget);
 
     // "查看详解"文本位于一个 ElevatedButton 内部（证明它是真实可点的按钮）。
-    expect(
-      find.ancestor(of: find.text('查看详解'), matching: find.byType(ElevatedButton)),
-      findsOneWidget,
-    );
+    expect(find.ancestor(of: find.text('查看详解'), matching: find.byType(ElevatedButton)), findsOneWidget);
   });
 }
 
@@ -108,9 +102,7 @@ class _FakeQueuePort implements LearningQueuePort {
     if (shuffle) {
       queue.shuffle();
     }
-    return (limit == null || limit >= queue.length)
-        ? queue
-        : queue.sublist(0, limit);
+    return (limit == null || limit >= queue.length) ? queue : queue.sublist(0, limit);
   }
 }
 
@@ -119,11 +111,7 @@ class _FakeProgressPort implements LearningProgressPort {
   Future<LearningProgress?> load() async => null;
 
   @override
-  Future<void> save({
-    required Book currentBook,
-    required int currentIndex,
-    required List<Word> queue,
-  }) async {}
+  Future<void> save({required Book currentBook, required int currentIndex, required List<Word> queue}) async {}
 }
 
 class _FakeChoicePort implements ChoiceGeneratorPort {

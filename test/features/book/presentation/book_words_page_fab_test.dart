@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -42,12 +43,12 @@ import '../test_helpers/fake_learning_progress_reader.dart';
 /// record arguments without executing real queue/progress side effects.
 class SpyLearningSessionState extends LearningSessionState {
   SpyLearningSessionState()
-      : super(
-          queuePort: MockLearningQueuePort(),
-          progressPort: MockLearningProgressPort(),
-          reviewSchedulePort: MockReviewScheduleWriterPort(),
-          choicePort: MockChoiceGeneratorPort(),
-        );
+    : super(
+        queuePort: MockLearningQueuePort(),
+        progressPort: MockLearningProgressPort(),
+        reviewSchedulePort: MockReviewScheduleWriterPort(),
+        choicePort: MockChoiceGeneratorPort(),
+      );
 
   Book? loadedBook;
   int? loadedLimit;
@@ -198,8 +199,7 @@ class MockChoiceGeneratorPort implements ChoiceGeneratorPort {
     required ChoiceCandidate correct,
     required Iterable<ChoiceCandidate> candidates,
     Random? random,
-  }) =>
-      [];
+  }) => [];
 }
 
 /// Mock FavoritesPort for tests.
@@ -255,26 +255,14 @@ void main() {
           update: (_, session, _) => LearningSessionStarterImpl(session),
         ),
         ChangeNotifierProvider<LearningFavoritesState>(
-          create: (_) => LearningFavoritesState(
-            favoritesPort: MockFavoritesPort(),
-            queuePort: MockLearningQueuePort(),
-          ),
+          create: (_) => LearningFavoritesState(favoritesPort: MockFavoritesPort(), queuePort: MockLearningQueuePort()),
         ),
-        ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
-          update: (_, state, _) => state,
-        ),
+        ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(update: (_, state, _) => state),
         ChangeNotifierProvider<NewWordsState>(
-          create: (_) => NewWordsState(
-            newWordsReader: MockNewWordsReader(),
-            writerPort: MockNewWordsWriterPort(),
-          ),
+          create: (_) => NewWordsState(newWordsReader: MockNewWordsReader(), writerPort: MockNewWordsWriterPort()),
         ),
-        ListenableProxyProvider<NewWordsState, NewWordsStore>(
-          update: (_, state, _) => state,
-        ),
-        ChangeNotifierProvider<AudioPlaybackState>(
-          create: (_) => AudioPlaybackState(audioService: MockAudioService()),
-        ),
+        ListenableProxyProvider<NewWordsState, NewWordsStore>(update: (_, state, _) => state),
+        ChangeNotifierProvider<AudioPlaybackState>(create: (_) => AudioPlaybackState(audioService: MockAudioService())),
         ChangeNotifierProvider<BookState>.value(value: bookState),
       ],
       child: MaterialApp(
@@ -297,10 +285,7 @@ void main() {
         wordsReader: MockBookWordsReader(),
         progressReader: fakeProgressReader,
       );
-      state.setWordsForTest([
-        Word(id: 1, word: 'apple'),
-        Word(id: 2, word: 'banana'),
-      ]);
+      state.setWordsForTest([Word(id: 1, word: 'apple'), Word(id: 2, word: 'banana')]);
 
       await tester.pumpWidget(buildTestWidget(state));
       await tester.pumpAndSettle();
@@ -309,17 +294,14 @@ void main() {
       expect(find.text('开始学习'), findsOneWidget);
     });
 
-    testWidgets('tapping FAB calls loadBook(book, limit: 50) and navigates to /immersive_swipe',
-        (tester) async {
+    testWidgets('tapping FAB calls loadBook(book, limit: 50) and navigates to /immersive_swipe', (tester) async {
       final state = BookState(
         catalogReader: MockCatalogReader(),
         selectionWriter: MockSelectionWriter(),
         wordsReader: MockBookWordsReader(),
         progressReader: fakeProgressReader,
       );
-      state.setWordsForTest([
-        Word(id: 1, word: 'apple'),
-      ]);
+      state.setWordsForTest([Word(id: 1, word: 'apple')]);
 
       String? navigatedRoute;
       await tester.pumpWidget(
@@ -330,23 +312,14 @@ void main() {
               update: (_, session, _) => LearningSessionStarterImpl(session),
             ),
             ChangeNotifierProvider<LearningFavoritesState>(
-              create: (_) => LearningFavoritesState(
-                favoritesPort: MockFavoritesPort(),
-                queuePort: MockLearningQueuePort(),
-              ),
+              create: (_) =>
+                  LearningFavoritesState(favoritesPort: MockFavoritesPort(), queuePort: MockLearningQueuePort()),
             ),
-            ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
-              update: (_, state, _) => state,
-            ),
+            ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(update: (_, state, _) => state),
             ChangeNotifierProvider<NewWordsState>(
-              create: (_) => NewWordsState(
-                newWordsReader: MockNewWordsReader(),
-                writerPort: MockNewWordsWriterPort(),
-              ),
+              create: (_) => NewWordsState(newWordsReader: MockNewWordsReader(), writerPort: MockNewWordsWriterPort()),
             ),
-            ListenableProxyProvider<NewWordsState, NewWordsStore>(
-              update: (_, state, _) => state,
-            ),
+            ListenableProxyProvider<NewWordsState, NewWordsStore>(update: (_, state, _) => state),
             ChangeNotifierProvider<AudioPlaybackState>(
               create: (_) => AudioPlaybackState(audioService: MockAudioService()),
             ),

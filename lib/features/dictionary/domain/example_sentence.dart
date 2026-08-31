@@ -2,11 +2,7 @@
 ///
 /// 封装一条英文例句及其中文翻译，纯数据，无外部依赖。
 class ExampleSentence {
-  const ExampleSentence({
-    required this.english,
-    required this.chinese,
-    this.highlight,
-  });
+  const ExampleSentence({required this.english, required this.chinese, this.highlight});
 
   /// 英文原文
   final String english;
@@ -29,15 +25,7 @@ class ExampleSentence {
   }
 
   /// 从原始字段创建。
-  factory ExampleSentence.fromRaw({
-    required String english,
-    required String chinese,
-    String? highlight,
-  }) {
-    return ExampleSentence(
-      english: english.trim(),
-      chinese: chinese.trim(),
-      highlight: highlight,
-    );
+  factory ExampleSentence.fromRaw({required String english, required String chinese, String? highlight}) {
+    return ExampleSentence(english: english.trim(), chinese: chinese.trim(), highlight: highlight);
   }
 }

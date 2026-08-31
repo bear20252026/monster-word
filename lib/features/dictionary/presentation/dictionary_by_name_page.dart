@@ -102,25 +102,14 @@ class _NotFoundScaffold extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                failed ? Icons.error_outline : Icons.search_off,
-                size: 56,
-                color: const Color(0xFFB0885A),
-              ),
+              Icon(failed ? Icons.error_outline : Icons.search_off, size: 56, color: const Color(0xFFB0885A)),
               SizedBox(height: 16),
               Text(
                 failed ? '查询失败' : '未找到「$wordName」',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF3D3630),
-                ),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3D3630)),
               ),
               SizedBox(height: 8),
-              Text(
-                failed ? '请稍后重试' : '该单词可能不在当前词库中',
-                style: const TextStyle(fontSize: 13, color: Color(0xFF8A8078)),
-              ),
+              Text(failed ? '请稍后重试' : '该单词可能不在当前词库中', style: const TextStyle(fontSize: 13, color: Color(0xFF8A8078))),
               SizedBox(height: 24),
               Builder(
                 builder: (ctx) => ElevatedButton.icon(

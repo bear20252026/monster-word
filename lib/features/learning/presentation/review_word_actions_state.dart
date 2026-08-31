@@ -9,11 +9,7 @@ import 'package:word_app/features/learning/application/mastered_writer_port.dart
 /// 收藏与手动掌握均保留各自独立的字符串集合语义。本状态只缓存展示所需
 /// 快照、转发操作并通知页面，避免 `ReviewPage` 自行维护未持久化的副本。
 class ReviewWordActionsState extends ChangeNotifier {
-  ReviewWordActionsState({
-    required this._favoritesPort,
-    required this._masteredReader,
-    required this._masteredWriter,
-  });
+  ReviewWordActionsState({required this._favoritesPort, required this._masteredReader, required this._masteredWriter});
 
   final FavoritesPort _favoritesPort;
   final MasteredWordsReader _masteredReader;

@@ -17,8 +17,7 @@ void main() {
       // 症状：例句能响、单词不响；根因：PhoneticAudioPlayer._needPlay 默认 false
       // 且全仓库无 setNeedPlay(true) 调用点，_playFile 开头 return 静默丢弃。
       // 修复：commit 2eabee0 默认改 true。
-      expect(PhoneticAudioPlayer().needPlayForTest, isTrue,
-          reason: 'needPlay 回退为 false 会导致所有单词发音静默失效（黑盒表现为"有的响有的不响"）');
+      expect(PhoneticAudioPlayer().needPlayForTest, isTrue, reason: 'needPlay 回退为 false 会导致所有单词发音静默失效（黑盒表现为"有的响有的不响"）');
     });
 
     test('REG-AUDIO-002: 例句 http:// 明文 URL 升级 https（Android 9+ 禁明文）', () {
@@ -30,8 +29,11 @@ void main() {
           '{"eid":"1","e":"Sentence one.","c":"例句一","b":"","u":"http://audio.beingfine.cn/sentence/audio/x.mp3"}]}]}]}';
       final sentences = ExampleParser.parse(raw);
       expect(sentences, isNotEmpty);
-      expect(sentences.first.audioUrl, startsWith('https://'),
-          reason: '任何 http:// 例句音频 URL 在 Android 真机上会被系统静默拦截，例句无声');
+      expect(
+        sentences.first.audioUrl,
+        startsWith('https://'),
+        reason: '任何 http:// 例句音频 URL 在 Android 真机上会被系统静默拦截，例句无声',
+      );
     });
 
     test('REG-AUDIO-003: 单词音频下载失败链路最终落系统 TTS（不再静默）', () {

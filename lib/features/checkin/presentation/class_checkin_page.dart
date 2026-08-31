@@ -80,9 +80,8 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                 child: Icon(Icons.settings, size: 20, color: skin.text1),
               ),
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('班级设置功能即将上线，敬请期待'), duration: Duration(seconds: 1)),
-                );
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text('班级设置功能即将上线，敬请期待'), duration: Duration(seconds: 1)));
               },
             ),
         ],
@@ -457,7 +456,9 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: skin.cardBg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(context.design.radius.xl))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(context.design.radius.xl)),
+      ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
           left: context.design.spacing.lg,
@@ -482,7 +483,10 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
                   borderRadius: BorderRadius.circular(context.design.radius.lg),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: context.design.spacing.md, vertical: context.design.spacing.sm),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: context.design.spacing.md,
+                  vertical: context.design.spacing.sm,
+                ),
               ),
             ),
             SizedBox(height: context.design.spacing.md),

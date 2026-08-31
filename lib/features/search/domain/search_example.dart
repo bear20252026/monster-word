@@ -9,12 +9,7 @@ class SearchExample {
   final String source; // 来源（剧集 / 考试）
   final String? audioUrl; // 音频 URL
 
-  const SearchExample({
-    required this.en,
-    required this.cn,
-    this.source = '',
-    this.audioUrl,
-  });
+  const SearchExample({required this.en, required this.cn, this.source = '', this.audioUrl});
 
   /// 去掉 <b> 高亮标签
   String get cleanEn => en.replaceAll('<b>', '').replaceAll('</b>', '');

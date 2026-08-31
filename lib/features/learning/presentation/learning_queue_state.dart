@@ -16,11 +16,7 @@ class LearningQueueSnapshot {
     required this.learnedCount,
   }) : words = List.unmodifiable(words);
 
-  const LearningQueueSnapshot.empty()
-      : currentBook = null,
-        words = const [],
-        currentIndex = 0,
-        learnedCount = 0;
+  const LearningQueueSnapshot.empty() : currentBook = null, words = const [], currentIndex = 0, learnedCount = 0;
 
   factory LearningQueueSnapshot.fromSession(LearningSessionState session) {
     return LearningQueueSnapshot(

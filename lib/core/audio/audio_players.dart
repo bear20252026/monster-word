@@ -764,7 +764,6 @@ class TextAudioPlayer {
 // 便捷全局函数
 // ============================================================
 
-
 /// 便捷：播放 TTS 文本
 Future<void> playTextAudio(String text, {double speed = 1.0}) {
   return TextAudioPlayer().playText(text, speed: speed);

@@ -14,29 +14,14 @@ class RepositoryLearningProgressPort implements LearningProgressPort {
     final snapshot = await _repository.load();
     if (snapshot == null) return null;
     return LearningProgress(
-      currentBook: Book(
-        id: int.tryParse(snapshot.bookId) ?? 0,
-        code: snapshot.bookId,
-        name: '',
-        wordCount: 0,
-      ),
+      currentBook: Book(id: int.tryParse(snapshot.bookId) ?? 0, code: snapshot.bookId, name: '', wordCount: 0),
       currentIndex: snapshot.currentIndex,
-      queue: snapshot.queueWordIds
-          .map((id) => Word(id: id, word: ''))
-          .toList(),
+      queue: snapshot.queueWordIds.map((id) => Word(id: id, word: '')).toList(),
     );
   }
 
   @override
-  Future<void> save({
-    required Book currentBook,
-    required int currentIndex,
-    required List<Word> queue,
-  }) {
-    return _repository.save(
-      currentBook: currentBook,
-      currentIndex: currentIndex,
-      queue: queue,
-    );
+  Future<void> save({required Book currentBook, required int currentIndex, required List<Word> queue}) {
+    return _repository.save(currentBook: currentBook, currentIndex: currentIndex, queue: queue);
   }
 }

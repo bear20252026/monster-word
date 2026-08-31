@@ -27,10 +27,7 @@ class DefinitionFormatter {
 
     // 回退：纯文本释义——含中文字符即有效，取第一行含中文的部分。
     if (_cjk.hasMatch(text)) {
-      return text
-          .split('\n')
-          .firstWhere((line) => _cjk.hasMatch(line), orElse: () => text)
-          .trim();
+      return text.split('\n').firstWhere((line) => _cjk.hasMatch(line), orElse: () => text).trim();
     }
     return '';
   }

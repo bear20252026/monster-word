@@ -83,10 +83,6 @@ class _WordDetailPageState extends State<WordDetailPage> {
     setState(() => _extra = extra);
   }
 
-  
-  
-  
-  
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
@@ -637,8 +633,6 @@ class _WordDetailPageState extends State<WordDetailPage> {
   // 笔记区
   // ===========================================================================
 
-
-
   Widget _buildWordHeader(dynamic word, SkinSystem skin) {
     return Container(
       padding: EdgeInsets.all(16),
@@ -673,7 +667,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
                         await player.playWord(word.word);
                       } catch (e) {
                         if (mounted) {
-                          messenger.showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
+                          messenger.showSnackBar(
+                            const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
+                          );
                         }
                       }
                     },
@@ -719,7 +715,3 @@ class _WordDetailPageState extends State<WordDetailPage> {
     super.dispose();
   }
 }
-
-
-
-

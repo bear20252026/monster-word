@@ -69,14 +69,9 @@ void main() {
           Provider<SearchHistoryStore>(create: (_) => _MockHistoryStore()),
           Provider<ExampleReader>(create: (_) => const ExampleParserAdapter()),
           ChangeNotifierProvider<LearningFavoritesState>(
-            create: (_) => LearningFavoritesState(
-              favoritesPort: _MockFavoritesPort(),
-              queuePort: _MockQueuePort(),
-            ),
+            create: (_) => LearningFavoritesState(favoritesPort: _MockFavoritesPort(), queuePort: _MockQueuePort()),
           ),
-          ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
-            update: (_, state, _) => state,
-          ),
+          ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(update: (_, state, _) => state),
           ChangeNotifierProvider<AudioPlaybackState>(
             create: (_) => AudioPlaybackState(audioService: _MockAudioService()),
           ),

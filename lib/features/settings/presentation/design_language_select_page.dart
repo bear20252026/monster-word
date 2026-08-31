@@ -27,15 +27,9 @@ class DesignLanguageSelectPage extends StatelessWidget {
               child: ListView(
                 padding: EdgeInsets.all(design.spacing.page),
                 children: [
-                  Text(
-                    '设计语言（B档）',
-                    style: TextStyle(fontSize: 13, color: skin.text3),
-                  ),
+                  Text('设计语言（B档）', style: TextStyle(fontSize: 13, color: skin.text3)),
                   SizedBox(height: design.spacing.xxs),
-                  Text(
-                    '一键切换整站字体、圆角、间距与阴影的风格气质，即时生效。',
-                    style: TextStyle(fontSize: 12, color: skin.text3),
-                  ),
+                  Text('一键切换整站字体、圆角、间距与阴影的风格气质，即时生效。', style: TextStyle(fontSize: 12, color: skin.text3)),
                   SizedBox(height: design.spacing.md),
                   // 动态渲染所有可用设计语言；选中即整站换肤（A 档品牌色 + B 档形态联动）
                   ...DesignLanguages.all.values.map((lang) {
@@ -79,10 +73,7 @@ class DesignLanguageSelectPage extends StatelessWidget {
           const Spacer(),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: design.spacing.page),
-            child: Text(
-              '风格',
-              style: TextStyle(fontSize: 12, color: skin.text3),
-            ),
+            child: Text('风格', style: TextStyle(fontSize: 12, color: skin.text3)),
           ),
         ],
       ),
@@ -106,10 +97,7 @@ class DesignLanguageSelectPage extends StatelessWidget {
         decoration: BoxDecoration(
           color: skin.cardBgAlt,
           borderRadius: BorderRadius.circular(design.radius.lg),
-          border: Border.all(
-            color: isSelected ? skin.accent : skin.divider,
-            width: isSelected ? 2 : 1,
-          ),
+          border: Border.all(color: isSelected ? skin.accent : skin.divider, width: isSelected ? 2 : 1),
         ),
         child: Row(
           children: [
@@ -125,10 +113,7 @@ class DesignLanguageSelectPage extends StatelessWidget {
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: skin.text1),
                   ),
                   SizedBox(height: design.spacing.xxs),
-                  Text(
-                    _langDescription(lang.id),
-                    style: TextStyle(fontSize: 12, color: skin.text3),
-                  ),
+                  Text(_langDescription(lang.id), style: TextStyle(fontSize: 12, color: skin.text3)),
                 ],
               ),
             ),
@@ -157,28 +142,19 @@ class DesignLanguageSelectPage extends StatelessWidget {
           Container(
             width: 44,
             height: 12,
-            decoration: BoxDecoration(
-              color: skin.accent,
-              borderRadius: BorderRadius.circular(lang.radius.pill),
-            ),
+            decoration: BoxDecoration(color: skin.accent, borderRadius: BorderRadius.circular(lang.radius.pill)),
           ),
           SizedBox(height: lang.spacing.xs),
           Container(
             width: 30,
             height: 6,
-            decoration: BoxDecoration(
-              color: skin.text2,
-              borderRadius: BorderRadius.circular(lang.radius.pill),
-            ),
+            decoration: BoxDecoration(color: skin.text2, borderRadius: BorderRadius.circular(lang.radius.pill)),
           ),
           SizedBox(height: lang.spacing.xxs),
           Container(
             width: 22,
             height: 6,
-            decoration: BoxDecoration(
-              color: skin.text3,
-              borderRadius: BorderRadius.circular(lang.radius.pill),
-            ),
+            decoration: BoxDecoration(color: skin.text3, borderRadius: BorderRadius.circular(lang.radius.pill)),
           ),
         ],
       ),

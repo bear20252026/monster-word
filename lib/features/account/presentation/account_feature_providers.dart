@@ -16,9 +16,7 @@ Widget buildAccountFeatureScope({required Widget child}) {
       ChangeNotifierProvider(create: (_) => AppSessionState()),
       // 以同实例暴露核心契约，供其它 feature（如 settings）只依赖 AppSessionController，
       // 不再直接 import account 内部（ARCH-FIX-1，去除跨 feature 展示层耦合）。
-      ProxyProvider<AppSessionState, AppSessionController>(
-        update: (_, session, _) => session,
-      ),
+      ProxyProvider<AppSessionState, AppSessionController>(update: (_, session, _) => session),
       Provider<AccountProfileStore>(create: (_) => AccountProfileRepository(userService: sl<UserService>())),
       ChangeNotifierProvider(
         create: (context) => AccountProfileState(profileStore: context.read<AccountProfileStore>())..refresh(),

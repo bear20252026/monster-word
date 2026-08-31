@@ -26,7 +26,8 @@ void main() {
     });
 
     test('多组多短语按类型分组', () {
-      const raw = '[{"t":1,"p":[{"en":"look up","cn":"check"},{"en":"look after","cn":"take care"}]},'
+      const raw =
+          '[{"t":1,"p":[{"en":"look up","cn":"check"},{"en":"look after","cn":"take care"}]},'
           '{"t":3,"p":[{"en":"look forward to","cn":"expect"}]}]';
       final groups = PhraseParser.parse(raw);
       expect(groups, hasLength(2));

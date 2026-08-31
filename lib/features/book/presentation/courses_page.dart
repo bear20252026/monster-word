@@ -62,17 +62,19 @@ class _CoursesPageState extends State<CoursesPage> {
   }
 
   void _onCourseTap(_CourseItem course) {
-    Navigator.pushNamed(context, RouteNames.classCheckin, arguments: {
-      'courseId': course.id,
-      'courseName': course.title,
-    });
+    Navigator.pushNamed(
+      context,
+      RouteNames.classCheckin,
+      arguments: {'courseId': course.id, 'courseName': course.title},
+    );
   }
 
   void _onActivityTap(_CourseItem course) {
-    Navigator.pushNamed(context, RouteNames.classActivity, arguments: {
-      'courseId': course.id,
-      'courseName': course.title,
-    });
+    Navigator.pushNamed(
+      context,
+      RouteNames.classActivity,
+      arguments: {'courseId': course.id, 'courseName': course.title},
+    );
   }
 
   @override
@@ -148,12 +150,7 @@ class _CourseCard extends StatelessWidget {
   final VoidCallback onActivityTap;
   final SkinSystem skin;
 
-  const _CourseCard({
-    required this.course,
-    required this.onTap,
-    required this.onActivityTap,
-    required this.skin,
-  });
+  const _CourseCard({required this.course, required this.onTap, required this.onActivityTap, required this.skin});
 
   @override
   Widget build(BuildContext context) {
@@ -176,9 +173,7 @@ class _CourseCard extends StatelessWidget {
                 color: course.coverColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(context.design.radius.md),
               ),
-              child: Center(
-                child: Icon(Icons.school, color: course.coverColor, size: 32),
-              ),
+              child: Center(child: Icon(Icons.school, color: course.coverColor, size: 32)),
             ),
             const SizedBox(width: 16),
             // 信息
@@ -196,10 +191,7 @@ class _CourseCard extends StatelessWidget {
                       Expanded(
                         child: Container(
                           height: 6,
-                          decoration: BoxDecoration(
-                            color: skin.colors.divider,
-                            borderRadius: BorderRadius.circular(3),
-                          ),
+                          decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(3)),
                           child: FractionallySizedBox(
                             alignment: Alignment.centerLeft,
                             widthFactor: course.progress,

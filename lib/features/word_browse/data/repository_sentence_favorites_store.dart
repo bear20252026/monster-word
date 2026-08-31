@@ -14,8 +14,7 @@ class RepositorySentenceFavoritesStore implements SentenceFavoritesStore {
   RepositorySentenceFavoritesStore._(this._repository);
 
   /// 显式注入（供测试覆盖）。
-  RepositorySentenceFavoritesStore(FavRepository repository)
-      : _repository = repository;
+  RepositorySentenceFavoritesStore(FavRepository repository) : _repository = repository;
 
   final FavRepository _repository;
 

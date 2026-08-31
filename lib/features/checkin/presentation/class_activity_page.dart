@@ -1,4 +1,4 @@
-﻿// 班级活动页：Banner + 活动指引 + 功能卡片 + 公告 + 评论
+// 班级活动页：Banner + 活动指引 + 功能卡片 + 公告 + 评论
 // 还原原版 v3.2 班级活动页面
 import 'package:flutter/material.dart';
 
@@ -155,7 +155,10 @@ class _ActivityBanner extends StatelessWidget {
                 ),
                 SizedBox(height: context.design.spacing.md),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: context.design.spacing.md, vertical: context.design.spacing.xs),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.design.spacing.md,
+                    vertical: context.design.spacing.xs,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.white100.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(context.design.radius.pill),

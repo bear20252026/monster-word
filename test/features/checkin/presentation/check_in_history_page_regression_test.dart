@@ -13,8 +13,7 @@ import 'package:word_app/features/checkin/presentation/check_in_history_page.dar
 
 class _FakeCheckInHistoryReader implements CheckInHistoryReader {
   @override
-  Future<Set<String>> getCheckedDates() async =>
-      <String>{'2024-01-01', '2024-01-02', '2024-01-03'};
+  Future<Set<String>> getCheckedDates() async => <String>{'2024-01-01', '2024-01-02', '2024-01-03'};
 
   @override
   Future<int> getStreak() async => 3;

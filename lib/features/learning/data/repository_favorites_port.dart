@@ -8,8 +8,7 @@ class RepositoryFavoritesPort implements FavoritesPort {
 
   RepositoryFavoritesPort(this._repository);
 
-  factory RepositoryFavoritesPort.fromServiceLocator() =>
-      RepositoryFavoritesPort(sl<FavRepository>());
+  factory RepositoryFavoritesPort.fromServiceLocator() => RepositoryFavoritesPort(sl<FavRepository>());
 
   @override
   Future<Set<String>> getFavoriteWords() => _repository.getFavoriteWords();

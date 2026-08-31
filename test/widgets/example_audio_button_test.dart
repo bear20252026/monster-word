@@ -41,9 +41,7 @@ class _ExampleCardWithAudio extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(example.en),
-            ),
+            Expanded(child: Text(example.en)),
             if (example.audioUrl != null && example.audioUrl!.isNotEmpty)
               IconButton(
                 icon: const Icon(Icons.volume_up_outlined, size: 20),
@@ -70,17 +68,11 @@ void main() {
     Widget buildCard(ExampleSentence example) {
       return MultiProvider(
         providers: [
-          ChangeNotifierProvider<AudioPlaybackState>(
-            create: (_) => AudioPlaybackState(audioService: spyAudio),
-          ),
-          ChangeNotifierProvider<SkinSystem>(
-            create: (_) => SkinSystem(),
-          ),
+          ChangeNotifierProvider<AudioPlaybackState>(create: (_) => AudioPlaybackState(audioService: spyAudio)),
+          ChangeNotifierProvider<SkinSystem>(create: (_) => SkinSystem()),
         ],
         child: MaterialApp(
-          home: Scaffold(
-            body: _ExampleCardWithAudio(example: example),
-          ),
+          home: Scaffold(body: _ExampleCardWithAudio(example: example)),
         ),
       );
     }
@@ -101,9 +93,7 @@ void main() {
     });
 
     testWidgets('无 audioUrl 时不显示音频播放按钮', (tester) async {
-      final sentences = ExampleParser.parse(
-        '{"data":[{"g":[{"s":[{"e":"Hello world","c":"你好世界","b":"test"}]}]}]}',
-      );
+      final sentences = ExampleParser.parse('{"data":[{"g":[{"s":[{"e":"Hello world","c":"你好世界","b":"test"}]}]}]}');
       expect(sentences.length, 1);
       expect(sentences.first.audioUrl, isNull);
 

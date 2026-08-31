@@ -12,8 +12,7 @@ class RepositoryQuickReviewWordReader implements QuickReviewWordReader {
   RepositoryQuickReviewWordReader._(this._repository);
 
   /// 显式注入（供测试覆盖）。
-  RepositoryQuickReviewWordReader(WordRepository repository)
-      : _repository = repository;
+  RepositoryQuickReviewWordReader(WordRepository repository) : _repository = repository;
 
   final WordRepository _repository;
 

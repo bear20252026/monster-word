@@ -31,10 +31,7 @@ void main() {
     });
 
     test('fromService 自动 trim 空白', () {
-      final info = PhoneticInfo.fromService({
-        'english': '  /test/  ',
-        'american': '',
-      });
+      final info = PhoneticInfo.fromService({'english': '  /test/  ', 'american': ''});
 
       expect(info.english, '/test/');
     });
@@ -45,21 +42,12 @@ void main() {
     });
 
     test('hasAudio 在仅有 UK 音频时为 true', () {
-      const info = PhoneticInfo(
-        english: '',
-        american: '',
-        ukAudio: 'https://x.com/uk.mp3',
-      );
+      const info = PhoneticInfo(english: '', american: '', ukAudio: 'https://x.com/uk.mp3');
       expect(info.hasAudio, isTrue);
     });
 
     test('fromRaw 正确传递所有字段', () {
-      final info = PhoneticInfo.fromRaw(
-        english: '/raw-uk/',
-        american: '/raw-us/',
-        ukAudio: 'uk',
-        usAudio: 'us',
-      );
+      final info = PhoneticInfo.fromRaw(english: '/raw-uk/', american: '/raw-us/', ukAudio: 'uk', usAudio: 'us');
 
       expect(info.english, '/raw-uk/');
       expect(info.american, '/raw-us/');

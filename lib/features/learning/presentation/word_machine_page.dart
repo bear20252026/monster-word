@@ -261,10 +261,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
                         if (s.cn.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              s.cn,
-                              style: MistralTypography.caption.copyWith(color: skin.colors.text3),
-                            ),
+                            child: Text(s.cn, style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
                           ),
                         const SizedBox(height: 8),
                       ],
@@ -280,11 +277,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _ControlButton(
-              icon: Icons.arrow_back_rounded,
-              onPressed: _currentIndex > 0 ? _previous : null,
-              skin: skin,
-            ),
+            _ControlButton(icon: Icons.arrow_back_rounded, onPressed: _currentIndex > 0 ? _previous : null, skin: skin),
             const SizedBox(width: 24),
             _ControlButton(
               icon: Icons.volume_up_rounded,
@@ -311,12 +304,7 @@ class _ControlButton extends StatelessWidget {
   final SkinSystem skin;
   final bool isPrimary;
 
-  const _ControlButton({
-    required this.icon,
-    this.onPressed,
-    required this.skin,
-    this.isPrimary = false,
-  });
+  const _ControlButton({required this.icon, this.onPressed, required this.skin, this.isPrimary = false});
 
   @override
   Widget build(BuildContext context) {

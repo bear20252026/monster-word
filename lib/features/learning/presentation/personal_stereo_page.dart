@@ -168,7 +168,10 @@ class PersonalStereoPage extends StatelessWidget {
             Container(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(color: MistralColors.cream, borderRadius: BorderRadius.circular(skin.design.radius.md)),
+              decoration: BoxDecoration(
+                color: MistralColors.cream,
+                borderRadius: BorderRadius.circular(skin.design.radius.md),
+              ),
               child: Icon(icon, color: MistralColors.primary, size: 24),
             ),
             const SizedBox(width: 16),

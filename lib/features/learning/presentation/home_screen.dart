@@ -94,10 +94,7 @@ class HomeScreen extends StatelessWidget {
                               ),
                             ),
                             // 每日学习目标选择器（滚轮选择 1-200 个单词/天）
-                            _EntranceIn(
-                              delayMs: 320,
-                              child: const DailyGoalPicker(),
-                            ),
+                            _EntranceIn(delayMs: 320, child: const DailyGoalPicker()),
                             // 每日一句励志语轮播（testimonial-slider，自动轮播+弹性滑动）
                             _EntranceIn(
                               delayMs: 380,
@@ -180,8 +177,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 Text('开始今天的学习', style: Theme.of(sheetCtx).textTheme.titleLarge),
                 const SizedBox(height: 8),
-                Text('选择一本词书，或直接从第一本开始',
-                    style: Theme.of(sheetCtx).textTheme.bodyMedium),
+                Text('选择一本词书，或直接从第一本开始', style: Theme.of(sheetCtx).textTheme.bodyMedium),
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
@@ -194,10 +190,7 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(sheetCtx, false),
-                    child: const Text('随便学一本'),
-                  ),
+                  child: OutlinedButton(onPressed: () => Navigator.pop(sheetCtx, false), child: const Text('随便学一本')),
                 ),
               ],
             ),

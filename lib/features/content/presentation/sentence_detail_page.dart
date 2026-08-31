@@ -1,4 +1,4 @@
-﻿// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队生成 | Monster Word App
 
 // 移植自 v3.2 SentenceDetailActivity
 // 例句详情页：显示单词的完整例句及翻译
@@ -113,4 +113,3 @@ class SentenceDetailPage extends StatelessWidget {
     );
   }
 }
-

@@ -33,11 +33,7 @@ void main() {
     });
 
     test('save() + load() 保持写入数据', () async {
-      final prefs = const LearningPreferences.defaults().copyWith(
-        dailyNewWords: 30,
-        darkMode: true,
-        learnPace: 20,
-      );
+      final prefs = const LearningPreferences.defaults().copyWith(dailyNewWords: 30, darkMode: true, learnPace: 20);
 
       await settings.save(prefs);
       final loaded = await settings.load();

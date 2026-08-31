@@ -179,7 +179,10 @@ class _AppearancePageState extends State<AppearancePage> {
         Expanded(
           child: Container(
             height: 220,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(context.design.radius.xl), color: skin.colors.cardBgAlt),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(context.design.radius.xl),
+              color: skin.colors.cardBgAlt,
+            ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
@@ -221,7 +224,10 @@ class _AppearancePageState extends State<AppearancePage> {
   Widget _buildThemeCircles(SkinSystem skin) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(color: skin.colors.cardBg, borderRadius: BorderRadius.circular(context.design.radius.xl)),
+      decoration: BoxDecoration(
+        color: skin.colors.cardBg,
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: themes.values.map((preset) {
@@ -264,7 +270,10 @@ class _AppearancePageState extends State<AppearancePage> {
   Widget _buildFollowSystemRow(SkinSystem skin) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(color: skin.colors.cardBg, borderRadius: BorderRadius.circular(context.design.radius.xl)),
+      decoration: BoxDecoration(
+        color: skin.colors.cardBg,
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -300,7 +309,10 @@ class _AppearancePageState extends State<AppearancePage> {
       onTap: () => _showFontDialog(context, skin),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(color: skin.colors.cardBg, borderRadius: BorderRadius.circular(context.design.radius.xl)),
+        decoration: BoxDecoration(
+          color: skin.colors.cardBg,
+          borderRadius: BorderRadius.circular(context.design.radius.xl),
+        ),
         child: Row(
           children: [
             Expanded(
@@ -351,7 +363,10 @@ class _AppearancePageState extends State<AppearancePage> {
       onTap: () => _showImmersiveSheet(skin),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(color: skin.colors.cardBg, borderRadius: BorderRadius.circular(context.design.radius.xl)),
+        decoration: BoxDecoration(
+          color: skin.colors.cardBg,
+          borderRadius: BorderRadius.circular(context.design.radius.xl),
+        ),
         child: Row(
           children: [
             Expanded(

@@ -154,14 +154,13 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     if (confirmed != true || !context.mounted) return;
 
     // 不可取消的进度弹窗
-    unawaited(showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => const PopScope(
-        canPop: false,
-        child: Center(child: CircularProgressIndicator()),
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const PopScope(canPop: false, child: Center(child: CircularProgressIndicator())),
       ),
-    ));
+    );
 
     DbRebuildResult result;
     try {
@@ -169,29 +168,27 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('词库重建失败: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('词库重建失败: $e')));
       }
       return;
     }
     if (context.mounted) {
       Navigator.of(context, rootNavigator: true).pop();
-      unawaited(showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          icon: Icon(
-            result.success ? Icons.check_circle_outline : Icons.error_outline,
-            color: result.success ? Colors.green : Colors.red,
-            size: 48,
+      unawaited(
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            icon: Icon(
+              result.success ? Icons.check_circle_outline : Icons.error_outline,
+              color: result.success ? Colors.green : Colors.red,
+              size: 48,
+            ),
+            title: Text(result.success ? '更新成功' : '更新失败'),
+            content: Text('${result.books} 本词书 / ${result.words} 词条 / ${result.links} 条关联\n\n${result.message}'),
+            actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('好的'))],
           ),
-          title: Text(result.success ? '更新成功' : '更新失败'),
-          content: Text(
-            '${result.books} 本词书 / ${result.words} 词条 / ${result.links} 条关联\n\n${result.message}',
-          ),
-          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('好的'))],
         ),
-      ));
+      );
     }
   }
 
@@ -229,7 +226,9 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                   SizedBox(height: 4),
                   Text(
                     '背单词，so easy！',
-                    style: MistralTypography.bodySm.copyWith(color: context.skin.colors.onGlassAccent.withValues(alpha: 0.9)),
+                    style: MistralTypography.bodySm.copyWith(
+                      color: context.skin.colors.onGlassAccent.withValues(alpha: 0.9),
+                    ),
                   ),
                   SizedBox(height: 16),
                   Container(

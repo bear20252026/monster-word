@@ -56,8 +56,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('今天已经签到过啦，明天再来～')));
       return;
     }
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('签到成功！尖叫币 +${store.checkInReward} 👹')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('签到成功！尖叫币 +${store.checkInReward} 👹')));
     await _refresh();
   }
 
@@ -199,7 +198,10 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
               width: double.infinity,
               margin: EdgeInsets.fromLTRB(context.responsive.pageMargin, 4, context.responsive.pageMargin, 16),
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(context.design.radius.lg)),
+              decoration: BoxDecoration(
+                color: skin.cardBgAlt,
+                borderRadius: BorderRadius.circular(context.design.radius.lg),
+              ),
               child: Text(
                 '🎬 关于「尖叫币」\n\n'
                 '设定致敬皮克斯经典动画《怪兽电力公司》（Monsters, Inc., 2001）：'

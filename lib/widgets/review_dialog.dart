@@ -78,10 +78,7 @@ class _ReviewDialog extends StatelessWidget {
         children: [
           Icon(Icons.check_circle_outline, size: 56, color: skin.success),
           const SizedBox(height: 16),
-          Text(
-            '今天没有需要复习的单词',
-            style: MistralTypography.heading5.copyWith(color: skin.text1),
-          ),
+          Text('今天没有需要复习的单词', style: MistralTypography.heading5.copyWith(color: skin.text1)),
           const SizedBox(height: 8),
           Text(
             '太棒了！今天的复习任务已完成，休息一下吧。',

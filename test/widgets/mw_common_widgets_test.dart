@@ -38,12 +38,9 @@ void main() {
 
     testWidgets('自定义文案 + 行动按钮可点击', (tester) async {
       var tapped = false;
-      await tester.pumpWidget(wrap(MwEmptyState(
-        title: '自定义标题',
-        subtitle: '自定义副标题',
-        actionLabel: '重试',
-        onAction: () => tapped = true,
-      )));
+      await tester.pumpWidget(
+        wrap(MwEmptyState(title: '自定义标题', subtitle: '自定义副标题', actionLabel: '重试', onAction: () => tapped = true)),
+      );
       expect(find.text('自定义标题'), findsOneWidget);
       await tester.tap(find.text('重试'));
       expect(tapped, isTrue);
@@ -60,12 +57,7 @@ void main() {
         MaterialApp(
           home: Builder(
             builder: (context) => TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => throw FlutterError('boom'),
-                ),
-              ),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => throw FlutterError('boom'))),
               child: const Text('crash'),
             ),
           ),

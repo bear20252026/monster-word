@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_reader.dart';

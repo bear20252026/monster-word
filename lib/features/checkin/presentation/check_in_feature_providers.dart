@@ -19,15 +19,9 @@ Widget buildCheckInFeatureScope({required Widget child}) {
 
   return MultiProvider(
     providers: [
-      Provider<CheckInHistoryReader>(
-        create: (_) => ServiceCheckInHistoryReader(service: service),
-      ),
-      Provider<CheckinStatusReader>(
-        create: (_) => ServiceCheckinStatusReader(service: service),
-      ),
-      Provider<CheckinWriter>(
-        create: (_) => ServiceCheckinWriter(service: service),
-      ),
+      Provider<CheckInHistoryReader>(create: (_) => ServiceCheckInHistoryReader(service: service)),
+      Provider<CheckinStatusReader>(create: (_) => ServiceCheckinStatusReader(service: service)),
+      Provider<CheckinWriter>(create: (_) => ServiceCheckinWriter(service: service)),
     ],
     child: child,
   );

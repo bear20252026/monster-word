@@ -5,14 +5,12 @@ import 'package:word_app/features/search/application/search_history_store.dart';
 /// 基于既有应用偏好存储的搜索历史适配器。
 class PreferencesSearchHistoryStore implements SearchHistoryStore {
   /// 从 service_locator 自动解析依赖。
-  factory PreferencesSearchHistoryStore.fromServiceLocator() =>
-      PreferencesSearchHistoryStore._(sl<AppPreferences>());
+  factory PreferencesSearchHistoryStore.fromServiceLocator() => PreferencesSearchHistoryStore._(sl<AppPreferences>());
 
   PreferencesSearchHistoryStore._(this._preferences);
 
   /// 显式注入（供测试覆盖）。
-  PreferencesSearchHistoryStore(AppPreferences preferences)
-      : _preferences = preferences;
+  PreferencesSearchHistoryStore(AppPreferences preferences) : _preferences = preferences;
 
   final AppPreferences _preferences;
 

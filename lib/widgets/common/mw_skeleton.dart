@@ -15,12 +15,7 @@ class MwSkeletonBlock extends StatefulWidget {
   final double height;
   final double? radius;
 
-  const MwSkeletonBlock({
-    super.key,
-    required this.width,
-    required this.height,
-    this.radius,
-  });
+  const MwSkeletonBlock({super.key, required this.width, required this.height, this.radius});
 
   @override
   State<MwSkeletonBlock> createState() => _MwSkeletonBlockState();
@@ -65,10 +60,7 @@ class MwSkeletonListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final design = context.design;
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: design.spacing.page,
-        vertical: design.spacing.sm,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: design.spacing.page, vertical: design.spacing.sm),
       child: Row(
         children: [
           MwSkeletonBlock(width: 40, height: 40, radius: 20),
@@ -104,10 +96,7 @@ class MwSkeletonPage extends StatelessWidget {
         children: [
           MwSkeletonBlock(width: 180, height: 24, radius: design.radius.sm),
           SizedBox(height: design.spacing.lg),
-          for (int i = 0; i < rows; i++) ...[
-            const MwSkeletonListItem(),
-            SizedBox(height: design.spacing.sm),
-          ],
+          for (int i = 0; i < rows; i++) ...[const MwSkeletonListItem(), SizedBox(height: design.spacing.sm)],
         ],
       ),
     );

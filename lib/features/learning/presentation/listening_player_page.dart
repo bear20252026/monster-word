@@ -403,10 +403,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
                   Expanded(
                     child: Text(
                       s.en,
-                      style: MistralTypography.bodySm.copyWith(
-                        color: skin.colors.text1,
-                        fontStyle: FontStyle.italic,
-                      ),
+                      style: MistralTypography.bodySm.copyWith(color: skin.colors.text1, fontStyle: FontStyle.italic),
                     ),
                   ),
                   if (s.audioUrl != null && s.audioUrl!.isNotEmpty)
@@ -421,10 +418,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
               if (s.cn.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    s.cn,
-                    style: MistralTypography.caption.copyWith(color: skin.colors.text3),
-                  ),
+                  child: Text(s.cn, style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
                 ),
               const SizedBox(height: 8),
             ],
@@ -473,7 +467,10 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
   Widget _buildRateControl(SkinSystem skin, AppResponsive resp) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(context.design.radius.lg)),
+      decoration: BoxDecoration(
+        color: skin.colors.cardBgAlt,
+        borderRadius: BorderRadius.circular(context.design.radius.lg),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

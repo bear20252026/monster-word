@@ -11,8 +11,7 @@ class ServiceDictionaryFavoriteWriter implements DictionaryFavoriteWriter {
 
   final FavRepository? _favRepository;
 
-  FavRepository get _fav =>
-      _favRepository ?? FavRepositoryImpl();
+  FavRepository get _fav => _favRepository ?? FavRepositoryImpl();
 
   @override
   Future<bool> toggleFavorite(String word) async {

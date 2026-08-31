@@ -5,10 +5,7 @@ import 'package:word_app/models/definition.dart';
 void main() {
   group('DefinitionItem', () {
     test('formatted 用分号连接释义', () {
-      const item = DefinitionItem(
-        partOfSpeech: 'n.',
-        definitions: ['帮助', '援助'],
-      );
+      const item = DefinitionItem(partOfSpeech: 'n.', definitions: ['帮助', '援助']);
       expect(item.formatted, '帮助; 援助');
     });
 
@@ -40,9 +37,7 @@ void main() {
       });
 
       test('中文释义为空时回退到英文释义', () {
-        const parsed = [
-          Definition(partOfSpeech: 'n.', enDef: 'help', cnDef: ''),
-        ];
+        const parsed = [Definition(partOfSpeech: 'n.', enDef: 'help', cnDef: '')];
 
         final items = DefinitionItem.fromParsed(parsed);
         expect(items[0].definitions, ['help']);

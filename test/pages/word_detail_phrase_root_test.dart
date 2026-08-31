@@ -169,8 +169,7 @@ void main() {
         usPron: 'həˈloʊ',
         ukPron: 'həˈləʊ',
         interpret: 'int. 你好',
-        phrase:
-            '[{"t":0,"p":[{"en":"say hello","cn":"打招呼","exams":"[\\"四级\\"]"},{"en":"hello world","cn":"你好世界","exams":"[]"}]}]',
+        phrase: '[{"t":0,"p":[{"en":"say hello","cn":"打招呼","exams":"[\\"四级\\"]"},{"en":"hello world","cn":"你好世界","exams":"[]"}]}]',
         example: '',
         wordRoot: '',
       );
@@ -255,8 +254,7 @@ void main() {
         usPron: '',
         ukPron: '',
         interpret: 'n. 生物学',
-        phrase:
-            '[{"t":0,"p":[{"en":"biological diversity","cn":"生物多样性","exams":"[]"}]}]',
+        phrase: '[{"t":0,"p":[{"en":"biological diversity","cn":"生物多样性","exams":"[]"}]}]',
         example: '',
         wordRoot: '{"roots":["bio=生命"]}',
       );
@@ -296,8 +294,7 @@ class _StubChoicePort implements ChoiceGeneratorPort {
     required ChoiceCandidate correct,
     required Iterable<ChoiceCandidate> candidates,
     Random? random,
-  }) =>
-      [correct];
+  }) => [correct];
 }
 
 class _StubReviewScheduleRepo extends ReviewScheduleRepository {}

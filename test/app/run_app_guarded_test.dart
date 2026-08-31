@@ -13,12 +13,7 @@ void main() {
   group('A-2: runZonedGuarded 兜底', () {
     testWidgets('runAppGuarded 包裹 runApp 不抛异常', (tester) async {
       // runAppGuarded 应正常启动应用（runApp 被 zone 包裹）
-      runAppGuarded(
-        const Directionality(
-          textDirection: TextDirection.ltr,
-          child: Text('guarded'),
-        ),
-      );
+      runAppGuarded(const Directionality(textDirection: TextDirection.ltr, child: Text('guarded')));
 
       await tester.pump();
 
@@ -33,12 +28,7 @@ void main() {
       // 这里验证函数可正常调用且不抛同步异常。
       expect(() {
         runZonedGuarded(
-          () => runApp(
-            const Directionality(
-              textDirection: TextDirection.ltr,
-              child: Text('zone-test'),
-            ),
-          ),
+          () => runApp(const Directionality(textDirection: TextDirection.ltr, child: Text('zone-test'))),
           (error, stack) {
             // zone 错误回调 — 生产环境应上报 Crashlytics/Sentry
           },

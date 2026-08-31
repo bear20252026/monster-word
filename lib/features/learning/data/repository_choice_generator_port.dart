@@ -13,10 +13,6 @@ class RepositoryChoiceGeneratorPort implements ChoiceGeneratorPort {
     required Iterable<ChoiceCandidate> candidates,
     Random? random,
   }) {
-    return ChoiceGenerator.generate(
-      correct: correct,
-      candidates: candidates,
-      random: random,
-    );
+    return ChoiceGenerator.generate(correct: correct, candidates: candidates, random: random);
   }
 }

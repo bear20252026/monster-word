@@ -9,8 +9,7 @@ class RepositoryNewWordsWriterPort implements NewWordsWriterPort {
 
   RepositoryNewWordsWriterPort(this._repository);
 
-  factory RepositoryNewWordsWriterPort.fromServiceLocator() =>
-      RepositoryNewWordsWriterPort(sl<NewWordRepository>());
+  factory RepositoryNewWordsWriterPort.fromServiceLocator() => RepositoryNewWordsWriterPort(sl<NewWordRepository>());
 
   @override
   Future<bool> toggleNewWord(Word word, {String source = 'manual'}) {

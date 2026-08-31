@@ -18,10 +18,10 @@ class BookState extends ChangeNotifier {
     required BookSelectionWriter selectionWriter,
     required BookWordsReader wordsReader,
     required LearningProgressReader progressReader,
-  })  : _catalogReader = catalogReader,
-        _selectionWriter = selectionWriter,
-        _wordsReader = wordsReader,
-        _progressReader = progressReader;
+  }) : _catalogReader = catalogReader,
+       _selectionWriter = selectionWriter,
+       _wordsReader = wordsReader,
+       _progressReader = progressReader;
   // ignore_for_file: prefer_initializing_formals
 
   final BookCatalogReader _catalogReader;

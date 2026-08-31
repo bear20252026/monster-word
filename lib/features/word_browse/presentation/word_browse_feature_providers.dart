@@ -12,12 +12,8 @@ import 'package:word_app/features/word_browse/data/repository_word_notes_store.d
 Widget buildWordBrowseFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
-      Provider<WordNotesStore>(
-        create: (_) => RepositoryWordNotesStore.fromServiceLocator(),
-      ),
-      Provider<SentenceFavoritesStore>(
-        create: (_) => RepositorySentenceFavoritesStore.fromServiceLocator(),
-      ),
+      Provider<WordNotesStore>(create: (_) => RepositoryWordNotesStore.fromServiceLocator()),
+      Provider<SentenceFavoritesStore>(create: (_) => RepositorySentenceFavoritesStore.fromServiceLocator()),
     ],
     child: child,
   );

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
@@ -28,7 +28,7 @@ class LearningSessionState extends ChangeNotifier {
     required this._reviewSchedulePort,
     required this._choicePort,
     List<Word> Function(List<Word>)? shuffler,
-  })  : _shuffler = shuffler ?? alphabetSpreadShuffle {
+  }) : _shuffler = shuffler ?? alphabetSpreadShuffle {
     unawaited(_loadProgress());
   }
 
@@ -73,6 +73,7 @@ class LearningSessionState extends ChangeNotifier {
       await AppPreferences().setTodayLearned(_todayLearned, date: _todayLearnedDate);
     } catch (_) {}
   }
+
   DateTime? _sessionStartTime;
 
   /// 队列代际计数：每当用户主动加载新的词库/收藏（`_replaceQueue`）时自增，
@@ -88,9 +89,8 @@ class LearningSessionState extends ChangeNotifier {
   /// 是否有未保存的学习进度（已翻过至少 1 张卡且未完成全部）。
   /// 用于 SessionExitGuard 智能拦截：无进度时不打扰用户。
   bool get hasProgress => _queue.isNotEmpty && _currentIndex > 0 && _currentIndex < _queue.length;
-  (int current, int total) get progress => _queue.isEmpty
-      ? (0, 0)
-      : ((_currentIndex.clamp(0, _queue.length - 1)) + 1, _queue.length);
+  (int current, int total) get progress =>
+      _queue.isEmpty ? (0, 0) : ((_currentIndex.clamp(0, _queue.length - 1)) + 1, _queue.length);
   bool get showAnswer => _showAnswer;
   List<WordChoicePair> get choices => _choices;
   int get learnedNum => _leitnerEngine.learnedNumber;
@@ -106,8 +106,7 @@ class LearningSessionState extends ChangeNotifier {
       _sessionStartTime == null ? null : DateTime.now().difference(_sessionStartTime!).inSeconds;
 
   /// 本次学习正确率（0.0 ~ 1.0），无答题记录为 null
-  double? get accuracy =>
-      _totalAnswered == 0 ? null : (_totalAnswered - _errorWords.length) / _totalAnswered;
+  double? get accuracy => _totalAnswered == 0 ? null : (_totalAnswered - _errorWords.length) / _totalAnswered;
 
   Word? get currentWord => (_queue.isEmpty || _currentIndex >= _queue.length) ? null : _queue[_currentIndex];
 
@@ -303,8 +302,6 @@ class LearningSessionState extends ChangeNotifier {
       correct: ChoiceCandidate(word: current.word, interpret: current.interpret),
       candidates: _queue.map((word) => ChoiceCandidate(word: word.word, interpret: word.interpret)),
     );
-    _choices = generated
-        .map((c) => WordChoicePair(c.word, c.interpret))
-        .toList(growable: false);
+    _choices = generated.map((c) => WordChoicePair(c.word, c.interpret)).toList(growable: false);
   }
 }

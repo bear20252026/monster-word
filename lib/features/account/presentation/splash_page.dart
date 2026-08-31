@@ -1,4 +1,4 @@
-﻿// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队生成 | Monster Word App
 
 // 移植自 v3.2 SplashActivity
 // 启动页：品牌动画 → 检查登录状态 → 跳转首页或登录页
@@ -286,7 +286,9 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                             style: ElevatedButton.styleFrom(
                               backgroundColor: skin.colors.accent,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(context.design.radius.pill),
+                              ),
                             ),
                             child: const Text('开始使用'),
                           )
@@ -300,7 +302,9 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                             style: ElevatedButton.styleFrom(
                               backgroundColor: skin.colors.accent,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(context.design.radius.pill),
+                              ),
                             ),
                             child: const Text('下一步'),
                           ),

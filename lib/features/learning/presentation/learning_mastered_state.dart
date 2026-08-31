@@ -10,10 +10,7 @@ import 'package:word_app/features/learning/application/mastered_writer_port.dart
 /// 读取通过 [MasteredWordsReader]，写入命令通过 [MasteredWriterPort] 委托给掌握仓库适配器，以保持
 /// `mastered_words_v1` 的字符串身份和已有用户数据兼容。该状态仅提供页面可订阅的掌握词集合与切换结果。
 class LearningMasteredState extends ChangeNotifier {
-  LearningMasteredState({
-    required this._masteredWordsReader,
-    required this._writerPort,
-  }) {
+  LearningMasteredState({required this._masteredWordsReader, required this._writerPort}) {
     unawaited(refresh());
   }
 

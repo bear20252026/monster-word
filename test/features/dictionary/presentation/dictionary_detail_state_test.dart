@@ -23,11 +23,7 @@ class _FakeSearchReader implements DictionarySearchReader {
 }
 
 class _FakeContentReader implements DictionaryContentReader {
-  _FakeContentReader({
-    this.derived = const [],
-    this.synonyms = const [],
-    this.examples = const [],
-  });
+  _FakeContentReader({this.derived = const [], this.synonyms = const [], this.examples = const []});
 
   final List<Word> derived;
   final List<Word> synonyms;
@@ -40,8 +36,7 @@ class _FakeContentReader implements DictionaryContentReader {
   Future<List<Word>> getSynonyms(String word) async => synonyms;
 
   @override
-  Future<List<Map<String, String>>> getExamExamples(String word) async =>
-      examples;
+  Future<List<Map<String, String>>> getExamExamples(String word) async => examples;
 }
 
 class _FakeFavoriteWriter implements DictionaryFavoriteWriter {
@@ -97,8 +92,7 @@ void main() {
     return Word(
       id: id,
       word: word,
-      interpret: interpretOverride ??
-          '[{"t":"n.","def":[{"cn":"例子"},{"cn":"范例"}]}]',
+      interpret: interpretOverride ?? '[{"t":"n.","def":[{"cn":"例子"},{"cn":"范例"}]}]',
       usPron: usPron,
       ukPron: ukPron,
       audioUrls: audioUrls,
@@ -113,11 +107,7 @@ void main() {
   }) {
     return DictionaryDetailState(
       searchReader: _FakeSearchReader(results: searchResults),
-      contentReader: _FakeContentReader(
-        derived: derived,
-        synonyms: synonyms,
-        examples: examples,
-      ),
+      contentReader: _FakeContentReader(derived: derived, synonyms: synonyms, examples: examples),
       favoriteWriter: _FakeFavoriteWriter(),
       newWordWriter: _FakeNewWordWriter(),
     );

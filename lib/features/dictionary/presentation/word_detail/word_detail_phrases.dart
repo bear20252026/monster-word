@@ -94,10 +94,7 @@ class _PhraseGroupCard extends StatelessWidget {
                   if (item.cn.isNotEmpty)
                     Padding(
                       padding: EdgeInsets.only(top: 2),
-                      child: Text(
-                        item.cn,
-                        style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
-                      ),
+                      child: Text(item.cn, style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
                     ),
                   if (item.exams.isNotEmpty)
                     Padding(
@@ -113,10 +110,7 @@ class _PhraseGroupCard extends StatelessWidget {
                                   color: skin.colors.cardBgAlt,
                                   borderRadius: BorderRadius.circular(context.design.radius.sm),
                                 ),
-                                child: Text(
-                                  e,
-                                  style: MistralTypography.micro.copyWith(color: skin.colors.text2),
-                                ),
+                                child: Text(e, style: MistralTypography.micro.copyWith(color: skin.colors.text2)),
                               ),
                             )
                             .toList(),

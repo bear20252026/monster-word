@@ -265,10 +265,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 中文释义提示
-        Text(
-          '请选择正确的英文句子：',
-          style: MistralTypography.bodyBold.copyWith(color: skin.colors.text2),
-        ),
+        Text('请选择正确的英文句子：', style: MistralTypography.bodyBold.copyWith(color: skin.colors.text2)),
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
@@ -284,8 +281,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
         ),
         const SizedBox(height: 24),
         // 选项列表
-        for (int i = 0; i < _options.length; i++)
-          _buildOptionItem(i, _options[i], skin, resp),
+        for (int i = 0; i < _options.length; i++) _buildOptionItem(i, _options[i], skin, resp),
         const SizedBox(height: 24),
         if (_showAnswer)
           SizedBox(
@@ -342,9 +338,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
               height: 28,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: borderColor == skin.colors.divider
-                    ? skin.colors.cardBgAlt
-                    : borderColor.withValues(alpha: 0.2),
+                color: borderColor == skin.colors.divider ? skin.colors.cardBgAlt : borderColor.withValues(alpha: 0.2),
               ),
               child: Center(
                 child: Text(
@@ -355,10 +349,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                option.text,
-                style: MistralTypography.body.copyWith(color: skin.colors.text1),
-              ),
+              child: Text(option.text, style: MistralTypography.body.copyWith(color: skin.colors.text1)),
             ),
             if (_showAnswer && option.isCorrect)
               Icon(Icons.check_circle, color: MistralColors.success, size: 20)

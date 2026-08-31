@@ -15,11 +15,7 @@ void main() {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('本次学习了 50 个单词，错了 5 个'),
-                      Text('答对率: 90%'),
-                      Text('用时: 3分钟'),
-                    ],
+                    children: [Text('本次学习了 50 个单词，错了 5 个'), Text('答对率: 90%'), Text('用时: 3分钟')],
                   ),
                 );
               },
@@ -36,11 +32,7 @@ void main() {
     testWidgets('无错题时不显示复习按钮', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: Center(
-              child: Text('你已经完成了今天的所有单词，太棒了！'),
-            ),
-          ),
+          home: Scaffold(body: Center(child: Text('你已经完成了今天的所有单词，太棒了！'))),
         ),
       );
 

@@ -43,10 +43,7 @@ class UriSchemePage extends StatelessWidget {
             SizedBox(
               width: 28,
               height: 28,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: MistralColors.primary,
-              ),
+              child: CircularProgressIndicator(strokeWidth: 2.5, color: MistralColors.primary),
             ),
           ],
         ),

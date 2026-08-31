@@ -278,7 +278,10 @@ class _CoinCard extends StatelessWidget {
                     builder: (context, snap) {
                       return Text(
                         '${snap.data ?? 0}',
-                        style: MistralTypography.heading4.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w700),
+                        style: MistralTypography.heading4.copyWith(
+                          color: skin.colors.text1,
+                          fontWeight: FontWeight.w700,
+                        ),
                       );
                     },
                   ),

@@ -19,11 +19,7 @@ class _WatchTestWidget extends StatelessWidget {
       body: Column(
         children: [
           // 模拟修复后的 Builder + watch 模式
-          Builder(
-            builder: (ctx) => Text(
-              'reward:${ctx.watch<_FakeNotifier>().reader.checkInReward}',
-            ),
-          ),
+          Builder(builder: (ctx) => Text('reward:${ctx.watch<_FakeNotifier>().reader.checkInReward}')),
         ],
       ),
     );
@@ -52,8 +48,7 @@ class _FakeCheckInHistoryReader implements CheckInHistoryReader {
 }
 
 void main() {
-  testWidgets('CheckInHistoryPage 使用 watch 模式，reader 变化时触发重建',
-      (tester) async {
+  testWidgets('CheckInHistoryPage 使用 watch 模式，reader 变化时触发重建', (tester) async {
     final notifier = _FakeNotifier(_FakeCheckInHistoryReader(reward: 5));
 
     await tester.pumpWidget(

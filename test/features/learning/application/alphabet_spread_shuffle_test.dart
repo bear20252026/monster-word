@@ -5,12 +5,12 @@ import 'package:word_app/features/learning/application/alphabet_spread_shuffle.d
 import 'package:word_app/models/word.dart';
 
 void main() {
-  List<Word> words(List<String> spellings) =>
-      [for (var i = 0; i < spellings.length; i++) Word(id: i, word: spellings[i])];
+  List<Word> words(List<String> spellings) => [
+    for (var i = 0; i < spellings.length; i++) Word(id: i, word: spellings[i]),
+  ];
 
   test('同一首字母不连续出现（大量同首字母词）', () {
-    final input = words(
-        ['apple', 'apply', 'apt', 'axe', 'banana', 'cat', 'dog', 'duck', 'elephant']);
+    final input = words(['apple', 'apply', 'apt', 'axe', 'banana', 'cat', 'dog', 'duck', 'elephant']);
     final result = alphabetSpreadShuffle(input);
     for (var i = 1; i < result.length; i++) {
       expect(

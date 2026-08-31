@@ -1,4 +1,4 @@
-﻿// 账号信息页：还原 v3.2 原版账号信息页布局
+// 账号信息页：还原 v3.2 原版账号信息页布局
 // 包含：头像 + 相机图标、ID账号、账号、昵称、手机号、绑定平台
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

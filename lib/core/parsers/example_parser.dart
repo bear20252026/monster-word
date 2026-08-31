@@ -88,9 +88,7 @@ class ExampleParser {
             final source = (s['b'] as String?) ?? '';
             // 例句音频真实字段为 u（相对路径 /sentence/audio/xxx.mp3），
             // 兼容 audio/audioUrl 旧写法；统一归一为完整可播放 URL。
-            var audioUrl = (s['u'] as String?) ??
-                (s['audio'] as String?) ??
-                (s['audioUrl'] as String?);
+            var audioUrl = (s['u'] as String?) ?? (s['audio'] as String?) ?? (s['audioUrl'] as String?);
             if (audioUrl != null && audioUrl.isNotEmpty) {
               audioUrl = _normalizeAudioUrl(audioUrl);
             }

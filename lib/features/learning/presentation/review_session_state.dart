@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/engine/srs_engine.dart' show RecallRating;
@@ -24,8 +24,8 @@ class ReviewSessionState extends ChangeNotifier {
     required ReviewRatingWriter ratingWriter,
     SuperMemoryEngine? engine,
     ReviewSessionQuestionFactory? questionFactory,
-  })  : _engine = engine ?? SuperMemoryEngine(),
-        _questionFactory = questionFactory ?? const ReviewSessionQuestionFactory() {
+  }) : _engine = engine ?? SuperMemoryEngine(),
+       _questionFactory = questionFactory ?? const ReviewSessionQuestionFactory() {
     _ratingExecutor = ReviewSessionRatingExecutor(engine: _engine, ratingWriter: ratingWriter);
   }
 

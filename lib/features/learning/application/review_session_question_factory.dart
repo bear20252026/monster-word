@@ -1,4 +1,4 @@
-﻿import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
+import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/engine/super_memory_engine.dart';
 import 'package:word_app/models/bb_word_process.dart';
 import 'package:word_app/models/word.dart';

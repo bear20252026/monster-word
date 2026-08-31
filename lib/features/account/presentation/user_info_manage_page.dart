@@ -1,4 +1,4 @@
-﻿// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队生成 | Monster Word App
 
 // 移植自 v3.2 UserInfoManageActivity
 // 用户信息管理：修改头像、昵称、签名等个人信息

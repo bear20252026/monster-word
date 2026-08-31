@@ -1,4 +1,4 @@
-﻿// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队生成 | Monster Word App
 
 // 移植自 v3.2 LoginActivity
 // 登录页：支持手机号登录、账号密码登录
@@ -362,7 +362,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                           style: ElevatedButton.styleFrom(
                             backgroundColor: MistralColors.primary,
                             foregroundColor: AppColors.white100,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(context.design.radius.md),
+                            ),
                           ),
                           child: const Text('获取验证码'),
                         ),
@@ -512,5 +514,4 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             ),
     );
   }
-
 }

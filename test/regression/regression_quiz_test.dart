@@ -24,8 +24,7 @@ class _FakeQueuePort implements LearningQueuePort {
   Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
 
   @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async =>
-      List<Word>.from(_words);
+  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => List<Word>.from(_words);
 }
 
 class _FakeProgressPort implements LearningProgressPort {
@@ -58,8 +57,7 @@ void main() {
       // 根因：extractChinese 只认 JSON 结构 [{"def":[{"cn":...}]}]，
       // 对词库中占多数的纯文本 "vi. 倒塌；崩溃" 永远返回空。
       // 修复：commit 2eabee0 增加含 CJK 字符的纯文本回退。
-      expect(DefinitionFormatter.extractChinese('vi. 倒塌；昏倒；崩溃'), isNotEmpty,
-          reason: '纯文本释义是词库主流格式，判定失败会劣化全部四选一的干扰项质量');
+      expect(DefinitionFormatter.extractChinese('vi. 倒塌；昏倒；崩溃'), isNotEmpty, reason: '纯文本释义是词库主流格式，判定失败会劣化全部四选一的干扰项质量');
       // 多行释义取第一行含中文的部分
       expect(DefinitionFormatter.extractChinese('n. 学位连领帽\nv. 覆盖'), contains('学位连领帽'));
       // 空壳与 JSON 两种形态回归
@@ -85,8 +83,7 @@ void main() {
       );
       await session.loadBook(Book(id: 1, code: 'T', name: '测试', wordCount: 3), shuffle: false);
 
-      expect(session.queue.map((w) => w.word), ['solid'],
-          reason: '空释义词进入队列 = 四选一残缺 + 详情页空白，宁少勿缺');
+      expect(session.queue.map((w) => w.word), ['solid'], reason: '空释义词进入队列 = 四选一残缺 + 详情页空白，宁少勿缺');
       expect(session.currentWord?.word, 'solid');
     });
 

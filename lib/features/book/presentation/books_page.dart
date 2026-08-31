@@ -44,8 +44,7 @@ class BookDashboardPage extends StatelessWidget {
   Widget _buildHeader(BuildContext context, ThemeVars skin) {
     return Text(
       '词书',
-      style: MistralTypography.heading2
-          .copyWith(color: skin.text1, fontWeight: FontWeight.bold),
+      style: MistralTypography.heading2.copyWith(color: skin.text1, fontWeight: FontWeight.bold),
     );
   }
 
@@ -65,22 +64,15 @@ class BookDashboardPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '当前词书',
-                style: MistralTypography.bodySm.copyWith(color: skin.text3),
-              ),
+              Text('当前词书', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
               SizedBox(height: context.design.spacing.xs),
               Text(
                 book?.name ?? '未选择',
-                style: MistralTypography.heading4.copyWith(
-                    color: skin.text1, fontWeight: FontWeight.w600),
+                style: MistralTypography.heading4.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
               ),
               if (book != null) ...[
                 SizedBox(height: context.design.spacing.sm),
-                Text(
-                  '${book.wordCount} 词',
-                  style: MistralTypography.bodyMd.copyWith(color: skin.text3),
-                ),
+                Text('${book.wordCount} 词', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
               ],
               if (stats != null) ...[
                 SizedBox(height: context.design.spacing.sm),
@@ -112,8 +104,7 @@ class BookDashboardPage extends StatelessWidget {
       children: [
         Text(
           '快捷入口',
-          style: MistralTypography.bodyMd
-              .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+          style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
         ),
         SizedBox(height: context.design.spacing.sm),
         Row(
@@ -135,14 +126,14 @@ class BookDashboardPage extends StatelessWidget {
                     onTap: state.currentBook == null
                         ? null
                         : () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ChangeNotifierProvider.value(
-                                  value: state,
-                                  child: BookWordsPage(book: state.currentBook!),
-                                ),
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChangeNotifierProvider.value(
+                                value: state,
+                                child: BookWordsPage(book: state.currentBook!),
                               ),
                             ),
+                          ),
                   );
                 },
               ),
@@ -155,11 +146,7 @@ class BookDashboardPage extends StatelessWidget {
 }
 
 class _ActionCard extends StatelessWidget {
-  const _ActionCard({
-    required this.icon,
-    required this.label,
-    this.onTap,
-  });
+  const _ActionCard({required this.icon, required this.label, this.onTap});
 
   final IconData icon;
   final String label;
@@ -181,10 +168,7 @@ class _ActionCard extends StatelessWidget {
           children: [
             Icon(icon, color: skin.accent, size: 28),
             SizedBox(height: context.design.spacing.xs),
-            Text(
-              label,
-              style: MistralTypography.bodySm.copyWith(color: skin.text1),
-            ),
+            Text(label, style: MistralTypography.bodySm.copyWith(color: skin.text1)),
           ],
         ),
       ),

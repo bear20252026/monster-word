@@ -175,10 +175,10 @@ void main() {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/features/dictionary/presentation/word_detail_page.dart').readAsStringSync();
       // 2026-08-30 拆分后，笔记/例句收藏的实际使用点在 word_detail/ 子目录
-      final notesSectionSource =
-          File('lib/features/dictionary/presentation/word_detail/word_detail_notes_section.dart').readAsStringSync();
-      final exampleTileSource =
-          File('lib/features/dictionary/presentation/word_detail/word_detail_example_tile.dart').readAsStringSync();
+      final notesSectionSource = File('lib/features/dictionary/presentation/word_detail/word_detail_notes_section.dart')
+          .readAsStringSync();
+      final exampleTileSource = File('lib/features/dictionary/presentation/word_detail/word_detail_example_tile.dart')
+          .readAsStringSync();
       final providersSource = File('lib/features/word_browse/presentation/word_browse_feature_providers.dart')
           .readAsStringSync();
 
@@ -219,8 +219,7 @@ void main() {
 
     test('词典页通过 DictionaryContentReader 读取扩展内容', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      final featurePageSource = File('lib/features/dictionary/presentation/dictionary_page.dart')
-          .readAsStringSync();
+      final featurePageSource = File('lib/features/dictionary/presentation/dictionary_page.dart').readAsStringSync();
       final providersSource = File('lib/features/dictionary/presentation/dictionary_feature_providers.dart')
           .readAsStringSync();
 
@@ -321,7 +320,8 @@ void main() {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final selectPageSource = File('lib/features/book/presentation/lib_select_page.dart').readAsStringSync();
       final wordsPageSource = File('lib/features/book/presentation/book_words_page.dart').readAsStringSync();
-      final extensiveModeSource = File('lib/features/book/presentation/extensive_model_select_page.dart').readAsStringSync();
+      final extensiveModeSource = File('lib/features/book/presentation/extensive_model_select_page.dart')
+          .readAsStringSync();
       final homeSource = File('lib/features/learning/presentation/home_screen.dart').readAsStringSync();
       final providersSource = File('lib/features/book/presentation/book_feature_providers.dart').readAsStringSync();
 
@@ -423,13 +423,7 @@ void main() {
       expect(portSource, contains('abstract class ReviewScheduleReader extends ChangeNotifier'));
       expect(adapterSource, contains('extends ReviewScheduleReader'));
       expect(providerSource, contains('RepositoryReviewScheduleReader'));
-      for (final source in [
-        wordDetailSource,
-        dialogSource,
-        statisticsSource,
-        wordListsSource,
-        reviewQueueSource,
-      ]) {
+      for (final source in [wordDetailSource, dialogSource, statisticsSource, wordListsSource, reviewQueueSource]) {
         expect(source, contains('ReviewScheduleReader'));
         expect(source, isNot(contains('ReviewScheduleRepository')));
         expect(source, isNot(contains('review_schedule_repository.dart')));

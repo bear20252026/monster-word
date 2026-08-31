@@ -210,15 +210,11 @@ class _SearchPageState extends State<SearchPage> {
             Navigator.pushNamed(context, RouteNames.dictionary, arguments: w);
           },
           child: Material(
-            color: _selectedWord?.word == w.word
-                ? skin.accent.withValues(alpha: 0.08)
-                : Colors.transparent,
+            color: _selectedWord?.word == w.word ? skin.accent.withValues(alpha: 0.08) : Colors.transparent,
             child: Container(
               decoration: _selectedWord?.word == w.word
                   ? BoxDecoration(
-                      border: Border(
-                        left: BorderSide(color: skin.accent, width: 3),
-                      ),
+                      border: Border(left: BorderSide(color: skin.accent, width: 3)),
                     )
                   : null,
               child: ListTile(
@@ -315,11 +311,7 @@ class _SearchPageState extends State<SearchPage> {
               style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
             ),
             const SizedBox(height: 8),
-            ...examples
-                .take(3)
-                .map(
-                  (ex) => _buildExampleCard(ex, skin),
-                ),
+            ...examples.take(3).map((ex) => _buildExampleCard(ex, skin)),
           ],
           const SizedBox(height: 16),
           SizedBox(
@@ -360,9 +352,7 @@ class _SearchPageState extends State<SearchPage> {
                   .map(
                     (p) => TextSpan(
                       text: p.text,
-                      style: p.highlight
-                          ? TextStyle(fontWeight: FontWeight.bold, color: skin.accent)
-                          : null,
+                      style: p.highlight ? TextStyle(fontWeight: FontWeight.bold, color: skin.accent) : null,
                     ),
                   )
                   .toList(),

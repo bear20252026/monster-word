@@ -79,8 +79,8 @@ class _BendingGalleryState extends State<BendingGallery> {
                 return AnimatedContainer(
                   duration: widget.animDuration,
                   curve: Curves.easeOutCubic,
-                  transform: Matrix4.translationValues(0.0, bendOffset, 0.0) *
-                      Matrix4.diagonal3Values(scale, scale, 1.0),
+                  transform:
+                      Matrix4.translationValues(0.0, bendOffset, 0.0) * Matrix4.diagonal3Values(scale, scale, 1.0),
                   child: GestureDetector(onTap: item.onTap, child: _buildItem(item, i)),
                 );
               }),
@@ -164,10 +164,14 @@ class _PerspectiveGalleryState extends State<PerspectiveGallery> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOutBack,
-              transform: Matrix4.rotationY((i - widget.items.length / 2) * 0.15) *
+              transform:
+                  Matrix4.rotationY((i - widget.items.length / 2) * 0.15) *
                   Matrix4.translationValues(0.0, isSelected ? -15.0 : normalizedDist * 20, 0.0) *
                   Matrix4.diagonal3Values(
-                      isSelected ? 1.1 : (1.0 - normalizedDist * 0.2), isSelected ? 1.1 : (1.0 - normalizedDist * 0.2), 1.0),
+                    isSelected ? 1.1 : (1.0 - normalizedDist * 0.2),
+                    isSelected ? 1.1 : (1.0 - normalizedDist * 0.2),
+                    1.0,
+                  ),
               child: Container(
                 width: widget.itemWidth,
                 margin: const EdgeInsets.symmetric(horizontal: 4),

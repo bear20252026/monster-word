@@ -5,10 +5,7 @@ import 'package:word_app/features/learning/application/mastered_words_reader.dar
 
 /// 基于既有仓储的已掌握词读取适配器。
 class RepositoryMasteredWordsReader implements MasteredWordsReader {
-  const RepositoryMasteredWordsReader({
-    required this._masteredRepository,
-    required this._wordRepository,
-  });
+  const RepositoryMasteredWordsReader({required this._masteredRepository, required this._wordRepository});
 
   final MasteredRepository _masteredRepository;
   final WordRepository _wordRepository;

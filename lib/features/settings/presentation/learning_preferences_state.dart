@@ -9,10 +9,7 @@ import 'package:word_app/features/settings/domain/learning_preferences.dart';
 /// 所有值通过 [SettingsReader] / [SettingsWriter] 端口读写。页面只发送明确的偏好命令，
 /// 不再保存会在离开页面后丢失的本地设置副本。
 class LearningPreferencesState extends ChangeNotifier {
-  LearningPreferencesState({
-    required this._reader,
-    required this._writer,
-  });
+  LearningPreferencesState({required this._reader, required this._writer});
 
   final SettingsReader _reader;
   final SettingsWriter _writer;

@@ -160,17 +160,14 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
           color: skin.text1,
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          '快速刷题',
-          style: MistralTypography.heading3.copyWith(color: skin.text1),
-        ),
+        title: Text('快速刷题', style: MistralTypography.heading3.copyWith(color: skin.text1)),
       ),
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _currentIndex >= _words.length
-                ? _buildResultPage(skin)
-                : _buildReviewPage(skin),
+            ? _buildResultPage(skin)
+            : _buildReviewPage(skin),
       ),
     );
   }
@@ -216,11 +213,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: _SimpleWordCard(
-              word: word,
-              showPhonetic: _showAnswer,
-              showMeaning: _showAnswer,
-            ),
+            child: _SimpleWordCard(word: word, showPhonetic: _showAnswer, showMeaning: _showAnswer),
           ),
         ),
         Padding(
@@ -267,9 +260,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                   child: SizedBox(
                     height: 52,
                     child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: MistralColors.danger),
-                      ),
+                      style: OutlinedButton.styleFrom(side: BorderSide(color: MistralColors.danger)),
                       onPressed: _onUnknown,
                       icon: const Icon(Icons.close, color: MistralColors.danger),
                       label: const Text('不认识', style: TextStyle(color: MistralColors.danger)),
@@ -305,10 +296,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
           children: [
             const MonsterAvatar(size: 80),
             const SizedBox(height: 24),
-            Text(
-              '本轮完成！',
-              style: MistralTypography.heading2.copyWith(color: skin.text1),
-            ),
+            Text('本轮完成！', style: MistralTypography.heading2.copyWith(color: skin.text1)),
             const SizedBox(height: 16),
             _ResultRow(label: '答题总数', value: '${stats.total}', skin: skin),
             _ResultRow(label: '答对', value: '${stats.correct}', skin: skin),
@@ -373,7 +361,10 @@ class _ResultRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
-          Text(value, style: MistralTypography.body.copyWith(color: skin.text1, fontWeight: FontWeight.w600)),
+          Text(
+            value,
+            style: MistralTypography.body.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
@@ -401,16 +392,10 @@ class _SimpleWordCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            word.word,
-            style: MistralTypography.heading1.copyWith(color: skin.text1),
-          ),
+          Text(word.word, style: MistralTypography.heading1.copyWith(color: skin.text1)),
           if (showPhonetic) ...[
             const SizedBox(height: 12),
-            Text(
-              '${word.ukPron}  ${word.usPron}',
-              style: MistralTypography.bodyMd.copyWith(color: skin.text3),
-            ),
+            Text('${word.ukPron}  ${word.usPron}', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
           ],
           if (showMeaning) ...[
             const SizedBox(height: 16),

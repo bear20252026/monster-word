@@ -165,11 +165,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                     return const MwSkeletonGrid(count: 6);
                   }
                   if (snapshot.hasError) {
-                    return const MwEmptyState(
-                      kind: MwEmptyKind.error,
-                      title: '词书加载失败',
-                      subtitle: '检查网络后重试，或稍后再来',
-                    );
+                    return const MwEmptyState(kind: MwEmptyKind.error, title: '词书加载失败', subtitle: '检查网络后重试，或稍后再来');
                   }
                   final books = _filterByTab(_allBooks, _tabIndex);
                   if (books.isEmpty) {
@@ -343,7 +339,11 @@ class _LibSelectPageState extends State<LibSelectPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _BottomToolItem(icon: Icons.dashboard_outlined, label: '词书主页', onTap: () => _openBookDashboard(context)),
+                    _BottomToolItem(
+                      icon: Icons.dashboard_outlined,
+                      label: '词书主页',
+                      onTap: () => _openBookDashboard(context),
+                    ),
                     _BottomToolItem(icon: Icons.style, label: '沉浸刷词', onTap: () => _onToolTap(context, 'immersive')),
                     _BottomToolItem(icon: Icons.headphones, label: '随身听', onTap: () => _onToolTap(context, 'listen')),
                     _BottomToolItem(icon: Icons.edit_note, label: '听写', onTap: () => _onToolTap(context, 'dictation')),
@@ -365,10 +365,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
 
   /// 打开词书主页（BookDashboardPage）。
   void _openBookDashboard(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const BookDashboardPage()),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const BookDashboardPage()));
   }
 
   void _onToolTap(BuildContext context, String tool) {
@@ -531,11 +528,8 @@ class _LibItem extends StatelessWidget {
         ),
         const Spacer(),
         GestureDetector(
-          onTap: () => Navigator.pushNamed(
-            context,
-            RouteNames.bookWords,
-            arguments: {'bookId': book.id, 'bookName': book.name},
-          ),
+          onTap: () =>
+              Navigator.pushNamed(context, RouteNames.bookWords, arguments: {'bookId': book.id, 'bookName': book.name}),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -570,9 +564,7 @@ class _LibItem extends StatelessWidget {
             await context.read<BookState>().selectAndLoad(book);
           }
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('已选中《${book.name}》')),
-            );
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已选中《${book.name}》')));
             // 用户需求：选书后提供每日学习目标设置（如每天背 50 个单词）
             await showModalBottomSheet<void>(
               context: context,
@@ -582,15 +574,11 @@ class _LibItem extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('设置每日学习目标',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text('设置每日学习目标', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       const DailyGoalPicker(),
                       const SizedBox(height: 8),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(sheetCtx),
-                        child: const Text('完成，回首页开始学习'),
-                      ),
+                      FilledButton(onPressed: () => Navigator.pop(sheetCtx), child: const Text('完成，回首页开始学习')),
                     ],
                   ),
                 ),

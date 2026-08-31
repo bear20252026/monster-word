@@ -1,4 +1,4 @@
-﻿// 测试：A-5 review_dialog dueCount==0 空态展示。
+// 测试：A-5 review_dialog dueCount==0 空态展示。
 //
 // 修复前：dueCount==0 时直接进入空复习页面。
 // 修复后：dueCount==0 时展示友好空态「今天没有需要复习的单词」+ CTA。
@@ -30,18 +30,10 @@ void main() {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
-            ChangeNotifierProvider<ReviewScheduleReader>.value(
-              value: _StubScheduleReader(dueCount: 0),
-            ),
-            ChangeNotifierProvider<LearningSessionState>.value(
-              value: _StubSessionState(),
-            ),
+            ChangeNotifierProvider<ReviewScheduleReader>.value(value: _StubScheduleReader(dueCount: 0)),
+            ChangeNotifierProvider<LearningSessionState>.value(value: _StubSessionState()),
           ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: SizedBox.shrink(),
-            ),
-          ),
+          child: const MaterialApp(home: Scaffold(body: SizedBox.shrink())),
         ),
       );
 
@@ -62,18 +54,10 @@ void main() {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
-            ChangeNotifierProvider<ReviewScheduleReader>.value(
-              value: _StubScheduleReader(dueCount: 5),
-            ),
-            ChangeNotifierProvider<LearningSessionState>.value(
-              value: _StubSessionState(),
-            ),
+            ChangeNotifierProvider<ReviewScheduleReader>.value(value: _StubScheduleReader(dueCount: 5)),
+            ChangeNotifierProvider<LearningSessionState>.value(value: _StubSessionState()),
           ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: SizedBox.shrink(),
-            ),
-          ),
+          child: const MaterialApp(home: Scaffold(body: SizedBox.shrink())),
         ),
       );
 
@@ -131,7 +115,8 @@ class _StubScheduleReader extends ReviewScheduleReader {
 /// 通过端口构造：queuePort/progressPort/reviewSchedulePort/choicePort，
 /// 其中队列用假件，进度/评分用轻量假件（不使用真实 IO）。
 class _StubSessionState extends LearningSessionState {
-  _StubSessionState() : super(
+  _StubSessionState()
+    : super(
         queuePort: _StubQueuePort(),
         progressPort: _StubProgressPort(),
         reviewSchedulePort: _StubReviewScheduleWriterPort(),
@@ -155,11 +140,7 @@ class _StubQueuePort implements LearningQueuePort {
 
 class _StubProgressPort implements LearningProgressPort {
   @override
-  Future<void> save({
-    required Book currentBook,
-    required int currentIndex,
-    required List<Word> queue,
-  }) async {}
+  Future<void> save({required Book currentBook, required int currentIndex, required List<Word> queue}) async {}
 
   @override
   Future<LearningProgress?> load() async => null;
@@ -179,6 +160,5 @@ class _StubChoicePort implements ChoiceGeneratorPort {
     required ChoiceCandidate correct,
     required Iterable<ChoiceCandidate> candidates,
     Random? random,
-  }) =>
-      [correct];
+  }) => [correct];
 }

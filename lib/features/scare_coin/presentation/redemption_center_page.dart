@@ -185,7 +185,10 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('我的尖叫币', style: MistralTypography.bodySm.copyWith(color: colors.onGlassAccent.withValues(alpha: 0.8))),
+              Text(
+                '我的尖叫币',
+                style: MistralTypography.bodySm.copyWith(color: colors.onGlassAccent.withValues(alpha: 0.8)),
+              ),
               const SizedBox(height: 4),
               Text('$_coins', style: MistralTypography.heading3.copyWith(color: colors.onGlassAccent)),
             ],

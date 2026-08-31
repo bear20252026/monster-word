@@ -521,7 +521,10 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
           padding: EdgeInsets.all(resp.pageMargin),
           child: Container(
             padding: EdgeInsets.all(24),
-            decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(context.design.radius.lg)),
+            decoration: BoxDecoration(
+              color: skin.cardBgAlt,
+              borderRadius: BorderRadius.circular(context.design.radius.lg),
+            ),
             child: Center(
               child: Text('本月还没有签到记录', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
             ),

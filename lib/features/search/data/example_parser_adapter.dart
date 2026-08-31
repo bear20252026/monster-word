@@ -14,11 +14,8 @@ class ExampleParserAdapter implements ExampleReader {
   @override
   List<SearchExample> parse(String raw) {
     final legacyExamples = legacy.ExampleParser.parse(raw);
-    return legacyExamples.map((e) => SearchExample(
-      en: e.en,
-      cn: e.cn,
-      source: e.source,
-      audioUrl: e.audioUrl,
-    )).toList();
+    return legacyExamples
+        .map((e) => SearchExample(en: e.en, cn: e.cn, source: e.source, audioUrl: e.audioUrl))
+        .toList();
   }
 }

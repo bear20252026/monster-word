@@ -162,7 +162,6 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
     );
   }
 
-
   Widget _buildWordList(SkinSystem skin) {
     return ListView.builder(
       itemCount: _words.length,

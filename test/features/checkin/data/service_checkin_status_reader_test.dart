@@ -28,7 +28,9 @@ class FakeCheckInService implements CheckInService {
 
   @override
   Future<Set<String>> getCheckinDates() async {
-    return _records.map((d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}').toSet();
+    return _records
+        .map((d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}')
+        .toSet();
   }
 
   @override
@@ -51,11 +53,7 @@ void main() {
     test('getStatus 返回正确状态', () async {
       fakeService.setCheckedInToday(true);
       fakeService.setStreakDays(7);
-      fakeService.setRecords([
-        DateTime(2025, 3, 1),
-        DateTime(2025, 3, 2),
-        DateTime(2025, 3, 3),
-      ]);
+      fakeService.setRecords([DateTime(2025, 3, 1), DateTime(2025, 3, 2), DateTime(2025, 3, 3)]);
       fakeService.setReward(10);
 
       final status = await reader.getStatus();
@@ -67,10 +65,7 @@ void main() {
     });
 
     test('getCheckinDates 委托到 service', () async {
-      fakeService.setRecords([
-        DateTime(2025, 3, 1),
-        DateTime(2025, 3, 5),
-      ]);
+      fakeService.setRecords([DateTime(2025, 3, 1), DateTime(2025, 3, 5)]);
 
       final dates = await reader.getCheckinDates();
       expect(dates, contains('2025-03-01'));

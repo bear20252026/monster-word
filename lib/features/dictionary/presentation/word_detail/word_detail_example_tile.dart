@@ -12,7 +12,6 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/text_generate_effect.dart';
 
-
 /// 例句条目（带收藏按钮）
 class ExampleTile extends StatefulWidget {
   final ExampleSentence example;
@@ -84,7 +83,9 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
       final newStatus = await store.isFavorite(wordId: widget.wordId, sentenceId: sentenceId);
       if (mounted) setState(() => _isFav = newStatus);
 
-      messenger.showSnackBar(SnackBar(content: Text(_isFav ? '已收藏到句库' : '已取消收藏'), duration: const Duration(seconds: 1)));
+      messenger.showSnackBar(
+        SnackBar(content: Text(_isFav ? '已收藏到句库' : '已取消收藏'), duration: const Duration(seconds: 1)),
+      );
     }
   }
 
@@ -134,11 +135,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
                   onTap: _playExampleAudio,
                   child: Padding(
                     padding: EdgeInsets.only(left: 6, top: 2),
-                    child: Icon(
-                      Icons.volume_up_outlined,
-                      size: 18,
-                      color: widget.skin.colors.accent,
-                    ),
+                    child: Icon(Icons.volume_up_outlined, size: 18, color: widget.skin.colors.accent),
                   ),
                 ),
               // 收藏按钮
@@ -148,10 +145,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
                   padding: EdgeInsets.only(left: 8),
                   child: AnimatedBuilder(
                     animation: _favScaleAnim,
-                    builder: (context, child) => Transform.scale(
-                      scale: _favScaleAnim.value,
-                      child: child,
-                    ),
+                    builder: (context, child) => Transform.scale(scale: _favScaleAnim.value, child: child),
                     child: Tooltip(
                       message: _isFav ? '取消收藏' : '收藏例句',
                       child: Icon(

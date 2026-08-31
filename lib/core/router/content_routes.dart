@@ -74,10 +74,7 @@ abstract final class ContentRoutes {
     if (name != null) {
       return DictionaryByNamePage(wordName: name);
     }
-    return RouteErrorPage(
-      routeName: RouteNames.dictionary,
-      message: '缺少单词参数',
-    );
+    return RouteErrorPage(routeName: RouteNames.dictionary, message: '缺少单词参数');
   }
 
   static Widget _buildDictionaryByNamePage(Object? args) {
@@ -85,10 +82,7 @@ abstract final class ContentRoutes {
     if (name != null) {
       return DictionaryByNamePage(wordName: name);
     }
-    return RouteErrorPage(
-      routeName: RouteNames.dictionaryByName,
-      message: '缺少单词名参数',
-    );
+    return RouteErrorPage(routeName: RouteNames.dictionaryByName, message: '缺少单词名参数');
   }
 
   /// 从 [args] 中稳健地提取单词原文；支持 Word / String / Map 三种形态。

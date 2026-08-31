@@ -22,7 +22,7 @@ class FakeScareCoinStore implements ScareCoinStore {
   final List<ScareCoinEntry> _entries;
 
   FakeScareCoinStore({this._balance = 0, this._checkedToday = false, List<ScareCoinEntry>? entries})
-      : _entries = entries ?? [];
+    : _entries = entries ?? [];
 
   @override
   int get checkInReward => 10;
@@ -69,10 +69,7 @@ class FakeScareCoinStore implements ScareCoinStore {
 
 Widget _buildTestPage(ScareCoinStore store) {
   return MaterialApp(
-    home: Provider<ScareCoinStore>.value(
-      value: store,
-      child: const ScareCoinHistoryPage(),
-    ),
+    home: Provider<ScareCoinStore>.value(value: store, child: const ScareCoinHistoryPage()),
   );
 }
 

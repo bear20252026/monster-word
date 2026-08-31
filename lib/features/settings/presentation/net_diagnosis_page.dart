@@ -1,4 +1,4 @@
-﻿// 移植自 v3.2 NetDiagnosisActivity
+// 移植自 v3.2 NetDiagnosisActivity
 // 网络诊断：检测网络连接状态和 API 可达性
 import 'dart:async';
 

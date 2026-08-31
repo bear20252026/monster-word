@@ -31,7 +31,6 @@ abstract class BaseSharedPreferences {
 
   double getDouble(String key, {double defaultValue = 0.0}) => _prefs?.getDouble(key) ?? defaultValue;
 
-
   List<String> getStringList(String key, {List<String>? defaultValue}) =>
       _prefs?.getStringList(key) ?? defaultValue ?? [];
 

@@ -8,8 +8,7 @@ class _MockWordNotesStore implements WordNotesStore {
   int _nextId = 1;
 
   @override
-  Future<List<WordNote>> listForWord(int wordId) async =>
-      _notes.where((n) => n.wordId == wordId).toList();
+  Future<List<WordNote>> listForWord(int wordId) async => _notes.where((n) => n.wordId == wordId).toList();
 
   @override
   Future<void> add(WordNote note) async {

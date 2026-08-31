@@ -4,10 +4,7 @@ import 'package:word_app/models/definition.dart';
 ///
 /// 封装一个词性下的所有释义文本，纯数据，无外部依赖。
 class DefinitionItem {
-  const DefinitionItem({
-    required this.partOfSpeech,
-    required this.definitions,
-  });
+  const DefinitionItem({required this.partOfSpeech, required this.definitions});
 
   /// 词性（如 "n."、"v."、"adj."）
   final String partOfSpeech;
@@ -33,8 +30,6 @@ class DefinitionItem {
       grouped.putIfAbsent(pos, () => []);
       grouped[pos]!.add(text);
     }
-    return grouped.entries
-        .map((e) => DefinitionItem(partOfSpeech: e.key, definitions: e.value))
-        .toList();
+    return grouped.entries.map((e) => DefinitionItem(partOfSpeech: e.key, definitions: e.value)).toList();
   }
 }

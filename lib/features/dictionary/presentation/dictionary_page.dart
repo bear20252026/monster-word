@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
 import 'package:provider/provider.dart';
@@ -25,8 +25,7 @@ class DictionaryPage extends StatefulWidget {
   State<DictionaryPage> createState() => _DictionaryPageState();
 }
 
-class _DictionaryPageState extends State<DictionaryPage>
-    with SingleTickerProviderStateMixin {
+class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -75,8 +74,7 @@ class _DictionaryPageState extends State<DictionaryPage>
     );
   }
 
-  Widget _buildTopBar(
-      BuildContext context, ThemeVars skin, Word word) {
+  Widget _buildTopBar(BuildContext context, ThemeVars skin, Word word) {
     return Container(
       height: context.design.spacing.navH,
       padding: EdgeInsets.symmetric(horizontal: 4),
@@ -95,8 +93,7 @@ class _DictionaryPageState extends State<DictionaryPage>
           Expanded(
             child: Text(
               '字典',
-              style: MistralTypography.heading5
-                  .copyWith(color: skin.text1, fontSize: 17, fontWeight: FontWeight.w600),
+              style: MistralTypography.heading5.copyWith(color: skin.text1, fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
           Consumer<DictionaryDetailState>(
@@ -106,9 +103,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                 children: [
                   IconButton(
                     icon: Icon(
-                      state.isNewWord
-                          ? Icons.bookmark_added
-                          : Icons.bookmark_add_outlined,
+                      state.isNewWord ? Icons.bookmark_added : Icons.bookmark_add_outlined,
                       color: state.isNewWord ? MistralColors.primary : skin.text3,
                       size: 24,
                     ),
@@ -119,20 +114,15 @@ class _DictionaryPageState extends State<DictionaryPage>
                             final wasNew = state.isNewWord;
                             await state.toggleNewWord();
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                      wasNew ? '已移出生词本' : '已加入生词本'),
-                                ),
-                              );
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(content: Text(wasNew ? '已移出生词本' : '已加入生词本')));
                             }
                           },
                   ),
                   IconButton(
                     icon: Icon(
                       state.isFavorite ? Icons.star : Icons.star_border,
-                      color:
-                          state.isFavorite ? MistralColors.primary : skin.text3,
+                      color: state.isFavorite ? MistralColors.primary : skin.text3,
                       size: 24,
                     ),
                     tooltip: state.isFavorite ? '取消收藏' : '收藏单词',
@@ -160,8 +150,7 @@ class _DictionaryPageState extends State<DictionaryPage>
             children: [
               Text(
                 word.word,
-                style: MistralTypography.heading2
-                    .copyWith(color: skin.text1, fontWeight: FontWeight.bold),
+                style: MistralTypography.heading2.copyWith(color: skin.text1, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: context.design.spacing.xs),
               _buildCETTags(skin),
@@ -188,13 +177,13 @@ class _DictionaryPageState extends State<DictionaryPage>
     final label = wordLen <= 4
         ? '基础'
         : wordLen <= 8
-            ? '核心'
-            : '进阶';
+        ? '核心'
+        : '进阶';
     final color = wordLen <= 4
         ? MistralColors.success
         : wordLen <= 8
-            ? skin.accent
-            : MistralColors.warning;
+        ? skin.accent
+        : MistralColors.warning;
     return Row(children: [_buildTag(label, color, skin)]);
   }
 
@@ -207,8 +196,7 @@ class _DictionaryPageState extends State<DictionaryPage>
       ),
       child: Text(
         text,
-        style: MistralTypography.micro
-            .copyWith(color: color, fontWeight: FontWeight.w600, fontSize: 11),
+        style: MistralTypography.micro.copyWith(color: color, fontWeight: FontWeight.w600, fontSize: 11),
       ),
     );
   }
@@ -217,8 +205,7 @@ class _DictionaryPageState extends State<DictionaryPage>
     return Consumer<DictionaryDetailState>(
       builder: (context, state, _) {
         final phonetic = state.phonetic;
-        if (phonetic == null ||
-            (phonetic.american.isEmpty && phonetic.english.isEmpty)) {
+        if (phonetic == null || (phonetic.american.isEmpty && phonetic.english.isEmpty)) {
           return const SizedBox.shrink();
         }
         final hasUs = phonetic.american.isNotEmpty;
@@ -233,13 +220,10 @@ class _DictionaryPageState extends State<DictionaryPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (hasUs)
-                _buildPronunciationRow(
-                    '美式', '/${phonetic.american}/', skin),
+              if (hasUs) _buildPronunciationRow('美式', '/${phonetic.american}/', skin),
               if (hasUk) ...[
                 SizedBox(height: context.design.spacing.sm),
-                _buildPronunciationRow(
-                    '英式', '/${phonetic.english}/', skin),
+                _buildPronunciationRow('英式', '/${phonetic.english}/', skin),
               ],
             ],
           ),
@@ -248,18 +232,15 @@ class _DictionaryPageState extends State<DictionaryPage>
     );
   }
 
-  Widget _buildPronunciationRow(
-      String label, String phonetic, ThemeVars skin) {
+  Widget _buildPronunciationRow(String label, String phonetic, ThemeVars skin) {
     return Row(
       children: [
         Text(
           label,
-          style: MistralTypography.bodySm
-              .copyWith(color: skin.text3, fontWeight: FontWeight.w500),
+          style: MistralTypography.bodySm.copyWith(color: skin.text3, fontWeight: FontWeight.w500),
         ),
         SizedBox(width: context.design.spacing.sm),
-        Text(phonetic,
-            style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
+        Text(phonetic, style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
       ],
     );
   }
@@ -282,30 +263,23 @@ class _DictionaryPageState extends State<DictionaryPage>
             children: [
               Text(
                 '释义',
-                style: MistralTypography.bodyMd
-                    .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
               ),
               SizedBox(height: context.design.spacing.sm),
               ...defs.expand((item) sync* {
                 if (item.partOfSpeech.isNotEmpty) {
                   yield Padding(
-                    padding: EdgeInsets.only(
-                        top: context.design.spacing.xs, bottom: 2),
+                    padding: EdgeInsets.only(top: context.design.spacing.xs, bottom: 2),
                     child: Text(
                       item.partOfSpeech,
-                      style: MistralTypography.bodySm.copyWith(
-                          color: skin.accent, fontWeight: FontWeight.w600),
+                      style: MistralTypography.bodySm.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
                     ),
                   );
                 }
                 for (final d in item.definitions) {
                   yield Padding(
                     padding: EdgeInsets.only(bottom: context.design.spacing.xs),
-                    child: Text(
-                      d,
-                      style: MistralTypography.bodyMd
-                          .copyWith(color: skin.text1, height: 1.5),
-                    ),
+                    child: Text(d, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
                   );
                 }
               }),
@@ -334,8 +308,7 @@ class _DictionaryPageState extends State<DictionaryPage>
             indicatorWeight: 3,
             indicatorSize: TabBarIndicatorSize.label,
             indicatorPadding: EdgeInsets.only(bottom: 2),
-            labelStyle:
-                MistralTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
+            labelStyle: MistralTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
             unselectedLabelStyle: MistralTypography.bodySm,
             tabs: const [
               Tab(text: '柯林斯'),
@@ -381,8 +354,7 @@ class _DictionaryPageState extends State<DictionaryPage>
               Expanded(
                 child: Text(
                   '柯林斯释义',
-                  style: MistralTypography.bodyMd
-                      .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
               ),
               IconButton(
@@ -393,8 +365,7 @@ class _DictionaryPageState extends State<DictionaryPage>
             ],
           ),
           SizedBox(height: context.design.spacing.sm),
-          Text('暂无柯林斯释义数据',
-              style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+          Text('暂无柯林斯释义数据', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
         ],
       ),
     );
@@ -413,9 +384,7 @@ class _DictionaryPageState extends State<DictionaryPage>
               border: Border.all(color: skin.divider, width: 0.5),
             ),
             child: Center(
-              child: Text('暂无例句数据',
-                  style:
-                      MistralTypography.bodyMd.copyWith(color: skin.text3)),
+              child: Text('暂无例句数据', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
             ),
           );
         }
@@ -436,14 +405,10 @@ class _DictionaryPageState extends State<DictionaryPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(ex.english,
-                      style: MistralTypography.bodyMd
-                          .copyWith(color: skin.text1, height: 1.5)),
+                  Text(ex.english, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
                   if (ex.chinese.isNotEmpty) ...[
                     SizedBox(height: context.design.spacing.xs),
-                    Text(ex.chinese,
-                        style: MistralTypography.bodySm
-                            .copyWith(color: skin.text3)),
+                    Text(ex.chinese, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
                   ],
                 ],
               ),
@@ -471,13 +436,10 @@ class _DictionaryPageState extends State<DictionaryPage>
               children: [
                 Text(
                   '派生词',
-                  style: MistralTypography.bodyMd
-                      .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
                 SizedBox(height: context.design.spacing.sm),
-                Text('暂无派生词',
-                    style: MistralTypography.bodyMd
-                        .copyWith(color: skin.text3)),
+                Text('暂无派生词', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
               ],
             ),
           );
@@ -492,13 +454,14 @@ class _DictionaryPageState extends State<DictionaryPage>
             return GestureDetector(
               onTap: () {
                 Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) =>
-                            ChangeNotifierProvider.value(
-                              value: context.read<DictionaryDetailState>(),
-                              child: DictionaryPage(word: w),
-                            )));
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChangeNotifierProvider.value(
+                      value: context.read<DictionaryDetailState>(),
+                      child: DictionaryPage(word: w),
+                    ),
+                  ),
+                );
               },
               child: Container(
                 margin: EdgeInsets.only(bottom: context.design.spacing.sm),
@@ -516,22 +479,17 @@ class _DictionaryPageState extends State<DictionaryPage>
                         children: [
                           Text(
                             w.word,
-                            style: MistralTypography.bodyMd.copyWith(
-                                color: skin.text1,
-                                fontWeight: FontWeight.w600),
+                            style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                           ),
                           if (w.usPron.isNotEmpty) ...[
                             SizedBox(height: 2),
-                            Text(w.usPron,
-                                style: MistralTypography.bodySm
-                                    .copyWith(color: skin.text3)),
+                            Text(w.usPron, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
                           ],
                           if (firstInterp.isNotEmpty) ...[
                             SizedBox(height: 4),
                             Text(
                               firstInterp,
-                              style: MistralTypography.bodySm
-                                  .copyWith(color: skin.text3),
+                              style: MistralTypography.bodySm.copyWith(color: skin.text3),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -539,8 +497,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                         ],
                       ),
                     ),
-                    Icon(Icons.arrow_forward_ios,
-                        color: skin.text3, size: 14),
+                    Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
                   ],
                 ),
               ),
@@ -572,13 +529,10 @@ class _DictionaryPageState extends State<DictionaryPage>
               children: [
                 Text(
                   '近义词',
-                  style: MistralTypography.bodyMd
-                      .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
                 SizedBox(height: context.design.spacing.sm),
-                Text('暂无近义词数据',
-                    style: MistralTypography.bodyMd
-                        .copyWith(color: skin.text3)),
+                Text('暂无近义词数据', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
               ],
             ),
           );
@@ -593,13 +547,14 @@ class _DictionaryPageState extends State<DictionaryPage>
             return GestureDetector(
               onTap: () {
                 Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) =>
-                            ChangeNotifierProvider.value(
-                              value: context.read<DictionaryDetailState>(),
-                              child: DictionaryPage(word: synonym),
-                            )));
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChangeNotifierProvider.value(
+                      value: context.read<DictionaryDetailState>(),
+                      child: DictionaryPage(word: synonym),
+                    ),
+                  ),
+                );
               },
               child: Container(
                 margin: EdgeInsets.only(bottom: context.design.spacing.sm),
@@ -617,16 +572,13 @@ class _DictionaryPageState extends State<DictionaryPage>
                         children: [
                           Text(
                             synonym.word,
-                            style: MistralTypography.bodyMd.copyWith(
-                                color: skin.text1,
-                                fontWeight: FontWeight.w600),
+                            style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                           ),
                           if (firstInterpret.isNotEmpty) ...[
                             SizedBox(height: context.design.spacing.xs),
                             Text(
                               firstInterpret,
-                              style: MistralTypography.bodySm
-                                  .copyWith(color: skin.text3),
+                              style: MistralTypography.bodySm.copyWith(color: skin.text3),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -634,8 +586,7 @@ class _DictionaryPageState extends State<DictionaryPage>
                         ],
                       ),
                     ),
-                    Icon(Icons.arrow_forward_ios,
-                        color: skin.text3, size: 14),
+                    Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
                   ],
                 ),
               ),
@@ -663,13 +614,10 @@ class _DictionaryPageState extends State<DictionaryPage>
               children: [
                 Text(
                   '真题例句',
-                  style: MistralTypography.bodyMd
-                      .copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
                 SizedBox(height: context.design.spacing.sm),
-                Text('暂无真题例句',
-                    style: MistralTypography.bodyMd
-                        .copyWith(color: skin.text3)),
+                Text('暂无真题例句', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
               ],
             ),
           );
@@ -691,14 +639,10 @@ class _DictionaryPageState extends State<DictionaryPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(ex.english,
-                      style: MistralTypography.bodyMd
-                          .copyWith(color: skin.text1, height: 1.5)),
+                  Text(ex.english, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
                   if (ex.chinese.isNotEmpty) ...[
                     SizedBox(height: context.design.spacing.xs),
-                    Text(ex.chinese,
-                        style: MistralTypography.bodySm
-                            .copyWith(color: skin.text3)),
+                    Text(ex.chinese, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
                   ],
                 ],
               ),
@@ -714,12 +658,8 @@ class _DictionaryPageState extends State<DictionaryPage>
       await context.read<AudioPlaybackState>().playWord(word);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('发音加载失败，请检查网络'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
       }
     }
   }

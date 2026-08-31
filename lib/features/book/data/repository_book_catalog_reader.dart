@@ -6,8 +6,7 @@ import 'package:word_app/features/book/application/book_catalog_reader.dart';
 /// 基于既有词书仓储的目录读取适配器。
 class RepositoryBookCatalogReader implements BookCatalogReader {
   /// 从 service_locator 自动解析依赖。
-  factory RepositoryBookCatalogReader.fromServiceLocator() =>
-      RepositoryBookCatalogReader._(sl<BookRepository>());
+  factory RepositoryBookCatalogReader.fromServiceLocator() => RepositoryBookCatalogReader._(sl<BookRepository>());
 
   RepositoryBookCatalogReader._(this._repository);
 

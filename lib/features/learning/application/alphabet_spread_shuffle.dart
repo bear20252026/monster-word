@@ -24,14 +24,11 @@ List<Word> alphabetSpreadShuffle(List<Word> words, {Random? random}) {
   final result = <Word>[];
   while (result.length < words.length) {
     // 候选：非空桶
-    final candidates =
-        buckets.entries.where((e) => e.value.isNotEmpty).toList();
+    final candidates = buckets.entries.where((e) => e.value.isNotEmpty).toList();
     if (candidates.isEmpty) break;
 
     // 优先取与上一个不同首字母的桶中剩余最多的
-    final preferred = candidates
-        .where((e) => e.key != lastKey)
-        .toList()
+    final preferred = candidates.where((e) => e.key != lastKey).toList()
       ..sort((a, b) => b.value.length.compareTo(a.value.length));
 
     final chosen = (preferred.isNotEmpty ? preferred : candidates).first;

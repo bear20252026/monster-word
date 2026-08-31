@@ -132,10 +132,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
               enabled: false,
               child: SkinProvider(
                 skin: skin,
-                child: GlobalNavHistoryBar(
-                  history: history,
-                  child: child!,
-                ),
+                child: GlobalNavHistoryBar(history: history, child: child!),
               ),
             );
           },
@@ -166,10 +163,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
       materialTapTargetSize: MaterialTapTargetSize.padded,
       splashFactory: InkSparkle.splashFactory,
       scaffoldBackgroundColor: c.pageBg,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: c.accent,
-        brightness: skin.effectiveUiBrightness,
-      ).copyWith(
+      colorScheme: ColorScheme.fromSeed(seedColor: c.accent, brightness: skin.effectiveUiBrightness).copyWith(
         primary: c.accent,
         secondary: c.accent,
         surface: c.cardBg,
@@ -188,11 +182,36 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
       ),
       // 字阶：标题紧字距（Geist 式 "tight"），正文暖灰而非纯黑
       textTheme: TextTheme(
-        displayLarge: TextStyle(fontSize: d.typography.hero, fontWeight: FontWeight.w600, letterSpacing: -1.2, color: c.text1),
-        displayMedium: TextStyle(fontSize: d.typography.h1, fontWeight: FontWeight.w600, letterSpacing: -0.8, color: c.text1),
-        displaySmall: TextStyle(fontSize: d.typography.h2, fontWeight: FontWeight.w600, letterSpacing: -0.5, color: c.text1),
-        headlineMedium: TextStyle(fontSize: d.typography.h3, fontWeight: FontWeight.w600, letterSpacing: -0.4, color: c.text1),
-        headlineSmall: TextStyle(fontSize: d.typography.h4, fontWeight: FontWeight.w600, letterSpacing: -0.2, color: c.text1),
+        displayLarge: TextStyle(
+          fontSize: d.typography.hero,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -1.2,
+          color: c.text1,
+        ),
+        displayMedium: TextStyle(
+          fontSize: d.typography.h1,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.8,
+          color: c.text1,
+        ),
+        displaySmall: TextStyle(
+          fontSize: d.typography.h2,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.5,
+          color: c.text1,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: d.typography.h3,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.4,
+          color: c.text1,
+        ),
+        headlineSmall: TextStyle(
+          fontSize: d.typography.h4,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.2,
+          color: c.text1,
+        ),
         titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -0.2, color: c.text1),
         titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: c.text1),
         titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.text1),
@@ -213,7 +232,12 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
           minimumSize: const Size(64, 44),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(d.radius.control)),
-          textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.1, color: isDark ? c.pageBg : Colors.white),
+          textStyle: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.1,
+            color: isDark ? c.pageBg : Colors.white,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -238,8 +262,14 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
         fillColor: c.cardBg,
         hintStyle: TextStyle(color: c.text3),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(d.radius.control), borderSide: BorderSide(color: c.divider)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(d.radius.control), borderSide: BorderSide(color: c.divider)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(d.radius.control),
+          borderSide: BorderSide(color: c.divider),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(d.radius.control),
+          borderSide: BorderSide(color: c.divider),
+        ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(d.radius.control),
           borderSide: BorderSide(color: c.accent, width: 1.2),
@@ -262,9 +292,15 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
       ),
       dividerTheme: DividerThemeData(color: c.divider, thickness: 1, space: 1),
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? (isDark ? c.pageBg : Colors.white) : Colors.white),
-        trackColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? c.accent : c.divider),
-        trackOutlineColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.transparent : c.divider),
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? (isDark ? c.pageBg : Colors.white) : Colors.white,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? c.accent : c.divider,
+        ),
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? Colors.transparent : c.divider,
+        ),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,

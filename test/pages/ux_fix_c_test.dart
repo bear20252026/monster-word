@@ -29,12 +29,12 @@ void main() {
                   final w = results[index];
                   final isSelected = selectedWord.word == w.word;
                   return Material(
-                    color: isSelected
-                        ? colors.accent.withValues(alpha: 0.08)
-                        : Colors.transparent,
+                    color: isSelected ? colors.accent.withValues(alpha: 0.08) : Colors.transparent,
                     child: Container(
                       decoration: isSelected
-                          ? BoxDecoration(border: Border(left: BorderSide(color: colors.accent, width: 3)))
+                          ? BoxDecoration(
+                              border: Border(left: BorderSide(color: colors.accent, width: 3)),
+                            )
                           : null,
                       child: ListTile(
                         title: Text(
@@ -84,12 +84,12 @@ void main() {
                   final w = results[index];
                   final isSelected = selectedWord.word == w.word;
                   return Material(
-                    color: isSelected
-                        ? skin.colors.accent.withValues(alpha: 0.08)
-                        : Colors.transparent,
+                    color: isSelected ? skin.colors.accent.withValues(alpha: 0.08) : Colors.transparent,
                     child: Container(
                       decoration: isSelected
-                          ? BoxDecoration(border: Border(left: BorderSide(color: skin.colors.accent, width: 3)))
+                          ? BoxDecoration(
+                              border: Border(left: BorderSide(color: skin.colors.accent, width: 3)),
+                            )
                           : null,
                       child: ListTile(title: Text(w.word)),
                     ),
@@ -150,10 +150,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: IconButton(
-              icon: const Icon(Icons.favorite_border),
-              onPressed: () {},
-            ),
+            body: IconButton(icon: const Icon(Icons.favorite_border), onPressed: () {}),
           ),
         ),
       );
@@ -168,10 +165,7 @@ void main() {
           home: Scaffold(
             body: Tooltip(
               message: '收藏例句',
-              child: IconButton(
-                icon: const Icon(Icons.favorite_border),
-                onPressed: () {},
-              ),
+              child: IconButton(icon: const Icon(Icons.favorite_border), onPressed: () {}),
             ),
           ),
         ),

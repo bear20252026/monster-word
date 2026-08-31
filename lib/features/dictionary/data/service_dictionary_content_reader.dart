@@ -30,11 +30,7 @@ class ServiceDictionaryContentReader implements DictionaryContentReader {
     final wordData = await _db.getWord(word);
     if (wordData == null || wordData.confuse.isEmpty) return [];
 
-    final synonyms = wordData.confuse
-        .split(',')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
+    final synonyms = wordData.confuse.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
     if (synonyms.isEmpty) return [];
 
     // 性能审计 P3：循环内逐词查询（N+1）改单次批量查询
@@ -47,15 +43,8 @@ class ServiceDictionaryContentReader implements DictionaryContentReader {
     final wordData = await _db.getWord(word);
     if (wordData == null || wordData.example.isEmpty) return [];
 
-    final examples = wordData.example
-        .split('\n')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
+    final examples = wordData.example.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
 
-    return examples.map((example) => {
-      'english': example,
-      'chinese': '',
-    }).toList();
+    return examples.map((example) => {'english': example, 'chinese': ''}).toList();
   }
 }

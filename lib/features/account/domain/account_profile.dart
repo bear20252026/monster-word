@@ -15,13 +15,13 @@ class AccountProfile {
   });
 
   const AccountProfile.empty()
-      : userId = 0,
-        nickname = '',
-        avatar = '',
-        phone = '',
-        displayId = '',
-        wechatName = '',
-        signature = '';
+    : userId = 0,
+      nickname = '',
+      avatar = '',
+      phone = '',
+      displayId = '',
+      wechatName = '',
+      signature = '';
 
   final int userId;
   final String nickname;

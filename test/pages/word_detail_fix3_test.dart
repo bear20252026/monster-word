@@ -133,8 +133,7 @@ class _StubChoicePort implements ChoiceGeneratorPort {
     required ChoiceCandidate correct,
     required Iterable<ChoiceCandidate> candidates,
     Random? random,
-  }) =>
-      [correct];
+  }) => [correct];
 }
 
 class _StubReviewScheduleRepo extends ReviewScheduleRepository {}
@@ -170,9 +169,7 @@ void main() {
         Provider<NoteRepository>.value(value: _StubNoteRepo()),
         Provider<WordNotesStore>.value(value: _StubNotesStore()),
         ChangeNotifierProvider<ReviewScheduleReader>(
-          create: (_) => RepositoryReviewScheduleReader(
-            repository: _StubReviewScheduleRepo(),
-          ),
+          create: (_) => RepositoryReviewScheduleReader(repository: _StubReviewScheduleRepo()),
         ),
         ChangeNotifierProvider<SkinSystem>(create: (_) => SkinSystem()),
       ],
@@ -230,12 +227,7 @@ void main() {
   group('XP-FIX-3: wordDetail 路由安全转换', () {
     testWidgets('从内容路由 Map 参数进入时不崩溃', (tester) async {
       // 模拟 content_routes 传入 Map 参数（深链序列化路径）
-      await tester.pumpWidget(
-        buildPageWithArgs(<String, dynamic>{
-          'word': 'hello',
-          'fromLearn': false,
-        }),
-      );
+      await tester.pumpWidget(buildPageWithArgs(<String, dynamic>{'word': 'hello', 'fromLearn': false}));
       await tester.pumpAndSettle();
 
       // Map 无法直接转 Word → 错误页面

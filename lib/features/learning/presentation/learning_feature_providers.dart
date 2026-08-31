@@ -61,27 +61,15 @@ Widget buildLearningFeatureScope({required Widget child}) {
       ChangeNotifierProvider<ReviewScheduleReader>(
         create: (_) => RepositoryReviewScheduleReader(repository: sl<ReviewScheduleRepository>()),
       ),
-      Provider<LearningQueuePort>.value(
-        value: RepositoryLearningQueuePort(sl<LearningQueueRepository>()),
-      ),
-      Provider<LearningProgressPort>.value(
-        value: RepositoryLearningProgressPort(sl<LearningProgressRepository>()),
-      ),
+      Provider<LearningQueuePort>.value(value: RepositoryLearningQueuePort(sl<LearningQueueRepository>())),
+      Provider<LearningProgressPort>.value(value: RepositoryLearningProgressPort(sl<LearningProgressRepository>())),
       Provider<ReviewScheduleWriterPort>.value(
         value: RepositoryReviewScheduleWriterPort(sl<ReviewScheduleRepository>()),
       ),
-      Provider<ChoiceGeneratorPort>.value(
-        value: const RepositoryChoiceGeneratorPort(),
-      ),
-      Provider<FavoritesPort>.value(
-        value: RepositoryFavoritesPort.fromServiceLocator(),
-      ),
-      Provider<MasteredWriterPort>.value(
-        value: RepositoryMasteredWriterPort.fromServiceLocator(),
-      ),
-      Provider<NewWordsWriterPort>.value(
-        value: RepositoryNewWordsWriterPort.fromServiceLocator(),
-      ),
+      Provider<ChoiceGeneratorPort>.value(value: const RepositoryChoiceGeneratorPort()),
+      Provider<FavoritesPort>.value(value: RepositoryFavoritesPort.fromServiceLocator()),
+      Provider<MasteredWriterPort>.value(value: RepositoryMasteredWriterPort.fromServiceLocator()),
+      Provider<NewWordsWriterPort>.value(value: RepositoryNewWordsWriterPort.fromServiceLocator()),
       ChangeNotifierProvider(
         create: (context) => LearningFavoritesState(
           favoritesPort: context.read<FavoritesPort>(),
@@ -90,9 +78,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
       ),
       // 以 core 契约类型暴露同一实例：search / book 等消费方仅依赖
       // lib/core/learning 的 LearningFavoritesStore，不触 learning/presentation。
-      ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
-        update: (_, state, _) => state,
-      ),
+      ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(update: (_, state, _) => state),
       ChangeNotifierProvider(
         create: (context) => LearningMasteredState(
           masteredWordsReader: sl<MasteredWordsReader>(),
@@ -124,9 +110,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
       ),
       // 只读统计端口：暴露给其它 feature（如 word_browse 的 foot_mark）读取统计。
       // 装配为具体状态实现 core 只读契约，消费方经类型注入依赖 core，而非 learning/presentation。
-      ListenableProxyProvider<LearningStatisticsState, LearningStatisticsReader>(
-        update: (_, state, _) => state,
-      ),
+      ListenableProxyProvider<LearningStatisticsState, LearningStatisticsReader>(update: (_, state, _) => state),
       ChangeNotifierProxyProvider2<LearningFavoritesState, LearningMasteredState, LearningCollectionsState>(
         create: (_) => LearningCollectionsState(),
         update: (_, favorites, mastered, collections) =>
@@ -134,9 +118,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
       ),
       // 只读集合端口：暴露给其它 feature（如 content 的 my_content_page、word_browse 的
       // foot_mark）读取收藏/掌握数量，消费方依赖 core 而非 learning/presentation。
-      ListenableProxyProvider<LearningCollectionsState, LearningCollectionsReader>(
-        update: (_, state, _) => state,
-      ),
+      ListenableProxyProvider<LearningCollectionsState, LearningCollectionsReader>(update: (_, state, _) => state),
       ChangeNotifierProxyProvider2<LearningQueueState, ReviewScheduleReader, LearningQueueWordListsState>(
         create: (_) => LearningQueueWordListsState(),
         update: (_, queue, schedule, wordLists) =>
@@ -169,18 +151,12 @@ Widget buildLearningFeatureScope({required Widget child}) {
       Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),
       Provider<NewWordsReader>.value(value: sl<NewWordsReader>()),
       Provider<ReviewQueueReader>.value(value: sl<ReviewQueueReader>()),
-      Provider<LearningProgressReader>.value(
-        value: LearningProgressReaderImpl.fromServiceLocator(),
-      ),
+      Provider<LearningProgressReader>.value(value: LearningProgressReaderImpl.fromServiceLocator()),
       ChangeNotifierProvider(
-        create: (_) => NewWordsState(
-          newWordsReader: sl<NewWordsReader>(),
-          writerPort: sl<NewWordsWriterPort>(),
-        )..initialize(),
+        create: (_) =>
+            NewWordsState(newWordsReader: sl<NewWordsReader>(), writerPort: sl<NewWordsWriterPort>())..initialize(),
       ),
-      ListenableProxyProvider<NewWordsState, NewWordsStore>(
-        update: (_, state, _) => state,
-      ),
+      ListenableProxyProvider<NewWordsState, NewWordsStore>(update: (_, state, _) => state),
     ],
     child: child,
   );

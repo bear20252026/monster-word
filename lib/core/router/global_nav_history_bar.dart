@@ -82,11 +82,7 @@ class _GlobalNavHistoryBarState extends State<GlobalNavHistoryBar> {
       child = Stack(
         children: [
           child,
-          Positioned(
-            right: 16,
-            bottom: 16,
-            child: _buildPill(context),
-          ),
+          Positioned(right: 16, bottom: 16, child: _buildPill(context)),
         ],
       );
     }
@@ -180,11 +176,7 @@ class _NavButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       child: Padding(
         padding: const EdgeInsets.all(10),
-        child: Icon(
-          icon,
-          size: 16,
-          color: enabled ? color.text1 : color.text3.withValues(alpha: 0.5),
-        ),
+        child: Icon(icon, size: 16, color: enabled ? color.text1 : color.text3.withValues(alpha: 0.5)),
       ),
     );
   }

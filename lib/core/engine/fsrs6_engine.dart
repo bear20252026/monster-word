@@ -136,21 +136,17 @@ class Fsrs6Engine {
   }
 
   /// 初始稳定性 S0(G) = w[G-1]
-  double _initialStability(FsrsRating rating) =>
-      _clampStability(weights[rating.value - 1]);
+  double _initialStability(FsrsRating rating) => _clampStability(weights[rating.value - 1]);
 
   /// 初始难度 D0(G) = w4 - e^(w5·(G-1)) + 1
   double _initialDifficulty(FsrsRating rating, {bool clamp = true}) {
-    final d =
-        weights[4] - exp(weights[5] * (rating.value - 1)) + 1;
+    final d = weights[4] - exp(weights[5] * (rating.value - 1)) + 1;
     return clamp ? _clampDifficulty(d) : d;
   }
 
   /// 同日复习的短时稳定性：S·e^(w17·(G-3+w18))·S^(-w19)，Hard/Good/Easy 时增长下限 1
   double _shortTermStability(double stability, FsrsRating rating) {
-    var inc =
-        exp(weights[17] * (rating.value - 3 + weights[18])) *
-        pow(stability, -weights[19]);
+    var inc = exp(weights[17] * (rating.value - 3 + weights[18])) * pow(stability, -weights[19]);
     if (rating != FsrsRating.again) inc = max(inc, 1.0);
     return _clampStability(stability * inc);
   }
@@ -166,12 +162,7 @@ class Fsrs6Engine {
 
   /// 回忆成功后的长时稳定性：
   /// S·(1 + e^w8·(11-D)·S^(-w9)·(e^((1-R)·w10)-1)·hardPenalty(w15)·easyBonus(w16))
-  double _nextRecallStability(
-    double stability,
-    double difficulty,
-    double retrievability,
-    FsrsRating rating,
-  ) {
+  double _nextRecallStability(double stability, double difficulty, double retrievability, FsrsRating rating) {
     final hardPenalty = rating == FsrsRating.hard ? weights[15] : 1.0;
     final easyBonus = rating == FsrsRating.easy ? weights[16] : 1.0;
     return stability *
@@ -187,11 +178,7 @@ class Fsrs6Engine {
   /// 遗忘后的长时稳定性：取长短期模型较小值
   /// long = w11·D^(-w12)·((S+1)^w13 - 1)·e^((1-R)·w14)
   /// short = S / e^(w17·w18)
-  double _nextForgetStability(
-    double stability,
-    double difficulty,
-    double retrievability,
-  ) {
+  double _nextForgetStability(double stability, double difficulty, double retrievability) {
     final longTerm =
         weights[11] *
         pow(difficulty, -weights[12]) *
@@ -203,10 +190,7 @@ class Fsrs6Engine {
 
   /// 下次间隔天数：round(S / FACTOR · (r^(1/DECAY) - 1))，1~36500 天
   int _nextInterval(double stability) {
-    final raw =
-        stability /
-        factor *
-        (pow(desiredRetention, 1 / decay).toDouble() - 1);
+    final raw = stability / factor * (pow(desiredRetention, 1 / decay).toDouble() - 1);
     return raw.round().clamp(1, 36500);
   }
 
@@ -235,12 +219,7 @@ class Fsrs6Engine {
         updated.shortTermStability = updated.stability;
       } else {
         // 跨天复习：长时模型（again → forget；其余 → recall）
-        updated.stability = _nextStability(
-          card.stability,
-          card.difficulty,
-          retrievability,
-          rating,
-        );
+        updated.stability = _nextStability(card.stability, card.difficulty, retrievability, rating);
         updated.shortTermStability = updated.stability;
       }
     }
@@ -262,12 +241,7 @@ class Fsrs6Engine {
   }
 
   /// 长时稳定性统一入口（again → forget，否则 recall）
-  double _nextStability(
-    double stability,
-    double difficulty,
-    double retrievability,
-    FsrsRating rating,
-  ) {
+  double _nextStability(double stability, double difficulty, double retrievability, FsrsRating rating) {
     final next = rating == FsrsRating.again
         ? _nextForgetStability(stability, difficulty, retrievability)
         : _nextRecallStability(stability, difficulty, retrievability, rating);

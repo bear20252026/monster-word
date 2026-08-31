@@ -1,4 +1,4 @@
-﻿// 移植自 v3.2 MyFavActivity
+// 移植自 v3.2 MyFavActivity
 // 单词本：收藏列表 + 学习入口 + 批量操作
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -312,4 +312,3 @@ class _MyFavPageState extends State<MyFavPage> {
     );
   }
 }
-

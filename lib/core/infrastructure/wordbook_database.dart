@@ -114,7 +114,8 @@ class WordBookDatabase {
         assetVersion = '${info.version}+${info.buildNumber}';
       } catch (_) {}
     }
-    final versionMatches = override == null &&
+    final versionMatches =
+        override == null &&
         assetVersion != null &&
         extractedVersion == assetVersion &&
         extractedHash != null &&
@@ -341,21 +342,15 @@ class WordBookDatabase {
   /// [lightweight] 列表浏览模式：不含 example/audio_urls/image_urls/phrase
   /// 大字段（实测省 ~95% 内存：example 均值 3KB）。性能审计 P1。
   /// 点进词典详情时由详情页按需重查完整词。
-  Future<List<Word>> getWordsByBook(int bookId,
-      {int? limit, int offset = 0, bool lightweight = false}) async {
-    final columns = lightweight
-        ? 'w.id, w.word, w.interpret, w.uk_pron, w.us_pron, w.confuse, w.word_root'
-        : 'w.*';
-    final rows = await db.rawQuery(
-      '''
+  Future<List<Word>> getWordsByBook(int bookId, {int? limit, int offset = 0, bool lightweight = false}) async {
+    final columns = lightweight ? 'w.id, w.word, w.interpret, w.uk_pron, w.us_pron, w.confuse, w.word_root' : 'w.*';
+    final rows = await db.rawQuery('''
       SELECT $columns FROM words w
       JOIN word_books wb ON wb.word_id = w.id
       WHERE wb.book_id = ?
       ORDER BY w.word COLLATE NOCASE ASC
       ${limit != null ? 'LIMIT ? OFFSET ?' : ''}
-    ''',
-      limit != null ? [bookId, limit, offset] : [bookId],
-    );
+    ''', limit != null ? [bookId, limit, offset] : [bookId]);
     return rows.map(Word.fromMap).toList();
   }
 
@@ -409,7 +404,6 @@ class WordBookDatabase {
   }
 }
 
-
 /// 词库全量重建结果（含完整性验证统计）
 class DbRebuildResult {
   final bool success;
@@ -429,7 +423,6 @@ class DbRebuildResult {
   @override
   String toString() => '重建结果: $books 本词书 / $words 词条 / $links 条关联 — $message';
 }
-
 
 /// 词库诊断快照
 class DbDiagnostics {

@@ -8,8 +8,7 @@ void main() {
   group('ExampleParser 结构化解析', () {
     test('解析单词例句 JSON 数组', () {
       // 词库格式: {"v":1,"data":[{"g":[{"s":[{"e":"...","c":"...","b":"..."}]}]}]}
-      final input =
-          '{"v":1,"data":[{"g":[{"s":[{"e":"This is a test sentence.","c":"这是一个测试句子。","b":"oxford"}]}]}]}';
+      final input = '{"v":1,"data":[{"g":[{"s":[{"e":"This is a test sentence.","c":"这是一个测试句子。","b":"oxford"}]}]}]}';
       final result = ExampleParser.parse(input);
 
       expect(result.length, 1);
@@ -43,14 +42,11 @@ void main() {
 
   group('WordRootTab 结构化显示', () {
     testWidgets('渲染词根信息', (tester) async {
-      const json =
-          '[{"root":"act","meaning":"to do","words":["action","active"]}]';
+      const json = '[{"root":"act","meaning":"to do","words":["action","active"]}]';
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: WordRootTab(wordRootJson: json),
-          ),
+          home: Scaffold(body: WordRootTab(wordRootJson: json)),
         ),
       );
 
@@ -61,9 +57,7 @@ void main() {
     testWidgets('空字符串不崩溃', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: WordRootTab(wordRootJson: ''),
-          ),
+          home: Scaffold(body: WordRootTab(wordRootJson: '')),
         ),
       );
 
@@ -76,8 +70,7 @@ void main() {
     test('含 example + wordRoot 的 Word 构造正确', () {
       final word = Word(
         word: 'test',
-        example:
-            '{"v":1,"data":[{"g":[{"s":[{"e":"This is a test.","c":"这是一个测试。","b":"oxford"}]}]}]}',
+        example: '{"v":1,"data":[{"g":[{"s":[{"e":"This is a test.","c":"这是一个测试。","b":"oxford"}]}]}]}',
         wordRoot: '[{"root":"test","meaning":"to try","words":["testing"]}]',
       );
 

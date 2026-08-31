@@ -68,12 +68,18 @@ void main() {
     expect(find.text('持续进步'), findsOneWidget);
 
     // 开始使用 → 主页
-    debugPrint('PROBE before tap: 持续进步=${find.text('持续进步').evaluate().length}, 开始使用=${find.text('开始使用').evaluate().length}');
+    debugPrint(
+      'PROBE before tap: 持续进步=${find.text('持续进步').evaluate().length}, 开始使用=${find.text('开始使用').evaluate().length}',
+    );
     await tester.tap(find.text('开始使用'), warnIfMissed: false);
     await tester.pump();
-    debugPrint('PROBE after tap pump0: MAIN=${find.text('MAIN_PAGE').evaluate().length}, 引导页=${find.text('持续进步').evaluate().length}');
+    debugPrint(
+      'PROBE after tap pump0: MAIN=${find.text('MAIN_PAGE').evaluate().length}, 引导页=${find.text('持续进步').evaluate().length}',
+    );
     await tester.pump(const Duration(milliseconds: 600));
-    debugPrint('PROBE after pump600: MAIN=${find.text('MAIN_PAGE').evaluate().length}, 引导页=${find.text('持续进步').evaluate().length}, Splash=${find.text('Monster Word').evaluate().length}');
+    debugPrint(
+      'PROBE after pump600: MAIN=${find.text('MAIN_PAGE').evaluate().length}, 引导页=${find.text('持续进步').evaluate().length}, Splash=${find.text('Monster Word').evaluate().length}',
+    );
     expect(find.text('MAIN_PAGE'), findsOneWidget, reason: '点「开始使用」后必须进入主页，不得卡在 Splash/引导页');
   });
 
@@ -88,8 +94,7 @@ void main() {
     final session2 = AppSessionState();
     await session2.restore();
     expect(session2.isLoggedIn, isTrue);
-    expect(session2.hasShownInitGuide, isTrue,
-        reason: '引导标记未持久化会导致每次重启都强制重看引导页');
+    expect(session2.hasShownInitGuide, isTrue, reason: '引导标记未持久化会导致每次重启都强制重看引导页');
   });
 
   testWidgets('REG-START-003: 未登录 → Splash 2秒 → 登录页（fail-safe 路径）', (tester) async {

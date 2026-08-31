@@ -5,6 +5,7 @@ import 'package:word_app/features/book/application/book_words_reader.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
+
 import '../test_helpers/fake_learning_progress_reader.dart';
 
 /// 模拟 BookCatalogReader
@@ -47,8 +48,7 @@ class FakeBookWordsReader implements BookWordsReader {
   void setWords(List<Word> words) => _words = words;
 
   @override
-  Future<List<Word>> loadWords(int bookId, {int limit = 50, int offset = 0}) async =>
-      _words;
+  Future<List<Word>> loadWords(int bookId, {int limit = 50, int offset = 0}) async => _words;
 }
 
 void main() {
@@ -79,10 +79,7 @@ void main() {
 
     test('load 加载词书列表和当前词书', () async {
       final currentBook = Book(id: 1, code: 'cet4', name: 'CET-4', wordCount: 4000);
-      catalogReader.setBooks([
-        currentBook,
-        Book(id: 2, code: 'cet6', name: 'CET-6', wordCount: 2000),
-      ]);
+      catalogReader.setBooks([currentBook, Book(id: 2, code: 'cet6', name: 'CET-6', wordCount: 2000)]);
       catalogReader.setBookById(currentBook);
       selectionWriter.setCurrentBookId(1);
       selectionWriter.setCurrentBook(currentBook);
@@ -106,10 +103,7 @@ void main() {
       // 先设置当前词书 ID，否则 loadWords 会提前返回
       selectionWriter.setCurrentBookId(1);
       await state.load(); // 加载当前词书
-      wordsReader.setWords([
-        Word(id: 1, word: 'apple'),
-        Word(id: 2, word: 'banana'),
-      ]);
+      wordsReader.setWords([Word(id: 1, word: 'apple'), Word(id: 2, word: 'banana')]);
 
       await state.loadWords();
 
@@ -119,11 +113,7 @@ void main() {
     test('loadWords 从 progressReader 获取已学数', () async {
       selectionWriter.setCurrentBookId(1);
       await state.load();
-      wordsReader.setWords([
-        Word(id: 1, word: 'apple'),
-        Word(id: 2, word: 'banana'),
-        Word(id: 3, word: 'cherry'),
-      ]);
+      wordsReader.setWords([Word(id: 1, word: 'apple'), Word(id: 2, word: 'banana'), Word(id: 3, word: 'cherry')]);
 
       await state.loadWords();
 
@@ -164,10 +154,7 @@ void main() {
       selectionWriter.setCurrentBook(bookWithCount);
       await state.load();
 
-      wordsReader.setWords([
-        Word(id: 1, word: 'apple'),
-        Word(id: 2, word: 'banana'),
-      ]);
+      wordsReader.setWords([Word(id: 1, word: 'apple'), Word(id: 2, word: 'banana')]);
 
       await state.loadWords();
 
@@ -177,9 +164,7 @@ void main() {
 
     // XP-FIX-4: 兜底 — 词书不在列表中时清除无效 ID
     test('load 时当前词书不在列表中则清除无效 ID', () async {
-      catalogReader.setBooks([
-        Book(id: 2, code: 'cet6', name: 'CET-6', wordCount: 2000),
-      ]);
+      catalogReader.setBooks([Book(id: 2, code: 'cet6', name: 'CET-6', wordCount: 2000)]);
       catalogReader.setBookById(null);
       selectionWriter.setCurrentBookId(999); // 无效 ID
 

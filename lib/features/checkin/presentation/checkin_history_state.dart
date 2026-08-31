@@ -23,10 +23,7 @@ class CheckinHistoryState extends ChangeNotifier {
     _loading = true;
     notifyListeners();
 
-    final results = await Future.wait([
-      _reader.getCheckedDates(),
-      _reader.getStreak(),
-    ]);
+    final results = await Future.wait([_reader.getCheckedDates(), _reader.getStreak()]);
 
     _checkedDates = results[0] as Set<String>;
     _streak = results[1] as int;

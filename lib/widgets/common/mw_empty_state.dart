@@ -10,35 +10,38 @@ import 'package:word_app/theme/skin_system.dart';
 enum MwEmptyKind {
   /// 无数据（列表为空）
   empty,
+
   /// 搜索无结果
   search,
+
   /// 无网络
   offline,
+
   /// 加载失败
   error,
 }
 
 extension _MwEmptyKindX on MwEmptyKind {
   IconData get icon => switch (this) {
-        MwEmptyKind.empty => Icons.inbox_outlined,
-        MwEmptyKind.search => Icons.search_off_rounded,
-        MwEmptyKind.offline => Icons.wifi_off_rounded,
-        MwEmptyKind.error => Icons.error_outline_rounded,
-      };
+    MwEmptyKind.empty => Icons.inbox_outlined,
+    MwEmptyKind.search => Icons.search_off_rounded,
+    MwEmptyKind.offline => Icons.wifi_off_rounded,
+    MwEmptyKind.error => Icons.error_outline_rounded,
+  };
 
   String get defaultTitle => switch (this) {
-        MwEmptyKind.empty => '这里还空空如也',
-        MwEmptyKind.search => '没有找到相关内容',
-        MwEmptyKind.offline => '网络连接不可用',
-        MwEmptyKind.error => '加载失败了',
-      };
+    MwEmptyKind.empty => '这里还空空如也',
+    MwEmptyKind.search => '没有找到相关内容',
+    MwEmptyKind.offline => '网络连接不可用',
+    MwEmptyKind.error => '加载失败了',
+  };
 
   String get defaultSubtitle => switch (this) {
-        MwEmptyKind.empty => '从下面开始，添加第一批内容吧',
-        MwEmptyKind.search => '换个关键词，或检查一下拼写',
-        MwEmptyKind.offline => '检查网络后重试',
-        MwEmptyKind.error => '稍后再试一次',
-      };
+    MwEmptyKind.empty => '从下面开始，添加第一批内容吧',
+    MwEmptyKind.search => '换个关键词，或检查一下拼写',
+    MwEmptyKind.offline => '检查网络后重试',
+    MwEmptyKind.error => '稍后再试一次',
+  };
 }
 
 class MwEmptyState extends StatelessWidget {

@@ -32,20 +32,14 @@ class FakeQuickReviewWordReader implements QuickReviewWordReader {
 
 Widget _buildTestPage(QuickReviewWordReader reader) {
   return MaterialApp(
-    home: Provider<QuickReviewWordReader>.value(
-      value: reader,
-      child: const ExamQuickReviewPage(),
-    ),
+    home: Provider<QuickReviewWordReader>.value(value: reader, child: const ExamQuickReviewPage()),
   );
 }
 
 void main() {
   group('ExamQuickReviewPage', () {
     testWidgets('加载后渲染第一题与操作按钮', (tester) async {
-      final reader = FakeQuickReviewWordReader([
-        Word(id: 1, word: 'serendipity'),
-        Word(id: 2, word: 'ephemeral'),
-      ]);
+      final reader = FakeQuickReviewWordReader([Word(id: 1, word: 'serendipity'), Word(id: 2, word: 'ephemeral')]);
       await tester.pumpWidget(_buildTestPage(reader));
       await tester.pumpAndSettle();
 
@@ -63,10 +57,7 @@ void main() {
     });
 
     testWidgets('点击查看答案后显示认识/不认识按钮', (tester) async {
-      final reader = FakeQuickReviewWordReader([
-        Word(id: 1, word: 'serendipity'),
-        Word(id: 2, word: 'ephemeral'),
-      ]);
+      final reader = FakeQuickReviewWordReader([Word(id: 1, word: 'serendipity'), Word(id: 2, word: 'ephemeral')]);
       await tester.pumpWidget(_buildTestPage(reader));
       await tester.pumpAndSettle();
 
@@ -80,10 +71,7 @@ void main() {
     });
 
     testWidgets('点击认识后进入下一题并更新统计', (tester) async {
-      final reader = FakeQuickReviewWordReader([
-        Word(id: 1, word: 'serendipity'),
-        Word(id: 2, word: 'ephemeral'),
-      ]);
+      final reader = FakeQuickReviewWordReader([Word(id: 1, word: 'serendipity'), Word(id: 2, word: 'ephemeral')]);
       await tester.pumpWidget(_buildTestPage(reader));
       await tester.pumpAndSettle();
 
@@ -101,10 +89,7 @@ void main() {
     });
 
     testWidgets('点击不认识后答错统计更新', (tester) async {
-      final reader = FakeQuickReviewWordReader([
-        Word(id: 1, word: 'serendipity'),
-        Word(id: 2, word: 'ephemeral'),
-      ]);
+      final reader = FakeQuickReviewWordReader([Word(id: 1, word: 'serendipity'), Word(id: 2, word: 'ephemeral')]);
       await tester.pumpWidget(_buildTestPage(reader));
       await tester.pumpAndSettle();
 
@@ -118,9 +103,7 @@ void main() {
     });
 
     testWidgets('可切换考试类型', (tester) async {
-      final reader = FakeQuickReviewWordReader([
-        Word(id: 1, word: 'apple'),
-      ]);
+      final reader = FakeQuickReviewWordReader([Word(id: 1, word: 'apple')]);
       await tester.pumpWidget(_buildTestPage(reader));
       await tester.pumpAndSettle();
 
@@ -137,10 +120,7 @@ void main() {
     });
 
     testWidgets('完成所有题目后显示结果页', (tester) async {
-      final reader = FakeQuickReviewWordReader([
-        Word(id: 1, word: 'serendipity'),
-        Word(id: 2, word: 'ephemeral'),
-      ]);
+      final reader = FakeQuickReviewWordReader([Word(id: 1, word: 'serendipity'), Word(id: 2, word: 'ephemeral')]);
       await tester.pumpWidget(_buildTestPage(reader));
       await tester.pumpAndSettle();
 
@@ -168,10 +148,7 @@ void main() {
     });
 
     testWidgets('再来一轮可重新开始', (tester) async {
-      final reader = FakeQuickReviewWordReader([
-        Word(id: 1, word: 'serendipity'),
-        Word(id: 2, word: 'ephemeral'),
-      ]);
+      final reader = FakeQuickReviewWordReader([Word(id: 1, word: 'serendipity'), Word(id: 2, word: 'ephemeral')]);
       await tester.pumpWidget(_buildTestPage(reader));
       await tester.pumpAndSettle();
 

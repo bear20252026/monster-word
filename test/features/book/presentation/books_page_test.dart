@@ -8,14 +8,13 @@ import 'package:word_app/features/book/presentation/book_state.dart';
 import 'package:word_app/features/book/presentation/books_page.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
+
 import '../test_helpers/fake_learning_progress_reader.dart';
 
 /// 模拟 BookCatalogReader
 class MockCatalogReader implements BookCatalogReader {
   @override
-  Future<List<Book>> listBooks() async => [
-        Book(id: 1, code: 'cet4', name: 'CET-4', wordCount: 4000),
-      ];
+  Future<List<Book>> listBooks() async => [Book(id: 1, code: 'cet4', name: 'CET-4', wordCount: 4000)];
 
   @override
   Future<Book?> findById(int bookId) async => null;

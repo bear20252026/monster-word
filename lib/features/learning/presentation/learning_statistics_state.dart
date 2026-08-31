@@ -103,10 +103,7 @@ class LearningStatisticsState extends ChangeNotifier implements LearningStatisti
 
   Map<String, int> get todayStats => _snapshot.todayStats;
 
-  void synchronize({
-    required LearningQueueSnapshot queue,
-    required ReviewScheduleReader schedule,
-  }) {
+  void synchronize({required LearningQueueSnapshot queue, required ReviewScheduleReader schedule}) {
     _snapshot = LearningStatisticsSnapshot.fromSources(queue: queue, schedule: schedule);
     notifyListeners();
   }

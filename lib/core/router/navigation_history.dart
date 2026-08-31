@@ -21,8 +21,7 @@ class RouteSnapshot {
   const RouteSnapshot(this.name, this.arguments);
 
   @override
-  bool operator ==(Object other) =>
-      other is RouteSnapshot && other.name == name && other.arguments == arguments;
+  bool operator ==(Object other) => other is RouteSnapshot && other.name == name && other.arguments == arguments;
 
   @override
   int get hashCode => Object.hash(name, arguments);
@@ -64,9 +63,7 @@ class NavigationHistoryService extends ChangeNotifier {
     final snap = _forward.removeLast();
     // 恢复期间的 push 不清空 forward 栈（这是导航还原，不是新分叉）
     _restoring = true;
-    unawaited(
-      navigator.pushNamed(snap.name, arguments: snap.arguments).whenComplete(() => _restoring = false),
-    );
+    unawaited(navigator.pushNamed(snap.name, arguments: snap.arguments).whenComplete(() => _restoring = false));
     notifyListeners();
   }
 
@@ -128,12 +125,10 @@ class NavigationHistoryObserver extends NavigatorObserver {
   NavigationHistoryObserver._(this._service);
 
   @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      _service._onPushed(route, previousRoute);
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) => _service._onPushed(route, previousRoute);
 
   @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      _service._onPopped(route, previousRoute);
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => _service._onPopped(route, previousRoute);
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {

@@ -17,9 +17,6 @@ class RepositoryNewWordsReader implements NewWordsReader {
 
     final words = await _wordRepository.getWordsByIds(records.map((record) => record.wordId));
     final wordsById = {for (final word in words) word.id: word};
-    return [
-      for (final record in records)
-        wordsById[record.wordId],
-    ].whereType<Word>().toList();
+    return [for (final record in records) wordsById[record.wordId]].whereType<Word>().toList();
   }
 }

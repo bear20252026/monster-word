@@ -56,12 +56,7 @@ void main() {
 
     test('toggle 切换收藏状态并返回新状态', () async {
       store.seed(wordId: 1, sentenceId: 's1', favorite: false);
-      final result = await store.toggle(
-        wordId: 1,
-        sentenceId: 's1',
-        english: 'Hello world',
-        chinese: '你好世界',
-      );
+      final result = await store.toggle(wordId: 1, sentenceId: 's1', english: 'Hello world', chinese: '你好世界');
       expect(result, isTrue);
       expect(await store.isFavorite(wordId: 1, sentenceId: 's1'), isTrue);
     });
@@ -87,22 +82,26 @@ void main() {
     });
 
     test('list 返回全部收藏', () async {
-      store.seedRecord(FavSentenceData(
-        word: 'test',
-        wordId: 1,
-        sentenceId: 's1',
-        sentenceData: SentenceData(sid: 's1', e: 'Test sentence', c: '测试句'),
-        wordUsage: 'usage',
-        updateTime: '20260828',
-      ));
-      store.seedRecord(FavSentenceData(
-        word: 'test',
-        wordId: 1,
-        sentenceId: 's2',
-        sentenceData: SentenceData(sid: 's2', e: 'Another sentence', c: '另一句'),
-        wordUsage: 'usage',
-        updateTime: '20260829',
-      ));
+      store.seedRecord(
+        FavSentenceData(
+          word: 'test',
+          wordId: 1,
+          sentenceId: 's1',
+          sentenceData: SentenceData(sid: 's1', e: 'Test sentence', c: '测试句'),
+          wordUsage: 'usage',
+          updateTime: '20260828',
+        ),
+      );
+      store.seedRecord(
+        FavSentenceData(
+          word: 'test',
+          wordId: 1,
+          sentenceId: 's2',
+          sentenceData: SentenceData(sid: 's2', e: 'Another sentence', c: '另一句'),
+          wordUsage: 'usage',
+          updateTime: '20260829',
+        ),
+      );
       final records = await store.list();
       expect(records, hasLength(2));
       expect(records[0].sentenceId, 's1');

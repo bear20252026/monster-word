@@ -11,29 +11,33 @@ void main() {
   group('ReviewPage 完成触发 goHome', () {
     testWidgets('done 状态"返回首页"按钮 popUntil 回到根路由', (tester) async {
       final navKey = GlobalKey<NavigatorState>();
-      await tester.pumpWidget(MaterialApp(
-        navigatorKey: navKey,
-        home: Navigator(
-          onGenerateRoute: (_) => MaterialPageRoute(
-            builder: (_) => const Scaffold(body: Text('home')),
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navKey,
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const Scaffold(body: Text('home'))),
           ),
         ),
-      ));
+      );
 
       // 模拟 review 完成页（done=true → 显示"返回首页"按钮，onReturnHome → goHome）
-      navKey.currentState!.push(MaterialPageRoute(
-        builder: (context) => Scaffold(
-          body: Builder(builder: (_) {
-            return Center(
-              child: ElevatedButton(
-                // 对应 review_page.dart L60: onReturnHome: () => NavUtils.goHome(context)
-                onPressed: () => NavUtils.goHome(context),
-                child: const Text('返回首页'),
-              ),
-            );
-          }),
+      navKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (context) => Scaffold(
+            body: Builder(
+              builder: (_) {
+                return Center(
+                  child: ElevatedButton(
+                    // 对应 review_page.dart L60: onReturnHome: () => NavUtils.goHome(context)
+                    onPressed: () => NavUtils.goHome(context),
+                    child: const Text('返回首页'),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('返回首页'), findsOneWidget);
@@ -48,30 +52,29 @@ void main() {
 
     testWidgets('多层嵌套路由 goHome 一次性回到根', (tester) async {
       final navKey = GlobalKey<NavigatorState>();
-      await tester.pumpWidget(MaterialApp(
-        navigatorKey: navKey,
-        home: Navigator(
-          onGenerateRoute: (_) => MaterialPageRoute(
-            builder: (_) => const Scaffold(body: Text('root')),
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navKey,
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const Scaffold(body: Text('root'))),
           ),
         ),
-      ));
+      );
 
       // 推两层路由模拟 learn → review 链路
-      navKey.currentState!.push(MaterialPageRoute(
-        builder: (_) => const Scaffold(body: Text('learn-page')),
-      ));
+      navKey.currentState!.push(MaterialPageRoute(builder: (_) => const Scaffold(body: Text('learn-page'))));
       await tester.pumpAndSettle();
-      navKey.currentState!.push(MaterialPageRoute(
-        builder: (context) => Scaffold(
-          body: Builder(builder: (_) {
-            return ElevatedButton(
-              onPressed: () => NavUtils.goHome(context),
-              child: const Text('goHome'),
-            );
-          }),
+      navKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (context) => Scaffold(
+            body: Builder(
+              builder: (_) {
+                return ElevatedButton(onPressed: () => NavUtils.goHome(context), child: const Text('goHome'));
+              },
+            ),
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('learn-page'), findsNothing); // 已被第三层覆盖
@@ -95,36 +98,36 @@ void main() {
       bool navigated = false;
 
       // 模拟 loadBook 后 currentWord 仍为 null 的空词表场景
-      await tester.pumpWidget(MaterialApp(
-        navigatorKey: navKey,
-        home: Navigator(
-          onGenerateRoute: (_) => MaterialPageRoute(
-            builder: (_) => const Scaffold(body: Text('lib-select')),
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navKey,
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const Scaffold(body: Text('lib-select'))),
           ),
         ),
-      ));
+      );
 
       // 推入一个模拟的书签选择项（模拟 lib_select_page.dart L513 onTap 逻辑）
-      navKey.currentState!.push(MaterialPageRoute(
-        builder: (context) => Scaffold(
-          body: Builder(builder: (_) {
-            return ElevatedButton(
-              onPressed: () async {
-                // 模拟 await session.loadBook(book, limit: 50) 后 currentWord == null
-                // 对应 lib_select_page.dart L518-523 守卫逻辑
-                // currentWord == null 分支（loadBook 后词表为空，直接守卫返回）
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('该词书暂无单词数据，无法开始学习'),
-                  ),
+      navKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (context) => Scaffold(
+            body: Builder(
+              builder: (_) {
+                return ElevatedButton(
+                  onPressed: () async {
+                    // 模拟 await session.loadBook(book, limit: 50) 后 currentWord == null
+                    // 对应 lib_select_page.dart L518-523 守卫逻辑
+                    // currentWord == null 分支（loadBook 后词表为空，直接守卫返回）
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词数据，无法开始学习')));
+                    return;
+                  },
+                  child: const Text('open-book'),
                 );
-                return;
               },
-              child: const Text('open-book'),
-            );
-          }),
+            ),
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('open-book'));
@@ -140,31 +143,33 @@ void main() {
     testWidgets('空词表守卫后路由栈未变化（无新页面入栈）', (tester) async {
       final navKey = GlobalKey<NavigatorState>();
 
-      await tester.pumpWidget(MaterialApp(
-        navigatorKey: navKey,
-        home: Navigator(
-          onGenerateRoute: (_) => MaterialPageRoute(
-            builder: (_) => const Scaffold(body: Text('root')),
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navKey,
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const Scaffold(body: Text('root'))),
           ),
         ),
-      ));
+      );
 
-      navKey.currentState!.push(MaterialPageRoute(
-        builder: (context) => Scaffold(
-          body: Builder(builder: (_) {
-            return ElevatedButton(
-              onPressed: () {
-                // 空词表守卫：仅提示，不 push
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('该词书暂无单词数据，无法开始学习')),
+      navKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (context) => Scaffold(
+            body: Builder(
+              builder: (_) {
+                return ElevatedButton(
+                  onPressed: () {
+                    // 空词表守卫：仅提示，不 push
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词数据，无法开始学习')));
+                    return;
+                  },
+                  child: const Text('tap'),
                 );
-                return;
               },
-              child: const Text('tap'),
-            );
-          }),
+            ),
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       final stackDepthBefore = navKey.currentState!.widget.pages.length;
@@ -185,16 +190,17 @@ void main() {
   // ──────────────────────────────────────────────────────
   group('safePop 回归', () {
     testWidgets('根路由 safePop 不黑屏不崩溃', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(builder: (context) {
-          return Scaffold(
-            body: ElevatedButton(
-              onPressed: () => NavUtils.safePop(context),
-              child: const Text('back'),
-            ),
-          );
-        }),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: ElevatedButton(onPressed: () => NavUtils.safePop(context), child: const Text('back')),
+              );
+            },
+          ),
+        ),
+      );
 
       await tester.tap(find.text('back'));
       await tester.pumpAndSettle();

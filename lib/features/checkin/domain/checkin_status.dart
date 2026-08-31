@@ -22,9 +22,5 @@ class CheckinStatus {
   final int reward;
 
   /// 初始空状态。
-  const CheckinStatus.empty()
-      : todayChecked = false,
-        streakDays = 0,
-        totalDays = 0,
-        reward = 0;
+  const CheckinStatus.empty() : todayChecked = false, streakDays = 0, totalDays = 0, reward = 0;
 }

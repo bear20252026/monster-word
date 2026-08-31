@@ -51,7 +51,9 @@ class UserServiceImpl implements UserService {
     if (bean.secret.isNotEmpty) {
       await SecureTokenStorage().setSecret(bean.secret);
     }
-    final sanitized = UserInfoBean.fromJson(bean.toJson())..token = ''..secret = '';
+    final sanitized = UserInfoBean.fromJson(bean.toJson())
+      ..token = ''
+      ..secret = '';
     final prefs = await SharedPreferences.getInstance();
     return prefs.setString(_userInfoKey, jsonEncode(sanitized.toJson()));
   }

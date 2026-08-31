@@ -73,11 +73,11 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _comingSoonBadge() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.orange.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(4),
+      decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4)),
+      child: const Text(
+        '即将上线',
+        style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w500),
       ),
-      child: const Text('即将上线', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w500)),
     );
   }
 
@@ -134,9 +134,8 @@ class _SettingsPageState extends State<SettingsPage> {
             value: '派生词 - 词组搭配 - 特殊变形 - …',
             trailing: _comingSoonBadge(),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('助记顺序设置即将上线，敬请期待'), duration: Duration(seconds: 1)),
-              );
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text('助记顺序设置即将上线，敬请期待'), duration: Duration(seconds: 1)));
             },
           ),
           _SwitchCellWithDesc(
@@ -160,9 +159,8 @@ class _SettingsPageState extends State<SettingsPage> {
             title: '更多学习偏好',
             trailing: _comingSoonBadge(),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('更多学习偏好即将上线，敬请期待'), duration: Duration(seconds: 1)),
-              );
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text('更多学习偏好即将上线，敬请期待'), duration: Duration(seconds: 1)));
             },
           ),
         ]),
@@ -322,10 +320,7 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               // 大号当前值展示
               Center(
-                child: Text(
-                  '$value 词',
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
-                ),
+                child: Text('$value 词', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700)),
               ),
               Slider(
                 value: value.clamp(1, 100).toDouble(),
@@ -348,11 +343,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   textAlign: TextAlign.center,
-                  decoration: const InputDecoration(
-                    hintText: '1-100',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
+                  decoration: const InputDecoration(hintText: '1-100', border: OutlineInputBorder(), isDense: true),
                   onSubmitted: (s) async {
                     final n = int.tryParse(s) ?? value;
                     if (n >= 1 && n <= 100) {

@@ -19,18 +19,10 @@ import 'package:word_app/features/dictionary/presentation/dictionary_detail_stat
 Widget buildDictionaryFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
-      Provider<DictionaryContentReader>(
-        create: (_) => ServiceDictionaryContentReader(),
-      ),
-      Provider<DictionarySearchReader>(
-        create: (_) => ServiceDictionarySearchReader(),
-      ),
-      Provider<DictionaryFavoriteWriter>(
-        create: (_) => ServiceDictionaryFavoriteWriter(),
-      ),
-      Provider<DictionaryNewWordWriter>(
-        create: (_) => ServiceDictionaryNewWordWriter(),
-      ),
+      Provider<DictionaryContentReader>(create: (_) => ServiceDictionaryContentReader()),
+      Provider<DictionarySearchReader>(create: (_) => ServiceDictionarySearchReader()),
+      Provider<DictionaryFavoriteWriter>(create: (_) => ServiceDictionaryFavoriteWriter()),
+      Provider<DictionaryNewWordWriter>(create: (_) => ServiceDictionaryNewWordWriter()),
     ],
     child: child,
   );

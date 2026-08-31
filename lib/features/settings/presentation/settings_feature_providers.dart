@@ -14,10 +14,7 @@ Widget buildSettingsFeatureScope({required Widget child}) {
     providers: [
       Provider<LearningPreferencesRepository>.value(value: repository),
       ChangeNotifierProvider<LearningPreferencesState>(
-        create: (_) => LearningPreferencesState(
-          reader: repository,
-          writer: repository,
-        ),
+        create: (_) => LearningPreferencesState(reader: repository, writer: repository),
       ),
     ],
     child: _SettingsFeatureInitializer(child: child),

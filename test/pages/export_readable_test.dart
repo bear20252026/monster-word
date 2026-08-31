@@ -7,8 +7,7 @@ const _rawPhrase =
     '[{"t":2,"p":[{"en":"say hello","cn":"打招呼","exams":"[\\"四级\\"]"},{"en":"hello world","cn":"你好世界","exams":"[]"}]}]';
 
 /// 模拟词库 example 原始 JSON 格式
-const _rawExample =
-    '{"v":1,"data":[{"g":[{"s":[{"e":"He <b>said</b> hello to me.","c":"他跟我打招呼。","b":"课本"}]}]}]}';
+const _rawExample = '{"v":1,"data":[{"g":[{"s":[{"e":"He <b>said</b> hello to me.","c":"他跟我打招呼。","b":"课本"}]}]}]}';
 
 void main() {
   group('PhraseParser.readableText', () {

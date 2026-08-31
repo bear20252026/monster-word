@@ -131,7 +131,9 @@ void main() {
   });
 
   test('专用学习会话在收藏词为空时保留当前队列与词书', () async {
-    final session = _sessionWithWords(words: [Word(id: 1, word: 'first', interpret: '中文释义')]);
+    final session = _sessionWithWords(
+      words: [Word(id: 1, word: 'first', interpret: '中文释义')],
+    );
     await session.loadBook(_testBook, shuffle: false);
 
     await session.loadFavorites();
@@ -143,7 +145,10 @@ void main() {
   test('评分推进到最后一词后 currentWord 变为 null，触发学习完成信号', () async {
     // 回归测试：rate() 在队列末尾曾经 clamp 回最后一个词，导致永远无法进入完成界面。
     final session = _sessionWithWords(
-      words: [Word(id: 1, word: 'first', interpret: '中文释义'), Word(id: 2, word: 'second', interpret: '中文释义')],
+      words: [
+        Word(id: 1, word: 'first', interpret: '中文释义'),
+        Word(id: 2, word: 'second', interpret: '中文释义'),
+      ],
     );
     await session.loadBook(_testBook, shuffle: false);
 
@@ -160,7 +165,11 @@ void main() {
   test('加载新词库时丢弃异步返回的过期进度，避免覆盖新会话索引', () async {
     // 回归测试：_loadProgress() 异步返回的旧索引曾经覆盖 loadBook 重置的索引 0。
     final session = _sessionWithWords(
-      words: [Word(id: 1, word: 'first', interpret: '中文释义'), Word(id: 2, word: 'second', interpret: '中文释义'), Word(id: 3, word: 'third', interpret: '中文释义')],
+      words: [
+        Word(id: 1, word: 'first', interpret: '中文释义'),
+        Word(id: 2, word: 'second', interpret: '中文释义'),
+        Word(id: 3, word: 'third', interpret: '中文释义'),
+      ],
     );
     await session.loadBook(_testBook, shuffle: false);
     await session.rate(FsrsRating.good); // 推进到 second，索引 1
@@ -222,9 +231,7 @@ class _FakeQueuePort implements LearningQueuePort {
     if (shuffle) {
       queue.shuffle();
     }
-    return (limit == null || limit >= queue.length)
-        ? queue
-        : queue.sublist(0, limit);
+    return (limit == null || limit >= queue.length) ? queue : queue.sublist(0, limit);
   }
 }
 
@@ -233,11 +240,7 @@ class _FakeProgressPort implements LearningProgressPort {
   Future<LearningProgress?> load() async => null;
 
   @override
-  Future<void> save({
-    required Book currentBook,
-    required int currentIndex,
-    required List<Word> queue,
-  }) async {}
+  Future<void> save({required Book currentBook, required int currentIndex, required List<Word> queue}) async {}
 }
 
 class _FakeChoicePort implements ChoiceGeneratorPort {

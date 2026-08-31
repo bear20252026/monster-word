@@ -18,6 +18,7 @@ import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/audio/audio_service.dart';
+
 import '../test_helpers/fake_learning_progress_reader.dart';
 
 /// 模拟 BookCatalogReader
@@ -125,23 +126,14 @@ void main() {
             Provider<BookWordsReader>.value(value: MockBookWordsReader()),
             ChangeNotifierProvider<BookState>.value(value: bookState),
             ChangeNotifierProvider<LearningFavoritesState>(
-              create: (_) => LearningFavoritesState(
-                favoritesPort: MockFavoritesPort(),
-                queuePort: MockLearningQueuePort(),
-              ),
+              create: (_) =>
+                  LearningFavoritesState(favoritesPort: MockFavoritesPort(), queuePort: MockLearningQueuePort()),
             ),
-            ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(
-              update: (_, state, _) => state,
-            ),
+            ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(update: (_, state, _) => state),
             ChangeNotifierProvider<NewWordsState>(
-              create: (_) => NewWordsState(
-                newWordsReader: MockNewWordsReader(),
-                writerPort: MockNewWordsWriterPort(),
-              ),
+              create: (_) => NewWordsState(newWordsReader: MockNewWordsReader(), writerPort: MockNewWordsWriterPort()),
             ),
-            ListenableProxyProvider<NewWordsState, NewWordsStore>(
-              update: (_, state, _) => state,
-            ),
+            ListenableProxyProvider<NewWordsState, NewWordsStore>(update: (_, state, _) => state),
             ChangeNotifierProvider<AudioPlaybackState>(
               create: (_) => AudioPlaybackState(audioService: MockAudioService()),
             ),

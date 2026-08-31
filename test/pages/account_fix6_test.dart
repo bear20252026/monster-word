@@ -92,16 +92,17 @@ void main() {
 
   group('MoreSettingsPage 安全返回', () {
     testWidgets('safePop 不会在根路由崩溃', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(builder: (context) {
-          return Scaffold(
-            body: ElevatedButton(
-              onPressed: () => NavUtils.safePop(context),
-              child: const Text('返回'),
-            ),
-          );
-        }),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: ElevatedButton(onPressed: () => NavUtils.safePop(context), child: const Text('返回')),
+              );
+            },
+          ),
+        ),
+      );
       await tester.tap(find.text('返回'));
       await tester.pumpAndSettle();
       // 不崩溃
@@ -125,24 +126,28 @@ void main() {
   group('LoginPage 安全退出', () {
     testWidgets('safePop 在根路由不崩溃', (tester) async {
       // 模拟登录页在栈底（pushReplacement 场景）
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(builder: (context) {
-          return Scaffold(
-            body: Column(
-              children: [
-                const Text('login'),
-                ElevatedButton(
-                  onPressed: () {
-                    // 模拟退出对话框的"确定"
-                    NavUtils.safePop(context);
-                  },
-                  child: const Text('退出'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: Column(
+                  children: [
+                    const Text('login'),
+                    ElevatedButton(
+                      onPressed: () {
+                        // 模拟退出对话框的"确定"
+                        NavUtils.safePop(context);
+                      },
+                      child: const Text('退出'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        }),
-      ));
+              );
+            },
+          ),
+        ),
+      );
       await tester.tap(find.text('退出'));
       await tester.pumpAndSettle();
       // 栈底 safePop 不崩溃
@@ -151,28 +156,27 @@ void main() {
 
     testWidgets('safePop 在有上层路由时正常 pop', (tester) async {
       final navKey = GlobalKey<NavigatorState>();
-      await tester.pumpWidget(MaterialApp(
-        navigatorKey: navKey,
-        home: Navigator(
-          onGenerateRoute: (_) => MaterialPageRoute(
-            builder: (_) => const Scaffold(body: Text('root')),
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navKey,
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const Scaffold(body: Text('root'))),
           ),
         ),
-      ));
+      );
 
-      navKey.currentState!.push(MaterialPageRoute(
-        builder: (context) => Scaffold(
-          body: Column(
-            children: [
-              const Text('login page'),
-              ElevatedButton(
-                onPressed: () => NavUtils.safePop(context),
-                child: const Text('退出'),
-              ),
-            ],
+      navKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (context) => Scaffold(
+            body: Column(
+              children: [
+                const Text('login page'),
+                ElevatedButton(onPressed: () => NavUtils.safePop(context), child: const Text('退出')),
+              ],
+            ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('退出'));

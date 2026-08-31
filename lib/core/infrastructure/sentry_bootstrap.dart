@@ -24,15 +24,12 @@ Future<void> runAppWithSentry(FutureOr<void> Function() appRunner) async {
     await appRunner();
     return;
   }
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = _kSentryDsn;
-      options.tracesSampleRate = 0.2; // 性能追踪采样 20%（免费档省额度）
-      options.environment = kReleaseMode ? 'production' : 'development';
-      options.sendDefaultPii = false; // 不上报个人信息（隐私底线）
-      options.attachScreenshot = false; // 崩溃截图可能含学习数据，默认关
-      options.release = 'monster-word@1.0.0';
-    },
-    appRunner: appRunner,
-  );
+  await SentryFlutter.init((options) {
+    options.dsn = _kSentryDsn;
+    options.tracesSampleRate = 0.2; // 性能追踪采样 20%（免费档省额度）
+    options.environment = kReleaseMode ? 'production' : 'development';
+    options.sendDefaultPii = false; // 不上报个人信息（隐私底线）
+    options.attachScreenshot = false; // 崩溃截图可能含学习数据，默认关
+    options.release = 'monster-word@1.0.0';
+  }, appRunner: appRunner);
 }

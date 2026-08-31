@@ -13,12 +13,11 @@ void main() {
 
   group('DictationSessionPage 空词表', () {
     testWidgets('空 words 时显示空态页 + 返回首页按钮，不白屏', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: SkinProvider(
-          skin: SkinSystem(),
-          child: DictationSessionPage(),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SkinProvider(skin: SkinSystem(), child: DictationSessionPage()),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('暂无待学习单词'), findsOneWidget);
@@ -28,21 +27,20 @@ void main() {
 
     testWidgets('空 words 点击返回首页触发 goHome 回到根路由', (tester) async {
       final navKey = GlobalKey<NavigatorState>();
-      await tester.pumpWidget(MaterialApp(
-        navigatorKey: navKey,
-        home: Navigator(
-          onGenerateRoute: (_) => MaterialPageRoute(
-            builder: (_) => const Scaffold(body: Text('root')),
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navKey,
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const Scaffold(body: Text('root'))),
           ),
         ),
-      ));
+      );
 
-      navKey.currentState!.push(MaterialPageRoute(
-        builder: (_) => SkinProvider(
-          skin: SkinSystem(),
-          child: DictationSessionPage(),
+      navKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (_) => SkinProvider(skin: SkinSystem(), child: DictationSessionPage()),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('暂无待学习单词'), findsOneWidget);
@@ -60,12 +58,11 @@ void main() {
 
   group('QuickSpellPage 空词表', () {
     testWidgets('空 words 时显示空态页 + 返回首页按钮，不白屏', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: SkinProvider(
-          skin: SkinSystem(),
-          child: QuickSpellPage(),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SkinProvider(skin: SkinSystem(), child: QuickSpellPage()),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('暂无待学习单词'), findsOneWidget);
@@ -75,21 +72,20 @@ void main() {
 
     testWidgets('空 words 点击返回首页触发 goHome 回到根路由', (tester) async {
       final navKey = GlobalKey<NavigatorState>();
-      await tester.pumpWidget(MaterialApp(
-        navigatorKey: navKey,
-        home: Navigator(
-          onGenerateRoute: (_) => MaterialPageRoute(
-            builder: (_) => const Scaffold(body: Text('root')),
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navKey,
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const Scaffold(body: Text('root'))),
           ),
         ),
-      ));
+      );
 
-      navKey.currentState!.push(MaterialPageRoute(
-        builder: (_) => SkinProvider(
-          skin: SkinSystem(),
-          child: QuickSpellPage(),
+      navKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (_) => SkinProvider(skin: SkinSystem(), child: QuickSpellPage()),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('暂无待学习单词'), findsOneWidget);
@@ -108,20 +104,20 @@ void main() {
   group('SessionExitGuard', () {
     testWidgets('包裹子 widget 后系统返回弹出退出确认对话框', (tester) async {
       final navKey = GlobalKey<NavigatorState>();
-      await tester.pumpWidget(MaterialApp(
-        navigatorKey: navKey,
-        home: Navigator(
-          onGenerateRoute: (_) => MaterialPageRoute(
-            builder: (_) => const Scaffold(body: Text('root')),
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navKey,
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const Scaffold(body: Text('root'))),
           ),
         ),
-      ));
+      );
 
-      navKey.currentState!.push(MaterialPageRoute(
-        builder: (_) => SessionExitGuard(
-          child: const Scaffold(body: Text('session')),
+      navKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (_) => SessionExitGuard(child: const Scaffold(body: Text('session'))),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('session'), findsOneWidget);
@@ -138,20 +134,20 @@ void main() {
 
     testWidgets('确认退出后执行 safePop 回到上一页', (tester) async {
       final navKey = GlobalKey<NavigatorState>();
-      await tester.pumpWidget(MaterialApp(
-        navigatorKey: navKey,
-        home: Navigator(
-          onGenerateRoute: (_) => MaterialPageRoute(
-            builder: (_) => const Scaffold(body: Text('root')),
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navKey,
+          home: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => const Scaffold(body: Text('root'))),
           ),
         ),
-      ));
+      );
 
-      navKey.currentState!.push(MaterialPageRoute(
-        builder: (_) => SessionExitGuard(
-          child: const Scaffold(body: Text('session')),
+      navKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (_) => SessionExitGuard(child: const Scaffold(body: Text('session'))),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Trigger system back → shows dialog

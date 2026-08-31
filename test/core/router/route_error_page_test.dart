@@ -32,10 +32,7 @@ void main() {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const RouteErrorPage(
-                    routeName: '/test',
-                    message: '测试',
-                  ),
+                  builder: (_) => const RouteErrorPage(routeName: '/test', message: '测试'),
                 ),
               );
             },

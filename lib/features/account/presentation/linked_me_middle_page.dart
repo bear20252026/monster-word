@@ -1,4 +1,4 @@
-﻿// 移植自 v3.2 LinkedMEMiddleActivty
+// 移植自 v3.2 LinkedMEMiddleActivty
 // 联想记忆中间页：展示单词的联想记忆方法
 import 'package:flutter/material.dart';
 

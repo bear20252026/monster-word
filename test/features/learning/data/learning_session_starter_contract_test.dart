@@ -1,4 +1,4 @@
-﻿import 'dart:math';
+import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,12 +49,12 @@ void main() {
 /// 记录 [LearningSessionState.loadBook] 调用参数，不触及真实队列/进度副作用。
 class _SpySession extends LearningSessionState {
   _SpySession()
-      : super(
-          queuePort: _MockQueuePort(),
-          progressPort: _MockProgressPort(),
-          reviewSchedulePort: _MockReviewScheduleWriterPort(),
-          choicePort: _MockChoicePort(),
-        );
+    : super(
+        queuePort: _MockQueuePort(),
+        progressPort: _MockProgressPort(),
+        reviewSchedulePort: _MockReviewScheduleWriterPort(),
+        choicePort: _MockChoicePort(),
+      );
 
   Book? loadedBook;
   int? loadedLimit;
@@ -82,11 +82,7 @@ class _MockProgressPort implements LearningProgressPort {
   Future<LearningProgress?> load() async => null;
 
   @override
-  Future<void> save({
-    required Book currentBook,
-    required int currentIndex,
-    required List<Word> queue,
-  }) async {}
+  Future<void> save({required Book currentBook, required int currentIndex, required List<Word> queue}) async {}
 }
 
 class _MockReviewScheduleWriterPort implements ReviewScheduleWriterPort {
@@ -103,6 +99,5 @@ class _MockChoicePort implements ChoiceGeneratorPort {
     required ChoiceCandidate correct,
     required Iterable<ChoiceCandidate> candidates,
     Random? random,
-  }) =>
-      [correct];
+  }) => [correct];
 }

@@ -29,12 +29,7 @@ class SessionExitGuard extends StatelessWidget {
   /// 为 null 时保持旧行为（始终拦截）。
   final bool Function()? shouldIntercept;
 
-  const SessionExitGuard({
-    super.key,
-    required this.child,
-    this.subject = '当前练习',
-    this.shouldIntercept,
-  });
+  const SessionExitGuard({super.key, required this.child, this.subject = '当前练习', this.shouldIntercept});
 
   Future<bool> _confirmExit(BuildContext context) async {
     final result = await showDialog<bool>(

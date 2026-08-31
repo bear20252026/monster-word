@@ -168,11 +168,7 @@ class _TopBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: Icon(
-              isFav ? Icons.star : Icons.star_border,
-              color: isFav ? StarGold.gold : colors.text2,
-              size: 22,
-            ),
+            icon: Icon(isFav ? Icons.star : Icons.star_border, color: isFav ? StarGold.gold : colors.text2, size: 22),
             tooltip: isFav ? '取消收藏' : '收藏',
             onPressed: word == null ? null : () => favorites.toggle(word.word),
           ),
@@ -268,8 +264,16 @@ class _CompletionScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _StatItem(label: '答对率', value: accuracy == null ? '--' : '${(accuracy! * 100).round()}%', colors: colors),
-                    _StatItem(label: '用时', value: durationSeconds == null ? '--' : _formatDuration(durationSeconds!), colors: colors),
+                    _StatItem(
+                      label: '答对率',
+                      value: accuracy == null ? '--' : '${(accuracy! * 100).round()}%',
+                      colors: colors,
+                    ),
+                    _StatItem(
+                      label: '用时',
+                      value: durationSeconds == null ? '--' : _formatDuration(durationSeconds!),
+                      colors: colors,
+                    ),
                     _StatItem(label: '答错', value: '$errorCount', colors: colors),
                   ],
                 ),
@@ -326,7 +330,10 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colors.text1)),
+        Text(
+          value,
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colors.text1),
+        ),
         const SizedBox(height: 4),
         Text(label, style: TextStyle(fontSize: 12, color: colors.text3)),
       ],
@@ -531,10 +538,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
                   height: 48,
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.of(context).pushNamed(
-                        RouteNames.wordDetail,
-                        arguments: {'fromLearn': true},
-                      );
+                      Navigator.of(context).pushNamed(RouteNames.wordDetail, arguments: {'fromLearn': true});
                     },
                     icon: Icon(Icons.arrow_forward, size: 20, color: Colors.white),
                     label: Text('查看详解', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -625,9 +629,10 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
             Padding(
               padding: const EdgeInsets.only(right: 14),
               child: ScaleTransition(
-                scale: Tween<double>(begin: 0.6, end: 1.0).animate(
-                  CurvedAnimation(parent: _checkController, curve: const Cubic(0.32, 2.32, 0.61, 0.27)),
-                ),
+                scale: Tween<double>(
+                  begin: 0.6,
+                  end: 1.0,
+                ).animate(CurvedAnimation(parent: _checkController, curve: const Cubic(0.32, 2.32, 0.61, 0.27))),
                 child: FadeTransition(
                   opacity: _checkController,
                   child: Icon(Icons.check_circle_outline, color: colors.quizCorrectText, size: 24),

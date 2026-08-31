@@ -6,10 +6,7 @@ import 'package:word_app/features/checkin/domain/checkin_status.dart';
 
 /// 班级签到页面的状态管理。
 class ClassCheckinState extends ChangeNotifier {
-  ClassCheckinState({
-    required this._statusReader,
-    required this._writer,
-  });
+  ClassCheckinState({required this._statusReader, required this._writer});
 
   final CheckinStatusReader _statusReader;
   final CheckinWriter _writer;
@@ -29,10 +26,7 @@ class ClassCheckinState extends ChangeNotifier {
     _loading = true;
     notifyListeners();
 
-    final results = await Future.wait([
-      _statusReader.getStatus(),
-      _statusReader.getCheckinDates(),
-    ]);
+    final results = await Future.wait([_statusReader.getStatus(), _statusReader.getCheckinDates()]);
 
     _status = results[0] as CheckinStatus;
     _checkedDates = results[1] as Set<String>;

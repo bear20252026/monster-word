@@ -7,11 +7,7 @@ class LearningProgress {
   final int currentIndex;
   final List<Word> queue;
 
-  const LearningProgress({
-    required this.currentBook,
-    required this.currentIndex,
-    required this.queue,
-  });
+  const LearningProgress({required this.currentBook, required this.currentIndex, required this.queue});
 }
 
 /// Port: learning progress persistence.
@@ -20,9 +16,5 @@ class LearningProgress {
 abstract class LearningProgressPort {
   Future<LearningProgress?> load();
 
-  Future<void> save({
-    required Book currentBook,
-    required int currentIndex,
-    required List<Word> queue,
-  });
+  Future<void> save({required Book currentBook, required int currentIndex, required List<Word> queue});
 }

@@ -1,4 +1,4 @@
-﻿import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
+import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/engine/srs_engine.dart' show RecallRating;
 import 'package:word_app/core/engine/super_memory_engine.dart';
 import 'package:word_app/models/bb_word_process.dart';

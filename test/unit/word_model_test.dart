@@ -1,4 +1,4 @@
-﻿// 单元测试：Word 模型 + WordChoicePair 释义解析
+// 单元测试：Word 模型 + WordChoicePair 释义解析
 // 复现 bug：API 返回 def 为 ID 引用时，释义显示原始 JSON 符号
 
 import 'package:flutter_test/flutter_test.dart';

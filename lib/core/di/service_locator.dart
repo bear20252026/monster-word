@@ -127,9 +127,7 @@ Future<void> setupServiceLocator() async {
 
   // NewWordsWriterPort
   if (!sl.isRegistered<NewWordsWriterPort>()) {
-    sl.registerLazySingleton<NewWordsWriterPort>(
-      () => RepositoryNewWordsWriterPort(sl<NewWordRepository>()),
-    );
+    sl.registerLazySingleton<NewWordsWriterPort>(() => RepositoryNewWordsWriterPort(sl<NewWordRepository>()));
   }
 
   // ReviewQueueReader

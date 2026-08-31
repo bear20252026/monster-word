@@ -22,10 +22,12 @@ void main() {
       // 新增品牌（B 档）忘记配套 A 档颜色会导致"切了形态不换色"。
       expect(SkinSystem.brandThemeMap.keys, hasLength(6));
       for (final entry in SkinSystem.brandThemeMap.entries) {
-        expect(DesignLanguages.all.containsKey(entry.key), isTrue,
-            reason: 'brandThemeMap 引用了不存在的 B 档设计语言: ${entry.key}');
-        expect(themes.containsKey(entry.value), isTrue,
-            reason: 'brandThemeMap 引用了不存在的 A 档颜色主题: ${entry.value}');
+        expect(
+          DesignLanguages.all.containsKey(entry.key),
+          isTrue,
+          reason: 'brandThemeMap 引用了不存在的 B 档设计语言: ${entry.key}',
+        );
+        expect(themes.containsKey(entry.value), isTrue, reason: 'brandThemeMap 引用了不存在的 A 档颜色主题: ${entry.value}');
       }
     });
 
@@ -43,8 +45,7 @@ void main() {
     test('REG-SKIN-003: 6 套设计语言的 radius/spacing 关键值互有差异', () {
       // 预防：校准 B 档时误把所有品牌值改平（换风格无感知 = bug）
       final radii = DesignLanguages.all.values.map((l) => l.radius.card).toSet();
-      expect(radii.length, greaterThanOrEqualTo(4),
-          reason: '各品牌 card 圆角应保持差异化（Nike 0 / Starbucks 12 / Apple 18 等）');
+      expect(radii.length, greaterThanOrEqualTo(4), reason: '各品牌 card 圆角应保持差异化（Nike 0 / Starbucks 12 / Apple 18 等）');
     });
   });
 }

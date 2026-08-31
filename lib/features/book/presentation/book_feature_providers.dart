@@ -20,15 +20,9 @@ import 'package:word_app/features/book/presentation/book_state.dart';
 Widget buildBookFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
-      Provider<BookCatalogReader>(
-        create: (_) => RepositoryBookCatalogReader.fromServiceLocator(),
-      ),
-      Provider<BookSelectionWriter>(
-        create: (_) => RepositoryBookSelectionWriter(),
-      ),
-      Provider<BookWordsReader>(
-        create: (_) => RepositoryBookWordsReader(),
-      ),
+      Provider<BookCatalogReader>(create: (_) => RepositoryBookCatalogReader.fromServiceLocator()),
+      Provider<BookSelectionWriter>(create: (_) => RepositoryBookSelectionWriter()),
+      Provider<BookWordsReader>(create: (_) => RepositoryBookWordsReader()),
     ],
     child: buildBookStateScope(child: child),
   );

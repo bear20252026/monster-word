@@ -19,8 +19,8 @@ class AudioServiceImpl implements AudioService {
   bool _disposed = false;
 
   AudioServiceImpl({PhoneticAudioPlayer? phoneticPlayer, SentenceAudioPlayer? sentencePlayer})
-      : _phoneticPlayer = phoneticPlayer ?? PhoneticAudioPlayer(),
-        _sentencePlayer = sentencePlayer ?? SentenceAudioPlayer();
+    : _phoneticPlayer = phoneticPlayer ?? PhoneticAudioPlayer(),
+      _sentencePlayer = sentencePlayer ?? SentenceAudioPlayer();
 
   @override
   Future<void> playWordAudio(String word, {String accent = 'us', String? audioUrl}) async {

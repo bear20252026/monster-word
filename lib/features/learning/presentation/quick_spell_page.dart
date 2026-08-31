@@ -155,8 +155,6 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
     _tts.speakEnglish(_currentWord.word);
   }
 
-
-
   void _showResultDialog() {
     final accuracy = _correctCount + _wrongCount > 0
         ? (_correctCount / (_correctCount + _wrongCount) * 100).toStringAsFixed(1)
@@ -292,12 +290,18 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: _secondsLeft <= 10 ? MistralColors.danger.withValues(alpha: 0.1) : MistralColors.primary.withValues(alpha: 0.1),
+              color: _secondsLeft <= 10
+                  ? MistralColors.danger.withValues(alpha: 0.1)
+                  : MistralColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(context.design.radius.pill),
             ),
             child: Row(
               children: [
-                Icon(Icons.timer_outlined, size: 16, color: _secondsLeft <= 10 ? MistralColors.danger : MistralColors.primary),
+                Icon(
+                  Icons.timer_outlined,
+                  size: 16,
+                  color: _secondsLeft <= 10 ? MistralColors.danger : MistralColors.primary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '$_secondsLeft s',
@@ -319,7 +323,10 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // 进度
-        Text('${_currentIndex + 1} / ${_words.length}', style: MistralTypography.heading5.copyWith(color: skin.colors.text3)),
+        Text(
+          '${_currentIndex + 1} / ${_words.length}',
+          style: MistralTypography.heading5.copyWith(color: skin.colors.text3),
+        ),
         const SizedBox(height: 8),
         // 释义提示
         Container(

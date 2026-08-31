@@ -25,9 +25,7 @@ class _DailyGoalPickerState extends State<DailyGoalPicker> {
   void initState() {
     super.initState();
     _currentValue = UserPreferences().getDailyGoal();
-    _controller = FixedExtentScrollController(
-      initialItem: (_currentValue - _minGoal).clamp(0, _maxGoal - _minGoal),
-    );
+    _controller = FixedExtentScrollController(initialItem: (_currentValue - _minGoal).clamp(0, _maxGoal - _minGoal));
   }
 
   @override
@@ -51,20 +49,13 @@ class _DailyGoalPickerState extends State<DailyGoalPicker> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
       child: MwCard(
-        padding: EdgeInsets.symmetric(
-          vertical: 12 * resp.scale,
-          horizontal: 16 * resp.scale,
-        ),
+        padding: EdgeInsets.symmetric(vertical: 12 * resp.scale, horizontal: 16 * resp.scale),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               '每日学习目标',
-              style: TextStyle(
-                fontSize: 14 * resp.fontScale,
-                fontWeight: FontWeight.w600,
-                color: skin.colors.text1,
-              ),
+              style: TextStyle(fontSize: 14 * resp.fontScale, fontWeight: FontWeight.w600, color: skin.colors.text1),
             ),
             const SizedBox(height: 8),
             SizedBox(
@@ -95,10 +86,7 @@ class _DailyGoalPickerState extends State<DailyGoalPicker> {
             ),
             Text(
               '个单词 / 天',
-              style: TextStyle(
-                fontSize: 12 * resp.fontScale,
-                color: skin.colors.text3,
-              ),
+              style: TextStyle(fontSize: 12 * resp.fontScale, color: skin.colors.text3),
             ),
           ],
         ),
