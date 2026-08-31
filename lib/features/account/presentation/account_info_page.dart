@@ -35,6 +35,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
         ],
       ),
     );
+    controller.dispose();
     if (result != null && result.isNotEmpty) {
       await _profile.updateNickname(result);
     }
@@ -56,6 +57,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
         ],
       ),
     );
+    controller.dispose();
     if (result != null) {
       await _profile.updateWechatName(result);
     }
@@ -77,6 +79,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
         ],
       ),
     );
+    controller.dispose();
     if (result != null && result.isNotEmpty) {
       await _profile.updateDisplayId(result);
     }

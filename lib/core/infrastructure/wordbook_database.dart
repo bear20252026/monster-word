@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:crypto/crypto.dart' show md5;
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,6 +71,7 @@ class WordBookDatabase {
   }
 
   static const String _kDbHashKey = 'wordbook_db_asset_hash';
+  static const String _kDbVersionKey = 'wordbook_db_asset_version';
 
   /// 仅供测试：覆盖资产词库 bytes（绕过 rootBundle，测试环境无 assets）
   @visibleForTesting
@@ -88,35 +90,57 @@ class WordBookDatabase {
     final dir = await getApplicationSupportDirectory();
     final dbPath = p.join(dir.path, 'wordbook.db');
     final gzAsset = 'assets/db/wordbook.db.gz';
-
-    final Uint8List bytes;
     final override = gzBytesOverrideForTest;
-    if (override != null) {
-      bytes = override();
-    } else {
-      final data = await rootBundle.load(gzAsset);
-      bytes = data.buffer.asUint8List();
-    }
-    final assetHash = base64.encode(md5.convert(bytes).bytes);
 
     String? extractedHash;
+    String? extractedVersion;
     var canPersist = false;
     try {
       final prefs = await SharedPreferences.getInstance();
       extractedHash = prefs.getString(_kDbHashKey);
+      extractedVersion = prefs.getString(_kDbVersionKey);
       canPersist = true;
     } catch (_) {
       // prefs 不可用（测试环境/异常）时退化为"文件存在即跳过解压"
     }
-    final needsExtract = !File(dbPath).existsSync() || extractedHash != assetHash;
 
-    if (needsExtract) {
-      await _extractTo(dbPath, bytes);
-      if (canPersist) {
-        try {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_kDbHashKey, assetHash);
-        } catch (_) {}
+    // 性能审计 P2：用版本号作资产指纹。资产词库与版本绑定发布，
+    // 版本不变 → 资产哈希必不变 → 跳过 35MB gz 加载与 MD5
+    // （每次冷启动省数百 ms + 内存尖峰）。极端坏库场景由下方三表自检兜底。
+    String? assetVersion;
+    if (override == null) {
+      try {
+        final info = await PackageInfo.fromPlatform();
+        assetVersion = '${info.version}+${info.buildNumber}';
+      } catch (_) {}
+    }
+    final versionMatches = override == null &&
+        assetVersion != null &&
+        extractedVersion == assetVersion &&
+        extractedHash != null &&
+        File(dbPath).existsSync();
+
+    Uint8List? assetBytes; // 惰性加载的资产 bytes（自检重建也可能需要）
+    Future<Uint8List> loadBytes() async {
+      if (override != null) return override();
+      final data = await rootBundle.load(gzAsset);
+      return data.buffer.asUint8List();
+    }
+
+    if (!versionMatches) {
+      // 慢路径：真正需要比对/解压时才加载资产
+      assetBytes = await loadBytes();
+      final assetHash = base64.encode(md5.convert(assetBytes).bytes);
+
+      if (extractedHash != assetHash || !File(dbPath).existsSync()) {
+        await _extractTo(dbPath, assetBytes);
+        if (canPersist) {
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString(_kDbHashKey, assetHash);
+            if (assetVersion != null) await prefs.setString(_kDbVersionKey, assetVersion);
+          } catch (_) {}
+        }
       }
     }
 
@@ -126,7 +150,8 @@ class WordBookDatabase {
       _db = await openDatabase(dbPath, readOnly: true);
     } catch (e) {
       debugPrint('[WordBookDatabase] 打开失败，删除损坏库并重建: $e');
-      await _extractTo(dbPath, bytes);
+      assetBytes ??= await loadBytes();
+      await _extractTo(dbPath, assetBytes);
       _db = await openDatabase(dbPath, readOnly: true);
       reopened = true;
     }
@@ -144,12 +169,15 @@ class WordBookDatabase {
         debugPrint('[WordBookDatabase] 检测到空库/坏库(books=$c words=$w links=$l)，强制重建');
         await _db!.close();
         _db = null;
-        await _extractTo(dbPath, bytes);
+        assetBytes ??= await loadBytes();
+        await _extractTo(dbPath, assetBytes);
         _db = await openDatabase(dbPath, readOnly: true);
         if (canPersist) {
           try {
             final prefs = await SharedPreferences.getInstance();
-            await prefs.setString(_kDbHashKey, assetHash);
+            final hash = base64.encode(md5.convert(assetBytes).bytes);
+            await prefs.setString(_kDbHashKey, hash);
+            if (assetVersion != null) await prefs.setString(_kDbVersionKey, assetVersion);
           } catch (_) {}
         }
       }

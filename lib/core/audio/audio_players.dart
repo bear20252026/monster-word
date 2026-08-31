@@ -318,6 +318,10 @@ class _AudioDownloader {
     try {
       final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: _connectTimeout + _readTimeout));
       if (response.statusCode == 200) {
+        // 安全审计 S4：下载内容上限 10MB（音频文件实际 <1MB），防恶意服务器撑爆磁盘/内存
+        if (response.bodyBytes.length > 10 * 1024 * 1024) {
+          return _DownloadResult(statusCode: 413);
+        }
         final file = File(localPath);
         await file.writeAsBytes(response.bodyBytes);
         return _DownloadResult(file: file, success: true, statusCode: 200);
@@ -376,13 +380,21 @@ class _AudioCacheDir {
     return p.join(base, 'tts', fileName);
   }
 
-  /// 从 URL/路径中提取文件名
+  /// 从 URL/路径中提取文件名（安全审计 S4：防路径遍历）
+  ///
+  /// 网络返回的文件名不可信：%2e%2e 等编码可解码为 ../ 逃出缓存目录。
+  /// 取末段后仅保留安全字符白名单，其余替换为下划线。
   static String _getFileName(String path) {
+    String name;
     final uri = Uri.tryParse(path);
     if (uri != null && uri.pathSegments.isNotEmpty) {
-      return uri.pathSegments.last;
+      name = uri.pathSegments.last;
+    } else {
+      name = path.split('/').last;
     }
-    return path.split('/').last;
+    name = p.basename(name); // 双保险：剥离任何目录成分
+    if (name.isEmpty || name == '.' || name == '..') name = 'unnamed_audio';
+    return name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
   }
 }
 

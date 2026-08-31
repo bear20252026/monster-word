@@ -45,6 +45,7 @@ dependencies:
   get_it: ^8.0.2           # 依赖注入（服务定位器）
   shared_preferences: ^2.3.3  # 学习进度/设置持久化
   flutter_secure_storage: ^9.2.4  # Token/Secret 安全存储（替代 SharedPreferences 明文）
+  package_info_plus: ^8.0.0  # 读取版本号（词库资产指纹，审计 P2）
   audioplayers: ^6.1.0     # 跨平台音频播放（单词发音/例句）
   flutter_svg: ^2.0.17     # 原版 vector 图标渲染
   crypto: ^3.0.6           # MD5/SHA 加密（原版 SecurityUtils）

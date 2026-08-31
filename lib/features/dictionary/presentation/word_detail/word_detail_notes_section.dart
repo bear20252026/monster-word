@@ -64,6 +64,7 @@ class _WordNotesSectionState extends State<WordNotesSection> {
       context: context,
       builder: (ctx) => _NoteDialog(controller: controller, title: '添加笔记'),
     );
+    controller.dispose();
     if (result != null && result.trim().isNotEmpty) {
       final note = WordNote(wordId: word.id, word: word.word, content: result.trim());
       await store.add(note);
@@ -78,6 +79,7 @@ class _WordNotesSectionState extends State<WordNotesSection> {
       context: context,
       builder: (ctx) => _NoteDialog(controller: controller, title: '编辑笔记'),
     );
+    controller.dispose();
     if (result != null && result.trim().isNotEmpty) {
       await store.update(note.copyWith(content: result.trim()));
       await _loadNotes();

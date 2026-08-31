@@ -505,7 +505,7 @@ class _ClassCheckInPageState extends State<ClassCheckInPage> {
           ],
         ),
       ),
-    );
+    ).then((_) => codeController.dispose());
   }
 
   void _showCheckInSuccess(BuildContext context, ThemeVars skin) {

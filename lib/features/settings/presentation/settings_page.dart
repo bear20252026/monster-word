@@ -309,12 +309,14 @@ class _SettingsPageState extends State<SettingsPage> {
   // 弹窗 5：每日新学词数（滑条 1-100 + 数字输入，原为 6 个固定档位）
   // ===========================================================================
   void _showDailyNewWordsDialog() {
+    // 安全审计 R2：controller 提到方法级（此前在 StatefulBuilder builder 内
+    // 每次 setState 重建都会新建一个永不释放的 controller）
+    final textCtrl = TextEditingController(text: '${_preferences.dailyNewWords}');
     _showBottomSheet(
       title: '每日新学',
       child: StatefulBuilder(
         builder: (ctx, setSheetState) {
           final value = _preferences.dailyNewWords;
-          final textCtrl = TextEditingController(text: '$value');
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -366,6 +368,7 @@ class _SettingsPageState extends State<SettingsPage> {
         },
       ),
     );
+    textCtrl.dispose();
   }
 
   // ===========================================================================

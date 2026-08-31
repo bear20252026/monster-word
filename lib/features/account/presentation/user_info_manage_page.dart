@@ -141,9 +141,9 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
     // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('选择头像功能开发中')));
   }
 
-  void _editField(String label, String current, Future<void> Function(String) onSave) {
+  Future<void> _editField(String label, String current, Future<void> Function(String) onSave) async {
     final controller = TextEditingController(text: current);
-    showDialog(
+    await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('修改$label'),
@@ -163,5 +163,6 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
         ],
       ),
     );
+    controller.dispose();
   }
 }
