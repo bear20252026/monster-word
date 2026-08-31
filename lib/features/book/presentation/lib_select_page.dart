@@ -16,6 +16,7 @@ import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/widgets/bending_gallery.dart';
 import 'package:word_app/widgets/daily_goal_picker.dart';
 import 'package:word_app/widgets/morphing_tabs.dart';
@@ -482,10 +483,18 @@ class _LibSelectPageState extends State<LibSelectPage> {
 }
 
 /// 词书列表项（复刻原版 lv_item_select_library：120dp 高）
-class _LibItem extends StatelessWidget {
+class _LibItem extends StatefulWidget {
+  const _LibItem({required this.book, this.showDescription = true});
+
   final Book book;
   final bool showDescription;
-  const _LibItem({required this.book, this.showDescription = true});
+
+  @override
+  State<_LibItem> createState() => _LibItemState();
+}
+
+class _LibItemState extends State<_LibItem> {
+  bool _selecting = false;
 
   // 三档绿（亮色模式）—— 星巴克品牌绿轮换
 
@@ -504,7 +513,7 @@ class _LibItem extends StatelessWidget {
   }
 
   String _coverText() {
-    final name = book.name.replaceAll(RegExp(r'MonsterWord_'), '');
+    final name = widget.book.name.replaceAll(RegExp(r'MonsterWord_'), '');
     return name.length > 4 ? name.substring(0, 4) : name;
   }
 
@@ -516,7 +525,7 @@ class _LibItem extends StatelessWidget {
         Text('单词量', style: TextStyle(fontSize: 12, color: colors.text3)),
         const SizedBox(width: 5),
         Text(
-          '${book.wordCount}',
+          '${widget.book.wordCount}',
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colors.text3),
         ),
         const Spacer(),
@@ -543,22 +552,35 @@ class _LibItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final session = context.read<LearningSessionReader>();
     final colors = context.skin.colors;
-    final isLearning = session.currentBook?.id == book.id;
+    final book = widget.book;
+    final showDescription = widget.showDescription;
+    final isLearning = session.currentBook?.id == widget.book.id;
 
     return GestureDetector(
       onTap: () async {
+        if (_selecting) return; // 防连点/并发竞态（体验审计 A-3）
+        setState(() => _selecting = true);
         // 选择页语义（2026-08-31 交互分离最终版）：
         // 点书 = 直接完成选中并生效（填充学习队列 + 同步词书聚合状态 + 持久化选中），
         // 然后返回首页；查看单词列表走卡片右侧「查看单词」进词书详情页。
         try {
-          await context.read<LearningSessionStarter>().startBookSession(book, limit: 50);
+          await context.read<LearningSessionStarter>().startBookSession(widget.book, limit: 50);
           if (context.mounted) {
             // 同步词书聚合状态（currentBook 标记 + selectBook 持久化 + 全量词表）
-            await context.read<BookState>().selectAndLoad(book);
+            await context.read<BookState>().selectAndLoad(widget.book);
           }
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已选中《${book.name}》')));
-            // 用户需求：选书后提供每日学习目标设置（如每天背 50 个单词）
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已选中《${widget.book.name}》')));
+            // 每日目标仅首次选书时弹出（体验审计 A-3：每次换书都弹是打扰）
+            final prefs = AppPreferences();
+            final firstTime = !prefs.getBool('daily_goal_prompt_shown', defaultValue: false);
+            if (!firstTime) {
+              if (context.mounted) Navigator.pop(context);
+              return;
+            }
+            await prefs.setBool('daily_goal_prompt_shown', true);
+            if (!context.mounted) return;
+            final nav = Navigator.of(context);
             await showModalBottomSheet<void>(
               context: context,
               builder: (sheetCtx) => SafeArea(
@@ -577,12 +599,14 @@ class _LibItem extends StatelessWidget {
                 ),
               ),
             );
-            if (context.mounted) Navigator.pop(context); // 选中完成，返回首页
+            nav.pop(); // 选中完成，返回首页
           }
         } catch (e) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('加载词书失败: $e')));
           }
+        } finally {
+          if (mounted) setState(() => _selecting = false);
         }
       },
       child: Container(
@@ -598,7 +622,7 @@ class _LibItem extends StatelessWidget {
               width: 72,
               height: 88,
               decoration: BoxDecoration(
-                color: coverColorFor(context, book.code),
+                color: coverColorFor(context, widget.book.code),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Center(

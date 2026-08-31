@@ -59,9 +59,10 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   }
 
   Future<void> _checkLoginAndNavigate() async {
-    // 等待动画播放 + 模拟网络检查。Timer 持有引用，dispose 时取消，避免 pending Timer。
+    // 体验审计 C1：原固定等待 2 秒纯延时。改为最短展示 800ms（覆盖入场动画），
+    // 初始化就绪即走，冷启动可交互时间显著缩短。
     _navTimer?.cancel();
-    _navTimer = Timer(const Duration(seconds: 2), () {
+    _navTimer = Timer(const Duration(milliseconds: 800), () {
       if (!mounted) return;
       _proceedToRoute();
     });

@@ -19,6 +19,7 @@ import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/scratch_to_reveal.dart';
 import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 
@@ -53,12 +54,11 @@ class _LearnPageState extends State<LearnPage> {
     final word = state.currentWord;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
-    return PopScope(
-      canPop: true,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) return;
-        state.exitLearning();
-      },
+    // 体验审计 P1：有学习进度时拦截返回，与「暂停并保存」承诺一致
+    // （此前系统返回直接清空队列，无确认）
+    return SessionExitGuard(
+      subject: '本次学习',
+      shouldIntercept: () => state.hasProgress,
       child: Scaffold(
         backgroundColor: skin.colors.pageBg,
         body: word == null

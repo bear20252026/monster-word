@@ -84,45 +84,6 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
     ),
   ];
 
-  void _redeem(_RedeemItem item) {
-    if (_coins < item.cost) {
-      final need = item.cost - _coins;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('还差 $need 币，快去签到赚取吧！')));
-      return;
-    }
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: SkinProvider.of(context).colors.cardBg,
-        title: Text('确认兑换', style: TextStyle(color: SkinProvider.of(context).colors.text1)),
-        content: Text(
-          '确定花费 ${item.cost} 兑换「${item.title}」吗？',
-          style: TextStyle(color: SkinProvider.of(context).colors.text2),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('取消', style: TextStyle(color: SkinProvider.of(context).colors.text3)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SkinProvider.of(context).colors.accent,
-              foregroundColor: SkinProvider.of(context).colors.onGlassAccent,
-            ),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await context.read<ScareCoinStore>().grant(delta: -item.cost, reason: '兑换 ${item.title}');
-              if (!mounted) return;
-              setState(() {});
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！${item.title} 已解锁')));
-            },
-            child: const Text('确认兑换'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final skin = SkinProvider.of(context);
@@ -151,6 +112,25 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
           children: [
             // 余额卡片
             _buildBalanceCard(skin, resp),
+            // 体验审计 P0：权益系统尚未接入，诚实告知而非扣币不解锁
+            Container(
+              margin: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, resp.pageMargin),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colors.cardBgAlt,
+                borderRadius: BorderRadius.circular(context.design.radius.md),
+                border: Border.all(color: colors.divider),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 18, color: colors.text2),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('兑换功能即将开放，当前可继续累积尖叫币', style: MistralTypography.caption.copyWith(color: colors.text2)),
+                  ),
+                ],
+              ),
+            ),
             // 兑换列表
             Expanded(
               child: ListView.builder(
@@ -200,7 +180,6 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
 
   Widget _buildItem(_RedeemItem item, SkinSystem skin, AppResponsive resp) {
     final colors = skin.colors;
-    final canAfford = _coins >= item.cost;
     return Container(
       margin: EdgeInsets.only(bottom: context.design.spacing.sm),
       decoration: BoxDecoration(
@@ -226,14 +205,14 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
         ),
         trailing: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: canAfford ? colors.accent : colors.text3,
-            foregroundColor: colors.onGlassAccent,
+            backgroundColor: colors.text3.withValues(alpha: 0.3),
+            foregroundColor: colors.text2,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             elevation: 0,
           ),
-          onPressed: () => _redeem(item),
-          child: Text('${item.cost}币', style: MistralTypography.micro.copyWith(color: colors.onGlassAccent)),
+          onPressed: null, // 体验审计 P0：权益未接入前禁止扣币（防止欺骗性消费）
+          child: Text('即将上线', style: MistralTypography.micro.copyWith(color: colors.text2)),
         ),
       ),
     );

@@ -3,6 +3,8 @@
 // 本文件是搜索功能的完整 UI，从 lib/pages/search_page.dart 迁入。
 // 依赖全部通过 application 端口注入，不直连旧 data 层或跨 feature presentation。
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -76,6 +78,20 @@ class _SearchPageState extends State<SearchPage> {
     setState(() => _searchHistory = []);
   }
 
+  /// 防抖：输入时 300ms 合并查询（体验审计 P0——每个按键触发一次全库检索）
+  Timer? _debounce;
+  int _searchSeq = 0;
+
+  void _onQueryChanged(String query) {
+    if (query.trim().isEmpty) {
+      _debounce?.cancel();
+      _search(query);
+      return;
+    }
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () => _search(query));
+  }
+
   Future<void> _search(String query) async {
     if (query.trim().isEmpty) {
       setState(() {
@@ -86,12 +102,24 @@ class _SearchPageState extends State<SearchPage> {
       });
       return;
     }
+    final seq = ++_searchSeq;
     setState(() => _isLoading = true);
-    final results = await context.read<WordSearchReader>().search(query.trim());
-    if (mounted) {
+    // 容错：查询异常必须复位 loading（此前异常会永久卡死骨架屏）
+    try {
+      final results = await context.read<WordSearchReader>().search(query.trim());
+      if (!mounted || seq != _searchSeq) return; // 过期响应丢弃
       setState(() {
         _results = results;
         _selectedWord = results.isNotEmpty ? results.first : null;
+        _hasSearched = true;
+        _lastQuery = query.trim();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted || seq != _searchSeq) return;
+      setState(() {
+        _results = [];
+        _selectedWord = null;
         _hasSearched = true;
         _lastQuery = query.trim();
         _isLoading = false;
@@ -157,7 +185,7 @@ class _SearchPageState extends State<SearchPage> {
               bgColor: skin.cardBgAlt,
               textStyle: MistralTypography.bodyMd.copyWith(color: skin.text1),
               hintStyle: MistralTypography.bodyMd.copyWith(color: MistralColors.muted, fontSize: 15 * resp.fontScale),
-              onChanged: _search,
+              onChanged: _onQueryChanged,
               onSubmitted: _search,
               autoFocus: true,
               suffixIcon: _controller.text.isNotEmpty

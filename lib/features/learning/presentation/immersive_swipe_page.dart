@@ -2,7 +2,10 @@
 
 // 移植自 lib/pages/immersive_swipe_page.dart
 // 沉浸刷词：全屏单词卡片，上滑=认识，下滑=不认识，纯记忆测试
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/router/nav_utils.dart';
@@ -63,7 +66,8 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
     final threshold = 100.0;
 
     if (_dragOffset < -threshold) {
-      // 上滑 = 认识
+      // 上滑 = 认识（触感反馈：体验审计 P1）
+      unawaited(HapticFeedback.mediumImpact());
       _slideOut(const Offset(0, -2), () {
         setState(() {
           _knownCount++;
@@ -74,6 +78,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       });
     } else if (_dragOffset > threshold) {
       // 下滑 = 不认识
+      unawaited(HapticFeedback.lightImpact());
       _slideOut(const Offset(0, 2), () {
         setState(() {
           _unknownCount++;

@@ -13,6 +13,7 @@ import 'package:word_app/features/scare_coin/presentation/redemption_center_page
 
 class _FakeScareCoinStore implements ScareCoinStore {
   int _balance;
+  int grantCalls = 0;
   final List<ScareCoinEntry> _entries;
 
   _FakeScareCoinStore({this._balance = 100, List<ScareCoinEntry>? entries}) : _entries = entries ?? [];
@@ -28,6 +29,7 @@ class _FakeScareCoinStore implements ScareCoinStore {
 
   @override
   Future<int> grant({required int delta, required String reason}) async {
+    grantCalls++;
     _balance += delta;
     _entries.insert(0, ScareCoinEntry(time: DateTime.now(), delta: delta, reason: reason));
     return _balance;
@@ -69,8 +71,8 @@ void main() {
       expect(find.text('1280'), findsNothing);
     });
 
-    testWidgets('余额不足时显示「还差 XX 币」', (tester) async {
-      // 设置余额为 100，兑换项花费 200（第一个兑换项）
+    testWidgets('权益未接入：按钮禁用显示「即将上线」，不扣币', (tester) async {
+      // 体验审计 P0 修复：权益系统未接入前禁止兑换（防止扣币不解锁的欺骗性消费）
       final store = _FakeScareCoinStore(balance: 100);
 
       await tester.pumpWidget(
@@ -82,16 +84,15 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      // 找到第一个兑换按钮并点击（按钮显示为「500币」）
-      final redeemButton = find.text('500币').first;
-      expect(redeemButton, findsOneWidget);
-      await tester.tap(redeemButton);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+      // 按钮显示「即将上线」（禁用态），顶部说明 banner 存在
+      expect(find.text('即将上线'), findsWidgets);
+      expect(find.text('500币'), findsNothing);
+      expect(find.textContaining('兑换功能即将开放'), findsOneWidget);
 
-      // 验证显示「还差 XX 币」
-      expect(find.textContaining('还差'), findsOneWidget);
-      expect(find.textContaining('币'), findsWidgets);
+      // 点击无效果（禁用态），余额不变
+      await tester.tap(find.text('即将上线').first, warnIfMissed: false);
+      await tester.pump();
+      expect(store.grantCalls, 0);
     });
   });
 }

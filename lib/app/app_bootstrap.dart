@@ -40,15 +40,17 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
   }
 
   // 初始化步骤清单 — 每步完成后回调进度。
+  // 体验审计 C1：两个本地 DB 初始化无相互依赖，并行执行（离线词库无需串行等待）
   final steps = <Future<void> Function()>[
-    () => WordBookDatabase.ensurePlatform(),
-    () => WordBookDatabase.instance.initialize(),
-    () => UserDatabase.instance.initialize(),
+    () async {
+      await WordBookDatabase.ensurePlatform();
+      await Future.wait([WordBookDatabase.instance.initialize(), UserDatabase.instance.initialize()]);
+    },
     () => AppPreferences().init(),
     () => initMobileAudioSession(),
     () => setupServiceLocator(),
   ];
-  final labels = const ['词书数据库平台', '词书数据库', '用户数据库', '偏好设置', '音频会话', '依赖注册'];
+  final labels = const ['词书与用户数据库（并行）', '偏好设置', '音频会话', '依赖注册'];
 
   final total = steps.length;
   for (var i = 0; i < total; i++) {

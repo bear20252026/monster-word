@@ -40,29 +40,51 @@ class _MainShellState extends State<MainShell> {
     setState(() => _active = index);
   }
 
+  /// 双击退出（体验审计 P1：学习途中误触返回直接退到桌面）
+  DateTime? _lastBackPress;
+
+  Future<bool> _onWillPop() async {
+    final now = DateTime.now();
+    if (_lastBackPress == null || now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
+      _lastBackPress = now;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('再按一次退出应用'), duration: Duration(milliseconds: 1500)));
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Stack(
-        children: [
-          // Z2 内容：使用 IndexedStack 避免切换时白屏
-          Positioned.fill(
-            child: IndexedStack(index: _active, children: widget.tabs.map((t) => t.builder(context)).toList()),
-          ),
-          // Z3 底部 Dock 导航（macOS 风格浮动栏）
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: MediaQuery.of(context).padding.bottom,
-            child: FloatingDock(
-              items: widget.tabs.map((t) => DockItem(icon: t.icon, label: t.label)).toList(),
-              currentIndex: _active,
-              onTap: switchTab,
-              activeColor: StarbucksCreamColors.greenHouse,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldPop = await _onWillPop();
+        if (shouldPop && context.mounted) Navigator.of(context).pop();
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          children: [
+            // Z2 内容：使用 IndexedStack 避免切换时白屏
+            Positioned.fill(
+              child: IndexedStack(index: _active, children: widget.tabs.map((t) => t.builder(context)).toList()),
             ),
-          ),
-        ],
+            // Z3 底部 Dock 导航（macOS 风格浮动栏）
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: MediaQuery.of(context).padding.bottom,
+              child: FloatingDock(
+                items: widget.tabs.map((t) => DockItem(icon: t.icon, label: t.label)).toList(),
+                currentIndex: _active,
+                onTap: switchTab,
+                activeColor: StarbucksCreamColors.greenHouse,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
