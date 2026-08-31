@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 /// 星巴克模态框模式
-enum SbModalMode {
+enum MwModalMode {
   /// 居中弹出（类似 showDialog）
   center,
 
@@ -18,20 +18,20 @@ enum SbModalMode {
 
 /// 星巴克模态框组件
 ///
-/// 两种模式：居中 [SbModalMode.center] 和底部弹出 [SbModalMode.bottom]
+/// 两种模式：居中 [MwModalMode.center] 和底部弹出 [MwModalMode.bottom]
 /// 规格：白卡 12px 圆角、遮罩 rgba(0,0,0,0.55)、顶部预留 88px 给标题/关闭钮
 ///
 /// 用法：
 /// ```dart
-/// SbModal.show(
+/// MwModal.show(
 ///   context,
-///   mode: SbModalMode.bottom,
+///   mode: MwModalMode.bottom,
 ///   title: '设置',
 ///   child: Column(children: [...]),
 ///   actions: [PillButton(label: '确认', onTap: () {})],
 /// );
 /// ```
-class SbModal extends StatelessWidget {
+class MwModal extends StatelessWidget {
   /// 标题文本（可选）
   final String? title;
 
@@ -50,7 +50,7 @@ class SbModal extends StatelessWidget {
   /// 最大宽度约束（居中模式默认 360）
   final double? maxWidth;
 
-  const SbModal({
+  const MwModal({
     super.key,
     this.title,
     required this.child,
@@ -66,7 +66,7 @@ class SbModal extends StatelessWidget {
   /// [barrierDismissible] 点击遮罩是否关闭（默认 true）
   static Future<T?> show<T>(
     BuildContext context, {
-    SbModalMode mode = SbModalMode.center,
+    MwModalMode mode = MwModalMode.center,
     String? title,
     required Widget child,
     List<Widget>? actions,
@@ -74,18 +74,18 @@ class SbModal extends StatelessWidget {
     bool barrierDismissible = true,
     double? maxWidth,
   }) {
-    final modal = SbModal(title: title, showClose: showClose, maxWidth: maxWidth, actions: actions, child: child);
+    final modal = MwModal(title: title, showClose: showClose, maxWidth: maxWidth, actions: actions, child: child);
 
     switch (mode) {
-      case SbModalMode.center:
+      case MwModalMode.center:
         return _showCenter<T>(context, modal, barrierDismissible);
-      case SbModalMode.bottom:
+      case MwModalMode.bottom:
         return _showBottom<T>(context, modal, barrierDismissible);
     }
   }
 
   /// 居中弹出
-  static Future<T?> _showCenter<T>(BuildContext context, SbModal modal, bool barrierDismissible) {
+  static Future<T?> _showCenter<T>(BuildContext context, MwModal modal, bool barrierDismissible) {
     final colors = context.skin.colors;
     return showDialog<T>(
       context: context,
@@ -104,7 +104,7 @@ class SbModal extends StatelessWidget {
   }
 
   /// 底部弹出
-  static Future<T?> _showBottom<T>(BuildContext context, SbModal modal, bool barrierDismissible) {
+  static Future<T?> _showBottom<T>(BuildContext context, MwModal modal, bool barrierDismissible) {
     final colors = context.skin.colors;
     return showModalBottomSheet<T>(
       context: context,

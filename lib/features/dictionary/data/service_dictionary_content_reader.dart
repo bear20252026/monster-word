@@ -37,14 +37,8 @@ class ServiceDictionaryContentReader implements DictionaryContentReader {
         .toList();
     if (synonyms.isEmpty) return [];
 
-    final results = <Word>[];
-    for (final synonym in synonyms) {
-      final synonymWord = await _db.getWord(synonym);
-      if (synonymWord != null) {
-        results.add(synonymWord);
-      }
-    }
-    return results;
+    // 性能审计 P3：循环内逐词查询（N+1）改单次批量查询
+    return _db.getWordsByNames(synonyms.toSet());
   }
 
   @override

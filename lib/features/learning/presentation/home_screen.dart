@@ -13,7 +13,7 @@ import 'package:word_app/features/learning/presentation/learning_session_state.d
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/widgets/sb_card.dart';
+import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/daily_goal_picker.dart';
 import 'package:word_app/widgets/review_dialog.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
@@ -59,10 +59,10 @@ class HomeScreen extends StatelessWidget {
                       : Column(
                           children: [
                             const Spacer(flex: 2),
-                            // 签到卡片（SbCard 白卡，替代毛玻璃）
+                            // 签到卡片（MwCard 白卡，替代毛玻璃）
                             _EntranceIn(delayMs: 120, child: _buildCheckInCard(context, skin)),
                             const Spacer(flex: 2),
-                            // Learn / Review 入口卡（SbCard 替代 GlassEntryCard）
+                            // Learn / Review 入口卡（MwCard 替代 GlassEntryCard）
                             _EntranceIn(
                               delayMs: 260,
                               child: Padding(
@@ -127,7 +127,7 @@ class HomeScreen extends StatelessWidget {
             ),
             // 右上角：单词机入口（GameBoy 风格保留，word_machine 豁免）
             Positioned(top: 0, right: 0, child: _buildWordMachineButton(context, skin)),
-            // 左上角：查词入口（SbCard 风格圆形按钮）
+            // 左上角：查词入口（MwCard 风格圆形按钮）
             Positioned(top: 0, left: 0, child: _buildSearchButton(context, skin)),
           ],
         ),
@@ -222,7 +222,7 @@ class HomeScreen extends StatelessWidget {
   Widget _buildBookSelector(BuildContext context, SkinSystem skin, AppResponsive resp) {
     return ScaleDownOnPress(
       onTap: () => Navigator.pushNamed(context, LibSelectPage.routeName),
-      child: SbCard(
+      child: MwCard(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Row(
           children: [
@@ -502,7 +502,7 @@ class _EntranceIn extends StatelessWidget {
   }
 }
 
-/// 入口卡片（替代 GlassEntryCard，使用 SbCard 白卡风格）
+/// 入口卡片（替代 GlassEntryCard，使用 MwCard 白卡风格）
 class _EntryCard extends StatelessWidget {
   final String title;
   final int count;
@@ -517,7 +517,7 @@ class _EntryCard extends StatelessWidget {
     // 微交互：按压缩放反馈（星巴克 --buttonActiveScale）
     return ScaleDownOnPress(
       onTap: onTap,
-      child: SbCard(
+      child: MwCard(
         padding: EdgeInsets.symmetric(vertical: 20 * resp.scale, horizontal: 16 * resp.scale),
         child: Column(
           mainAxisSize: MainAxisSize.min,

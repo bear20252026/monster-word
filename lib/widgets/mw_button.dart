@@ -9,7 +9,7 @@ import 'package:word_app/tokens/starbucks_tokens.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 
 /// 星巴克胶囊按钮变体
-enum SbButtonVariant {
+enum MwButtonVariant {
   /// 主款：填充 #00754A + 白字
   primary,
 
@@ -26,26 +26,26 @@ enum SbButtonVariant {
 /// 星巴克胶囊按钮
 ///
 /// 50px 高度，全胶囊圆角，支持四变体：
-/// - [SbButtonVariant.primary]：绿底白字（默认）
-/// - [SbButtonVariant.outlined]：绿描边绿字
-/// - [SbButtonVariant.dark]：深绿底白字
-/// - [SbButtonVariant.inverse]：白底深绿字
+/// - [MwButtonVariant.primary]：绿底白字（默认）
+/// - [MwButtonVariant.outlined]：绿描边绿字
+/// - [MwButtonVariant.dark]：深绿底白字
+/// - [MwButtonVariant.inverse]：白底深绿字
 ///
 /// 按压反馈由 [ScaleDownOnPress] 提供（scale 0.95 + 200ms easeOut）。
 ///
 /// 用法：
 /// ```dart
-/// SbButton(
+/// MwButton(
 ///   label: '开始学习',
 ///   onTap: () => print('tapped'),
 /// )
 ///
-/// SbButton.outlined(
+/// MwButton.outlined(
 ///   label: '取消',
 ///   onTap: () => Navigator.pop(context),
 /// )
 /// ```
-class SbButton extends StatelessWidget {
+class MwButton extends StatelessWidget {
   /// 按钮文字
   final String label;
 
@@ -53,7 +53,7 @@ class SbButton extends StatelessWidget {
   final VoidCallback? onTap;
 
   /// 按钮变体，默认 primary
-  final SbButtonVariant variant;
+  final MwButtonVariant variant;
 
   /// 自定义填充色（覆盖变体默认值）
   final Color? fillColor;
@@ -73,11 +73,11 @@ class SbButton extends StatelessWidget {
   /// 内边距（默认 竖10 × 横20）
   final EdgeInsetsGeometry padding;
 
-  const SbButton({
+  const MwButton({
     super.key,
     required this.label,
     this.onTap,
-    this.variant = SbButtonVariant.primary,
+    this.variant = MwButtonVariant.primary,
     this.fillColor,
     this.textColor,
     this.borderSide,
@@ -87,7 +87,7 @@ class SbButton extends StatelessWidget {
   });
 
   /// 便捷构造：描边款
-  const SbButton.outlined({
+  const MwButton.outlined({
     super.key,
     required this.label,
     this.onTap,
@@ -97,10 +97,10 @@ class SbButton extends StatelessWidget {
     this.enabled = true,
     this.minWidth,
     this.padding = const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-  }) : variant = SbButtonVariant.outlined;
+  }) : variant = MwButtonVariant.outlined;
 
   /// 便捷构造：深绿底款
-  const SbButton.dark({
+  const MwButton.dark({
     super.key,
     required this.label,
     this.onTap,
@@ -110,10 +110,10 @@ class SbButton extends StatelessWidget {
     this.enabled = true,
     this.minWidth,
     this.padding = const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-  }) : variant = SbButtonVariant.dark;
+  }) : variant = MwButtonVariant.dark;
 
   /// 便捷构造：反白款
-  const SbButton.inverse({
+  const MwButton.inverse({
     super.key,
     required this.label,
     this.onTap,
@@ -123,7 +123,7 @@ class SbButton extends StatelessWidget {
     this.enabled = true,
     this.minWidth,
     this.padding = const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-  }) : variant = SbButtonVariant.inverse;
+  }) : variant = MwButtonVariant.inverse;
 
   // ---- 星巴克品牌色常量 ----
   static const Color _houseGreen = Color(0xFF00754A);
@@ -132,13 +132,13 @@ class SbButton extends StatelessWidget {
   /// 获取当前变体的描边
   BorderSide get _defaultBorderSide {
     switch (variant) {
-      case SbButtonVariant.primary:
+      case MwButtonVariant.primary:
         return const BorderSide(color: _houseGreen, width: 1);
-      case SbButtonVariant.outlined:
+      case MwButtonVariant.outlined:
         return const BorderSide(color: _houseGreen, width: 1);
-      case SbButtonVariant.dark:
+      case MwButtonVariant.dark:
         return BorderSide.none;
-      case SbButtonVariant.inverse:
+      case MwButtonVariant.inverse:
         return BorderSide.none;
     }
   }
@@ -146,15 +146,15 @@ class SbButton extends StatelessWidget {
   /// 深色模式感知的填充色解析
   Color _resolveFillColor(ThemeVars colors) {
     switch (variant) {
-      case SbButtonVariant.primary:
+      case MwButtonVariant.primary:
         return _houseGreen;
-      case SbButtonVariant.outlined:
+      case MwButtonVariant.outlined:
         return Colors.transparent;
-      case SbButtonVariant.dark:
+      case MwButtonVariant.dark:
         // 深色画布上 #1E3932 对比度不足，深色模式下提亮至 greenSoft
         final isDark = colors.pageBg == StarbucksDarkColors.pageBg;
         return isDark ? StarbucksCreamColors.greenSoft : _darkGreen;
-      case SbButtonVariant.inverse:
+      case MwButtonVariant.inverse:
         return colors.cardBg; // 适配深色模式
     }
   }
@@ -162,13 +162,13 @@ class SbButton extends StatelessWidget {
   /// 深色模式感知的文字色解析
   Color _resolveTextColor(ThemeVars colors) {
     switch (variant) {
-      case SbButtonVariant.primary:
+      case MwButtonVariant.primary:
         return Colors.white;
-      case SbButtonVariant.outlined:
+      case MwButtonVariant.outlined:
         return colors.accent; // 品牌绿适配主题
-      case SbButtonVariant.dark:
+      case MwButtonVariant.dark:
         return Colors.white;
-      case SbButtonVariant.inverse:
+      case MwButtonVariant.inverse:
         return colors.accent;
     }
   }

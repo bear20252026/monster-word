@@ -33,7 +33,7 @@ void main() {
     'lib/features/book/presentation/lib_select_page.dart': {84},
     'lib/features/learning/presentation/spell_check_page.dart': {84},
     'lib/features/scare_coin/presentation/scare_coin_history_page.dart': {65},
-    'lib/features/settings/presentation/more_settings_page.dart': {260},
+    'lib/features/settings/presentation/more_settings_page.dart': {262},
   };
 
   test('presentation 层 build() 方法不超过 120 行', () {

@@ -2,6 +2,8 @@
 
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
 // 还原原版 v3.2 个人中心 → 更多设置入口
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -12,8 +14,8 @@ import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/widgets/sb_button.dart';
-import 'package:word_app/widgets/sb_modal.dart';
+import 'package:word_app/widgets/mw_button.dart';
+import 'package:word_app/widgets/mw_modal.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 
 /// 更多设置页
@@ -152,14 +154,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     if (confirmed != true || !context.mounted) return;
 
     // 不可取消的进度弹窗
-    showDialog(
+    unawaited(showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => const PopScope(
         canPop: false,
         child: Center(child: CircularProgressIndicator()),
       ),
-    );
+    ));
 
     DbRebuildResult result;
     try {
@@ -175,7 +177,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     }
     if (context.mounted) {
       Navigator.of(context, rootNavigator: true).pop();
-      showDialog(
+      unawaited(showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
           icon: Icon(
@@ -189,7 +191,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           ),
           actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('好的'))],
         ),
-      );
+      ));
     }
   }
 
@@ -374,7 +376,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                   // 退出登录
                   SizedBox(
                     width: double.infinity,
-                    child: SbButton.outlined(
+                    child: MwButton.outlined(
                       label: '退出登录',
                       onTap: () => _showLogoutSheet(context),
                       borderSide: BorderSide(color: skin.colors.danger, width: 1),
@@ -391,19 +393,19 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     );
   }
 
-  /// 退出登录确认弹窗（SbModal 底部弹出）
+  /// 退出登录确认弹窗（MwModal 底部弹出）
   void _showLogoutSheet(BuildContext context) {
-    SbModal.show(
+    MwModal.show(
       context,
-      mode: SbModalMode.bottom,
+      mode: MwModalMode.bottom,
       title: '退出登录',
       child: Text(
         '确定要退出登录吗？退出后学习数据将保留在本地，但同步功能将不可用。',
         style: MistralTypography.bodyMd.copyWith(color: context.skin.colors.text2),
       ),
       actions: [
-        SbButton.outlined(label: '取消', onTap: () => Navigator.pop(context)),
-        SbButton(
+        MwButton.outlined(label: '取消', onTap: () => Navigator.pop(context)),
+        MwButton(
           label: '退出',
           onTap: () {
             Navigator.pop(context);

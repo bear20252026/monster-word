@@ -1,4 +1,6 @@
 // 字典详情页 - 例句条目（带收藏与发音，从 word_detail_page.dart 拆出）
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:provider/provider.dart';
@@ -66,8 +68,8 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
     final messenger = ScaffoldMessenger.of(context);
 
     // 触觉反馈 + 弹性动画
-    HapticFeedback.lightImpact();
-    _favAnimController.forward(from: 0.0);
+    unawaited(HapticFeedback.lightImpact());
+    unawaited(_favAnimController.forward(from: 0.0));
 
     await store.toggle(
       wordId: widget.wordId,

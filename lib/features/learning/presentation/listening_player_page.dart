@@ -15,7 +15,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/core/learning/listening_mode.dart';
 export 'package:word_app/core/learning/listening_mode.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/widgets/sb_card.dart';
+import 'package:word_app/widgets/mw_card.dart';
 
 class ListeningPlayerPage extends StatefulWidget {
   final List<Word> words;
@@ -436,7 +436,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
 
   Widget _buildControls(SkinSystem skin, AppResponsive resp) {
     final buttonSize = 56.0 * resp.scale;
-    return SbCard(
+    return MwCard(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,

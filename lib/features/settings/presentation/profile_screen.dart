@@ -1,5 +1,5 @@
 // 个人中心页：星巴克风格 — 奶油画布 + 头像 + 尖叫币/装备 + 菜单
-// batch4a 改造：金色渐变→奶油纯色，硬编码→token，卡片→SbCard
+// batch4a 改造：金色渐变→奶油纯色，硬编码→token，卡片→MwCard
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,7 +11,7 @@ import 'package:word_app/core/scare_coin/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/func_colors.dart';
-import 'package:word_app/widgets/sb_card.dart';
+import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 
@@ -182,7 +182,7 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildMenu(SkinSystem skin, AppResponsive resp, BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
-      child: SbCard(
+      child: MwCard(
         child: Column(
           children: [
             _menuRow(
@@ -251,7 +251,7 @@ class _CoinCard extends StatelessWidget {
       message: '尖叫币是学习奖励货币，签到/学词可赚取，可用于兑换主题装备',
       child: GestureDetector(
         onTap: () => Navigator.pushNamed(context, '/scare_coin_history'),
-        child: SbCard(
+        child: MwCard(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,7 +301,7 @@ class _EquipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SbCard(
+    return MwCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

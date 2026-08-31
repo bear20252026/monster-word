@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
-import 'package:word_app/widgets/sb_card.dart';
+import 'package:word_app/widgets/mw_card.dart';
 
 class DailyGoalPicker extends StatefulWidget {
   const DailyGoalPicker({super.key});
@@ -50,7 +50,7 @@ class _DailyGoalPickerState extends State<DailyGoalPicker> {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
-      child: SbCard(
+      child: MwCard(
         padding: EdgeInsets.symmetric(
           vertical: 12 * resp.scale,
           horizontal: 16 * resp.scale,

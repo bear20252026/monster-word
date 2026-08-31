@@ -5,7 +5,7 @@ import 'package:word_app/features/learning/application/review_schedule_reader.da
 import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/widgets/sb_card.dart';
+import 'package:word_app/widgets/mw_card.dart';
 
 /// FSRS 记忆预测卡片（从 word_detail_page.dart 拆出）
 class FsrsPredictionCard extends StatelessWidget {
@@ -19,7 +19,7 @@ class FsrsPredictionCard extends StatelessWidget {
     final skin = context.skin;
     final card = schedule.cardFor(word.word);
     if (card == null || card.isNew) {
-      return SbCard(
+      return MwCard(
         padding: EdgeInsets.all(16),
         child: Row(
           children: [
@@ -42,7 +42,7 @@ class FsrsPredictionCard extends StatelessWidget {
         : r < 14
         ? Colors.blue
         : Colors.green;
-    return SbCard(
+    return MwCard(
       padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

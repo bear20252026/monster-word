@@ -1,5 +1,5 @@
 // Monster Word — 星巴克卡片组件
-// 来源规格：docs/component_spec.md §2（SbCard）
+// 来源规格：docs/component_spec.md §2（MwCard）
 // 24px 圆角、白底、双层低透明度阴影、奶油画布浮起效果（圆润温润版）
 
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ import 'package:word_app/widgets/scale_down_on_press.dart';
 ///
 /// 用法：
 /// ```dart
-/// SbCard(
+/// MwCard(
 ///   onTap: () => print('tapped'),
 ///   child: Padding(
 ///     padding: EdgeInsets.all(16),
@@ -22,7 +22,7 @@ import 'package:word_app/widgets/scale_down_on_press.dart';
 ///   ),
 /// )
 /// ```
-class SbCard extends StatelessWidget {
+class MwCard extends StatelessWidget {
   /// 被包装的子组件
   final Widget child;
 
@@ -44,7 +44,7 @@ class SbCard extends StatelessWidget {
   /// 是否启用阴影，默认 true
   final bool shadow;
 
-  const SbCard({
+  const MwCard({
     super.key,
     required this.child,
     this.onTap,

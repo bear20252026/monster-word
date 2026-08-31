@@ -455,7 +455,7 @@ class PhoneticAudioPlayer {
 
     // 如果正在播放，先暂停
     if (_audioPlayer.isPlaying) {
-      _audioPlayer.pause();
+      unawaited(_audioPlayer.pause());
     }
 
     // 检查本地缓存
@@ -585,7 +585,7 @@ class SentenceAudioPlayer {
     final fullUrl = url.startsWith('http') ? url : '$_baseAudioUrl$url';
 
     // 暂停之前的播放
-    _audioPlayer.pause();
+    unawaited(_audioPlayer.pause());
 
     // 检查本地缓存
     final localPath = await _AudioCacheDir.sentenceAudioPath(fullUrl);
