@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/models/scare_coin_entry.dart';
 import 'package:word_app/features/scare_coin/presentation/redemption_center_page.dart';
@@ -53,6 +54,10 @@ class _FakeScareCoinStore implements ScareCoinStore {
 
 void main() {
   group('RedemptionCenterPage UX-FIX-E', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
     testWidgets('显示真实余额（非硬编码 1280）', (tester) async {
       const realBalance = 100;
       final store = _FakeScareCoinStore(balance: realBalance);
@@ -71,8 +76,8 @@ void main() {
       expect(find.text('1280'), findsNothing);
     });
 
-    testWidgets('权益未接入：按钮禁用显示「即将上线」，不扣币', (tester) async {
-      // 体验审计 P0 修复：权益系统未接入前禁止兑换（防止扣币不解锁的欺骗性消费）
+    testWidgets('尖叫币不足：按钮可点但不扣币，提示还差多少', (tester) async {
+      // 公平经济规则：兑换真实可执行，但余额不足时拒绝并提示，绝不产生隐藏扣费
       final store = _FakeScareCoinStore(balance: 100);
 
       await tester.pumpWidget(
@@ -84,15 +89,40 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      // 按钮显示「即将上线」（禁用态），顶部说明 banner 存在
-      expect(find.text('即将上线'), findsWidgets);
-      expect(find.text('500币'), findsNothing);
-      expect(find.textContaining('兑换功能即将开放'), findsOneWidget);
+      // 公平声明 banner 存在（无权益墙）
+      expect(find.textContaining('所有功能对所有人开放'), findsOneWidget);
 
-      // 点击无效果（禁用态），余额不变
-      await tester.tap(find.text('即将上线').first, warnIfMissed: false);
+      // 点击 300 币商品（余额 100 不足）
+      await tester.tap(find.text('300').first, warnIfMissed: false);
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
       expect(store.grantCalls, 0);
+      expect(find.textContaining('尖叫币不足'), findsOneWidget);
+    });
+
+    testWidgets('余额充足：真实兑换扣币并标记已拥有', (tester) async {
+      final store = _FakeScareCoinStore(balance: 1000);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Provider<ScareCoinStore>.value(value: store, child: const RedemptionCenterPage()),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.tap(find.text('300').first, warnIfMissed: false);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(store.grantCalls, 1);
+      expect(find.text('已拥有'), findsOneWidget);
+      // 兑换后余额 1000 - 300 = 700
+      expect(find.text('700'), findsOneWidget);
+      // 兑换成功提示
+      expect(find.textContaining('兑换成功'), findsOneWidget);
     });
   });
 }

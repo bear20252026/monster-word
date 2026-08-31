@@ -11,6 +11,8 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/presentation/responsive.dart';
+import 'package:word_app/features/learning/application/learning_reward_service.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -38,6 +40,20 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
   DateTime? _sessionStart;
   late ConfettiController _confettiController;
   bool _celebrated = false;
+  int? _grantedCoins;
+
+  /// 会话结算发币（每会话一次，由 _celebrated 保证）；失败静默不打断完成页。
+  Future<void> _settleRewards(BuildContext context, LearningSessionState state, int total) async {
+    try {
+      final store = context.read<ScareCoinStore>();
+      final service = LearningRewardService(store);
+      final result = await service.settleSession(wordsLearned: total, dailyGoalAchieved: state.dailyGoalAchieved);
+      if (!mounted || result.totalGranted <= 0) return;
+      setState(() => _grantedCoins = result.totalGranted);
+    } catch (_) {
+      // 奖励结算失败不打断完成页
+    }
+  }
 
   @override
   void initState() {
@@ -131,13 +147,14 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
 
   /// 完成页：对齐 Learn 页规格（庆祝动画 + 目标达成横幅 + 统计卡 + 主操作按钮）
   Widget _buildCompletion(BuildContext context, SkinSystem skin, LearningSessionState state) {
+    final total = _knownCount + _unknownCount;
+    final duration = _sessionStart == null ? null : DateTime.now().difference(_sessionStart!).inSeconds;
     if (!_celebrated) {
       _celebrated = true;
       unawaited(HapticFeedback.mediumImpact());
       WidgetsBinding.instance.addPostFrameCallback((_) => _confettiController.play());
+      _settleRewards(context, state, total);
     }
-    final total = _knownCount + _unknownCount;
-    final duration = _sessionStart == null ? null : DateTime.now().difference(_sessionStart!).inSeconds;
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
@@ -162,6 +179,29 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                 const SizedBox(height: 12),
                 // 今日目标达成庆祝横幅
                 if (state.dailyGoalAchieved) ...[_buildGoalAchievedBanner(skin, state), const SizedBox(height: 12)],
+                // 尖叫币奖励横幅（本次会话结算所得）
+                if (_grantedCoins != null && _grantedCoins! > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: skin.colors.accent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: skin.colors.accent.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('👹', style: TextStyle(fontSize: 16)),
+                        const SizedBox(width: 6),
+                        Text(
+                          '尖叫币 +$_grantedCoins',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: skin.colors.accent),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 Text(
                   '本次共刷过 $total 个单词',
                   style: TextStyle(fontSize: 16, color: skin.colors.text2),

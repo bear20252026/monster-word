@@ -6,6 +6,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/features/learning/application/learning_reward_service.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
+
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/presentation/responsive.dart';
@@ -216,7 +219,7 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-class _CompletionScreen extends StatelessWidget {
+class _CompletionScreen extends StatefulWidget {
   final SkinSystem skin;
   final int errorCount;
   final int totalAnswered;
@@ -241,8 +244,43 @@ class _CompletionScreen extends StatelessWidget {
   final int dailyGoal;
 
   @override
+  State<_CompletionScreen> createState() => _CompletionScreenState();
+}
+
+class _CompletionScreenState extends State<_CompletionScreen> {
+  int? _grantedCoins;
+
+  @override
+  void initState() {
+    super.initState();
+    // 会话结算（发币）只在完成页首次展示时执行一次；失败静默——奖励不应阻塞完成页。
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final store = context.read<ScareCoinStore>();
+      final service = LearningRewardService(store);
+      try {
+        final result = await service.settleSession(
+          wordsLearned: widget.totalAnswered,
+          dailyGoalAchieved: widget.goalAchieved,
+        );
+        if (!mounted || result.totalGranted <= 0) return;
+        setState(() => _grantedCoins = result.totalGranted);
+      } catch (_) {
+        // 奖励结算失败不打断完成页；下次会话仍有机会获得
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final colors = skin.colors;
+    final colors = widget.skin.colors;
+    final goalAchieved = widget.goalAchieved;
+    final todayLearned = widget.todayLearned;
+    final dailyGoal = widget.dailyGoal;
+    final errorCount = widget.errorCount;
+    final totalAnswered = widget.totalAnswered;
+    final durationSeconds = widget.durationSeconds;
+    final accuracy = widget.accuracy;
+    final onReviewErrors = widget.onReviewErrors;
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
@@ -257,6 +295,11 @@ class _CompletionScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colors.text1),
               ),
               const SizedBox(height: 12),
+              // 尖叫币奖励横幅（本次会话结算所得）
+              if (_grantedCoins != null && _grantedCoins! > 0) ...[
+                _buildCoinBanner(colors),
+                const SizedBox(height: 12),
+              ],
               // 今日目标达成庆祝横幅
               if (goalAchieved) ...[
                 Container(
@@ -302,12 +345,12 @@ class _CompletionScreen extends StatelessWidget {
                   children: [
                     _StatItem(
                       label: '答对率',
-                      value: accuracy == null ? '--' : '${(accuracy! * 100).round()}%',
+                      value: accuracy == null ? '--' : '${(accuracy * 100).round()}%',
                       colors: colors,
                     ),
                     _StatItem(
                       label: '用时',
-                      value: durationSeconds == null ? '--' : _formatDuration(durationSeconds!),
+                      value: durationSeconds == null ? '--' : _formatDuration(durationSeconds),
                       colors: colors,
                     ),
                     _StatItem(label: '答错', value: '$errorCount', colors: colors),
@@ -339,6 +382,29 @@ class _CompletionScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// 尖叫币奖励横幅（本次会话结算所得）
+  Widget _buildCoinBanner(dynamic colors) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: colors.accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: colors.accent.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('👹', style: TextStyle(fontSize: 16)),
+          const SizedBox(width: 6),
+          Text(
+            '尖叫币 +$_grantedCoins',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.accent),
+          ),
+        ],
       ),
     );
   }
