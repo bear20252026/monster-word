@@ -39,8 +39,7 @@ class LearningQueueRepository {
 
   Future<List<Word>> loadBook(Book book, {required int limit, required bool shuffle}) async {
     // shuffle=true 时 SQL 层随机取样（随机取 50 个），再交给上层字母分散洗牌
-    final queue = await _wordSource.getWordsByBook(book.id,
-        limit: limit, offset: 0, randomOrder: shuffle);
+    final queue = await _wordSource.getWordsByBook(book.id, limit: limit, offset: 0, randomOrder: shuffle);
     if (shuffle) queue.shuffle();
     return queue;
   }

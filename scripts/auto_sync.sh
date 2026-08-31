@@ -51,6 +51,18 @@ while IFS= read -r f; do
   fi
 done <<< "$CHANGES"
 
+# ---- 2.5) 格式化（与 CI dart.yml 的 --line-length 120 对齐；formatter.page_width 已写入 analysis_options）----
+echo "[auto_sync] dart format ..."
+dart format lib/ test/ >/dev/null 2>&1
+CHANGES="$(git status --porcelain -- lib/ test/ pubspec.yaml pubspec.lock \
+  analysis_options.yaml docs/ scripts/ assets/db/ windows/ android/app/ \
+  2>/dev/null)"
+if [ -z "$CHANGES" ]; then
+  echo "[auto_sync] 无源码变更，结束"
+  exit 0
+fi
+FILE_COUNT="$(echo "$CHANGES" | wc -l | tr -d ' ')"
+
 # ---- 3) 提交 ----
 if [ $# -ge 1 ] && [ -n "$1" ]; then
   MSG="$1"

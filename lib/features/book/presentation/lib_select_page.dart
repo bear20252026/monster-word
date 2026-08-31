@@ -46,9 +46,7 @@ Color coverColorFor(BuildContext context, String code) {
   final isDark = context.skin.currentTheme.uiBrightness == Brightness.dark;
   // 明度偏移量（深色画布整体提亮一档，避免封面与背景混淆）
   final lightnessDelta = isDark ? [0.06, 0.14, -0.02] : [0.0, 0.10, -0.12];
-  return hsl
-      .withLightness((hsl.lightness + lightnessDelta[index]).clamp(0.15, 0.85))
-      .toColor();
+  return hsl.withLightness((hsl.lightness + lightnessDelta[index]).clamp(0.15, 0.85)).toColor();
 }
 
 class _LibSelectPageState extends State<LibSelectPage> {
@@ -490,7 +488,6 @@ class _LibItem extends StatelessWidget {
   const _LibItem({required this.book, this.showDescription = true});
 
   // 三档绿（亮色模式）—— 星巴克品牌绿轮换
-
 
   /// 从词书 code 推断描述标签（如 'CET4 | 1200词'），替代硬编码文本
   static String _categoryOf(String code) {
