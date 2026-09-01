@@ -25,6 +25,9 @@
 | REG-DICT-003（流程） | release 崩溃凭代码推断修复两批未中真因 | 未先读 error_boundary.log 真实异常栈 | `305113b` | 流程约定：release 崩溃排障第一步=读 `%APPDATA%/com.monsterword/Monster Word/logs/error_boundary.log` |
 | REG-MSG-001 | 消息页 build 期间调用 setState（itemBuilder 内触发 `_loadMessages()`），且真数据渲染暴露 ListTile 断言（背景色被 DecoratedBox 遮挡） | 假分页骨架在 itemBuilder 中同步触发 setState；ListTile 未包透明 Material | 第十六批 | `test/regression/regression_message_page_test.dart`（裸 push 渲染真实列表无异常） |
 | REG-MSG-002 | 消息中心「全部已读」空操作（TODO 壳子） | 页面为静态壳，无数据源 | 第十六批 | 同上（点击后 unreadCount=0 且按钮消失） |
+| REG-FDB-001 | 反馈提交为 800ms 假延迟，内容直接丢弃却显示「感谢反馈」 | `_submit` 无任何持久化/上报逻辑 | 第十七批 | `test/regression/regression_feedback_diagnosis_test.dart`（提交后本地存档可读回） |
+| REG-FDB-002 | 空内容提交未拦截（假提交流程连带） | 同上 | 第十七批 | 同上（空内容 SnackBar 提示、不进感谢页） |
+| REG-NET-001 | 网络诊断硬编码「全部成功」，断网也显示一切正常（误导性假语义） | 诊断步骤为常量列表，无真实检测 | 第十七批 | 同上（mock 失败步骤时页面显示 error 图标与失败文案） |
 
 ## 修复新 bug 的流程
 

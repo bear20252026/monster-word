@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 
+import 'package:word_app/features/account/application/feedback_archive.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
 /// 帮助与反馈页面（遵循星巴克设计规范）
+///
+/// 反馈真实提交：先本地存档（永不丢弃），再经 Sentry User Feedback 上报。
 class FeedbackPage extends StatefulWidget {
+  const FeedbackPage({super.key, this.archiveOverride});
+
+  final FeedbackArchive? archiveOverride;
+
   static const String routeName = '/feedback';
-  const FeedbackPage({super.key});
 
   @override
   State<FeedbackPage> createState() => _FeedbackPageState();
@@ -32,8 +38,13 @@ class _FeedbackPageState extends State<FeedbackPage> {
       return;
     }
     setState(() => _isSubmitting = true);
-    // 模拟提交延迟
-    await Future.delayed(const Duration(milliseconds: 800));
+    // 本地存档兜底 + Sentry 上报（失败不阻断提交语义）。
+    try {
+      final archive = widget.archiveOverride ?? FeedbackArchive();
+      await archive.submit(content: _controller.text, contact: _contactController.text);
+    } catch (_) {
+      // FeedbackArchive.submit 自身已兜底，此层防御意外的同步异常。
+    }
     if (!mounted) return;
     setState(() {
       _isSubmitting = false;

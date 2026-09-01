@@ -1,22 +1,18 @@
 // 移植自 v3.2 NetDiagnosisActivity
-// 网络诊断：检测网络连接状态和 API 可达性
-import 'dart:async';
-
+// 网络诊断：真实检测网络连接、DNS 解析与关键服务可达性
+// （数据源为 NetworkDiagnosisService，dart:io 实现，非硬编码结果）。
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'package:word_app/features/settings/application/network_diagnosis_service.dart';
+import 'package:word_app/features/settings/domain/diagnosis_result.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
-class DiagnosisResult {
-  final String name;
-  final bool success;
-  final String detail;
-
-  const DiagnosisResult({required this.name, required this.success, required this.detail});
-}
-
 class NetDiagnosisPage extends StatefulWidget {
-  const NetDiagnosisPage({super.key});
+  const NetDiagnosisPage({super.key, this.serviceOverride});
+
+  final NetworkDiagnosisService? serviceOverride;
 
   static const routeName = '/net_diagnosis';
 
@@ -34,18 +30,17 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
       _results.clear();
     });
 
-    // 模拟网络诊断步骤
-    final steps = [('网络连接', true, '已连接'), ('DNS 解析', true, '解析成功'), ('API 服务器', true, '可达'), ('数据同步', true, '正常')];
-
-    for (final step in steps) {
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (!mounted) return;
-      setState(() {
-        _results.add(DiagnosisResult(name: step.$1, success: step.$2, detail: step.$3));
-      });
+    final service = widget.serviceOverride ?? context.read<NetworkDiagnosisService>();
+    try {
+      // 逐步回调：每个真实步骤完成即上屏，无模拟延迟。
+      await service.runDiagnosis(
+        onStep: (DiagnosisResult step) {
+          if (mounted) setState(() => _results.add(step));
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _isRunning = false);
     }
-
-    setState(() => _isRunning = false);
   }
 
   @override

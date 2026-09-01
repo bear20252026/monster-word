@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/features/settings/application/network_diagnosis_service.dart';
+import 'package:word_app/features/settings/data/io_network_diagnosis_service.dart';
 import 'package:word_app/features/settings/data/learning_preferences_repository.dart';
 import 'package:word_app/features/settings/presentation/learning_preferences_state.dart';
 
@@ -13,6 +15,8 @@ Widget buildSettingsFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
       Provider<LearningPreferencesRepository>.value(value: repository),
+      // 网络诊断：真实 dart:io 检测（DNS + HTTP 可达性）。
+      Provider<NetworkDiagnosisService>(create: (_) => IoNetworkDiagnosisService()),
       ChangeNotifierProvider<LearningPreferencesState>(
         create: (_) => LearningPreferencesState(reader: repository, writer: repository),
       ),
