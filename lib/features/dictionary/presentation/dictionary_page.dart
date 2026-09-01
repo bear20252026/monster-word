@@ -321,7 +321,11 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
           ),
         ),
         SizedBox(height: context.design.spacing.md),
-        Expanded(
+        // 修复：本页整体位于 SingleChildScrollView 内（高度无界），
+        // Expanded 在此非法、构建即崩（页面曾显示"页面出错了"）。
+        // TabBarView 需要有界高度，改为固定高度（约 6 行内容，可滚动）。
+        SizedBox(
+          height: 360,
           child: TabBarView(
             controller: _tabController,
             children: [

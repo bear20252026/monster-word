@@ -15,8 +15,8 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/common/mw_empty_state.dart';
 import 'package:word_app/widgets/common/mw_skeleton.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/breathing_word.dart';
 import 'package:word_app/widgets/halo_search.dart';
-import 'package:word_app/widgets/path_marquee.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/features/search/application/example_reader.dart';
@@ -470,14 +470,10 @@ class _SearchPageState extends State<SearchPage> {
           const SizedBox(height: 16),
           Text('输入单词开始查询', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
           const SizedBox(height: 24),
-          PathMarquee(
-            text: 'abandon · ability · about · above · accept · ',
-            pathType: MarqueePathType.sine,
-            pathWidth: 260,
-            pathHeight: 24,
-            speed: 0.5,
-            loopDuration: const Duration(seconds: 6),
-            textStyle: TextStyle(fontSize: 12, color: skin.text3.withValues(alpha: 0.5), letterSpacing: 1),
+          // 示例单词呼吸轮换：同一时刻只显示一个词（原波浪滚动文字已废弃）
+          BreathingWord(
+            words: const ['abandon', 'ability', 'above', 'accept', 'achieve'],
+            style: TextStyle(fontSize: 12, color: skin.text3.withValues(alpha: 0.5), letterSpacing: 1),
           ),
         ],
       ),

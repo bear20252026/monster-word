@@ -10,8 +10,8 @@ import 'package:provider/provider.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/animations.dart';
+import 'package:word_app/widgets/breathing_word.dart';
 import 'package:word_app/widgets/liquid_logo.dart';
-import 'package:word_app/widgets/path_marquee.dart';
 import 'package:word_app/widgets/meteors.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 import 'package:word_app/features/account/presentation/login_page.dart';
@@ -178,20 +178,15 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                     SizedBox(height: 4),
                     Text('背单词 · 从未如此有趣', style: TextStyle(fontSize: 13, color: skin.colors.text3)),
                     SizedBox(height: 24),
-                    // 波浪滚动文字装饰
-                    PathMarquee(
-                      text: 'Monster Word · 背单词 · 从未如此有趣 · ',
-                      pathType: MarqueePathType.sine,
-                      pathWidth: 280,
-                      pathHeight: 30,
-                      speed: 0.6,
-                      loopDuration: const Duration(seconds: 5),
-                      textStyle: TextStyle(
+                    // 品牌词呼吸轮换：同一时刻只显示一个词（原波浪滚动文字已废弃）
+                    BreathingWord(
+                      words: const ['Monster Word', '背单词', '从未如此有趣'],
+                      perWord: const Duration(seconds: 4),
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: skin.colors.text3.withValues(alpha: 0.7),
                       ),
-                      showPath: false,
                     ),
                   ],
                 ),
