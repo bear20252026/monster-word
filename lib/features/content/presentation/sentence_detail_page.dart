@@ -2,8 +2,12 @@
 
 // 移植自 v3.2 SentenceDetailActivity
 // 例句详情页：显示单词的完整例句及翻译
+// 发音走既有端口 AudioPlaybackState（例句本身无音频 URL 时播所属单词，有道 TTS 回退）。
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
+
+import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
@@ -105,7 +109,10 @@ class SentenceDetailPage extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.volume_up_outlined, color: skin.colors.text1, size: 22),
             onPressed: () {
-              // TODO: 播放语音
+              // 例句本身无音频 URL，播所属单词发音（有道 TTS 回退）
+              if (word.isNotEmpty) {
+                context.read<AudioPlaybackState>().playWord(word);
+              }
             },
           ),
         ],
