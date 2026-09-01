@@ -1,8 +1,10 @@
 allprojects {
     repositories {
-        // 直连官方源（本地走代理；CI 为海外网络，均无需镜像）
+        // 优先直连官方源（本地走代理；CI 为海外网络），阿里云镜像仅作后备
         google()
         mavenCentral()
+        maven { url = uri("https://maven.aliyun.com/repository/google") }
+        maven { url = uri("https://maven.aliyun.com/repository/central") }
     }
 }
 
