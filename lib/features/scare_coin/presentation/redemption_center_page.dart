@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -22,7 +23,8 @@ class RedemptionCenterPage extends StatefulWidget {
 }
 
 class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
-  static const String _redeemedPrefix = 'scare_coin.redeemed.';
+  /// 已兑换收藏章键前缀（单一事实来源：AppPreferences.redeemedBadgePrefix）。
+  static const String _redeemedPrefix = AppPreferences.redeemedBadgePrefix;
 
   int _coins = 0;
   int _todayEarned = 0;

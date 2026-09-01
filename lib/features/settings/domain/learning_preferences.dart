@@ -1,10 +1,13 @@
+import 'package:word_app/core/infrastructure/app_preferences.dart';
+
 /// 设置页所展示学习偏好的不可变值对象。
 ///
 /// 该对象只表达用户显式可配置的学习偏好；主题、壁纸、账户和学习进度继续由各自
 /// 功能域拥有，避免重新形成全局偏好聚合状态。
 class LearningPreferences {
-  /// 助记段落默认顺序（逗号分隔存储；消费方：单词详情页助记段落排序）。
-  static const String defaultMnemonicOrder = '派生词,词组搭配,特殊变形,词根词缀';
+  /// 助记段落默认顺序（单一事实来源：AppPreferences.defaultMnemonicOrder，
+  /// 逗号分隔存储；消费方：设置页助记顺序弹窗 + 单词详情页助记段落排序）。
+  static const String defaultMnemonicOrder = AppPreferences.defaultMnemonicOrder;
 
   const LearningPreferences({
     required this.dailyNewWords,

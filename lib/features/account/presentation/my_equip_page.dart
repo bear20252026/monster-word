@@ -12,9 +12,6 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/func_colors.dart';
 
-/// 已兑换收藏章的 SharedPreferences 键前缀（与 RedemptionCenterPage 保持一致）。
-const String _redeemedPrefix = 'scare_coin.redeemed.';
-
 class MyEquipPage extends StatelessWidget {
   const MyEquipPage({super.key});
 
@@ -23,6 +20,7 @@ class MyEquipPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
+    assert(AppPreferences.equipRackCount == 3, '装备架条目数与 AppPreferences.equipRackCount 不同步（profile 装备卡片共用该值）');
 
     final equips = [
       _EquipItem(
@@ -38,7 +36,7 @@ class MyEquipPage extends StatelessWidget {
         color: FuncColors.purple,
         title: '收藏章',
         subtitle: '在兑换中心用尖叫币兑换',
-        value: '${_redeemedBadgeCount()} 枚',
+        value: '${AppPreferences().redeemedBadgeCount()} 枚',
         route: RouteNames.redemption,
       ),
       _EquipItem(
@@ -71,11 +69,6 @@ class MyEquipPage extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  /// 统计已兑换的收藏章数量（扫描 prefs 键前缀，与兑换中心同源）。
-  int _redeemedBadgeCount() {
-    return AppPreferences().getKeys().where((k) => k.startsWith(_redeemedPrefix)).length;
   }
 
   Widget _buildNavBar(SkinSystem skin, BuildContext context) {

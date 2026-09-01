@@ -131,6 +131,37 @@ class AppPreferences extends BaseSharedPreferences {
   /// 已存日期（用于跨天判断）
   String getTodayLearnedDate() => getString(todayLearnedDateKey);
 
+  // ── 助记展示偏好（settings 与 dictionary 共享 key，架构审计后上提）──
+
+  /// 助记段落顺序键（逗号分隔段落名，单词详情页按此排序消费）。
+  static const mnemonicOrderKey = 'mnemonic_order_v1';
+
+  /// 形近词（特殊变形）显示开关键。
+  static const showSimilarWordsKey = 'show_similar_words_v1';
+
+  /// 词根词缀显示开关键。
+  static const showRootsKey = 'show_roots_v1';
+
+  /// 助记段落默认顺序（与 LearningPreferences.defaults 一致）。
+  static const defaultMnemonicOrder = '派生词,词组搭配,特殊变形,词根词缀';
+
+  /// 形近词默认显示（与 LearningPreferences.defaults 一致）。
+  static const defaultShowSimilarWords = true;
+
+  /// 词根词缀默认显示（与 LearningPreferences.defaults 一致）。
+  static const defaultShowRoots = true;
+
+  // ── 兑换/装备共享（account 与 settings 共享，经 core 中转避免跨功能 import）──
+
+  /// 已兑换收藏章的 SharedPreferences 键前缀（兑换中心/装备架/profile 同源）。
+  static const String redeemedBadgePrefix = 'scare_coin.redeemed.';
+
+  /// 装备架条目数（我的装备页与 profile 装备卡片共用，装备架增删条目时同步更新）。
+  static const int equipRackCount = 3;
+
+  /// 已兑换收藏章枚数（扫描 prefs 键前缀）。
+  int redeemedBadgeCount() => getKeys().where((k) => k.startsWith(redeemedBadgePrefix)).length;
+
   static final AppPreferences _instance = AppPreferences._();
   factory AppPreferences() => _instance;
   AppPreferences._();

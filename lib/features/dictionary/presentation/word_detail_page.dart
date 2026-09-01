@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/dictionary/data/dictionary_extra.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_example_tile.dart';
@@ -287,104 +288,8 @@ class _WordDetailPageState extends State<WordDetailPage> {
                     // FSRS-6 记忆预测卡片
                     SizedBox(height: context.design.spacing.lg),
                     FsrsPredictionCard(schedule: context.read<ReviewScheduleReader>(), word: word),
-                    // 形近词
-                    if (confuseList.isNotEmpty) ...[
-                      SizedBox(height: context.design.spacing.lg),
-                      Text('形近词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-                      SizedBox(height: context.design.spacing.xs),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: confuseList
-                            .map(
-                              (c) => Chip(
-                                label: Text(c, style: MistralTypography.bodySm.copyWith(color: skin.colors.text1)),
-                                backgroundColor: skin.colors.pageBg,
-                                side: BorderSide(color: skin.colors.divider),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    ],
-                    // 补充数据
-                    if (_extra != null) ...[
-                      SizedBox(height: context.design.spacing.lg),
-                      Text('拓展 · 派生词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-                      SizedBox(height: context.design.spacing.xs),
-                      ..._extra!.derivatives.map(
-                        (d) => Padding(
-                          padding: EdgeInsets.only(bottom: 4),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('· ', style: TextStyle(fontWeight: FontWeight.bold)),
-                              Expanded(
-                                child: Text(
-                                  d,
-                                  style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: context.design.spacing.lg),
-                      Text('近义词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-                      SizedBox(height: context.design.spacing.xs),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _extra!.synonyms
-                            .map(
-                              (s) => Chip(
-                                label: Text(s, style: MistralTypography.bodySm.copyWith(color: AppColors.white100)),
-                                backgroundColor: skin.colors.accent.withValues(alpha: 0.85),
-                                side: BorderSide.none,
-                              ),
-                            )
-                            .toList(),
-                      ),
-                      if (_extra!.examSentences.isNotEmpty) ...[
-                        SizedBox(height: context.design.spacing.lg),
-                        Text('真题例句', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-                        SizedBox(height: context.design.spacing.xs),
-                        ..._extra!.examSentences.map(
-                          (e) => Container(
-                            margin: EdgeInsets.only(bottom: 8),
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: skin.colors.cardBgAlt,
-                              borderRadius: BorderRadius.circular(context.design.radius.md),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.highlightOrange,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Text(
-                                        e.source,
-                                        style: MistralTypography.caption.copyWith(color: AppColors.white100),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 6),
-                                Text(
-                                  e.sentence,
-                                  style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                    // 助记段落（按设置「助记顺序」重排；形近词/词根词缀受开关控制）
+                    ..._buildMnemonicSections(word, skin, confuseList),
                     // 常见用法
                     SizedBox(height: context.design.spacing.lg),
                     Text('常见用法', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
@@ -414,20 +319,6 @@ class _WordDetailPageState extends State<WordDetailPage> {
                         ],
                       ),
                     ),
-                    // 词组/搭配（结构化展示）
-                    if (PhraseParser.hasData(word.phrase)) ...[
-                      SizedBox(height: context.design.spacing.lg),
-                      Text('词组/搭配', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-                      SizedBox(height: context.design.spacing.xs),
-                      PhraseGroupList(raw: word.phrase, skin: skin),
-                    ],
-                    // 词根词缀
-                    if (word.wordRoot.isNotEmpty) ...[
-                      SizedBox(height: context.design.spacing.lg),
-                      Text('词根词缀', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-                      SizedBox(height: context.design.spacing.xs),
-                      WordRootTab(wordRootJson: word.wordRoot),
-                    ],
                     // 笔记区
                     SizedBox(height: context.design.spacing.lg),
                     WordNotesSection(word: word),
@@ -495,95 +386,8 @@ class _WordDetailPageState extends State<WordDetailPage> {
           // FSRS-6 记忆预测卡片
           SizedBox(height: context.design.spacing.lg),
           FsrsPredictionCard(schedule: context.read<ReviewScheduleReader>(), word: word),
-          // 形近词
-          if (confuseList.isNotEmpty) ...[
-            SizedBox(height: context.design.spacing.lg),
-            Text('形近词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-            SizedBox(height: context.design.spacing.xs),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: confuseList
-                  .map(
-                    (c) => Chip(
-                      label: Text(c, style: MistralTypography.bodySm.copyWith(color: skin.colors.text1)),
-                      backgroundColor: skin.colors.pageBg,
-                      side: BorderSide(color: skin.colors.divider),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
-          // 补充数据
-          if (_extra != null) ...[
-            SizedBox(height: context.design.spacing.lg),
-            Text('拓展 · 派生词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-            SizedBox(height: context.design.spacing.xs),
-            ..._extra!.derivatives.map(
-              (d) => Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('· ', style: TextStyle(fontWeight: FontWeight.bold)),
-                    Expanded(
-                      child: Text(d, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: context.design.spacing.lg),
-            Text('近义词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-            SizedBox(height: context.design.spacing.xs),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _extra!.synonyms
-                  .map(
-                    (s) => Chip(
-                      label: Text(s, style: MistralTypography.bodySm.copyWith(color: AppColors.white100)),
-                      backgroundColor: skin.colors.accent.withValues(alpha: 0.85),
-                      side: BorderSide.none,
-                    ),
-                  )
-                  .toList(),
-            ),
-            if (_extra!.examSentences.isNotEmpty) ...[
-              SizedBox(height: context.design.spacing.lg),
-              Text('真题例句', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-              SizedBox(height: context.design.spacing.xs),
-              ..._extra!.examSentences.map(
-                (e) => Container(
-                  margin: EdgeInsets.only(bottom: 8),
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: skin.colors.cardBgAlt,
-                    borderRadius: BorderRadius.circular(context.design.radius.md),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: AppColors.highlightOrange,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(e.source, style: MistralTypography.caption.copyWith(color: AppColors.white100)),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 6),
-                      Text(e.sentence, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ],
+          // 助记段落（按设置「助记顺序」重排；形近词/词根词缀受开关控制）
+          ..._buildMnemonicSections(word, skin, confuseList),
           // 常见用法
           SizedBox(height: context.design.spacing.lg),
           Text('常见用法', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
@@ -607,26 +411,154 @@ class _WordDetailPageState extends State<WordDetailPage> {
               ],
             ),
           ),
-          // 词组/搭配（结构化展示）
-          if (PhraseParser.hasData(word.phrase)) ...[
-            SizedBox(height: context.design.spacing.lg),
-            Text('词组/搭配', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-            SizedBox(height: context.design.spacing.xs),
-            PhraseGroupList(raw: word.phrase, skin: skin),
-          ],
-          // 词根词缀
-          if (word.wordRoot.isNotEmpty) ...[
-            SizedBox(height: context.design.spacing.lg),
-            Text('词根词缀', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
-            SizedBox(height: context.design.spacing.xs),
-            WordRootTab(wordRootJson: word.wordRoot),
-          ],
           // 笔记区
           SizedBox(height: context.design.spacing.lg),
           WordNotesSection(word: word),
         ],
       ),
     );
+  }
+
+  // ===========================================================================
+  // 助记段落：按设置页「助记顺序」重排；形近词(特殊变形)/词根词缀受开关控制
+  // 段落名与 LearningPreferences.defaultMnemonicOrder 对应：
+  // 派生词→拓展·派生词(含近义词/真题例句)、词组搭配→词组/搭配、
+  // 特殊变形→形近词（showSimilarWords）、词根词缀→词根词缀（showRoots）。
+  // ===========================================================================
+  List<Widget> _buildMnemonicSections(Word word, SkinSystem skin, List<String> confuseList) {
+    // 助记展示偏好：AppPreferences 单例直读（settings 与 dictionary 共享 key，
+    // 键定义在 core 上提，避免跨功能 import；设置页修改后下次进入详情页生效）。
+    final appPrefs = AppPreferences();
+    final showSimilarWords = appPrefs.getBool(
+      AppPreferences.showSimilarWordsKey,
+      defaultValue: AppPreferences.defaultShowSimilarWords,
+    );
+    final showRoots = appPrefs.getBool(AppPreferences.showRootsKey, defaultValue: AppPreferences.defaultShowRoots);
+    final segments = appPrefs
+        .getString(AppPreferences.mnemonicOrderKey, defaultValue: AppPreferences.defaultMnemonicOrder)
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    final gap = SizedBox(height: context.design.spacing.lg);
+    final gapSm = SizedBox(height: context.design.spacing.xs);
+
+    final sections = <String, List<Widget>>{
+      // 特殊变形（形近词）
+      '特殊变形': [
+        if (showSimilarWords && confuseList.isNotEmpty) ...[
+          gap,
+          Text('形近词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          gapSm,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: confuseList
+                .map(
+                  (c) => Chip(
+                    label: Text(c, style: MistralTypography.bodySm.copyWith(color: skin.colors.text1)),
+                    backgroundColor: skin.colors.pageBg,
+                    side: BorderSide(color: skin.colors.divider),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ],
+      // 派生词（拓展数据：派生词 + 近义词 + 真题例句）
+      '派生词': [
+        if (_extra != null) ...[
+          gap,
+          Text('拓展 · 派生词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          gapSm,
+          ..._extra!.derivatives.map(
+            (d) => Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('· ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: Text(d, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          gap,
+          Text('近义词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          gapSm,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _extra!.synonyms
+                .map(
+                  (s) => Chip(
+                    label: Text(s, style: MistralTypography.bodySm.copyWith(color: AppColors.white100)),
+                    backgroundColor: skin.colors.accent.withValues(alpha: 0.85),
+                    side: BorderSide.none,
+                  ),
+                )
+                .toList(),
+          ),
+          if (_extra!.examSentences.isNotEmpty) ...[
+            gap,
+            Text('真题例句', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+            gapSm,
+            ..._extra!.examSentences.map(
+              (e) => Container(
+                margin: EdgeInsets.only(bottom: 8),
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: skin.colors.cardBgAlt,
+                  borderRadius: BorderRadius.circular(context.design.radius.md),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: AppColors.highlightOrange,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(e.source, style: MistralTypography.caption.copyWith(color: AppColors.white100)),
+                    ),
+                    SizedBox(height: 6),
+                    Text(e.sentence, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ],
+      // 词组搭配
+      '词组搭配': [
+        if (PhraseParser.hasData(word.phrase)) ...[
+          gap,
+          Text('词组/搭配', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          gapSm,
+          PhraseGroupList(raw: word.phrase, skin: skin),
+        ],
+      ],
+      // 词根词缀
+      '词根词缀': [
+        if (showRoots && word.wordRoot.isNotEmpty) ...[
+          gap,
+          Text('词根词缀', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          gapSm,
+          WordRootTab(wordRootJson: word.wordRoot),
+        ],
+      ],
+    };
+
+    // 按用户配置的助记顺序输出；未识别的段落名跳过。
+    final out = <Widget>[];
+    for (final segment in segments) {
+      out.addAll(sections[segment] ?? const <Widget>[]);
+    }
+    return out;
   }
 
   // ===========================================================================

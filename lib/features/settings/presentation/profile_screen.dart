@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/account/application/account_profile_state.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/features/settings/presentation/more_settings_page.dart';
@@ -348,13 +350,17 @@ class _CoinCard extends StatelessWidget {
   }
 }
 
-/// 装备卡片
+/// 装备卡片（真实数据：与我的装备架同源 — 皮肤/收藏章/连击徽章）
 class _EquipCard extends StatelessWidget {
   final SkinSystem skin;
   const _EquipCard({required this.skin});
 
   @override
   Widget build(BuildContext context) {
+    // 已拥有装备件数：当前皮肤(恒 1) + 收藏章(已兑换≥1 计 1 件) + 连击徽章(连击>0 计 1 件)；
+    // 总数取装备架条目数（单一事实来源 AppPreferences.equipRackCount，与我的装备页同源）。
+    final streakFuture = context.read<CheckinStatusReader>().getStreakDays();
+    final redeemedCount = AppPreferences().redeemedBadgeCount();
     return MwCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       child: Column(
@@ -367,7 +373,16 @@ class _EquipCard extends StatelessWidget {
                 style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: 6),
-              Text('9/9', style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
+              FutureBuilder<int>(
+                future: streakFuture,
+                builder: (context, snap) {
+                  final owned = 1 + (redeemedCount > 0 ? 1 : 0) + ((snap.data ?? 0) > 0 ? 1 : 0);
+                  return Text(
+                    '$owned/${AppPreferences.equipRackCount}',
+                    style: MistralTypography.caption.copyWith(color: skin.colors.text3),
+                  );
+                },
+              ),
             ],
           ),
           const SizedBox(height: 12),

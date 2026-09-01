@@ -76,4 +76,34 @@ void main() {
     expect(preferences.getBool(LearningPreferencesRepository.splitMnemonicKey), isFalse);
     expect(preferences.getBool(LearningPreferencesRepository.showConfusableMeaningsKey), isFalse);
   });
+
+  test('学习偏好状态持久化助记顺序与形近词/词根开关', () async {
+    // 预置：形近词/词根开关已关、自定义助记顺序（词根词缀在最前）
+    SharedPreferences.setMockInitialValues({
+      LearningPreferencesRepository.showSimilarWordsKey: false,
+      LearningPreferencesRepository.showRootsKey: false,
+      LearningPreferencesRepository.mnemonicOrderKey: '词根词缀,派生词,词组搭配,特殊变形',
+    });
+    final repo = LearningPreferencesRepository();
+    final state = LearningPreferencesState(reader: repo, writer: repo);
+    await state.initialize();
+
+    // 加载持久化值
+    expect(state.showSimilarWords, isFalse);
+    expect(state.showRoots, isFalse);
+    expect(state.mnemonicSegments.first, '词根词缀');
+
+    // 重排 + 开关回开，写入显式事实键
+    await state.setMnemonicOrder(['词组搭配', '特殊变形', '派生词', '词根词缀']);
+    await state.setShowSimilarWords(true);
+    await state.setShowRoots(true);
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(state.mnemonicSegments, ['词组搭配', '特殊变形', '派生词', '词根词缀']);
+    expect(state.showSimilarWords, isTrue);
+    expect(state.showRoots, isTrue);
+    expect(preferences.getString(LearningPreferencesRepository.mnemonicOrderKey), '词组搭配,特殊变形,派生词,词根词缀');
+    expect(preferences.getBool(LearningPreferencesRepository.showSimilarWordsKey), isTrue);
+    expect(preferences.getBool(LearningPreferencesRepository.showRootsKey), isTrue);
+  });
 }
