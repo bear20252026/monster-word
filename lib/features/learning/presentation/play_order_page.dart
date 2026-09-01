@@ -1,34 +1,52 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 lib/pages/play_order_page.dart
-// 播放顺序：设置随身听的单词播放顺序
+// 播放顺序：设置随身听的单词播放顺序（持久化到 AppPreferences，被随身听消费）
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/features/learning/application/play_order.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
-enum PlayOrder {
-  sequential('顺序播放', Icons.format_list_numbered),
-  reverse('逆序播放', Icons.format_list_numbered),
-  random('随机播放', Icons.shuffle),
-  alphabetical('字母顺序', Icons.sort_by_alpha);
-
-  final String label;
-  final IconData icon;
-  const PlayOrder(this.label, this.icon);
-}
+export 'package:word_app/features/learning/application/play_order.dart' show PlayOrder;
 
 class PlayOrderPage extends StatefulWidget {
   const PlayOrderPage({super.key});
 
   static const routeName = '/play_order';
 
+  /// 播放顺序的持久化键（随身听播放器读取同一 key）。
+  static const prefKey = 'stereo.play_order';
+
   @override
   State<PlayOrderPage> createState() => _PlayOrderPageState();
 }
 
 class _PlayOrderPageState extends State<PlayOrderPage> {
+  final AppPreferences _prefs = AppPreferences();
   PlayOrder _selected = PlayOrder.sequential;
+
+  @override
+  void initState() {
+    super.initState();
+    _restore();
+  }
+
+  Future<void> _restore() async {
+    await _prefs.init();
+    if (!mounted) return;
+    final saved = _prefs.getString(PlayOrderPage.prefKey);
+    setState(() {
+      _selected = PlayOrder.values.where((order) => order.name == saved).firstOrNull ?? PlayOrder.sequential;
+    });
+  }
+
+  Future<void> _select(PlayOrder order) async {
+    setState(() => _selected = order);
+    await _prefs.setString(PlayOrderPage.prefKey, order.name);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +65,7 @@ class _PlayOrderPageState extends State<PlayOrderPage> {
                 children: PlayOrder.values.map((order) {
                   final isSelected = _selected == order;
                   return GestureDetector(
-                    onTap: () => setState(() => _selected = order),
+                    onTap: () => unawaited(_select(order)),
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(16),
