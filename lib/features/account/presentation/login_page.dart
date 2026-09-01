@@ -2,6 +2,8 @@
 
 // 移植自 v3.2 LoginActivity
 // 登录页：支持手机号登录、账号密码登录
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +11,7 @@ import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/animations.dart';
+import 'package:word_app/features/account/application/sms_code_service.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 
 class LoginPage extends StatefulWidget {
@@ -29,6 +32,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   final _codeController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  bool _isSendingCode = false;
+  int _countdown = 0; // 验证码发送冷却（秒）
+  Timer? _countdownTimer;
   String? _lastLoginAccountInfo;
 
   late AnimationController _animController;
@@ -52,6 +58,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _animController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
@@ -133,6 +140,13 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     // ✅ 频率限制
     if (!_checkRateLimit()) return;
 
+    // ✅ 验证码本地校验（发送时生成的验证码，5 分钟有效）
+    final smsError = context.read<SmsCodeService>().verifyCode(phone, code);
+    if (smsError != null) {
+      _showToast(smsError);
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final session = context.read<AppSessionState>();
@@ -151,6 +165,39 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
   void _onLoginSuccess() {
     Navigator.of(context).pushReplacementNamed('/');
+  }
+
+  /// 发送短信验证码（Spug Push），成功后启动 60s 冷却倒计时。
+  Future<void> _sendSmsCode() async {
+    final phone = _phoneController.text.trim();
+    if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
+      _showToast('请输入有效的手机号');
+      return;
+    }
+    if (_isSendingCode || _countdown > 0) return;
+
+    setState(() => _isSendingCode = true);
+    try {
+      final result = await context.read<SmsCodeService>().sendCode(phone);
+      if (!mounted) return;
+      if (result.ok) _startCountdown();
+      _showToast(result.message);
+    } finally {
+      if (mounted) setState(() => _isSendingCode = false);
+    }
+  }
+
+  void _startCountdown() {
+    _countdownTimer?.cancel();
+    setState(() => _countdown = 60);
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() => _countdown--);
+      if (_countdown <= 0) timer.cancel();
+    });
   }
 
   void _showToast(String msg) {
@@ -355,18 +402,16 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       SizedBox(
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: () {
-                            // TODO: 发送验证码
-                            _showToast('验证码已发送');
-                          },
+                          onPressed: (_isSendingCode || _countdown > 0) ? null : _sendSmsCode,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: MistralColors.primary,
                             foregroundColor: AppColors.white100,
+                            disabledBackgroundColor: MistralColors.muted,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(context.design.radius.md),
                             ),
                           ),
-                          child: const Text('获取验证码'),
+                          child: Text(_isSendingCode ? '发送中' : (_countdown > 0 ? '${_countdown}s' : '获取验证码')),
                         ),
                       ),
                     ],
