@@ -77,6 +77,13 @@ class WordBookDatabase {
   @visibleForTesting
   static Uint8List Function()? gzBytesOverrideForTest;
 
+  /// 仅供测试：注入内存数据库，绕过 initialize()（集成测试用）。
+  @visibleForTesting
+  void debugInjectDbForTest(Database db) {
+    _db = db;
+    _initialized = true;
+  }
+
   /// 初始化：解压词库 + 打开数据库。
   ///
   /// 版本管理（2026-08-30 根治"暂无单词数据"）：只检查文件存在会导致

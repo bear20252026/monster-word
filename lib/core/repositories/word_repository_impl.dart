@@ -80,7 +80,24 @@ class WordRepositoryImpl implements WordRepository {
   @override
   Future<List<Word>> searchWords(String query, {int? limit}) async {
     final db = _database.db;
-    final maps = await db.query('words', where: 'word LIKE ?', whereArgs: ['%$query%'], limit: limit ?? 50);
+    // 搜索范围（2026-09-01）：英文单词 + 中文释义（搜索框提示"英文或中文"，
+    // 此前只匹配 word 列导致中文查询恒为空）。英文命中优先于中文命中。
+    final like = '%$query%';
+    final maps = await db.rawQuery(
+      '''
+      SELECT * FROM words
+      WHERE word LIKE ? OR interpret LIKE ?
+      ORDER BY
+        CASE
+          WHEN word = ? THEN 0
+          WHEN word LIKE ? THEN 1
+          ELSE 2
+        END,
+        word COLLATE NOCASE
+      LIMIT ?
+    ''',
+      [like, like, query, '$query%', limit ?? 50],
+    );
     return maps.map((m) => Word.fromMap(m)).toList();
   }
 
