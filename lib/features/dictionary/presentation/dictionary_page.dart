@@ -9,6 +9,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/word_root_tab.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_detail_state.dart';
+import 'package:word_app/features/dictionary/presentation/dictionary_feature_providers.dart';
 
 /// 词典详情页。
 ///
@@ -42,6 +43,17 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    // 根因修复（error_boundary.log 实锤 Provider<DictionaryDetailState> not found）：
+    // buildDictionaryDetailScope 此前全工程零调用，页面所有 Consumer 均因缺 Provider
+    // 构建即崩（"页面出错了"）。页面自挂载数据源，任何入口（路由/按名/跳转）都自洽。
+    // 注意：scope 读取的四个端口由 app.dart 顶层 buildDictionaryFeatureScope 提供。
+    return buildDictionaryDetailScope(
+      word: widget.word,
+      child: Builder(builder: (context) => _buildPage(context)),
+    );
+  }
+
+  Widget _buildPage(BuildContext context) {
     final skin = context.skin.colors;
     final word = widget.word;
 
@@ -457,15 +469,9 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             final firstInterp = w.firstInterpretLine;
             return GestureDetector(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChangeNotifierProvider.value(
-                      value: context.read<DictionaryDetailState>(),
-                      child: DictionaryPage(word: w),
-                    ),
-                  ),
-                );
+                // 页面已自挂载 DetailScope：直接 push，新页为新单词创建全新状态
+                // （旧写法 Provider.value 复用上一词的状态，导致新词头配旧词数据）
+                Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: w)));
               },
               child: Container(
                 margin: EdgeInsets.only(bottom: context.design.spacing.sm),
@@ -550,15 +556,8 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             final firstInterpret = synonym.firstInterpretLine;
             return GestureDetector(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChangeNotifierProvider.value(
-                      value: context.read<DictionaryDetailState>(),
-                      child: DictionaryPage(word: synonym),
-                    ),
-                  ),
-                );
+                // 同上：直接 push，新页自建全新状态
+                Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: synonym)));
               },
               child: Container(
                 margin: EdgeInsets.only(bottom: context.design.spacing.sm),

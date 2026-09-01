@@ -167,6 +167,12 @@ class _AppDockState extends State<AppDock> with TickerProviderStateMixin {
 
 /// 浮动 Dock（带背景模糊效果）
 class FloatingDock extends StatelessWidget {
+  /// 页面底部需为悬浮 Dock 预留的最小空隙（单一事实来源）。
+  ///
+  /// 主壳将 Dock 悬浮定位在底部安全区之上，Dock 自身再带 16 外边距 + 64 栏高；
+  /// 页面底部固定内容（如工具栏）必须预留此高度，否则与 Dock 重叠。
+  static double clearance(BuildContext context) => MediaQuery.of(context).padding.bottom + 16 + 64;
+
   final List<DockItem> items;
   final int currentIndex;
   final ValueChanged<int> onTap;

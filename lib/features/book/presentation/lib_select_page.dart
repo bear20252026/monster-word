@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/models/book.dart';
+import 'package:word_app/widgets/app_dock.dart';
 import 'package:word_app/widgets/common/mw_empty_state.dart';
 import 'package:word_app/widgets/common/mw_skeleton.dart';
 import 'package:word_app/features/learning/application/learning_session_reader.dart';
@@ -342,36 +343,41 @@ class _LibSelectPageState extends State<LibSelectPage> {
               ),
             ),
             // ===== 底部工具栏（原版底部操作栏）=====
-            Container(
-              decoration: BoxDecoration(
-                color: colors.cardBg,
-                border: Border(top: BorderSide(color: colors.divider)),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _BottomToolItem(
-                      icon: Icons.dashboard_outlined,
-                      label: '词书主页',
-                      onTap: () => _openBookDashboard(context),
-                    ),
-                    _BottomToolItem(icon: Icons.style, label: '沉浸刷词', onTap: () => _onToolTap(context, 'immersive')),
-                    _BottomToolItem(icon: Icons.headphones, label: '随身听', onTap: () => _onToolTap(context, 'listen')),
-                    _BottomToolItem(icon: Icons.edit_note, label: '听写', onTap: () => _onToolTap(context, 'dictation')),
-                    _BottomToolItem(icon: Icons.spellcheck, label: '随手拼', onTap: () => _onToolTap(context, 'spell')),
-                    _BottomToolItem(
-                      icon: Icons.file_download_outlined,
-                      label: '导出',
-                      onTap: () => _onToolTap(context, 'export'),
-                    ),
-                    _BottomToolItem(icon: Icons.bolt, label: '考试速刷', onTap: () => _onToolTap(context, 'quickReview')),
-                  ],
-                ),
-              ),
-            ),
+            _buildBottomToolbar(colors),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// 底部工具栏。
+  /// 预留悬浮 Dock 高度：否则工具栏与主壳悬浮 Dock 重叠（v2.7.22 用户实测）。
+  Widget _buildBottomToolbar(ThemeVars colors) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: FloatingDock.clearance(context)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.cardBg,
+          border: Border(top: BorderSide(color: colors.divider)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _BottomToolItem(icon: Icons.dashboard_outlined, label: '词书主页', onTap: () => _openBookDashboard(context)),
+              _BottomToolItem(icon: Icons.style, label: '沉浸刷词', onTap: () => _onToolTap(context, 'immersive')),
+              _BottomToolItem(icon: Icons.headphones, label: '随身听', onTap: () => _onToolTap(context, 'listen')),
+              _BottomToolItem(icon: Icons.edit_note, label: '听写', onTap: () => _onToolTap(context, 'dictation')),
+              _BottomToolItem(icon: Icons.spellcheck, label: '随手拼', onTap: () => _onToolTap(context, 'spell')),
+              _BottomToolItem(
+                icon: Icons.file_download_outlined,
+                label: '导出',
+                onTap: () => _onToolTap(context, 'export'),
+              ),
+              _BottomToolItem(icon: Icons.bolt, label: '考试速刷', onTap: () => _onToolTap(context, 'quickReview')),
+            ],
+          ),
         ),
       ),
     );
