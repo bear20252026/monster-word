@@ -72,6 +72,9 @@ class _StubNoteRepo implements NoteRepository {
   @override
   Future<List<WordNote>> getNotesByWord(int wordId) async => [];
   @override
+  Future<int> countAllNotes() async => 0;
+
+  @override
   Future<int> addNote(int wordId, String content, {String word = ''}) async => 0;
   @override
   Future<int> insertNote(WordNote note) async => 0;
@@ -99,6 +102,9 @@ class _StubNotesStore implements WordNotesStore {
   Future<void> update(WordNote note) async {}
   @override
   Future<void> deleteById(int noteId) async {}
+
+  @override
+  Future<int> countAll() async => 0;
 }
 
 /// 模拟 AudioService

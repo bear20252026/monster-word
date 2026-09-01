@@ -1,15 +1,25 @@
 // 我的内容页：还原原版"我的内容"页面
 // 横向卡片（随身听/听写）+ 列表项（在学词书/近日已学/全部已学/单词本/句库/笔记）
+// batch5：假数据全部替换为真实数据源（学习队列/统计/收藏/笔记计数），卡片接通对应功能入口。
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import 'package:word_app/features/learning/application/learning_collections_reader.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/presentation/responsive.dart';
+import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/features/content/presentation/my_fav_page.dart';
+import 'package:word_app/features/learning/application/learning_collections_reader.dart';
+import 'package:word_app/features/learning/application/learning_session_reader.dart';
+import 'package:word_app/features/learning/application/learning_statistics_reader.dart';
+import 'package:word_app/features/learning/application/new_words_store.dart';
+import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
+import 'package:word_app/features/word_browse/application/word_notes_store.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/func_colors.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/features/content/presentation/my_fav_page.dart';
 
 class MyContentPage extends StatelessWidget {
   const MyContentPage({super.key});
@@ -38,63 +48,10 @@ class MyContentPage extends StatelessWidget {
                     _HorizontalCards(skin: skin),
                     const SizedBox(height: 20),
                     // 列表组 1：在学词书 / 近日已学 / 全部已学
-                    _ListGroup(
-                      children: [
-                        _ListItem(
-                          icon: Icons.menu_book,
-                          iconColor: skin.success,
-                          title: '在学词书',
-                          value: '6135 词',
-                          skin: skin,
-                        ),
-                        _ListItem(
-                          icon: Icons.check_circle_outline,
-                          iconColor: FuncColors.warning,
-                          title: '近日已学',
-                          value: '今天 4 词',
-                          skin: skin,
-                        ),
-                        _ListItem(
-                          icon: Icons.check_circle,
-                          iconColor: FuncColors.warning,
-                          title: '全部已学',
-                          value: '250 词',
-                          skin: skin,
-                        ),
-                      ],
-                    ),
+                    _LearningListGroup(skin: skin),
                     const SizedBox(height: 16),
                     // 列表组 2：单词本 / 句库 / 笔记
-                    _ListGroup(
-                      children: [
-                        // 只订阅收藏计数快照，避免集合以外的状态变化导致整页 rebuild。
-                        Selector<LearningCollectionsReader, int>(
-                          selector: (_, s) => s.favoriteCount,
-                          builder: (context, favCount, _) => _ListItem(
-                            icon: Icons.book_outlined,
-                            iconColor: FuncColors.info,
-                            title: '单词本',
-                            value: '$favCount 词',
-                            skin: skin,
-                            onTap: () => Navigator.pushNamed(context, MyFavPage.routeName),
-                          ),
-                        ),
-                        _ListItem(
-                          icon: Icons.format_quote,
-                          iconColor: FuncColors.info,
-                          title: '句库',
-                          value: '0 句',
-                          skin: skin,
-                        ),
-                        _ListItem(
-                          icon: Icons.edit_outlined,
-                          iconColor: FuncColors.info,
-                          title: '笔记',
-                          value: '19 条',
-                          skin: skin,
-                        ),
-                      ],
-                    ),
+                    _CollectionsListGroup(skin: skin),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -103,6 +60,100 @@ class MyContentPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 列表组 1：在学词书（真实词书）/ 近日已学（今日计数）/ 全部已学（队列已学）
+class _LearningListGroup extends StatelessWidget {
+  final ThemeVars skin;
+  const _LearningListGroup({required this.skin});
+
+  @override
+  Widget build(BuildContext context) {
+    return _ListGroup(
+      children: [
+        // 订阅当前词书变化（选书后回来自动刷新书名与词数）。
+        Selector<LearningSessionReader, Book?>(
+          selector: (_, s) => s.currentBook,
+          builder: (context, book, _) => _ListItem(
+            icon: Icons.menu_book,
+            iconColor: skin.success,
+            title: '在学词书',
+            value: book == null ? '未选择' : '${book.name} · ${book.wordCount} 词',
+            skin: skin,
+            onTap: () => Navigator.pushNamed(context, RouteNames.libSelect),
+          ),
+        ),
+        // 今日已学计数持久化在 AppPreferences（与 Learn 页目标进度同源）。
+        _ListItem(
+          icon: Icons.check_circle_outline,
+          iconColor: FuncColors.warning,
+          title: '近日已学',
+          value: '今天 ${AppPreferences().getTodayLearned()} 词',
+          skin: skin,
+        ),
+        // 订阅学习统计快照，展示当前队列已学卡片数。
+        Selector<LearningStatisticsReader, int>(
+          selector: (_, s) => s.learnedCount,
+          builder: (context, learned, _) => _ListItem(
+            icon: Icons.check_circle,
+            iconColor: FuncColors.warning,
+            title: '全部已学',
+            value: '$learned 词',
+            skin: skin,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 列表组 2：单词本 / 句库 / 笔记（真实计数 + 句库入口）
+class _CollectionsListGroup extends StatelessWidget {
+  final ThemeVars skin;
+  const _CollectionsListGroup({required this.skin});
+
+  @override
+  Widget build(BuildContext context) {
+    return _ListGroup(
+      children: [
+        // 只订阅收藏计数快照，避免集合以外的状态变化导致整页 rebuild。
+        Selector<LearningCollectionsReader, int>(
+          selector: (_, s) => s.favoriteCount,
+          builder: (context, favCount, _) => _ListItem(
+            icon: Icons.book_outlined,
+            iconColor: FuncColors.info,
+            title: '单词本',
+            value: '$favCount 词',
+            skin: skin,
+            onTap: () => Navigator.pushNamed(context, MyFavPage.routeName),
+          ),
+        ),
+        // 句库：异步统计收藏例句数，点击进入句库页。
+        FutureBuilder<List<FavSentenceData>>(
+          future: context.read<SentenceFavoritesStore>().list(),
+          builder: (context, snap) => _ListItem(
+            icon: Icons.format_quote,
+            iconColor: FuncColors.info,
+            title: '句库',
+            value: '${snap.data?.length ?? 0} 句',
+            skin: skin,
+            onTap: () => Navigator.pushNamed(context, RouteNames.myFavSentence),
+          ),
+        ),
+        // 笔记：异步统计全部笔记条数（SharedPreferences 前缀扫描）。
+        FutureBuilder<int>(
+          future: context.read<WordNotesStore>().countAll(),
+          builder: (context, snap) => _ListItem(
+            icon: Icons.edit_outlined,
+            iconColor: FuncColors.info,
+            title: '笔记',
+            value: '${snap.data ?? 0} 条',
+            skin: skin,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -134,13 +185,28 @@ class _NavBar extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(Icons.lightbulb_outline, size: 22, color: skin.text1),
-            tooltip: '提示',
-            onPressed: () {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text('提示功能开发中...'), duration: Duration(seconds: 1)));
-            },
+            tooltip: '功能说明',
+            onPressed: () => _showHelpDialog(context),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showHelpDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('我的内容'),
+        content: const Text(
+          '这里汇总你的学习资料：\n\n'
+          '· 随身听：按队列朗读单词，随时随地磨耳朵\n'
+          '· 听写：选择词书进入听写练习\n'
+          '· 在学词书：当前词书与词数，点击可更换\n'
+          '· 近日/全部已学：今日与本次队列的学习进度\n'
+          '· 单词本/句库/笔记：收藏的词、例句与学习笔记',
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('知道了'))],
       ),
     );
   }
@@ -157,7 +223,7 @@ class _HorizontalCards extends StatelessWidget {
       height: 160,
       child: Row(
         children: [
-          // 随身听卡片（橙色渐变）
+          // 随身听卡片（橙色渐变）：整卡进入随身听，回顾=待复习数，预习=生词本数
           Expanded(
             child: _FeatureCard(
               gradient: LinearGradient(
@@ -169,15 +235,24 @@ class _HorizontalCards extends StatelessWidget {
               iconBg: skin.accent,
               title: '随身听',
               skin: skin,
+              onTap: () => Navigator.pushNamed(context, RouteNames.personalStereo),
               children: [
-                _MiniCard(title: '回顾', count: '4 词', accent: skin.accent, skin: skin),
+                Selector<LearningStatisticsReader, int>(
+                  selector: (_, s) => s.dueCount,
+                  builder: (context, due, _) =>
+                      _MiniCard(title: '回顾', count: '$due 词', accent: skin.accent, skin: skin),
+                ),
                 const SizedBox(width: 8),
-                _MiniCard(title: '预习', count: '20 词', accent: skin.accent, skin: skin),
+                Selector<NewWordsStore, int>(
+                  selector: (_, s) => s.count,
+                  builder: (context, newCount, _) =>
+                      _MiniCard(title: '预习', count: '$newCount 词', accent: skin.accent, skin: skin),
+                ),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          // 听写卡片（蓝色渐变）
+          // 听写卡片（蓝色渐变）：进入词书选择开始听写
           Expanded(
             child: _FeatureCard(
               gradient: LinearGradient(
@@ -189,7 +264,8 @@ class _HorizontalCards extends StatelessWidget {
               iconBg: FuncColors.info,
               title: '听写',
               skin: skin,
-              children: [_MiniCard(title: '单元测', count: '', accent: FuncColors.info, skin: skin)],
+              onTap: () => Navigator.pushNamed(context, RouteNames.libSelect),
+              children: [_MiniCard(title: '选择词书', count: '', accent: FuncColors.info, skin: skin)],
             ),
           ),
         ],
@@ -206,6 +282,7 @@ class _FeatureCard extends StatelessWidget {
   final String title;
   final ThemeVars skin;
   final List<Widget> children;
+  final VoidCallback? onTap;
 
   const _FeatureCard({
     required this.gradient,
@@ -214,48 +291,53 @@ class _FeatureCard extends StatelessWidget {
     required this.title,
     required this.skin,
     required this.children,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: iconBg.withValues(alpha: 0.2), blurRadius: 16, offset: const Offset(0, 6))],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 标题行：图标 + 标题
-            Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
-                  child: Icon(icon, color: AppColors.white100, size: 15),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: skin.text1),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // 子卡片行
-            Expanded(child: Row(children: children)),
-          ],
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [BoxShadow(color: iconBg.withValues(alpha: 0.2), blurRadius: 16, offset: const Offset(0, 6))],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 标题行：图标 + 标题
+              Row(
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+                    child: Icon(icon, color: AppColors.white100, size: 15),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: skin.text1),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // 子卡片行
+              Expanded(child: Row(children: children)),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// 子卡片（回顾/预习/单元测）带播放按钮
+/// 子卡片（回顾/预习/选择词书）带播放按钮
 class _MiniCard extends StatelessWidget {
   final String title;
   final String count;

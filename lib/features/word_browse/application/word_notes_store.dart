@@ -6,6 +6,9 @@ import 'package:word_app/models/word_note.dart';
 abstract interface class WordNotesStore {
   Future<List<WordNote>> listForWord(int wordId);
 
+  /// 全量笔记计数（跨所有单词，"我的内容-笔记"真实计数）。
+  Future<int> countAll();
+
   Future<void> add(WordNote note);
 
   Future<void> update(WordNote note);

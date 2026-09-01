@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
+import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -180,6 +181,18 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                   _selectedIndices.add(index);
                 }
               });
+            } else {
+              // 非编辑态：进入例句详情页（batch5 接通孤儿页）。
+              Navigator.pushNamed(
+                context,
+                RouteNames.sentenceDetail,
+                arguments: <String, dynamic>{
+                  'word': favSentence.word,
+                  'sentence': sentenceData.e,
+                  'translation': sentenceData.c,
+                  'source': sentenceData.b,
+                },
+              );
             }
           },
           child: Container(

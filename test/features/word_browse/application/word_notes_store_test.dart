@@ -11,6 +11,9 @@ class _MockWordNotesStore implements WordNotesStore {
   Future<List<WordNote>> listForWord(int wordId) async => _notes.where((n) => n.wordId == wordId).toList();
 
   @override
+  Future<int> countAll() async => _notes.length;
+
+  @override
   Future<void> add(WordNote note) async {
     _notes.add(note.copyWith(id: _nextId++));
   }

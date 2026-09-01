@@ -53,10 +53,7 @@ class ProfileScreen extends StatelessWidget {
                   IconButton(
                     icon: Icon(Icons.mail_outline, color: skin.colors.text1, size: 22),
                     tooltip: '消息',
-                    onPressed: () {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(const SnackBar(content: Text('消息功能开发中...'), duration: Duration(seconds: 1)));
-                    },
+                    onPressed: () => Navigator.pushNamed(context, RouteNames.messages),
                   ),
                 ],
               ),
@@ -82,6 +79,10 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     // 菜单列表
                     _buildMenu(skin, resp, context),
+                    const SizedBox(height: 16),
+                    // 我的学习菜单组（足迹/内容/随身听/装备）
+                    _buildMyLearningMenu(skin, resp, context),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -193,7 +194,13 @@ class ProfileScreen extends StatelessWidget {
               onTap: () => Navigator.pushNamed(context, RouteNames.appearance),
             ),
             Divider(height: 1, color: skin.colors.divider),
-            _menuRow(Icons.tune, FuncColors.purple, '学习偏好', skin),
+            _menuRow(
+              Icons.tune,
+              FuncColors.purple,
+              '学习偏好',
+              skin,
+              onTap: () => Navigator.pushNamed(context, RouteNames.settings),
+            ),
             Divider(height: 1, color: skin.colors.divider),
             _menuRow(
               Icons.settings_outlined,
@@ -201,6 +208,50 @@ class ProfileScreen extends StatelessWidget {
               '更多设置',
               skin,
               onTap: () => Navigator.pushNamed(context, MoreSettingsPage.routeName),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// "我的学习"菜单组：足迹/我的内容/随身听/我的装备（batch5 接通四个孤儿页入口）。
+  Widget _buildMyLearningMenu(SkinSystem skin, AppResponsive resp, BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
+      child: MwCard(
+        child: Column(
+          children: [
+            _menuRow(
+              Icons.timeline,
+              FuncColors.success,
+              '学习足迹',
+              skin,
+              onTap: () => Navigator.pushNamed(context, RouteNames.footMark),
+            ),
+            Divider(height: 1, color: skin.colors.divider),
+            _menuRow(
+              Icons.grid_view_outlined,
+              FuncColors.info,
+              '我的内容',
+              skin,
+              onTap: () => Navigator.pushNamed(context, RouteNames.myContent),
+            ),
+            Divider(height: 1, color: skin.colors.divider),
+            _menuRow(
+              Icons.headphones_outlined,
+              FuncColors.purple,
+              '随身听',
+              skin,
+              onTap: () => Navigator.pushNamed(context, RouteNames.personalStereo),
+            ),
+            Divider(height: 1, color: skin.colors.divider),
+            _menuRow(
+              Icons.inventory_2_outlined,
+              FuncColors.warning,
+              '我的装备',
+              skin,
+              onTap: () => Navigator.pushNamed(context, RouteNames.myEquip),
             ),
           ],
         ),

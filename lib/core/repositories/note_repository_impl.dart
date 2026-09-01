@@ -28,6 +28,22 @@ class NoteRepositoryImpl implements NoteRepository {
   }
 
   @override
+  Future<int> countAllNotes() async {
+    final prefs = await SharedPreferences.getInstance();
+    // 笔记按 wordId 分键存储（notes_v1_<wordId>），全量计数 = 扫描所有笔记键求和。
+    var total = 0;
+    for (final key in prefs.getKeys()) {
+      if (!key.startsWith('${_notesKey}_')) continue;
+      final jsonStr = prefs.getString(key);
+      if (jsonStr == null || jsonStr.isEmpty) continue;
+      try {
+        total += (jsonDecode(jsonStr) as List).length;
+      } catch (_) {}
+    }
+    return total;
+  }
+
+  @override
   Future<int> addNote(int wordId, String content, {String word = ''}) async {
     final notes = await getNotesByWord(wordId);
     final now = DateTime.now();

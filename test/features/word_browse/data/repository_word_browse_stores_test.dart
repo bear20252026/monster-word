@@ -99,6 +99,9 @@ class _FakeNoteRepository implements NoteRepository {
 
   @override
   Future<List<WordNote>> getNotesByWord(int wordId) async => notes;
+  @override
+  Future<int> countAllNotes() async => 0;
+
 
   @override
   Future<int> insertNote(WordNote note) async {

@@ -10,6 +10,9 @@ abstract class NoteRepository {
   /// 获取单词的所有笔记
   Future<List<WordNote>> getNotesByWord(int wordId);
 
+  /// 全量笔记计数（跨所有单词，用于"我的内容-笔记"真实计数）
+  Future<int> countAllNotes();
+
   /// 添加笔记（返回 noteId）
   Future<int> addNote(int wordId, String content, {String word = ''});
 
