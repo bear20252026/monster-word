@@ -39,6 +39,13 @@ class LearningPreferencesState extends ChangeNotifier {
   bool get splitMnemonic => _preferences.splitMnemonic;
   bool get showConfusableMeanings => _preferences.showConfusableMeanings;
 
+  /// 助记段落顺序（单词详情页消费）。
+  List<String> get mnemonicSegments =>
+      _preferences.mnemonicOrder.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+
+  bool get showSimilarWords => _preferences.showSimilarWords;
+  bool get showRoots => _preferences.showRoots;
+
   Future<void> initialize() async {
     _isLoading = true;
     _loadError = null;
@@ -70,6 +77,10 @@ class LearningPreferencesState extends ChangeNotifier {
   Future<void> setAudioMeaningQuestion(bool value) => _update(_preferences.copyWith(audioMeaningQuestion: value));
   Future<void> setSplitMnemonic(bool value) => _update(_preferences.copyWith(splitMnemonic: value));
   Future<void> setShowConfusableMeanings(bool value) => _update(_preferences.copyWith(showConfusableMeanings: value));
+  Future<void> setMnemonicOrder(List<String> segments) =>
+      _update(_preferences.copyWith(mnemonicOrder: segments.join(',')));
+  Future<void> setShowSimilarWords(bool value) => _update(_preferences.copyWith(showSimilarWords: value));
+  Future<void> setShowRoots(bool value) => _update(_preferences.copyWith(showRoots: value));
 
   Future<void> _update(LearningPreferences next) async {
     if (identical(next, _preferences)) return;

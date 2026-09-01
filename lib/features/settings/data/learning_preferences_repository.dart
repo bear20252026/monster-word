@@ -25,6 +25,9 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
   static const audioMeaningQuestionKey = 'audio_meaning_question_v1';
   static const splitMnemonicKey = 'split_mnemonic_v1';
   static const showConfusableMeaningsKey = 'show_confusable_meanings_v1';
+  static const mnemonicOrderKey = 'mnemonic_order_v1';
+  static const showSimilarWordsKey = 'show_similar_words_v1';
+  static const showRootsKey = 'show_roots_v1';
 
   @override
   Future<LearningPreferences> load() async {
@@ -47,6 +50,9 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
       audioMeaningQuestion: prefs.getBool(audioMeaningQuestionKey) ?? defaults.audioMeaningQuestion,
       splitMnemonic: prefs.getBool(splitMnemonicKey) ?? defaults.splitMnemonic,
       showConfusableMeanings: prefs.getBool(showConfusableMeaningsKey) ?? defaults.showConfusableMeanings,
+      mnemonicOrder: prefs.getString(mnemonicOrderKey) ?? defaults.mnemonicOrder,
+      showSimilarWords: prefs.getBool(showSimilarWordsKey) ?? defaults.showSimilarWords,
+      showRoots: prefs.getBool(showRootsKey) ?? defaults.showRoots,
     );
   }
 
@@ -70,6 +76,9 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
       prefs.setBool(audioMeaningQuestionKey, preferences.audioMeaningQuestion),
       prefs.setBool(splitMnemonicKey, preferences.splitMnemonic),
       prefs.setBool(showConfusableMeaningsKey, preferences.showConfusableMeanings),
+      prefs.setString(mnemonicOrderKey, preferences.mnemonicOrder),
+      prefs.setBool(showSimilarWordsKey, preferences.showSimilarWords),
+      prefs.setBool(showRootsKey, preferences.showRoots),
     ]);
   }
 }

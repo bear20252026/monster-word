@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/tokens/design_language.dart';
+import 'package:word_app/features/settings/domain/learning_preferences.dart';
 import 'package:word_app/features/settings/presentation/learning_preferences_state.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -69,18 +70,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  /// 「即将上线」标签
-  Widget _comingSoonBadge() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4)),
-      child: const Text(
-        '即将上线',
-        style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w500),
-      ),
-    );
-  }
-
   Widget _buildPreferences(BuildContext context) {
     final resp = context.responsive;
     final settings = context.watch<LearningPreferencesState>();
@@ -129,15 +118,7 @@ class _SettingsPageState extends State<SettingsPage> {
         // --- 第五组：题型/助记 ---
         _SettingGroup([
           _SwitchCell('听音选义题型', value: settings.audioMeaningQuestion, onChanged: settings.setAudioMeaningQuestion),
-          _Cell(
-            title: '助记顺序',
-            value: '派生词 - 词组搭配 - 特殊变形 - …',
-            trailing: _comingSoonBadge(),
-            onTap: () {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text('助记顺序设置即将上线，敬请期待'), duration: Duration(seconds: 1)));
-            },
-          ),
+          _Cell(title: '助记顺序', value: settings.mnemonicSegments.join(' - '), onTap: () => _showMnemonicOrderDialog()),
           _SwitchCellWithDesc(
             title: '拆分助记',
             desc: '学习时自动拆分单词',
@@ -154,16 +135,7 @@ class _SettingsPageState extends State<SettingsPage> {
         SizedBox(height: 16),
 
         // --- 第六组：更多设置 ---
-        _SettingGroup([
-          _Cell(
-            title: '更多学习偏好',
-            trailing: _comingSoonBadge(),
-            onTap: () {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text('更多学习偏好即将上线，敬请期待'), duration: Duration(seconds: 1)));
-            },
-          ),
-        ]),
+        _SettingGroup([_Cell(title: '更多学习偏好', onTap: () => _showMorePrefsDialog())]),
       ],
     );
   }
@@ -456,6 +428,113 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   // ===========================================================================
+  // 弹窗 9：助记顺序（上下移动调整段落顺序，单词详情页按此排序消费）
+  // ===========================================================================
+  void _showMnemonicOrderDialog() {
+    _showBottomSheet(
+      title: '助记顺序',
+      child: StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final skin = context.skin.colors;
+          final segments = _preferences.mnemonicSegments;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('单词详情页助记段落的显示顺序', style: TextStyle(fontSize: 13, color: skin.text3)),
+              SizedBox(height: 12),
+              for (var i = 0; i < segments.length; i++)
+                Container(
+                  margin: EdgeInsets.only(bottom: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(12)),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text('${i + 1}. ${segments[i]}', style: TextStyle(fontSize: 15, color: skin.text1)),
+                      ),
+                      GestureDetector(
+                        onTap: i == 0
+                            ? null
+                            : () async {
+                                final next = List.of(segments);
+                                next[i] = next[i - 1];
+                                next[i - 1] = segments[i];
+                                await _preferences.setMnemonicOrder(next);
+                                if (ctx.mounted) setSheetState(() {});
+                              },
+                        child: Icon(Icons.arrow_upward, size: 20, color: i == 0 ? skin.text3 : skin.accent),
+                      ),
+                      SizedBox(width: 16),
+                      GestureDetector(
+                        onTap: i == segments.length - 1
+                            ? null
+                            : () async {
+                                final next = List.of(segments);
+                                next[i] = next[i + 1];
+                                next[i + 1] = segments[i];
+                                await _preferences.setMnemonicOrder(next);
+                                if (ctx.mounted) setSheetState(() {});
+                              },
+                        child: Icon(
+                          Icons.arrow_downward,
+                          size: 20,
+                          color: i == segments.length - 1 ? skin.text3 : skin.accent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              SizedBox(height: 4),
+              _SheetOptionRow(
+                label: '恢复默认顺序',
+                selected: false,
+                onTap: () async {
+                  await _preferences.setMnemonicOrder(
+                    LearningPreferences.defaultMnemonicOrder.split(',').map((s) => s.trim()).toList(),
+                  );
+                  if (ctx.mounted) setSheetState(() {});
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // 弹窗 10：更多学习偏好（形近词 / 词根词缀显示开关）
+  // ===========================================================================
+  void _showMorePrefsDialog() {
+    _showBottomSheet(
+      title: '更多学习偏好',
+      child: StatefulBuilder(
+        builder: (ctx, setSheetState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _SheetSwitchRow(
+              title: '显示形近词',
+              value: _preferences.showSimilarWords,
+              onChanged: (v) async {
+                await _preferences.setShowSimilarWords(v);
+                if (ctx.mounted) setSheetState(() {});
+              },
+            ),
+            _SheetSwitchRow(
+              title: '显示词根词缀',
+              value: _preferences.showRoots,
+              onChanged: (v) async {
+                await _preferences.setShowRoots(v);
+                if (ctx.mounted) setSheetState(() {});
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===========================================================================
   // 通用底部弹窗
   // ===========================================================================
   void _showBottomSheet({required String title, required Widget child}) {
@@ -538,8 +617,7 @@ class _Cell extends StatelessWidget {
   final String title;
   final String? value;
   final VoidCallback? onTap;
-  final Widget? trailing;
-  const _Cell({required this.title, this.value, this.onTap, this.trailing});
+  const _Cell({required this.title, this.value, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -562,7 +640,6 @@ class _Cell extends StatelessWidget {
                   padding: EdgeInsets.only(right: 8),
                   child: Text(value!, style: TextStyle(fontSize: 14, color: skin.text3)),
                 ),
-              if (trailing != null) ...[trailing!, SizedBox(width: 8)],
               Icon(Icons.chevron_right, size: 20, color: skin.text3),
             ],
           ),

@@ -3,6 +3,9 @@
 /// 该对象只表达用户显式可配置的学习偏好；主题、壁纸、账户和学习进度继续由各自
 /// 功能域拥有，避免重新形成全局偏好聚合状态。
 class LearningPreferences {
+  /// 助记段落默认顺序（逗号分隔存储；消费方：单词详情页助记段落排序）。
+  static const String defaultMnemonicOrder = '派生词,词组搭配,特殊变形,词根词缀';
+
   const LearningPreferences({
     required this.dailyNewWords,
     required this.autoPlayAudio,
@@ -20,6 +23,9 @@ class LearningPreferences {
     required this.audioMeaningQuestion,
     required this.splitMnemonic,
     required this.showConfusableMeanings,
+    required this.mnemonicOrder,
+    required this.showSimilarWords,
+    required this.showRoots,
   });
 
   const LearningPreferences.defaults()
@@ -38,7 +44,10 @@ class LearningPreferences {
       reviewPace = 10,
       audioMeaningQuestion = true,
       splitMnemonic = true,
-      showConfusableMeanings = true;
+      showConfusableMeanings = true,
+      mnemonicOrder = defaultMnemonicOrder,
+      showSimilarWords = true,
+      showRoots = true;
 
   final int dailyNewWords;
   final bool autoPlayAudio;
@@ -57,6 +66,15 @@ class LearningPreferences {
   final bool splitMnemonic;
   final bool showConfusableMeanings;
 
+  /// 助记段落顺序（逗号分隔的段落名，如 '派生词,词组搭配,特殊变形,词根词缀'）。
+  final String mnemonicOrder;
+
+  /// 单词详情页是否显示形近词（特殊变形）。
+  final bool showSimilarWords;
+
+  /// 单词详情页是否显示词根词缀。
+  final bool showRoots;
+
   LearningPreferences copyWith({
     int? dailyNewWords,
     bool? autoPlayAudio,
@@ -74,6 +92,9 @@ class LearningPreferences {
     bool? audioMeaningQuestion,
     bool? splitMnemonic,
     bool? showConfusableMeanings,
+    String? mnemonicOrder,
+    bool? showSimilarWords,
+    bool? showRoots,
   }) {
     return LearningPreferences(
       dailyNewWords: dailyNewWords ?? this.dailyNewWords,
@@ -92,6 +113,9 @@ class LearningPreferences {
       audioMeaningQuestion: audioMeaningQuestion ?? this.audioMeaningQuestion,
       splitMnemonic: splitMnemonic ?? this.splitMnemonic,
       showConfusableMeanings: showConfusableMeanings ?? this.showConfusableMeanings,
+      mnemonicOrder: mnemonicOrder ?? this.mnemonicOrder,
+      showSimilarWords: showSimilarWords ?? this.showSimilarWords,
+      showRoots: showRoots ?? this.showRoots,
     );
   }
 }

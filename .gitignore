@@ -62,3 +62,4 @@ logs/
 
 # Test coverage
 coverage/
+.workbuddy/
