@@ -20,6 +20,11 @@ class AccountInfoPage extends StatefulWidget {
 class _AccountInfoPageState extends State<AccountInfoPage> {
   AccountProfileState get _profile => context.read<AccountProfileState>();
 
+  /// 暂无第三方账号绑定能力：诚实提示而非静默无响应。
+  void _showBindNotSupported(BuildContext context, String platform) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('暂不支持绑定$platform，如有需要欢迎通过「帮助与反馈」告诉我们')));
+  }
+
   Future<void> _editNickname() async {
     final controller = TextEditingController(text: _profile.nickname);
     final result = await showDialog<String>(
@@ -272,7 +277,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             iconColor: const Color(0xFF12B7F5),
             platform: 'QQ',
             isBound: false,
-            onTap: () {},
+            onTap: () => _showBindNotSupported(context, 'QQ'),
           ),
           _buildDivider(skin),
           _buildBindRow(
@@ -281,7 +286,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             iconColor: const Color(0xFFE6162D),
             platform: '微博',
             isBound: false,
-            onTap: () {},
+            onTap: () => _showBindNotSupported(context, '微博'),
           ),
           _buildDivider(skin),
           _buildBindRow(
@@ -290,7 +295,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             iconColor: skin.text1,
             platform: 'Apple ID',
             isBound: false,
-            onTap: () {},
+            onTap: () => _showBindNotSupported(context, 'Apple ID'),
           ),
           SizedBox(height: 4),
         ],

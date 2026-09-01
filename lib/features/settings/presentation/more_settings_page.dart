@@ -14,15 +14,21 @@ import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
+import 'package:word_app/features/settings/application/update_check_service.dart';
+import 'package:word_app/features/settings/data/github_update_check_service.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/mw_button.dart';
 import 'package:word_app/widgets/mw_modal.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// 更多设置页
 class MoreSettingsPage extends StatefulWidget {
-  const MoreSettingsPage({super.key});
+  const MoreSettingsPage({super.key, this.updateServiceOverride});
+
+  final UpdateCheckService? updateServiceOverride;
+
   static const routeName = '/more_settings';
 
   @override
@@ -31,9 +37,12 @@ class MoreSettingsPage extends StatefulWidget {
 
 class _MoreSettingsPageState extends State<MoreSettingsPage> {
   bool _wallpaperParallax = true;
+  bool _isCheckingUpdate = false;
 
   /// 真实应用版本号（package_info_plus；替换原硬编码 v5.11.1）。
   String _appVersion = '';
+
+  UpdateCheckService get _updateService => widget.updateServiceOverride ?? GithubUpdateCheckService();
 
   @override
   void initState() {
@@ -204,11 +213,29 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
               ),
               onPressed: rating == 0
                   ? null
-                  : () {
+                  : () async {
                       Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('感谢您的 $rating 星好评！⭐'), backgroundColor: context.skin.colors.success),
-                      );
+                      // 评分走真实动作：好评跳仓库页（可 Star），低分引导到应用内反馈。
+                      if (rating >= 4) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('感谢您的 $rating 星好评！欢迎去 GitHub 给我们一个 ⭐'),
+                            backgroundColor: context.skin.colors.success,
+                          ),
+                        );
+                        await launchUrl(
+                          Uri.parse(GithubUpdateCheckService.repoUrl),
+                          mode: LaunchMode.externalApplication,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('感谢反馈！已为您打开意见反馈页，帮我们做得更好'),
+                            backgroundColor: context.skin.colors.success,
+                          ),
+                        );
+                        Navigator.pushNamed(context, RouteNames.feedback);
+                      }
                     },
               child: const Text('提交'),
             ),
@@ -218,38 +245,139 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     );
   }
 
-  /// 检查更新弹窗
-  void _showUpdateDialog(BuildContext context) {
-    showDialog(
+  /// 检查更新：真实请求 GitHub Releases 最新 tag 与当前版本比较。
+  Future<void> _checkForUpdate() async {
+    if (_isCheckingUpdate) return;
+    setState(() => _isCheckingUpdate = true);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('正在检查更新…'), duration: Duration(seconds: 2)));
+
+    final result = await _updateService.check(currentVersion: _appVersion);
+    if (!mounted) return;
+    setState(() => _isCheckingUpdate = false);
+
+    if (result.failed) {
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: context.skin.colors.cardBg,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Column(
+            children: [
+              const Text('📡', style: TextStyle(fontSize: 36)),
+              SizedBox(height: 8),
+              Text('检查失败', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
+            ],
+          ),
+          content: Text(
+            '无法连接更新服务器，请检查网络后重试',
+            style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
+            textAlign: TextAlign.center,
+          ),
+          actions: [_okButton(ctx)],
+        ),
+      );
+      return;
+    }
+
+    if (result.hasUpdate) {
+      final notesPreview = result.notes == null ? '' : _firstLines(result.notes!, 6);
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: context.skin.colors.cardBg,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Column(
+            children: [
+              const Text('🎉', style: TextStyle(fontSize: 36)),
+              SizedBox(height: 8),
+              Text(
+                '发现新版本 v${result.latestVersion}',
+                style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '当前版本 v${result.currentVersion}，可前往下载页更新',
+                style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
+              ),
+              if (notesPreview.isNotEmpty) ...[
+                SizedBox(height: 12),
+                Text(notesPreview, style: MistralTypography.bodySm.copyWith(color: context.skin.colors.text3)),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('下次再说', style: TextStyle(color: context.skin.colors.text3)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.skin.colors.accent,
+                foregroundColor: context.skin.colors.onGlassAccent,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await launchUrl(Uri.parse(result.releaseUrl), mode: LaunchMode.externalApplication);
+              },
+              child: const Text('前往下载'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // 真实对比后确认已是最新。
+    await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.skin.colors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Column(
           children: [
-            const Text('🎉', style: TextStyle(fontSize: 36)),
+            const Text('✅', style: TextStyle(fontSize: 36)),
             SizedBox(height: 8),
             Text('已是最新版本', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
           ],
         ),
         content: Text(
-          _appVersion.isEmpty ? '当前已是最新版本，无需更新' : '当前版本 v$_appVersion 已是最新，无需更新',
+          _appVersion.isEmpty ? '当前已是最新版本' : '当前版本 v$_appVersion 已是最新（远端 v${result.latestVersion}）',
           style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
           textAlign: TextAlign.center,
         ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: context.skin.colors.accent,
-              foregroundColor: context.skin.colors.onGlassAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('知道了'),
-          ),
-        ],
+        actions: [_okButton(ctx)],
       ),
     );
+  }
+
+  Widget _okButton(BuildContext ctx) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: context.skin.colors.accent,
+        foregroundColor: context.skin.colors.onGlassAccent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      onPressed: () => Navigator.pop(ctx),
+      child: const Text('知道了'),
+    );
+  }
+
+  /// 更新日志摘要：取前 [maxLines] 行，压掉空行与图片标记。
+  String _firstLines(String notes, int maxLines) {
+    final lines = notes
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty && !line.startsWith('!['))
+        .toList();
+    final picked = lines.take(maxLines).join('\n');
+    return lines.length > maxLines ? '$picked\n…' : picked;
   }
 
   /// 词库全量覆盖重建：确认 → 执行（不可取消的进度弹窗）→ 完整性结果
@@ -459,7 +587,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         icon: Icons.system_update_outlined,
         iconColor: MistralColors.link,
         title: '检查更新',
-        onTap: () => _showUpdateDialog(context),
+        onTap: () => _checkForUpdate(),
       ),
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(

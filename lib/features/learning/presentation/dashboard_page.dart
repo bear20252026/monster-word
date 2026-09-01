@@ -246,15 +246,13 @@ class DashboardPage extends StatelessWidget {
 
       // 获取尖叫币功能域提供的签到数据
       final scareCoinStore = context.read<ScareCoinStore>();
+      // 海报总词数与统计面板同源（单一事实来源：FSRS 统计的 total）。
+      final totalWords = context.read<LearningStatisticsState>().memoryStats['total'] ?? 0;
       final totalDays = (await scareCoinStore.checkinDates()).length;
       final streakDays = await scareCoinStore.streak();
 
       // 生成并分享
-      await ShareImageService.generateAndShare(
-        totalWords: 25000, // 词库总数作为学习参考
-        streakDays: streakDays,
-        totalDays: totalDays,
-      );
+      await ShareImageService.generateAndShare(totalWords: totalWords, streakDays: streakDays, totalDays: totalDays);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('分享失败: $e')));

@@ -29,6 +29,9 @@
 | REG-FDB-002 | 空内容提交未拦截（假提交流程连带） | 同上 | 第十七批 | 同上（空内容 SnackBar 提示、不进感谢页） |
 | REG-NET-001 | 网络诊断硬编码「全部成功」，断网也显示一切正常（误导性假语义） | 诊断步骤为常量列表，无真实检测 | 第十七批 | 同上（mock 失败步骤时页面显示 error 图标与失败文案） |
 | REG-MSG-003 | 消息中心入口红点硬编码常显（无未读也亮红点）；另一入口则完全无角标 | my_space 入口红点为静态装饰、未接数据源 | 第十八批 | `test/regression/regression_message_badge_test.dart`（有未读显数字、已读消失、>99 显 99+） |
+| REG-UPD-001 | 「检查更新」无任何版本比对，永远弹「已是最新版本」 | 更新弹窗为静态 UI，无远端请求与比较逻辑 | 第十九批 | `test/features/settings/data/github_update_check_service_test.dart`（版本比较纯函数 + Release JSON 解析 + 失败不假装最新） |
+| REG-FDB-003 | 「评价应用」提交仅弹SnackBar，无真实动作 | 假提交 | 第十九批 | 同上文件所在批次的页面改造：4-5 星跳 GitHub 仓库页、1-3 星引导应用内反馈 |
+| REG-POSTER-001 | 分享海报总词数硬编码 25000，与实际词库不符 | 海报数据源未接统计状态 | 第十九批 | `_sharePoster` 改读 LearningStatisticsState.memoryStats['total']（与统计面板同源，单一事实来源） |
 
 ## 修复新 bug 的流程
 
