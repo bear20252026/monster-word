@@ -1,8 +1,6 @@
 allprojects {
     repositories {
-        // 国内镜像加速（原 google()/mavenCentral() 走代理极慢）
-        maven { url = uri("https://maven.aliyun.com/repository/google") }
-        maven { url = uri("https://maven.aliyun.com/repository/central") }
+        // 直连官方源（本地走代理；CI 为海外网络，均无需镜像）
         google()
         mavenCentral()
     }
