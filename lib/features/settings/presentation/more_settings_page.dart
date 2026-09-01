@@ -5,9 +5,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/auth/app_session_controller.dart';
+import 'package:word_app/core/web/base_web_page.dart';
 import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
@@ -30,9 +32,124 @@ class MoreSettingsPage extends StatefulWidget {
 class _MoreSettingsPageState extends State<MoreSettingsPage> {
   bool _wallpaperParallax = true;
 
-  void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('$feature 功能即将上线'), duration: const Duration(seconds: 1)));
+  /// 真实应用版本号（package_info_plus；替换原硬编码 v5.11.1）。
+  String _appVersion = '';
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform()
+        .then((info) {
+          if (mounted) setState(() => _appVersion = info.version);
+        })
+        .catchError((e) => debugPrint('读取应用版本失败: $e'));
+  }
+
+  /// 违法不良信息举报：展示官方举报渠道（中央网信办 12377 / 公安 110 / 应用内反馈）。
+  void _showReportDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.skin.colors.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Column(
+          children: [
+            const Text('🚩', style: TextStyle(fontSize: 36)),
+            SizedBox(height: 8),
+            Text('举报渠道', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('如发现违法和不良信息，可通过以下官方渠道举报：', style: MistralTypography.bodySm.copyWith(color: context.skin.colors.text2)),
+            SizedBox(height: 12),
+            _reportChannel('中央网信办举报中心', '电话 12377 · 官网 www.12377.cn'),
+            SizedBox(height: 8),
+            _reportChannel('公安报警', '电话 110'),
+            SizedBox(height: 8),
+            _reportChannel('应用内问题反馈', '帮助与反馈入口'),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.skin.colors.accent,
+              foregroundColor: context.skin.colors.onGlassAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('知道了'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _reportChannel(String title, String detail) {
+    final skin = context.skin.colors;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('· ', style: TextStyle(fontWeight: FontWeight.bold)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: MistralTypography.bodySm.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+              ),
+              Text(detail, style: MistralTypography.caption.copyWith(color: skin.text3)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 关于我们弹窗（真实版本号 + 官网信息）。
+  void _showAboutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.skin.colors.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Column(
+          children: [
+            const Text('🧸', style: TextStyle(fontSize: 36)),
+            SizedBox(height: 8),
+            Text('Monster Word', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _appVersion.isEmpty ? '正在读取版本…' : '版本 $_appVersion',
+              style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '科学背单词 · 官网 www.beingfine.cn',
+              style: MistralTypography.bodySm.copyWith(color: context.skin.colors.text3),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.skin.colors.accent,
+              foregroundColor: context.skin.colors.onGlassAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('知道了'),
+          ),
+        ],
+      ),
+    );
   }
 
   /// 评价应用弹窗（5星评分）
@@ -116,7 +233,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           ],
         ),
         content: Text(
-          '当前版本 v5.11.1 已是最新，无需更新',
+          _appVersion.isEmpty ? '当前已是最新版本，无需更新' : '当前版本 v$_appVersion 已是最新，无需更新',
           style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
           textAlign: TextAlign.center,
         ),
@@ -272,122 +389,160 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
               child: ListView(
                 padding: EdgeInsets.symmetric(horizontal: resp.pageMargin, vertical: context.design.spacing.md),
                 children: [
-                  // 账号信息
-                  _SettingGroup([
-                    _Cell(
-                      icon: Icons.person_outline,
-                      iconColor: skin.colors.accent,
-                      title: '账号信息',
-                      subtitle: '点击设置',
-                      onTap: () => Navigator.pushNamed(context, RouteNames.accountInfo),
-                    ),
-                  ]),
+                  _buildAccountGroup(skin),
                   SizedBox(height: context.design.spacing.md),
-
-                  // 主页壁纸随动
-                  _SettingGroup([
-                    _SwitchCell(
-                      icon: Icons.wallpaper,
-                      iconColor: MistralColors.link,
-                      title: '主页壁纸随动',
-                      subtitle: '壁纸随设备陀螺仪轻微移动',
-                      value: _wallpaperParallax,
-                      onChanged: (v) => setState(() => _wallpaperParallax = v),
-                    ),
-                  ]),
+                  _buildWallpaperGroup(),
                   SizedBox(height: context.design.spacing.md),
-
-                  // 帮助与反馈 / 评价应用 / 检查更新 / 推荐给好友
-                  _SettingGroup([
-                    _Cell(
-                      icon: Icons.help_outline,
-                      iconColor: MistralColors.success,
-                      title: '帮助与反馈',
-                      onTap: () => Navigator.pushNamed(context, RouteNames.feedback),
-                    ),
-                    Divider(height: 1, color: skin.colors.divider, indent: 52),
-                    _Cell(
-                      icon: Icons.star_outline,
-                      iconColor: MistralColors.warning,
-                      title: '评价应用',
-                      subtitle: 'v5.11.1',
-                      onTap: () => _showRatingDialog(context),
-                    ),
-                    Divider(height: 1, color: skin.colors.divider, indent: 52),
-                    _Cell(
-                      icon: Icons.system_update_outlined,
-                      iconColor: MistralColors.link,
-                      title: '检查更新',
-                      onTap: () => _showUpdateDialog(context),
-                    ),
-                    Divider(height: 1, color: skin.colors.divider, indent: 52),
-                    _Cell(
-                      icon: Icons.storage_outlined,
-                      iconColor: MistralColors.link,
-                      title: '更新词库数据',
-                      subtitle: '全量覆盖重建本地词库（含全部词条与索引）',
-                      onTap: () => _showRebuildWordbookDialog(context),
-                    ),
-                    Divider(height: 1, color: skin.colors.divider, indent: 52),
-                    _Cell(
-                      icon: Icons.share_outlined,
-                      iconColor: MistralColors.ink,
-                      title: '推荐给好友',
-                      onTap: () => _showShareDialog(context),
-                    ),
-                  ]),
+                  _buildFeedbackGroup(skin),
                   SizedBox(height: context.design.spacing.md),
-
-                  // 兑换中心 / 举报
-                  _SettingGroup([
-                    _Cell(
-                      icon: Icons.redeem_outlined,
-                      iconColor: MistralColors.primary,
-                      title: '兑换中心',
-                      onTap: () => Navigator.pushNamed(context, RouteNames.redemption),
-                    ),
-                    Divider(height: 1, color: skin.colors.divider, indent: 52),
-                    _Cell(
-                      icon: Icons.flag_outlined,
-                      iconColor: MistralColors.danger,
-                      title: '违法不良信息举报',
-                      onTap: () => _showComingSoon('举报'),
-                    ),
-                  ]),
+                  _buildRedeemReportGroup(skin),
                   SizedBox(height: context.design.spacing.md),
-
-                  // 服务条款 / 隐私协议
-                  _SettingGroup([
-                    _Cell(icon: Icons.description_outlined, iconColor: skin.colors.text3, title: '服务条款', onTap: () {}),
-                    Divider(height: 1, color: skin.colors.divider, indent: 52),
-                    _Cell(icon: Icons.privacy_tip_outlined, iconColor: skin.colors.text3, title: '隐私协议', onTap: () {}),
-                    Divider(height: 1, color: skin.colors.divider, indent: 52),
-                    _Cell(
-                      icon: Icons.info_outline,
-                      iconColor: skin.colors.text3,
-                      title: '关于我们',
-                      subtitle: 'v5.11.1',
-                      onTap: () {},
-                    ),
-                  ]),
+                  _buildLegalGroup(skin),
                   SizedBox(height: context.design.spacing.xxl),
-
-                  // 退出登录
-                  SizedBox(
-                    width: double.infinity,
-                    child: MwButton.outlined(
-                      label: '退出登录',
-                      onTap: () => _showLogoutSheet(context),
-                      borderSide: BorderSide(color: skin.colors.danger, width: 1),
-                      textColor: skin.colors.danger,
-                    ),
-                  ),
+                  _buildLogoutButton(skin),
                   SizedBox(height: context.design.spacing.xxl),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// 账号信息组
+  Widget _buildAccountGroup(SkinSystem skin) {
+    return _SettingGroup([
+      _Cell(
+        icon: Icons.person_outline,
+        iconColor: skin.colors.accent,
+        title: '账号信息',
+        subtitle: '点击设置',
+        onTap: () => Navigator.pushNamed(context, RouteNames.accountInfo),
+      ),
+    ]);
+  }
+
+  /// 主页壁纸随动组
+  Widget _buildWallpaperGroup() {
+    return _SettingGroup([
+      _SwitchCell(
+        icon: Icons.wallpaper,
+        iconColor: MistralColors.link,
+        title: '主页壁纸随动',
+        subtitle: '壁纸随设备陀螺仪轻微移动',
+        value: _wallpaperParallax,
+        onChanged: (v) => setState(() => _wallpaperParallax = v),
+      ),
+    ]);
+  }
+
+  /// 帮助与反馈 / 评价应用 / 检查更新 / 更新词库 / 推荐给好友组
+  Widget _buildFeedbackGroup(SkinSystem skin) {
+    return _SettingGroup([
+      _Cell(
+        icon: Icons.help_outline,
+        iconColor: MistralColors.success,
+        title: '帮助与反馈',
+        onTap: () => Navigator.pushNamed(context, RouteNames.feedback),
+      ),
+      Divider(height: 1, color: skin.colors.divider, indent: 52),
+      _Cell(
+        icon: Icons.star_outline,
+        iconColor: MistralColors.warning,
+        title: '评价应用',
+        subtitle: _appVersion.isEmpty ? null : 'v$_appVersion',
+        onTap: () => _showRatingDialog(context),
+      ),
+      Divider(height: 1, color: skin.colors.divider, indent: 52),
+      _Cell(
+        icon: Icons.system_update_outlined,
+        iconColor: MistralColors.link,
+        title: '检查更新',
+        onTap: () => _showUpdateDialog(context),
+      ),
+      Divider(height: 1, color: skin.colors.divider, indent: 52),
+      _Cell(
+        icon: Icons.storage_outlined,
+        iconColor: MistralColors.link,
+        title: '更新词库数据',
+        subtitle: '全量覆盖重建本地词库（含全部词条与索引）',
+        onTap: () => _showRebuildWordbookDialog(context),
+      ),
+      Divider(height: 1, color: skin.colors.divider, indent: 52),
+      _Cell(
+        icon: Icons.share_outlined,
+        iconColor: MistralColors.ink,
+        title: '推荐给好友',
+        onTap: () => _showShareDialog(context),
+      ),
+    ]);
+  }
+
+  /// 兑换中心 / 举报组
+  Widget _buildRedeemReportGroup(SkinSystem skin) {
+    return _SettingGroup([
+      _Cell(
+        icon: Icons.redeem_outlined,
+        iconColor: MistralColors.primary,
+        title: '兑换中心',
+        onTap: () => Navigator.pushNamed(context, RouteNames.redemption),
+      ),
+      Divider(height: 1, color: skin.colors.divider, indent: 52),
+      _Cell(
+        icon: Icons.flag_outlined,
+        iconColor: MistralColors.danger,
+        title: '违法不良信息举报',
+        onTap: () => _showReportDialog(context),
+      ),
+    ]);
+  }
+
+  /// 服务条款 / 隐私协议 / 关于我们组
+  Widget _buildLegalGroup(SkinSystem skin) {
+    return _SettingGroup([
+      _Cell(
+        icon: Icons.description_outlined,
+        iconColor: skin.colors.text3,
+        title: '服务条款',
+        onTap: () => _openLegalPage('https://www.beingfine.cn/terms', '服务条款'),
+      ),
+      Divider(height: 1, color: skin.colors.divider, indent: 52),
+      _Cell(
+        icon: Icons.privacy_tip_outlined,
+        iconColor: skin.colors.text3,
+        title: '隐私协议',
+        onTap: () => _openLegalPage('https://www.beingfine.cn/privacy', '隐私协议'),
+      ),
+      Divider(height: 1, color: skin.colors.divider, indent: 52),
+      _Cell(
+        icon: Icons.info_outline,
+        iconColor: skin.colors.text3,
+        title: '关于我们',
+        subtitle: _appVersion.isEmpty ? null : 'v$_appVersion',
+        onTap: () => _showAboutDialog(context),
+      ),
+    ]);
+  }
+
+  void _openLegalPage(String url, String title) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BaseWebPage(url: url, title: title),
+      ),
+    );
+  }
+
+  /// 退出登录按钮
+  Widget _buildLogoutButton(SkinSystem skin) {
+    return SizedBox(
+      width: double.infinity,
+      child: MwButton.outlined(
+        label: '退出登录',
+        onTap: () => _showLogoutSheet(context),
+        borderSide: BorderSide(color: skin.colors.danger, width: 1),
+        textColor: skin.colors.danger,
       ),
     );
   }
