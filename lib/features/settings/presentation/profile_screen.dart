@@ -15,6 +15,7 @@ import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/func_colors.dart';
+import 'package:word_app/widgets/message_badge_icon.dart';
 import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 import 'package:word_app/widgets/monster_icon.dart';
@@ -47,20 +48,11 @@ class ProfileScreen extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // 顶部导航栏（仅消息图标）
+            // 顶部导航栏（仅消息图标，未读角标由 MessageStore 驱动）
             Container(
               height: AppSpacing.navH,
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: [
-                  const Spacer(),
-                  IconButton(
-                    icon: Icon(Icons.mail_outline, color: skin.colors.text1, size: 22),
-                    tooltip: '消息',
-                    onPressed: () => Navigator.pushNamed(context, RouteNames.messages),
-                  ),
-                ],
-              ),
+              child: Row(children: [const Spacer(), const MessageBadgeIcon()]),
             ),
             Expanded(
               child: SingleChildScrollView(

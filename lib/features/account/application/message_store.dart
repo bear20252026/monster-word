@@ -40,6 +40,18 @@ class MessageStore extends ChangeNotifier {
   /// 是否已完成首次加载。
   bool get loaded => _loaded;
 
+  /// 测试专用：直接注入指定数量的未读消息（不经持久化刷新；
+  /// 同时标记已加载，避免组件补载逻辑覆盖种子数据）。
+  @visibleForTesting
+  void debugSeedUnread(int count) {
+    _messages = List<MessageItem>.generate(
+      count,
+      (int i) => MessageItem(id: 'seed-$i', title: '消息 $i', content: '内容 $i', time: '2026-01-01 08:00'),
+    );
+    _loaded = true;
+    notifyListeners();
+  }
+
   /// 加载消息：读持久化 → 刷新学习类消息 → 持久化 → 通知。
   Future<void> load() async {
     final prefs = await _prefs();

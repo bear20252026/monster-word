@@ -28,6 +28,7 @@
 | REG-FDB-001 | 反馈提交为 800ms 假延迟，内容直接丢弃却显示「感谢反馈」 | `_submit` 无任何持久化/上报逻辑 | 第十七批 | `test/regression/regression_feedback_diagnosis_test.dart`（提交后本地存档可读回） |
 | REG-FDB-002 | 空内容提交未拦截（假提交流程连带） | 同上 | 第十七批 | 同上（空内容 SnackBar 提示、不进感谢页） |
 | REG-NET-001 | 网络诊断硬编码「全部成功」，断网也显示一切正常（误导性假语义） | 诊断步骤为常量列表，无真实检测 | 第十七批 | 同上（mock 失败步骤时页面显示 error 图标与失败文案） |
+| REG-MSG-003 | 消息中心入口红点硬编码常显（无未读也亮红点）；另一入口则完全无角标 | my_space 入口红点为静态装饰、未接数据源 | 第十八批 | `test/regression/regression_message_badge_test.dart`（有未读显数字、已读消失、>99 显 99+） |
 
 ## 修复新 bug 的流程
 

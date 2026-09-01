@@ -10,6 +10,7 @@ import 'package:word_app/features/checkin/application/checkin_status_reader.dart
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/message_badge_icon.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 
@@ -57,29 +58,8 @@ class MySpacePage extends StatelessWidget {
                             onPressed: () => Navigator.pop(context),
                           ),
                           const Spacer(),
-                          Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.mail_outline, size: 22),
-                                color: skin.text1,
-                                onPressed: () => Navigator.pushNamed(context, RouteNames.messages),
-                              ),
-                              Positioned(
-                                right: 8,
-                                top: 8,
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: skin.danger,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: skin.pageBg, width: 1.5),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          // 未读角标由 MessageStore 驱动（旧版为硬编码常显红点）。
+                          const MessageBadgeIcon(),
                           IconButton(
                             icon: const Icon(Icons.settings, size: 22),
                             color: skin.text1,
