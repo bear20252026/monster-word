@@ -23,6 +23,8 @@
 | REG-DICT-002 | 派生词/近义词跳转后新词头配旧词释义（数据错配） | 跳转用 `Provider.value` 复用同一 DetailState，该实例只 loadWord 过主词 | `305113b` | 同上（跳转后新页释义=新词数据） |
 | REG-DOCK-001 | 词书选择页底部工具栏与悬浮 Dock 重叠 | MainShell 悬浮 Dock 于内容之上，页面底部固定内容未预留 Dock 高度 | `305113b` | 同上（clearance = 安全区+16+64 契约锁定） |
 | REG-DICT-003（流程） | release 崩溃凭代码推断修复两批未中真因 | 未先读 error_boundary.log 真实异常栈 | `305113b` | 流程约定：release 崩溃排障第一步=读 `%APPDATA%/com.monsterword/Monster Word/logs/error_boundary.log` |
+| REG-MSG-001 | 消息页 build 期间调用 setState（itemBuilder 内触发 `_loadMessages()`），且真数据渲染暴露 ListTile 断言（背景色被 DecoratedBox 遮挡） | 假分页骨架在 itemBuilder 中同步触发 setState；ListTile 未包透明 Material | 第十六批 | `test/regression/regression_message_page_test.dart`（裸 push 渲染真实列表无异常） |
+| REG-MSG-002 | 消息中心「全部已读」空操作（TODO 壳子） | 页面为静态壳，无数据源 | 第十六批 | 同上（点击后 unreadCount=0 且按钮消失） |
 
 ## 修复新 bug 的流程
 

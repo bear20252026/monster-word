@@ -1,27 +1,15 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 移植自 v3.2 MessageActivity
-// 消息中心：显示系统通知、学习提醒等消息列表
+// 消息中心：显示本地消息（欢迎/打卡提醒/连续打卡里程碑等），
+// 数据源为 MessageStore（单一事实来源），支持全部已读与单条已读。
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'package:word_app/features/account/application/message_store.dart';
+import 'package:word_app/features/account/domain/message_item.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-
-class MessageItem {
-  final String id;
-  final String title;
-  final String content;
-  final String time;
-  final bool isRead;
-
-  const MessageItem({
-    required this.id,
-    required this.title,
-    required this.content,
-    required this.time,
-    this.isRead = false,
-  });
-}
 
 class MessagePage extends StatefulWidget {
   const MessagePage({super.key});
@@ -33,65 +21,38 @@ class MessagePage extends StatefulWidget {
 }
 
 class _MessagePageState extends State<MessagePage> {
-  List<MessageItem> _messages = [];
-  bool _isLoading = true;
-  bool _hasMore = true;
-
   @override
   void initState() {
     super.initState();
-    _loadMessages();
-  }
-
-  Future<void> _loadMessages({bool refresh = false}) async {
-    if (refresh) {
-      _hasMore = true;
-    }
-    setState(() => _isLoading = true);
-    // TODO: 调用 API 加载消息
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) {
-      setState(() {
-        _messages = [];
-        _isLoading = false;
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<MessageStore>().load();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
+    final store = context.watch<MessageStore>();
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
       body: SafeArea(
         child: Column(
           children: [
-            _buildNavBar(skin),
+            _buildNavBar(skin, store),
             Container(height: 1, color: skin.colors.divider),
             Expanded(
-              child: _isLoading
+              child: !store.loaded
                   ? Center(child: CircularProgressIndicator(color: MistralColors.primary))
-                  : _messages.isEmpty
+                  : store.messages.isEmpty
                   ? _buildEmptyView(skin)
                   : RefreshIndicator(
                       color: MistralColors.primary,
-                      onRefresh: () => _loadMessages(refresh: true),
+                      onRefresh: () => store.load(),
                       child: ListView.builder(
-                        itemCount: _messages.length + (_hasMore ? 1 : 0),
+                        itemCount: store.messages.length,
                         padding: EdgeInsets.symmetric(vertical: 8),
-                        itemBuilder: (context, index) {
-                          if (index == _messages.length) {
-                            _loadMessages();
-                            return Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: CircularProgressIndicator(color: MistralColors.primary, strokeWidth: 2),
-                              ),
-                            );
-                          }
-                          return _buildMessageItem(skin, _messages[index]);
-                        },
+                        itemBuilder: (context, index) => _buildMessageItem(skin, store, store.messages[index]),
                       ),
                     ),
             ),
@@ -101,7 +62,7 @@ class _MessagePageState extends State<MessagePage> {
     );
   }
 
-  Widget _buildNavBar(SkinSystem skin) {
+  Widget _buildNavBar(SkinSystem skin, MessageStore store) {
     return Container(
       height: 48,
       padding: EdgeInsets.symmetric(horizontal: 4),
@@ -116,12 +77,11 @@ class _MessagePageState extends State<MessagePage> {
           SizedBox(width: 4),
           Text('消息中心', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
-          TextButton(
-            onPressed: () {
-              // TODO: 全部标记已读
-            },
-            child: Text('全部已读', style: TextStyle(color: MistralColors.primary)),
-          ),
+          if (store.unreadCount > 0)
+            TextButton(
+              onPressed: () => store.markAllRead(),
+              child: Text('全部已读(${store.unreadCount})', style: TextStyle(color: MistralColors.primary)),
+            ),
         ],
       ),
     );
@@ -140,7 +100,7 @@ class _MessagePageState extends State<MessagePage> {
     );
   }
 
-  Widget _buildMessageItem(SkinSystem skin, MessageItem msg) {
+  Widget _buildMessageItem(SkinSystem skin, MessageStore store, MessageItem msg) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
@@ -148,41 +108,48 @@ class _MessagePageState extends State<MessagePage> {
         borderRadius: BorderRadius.circular(context.design.radius.lg),
         border: Border.all(color: skin.colors.divider),
       ),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: msg.isRead ? MistralColors.hairline : MistralColors.cream,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.notifications_outlined,
-            color: msg.isRead ? MistralColors.stone : MistralColors.primary,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          msg.title,
-          style: MistralTypography.bodyBold.copyWith(
-            color: skin.colors.text1,
-            fontWeight: msg.isRead ? FontWeight.normal : FontWeight.w600,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 4),
-            Text(
-              msg.content,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
+      // ListTile 背景与水波纹画在最近的 Material 上；透明 Material 保证
+      // 卡片背景色与点击涟漪可见（否则触发框架断言）。
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
+          onTap: () => store.markRead(msg.id),
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: msg.isRead ? MistralColors.hairline : MistralColors.cream,
+              shape: BoxShape.circle,
             ),
-            SizedBox(height: 4),
-            Text(msg.time, style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
-          ],
+            child: Icon(
+              Icons.notifications_outlined,
+              color: msg.isRead ? MistralColors.stone : MistralColors.primary,
+              size: 20,
+            ),
+          ),
+          title: Text(
+            msg.title,
+            style: MistralTypography.bodyBold.copyWith(
+              color: skin.colors.text1,
+              fontWeight: msg.isRead ? FontWeight.normal : FontWeight.w600,
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 4),
+              Text(
+                msg.content,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
+              ),
+              SizedBox(height: 4),
+              Text(msg.time, style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
+            ],
+          ),
         ),
       ),
     );

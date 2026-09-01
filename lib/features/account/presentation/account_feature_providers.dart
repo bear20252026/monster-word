@@ -9,8 +9,10 @@ import 'package:word_app/features/account/data/spug_sms_code_service.dart';
 import 'package:word_app/features/account/data/user_service.dart';
 import 'package:word_app/features/account/application/account_profile_store.dart';
 import 'package:word_app/features/account/application/avatar_storage.dart';
+import 'package:word_app/features/account/application/message_store.dart';
 import 'package:word_app/features/account/application/password_auth_store.dart';
 import 'package:word_app/features/account/application/sms_code_service.dart';
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/features/account/data/account_profile_repository.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
@@ -27,6 +29,8 @@ Widget buildAccountFeatureScope({required Widget child}) {
       Provider<AvatarStorage>(create: (_) => FileAvatarStorage()),
       Provider<SmsCodeService>(create: (_) => SpugSmsCodeService()),
       Provider<PasswordAuthStore>(create: (_) => SecurePasswordAuthStore()),
+      // 消息中心单一事实来源；跨 feature 仅依赖 checkin 的 application 端口（R4 通道）。
+      ChangeNotifierProvider(create: (context) => MessageStore(checkinReader: context.read<CheckinStatusReader>())),
       ChangeNotifierProvider(
         create: (context) => AccountProfileState(profileStore: context.read<AccountProfileStore>())..refresh(),
       ),
