@@ -19,6 +19,10 @@
 | REG-DATA-001 | 词库数据缺失/损坏 | 词库精简/回填事故 | `8c9486b` | `test/data_verification_test.dart`（50 本/25k 词校验，CI 前置 `test -s assets/db/wordbook.db.gz`） |
 | REG-UI-001 | 文字对比度不达标（无障碍退化） | 主题色随意取值 | `d320ceb` | `test/contrast_guard_test.dart`（WCAG AA 4.5:1 全主题守卫） |
 | REG-ARCH-001 | 模块间依赖越界 | 分层边界失守 | — | `test/architecture/import_guard_test.dart`（全库扫描） |
+| REG-DICT-001 | 词典详情页多区块「页面出错了」（release 真机） | `buildDictionaryDetailScope` 全工程零调用，页面 Consumer 抛 Provider not found（error_boundary.log 实锤） | `305113b` | `test/regression/regression_dictionary_page_test.dart`（裸 push 渲染不崩） |
+| REG-DICT-002 | 派生词/近义词跳转后新词头配旧词释义（数据错配） | 跳转用 `Provider.value` 复用同一 DetailState，该实例只 loadWord 过主词 | `305113b` | 同上（跳转后新页释义=新词数据） |
+| REG-DOCK-001 | 词书选择页底部工具栏与悬浮 Dock 重叠 | MainShell 悬浮 Dock 于内容之上，页面底部固定内容未预留 Dock 高度 | `305113b` | 同上（clearance = 安全区+16+64 契约锁定） |
+| REG-DICT-003（流程） | release 崩溃凭代码推断修复两批未中真因 | 未先读 error_boundary.log 真实异常栈 | `305113b` | 流程约定：release 崩溃排障第一步=读 `%APPDATA%/com.monsterword/Monster Word/logs/error_boundary.log` |
 
 ## 修复新 bug 的流程
 
