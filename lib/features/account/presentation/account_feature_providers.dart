@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/auth/app_session_controller.dart';
 import 'package:word_app/core/di/service_locator.dart';
 import 'package:word_app/features/account/data/file_avatar_storage.dart';
+import 'package:word_app/features/account/data/secure_password_auth_store.dart';
 import 'package:word_app/features/account/data/spug_sms_code_service.dart';
 import 'package:word_app/features/account/data/user_service.dart';
 import 'package:word_app/features/account/application/account_profile_store.dart';
 import 'package:word_app/features/account/application/avatar_storage.dart';
+import 'package:word_app/features/account/application/password_auth_store.dart';
 import 'package:word_app/features/account/application/sms_code_service.dart';
 import 'package:word_app/features/account/data/account_profile_repository.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
@@ -24,6 +26,7 @@ Widget buildAccountFeatureScope({required Widget child}) {
       Provider<AccountProfileStore>(create: (_) => AccountProfileRepository(userService: sl<UserService>())),
       Provider<AvatarStorage>(create: (_) => FileAvatarStorage()),
       Provider<SmsCodeService>(create: (_) => SpugSmsCodeService()),
+      Provider<PasswordAuthStore>(create: (_) => SecurePasswordAuthStore()),
       ChangeNotifierProvider(
         create: (context) => AccountProfileState(profileStore: context.read<AccountProfileStore>())..refresh(),
       ),

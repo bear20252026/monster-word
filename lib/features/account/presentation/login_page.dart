@@ -11,6 +11,7 @@ import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/animations.dart';
+import 'package:word_app/features/account/application/password_auth_store.dart';
 import 'package:word_app/features/account/application/sms_code_service.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 
@@ -103,8 +104,32 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     // ✅ 频率限制
     if (!_checkRateLimit()) return;
 
+    // 本机账号闭环：首次登录即创建（用户确认后），此后真校验密码。
+    // 密码校验走 PasswordAuthStore（盐值+哈希存平台安全存储），会话仍走本地语义。
+    final auth = context.read<PasswordAuthStore>();
+    final hasAccount = await auth.hasPassword(username);
+    if (!hasAccount) {
+      final confirmed = await _confirmCreateLocalAccount(username);
+      if (!confirmed || !mounted) return;
+      // 用户名本身是手机号时自动绑定，供忘记密码短信找回
+      final phone = RegExp(r'^1[3-9]\d{9}$').hasMatch(username) ? username : null;
+      try {
+        await auth.setPassword(username, password, phone: phone);
+      } catch (e) {
+        if (mounted) _showToast('创建本机账号失败：$e');
+        return;
+      }
+    } else {
+      final verified = await auth.verify(username, password);
+      if (!verified) {
+        _showToast('账号或密码不正确');
+        return;
+      }
+    }
+
     setState(() => _isLoading = true);
     try {
+      if (!mounted) return;
       final session = context.read<AppSessionState>();
       final success = await session.login(username, password);
       if (success && mounted) {
@@ -117,6 +142,107 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// 首次使用账号密码登录：确认创建本机账号（密码哈希仅存本机）。
+  Future<bool> _confirmCreateLocalAccount(String username) async {
+    if (!mounted) return false;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('创建本机账号'),
+        content: Text('「$username」首次使用，将把当前密码保存为本机登录密码（仅存本机，不上传）。\n\n继续使用该账号密码登录即视为创建。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('确认创建')),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
+  /// 忘记密码：账号绑定手机号 → 短信验证码 → 重置本机密码。
+  Future<void> _forgotPassword() async {
+    final auth = context.read<PasswordAuthStore>();
+    final sms = context.read<SmsCodeService>();
+
+    // 步骤 1：输入账号名（预填当前输入框）
+    final username = await _promptText(
+      title: '找回密码 · 第 1 步',
+      label: '请输入要找回的账号名',
+      initial: _phoneController.text.trim(),
+    );
+    if (username == null || username.isEmpty || !mounted) return;
+
+    if (!await auth.hasPassword(username)) {
+      _showToast('本机不存在账号「$username」');
+      return;
+    }
+    final phone = await auth.boundPhone(username);
+    if (phone == null) {
+      _showToast('该账号未绑定手机号，无法短信找回；手机号格式的用户名注册时自动绑定');
+      return;
+    }
+
+    // 步骤 2：发送验证码（复用 SmsCodeService 的频控与有效期）
+    final send = await sms.sendCode(phone);
+    if (!send.ok) {
+      _showToast('验证码发送失败：${send.message}');
+      return;
+    }
+    if (!mounted) return;
+    _showToast('验证码已发送至 $phone');
+
+    // 步骤 3：输入验证码 + 新密码
+    final code = await _promptText(title: '找回密码 · 第 2 步', label: '请输入短信验证码（发往 $phone）');
+    if (code == null || code.isEmpty || !mounted) return;
+    final verifyError = sms.verifyCode(phone, code);
+    if (verifyError != null) {
+      _showToast(verifyError);
+      return;
+    }
+
+    // 步骤 4：设置新密码
+    final newPassword = await _promptText(title: '找回密码 · 第 3 步', label: '请输入新密码（6-64 位）', obscure: true);
+    if (newPassword == null || newPassword.isEmpty || !mounted) return;
+    if (newPassword.length < 6 || newPassword.length > 64) {
+      _showToast('密码长度应为 6-64 个字符');
+      return;
+    }
+    try {
+      // 重置密码并保持原手机号绑定
+      await auth.setPassword(username, newPassword, phone: phone);
+    } catch (e) {
+      _showToast('重置失败：$e');
+      return;
+    }
+    _showToast('密码已重置，请用新密码登录');
+  }
+
+  /// 找回密码流程的通用单行输入弹窗；返回 null 表示取消。
+  Future<String?> _promptText({
+    required String title,
+    required String label,
+    String initial = '',
+    bool obscure = false,
+  }) {
+    final controller = TextEditingController(text: initial);
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          obscureText: obscure,
+          autofocus: true,
+          decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, null), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: const Text('确定')),
+        ],
+      ),
+    );
   }
 
   Future<void> _loginWithPhone(String phone, String code) async {
@@ -444,9 +570,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {
-                        // TODO: 忘记密码
-                      },
+                      onPressed: _forgotPassword,
                       child: Text('忘记密码？', style: MistralTypography.bodySm.copyWith(color: MistralColors.link)),
                     ),
                   ),
