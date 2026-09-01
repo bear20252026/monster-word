@@ -1,4 +1,5 @@
 import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/features/settings/domain/reminder_time.dart';
 
 /// 设置页所展示学习偏好的不可变值对象。
 ///
@@ -29,6 +30,7 @@ class LearningPreferences {
     required this.mnemonicOrder,
     required this.showSimilarWords,
     required this.showRoots,
+    required this.reminderTime,
   });
 
   const LearningPreferences.defaults()
@@ -37,7 +39,8 @@ class LearningPreferences {
       showPhonetic = true,
       darkMode = false,
       wechatReminder = false,
-      systemReminder = true,
+      // 系统提醒默认关闭：真实现下未开启即不调度，用户主动开启才申请通知权限。
+      systemReminder = false,
       pronunciationType = '美式',
       autoPlayExampleAudio = false,
       spellRightSwipe = true,
@@ -50,7 +53,8 @@ class LearningPreferences {
       showConfusableMeanings = true,
       mnemonicOrder = defaultMnemonicOrder,
       showSimilarWords = true,
-      showRoots = true;
+      showRoots = true,
+      reminderTime = defaultReminderTime;
 
   final int dailyNewWords;
   final bool autoPlayAudio;
@@ -78,6 +82,9 @@ class LearningPreferences {
   /// 单词详情页是否显示词根词缀。
   final bool showRoots;
 
+  /// 每日学习提醒时间（24 小时制 'HH:mm'，系统提醒开关的真实现消费方）。
+  final String reminderTime;
+
   LearningPreferences copyWith({
     int? dailyNewWords,
     bool? autoPlayAudio,
@@ -98,6 +105,7 @@ class LearningPreferences {
     String? mnemonicOrder,
     bool? showSimilarWords,
     bool? showRoots,
+    String? reminderTime,
   }) {
     return LearningPreferences(
       dailyNewWords: dailyNewWords ?? this.dailyNewWords,
@@ -119,6 +127,7 @@ class LearningPreferences {
       mnemonicOrder: mnemonicOrder ?? this.mnemonicOrder,
       showSimilarWords: showSimilarWords ?? this.showSimilarWords,
       showRoots: showRoots ?? this.showRoots,
+      reminderTime: reminderTime ?? this.reminderTime,
     );
   }
 }

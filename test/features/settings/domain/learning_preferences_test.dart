@@ -11,7 +11,8 @@ void main() {
       expect(prefs.showPhonetic, isTrue);
       expect(prefs.darkMode, isFalse);
       expect(prefs.wechatReminder, isFalse);
-      expect(prefs.systemReminder, isTrue);
+      // 真实现下默认关闭：未开启即不调度，用户主动开启才申请通知权限。
+      expect(prefs.systemReminder, isFalse);
       expect(prefs.pronunciationType, '美式');
       expect(prefs.autoPlayExampleAudio, isFalse);
       expect(prefs.spellRightSwipe, isTrue);

@@ -7,16 +7,22 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/tokens/design_language.dart';
+import 'package:word_app/features/settings/application/study_reminder_service.dart';
 import 'package:word_app/features/settings/domain/learning_preferences.dart';
 import 'package:word_app/features/settings/presentation/learning_preferences_state.dart';
+import 'package:word_app/features/settings/presentation/settings_bottom_sheet.dart';
+import 'package:word_app/features/settings/presentation/study_reminder_sheet.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({super.key, this.reminderServiceOverride});
 
   static const routeName = '/settings';
+
+  /// 测试注入学习提醒服务替身（null 时从 Provider 读取）。
+  final StudyReminderService? reminderServiceOverride;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -148,34 +154,13 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   // ===========================================================================
-  // 弹窗 1：学习提醒
+  // 弹窗 1：学习提醒（真实现见 study_reminder_sheet.dart）
   // ===========================================================================
   void _showReminderDialog() {
-    _showBottomSheet(
-      title: '学习提醒',
-      child: StatefulBuilder(
-        builder: (ctx, setSheetState) => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _SheetSwitchRow(
-              title: '微信提醒',
-              value: _preferences.wechatReminder,
-              onChanged: (v) async {
-                await _preferences.setWechatReminder(v);
-                if (ctx.mounted) setSheetState(() {});
-              },
-            ),
-            _SheetSwitchRow(
-              title: '系统提醒',
-              value: _preferences.systemReminder,
-              onChanged: (v) async {
-                await _preferences.setSystemReminder(v);
-                if (ctx.mounted) setSheetState(() {});
-              },
-            ),
-          ],
-        ),
-      ),
+    showStudyReminderSheet(
+      context,
+      preferences: _preferences,
+      service: widget.reminderServiceOverride ?? context.read<StudyReminderService>(),
     );
   }
 
@@ -189,7 +174,7 @@ class _SettingsPageState extends State<SettingsPage> {
         builder: (ctx, setSheetState) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _SheetOptionRow(
+            SettingsSheetOptionRow(
               label: '英式',
               selected: _preferences.pronunciationType == '英式',
               onTap: () async {
@@ -197,7 +182,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 if (ctx.mounted) setSheetState(() {});
               },
             ),
-            _SheetOptionRow(
+            SettingsSheetOptionRow(
               label: '美式',
               selected: _preferences.pronunciationType == '美式',
               onTap: () async {
@@ -221,7 +206,7 @@ class _SettingsPageState extends State<SettingsPage> {
         builder: (ctx, setSheetState) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _SheetSwitchRow(
+            SettingsSheetSwitchRow(
               title: '单词自动发音',
               value: _preferences.autoPlayAudio,
               onChanged: (v) async {
@@ -229,7 +214,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 if (ctx.mounted) setSheetState(() {});
               },
             ),
-            _SheetSwitchRow(
+            SettingsSheetSwitchRow(
               title: '词义页面例句自动发音',
               value: _preferences.autoPlayExampleAudio,
               onChanged: (v) async {
@@ -253,7 +238,7 @@ class _SettingsPageState extends State<SettingsPage> {
         builder: (ctx, setSheetState) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _SheetSwitchRow(
+            SettingsSheetSwitchRow(
               title: '右滑随手拼',
               value: _preferences.spellRightSwipe,
               onChanged: (v) async {
@@ -261,7 +246,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 if (ctx.mounted) setSheetState(() {});
               },
             ),
-            _SheetSwitchRow(
+            SettingsSheetSwitchRow(
               title: '复习拼写提示',
               value: _preferences.spellReviewTip,
               onChanged: (v) async {
@@ -345,7 +330,7 @@ class _SettingsPageState extends State<SettingsPage> {
           mainAxisSize: MainAxisSize.min,
           children: [5, 10, 15, 20]
               .map(
-                (n) => _SheetOptionRow(
+                (n) => SettingsSheetOptionRow(
                   label: '$n 词/小结',
                   selected: _preferences.learnPace == n,
                   onTap: () async {
@@ -411,7 +396,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Text('每组词数', style: TextStyle(fontSize: 13, color: skin.text3)),
               SizedBox(height: 8),
               ...[10, 15, 20, 40, 100].map(
-                (n) => _SheetOptionRow(
+                (n) => SettingsSheetOptionRow(
                   label: '$n 词/组',
                   selected: _preferences.reviewPace == n,
                   onTap: () async {
@@ -485,7 +470,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               SizedBox(height: 4),
-              _SheetOptionRow(
+              SettingsSheetOptionRow(
                 label: '恢复默认顺序',
                 selected: false,
                 onTap: () async {
@@ -512,7 +497,7 @@ class _SettingsPageState extends State<SettingsPage> {
         builder: (ctx, setSheetState) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _SheetSwitchRow(
+            SettingsSheetSwitchRow(
               title: '显示形近词',
               value: _preferences.showSimilarWords,
               onChanged: (v) async {
@@ -520,7 +505,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 if (ctx.mounted) setSheetState(() {});
               },
             ),
-            _SheetSwitchRow(
+            SettingsSheetSwitchRow(
               title: '显示词根词缀',
               value: _preferences.showRoots,
               onChanged: (v) async {
@@ -535,61 +520,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   // ===========================================================================
-  // 通用底部弹窗
+  // 通用底部弹窗（骨架拆至 settings_bottom_sheet.dart）
   // ===========================================================================
   void _showBottomSheet({required String title, required Widget child}) {
-    final skin = context.skin.colors;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => Container(
-        decoration: BoxDecoration(
-          color: skin.cardBg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 拖拽条 + 关闭按钮
-            Row(
-              children: [
-                SizedBox(width: 36),
-                Expanded(
-                  child: Center(
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(color: skin.divider, borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => NavUtils.safePop(context),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.close, size: 20, color: skin.text3),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            // 标题
-            Text(
-              title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: skin.text1),
-            ),
-            SizedBox(height: 16),
-            // 内容
-            child,
-          ],
-        ),
-      ),
-    );
+    showSettingsBottomSheet(context, title: title, child: child);
   }
 }
 
@@ -753,76 +687,6 @@ class _SwitchCellWithDesc extends StatelessWidget {
             inactiveTrackColor: skin.text3,
           ),
         ],
-      ),
-    );
-  }
-}
-
-// =============================================================================
-// 弹窗内部组件
-// =============================================================================
-
-/// 弹窗开关行
-class _SheetSwitchRow extends StatelessWidget {
-  final String title;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  const _SheetSwitchRow({required this.title, required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final skin = context.skin.colors;
-    return SizedBox(
-      height: 52,
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(title, style: TextStyle(fontSize: 15, color: skin.text1)),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: Colors.white,
-            activeTrackColor: skin.accent,
-            inactiveThumbColor: Colors.white,
-            inactiveTrackColor: skin.text3,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 弹窗选项行（橙色对勾）
-class _SheetOptionRow extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _SheetOptionRow({required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final skin = context.skin.colors;
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        height: 52,
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: selected ? skin.accent : skin.text1,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                ),
-              ),
-            ),
-            if (selected) Icon(Icons.check, size: 22, color: skin.accent),
-          ],
-        ),
       ),
     );
   }

@@ -45,6 +45,7 @@ class LearningPreferencesState extends ChangeNotifier {
 
   bool get showSimilarWords => _preferences.showSimilarWords;
   bool get showRoots => _preferences.showRoots;
+  String get reminderTime => _preferences.reminderTime;
 
   Future<void> initialize() async {
     _isLoading = true;
@@ -81,6 +82,7 @@ class LearningPreferencesState extends ChangeNotifier {
       _update(_preferences.copyWith(mnemonicOrder: segments.join(',')));
   Future<void> setShowSimilarWords(bool value) => _update(_preferences.copyWith(showSimilarWords: value));
   Future<void> setShowRoots(bool value) => _update(_preferences.copyWith(showRoots: value));
+  Future<void> setReminderTime(String value) => _update(_preferences.copyWith(reminderTime: value));
 
   Future<void> _update(LearningPreferences next) async {
     if (identical(next, _preferences)) return;

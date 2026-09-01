@@ -26,6 +26,7 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
   static const audioMeaningQuestionKey = 'audio_meaning_question_v1';
   static const splitMnemonicKey = 'split_mnemonic_v1';
   static const showConfusableMeaningsKey = 'show_confusable_meanings_v1';
+  static const reminderTimeKey = 'reminder_time_v1';
 
   /// 助记顺序/形近词/词根键（settings 与 dictionary 共享，单一事实来源在 AppPreferences）。
   static const mnemonicOrderKey = AppPreferences.mnemonicOrderKey;
@@ -56,6 +57,7 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
       mnemonicOrder: prefs.getString(mnemonicOrderKey) ?? defaults.mnemonicOrder,
       showSimilarWords: prefs.getBool(showSimilarWordsKey) ?? defaults.showSimilarWords,
       showRoots: prefs.getBool(showRootsKey) ?? defaults.showRoots,
+      reminderTime: prefs.getString(reminderTimeKey) ?? defaults.reminderTime,
     );
   }
 
@@ -82,6 +84,7 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
       prefs.setString(mnemonicOrderKey, preferences.mnemonicOrder),
       prefs.setBool(showSimilarWordsKey, preferences.showSimilarWords),
       prefs.setBool(showRootsKey, preferences.showRoots),
+      prefs.setString(reminderTimeKey, preferences.reminderTime),
     ]);
   }
 }

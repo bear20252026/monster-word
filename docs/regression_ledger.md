@@ -32,6 +32,7 @@
 | REG-UPD-001 | 「检查更新」无任何版本比对，永远弹「已是最新版本」 | 更新弹窗为静态 UI，无远端请求与比较逻辑 | 第十九批 | `test/features/settings/data/github_update_check_service_test.dart`（版本比较纯函数 + Release JSON 解析 + 失败不假装最新） |
 | REG-FDB-003 | 「评价应用」提交仅弹SnackBar，无真实动作 | 假提交 | 第十九批 | 同上文件所在批次的页面改造：4-5 星跳 GitHub 仓库页、1-3 星引导应用内反馈 |
 | REG-POSTER-001 | 分享海报总词数硬编码 25000，与实际词库不符 | 海报数据源未接统计状态 | 第十九批 | `_sharePoster` 改读 LearningStatisticsState.memoryStats['total']（与统计面板同源，单一事实来源） |
+| REG-REM-001 | 「学习提醒」开关空转：切换无任何真实效果 | 无通知调度实现（flutter_local_notifications 缺位） | 第二十批 | `test/regression/regression_study_reminder_test.dart`（开启真调度+诚实提示；权限被拒/调度失败开关回滚；关闭真取消）+ `local_study_reminder_service_test.dart`（调度时刻计算/幂等） |
 
 ## 修复新 bug 的流程
 
