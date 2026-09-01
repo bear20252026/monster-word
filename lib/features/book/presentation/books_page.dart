@@ -15,8 +15,6 @@ import 'package:word_app/features/book/presentation/book_words_page.dart';
 class BookDashboardPage extends StatelessWidget {
   const BookDashboardPage({super.key});
 
-  static const String routeName = '/books';
-
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;

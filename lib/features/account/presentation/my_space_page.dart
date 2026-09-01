@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -14,7 +16,7 @@ import 'package:word_app/features/account/application/account_profile_state.dart
 class MySpacePage extends StatelessWidget {
   const MySpacePage({super.key});
 
-  static const routeName = '/my_space';
+  static const routeName = RouteNames.mySpace;
 
   @override
   Widget build(BuildContext context) {
@@ -368,8 +370,12 @@ class _EquipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 已拥有装备件数与总数取单一事实来源（与 profile_screen / 我的装备页同源）：
+    // 当前皮肤(恒 1) + 收藏章(已兑换≥1 计 1 件) + 连击徽章(连击>0 计 1 件)。
+    final streakFuture = context.read<CheckinStatusReader>().getStreakDays();
+    final redeemedCount = AppPreferences().redeemedBadgeCount();
     return GestureDetector(
-      onTap: () {},
+      onTap: () => Navigator.pushNamed(context, RouteNames.myEquip),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
@@ -388,9 +394,15 @@ class _EquipCard extends StatelessWidget {
                     children: [
                       Text('装备', style: MistralTypography.micro.copyWith(color: skin.text3)),
                       SizedBox(width: 4),
-                      Text(
-                        '9/9',
-                        style: MistralTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
+                      FutureBuilder<int>(
+                        future: streakFuture,
+                        builder: (context, snap) {
+                          final owned = 1 + (redeemedCount > 0 ? 1 : 0) + ((snap.data ?? 0) > 0 ? 1 : 0);
+                          return Text(
+                            '$owned/${AppPreferences.equipRackCount}',
+                            style: MistralTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
+                          );
+                        },
                       ),
                     ],
                   ),

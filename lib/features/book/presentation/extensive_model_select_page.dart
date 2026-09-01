@@ -19,8 +19,6 @@ class ExtensiveModelSelectPage extends StatefulWidget {
 
   const ExtensiveModelSelectPage({super.key, required this.bookId, required this.bookName});
 
-  static const routeName = '/extensive_model_select';
-
   @override
   State<ExtensiveModelSelectPage> createState() => _ExtensiveModelSelectPageState();
 }

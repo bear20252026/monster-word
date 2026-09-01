@@ -15,8 +15,6 @@ class BaseWebPage extends StatefulWidget {
 
   const BaseWebPage({super.key, required this.url, this.title, this.showAppBar = true});
 
-  static const routeName = '/web';
-
   @override
   State<BaseWebPage> createState() => _BaseWebPageState();
 }
@@ -174,8 +172,6 @@ class _BaseWebPageState extends State<BaseWebPage> {
 class AdWebPage extends StatelessWidget {
   final String url;
   const AdWebPage({super.key, required this.url});
-
-  static const routeName = '/ad_web';
 
   @override
   Widget build(BuildContext context) {

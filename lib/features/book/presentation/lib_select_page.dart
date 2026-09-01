@@ -366,6 +366,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                       label: '导出',
                       onTap: () => _onToolTap(context, 'export'),
                     ),
+                    _BottomToolItem(icon: Icons.bolt, label: '考试速刷', onTap: () => _onToolTap(context, 'quickReview')),
                   ],
                 ),
               ),
@@ -384,7 +385,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   void _onToolTap(BuildContext context, String tool) {
     final book = context.read<LearningSessionReader>().currentBook;
 
-    if (book == null && tool != 'immersive') {
+    if (book == null && tool != 'immersive' && tool != 'quickReview') {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先选择一本词书')));
       return;
     }
@@ -392,6 +393,10 @@ class _LibSelectPageState extends State<LibSelectPage> {
     switch (tool) {
       case 'immersive':
         Navigator.pushNamed(context, RouteNames.immersiveSwipe);
+        break;
+      case 'quickReview':
+        // 考试速刷 → 独立于词书的考试模式速刷
+        Navigator.pushNamed(context, RouteNames.examQuickReview);
         break;
       case 'listen':
         // 随身听 → 模式选择页
@@ -557,58 +562,7 @@ class _LibItemState extends State<_LibItem> {
     final isLearning = session.currentBook?.id == widget.book.id;
 
     return GestureDetector(
-      onTap: () async {
-        if (_selecting) return; // 防连点/并发竞态（体验审计 A-3）
-        setState(() => _selecting = true);
-        // 选择页语义（2026-08-31 交互分离最终版）：
-        // 点书 = 直接完成选中并生效（填充学习队列 + 同步词书聚合状态 + 持久化选中），
-        // 然后返回首页；查看单词列表走卡片右侧「查看单词」进词书详情页。
-        try {
-          await context.read<LearningSessionStarter>().startBookSession(widget.book, limit: 50);
-          if (context.mounted) {
-            // 同步词书聚合状态（currentBook 标记 + selectBook 持久化 + 全量词表）
-            await context.read<BookState>().selectAndLoad(widget.book);
-          }
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已选中《${widget.book.name}》')));
-            // 每日目标仅首次选书时弹出（体验审计 A-3：每次换书都弹是打扰）
-            final prefs = AppPreferences();
-            final firstTime = !prefs.getBool('daily_goal_prompt_shown', defaultValue: false);
-            if (!firstTime) {
-              if (context.mounted) Navigator.pop(context);
-              return;
-            }
-            await prefs.setBool('daily_goal_prompt_shown', true);
-            if (!context.mounted) return;
-            final nav = Navigator.of(context);
-            await showModalBottomSheet<void>(
-              context: context,
-              builder: (sheetCtx) => SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('设置每日学习目标', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 8),
-                      const DailyGoalPicker(),
-                      const SizedBox(height: 8),
-                      FilledButton(onPressed: () => Navigator.pop(sheetCtx), child: const Text('完成，回首页开始学习')),
-                    ],
-                  ),
-                ),
-              ),
-            );
-            nav.pop(); // 选中完成，返回首页
-          }
-        } catch (e) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('加载词书失败: $e')));
-          }
-        } finally {
-          if (mounted) setState(() => _selecting = false);
-        }
-      },
+      onTap: () => _handleCardTap(context),
       child: Container(
         height: 120,
         padding: const EdgeInsets.all(16),
@@ -676,6 +630,59 @@ class _LibItemState extends State<_LibItem> {
         ),
       ),
     );
+  }
+
+  /// 点卡片 = 直接完成选中并生效（选择页语义 2026-08-31 交互分离最终版）：
+  /// 填充学习队列 + 同步词书聚合状态 + 持久化选中，然后返回首页；
+  /// 查看单词列表走卡片右侧「查看单词」进词书详情页。
+  Future<void> _handleCardTap(BuildContext context) async {
+    if (_selecting) return; // 防连点/并发竞态（体验审计 A-3）
+    setState(() => _selecting = true);
+    try {
+      await context.read<LearningSessionStarter>().startBookSession(widget.book, limit: 50);
+      if (context.mounted) {
+        // 同步词书聚合状态（currentBook 标记 + selectBook 持久化 + 全量词表）
+        await context.read<BookState>().selectAndLoad(widget.book);
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已选中《${widget.book.name}》')));
+        // 每日目标仅首次选书时弹出（体验审计 A-3：每次换书都弹是打扰）
+        final prefs = AppPreferences();
+        final firstTime = !prefs.getBool('daily_goal_prompt_shown', defaultValue: false);
+        if (!firstTime) {
+          if (context.mounted) Navigator.pop(context);
+          return;
+        }
+        await prefs.setBool('daily_goal_prompt_shown', true);
+        if (!context.mounted) return;
+        final nav = Navigator.of(context);
+        await showModalBottomSheet<void>(
+          context: context,
+          builder: (sheetCtx) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('设置每日学习目标', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  const DailyGoalPicker(),
+                  const SizedBox(height: 8),
+                  FilledButton(onPressed: () => Navigator.pop(sheetCtx), child: const Text('完成，回首页开始学习')),
+                ],
+              ),
+            ),
+          ),
+        );
+        nav.pop(); // 选中完成，返回首页
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('加载词书失败: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _selecting = false);
+    }
   }
 }
 

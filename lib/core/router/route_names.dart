@@ -60,4 +60,5 @@ class RouteNames {
   static const String dictationSession = '/dictation_session';
   static const String quickSpell = '/quick_spell';
   static const String wordExport = '/word_export';
+  static const String examQuickReview = '/exam_quick_review';
 }

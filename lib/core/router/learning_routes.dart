@@ -22,6 +22,7 @@ import 'package:word_app/features/learning/presentation/spell_check_page.dart';
 import 'package:word_app/features/learning/presentation/spell_session_page.dart';
 import 'package:word_app/features/learning/presentation/learn_page.dart';
 import 'package:word_app/features/learning/presentation/word_machine_page.dart';
+import 'package:word_app/features/quick_review/presentation/exam_quick_review_page.dart';
 
 import 'package:word_app/core/router/route_error_page.dart';
 import 'package:word_app/core/router/route_names.dart';
@@ -75,6 +76,8 @@ abstract final class LearningRoutes {
         return _buildQuickSpellPage(args);
       case RouteNames.wordExport:
         return _buildWordExportPage(args);
+      case RouteNames.examQuickReview:
+        return const ExamQuickReviewPage();
       default:
         return null;
     }

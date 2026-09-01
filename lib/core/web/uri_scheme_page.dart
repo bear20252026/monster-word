@@ -15,8 +15,6 @@ class UriSchemePage extends StatelessWidget {
 
   const UriSchemePage({super.key, required this.uri});
 
-  static const routeName = '/uri_scheme';
-
   @override
   Widget build(BuildContext context) {
     // 解析 URI 并跳转到对应页面
