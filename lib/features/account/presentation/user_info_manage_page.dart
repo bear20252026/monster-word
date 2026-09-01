@@ -2,6 +2,9 @@
 
 // 移植自 v3.2 UserInfoManageActivity
 // 用户信息管理：修改头像、昵称、签名等个人信息
+// 头像选图与落盘走 AvatarStorage 端口（application 层），页面不接触文件系统。
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +12,7 @@ import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
+import 'package:word_app/features/account/application/avatar_storage.dart';
 
 class UserInfoManagePage extends StatefulWidget {
   const UserInfoManagePage({super.key});
@@ -53,8 +57,13 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                             shape: BoxShape.circle,
                             gradient: LinearGradient(colors: [MistralColors.cream, MistralColors.creamDeeper]),
                             border: Border.all(color: MistralColors.hairline, width: 2),
+                            image: profile.avatar.isEmpty
+                                ? null
+                                : DecorationImage(image: FileImage(File(profile.avatar)), fit: BoxFit.cover),
                           ),
-                          child: Icon(Icons.person, size: 40, color: MistralColors.stone),
+                          child: profile.avatar.isEmpty
+                              ? Icon(Icons.person, size: 40, color: MistralColors.stone)
+                              : null,
                         ),
                       ),
                     ),
@@ -79,7 +88,7 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                       profile.signature.isEmpty ? '未设置' : profile.signature,
                       () => _editField('签名', profile.signature, _profile.updateSignature),
                     ),
-                    _buildInfoTile(skin, '手机号', '未绑定', null),
+                    _buildInfoTile(skin, '手机号', profile.phone.isEmpty ? '未绑定' : profile.phone, null),
                     _buildInfoTile(skin, '注册时间', '—', null, isReadOnly: true),
                   ],
                 ),
@@ -136,9 +145,23 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
     );
   }
 
-  void _changeAvatar() {
-    // TODO: 选择图片（功能开发中，暂时隐藏入口）
-    // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('选择头像功能开发中')));
+  Future<void> _changeAvatar() async {
+    final storage = context.read<AvatarStorage>();
+    final oldPath = _profile.avatar;
+    try {
+      final newPath = await storage.pickAndSave();
+      if (newPath == null) return; // 用户取消
+      await _profile.updateAvatar(newPath);
+      // 持久化成功后清理旧头像文件（仅清理应用私有目录内的）
+      await storage.delete(oldPath);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('头像已更新')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('更换头像失败: $e')));
+      }
+    }
   }
 
   Future<void> _editField(String label, String current, Future<void> Function(String) onSave) async {

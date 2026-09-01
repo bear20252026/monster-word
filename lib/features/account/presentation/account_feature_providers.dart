@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/core/auth/app_session_controller.dart';
 import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/features/account/data/file_avatar_storage.dart';
 import 'package:word_app/features/account/data/user_service.dart';
 import 'package:word_app/features/account/application/account_profile_store.dart';
+import 'package:word_app/features/account/application/avatar_storage.dart';
 import 'package:word_app/features/account/data/account_profile_repository.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
@@ -18,6 +20,7 @@ Widget buildAccountFeatureScope({required Widget child}) {
       // 不再直接 import account 内部（ARCH-FIX-1，去除跨 feature 展示层耦合）。
       ProxyProvider<AppSessionState, AppSessionController>(update: (_, session, _) => session),
       Provider<AccountProfileStore>(create: (_) => AccountProfileRepository(userService: sl<UserService>())),
+      Provider<AvatarStorage>(create: (_) => FileAvatarStorage()),
       ChangeNotifierProvider(
         create: (context) => AccountProfileState(profileStore: context.read<AccountProfileStore>())..refresh(),
       ),

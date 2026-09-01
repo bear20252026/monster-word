@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
@@ -233,6 +234,13 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
           ),
           _buildDivider(skin),
           _buildInfoRow(skin, label: '手机号', value: profile.phone.isEmpty ? '点击设置' : profile.phone, onTap: _editPhone),
+          _buildDivider(skin),
+          _buildInfoRow(
+            skin,
+            label: '编辑资料',
+            value: '头像 · 签名',
+            onTap: () => Navigator.pushNamed(context, RouteNames.userInfoManage),
+          ),
         ],
       ),
     );

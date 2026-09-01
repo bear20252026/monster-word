@@ -1,5 +1,7 @@
 // 个人中心页：星巴克风格 — 奶油画布 + 头像 + 尖叫币/装备 + 菜单
 // batch4a 改造：金色渐变→奶油纯色，硬编码→token，卡片→MwCard
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -109,7 +111,7 @@ class ProfileScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // 头像 + VIP 徽章
-                    _buildAvatar(skin),
+                    _buildAvatar(skin, profile),
                     const SizedBox(width: 20),
                     // 用户信息
                     Column(
@@ -128,7 +130,7 @@ class ProfileScreen extends StatelessWidget {
               : Column(
                   children: [
                     // 头像 + VIP 徽章
-                    _buildAvatar(skin),
+                    _buildAvatar(skin, profile),
                     const SizedBox(height: 12),
                     // 用户 ID（用户可自定义）
                     Text(
@@ -142,7 +144,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(SkinSystem skin) {
+  Widget _buildAvatar(SkinSystem skin, AccountProfileState profile) {
     return SizedBox(
       width: 88,
       height: 88,
@@ -155,8 +157,11 @@ class ProfileScreen extends StatelessWidget {
               shape: BoxShape.circle,
               color: AppColors.white100,
               border: Border.all(color: AppColors.white100, width: 3),
+              image: profile.avatar.isEmpty
+                  ? null
+                  : DecorationImage(image: FileImage(File(profile.avatar)), fit: BoxFit.cover),
             ),
-            child: Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 40),
+            child: profile.avatar.isEmpty ? Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 40) : null,
           ),
           Positioned(
             right: 0,
