@@ -1,11 +1,12 @@
-import 'package:word_app/core/di/service_locator.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/search/application/search_history_store.dart';
 
 /// 基于既有应用偏好存储的搜索历史适配器。
 class PreferencesSearchHistoryStore implements SearchHistoryStore {
-  /// 从 service_locator 自动解析依赖。
-  factory PreferencesSearchHistoryStore.fromServiceLocator() => PreferencesSearchHistoryStore._(sl<AppPreferences>());
+  /// AppPreferences 是工厂单例（全库统一 `AppPreferences()` 直用），
+  /// 未注册进 GetIt——不得走 `sl<AppPreferences>()`（2026-09-01 崩溃根因：
+  /// 查词页打开即 GetIt 抛 "AppPreferences is not registered" 整页失败）。
+  factory PreferencesSearchHistoryStore.fromServiceLocator() => PreferencesSearchHistoryStore._(AppPreferences());
 
   PreferencesSearchHistoryStore._(this._preferences);
 
