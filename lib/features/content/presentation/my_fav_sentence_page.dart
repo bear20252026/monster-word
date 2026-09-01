@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
+import 'package:word_app/features/content/presentation/sentence_learning_page.dart';
 import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -318,8 +319,13 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
   }
 
   void _startLearning() {
-    // TODO: 实现从句库学习功能
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('句库学习功能开发中...')));
+    // 只带有效例句进入翻卡学习器
+    final learnable = _sentences.where((s) => (s.sentenceData?.e ?? '').isNotEmpty).toList();
+    if (learnable.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('暂无可学习的例句')));
+      return;
+    }
+    startSentenceLearning(context, learnable);
   }
 
   Future<void> _deleteSelected() async {
