@@ -63,6 +63,37 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     }
   }
 
+  Future<void> _editPhone() async {
+    final controller = TextEditingController(text: _profile.phone);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('设置手机号'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.phone,
+          maxLength: 11,
+          decoration: const InputDecoration(hintText: '输入 11 位手机号', counterText: ''),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(ctx, controller.text), child: const Text('保存')),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (result == null) return;
+    final trimmed = result.trim();
+    if (trimmed.isEmpty) return;
+    if (!RegExp(r'^1\d{10}$').hasMatch(trimmed)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请输入正确的 11 位手机号')));
+      }
+      return;
+    }
+    await _profile.updatePhone(trimmed);
+  }
+
   Future<void> _editUserId() async {
     final controller = TextEditingController(text: _profile.displayId);
     final result = await showDialog<String>(
@@ -201,7 +232,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             onTap: _editNickname,
           ),
           _buildDivider(skin),
-          _buildInfoRow(skin, label: '手机号', value: '点击设置', onTap: () {}),
+          _buildInfoRow(skin, label: '手机号', value: profile.phone.isEmpty ? '点击设置' : profile.phone, onTap: _editPhone),
         ],
       ),
     );
