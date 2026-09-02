@@ -33,6 +33,7 @@
 | REG-FDB-003 | 「评价应用」提交仅弹SnackBar，无真实动作 | 假提交 | 第十九批 | 同上文件所在批次的页面改造：4-5 星跳 GitHub 仓库页、1-3 星引导应用内反馈 |
 | REG-POSTER-001 | 分享海报总词数硬编码 25000，与实际词库不符 | 海报数据源未接统计状态 | 第十九批 | `_sharePoster` 改读 LearningStatisticsState.memoryStats['total']（与统计面板同源，单一事实来源） |
 | REG-REM-001 | 「学习提醒」开关空转：切换无任何真实效果 | 无通知调度实现（flutter_local_notifications 缺位） | 第二十批 | `test/regression/regression_study_reminder_test.dart`（开启真调度+诚实提示；权限被拒/调度失败开关回滚；关闭真取消）+ `local_study_reminder_service_test.dart`（调度时刻计算/幂等） |
+| REG-CHK-001 | 签到历史页日历恒空、连签天数恒 0（与签到日历不一致） | 双数据源：签到只写尖叫币账本（scare_coin.checkin_dates），另一套 CheckInService（check_in_records_v1/streak_days_v1）只读从不写且 CheckinWriter 零调用方 | 第二十三批（修复）/ 第二十六批（补守护） | `test/regression/regression_checkin_test.dart`（写入→历史/状态读取器同源可读、同日重复签到幂等、三个适配器连签报告一致）；另由 `app_structure_test.dart` 断言 checkin_service.dart 不存在防复活 |
 
 ## 修复新 bug 的流程
 
