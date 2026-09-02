@@ -7,18 +7,18 @@ import 'package:word_app/tokens/starbucks_tokens.dart';
 /// 过渡期颜色（旧名新值）
 class MistralColors {
   // 品牌色 → 品牌绿
-  static const Color primary = StarbucksCreamColors.greenBrand; // 0xFF00754A
+  static const Color primary = StarbucksCreamColors.greenBrand; // 0xFF006B3F
   static const Color primaryDeep = StarbucksCreamColors.greenHouse; // 0xFF006241
   static const Color onPrimary = Color(0xFFFFFFFF);
 
-  static const Color primaryLight = StarbucksCreamColors.greenBrand; // 0xFF00754A
-  static const Color primaryDark = StarbucksDarkColors.accent; // 0xFF00A862 薄荷绿
+  static const Color primaryLight = StarbucksCreamColors.greenBrand; // 0xFF006B3F
+  static const Color primaryDark = StarbucksDarkColors.accent; // 0xFF00BB00 亮绿
 
   // sunshine 系列 → 品牌绿/金
   static const Color sunshine300 = StarbucksCreamColors.vipGoldBg; // 0xFFCBA258 品牌金
-  static const Color sunshine500 = StarbucksDarkColors.accent; // 0xFF00A862 薄荷绿
+  static const Color sunshine500 = StarbucksDarkColors.accent; // 0xFF00BB00 亮绿
   static const Color sunshine700 = StarbucksCreamColors.greenHouse; // 0xFF006241 深绿
-  static const Color sunshine900 = StarbucksCreamColors.greenBrand; // 0xFF00754A 品牌绿
+  static const Color sunshine900 = StarbucksCreamColors.greenBrand; // 0xFF006B3F 品牌绿
 
   // 奶油色 → 奶油画布
   static const Color cream = StarbucksCreamColors.pageBg; // 0xFFF2F0EB
@@ -51,7 +51,7 @@ class MistralColors {
   static const Color accent = StarbucksCreamColors.vipGoldBg; // 品牌金 accent
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6); // 蓝色 - 新词/信息
-  static const Color link = StarbucksCreamColors.greenBrand; // 0xFF00754A 品牌绿
+  static const Color link = StarbucksCreamColors.greenBrand; // 0xFF006B3F 品牌绿
 
   // 透明度白/黑（用于阴影、遮罩、次要文字）
   static const Color white54 = Color(0x8AFFFFFF);
@@ -192,7 +192,7 @@ class AppColors {
   static const Color highlightOrange = StarbucksCreamColors.greenBrand; // 品牌绿
   static const Color errorRed = MistralColors.danger;
   static const Color black87 = Color(0xFF212121); // 正文黑
-  static const Color black54 = StarbucksCreamColors.text2; // α=0.58
+  static const Color black54 = StarbucksCreamColors.text2; // α=0.70
   static const Color black12 = StarbucksCreamColors.divider; // 0x14000000
   static const Color white100 = Color(0xFFFFFFFF);
   static const Color mainBgTop = StarbucksCreamColors.pageBg; // 奶油画布
@@ -200,8 +200,8 @@ class AppColors {
   static const Color cardBg = StarbucksCreamColors.cardBg; // 白卡片
   static const Color dividerGrey = StarbucksCreamColors.divider;
   static const Color textTertiary = StarbucksDarkColors.text2; // 雾绿
-  static const Color checkInBg = Color(0x3300754A); // 品牌绿 20%
-  static const Color checkInAccent = StarbucksDarkColors.accent; // 薄荷绿
+  static const Color checkInBg = Color(0x33006B3F); // 品牌绿 20%
+  static const Color checkInAccent = StarbucksDarkColors.accent; // 亮绿
   static const Color primary = StarbucksCreamColors.greenBrand; // 品牌绿
 }
 

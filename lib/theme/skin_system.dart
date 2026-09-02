@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/tokens/design_language.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 class ThemeVars {
   final Color pageBg;
@@ -206,36 +207,37 @@ final themes = <String, ThemePreset>{
     name: '星巴克奶油',
     uiBrightness: Brightness.light,
     statusBarBrightness: Brightness.dark,
+    // 单一事实来源：全部字段引用 starbucks_tokens 常量（守卫测试 theme_token_consistency_test.dart 锁定）
     vars: ThemeVars(
-      pageBg: const Color(0xFFF2F0EB), // 奶油画布
-      cardBg: const Color(0xFFFFFFFF), // 白卡片
-      cardBgAlt: const Color(0xFFEDEBE9), // 陶瓷画布
-      text1: const Color(0xDE212121), // α=0.87 正文黑
-      text2: const Color(0xB3212121), // α=0.70（WCAG AA on 奶油画布 5.55:1）
-      text3: const Color(0xB3212121), // α=0.70（WCAG AA on 奶油画布 4.71:1）
-      divider: const Color(0x14000000), // 8% 黑
-      accent: const Color(0xFF006B3F), // 深星巴克绿（WCAG AA on 奶油画布 ≥5.0:1）
-      success: const Color(0xFF2E7D32), // 深绿色（WCAG AA）
-      danger: const Color(0xFFBF2020), // 深红色（WCAG AA）
-      teal: const Color(0xFF006B3F), // 深星巴克绿替代蓝（WCAG AA ≥5.0:1）
-      tabBarIcon: const Color(0xDE212121), // 同 text1
-      onGlassText1: const Color(0xDE212121),
-      onGlassText2: const Color(0xA6212121), // α=0.65（WCAG AA on 白卡片）
-      onGlassAccent: const Color(0xFF006B3F), // 深绿字（WCAG AA on 白玻璃 ≥5.0:1）
-      glassBg: const Color(0xFFFFFFFF),
-      glassBgStrong: const Color(0xFFFFFFFF),
-      glassBorder: const Color(0x14000000),
-      wallpaperScrim: const Color(0xFFF2F0EB), // 同 pageBg
-      modalGlassBg: const Color(0xFFFFFFFF),
-      modalText1: const Color(0xDE212121),
-      modalText2: const Color(0xA6212121), // α=0.65（WCAG AA on 白底）
-      quizCorrectBg: const Color(0xFFD1FAE5),
-      quizCorrectText: const Color(0xFF1B5E20), // 深绿色（WCAG AA on #D1FAE5）
-      quizWrongBg: const Color(0xFFFEE2E2),
-      quizWrongText: const Color(0xFF9B1515), // 深红色（WCAG AA on #FEE2E2）
-      vipGoldBg: const Color(0xFFCBA258), // 品牌金
-      vipGoldText: const Color(0xFF1E3932), // 深绿字（WCAG AA 5.22:1 on 金底）
-      profileDecor: const [Color(0xFFD4E9E2), Color(0xFFEDEBE9)], // 浅绿+陶瓷
+      pageBg: StarbucksCreamColors.pageBg, // 奶油画布
+      cardBg: StarbucksCreamColors.cardBg, // 白卡片
+      cardBgAlt: StarbucksCreamColors.cardBgAlt, // 陶瓷画布
+      text1: StarbucksCreamColors.text1, // α=0.87 正文黑
+      text2: StarbucksCreamColors.text2, // α=0.70（WCAG AA on 奶油画布 5.55:1）
+      text3: StarbucksCreamColors.text3, // α=0.70（WCAG AA on 奶油画布 4.71:1）
+      divider: StarbucksCreamColors.divider, // 8% 黑
+      accent: StarbucksCreamColors.accent, // 深星巴克绿（WCAG AA on 奶油画布 ≥5.0:1）
+      success: StarbucksCreamColors.success, // 深绿色（WCAG AA）
+      danger: StarbucksCreamColors.danger, // 深红色（WCAG AA）
+      teal: StarbucksCreamColors.teal, // 品牌绿替代蓝（WCAG AA ≥5.0:1）
+      tabBarIcon: StarbucksCreamColors.tabBarIcon, // 同 text1
+      onGlassText1: StarbucksCreamColors.onGlassText1,
+      onGlassText2: StarbucksCreamColors.onGlassText2, // α=0.65（WCAG AA on 白卡片）
+      onGlassAccent: StarbucksCreamColors.onGlassAccent, // 深绿字（WCAG AA on 白玻璃 ≥5.0:1）
+      glassBg: StarbucksCreamColors.glassBg,
+      glassBgStrong: StarbucksCreamColors.glassBgStrong,
+      glassBorder: StarbucksCreamColors.glassBorder,
+      wallpaperScrim: StarbucksCreamColors.wallpaperScrim, // 同 pageBg
+      modalGlassBg: StarbucksCreamColors.modalGlassBg,
+      modalText1: StarbucksCreamColors.modalText1,
+      modalText2: StarbucksCreamColors.modalText2, // α=0.65（WCAG AA on 白底）
+      quizCorrectBg: StarbucksCreamColors.quizCorrectBg,
+      quizCorrectText: StarbucksCreamColors.quizCorrectText, // 深绿色（WCAG AA on #D1FAE5）
+      quizWrongBg: StarbucksCreamColors.quizWrongBg,
+      quizWrongText: StarbucksCreamColors.quizWrongText, // 深红色（WCAG AA on #FEE2E2）
+      vipGoldBg: StarbucksCreamColors.vipGoldBg, // 品牌金
+      vipGoldText: StarbucksCreamColors.vipGoldText, // 深绿字（WCAG AA 5.22:1 on 金底）
+      profileDecor: StarbucksCreamColors.profileDecor, // 浅绿+陶瓷
     ),
   ),
   'starbucks_dark': ThemePreset(
@@ -243,36 +245,37 @@ final themes = <String, ThemePreset>{
     name: '星巴克深绿',
     uiBrightness: Brightness.dark,
     statusBarBrightness: Brightness.light,
+    // 单一事实来源：全部字段引用 starbucks_tokens 常量（守卫测试 theme_token_consistency_test.dart 锁定）
     vars: ThemeVars(
-      pageBg: const Color(0xFF101B17), // 墨绿近黑
-      cardBg: const Color(0xFF1E3932), // 深绿表面
-      cardBgAlt: const Color(0xFF274A40), // 二级浮层
-      text1: const Color(0xDEFFFFFF), // 87% 白
-      text2: const Color(0xFFA9BCB5), // 雾绿（A11y 修正，固定色值）
-      text3: const Color(0x9EFFFFFF), // α=0.62（WCAG AA 达标）
-      divider: const Color(0x1FFFFFFF), // 12% 白
-      accent: const Color(0xFF00BB00), // 亮绿色（WCAG AA on 表面 4.62:1）
-      success: const Color(0xFF00C853), // 亮绿色（WCAG AA）
-      danger: const Color(0xFFFF5252), // 亮红色（WCAG AA）
-      teal: const Color(0xFF2196F3), // 蓝色（WCAG AA）
-      tabBarIcon: const Color(0xDEFFFFFF),
-      onGlassText1: const Color(0xDEFFFFFF),
-      onGlassText2: const Color(0xFFA9BCB5), // 同 text2
-      onGlassAccent: const Color(0xFFFFFFFF), // 白字（在绿色按钮上清晰可读）
-      glassBg: const Color(0xFF1E3932),
-      glassBgStrong: const Color(0xFF274A40),
-      glassBorder: const Color(0x1FFFFFFF),
-      wallpaperScrim: const Color(0xFF101B17),
-      modalGlassBg: const Color(0xFF274A40),
-      modalText1: const Color(0xDEFFFFFF),
-      modalText2: const Color(0xFFA9BCB5),
-      quizCorrectBg: const Color(0xFF1A3D2E),
-      quizCorrectText: const Color(0xFF4DB6AC), // 浅青绿色（WCAG AA on #1A3D2E）
-      quizWrongBg: const Color(0xFF3D1A2E),
-      quizWrongText: const Color(0xFFFF5252), // 亮红色（WCAG AA on #3D1A2E）
-      vipGoldBg: const Color(0xFFCBA258), // 品牌金
-      vipGoldText: const Color(0xFF1E3932), // 深绿字（WCAG AA on 金底）
-      profileDecor: const [Color(0xFF101B17), Color(0xFF1E3932)], // 深绿体系
+      pageBg: StarbucksDarkColors.pageBg, // 墨绿近黑
+      cardBg: StarbucksDarkColors.cardBg, // 深绿表面
+      cardBgAlt: StarbucksDarkColors.cardBgAlt, // 二级浮层
+      text1: StarbucksDarkColors.text1, // 87% 白
+      text2: StarbucksDarkColors.text2, // 雾绿（A11y 修正，固定色值）
+      text3: StarbucksDarkColors.text3, // α=0.62（WCAG AA 达标）
+      divider: StarbucksDarkColors.divider, // 12% 白
+      accent: StarbucksDarkColors.accent, // 亮绿色（WCAG AA on 表面 4.62:1）
+      success: StarbucksDarkColors.success, // 亮绿色（WCAG AA）
+      danger: StarbucksDarkColors.danger, // 亮红色（WCAG AA）
+      teal: StarbucksDarkColors.teal, // 蓝色（WCAG AA）
+      tabBarIcon: StarbucksDarkColors.tabBarIcon,
+      onGlassText1: StarbucksDarkColors.onGlassText1,
+      onGlassText2: StarbucksDarkColors.onGlassText2, // 同 text2
+      onGlassAccent: StarbucksDarkColors.onGlassAccent, // 白字（在绿色按钮上清晰可读）
+      glassBg: StarbucksDarkColors.glassBg,
+      glassBgStrong: StarbucksDarkColors.glassBgStrong,
+      glassBorder: StarbucksDarkColors.glassBorder,
+      wallpaperScrim: StarbucksDarkColors.wallpaperScrim,
+      modalGlassBg: StarbucksDarkColors.modalGlassBg,
+      modalText1: StarbucksDarkColors.modalText1,
+      modalText2: StarbucksDarkColors.modalText2,
+      quizCorrectBg: StarbucksDarkColors.quizCorrectBg,
+      quizCorrectText: StarbucksDarkColors.quizCorrectText, // 浅青绿色（WCAG AA on #1A3D2E）
+      quizWrongBg: StarbucksDarkColors.quizWrongBg,
+      quizWrongText: StarbucksDarkColors.quizWrongText, // 亮红色（WCAG AA on #3D1A2E）
+      vipGoldBg: StarbucksDarkColors.vipGoldBg, // 品牌金
+      vipGoldText: StarbucksDarkColors.vipGoldText, // 深绿字（WCAG AA on 金底）
+      profileDecor: StarbucksDarkColors.profileDecor, // 深绿体系
     ),
   ),
   // === 暖橙主题 — 活力温暖，适合日间学习 ===
