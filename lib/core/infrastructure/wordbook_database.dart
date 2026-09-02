@@ -3,6 +3,7 @@
 // 由账号4生成
 // 数据层：词库数据库初始化与查询
 // 跨平台支持：Windows (sqflite_common_ffi) / Android / iOS (sqflite)
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -51,6 +52,12 @@ class WordBookDatabase {
   bool _initialized = false;
   bool _rebuilding = false;
 
+  /// A6（v2.7.42）：initialize/forceRebuild 的并发互斥屏障。
+  /// 非 null 表示有一次初始化或重建正在进行，后续 initialize() 复用同一 Future，
+  /// 不再各自跑一遍 35MB gz 解压/开库慢路径（复审 M7/A6：早退检查与 :193 置位
+  /// 之间隔着多个 await，并发调用会重复解压并竞写同一 db 文件）。
+  Completer<void>? _initCompleter;
+
   /// 数据库是否已初始化完成。
   /// 调用方可先检查此 getter 再访问 [db]，避免 StateError。
   bool get isInitialized => _initialized && _db != null;
@@ -84,14 +91,36 @@ class WordBookDatabase {
     _initialized = true;
   }
 
-  /// 初始化：解压词库 + 打开数据库。
+  /// 初始化：解压词库 + 打开数据库（并发安全）。
   ///
   /// 版本管理（2026-08-30 根治"暂无单词数据"）：只检查文件存在会导致
   /// 旧版本 app 解压的旧词库永远不被新资产替换（旧库词书关联缺失 →
   /// 词书详情"暂无单词数据"、背单词 queue 为空）。现改为比对资产
   /// 词库的内容哈希，不一致即重新解压。
-  Future<void> initialize() async {
-    if (_initialized) return;
+  ///
+  /// 并发语义（A6）：多个调用方同时 initialize 只执行一次慢路径，
+  /// 全部等待同一结果；失败释放互斥允许重试。
+  Future<void> initialize() {
+    if (_initialized) return Future.value();
+    final inFlight = _initCompleter;
+    if (inFlight != null) return inFlight.future;
+    final completer = Completer<void>();
+    _initCompleter = completer;
+    // 自我监听：无人 await 时错误不逃逸为 unhandled exception
+    completer.future.ignore();
+    _initializeInner().then(
+      (_) {
+        completer.complete();
+      },
+      onError: (Object e, StackTrace st) {
+        if (identical(_initCompleter, completer)) _initCompleter = null;
+        completer.completeError(e, st);
+      },
+    );
+    return completer.future;
+  }
+
+  Future<void> _initializeInner() async {
     await ensurePlatform();
 
     final dir = await getApplicationSupportDirectory();
@@ -219,8 +248,18 @@ class WordBookDatabase {
       throw StateError('词库重建正在进行中，请稍候');
     }
     _rebuilding = true;
+    // A6：重建期间到达的 initialize() 挂到屏障上等待，不再与重建竞写库文件
+    final initBarrier = Completer<void>();
+    initBarrier.future.ignore();
+    _initCompleter = initBarrier;
     try {
-      return await _forceRebuildInner();
+      final result = await _forceRebuildInner();
+      initBarrier.complete();
+      return result;
+    } catch (e, st) {
+      if (identical(_initCompleter, initBarrier)) _initCompleter = null;
+      initBarrier.completeError(e, st);
+      rethrow;
     } finally {
       _rebuilding = false;
     }
@@ -417,6 +456,7 @@ class WordBookDatabase {
     await _db?.close();
     _db = null;
     _initialized = false;
+    _initCompleter = null; // A6：允许后续 initialize 重新走完整初始化
   }
 }
 
