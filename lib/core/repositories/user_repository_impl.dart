@@ -10,8 +10,6 @@ import 'package:word_app/core/repositories/user_repository.dart';
 /// 使用 SharedPreferences 存储用户数据。
 class UserRepositoryImpl implements UserRepository {
   static const _userInfoKey = 'user_info_v1';
-  static const _checkInRecordsKey = 'check_in_records_v1';
-  static const _streakKey = 'streak_days_v1';
 
   @override
   Future<Map<String, dynamic>?> getUserInfo() async {
@@ -32,31 +30,6 @@ class UserRepositoryImpl implements UserRepository {
   Future<Map<String, dynamic>> getLearningStats() async {
     // 学习统计由学习域的专用读取状态提供；该兼容仓储暂保留既有零值返回。
     return {'totalWords': 0, 'mastered': 0, 'learning': 0, 'reviewing': 0};
-  }
-
-  @override
-  Future<List<DateTime>> getCheckInRecords() async {
-    final prefs = await SharedPreferences.getInstance();
-    final records = prefs.getStringList(_checkInRecordsKey) ?? [];
-    return records.map((r) => DateTime.tryParse(r) ?? DateTime.now()).toList();
-  }
-
-  @override
-  Future<int> addCheckIn(DateTime date) async {
-    final prefs = await SharedPreferences.getInstance();
-    final records = prefs.getStringList(_checkInRecordsKey) ?? [];
-    final dateStr = date.toIso8601String().split('T').first;
-    if (!records.contains(dateStr)) {
-      records.add(dateStr);
-      await prefs.setStringList(_checkInRecordsKey, records);
-    }
-    return 1;
-  }
-
-  @override
-  Future<int> getStreakDays() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_streakKey) ?? 0;
   }
 
   @override

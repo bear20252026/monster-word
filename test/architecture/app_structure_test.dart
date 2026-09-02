@@ -242,7 +242,10 @@ void main() {
 
       expect(appSource, contains('buildCheckInFeatureScope('));
       expect(File('lib/features/checkin/application/check_in_history_reader.dart').existsSync(), isTrue);
-      expect(providersSource, contains('sl<CheckInService>()'));
+      // 签到单一事实来源：适配器消费上游 ScareCoinStore 端口，禁止经服务定位器或自建持久化。
+      expect(providersSource, contains('context.read<ScareCoinStore>()'));
+      expect(providersSource, isNot(contains('service_locator')));
+      expect(File('lib/features/checkin/data/checkin_service.dart').existsSync(), isFalse);
       expect(pageSource, contains('CheckInHistoryReader'));
       expect(pageSource, isNot(contains('sl<')));
       expect(pageSource, isNot(contains('CheckInService')));

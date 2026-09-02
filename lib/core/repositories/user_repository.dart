@@ -3,7 +3,8 @@
 
 /// 用户数据仓库接口
 ///
-/// 提供用户信息、学习统计、签到记录等数据访问抽象。
+/// 提供用户信息、学习统计等数据访问抽象。
+/// 签到记录不在此处：单一事实来源为尖叫币账本（ScareCoinStore）。
 abstract class UserRepository {
   /// 获取用户信息
   Future<Map<String, dynamic>?> getUserInfo();
@@ -13,15 +14,6 @@ abstract class UserRepository {
 
   /// 获取学习统计
   Future<Map<String, dynamic>> getLearningStats();
-
-  /// 获取签到记录
-  Future<List<DateTime>> getCheckInRecords();
-
-  /// 添加签到记录
-  Future<int> addCheckIn(DateTime date);
-
-  /// 获取连续签到天数
-  Future<int> getStreakDays();
 
   /// 获取设置项
   Future<String?> getSetting(String key);

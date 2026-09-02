@@ -54,7 +54,7 @@ class WordApp extends StatelessWidget {
                   child: buildScareCoinFeatureScope(
                     // [8] ScareCoin — ScareCoinStore。✅ 是 checkin 的上游渠道；亦被 profile/redemption/日历消费。
                     child: buildCheckInFeatureScope(
-                      // [9] CheckIn — CheckInHistoryReader/CheckinStatusReader/CheckinWriter。✅ 消费 [8] ScareCoinStore，故必须在其内层；[8]→[9] 即渠道方向。
+                      // [9] CheckIn — CheckInHistoryReader/CheckinStatusReader/CheckinWriter。✅ 适配器直接消费 [8] ScareCoinStore（签到单一事实来源），故必须在其内层；[8]→[9] 即渠道方向。
                       child: buildDictionaryFeatureScope(
                         // [10] Dictionary — 词典 Reader/Writer。被 word_detail/查词页消费；✅ 已核实【无上游 feature 依赖】。
                         child: buildWordBrowseFeatureScope(

@@ -21,8 +21,6 @@ import 'package:word_app/core/repositories/new_word_repository.dart';
 import 'package:word_app/core/repositories/new_word_repository_impl.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/core/audio/audio_service_impl.dart';
-import 'package:word_app/features/checkin/data/checkin_service.dart';
-import 'package:word_app/features/checkin/data/checkin_service_impl.dart';
 import 'package:word_app/features/account/data/user_service.dart';
 import 'package:word_app/features/account/data/user_service_impl.dart';
 import 'package:word_app/features/learning/application/book_words_reader.dart';
@@ -170,11 +168,6 @@ Future<void> setupServiceLocator() async {
     sl.registerLazySingleton<ReviewAudioPlayer>(
       () => ReviewAudioPlayer(playAudio: (word) => sl<AudioService>().playWordAudio(word)),
     );
-  }
-
-  // CheckInService（签到）
-  if (!sl.isRegistered<CheckInService>()) {
-    sl.registerLazySingleton<CheckInService>(() => CheckInServiceImpl(userRepo: sl<UserRepository>()));
   }
 
   // UserService（用户）
