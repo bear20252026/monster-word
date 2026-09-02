@@ -33,8 +33,6 @@ class LearningPreferencesState extends ChangeNotifier {
   bool get spellRightSwipe => _preferences.spellRightSwipe;
   bool get spellReviewTip => _preferences.spellReviewTip;
   int get learnPace => _preferences.learnPace;
-  String get reviewMode => _preferences.reviewMode;
-  int get reviewPace => _preferences.reviewPace;
   bool get audioMeaningQuestion => _preferences.audioMeaningQuestion;
   bool get splitMnemonic => _preferences.splitMnemonic;
   bool get showConfusableMeanings => _preferences.showConfusableMeanings;
@@ -73,8 +71,6 @@ class LearningPreferencesState extends ChangeNotifier {
   Future<void> setSpellRightSwipe(bool value) => _update(_preferences.copyWith(spellRightSwipe: value));
   Future<void> setSpellReviewTip(bool value) => _update(_preferences.copyWith(spellReviewTip: value));
   Future<void> setLearnPace(int value) => _update(_preferences.copyWith(learnPace: value));
-  Future<void> setReviewMode(String value) => _update(_preferences.copyWith(reviewMode: value));
-  Future<void> setReviewPace(int value) => _update(_preferences.copyWith(reviewPace: value));
   Future<void> setAudioMeaningQuestion(bool value) => _update(_preferences.copyWith(audioMeaningQuestion: value));
   Future<void> setSplitMnemonic(bool value) => _update(_preferences.copyWith(splitMnemonic: value));
   Future<void> setShowConfusableMeanings(bool value) => _update(_preferences.copyWith(showConfusableMeanings: value));

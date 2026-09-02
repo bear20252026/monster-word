@@ -36,8 +36,6 @@ void main() {
     await state.setPronunciationType('英式');
     await state.setAutoPlayExampleAudio(true);
     await state.setLearnPace(15);
-    await state.setReviewMode('旧模式');
-    await state.setReviewPace(40);
     await state.setSpellRightSwipe(false);
     await state.setAudioMeaningQuestion(false);
 
@@ -46,13 +44,10 @@ void main() {
     expect(state.pronunciationType, '英式');
     expect(state.autoPlayExampleAudio, isTrue);
     expect(state.learnPace, 15);
-    expect(state.reviewMode, '旧模式');
-    expect(state.reviewPace, 40);
     expect(state.spellRightSwipe, isFalse);
     expect(state.audioMeaningQuestion, isFalse);
     expect(preferences.getInt(LearningPreferencesRepository.dailyNewWordsKey), 20);
     expect(preferences.getString(LearningPreferencesRepository.pronunciationTypeKey), '英式');
-    expect(preferences.getInt(LearningPreferencesRepository.reviewPaceKey), 40);
     expect(preferences.getBool(LearningPreferencesRepository.spellRightSwipeKey), isFalse);
   });
 

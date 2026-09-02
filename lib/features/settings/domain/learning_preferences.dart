@@ -22,8 +22,6 @@ class LearningPreferences {
     required this.spellRightSwipe,
     required this.spellReviewTip,
     required this.learnPace,
-    required this.reviewMode,
-    required this.reviewPace,
     required this.audioMeaningQuestion,
     required this.splitMnemonic,
     required this.showConfusableMeanings,
@@ -46,8 +44,6 @@ class LearningPreferences {
       spellRightSwipe = true,
       spellReviewTip = true,
       learnPace = 10,
-      reviewMode = '新模式',
-      reviewPace = 10,
       audioMeaningQuestion = true,
       splitMnemonic = true,
       showConfusableMeanings = true,
@@ -67,8 +63,6 @@ class LearningPreferences {
   final bool spellRightSwipe;
   final bool spellReviewTip;
   final int learnPace;
-  final String reviewMode;
-  final int reviewPace;
   final bool audioMeaningQuestion;
   final bool splitMnemonic;
   final bool showConfusableMeanings;
@@ -97,8 +91,6 @@ class LearningPreferences {
     bool? spellRightSwipe,
     bool? spellReviewTip,
     int? learnPace,
-    String? reviewMode,
-    int? reviewPace,
     bool? audioMeaningQuestion,
     bool? splitMnemonic,
     bool? showConfusableMeanings,
@@ -119,8 +111,6 @@ class LearningPreferences {
       spellRightSwipe: spellRightSwipe ?? this.spellRightSwipe,
       spellReviewTip: spellReviewTip ?? this.spellReviewTip,
       learnPace: learnPace ?? this.learnPace,
-      reviewMode: reviewMode ?? this.reviewMode,
-      reviewPace: reviewPace ?? this.reviewPace,
       audioMeaningQuestion: audioMeaningQuestion ?? this.audioMeaningQuestion,
       splitMnemonic: splitMnemonic ?? this.splitMnemonic,
       showConfusableMeanings: showConfusableMeanings ?? this.showConfusableMeanings,

@@ -21,8 +21,6 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
   static const spellRightSwipeKey = 'spell_right_swipe_v1';
   static const spellReviewTipKey = 'spell_review_tip_v1';
   static const learnPaceKey = 'learn_pace_v1';
-  static const reviewModeKey = 'review_mode_v1';
-  static const reviewPaceKey = 'review_pace_v1';
   static const audioMeaningQuestionKey = 'audio_meaning_question_v1';
   static const splitMnemonicKey = 'split_mnemonic_v1';
   static const showConfusableMeaningsKey = 'show_confusable_meanings_v1';
@@ -49,8 +47,6 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
       spellRightSwipe: prefs.getBool(spellRightSwipeKey) ?? defaults.spellRightSwipe,
       spellReviewTip: prefs.getBool(spellReviewTipKey) ?? defaults.spellReviewTip,
       learnPace: prefs.getInt(learnPaceKey) ?? defaults.learnPace,
-      reviewMode: prefs.getString(reviewModeKey) ?? defaults.reviewMode,
-      reviewPace: prefs.getInt(reviewPaceKey) ?? defaults.reviewPace,
       audioMeaningQuestion: prefs.getBool(audioMeaningQuestionKey) ?? defaults.audioMeaningQuestion,
       splitMnemonic: prefs.getBool(splitMnemonicKey) ?? defaults.splitMnemonic,
       showConfusableMeanings: prefs.getBool(showConfusableMeaningsKey) ?? defaults.showConfusableMeanings,
@@ -76,8 +72,6 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
       prefs.setBool(spellRightSwipeKey, preferences.spellRightSwipe),
       prefs.setBool(spellReviewTipKey, preferences.spellReviewTip),
       prefs.setInt(learnPaceKey, preferences.learnPace),
-      prefs.setString(reviewModeKey, preferences.reviewMode),
-      prefs.setInt(reviewPaceKey, preferences.reviewPace),
       prefs.setBool(audioMeaningQuestionKey, preferences.audioMeaningQuestion),
       prefs.setBool(splitMnemonicKey, preferences.splitMnemonic),
       prefs.setBool(showConfusableMeaningsKey, preferences.showConfusableMeanings),

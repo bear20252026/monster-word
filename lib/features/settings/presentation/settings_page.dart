@@ -117,7 +117,6 @@ class _SettingsPageState extends State<SettingsPage> {
         _SettingGroup([
           _Cell(title: '每日新学', value: '${settings.dailyNewWords} 词', onTap: () => _showDailyNewWordsDialog()),
           _Cell(title: '学习节奏', value: '${settings.learnPace} 词/小结', onTap: () => _showLearnPaceDialog()),
-          _Cell(title: '复习节奏', value: '${settings.reviewPace} 词/组', onTap: () => _showReviewPaceDialog()),
         ]),
         SizedBox(height: 16),
 
@@ -341,73 +340,6 @@ class _SettingsPageState extends State<SettingsPage> {
               )
               .toList(),
         ),
-      ),
-    );
-  }
-
-  // ===========================================================================
-  // 弹窗 6：复习节奏（新模式/旧模式 + 10/15/20/40/100 词/组）
-  // ===========================================================================
-  void _showReviewPaceDialog() {
-    _showBottomSheet(
-      title: '复习节奏',
-      child: StatefulBuilder(
-        builder: (ctx, setSheetState) {
-          final skin = context.skin.colors;
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 模式切换
-              Text('复习模式', style: TextStyle(fontSize: 13, color: skin.text3)),
-              SizedBox(height: 8),
-              Row(
-                children: ['新模式', '旧模式'].map((m) {
-                  final on = _preferences.reviewMode == m;
-                  return Padding(
-                    padding: EdgeInsets.only(right: 8),
-                    child: GestureDetector(
-                      onTap: () async {
-                        await _preferences.setReviewMode(m);
-                        if (ctx.mounted) setSheetState(() {});
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: on ? skin.accent : skin.cardBgAlt,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: on ? skin.accent : skin.divider),
-                        ),
-                        child: Text(
-                          m,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: on ? Colors.white : skin.text1,
-                            fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              SizedBox(height: 16),
-              // 词数组
-              Text('每组词数', style: TextStyle(fontSize: 13, color: skin.text3)),
-              SizedBox(height: 8),
-              ...[10, 15, 20, 40, 100].map(
-                (n) => SettingsSheetOptionRow(
-                  label: '$n 词/组',
-                  selected: _preferences.reviewPace == n,
-                  onTap: () async {
-                    await _preferences.setReviewPace(n);
-                    if (ctx.mounted) setSheetState(() {});
-                  },
-                ),
-              ),
-            ],
-          );
-        },
       ),
     );
   }

@@ -18,8 +18,6 @@ void main() {
       expect(prefs.spellRightSwipe, isTrue);
       expect(prefs.spellReviewTip, isTrue);
       expect(prefs.learnPace, 10);
-      expect(prefs.reviewMode, '新模式');
-      expect(prefs.reviewPace, 10);
       expect(prefs.audioMeaningQuestion, isTrue);
       expect(prefs.splitMnemonic, isTrue);
       expect(prefs.showConfusableMeanings, isTrue);
@@ -34,15 +32,13 @@ void main() {
       expect(modified.autoPlayAudio, original.autoPlayAudio);
       expect(modified.pronunciationType, original.pronunciationType);
       expect(modified.learnPace, original.learnPace);
-      expect(modified.reviewMode, original.reviewMode);
     });
 
     test('copyWith 只修改指定字段', () {
       const original = LearningPreferences.defaults();
-      final modified = original.copyWith(learnPace: 20, reviewPace: 40);
+      final modified = original.copyWith(learnPace: 20);
 
       expect(modified.learnPace, 20);
-      expect(modified.reviewPace, 40);
       expect(modified.dailyNewWords, original.dailyNewWords);
       expect(modified.autoPlayAudio, original.autoPlayAudio);
     });
