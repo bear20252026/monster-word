@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 外观 & 沉浸场景页：壁纸选择 + 主题切换 + 实时预览
-// 还原原版 v3.2 个人中心 → 外观&沉浸场景入口
+// 外观 & 沉浸场景页：主题切换 + 风格字体 + 沉浸场景入口
+// （原「壁纸/阅读模式静态预览卡」为纯装饰假卡片，且壁纸系统已随主页方案C移除，于 v2.7.36 删除）
 import 'package:flutter/material.dart';
 
 import 'package:word_app/core/presentation/responsive.dart';
@@ -41,9 +41,6 @@ class _AppearancePageState extends State<AppearancePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: context.design.spacing.lg),
-                        // 两个大预览卡片（壁纸 + 阅读模式）
-                        _buildPreviewCards(skin),
-                        SizedBox(height: context.design.spacing.xl),
                         // 主题选择圆圈（明亮/深邃/极夜）
                         _buildThemeCircles(skin),
                         SizedBox(height: context.design.spacing.md),
@@ -91,132 +88,6 @@ class _AppearancePageState extends State<AppearancePage> {
           SizedBox(width: 48),
         ],
       ),
-    );
-  }
-
-  /// 两个大预览卡片
-  Widget _buildPreviewCards(SkinSystem skin) {
-    return Row(
-      children: [
-        // 壁纸预览卡
-        Expanded(
-          child: Container(
-            height: 220,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(context.design.radius.xl),
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF87CEEB), Color(0xFFB0C4DE), Color(0xFFF5F5F5)],
-              ),
-            ),
-            child: Stack(
-              children: [
-                // 模拟壁纸内容
-                Positioned(
-                  top: 40,
-                  left: 20,
-                  right: 20,
-                  child: Container(
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: AppColors.white100.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(context.design.radius.md),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 30,
-                  left: 16,
-                  right: 16,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: AppColors.white100.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(context.design.radius.sm),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: context.design.spacing.xs),
-                      Expanded(
-                        child: Container(
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: AppColors.white100.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(context.design.radius.sm),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // 锁图标
-                Positioned(
-                  top: 80,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.white100.withValues(alpha: 0.6),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.lock, size: 18, color: skin.colors.text3),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(width: context.design.spacing.sm),
-        // 阅读模式预览卡
-        Expanded(
-          child: Container(
-            height: 220,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(context.design.radius.xl),
-              color: skin.colors.cardBgAlt,
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 60,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(context.design.radius.xs),
-                    ),
-                  ),
-                  SizedBox(height: context.design.spacing.sm),
-                  ...List.generate(
-                    4,
-                    (i) => Padding(
-                      padding: EdgeInsets.only(bottom: 8),
-                      child: Container(
-                        height: 10,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: AppColors.white100.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(context.design.radius.xs),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
