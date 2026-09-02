@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/auth/app_session_controller.dart';
-import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/features/account/data/file_avatar_storage.dart';
 import 'package:word_app/features/account/data/secure_password_auth_store.dart';
 import 'package:word_app/features/account/data/spug_sms_code_service.dart';

@@ -1,4 +1,4 @@
-import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
 import 'package:word_app/features/learning/application/favorites_port.dart';
 

@@ -1,4 +1,4 @@
-import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/features/learning/data/mastered_repository.dart';
 import 'package:word_app/features/learning/application/mastered_writer_port.dart';
 

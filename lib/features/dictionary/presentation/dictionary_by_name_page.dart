@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 import 'package:flutter/material.dart';
 
-import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';

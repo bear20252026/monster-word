@@ -1,7 +1,7 @@
 /// ─── 依赖注入约定（2026-08-30 健康评估 M1/M2 落地）──────────────────
 ///
 /// 全库两条装配通道，不许混用第三种：
-/// 1. **get_it（本文件配套的 service_locator.dart）**：只注册
+/// 1. **get_it（本文件配套的 app/service_locator.dart）**：只注册
 ///    「跨 feature 基础设施」——DB、音频、session、各 feature 的
 ///    端口实现（data 层 XxxRepository/Reader/WriterPort）。
 /// 2. **Provider（各 feature 的 *_feature_providers.dart）**：注册
@@ -61,10 +61,10 @@ class ImportGuard {
     }
 
     // core 依赖方向：core 不得反向依赖 features。
-    // 例外：core/di 与 core/router 是 IoC 组合根/装配边界，按其设计必须引用
-    // feature 的实现（DI 注册表注册各 feature 的端口实现；路由协调器装配各页面）。
-    // 它们只做「组装」，不承载业务逻辑，因此豁免 R-core，避免依赖方向误报。
-    final isCompositionRoot = from.startsWith('core/di/') || from.startsWith('core/router/');
+    // 例外：core/router 是路由装配边界，按其设计必须引用各页面（只做组装、不承载
+    // 业务逻辑）。组合根本体已上移 app/service_locator.dart（v2.7.37），core/di 不复
+    // 存在；core 其余部分由 app_structure_test 的 REG-ARCH-002 守卫锁定零 feature 依赖。
+    final isCompositionRoot = from.startsWith('core/router/');
     if (!isCompositionRoot && from.startsWith('core/') && to.startsWith('features/')) {
       violations.add('core 不得 import features(R-core): $from -> $to');
     }
@@ -72,7 +72,10 @@ class ImportGuard {
     // R6：feature 不得反向依赖壳层 —— feature 不得 import screens/ 或 app/（组合根）。
     // 壳层只有组合根（app/app.dart、core/router）可以引用 feature；feature 只能
     // 通过 core 的 routeNames 等契约做跨功能导航，不得 import 壳层实现。
-    if (fromFeature.isNotEmpty && (to.startsWith('screens/') || to.startsWith('app/'))) {
+    // 豁免：app/service_locator.dart 是 get_it 容器（组合根产出的 DI 契约），
+    // feature 经它访问 sl<> 是两条装配通道之一，不算 import 壳层实现。
+    final isDiContract = to == 'app/service_locator.dart';
+    if (!isDiContract && fromFeature.isNotEmpty && (to.startsWith('screens/') || to.startsWith('app/'))) {
       violations.add('feature 不得 import 壳层 screens/app(R6): $from -> $to');
     }
 

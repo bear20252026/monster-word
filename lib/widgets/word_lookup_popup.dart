@@ -5,7 +5,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/theme/skin_system.dart';

@@ -1,7 +1,7 @@
 // 应用启动冒烟测试
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/app/app.dart';
-import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/app/service_locator.dart';
 
 void main() {
   testWidgets('应用启动冒烟测试', (WidgetTester tester) async {

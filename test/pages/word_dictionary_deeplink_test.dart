@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/router/content_routes.dart';
 import 'package:word_app/core/router/route_error_page.dart';
 import 'package:word_app/core/router/route_names.dart';

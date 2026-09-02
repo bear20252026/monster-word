@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/app/service_locator.dart';
+import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/core/audio/word_audio_scope.dart';
 import 'package:word_app/core/router/app_router.dart';
 import 'package:word_app/core/router/global_nav_history_bar.dart';
@@ -38,6 +40,7 @@ class WordApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return buildWordAudioScope(
+      audioService: sl<AudioService>(),
       // [1] WordAudio — core/audio 音频会话/播放态。✅ 被全部下游会话页（learn/review/spell/dictation）消费；无上游 provider 依赖，故放最外。
       child: buildAccountFeatureScope(
         // [2] Account — AppSessionState(implements AppSessionController) + AccountProfile。✅ settings(更多设置)经 AppSessionController.logout 消费；Splash 登录检查依赖。无上游依赖。

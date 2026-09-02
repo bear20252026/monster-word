@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/features/book/data/book_repository.dart';
 import 'package:word_app/features/book/application/book_selection_writer.dart';

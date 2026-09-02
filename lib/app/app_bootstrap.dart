@@ -5,7 +5,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 
 import 'package:word_app/app/app_error_widget.dart';
-import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/infrastructure/user_database.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';

@@ -1,4 +1,4 @@
-import 'package:word_app/core/di/service_locator.dart';
+import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/features/quick_review/application/quick_review_word_reader.dart';

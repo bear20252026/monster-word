@@ -109,7 +109,7 @@ void main() {
         'lib/features/dictionary/presentation/word_detail_page.dart',
       ];
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
+      final locatorSource = File('lib/app/service_locator.dart').readAsStringSync();
 
       expect(File('lib/state/player_state.dart').existsSync(), isFalse);
       expect(appSource, contains('buildWordAudioScope('));
@@ -124,7 +124,7 @@ void main() {
 
     test('无消费者的统计栈已删除，应用根不再装配平行统计状态', () {
       final appSource = File('lib/app/app.dart').readAsStringSync();
-      final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
+      final locatorSource = File('lib/app/service_locator.dart').readAsStringSync();
 
       expect(File('lib/state/user_stats_state.dart').existsSync(), isFalse);
       expect(File('lib/services/stats_service.dart').existsSync(), isFalse);
@@ -140,7 +140,7 @@ void main() {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       // 页面逻辑已迁入 feature，断言指向 feature 内部页
       final settingsPageSource = File('lib/features/settings/presentation/settings_page.dart').readAsStringSync();
-      final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
+      final locatorSource = File('lib/app/service_locator.dart').readAsStringSync();
 
       expect(File('lib/state/settings_state.dart').existsSync(), isFalse);
       expect(appSource, contains('buildSettingsFeatureScope('));
@@ -157,7 +157,7 @@ void main() {
     });
 
     test('遗留复习会话栈已删除，功能域装配不再注册旧状态或服务', () {
-      final locatorSource = File('lib/core/di/service_locator.dart').readAsStringSync();
+      final locatorSource = File('lib/app/service_locator.dart').readAsStringSync();
       final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
           .readAsStringSync();
 
@@ -447,6 +447,24 @@ void main() {
       expect(File('lib/screens/review_session.dart').existsSync(), isFalse);
       expect(learningRoutesSource, isNot(contains("import '../../screens/review_session.dart';")));
       expect(learningRoutesSource, isNot(contains('return const ReviewSession();')));
+    });
+
+    test('组合根位于 app 层，core 不反向依赖 feature（REG-ARCH-002）', () {
+      // service_locator（get_it 组合根）已上移 app/；core/di 目录不复存在。
+      expect(Directory('lib/core/di').existsSync(), isFalse);
+      expect(File('lib/app/service_locator.dart').existsSync(), isTrue);
+      expect(File('lib/core/audio/word_audio_scope.dart').readAsStringSync(), isNot(contains('service_locator')));
+
+      // core 层禁止 import 任何 feature 包。
+      // 豁免：core/router（导航路由需引用页面，上移 app/ 列为后续独立批次）。
+      final offenders = <String>[];
+      for (final entity in Directory('lib/core').listSync(recursive: true)) {
+        if (entity is! File || !entity.path.endsWith('.dart')) continue;
+        if (entity.path.replaceAll('\\', '/').contains('/core/router/')) continue;
+        final source = entity.readAsStringSync();
+        if (source.contains("import 'package:word_app/features/")) offenders.add(entity.path);
+      }
+      expect(offenders, isEmpty, reason: 'core 不得反向依赖 features：$offenders');
     });
   });
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/di/service_locator.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 
@@ -13,11 +12,12 @@ import 'package:word_app/core/audio/audio_service.dart';
 ///
 /// 正因它是跨功能共享能力，所以放在 `core/` 而非任何 feature 目录；
 /// 各页面/功能只依赖这里的共享抽象，禁止直接 import `features/player/**`。
-Widget buildWordAudioScope({required Widget child}) {
+/// [audioService] 由 app 层（组合根）注入，core 不反向依赖 DI 容器。
+Widget buildWordAudioScope({required AudioService audioService, required Widget child}) {
   return MultiProvider(
     providers: [
-      Provider<AudioService>.value(value: sl<AudioService>()),
-      ChangeNotifierProvider<AudioPlaybackState>(create: (_) => AudioPlaybackState(audioService: sl<AudioService>())),
+      Provider<AudioService>.value(value: audioService),
+      ChangeNotifierProvider<AudioPlaybackState>(create: (_) => AudioPlaybackState(audioService: audioService)),
     ],
     child: child,
   );
