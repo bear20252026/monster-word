@@ -390,6 +390,42 @@ void main() {
     });
   });
 
+  group('Provider scope 嵌套全序锁定（REG-ARCH-003）', () {
+    test('app.dart 12 层 scope 必须保持注释 [1]~[12] 的 DAG 链序', () {
+      // 背景：app.dart 的 scope 嵌套顺序是全库 Provider 可达性的根基（learning 被跨模块
+      // 消费 189 处），此前仅 ScareCoin→CheckIn 一对有断言（复审 A4/H3），其余层序靠
+      // 注释维护——任何调整都可能编译期静默、运行时 ProviderNotFound。
+      // 本测试锁定完整链序；如需调整嵌套顺序，必须连同本测试与 app.dart 注释一起修改，
+      // 并逐页面验证 context.read 依赖方向。
+      final appSource = File('lib/app/app.dart').readAsStringSync();
+      const chainOrder = <String>[
+        'buildWordAudioScope(', // [1] WordAudio
+        'buildAccountFeatureScope(', // [2] Account
+        'buildLearningFeatureScope(', // [3] Learning
+        'buildSettingsFeatureScope(', // [4] Settings
+        'buildSearchFeatureScope(', // [5] Search
+        'buildQuickReviewFeatureScope(', // [6] QuickReview
+        'buildBookFeatureScope(', // [7] Book
+        'buildScareCoinFeatureScope(', // [8] ScareCoin
+        'buildCheckInFeatureScope(', // [9] CheckIn
+        'buildDictionaryFeatureScope(', // [10] Dictionary
+        'buildWordBrowseFeatureScope(', // [11] WordBrowse
+        'ChangeNotifierProvider(create: (_) => SkinSystem())', // [12] MultiProvider（皮肤/墙纸）
+      ];
+      var prevIdx = -1;
+      for (final marker in chainOrder) {
+        final idx = appSource.indexOf(marker);
+        expect(idx, greaterThan(-1), reason: 'app.dart 缺少 scope 标记：$marker（结构被改动？）');
+        expect(
+          idx,
+          greaterThan(prevIdx),
+          reason: 'scope 嵌套顺序被调整：$marker 必须保持 app.dart 注释 [1]~[12] 的 DAG 链序（详见 app.dart ScopeOrder 注释）',
+        );
+        prevIdx = idx;
+      }
+    });
+  });
+
   group('正式复习禁止依赖', () {
     test('路由页面不回流会话算法、遗留聚合状态或服务定位器', () {
       final pageSource = File('lib/features/learning/presentation/review_page.dart').readAsStringSync();
