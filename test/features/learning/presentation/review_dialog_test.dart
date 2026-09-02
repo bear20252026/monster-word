@@ -18,7 +18,7 @@ import 'package:word_app/features/learning/application/review_schedule_writer_po
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/widgets/review_dialog.dart';
+import 'package:word_app/features/learning/presentation/review_dialog.dart';
 
 void main() {
   setUp(() {

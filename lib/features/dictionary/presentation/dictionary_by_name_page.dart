@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
@@ -39,7 +39,7 @@ class _DictionaryByNamePageState extends State<DictionaryByNamePage> {
 
   Future<void> _resolve() async {
     try {
-      final word = await sl<WordRepository>().getWordByText(widget.wordName);
+      final word = await context.read<WordRepository>().getWordByText(widget.wordName);
       if (!mounted) return;
       setState(() {
         _word = word;

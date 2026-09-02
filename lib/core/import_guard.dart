@@ -10,8 +10,11 @@
 /// 禁止：
 /// - service_locator 注册任何 presentation/ 下的类型（ChangeNotifier
 ///   的生命周期归 Provider 管，见 NewWordsState 迁移先例）。
-/// - presentation 层直接 `sl<>` 取依赖（走 Provider；存量仅
-///   dictionary_by_name_page / word_lookup_popup 2 处，迁移中）。
+/// - feature 的 presentation 层直接 `sl<>` 取依赖（走 Provider）；
+///   `*_feature_providers.dart` 是装配边界例外。存量 3 处已于 v2.7.40
+///   收口（A3），新增即被 R6-DI 规则拦截。
+/// - widgets/ 共享组件层消费 feature 的 domain/data/presentation 内部
+///   实现（A2，v2.7.40 起由 R-widgets 规则拦截；application 端口放行）。
 /// - 新增第三种装配通道。
 // 由 Claude 团队生成 | Monster Word App
 //
@@ -77,6 +80,27 @@ class ImportGuard {
     final isDiContract = to == 'app/service_locator.dart';
     if (!isDiContract && fromFeature.isNotEmpty && (to.startsWith('screens/') || to.startsWith('app/'))) {
       violations.add('feature 不得 import 壳层 screens/app(R6): $from -> $to');
+    }
+
+    // R6-DI（A3 收口）：DI 契约仅 data 层适配器与 *_feature_providers.dart 装配边界
+    // 可用；feature 的 presentation 页面必须走 Provider 注入，不得直取 sl<>。
+    final isProviderAssembly = from.endsWith('_feature_providers.dart');
+    if (isDiContract && fromFeature.isNotEmpty && fromLayer == 'presentation' && !isProviderAssembly) {
+      violations.add('presentation 不得直取 DI 契约(R6-DI): $from -> $to（改走 Provider 注入）');
+    }
+
+    // R-widgets（A2 收口）：共享组件层（widgets/）位于 R4/R6 的 from 域之外，
+    // 此前完全脱离守卫。规则：可消费 feature 的 application 端口（端口-适配器
+    // 允许的功能间通道），不得进入 feature 的 domain/data/presentation 内部，
+    // 也不得 import 壳层 app/（组合根归 app.dart 专用）。
+    final isWidgetsLayer = from.startsWith('widgets/');
+    if (isWidgetsLayer) {
+      if (toFeature.isNotEmpty && toLayer != 'application') {
+        violations.add('widgets 只能消费 feature application 端口(R-widgets): $from -> $to');
+      }
+      if (to.startsWith('app/')) {
+        violations.add('widgets 不得 import 壳层 app/(R-widgets): $from -> $to');
+      }
     }
 
     // R3：分层只向内 —— 仅对同一 feature 内的层间 import 生效。

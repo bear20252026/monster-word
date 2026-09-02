@@ -1,10 +1,10 @@
-// 回顾弹窗：今日已学 + 今日复习统计
+// 回顾弹窗：今日已学 + 今日复习统计（learning feature 内部组件，仅被 home_screen 消费）
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/router/route_names.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
-import 'package:word_app/features/learning/presentation/review_page.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
@@ -186,7 +186,7 @@ class _ReviewDialog extends StatelessWidget {
                   onPressed: () {
                     final nav = Navigator.of(context);
                     nav.pop();
-                    nav.pushNamed('/learn');
+                    nav.pushNamed(RouteNames.learn);
                   },
                   icon: const Icon(Icons.play_arrow, size: 18),
                   label: const Text('继续学习'),
@@ -204,7 +204,7 @@ class _ReviewDialog extends StatelessWidget {
                   onPressed: () {
                     final nav = Navigator.of(context);
                     nav.pop();
-                    nav.pushNamed(ReviewPage.routeName);
+                    nav.pushNamed(RouteNames.review);
                   },
                   icon: const Icon(Icons.replay, size: 18),
                   label: const Text('开始复习'),

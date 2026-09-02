@@ -1,13 +1,14 @@
-// 内置字典弹窗：长按单词弹出释义小框
+// 内置字典弹窗：长按单词弹出释义小框（learning feature 内部组件，仅被 learn_page 消费）
 // 样式：圆角 + 阴影 + 半透明背景
 // 点击可进入字典详情页
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import 'package:word_app/app/service_locator.dart';
-import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
+import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
@@ -32,8 +33,8 @@ class WordLookupPopup extends StatelessWidget {
   }
 
   void _showPopup(BuildContext context, Offset position) async {
-    // 查询单词数据
-    final wordData = await _lookupWord(word);
+    // 查询单词数据（Provider 通道：learning scope 注册 WordRepository 转发）
+    final wordData = await _lookupWord(context, word);
     if (!context.mounted) return;
 
     // 计算弹窗位置（避免超出屏幕）
@@ -84,7 +85,7 @@ class WordLookupPopup extends StatelessWidget {
                     onTap: () {
                       Navigator.pop(ctx);
                       // 跳转字典详情页
-                      Navigator.pushNamed(context, '/word_detail', arguments: wordData);
+                      Navigator.pushNamed(context, RouteNames.wordDetail, arguments: wordData);
                     },
                   ),
                 ),
@@ -97,9 +98,9 @@ class WordLookupPopup extends StatelessWidget {
   }
 
   /// 查询单词数据
-  Future<Word?> _lookupWord(String word) async {
+  Future<Word?> _lookupWord(BuildContext context, String word) async {
     try {
-      return await sl<WordRepository>().getWordByText(word);
+      return await context.read<WordRepository>().getWordByText(word);
     } catch (e) {
       debugPrint('Word lookup error: $e');
       return null;
@@ -205,13 +206,5 @@ class _PopupCard extends StatelessWidget {
         Text('未找到该单词', style: MistralTypography.body.copyWith(color: skin.text3)),
       ],
     );
-  }
-}
-
-/// 便捷扩展：给任意 Text widget 添加长按查词
-extension WordLookupExtension on Widget {
-  /// 包裹为可长按查词的 widget
-  Widget withWordLookup(String word) {
-    return WordLookupPopup(word: word, child: this);
   }
 }

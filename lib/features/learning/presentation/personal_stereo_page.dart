@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_service.dart';
-import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 import 'package:word_app/features/learning/application/learning_session_reader.dart';
 import 'package:word_app/features/learning/application/new_words_reader.dart';
@@ -34,7 +33,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
   @override
   void initState() {
     super.initState();
-    _player = StereoPlayerState(audioService: sl<AudioService>());
+    _player = StereoPlayerState(audioService: context.read<AudioService>());
   }
 
   @override
@@ -61,7 +60,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
       case StereoSource.reviewing:
         return context.read<ReviewQueueState>().snapshot.dueWords;
       case StereoSource.newWords:
-        return sl<NewWordsReader>().loadWords();
+        return context.read<NewWordsReader>().loadWords();
       case StereoSource.favorites:
         final favorites = context.read<LearningFavoritesStore>();
         final queue = context.read<LearningSessionReader>().queue;

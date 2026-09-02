@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/app/service_locator.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/dictionary/application/dictionary_content_reader.dart';
 import 'package:word_app/features/dictionary/application/dictionary_favorite_writer.dart';
@@ -23,6 +25,8 @@ Widget buildDictionaryFeatureScope({required Widget child}) {
       Provider<DictionarySearchReader>(create: (_) => ServiceDictionarySearchReader()),
       Provider<DictionaryFavoriteWriter>(create: (_) => ServiceDictionaryFavoriteWriter()),
       Provider<DictionaryNewWordWriter>(create: (_) => ServiceDictionaryNewWordWriter()),
+      // core 仓储转发（深链页经 Provider 通道消费，禁止直取 sl<>——A3 收口）
+      Provider<WordRepository>.value(value: sl<WordRepository>()),
     ],
     child: child,
   );

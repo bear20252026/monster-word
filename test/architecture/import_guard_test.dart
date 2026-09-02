@@ -99,6 +99,44 @@ void main() {
       expect(check('core/router/learning_routes.dart', 'features/learning/presentation/learn_session.dart'), isEmpty);
     });
 
+    test('R6-DI: feature presentation 不得直取 DI 契约（A3 收口）', () {
+      // presentation 页面 import app/service_locator → 违规（走 Provider）
+      expect(
+        check('features/learning/presentation/personal_stereo_page.dart', 'app/service_locator.dart'),
+        anyElement(contains('presentation 不得直取 DI 契约(R6-DI)')),
+      );
+      // 装配边界（*_feature_providers.dart）与 data 层适配器放行
+      expect(
+        check('features/learning/presentation/learning_feature_providers.dart', 'app/service_locator.dart'),
+        isEmpty,
+      );
+      expect(check('features/learning/data/repository_favorites_port.dart', 'app/service_locator.dart'), isEmpty);
+    });
+
+    test('R-widgets: widgets 层只能消费 feature application 端口（A2 收口）', () {
+      // widgets import feature presentation/data/domain → 违规
+      expect(
+        check('widgets/review_dialog.dart', 'features/learning/presentation/learning_session_state.dart'),
+        anyElement(contains('widgets 只能消费 feature application 端口(R-widgets)')),
+      );
+      expect(
+        check('widgets/some_card.dart', 'features/book/data/book_repository.dart'),
+        anyElement(contains('widgets 只能消费 feature application 端口(R-widgets)')),
+      );
+      // widgets import 壳层 app/ → 违规
+      expect(
+        check('widgets/some_card.dart', 'app/service_locator.dart'),
+        anyElement(contains('widgets 不得 import 壳层 app/(R-widgets)')),
+      );
+      // widgets import feature application 端口 → 放行
+      expect(
+        check('widgets/spring_check_in_calendar.dart', 'features/checkin/application/checkin_status_reader.dart'),
+        isEmpty,
+      );
+      // widgets import core/models/theme → 放行
+      expect(check('widgets/some_card.dart', 'core/repositories/word_repository.dart'), isEmpty);
+    });
+
     test('非 feature、非 core 壳层（遗留薄适配）依赖 feature 允许', () {
       expect(check('pages/book_words_page.dart', 'features/learning/presentation/state.dart'), isEmpty);
     });

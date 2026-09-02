@@ -17,7 +17,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/daily_goal_picker.dart';
-import 'package:word_app/widgets/review_dialog.dart';
+import 'package:word_app/features/learning/presentation/review_dialog.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 import 'package:word_app/widgets/spring_check_in_calendar.dart';
 import 'package:word_app/widgets/testimonial_slider.dart';

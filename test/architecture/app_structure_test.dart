@@ -444,7 +444,7 @@ void main() {
       final providerSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
           .readAsStringSync();
       final wordDetailSource = File('lib/features/dictionary/presentation/word_detail_page.dart').readAsStringSync();
-      final dialogSource = File('lib/widgets/review_dialog.dart').readAsStringSync();
+      final dialogSource = File('lib/features/learning/presentation/review_dialog.dart').readAsStringSync();
       final statisticsSource = File('lib/features/learning/presentation/learning_statistics_state.dart')
           .readAsStringSync();
       final wordListsSource = File('lib/features/learning/presentation/learning_queue_word_lists_state.dart')

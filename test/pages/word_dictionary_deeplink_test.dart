@@ -1,6 +1,7 @@
 // 由 Claude 团队生成
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/router/content_routes.dart';
@@ -91,8 +92,14 @@ void main() {
 
     group('按名解析页面', () {
       testWidgets('未命中 → 友好错误态，可返回首页', (tester) async {
-        sl.registerLazySingleton<WordRepository>(() => _FakeWordRepository(found: null));
-        await tester.pumpWidget(const MaterialApp(home: DictionaryByNamePage(wordName: 'zzz_not_exist')));
+        // A3 收口后 DictionaryByNamePage 通过 context.read<WordRepository>() 取依赖，
+        // 测试桩以 Provider 契约方式注入（与 feature_providers 装配一致），不再经 sl。
+        await tester.pumpWidget(
+          Provider<WordRepository>.value(
+            value: _FakeWordRepository(found: null),
+            child: const MaterialApp(home: DictionaryByNamePage(wordName: 'zzz_not_exist')),
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(find.textContaining('未找到'), findsOneWidget);

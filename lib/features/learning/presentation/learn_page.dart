@@ -17,7 +17,7 @@ import 'package:word_app/theme/skin_system.dart';
 
 import 'package:word_app/tokens/star_gold.dart';
 import 'package:word_app/widgets/animations.dart';
-import 'package:word_app/widgets/word_lookup_popup.dart';
+import 'package:word_app/features/learning/presentation/word_lookup_popup.dart';
 import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/scratch_to_reveal.dart';
