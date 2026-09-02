@@ -4,14 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/router/route_names.dart';
-import 'package:word_app/core/infrastructure/app_preferences.dart';
-import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
-import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/message_badge_icon.dart';
-import 'package:word_app/widgets/monster_icon.dart';
+import 'package:word_app/widgets/scare_coin_summary_cards.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 
 class MySpacePage extends StatelessWidget {
@@ -77,9 +74,9 @@ class MySpacePage extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       children: [
-                        Expanded(child: _CoinCard(skin: skin)),
+                        Expanded(child: ScareCoinCard(skin: skin)),
                         SizedBox(width: 12),
-                        Expanded(child: _EquipCard(skin: skin)),
+                        Expanded(child: EquipCard(skin: skin)),
                       ],
                     ),
                   ),
@@ -292,128 +289,6 @@ class _MenuItem extends StatelessWidget {
         trailing: Icon(Icons.chevron_right, color: skin.text3, size: 20),
         onTap: onTap,
       ),
-    );
-  }
-}
-
-/// 尖叫币卡片：动态余额，点击进入历史记录页
-class _CoinCard extends StatelessWidget {
-  final ThemeVars skin;
-  const _CoinCard({required this.skin});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, RouteNames.scareCoinHistory),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          color: skin.cardBg,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: skin.text1.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
-        ),
-        child: Row(
-          children: [
-            const MonsterAvatar(size: 34),
-            SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('尖叫币', style: MistralTypography.micro.copyWith(color: skin.text3)),
-                  SizedBox(height: 2),
-                  FutureBuilder<int>(
-                    future: context.read<ScareCoinStore>().balance(),
-                    builder: (context, snap) {
-                      return Text(
-                        '${snap.data ?? 0}',
-                        style: MistralTypography.heading4.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 装备卡片：标题 + 4个装备图标 + 箭头
-class _EquipCard extends StatelessWidget {
-  final ThemeVars skin;
-  const _EquipCard({required this.skin});
-
-  @override
-  Widget build(BuildContext context) {
-    // 已拥有装备件数与总数取单一事实来源（与 profile_screen / 我的装备页同源）：
-    // 当前皮肤(恒 1) + 收藏章(已兑换≥1 计 1 件) + 连击徽章(连击>0 计 1 件)。
-    final streakFuture = context.read<CheckinStatusReader>().getStreakDays();
-    final redeemedCount = AppPreferences().redeemedBadgeCount();
-    return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, RouteNames.myEquip),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          color: skin.cardBg,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: skin.text1.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    children: [
-                      Text('装备', style: MistralTypography.micro.copyWith(color: skin.text3)),
-                      SizedBox(width: 4),
-                      FutureBuilder<int>(
-                        future: streakFuture,
-                        builder: (context, snap) {
-                          final owned = 1 + (redeemedCount > 0 ? 1 : 0) + ((snap.data ?? 0) > 0 ? 1 : 0);
-                          return Text(
-                            '$owned/${AppPreferences.equipRackCount}',
-                            style: MistralTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _equipIcon(Icons.auto_awesome, skin),
-                      SizedBox(width: 6),
-                      _equipIcon(Icons.menu_book, skin),
-                      SizedBox(width: 6),
-                      _equipIcon(Icons.headphones, skin),
-                      SizedBox(width: 6),
-                      _equipIcon(Icons.translate, skin),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _equipIcon(IconData icon, ThemeVars skin) {
-    return Container(
-      width: 26,
-      height: 26,
-      decoration: BoxDecoration(color: skin.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-      child: Icon(icon, color: skin.accent, size: 15),
     );
   }
 }

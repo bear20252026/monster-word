@@ -364,9 +364,9 @@ void main() {
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/features/scare_coin/presentation/scare_coin_history_page.dart').readAsStringSync();
       final calendarSource = File('lib/widgets/spring_check_in_calendar.dart').readAsStringSync();
-      final profileSource = File('lib/features/settings/presentation/profile_screen.dart').readAsStringSync();
+      // A5 收口后 profile/my_space 的卡片消费已上收至共享组件（唯一持有 ScareCoinStore 消费）。
+      final cardsSource = File('lib/widgets/scare_coin_summary_cards.dart').readAsStringSync();
       final dashboardSource = File('lib/features/learning/presentation/dashboard_page.dart').readAsStringSync();
-      final mySpaceSource = File('lib/features/account/presentation/my_space_page.dart').readAsStringSync();
 
       expect(portSource, contains('abstract interface class ScareCoinStore'));
       expect(adapterSource, contains('implements ScareCoinStore'));
@@ -381,11 +381,40 @@ void main() {
       expect(scareCoinScopeIdx, greaterThan(-1));
       expect(checkInScopeIdx, greaterThan(-1));
       expect(scareCoinScopeIdx, lessThan(checkInScopeIdx));
-      for (final source in [pageSource, calendarSource, profileSource, dashboardSource, mySpaceSource]) {
+      for (final source in [pageSource, calendarSource, cardsSource, dashboardSource]) {
         expect(source, contains('ScareCoinStore'));
         expect(source, isNot(contains('ScareCoinLedger')));
         expect(source, isNot(contains('SharedPreferences')));
         expect(source, isNot(contains('service_locator')));
+      }
+    });
+
+    test('A5 尖叫币/装备卡片单一事实来源——共享组件唯一持有，页面零双写', () {
+      // 背景：my_space_page 与 profile_screen 此前各自私有实现 _CoinCard/_EquipCard，
+      // UI 与行为已漂移（裸 Container vs MwCard、字符串路由 vs RouteNames、装备数
+      // 规则 1+(redeemed>0)+(streak>0) 双写、装备徽章两套配色）。v2.7.41 收口至
+      // lib/widgets/scare_coin_summary_cards.dart；本测试锁定收口成果防双写复发。
+      final cardsSource = File('lib/widgets/scare_coin_summary_cards.dart').readAsStringSync();
+      final mySpaceSource = File('lib/features/account/presentation/my_space_page.dart').readAsStringSync();
+      final profileSource = File('lib/features/settings/presentation/profile_screen.dart').readAsStringSync();
+
+      // 共享组件是唯一持有方：双卡类 + 双路由常量 + 装备数规则仅写一遍
+      expect(cardsSource, contains('class ScareCoinCard'));
+      expect(cardsSource, contains('class EquipCard'));
+      expect(cardsSource, contains('RouteNames.scareCoinHistory'));
+      expect(cardsSource, contains('RouteNames.myEquip'));
+      expect(cardsSource, contains('AppPreferences.equipRackCount'));
+      const ownedRule = '1 + (redeemedCount > 0 ? 1 : 0) + ((snap.data ?? 0) > 0 ? 1 : 0)';
+      expect(ownedRule.allMatches(cardsSource).length, 1, reason: '装备数规则只能写一遍');
+
+      // 两页面零双写：不定义私有卡片类、不算装备数、不写死字符串路由
+      for (final entry in {'my_space_page.dart': mySpaceSource, 'profile_screen.dart': profileSource}.entries) {
+        expect(entry.value, isNot(contains('class _CoinCard')), reason: '${entry.key} 不得再私有实现卡片');
+        expect(entry.value, isNot(contains('class _EquipCard')), reason: '${entry.key} 不得再私有实现卡片');
+        expect(entry.value, contains('ScareCoinCard('), reason: '${entry.key} 应消费共享组件');
+        expect(entry.value, contains('EquipCard('), reason: '${entry.key} 应消费共享组件');
+        expect(entry.value, isNot(contains('AppPreferences.equipRackCount')), reason: '${entry.key} 不得重写装备数规则');
+        expect(entry.value, isNot(contains("'/scare_coin_history'")), reason: '${entry.key} 不得使用字符串路由');
       }
     });
   });
