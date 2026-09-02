@@ -36,7 +36,6 @@ class MoreSettingsPage extends StatefulWidget {
 }
 
 class _MoreSettingsPageState extends State<MoreSettingsPage> {
-  bool _wallpaperParallax = true;
   bool _isCheckingUpdate = false;
 
   /// 真实应用版本号（package_info_plus；替换原硬编码 v5.11.1）。
@@ -519,8 +518,6 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                 children: [
                   _buildAccountGroup(skin),
                   SizedBox(height: context.design.spacing.md),
-                  _buildWallpaperGroup(),
-                  SizedBox(height: context.design.spacing.md),
                   _buildFeedbackGroup(skin),
                   SizedBox(height: context.design.spacing.md),
                   _buildRedeemReportGroup(skin),
@@ -547,20 +544,6 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         title: '账号信息',
         subtitle: '点击设置',
         onTap: () => Navigator.pushNamed(context, RouteNames.accountInfo),
-      ),
-    ]);
-  }
-
-  /// 主页壁纸随动组
-  Widget _buildWallpaperGroup() {
-    return _SettingGroup([
-      _SwitchCell(
-        icon: Icons.wallpaper,
-        iconColor: MistralColors.link,
-        title: '主页壁纸随动',
-        subtitle: '壁纸随设备陀螺仪轻微移动',
-        value: _wallpaperParallax,
-        onChanged: (v) => setState(() => _wallpaperParallax = v),
       ),
     ]);
   }
@@ -781,58 +764,6 @@ class _Cell extends StatelessWidget {
             Icon(Icons.chevron_right, size: 18, color: skin.text3),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// 开关设置项（图标 + 标题 + 副标题 + Switch）
-class _SwitchCell extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String? subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _SwitchCell({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    this.subtitle,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final skin = context.skin.colors;
-    return Container(
-      height: 56,
-      padding: EdgeInsets.symmetric(horizontal: context.design.spacing.md),
-      child: Row(
-        children: [
-          Icon(icon, color: iconColor, size: 22),
-          SizedBox(width: context.design.spacing.sm),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
-                if (subtitle != null) Text(subtitle!, style: MistralTypography.micro.copyWith(color: skin.text3)),
-              ],
-            ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.white100,
-            activeTrackColor: skin.accent,
-            inactiveThumbColor: AppColors.white100,
-            inactiveTrackColor: skin.text3,
-          ),
-        ],
       ),
     );
   }

@@ -1,5 +1,5 @@
 // Morphing Tabs：变形标签栏，切换时指示器像液体一样拉伸变形
-// 颜色可自定义，支持弹性动画和视差效果
+// 颜色可自定义，支持弹性动画
 // 适用于：词书分类标签、设置页标签、任何 Tab 切换场景
 import 'dart:math' as math;
 
@@ -26,7 +26,6 @@ class MorphingTabs extends StatefulWidget {
   final EdgeInsets padding;
   final Duration animationDuration;
   final bool showIndicator;
-  final bool enableParallax;
 
   const MorphingTabs({
     super.key,
@@ -42,7 +41,6 @@ class MorphingTabs extends StatefulWidget {
     this.padding = const EdgeInsets.all(3),
     this.animationDuration = const Duration(milliseconds: 400),
     this.showIndicator = true,
-    this.enableParallax = true,
   });
 
   @override
