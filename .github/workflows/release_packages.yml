@@ -17,9 +17,34 @@ on:
 
 jobs:
   # --------------------------------------------------------------------
+  # QUALITY GATE：analyze + 全量测试，任一失败则整个发版链熔断
+  # --------------------------------------------------------------------
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze project source
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Run tests
+        run: flutter test --no-pub
+
+  # --------------------------------------------------------------------
   # ANDROID：生产 APK + AAB
   # --------------------------------------------------------------------
   android:
+    needs: [quality-gate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -100,6 +125,7 @@ jobs:
   # WINDOWS：生产 Inno Setup 安装程序（.exe）
   # --------------------------------------------------------------------
   windows:
+    needs: [quality-gate]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
