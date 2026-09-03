@@ -15,6 +15,8 @@ import 'package:word_app/widgets/liquid_logo.dart';
 import 'package:word_app/widgets/meteors.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 import 'package:word_app/features/account/presentation/login_page.dart';
+import 'package:word_app/tokens/effect_palette.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -133,13 +135,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
         children: [
           // 流星雨背景（仅在深色主题时显示）
           if (skin.colors.pageBg.computeLuminance() < 0.3)
-            const Positioned.fill(
-              child: MeteorShower(
-                count: 15,
-                enableStars: true,
-                colors: [Color(0xFF006241), Color(0xFF00754A), Color(0xFFcba258), Color(0xFF4D96FF)],
-              ),
-            ),
+            const Positioned.fill(child: MeteorShower(count: 15, enableStars: true, colors: GradientEffects.splash)),
           Center(
             child: FadeTransition(
               opacity: _fadeAnim,
@@ -154,8 +150,8 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                       colors: [
                         skin.colors.accent,
                         skin.colors.accent.withValues(alpha: 0.8),
-                        const Color(0xFF1E3932),
-                        const Color(0xFFcba258),
+                        StarbucksCreamColors.greenBanner,
+                        StarbucksCreamColors.vipGoldBg,
                       ],
                       child: ExcludeSemantics(
                         child: Text(

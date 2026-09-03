@@ -7,6 +7,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 class BendingGalleryItem {
   final Widget child;
@@ -101,7 +102,7 @@ class _BendingGalleryState extends State<BendingGallery> {
           Container(
             height: widget.height * 0.7,
             decoration: BoxDecoration(
-              color: item.color ?? widget.activeColor ?? const Color(0xFF006241),
+              color: item.color ?? widget.activeColor ?? StarbucksCreamColors.greenHouse,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -176,7 +177,7 @@ class _PerspectiveGalleryState extends State<PerspectiveGallery> {
                 width: widget.itemWidth,
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(
-                  color: widget.items[i].color ?? const Color(0xFF006241),
+                  color: widget.items[i].color ?? StarbucksCreamColors.greenHouse,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(

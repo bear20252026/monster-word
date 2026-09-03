@@ -6,6 +6,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/effect_palette.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 class Meteor {
   Offset position;
@@ -50,7 +52,13 @@ class MeteorShower extends StatefulWidget {
     super.key,
     this.child,
     this.count = 12,
-    this.colors = const [Color(0xFF006241), Color(0xFF00754A), Color(0xFFcba258), Color(0xFF4D96FF), Color(0xFFC77DFF)],
+    this.colors = const [
+      StarbucksCreamColors.greenHouse,
+      StarbucksCreamColors.greenSignature,
+      StarbucksCreamColors.vipGoldBg,
+      PartyColors.blue,
+      PartyColors.purple,
+    ],
     this.speed = 1.0,
     this.minLength = 40,
     this.maxLength = 120,
@@ -175,7 +183,7 @@ class _MeteorShowerState extends State<MeteorShower> with SingleTickerProviderSt
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [const Color(0xFF0A0F0D), const Color(0xFF1E3932).withValues(alpha: 0.8)],
+                      colors: [MeteorPalette.nightSky, StarbucksCreamColors.greenBanner.withValues(alpha: 0.8)],
                     ),
                   )
                 : null,
@@ -294,7 +302,11 @@ class MeteorBackground extends StatelessWidget {
     super.key,
     required this.child,
     this.meteorCount = 8,
-    this.colors = const [Color(0xFF006241), Color(0xFF00754A), Color(0xFFcba258)],
+    this.colors = const [
+      StarbucksCreamColors.greenHouse,
+      StarbucksCreamColors.greenSignature,
+      StarbucksCreamColors.vipGoldBg,
+    ],
   });
 
   @override

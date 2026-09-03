@@ -4,6 +4,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/effect_palette.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 class GlobePoint {
   final double lat; // 纬度 (-90 to 90)
@@ -16,7 +18,7 @@ class GlobePoint {
     required this.lat,
     required this.lon,
     this.size = 4,
-    this.color = const Color(0xFF006241),
+    this.color = StarbucksCreamColors.greenHouse,
     this.label,
   });
 }
@@ -34,7 +36,7 @@ class GlobeArc {
     required this.fromLon,
     required this.toLat,
     required this.toLon,
-    this.color = const Color(0xFF006241),
+    this.color = StarbucksCreamColors.greenHouse,
     this.width = 1.5,
   });
 }
@@ -127,10 +129,10 @@ class _WordGlobeState extends State<WordGlobe> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    final globeColor = widget.globeColor ?? const Color(0xFF1E3932);
-    final pointColor = widget.pointColor ?? const Color(0xFF006241);
-    final arcColor = widget.arcColor ?? const Color(0xFFcba258);
-    final atmosphereColor = widget.atmosphereColor ?? const Color(0xFF00754A);
+    final globeColor = widget.globeColor ?? StarbucksCreamColors.greenBanner;
+    final pointColor = widget.pointColor ?? StarbucksCreamColors.greenHouse;
+    final arcColor = widget.arcColor ?? StarbucksCreamColors.vipGoldBg;
+    final atmosphereColor = widget.atmosphereColor ?? StarbucksCreamColors.greenSignature;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -337,18 +339,24 @@ class _GlobePainter extends CustomPainter {
 /// 预设数据：单词起源地
 class WordOriginData {
   static const List<GlobePoint> origins = [
-    GlobePoint(lat: 41.9, lon: 12.5, label: 'Latin', color: Color(0xFFcba258), size: 6), // 罗马 - 拉丁语
-    GlobePoint(lat: 37.98, lon: 23.72, label: 'Greek', color: Color(0xFF00754A), size: 6), // 雅典 - 希腊语
-    GlobePoint(lat: 48.85, lon: 2.35, label: 'French', color: Color(0xFF4D96FF), size: 5), // 巴黎 - 法语
-    GlobePoint(lat: 51.5, lon: -0.12, label: 'English', color: Color(0xFF006241), size: 5), // 伦敦 - 英语
-    GlobePoint(lat: 52.5, lon: 13.4, label: 'German', color: Color(0xFF6BCB77), size: 4), // 柏林 - 德语
-    GlobePoint(lat: 36.7, lon: 3.0, label: 'Arabic', color: Color(0xFFFF6B6B), size: 4), // 阿尔及尔 - 阿拉伯语
+    GlobePoint(lat: 41.9, lon: 12.5, label: 'Latin', color: StarbucksCreamColors.vipGoldBg, size: 6), // 罗马 - 拉丁语
+    GlobePoint(lat: 37.98, lon: 23.72, label: 'Greek', color: StarbucksCreamColors.greenSignature, size: 6), // 雅典 - 希腊语
+    GlobePoint(lat: 48.85, lon: 2.35, label: 'French', color: PartyColors.blue, size: 5), // 巴黎 - 法语
+    GlobePoint(lat: 51.5, lon: -0.12, label: 'English', color: StarbucksCreamColors.greenHouse, size: 5), // 伦敦 - 英语
+    GlobePoint(lat: 52.5, lon: 13.4, label: 'German', color: PartyColors.green, size: 4), // 柏林 - 德语
+    GlobePoint(lat: 36.7, lon: 3.0, label: 'Arabic', color: PartyColors.red, size: 4), // 阿尔及尔 - 阿拉伯语
   ];
 
   static const List<GlobeArc> connections = [
-    GlobeArc(fromLat: 41.9, fromLon: 12.5, toLat: 51.5, toLon: -0.12, color: Color(0xFFcba258)), // 罗马→伦敦
-    GlobeArc(fromLat: 37.98, fromLon: 23.72, toLat: 41.9, toLon: 12.5, color: Color(0xFF00754A)), // 雅典→罗马
-    GlobeArc(fromLat: 41.9, fromLon: 12.5, toLat: 48.85, toLon: 2.35, color: Color(0xFF4D96FF)), // 罗马→巴黎
-    GlobeArc(fromLat: 48.85, fromLon: 2.35, toLat: 51.5, toLon: -0.12, color: Color(0xFF006241)), // 巴黎→伦敦
+    GlobeArc(fromLat: 41.9, fromLon: 12.5, toLat: 51.5, toLon: -0.12, color: StarbucksCreamColors.vipGoldBg), // 罗马→伦敦
+    GlobeArc(
+      fromLat: 37.98,
+      fromLon: 23.72,
+      toLat: 41.9,
+      toLon: 12.5,
+      color: StarbucksCreamColors.greenSignature,
+    ), // 雅典→罗马
+    GlobeArc(fromLat: 41.9, fromLon: 12.5, toLat: 48.85, toLon: 2.35, color: PartyColors.blue), // 罗马→巴黎
+    GlobeArc(fromLat: 48.85, fromLon: 2.35, toLat: 51.5, toLon: -0.12, color: StarbucksCreamColors.greenHouse), // 巴黎→伦敦
   ];
 }

@@ -25,6 +25,8 @@ import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/effect_palette.dart';
 
 class LearnPage extends StatefulWidget {
   const LearnPage({super.key});
@@ -616,7 +618,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       particleCount: 30,
       direction: ConfettiDirection.down,
       duration: const Duration(seconds: 2),
-      colors: const [Color(0xFF006241), Color(0xFF00754A), Color(0xFFcba258), Color(0xFFFFD93D), Color(0xFF6BCB77)],
+      colors: GradientEffects.celebration,
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: resp.pageMargin),
         child: Padding(
@@ -718,8 +720,8 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
               boxShadow: isCorrect || isWrong
                   ? null
                   : const [
-                      BoxShadow(color: Color(0x24000000), blurRadius: 0.5, offset: Offset(0, 0)),
-                      BoxShadow(color: Color(0x3D000000), blurRadius: 1, offset: Offset(0, 1)),
+                      BoxShadow(color: MistralShadows.softShadow, blurRadius: 0.5, offset: Offset(0, 0)),
+                      BoxShadow(color: MistralShadows.liftShadow, blurRadius: 1, offset: Offset(0, 1)),
                     ],
             ),
             child: Center(

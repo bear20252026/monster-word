@@ -204,7 +204,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                 color: skin.accent,
                 border: Border.all(color: skin.cardBg, width: 2),
               ),
-              child: const Icon(Icons.camera_alt, color: Color(0xFFFFFFFF), size: 14),
+              child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
             ),
           ),
         ],
@@ -264,7 +264,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
           _buildBindRow(
             skin,
             icon: Icons.chat_bubble,
-            iconColor: const Color(0xFF07C160),
+            iconColor: ThirdPartyBrand.wechat,
             platform: '微信',
             isBound: profile.wechatName.isNotEmpty,
             boundName: profile.wechatName,
@@ -274,7 +274,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
           _buildBindRow(
             skin,
             icon: Icons.circle,
-            iconColor: const Color(0xFF12B7F5),
+            iconColor: ThirdPartyBrand.qq,
             platform: 'QQ',
             isBound: false,
             onTap: () => _showBindNotSupported(context, 'QQ'),
@@ -283,7 +283,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
           _buildBindRow(
             skin,
             icon: Icons.language,
-            iconColor: const Color(0xFFE6162D),
+            iconColor: ThirdPartyBrand.weibo,
             platform: '微博',
             isBound: false,
             onTap: () => _showBindNotSupported(context, '微博'),

@@ -22,6 +22,7 @@ import 'package:word_app/widgets/scale_down_on_press.dart';
 import 'package:word_app/widgets/spring_check_in_calendar.dart';
 import 'package:word_app/widgets/testimonial_slider.dart';
 import 'package:word_app/widgets/text_reveal_card.dart';
+import 'package:word_app/tokens/effect_palette.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -355,8 +356,8 @@ class HomeScreen extends StatelessWidget {
                   color: skin.colors.cardBg,
                   shape: BoxShape.circle,
                   boxShadow: const [
-                    BoxShadow(color: Color(0x23000000), blurRadius: 0.5, offset: Offset(0, 0)),
-                    BoxShadow(color: Color(0x3D000000), blurRadius: 1.0, offset: Offset(0, 1)),
+                    BoxShadow(color: MistralShadows.hairlineShadow, blurRadius: 0.5, offset: Offset(0, 0)),
+                    BoxShadow(color: MistralShadows.liftShadow, blurRadius: 1.0, offset: Offset(0, 1)),
                   ],
                 ),
                 child: Icon(Icons.calendar_today, size: 16, color: skin.colors.accent),
@@ -379,7 +380,7 @@ class HomeScreen extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF9BBC0F), // GameBoy 绿（豁免）
+              color: GameBoyColors.screen, // GameBoy 绿（豁免）
               shape: BoxShape.circle,
               boxShadow: [BoxShadow(color: MistralColors.black26, blurRadius: 6, offset: const Offset(0, 2))],
             ),
@@ -390,7 +391,7 @@ class HomeScreen extends StatelessWidget {
                   fontFamily: 'monospace',
                   fontSize: 14,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F380F), // GameBoy 深绿（豁免）
+                  color: GameBoyColors.pixel, // GameBoy 深绿（豁免）
                 ),
               ),
             ),
@@ -417,8 +418,8 @@ class HomeScreen extends StatelessWidget {
                 color: skin.colors.cardBg,
                 shape: BoxShape.circle,
                 boxShadow: const [
-                  BoxShadow(color: Color(0x23000000), blurRadius: 0.5),
-                  BoxShadow(color: Color(0x3D000000), blurRadius: 1.0, offset: Offset(0, 1)),
+                  BoxShadow(color: MistralShadows.hairlineShadow, blurRadius: 0.5),
+                  BoxShadow(color: MistralShadows.liftShadow, blurRadius: 1.0, offset: Offset(0, 1)),
                 ],
               ),
               child: Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 24),

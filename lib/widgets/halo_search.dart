@@ -4,6 +4,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 class HaloSearchField extends StatefulWidget {
   final TextEditingController? controller;
@@ -187,7 +188,7 @@ class HaloSearchBackground extends StatefulWidget {
   final Widget child;
   final Color color;
 
-  const HaloSearchBackground({super.key, required this.child, this.color = const Color(0xFF006241)});
+  const HaloSearchBackground({super.key, required this.child, this.color = StarbucksCreamColors.greenHouse});
 
   @override
   State<HaloSearchBackground> createState() => _HaloSearchBackgroundState();

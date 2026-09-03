@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 星巴克标准卡片组件
 ///
@@ -58,12 +59,12 @@ class MwCard extends StatelessWidget {
   /// 星巴克标准双层阴影
   static const List<BoxShadow> _shadows = [
     BoxShadow(
-      color: Color(0x23000000), // rgba(0,0,0,0.14)
+      color: MistralShadows.hairlineShadow, // rgba(0,0,0,0.14)
       blurRadius: 0.5,
       offset: Offset(0, 0),
     ),
     BoxShadow(
-      color: Color(0x3D000000), // rgba(0,0,0,0.24)
+      color: MistralShadows.liftShadow, // rgba(0,0,0,0.24)
       blurRadius: 1.0,
       offset: Offset(0, 1),
     ),

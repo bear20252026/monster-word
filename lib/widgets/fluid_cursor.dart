@@ -4,6 +4,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 /// 流体光标控制器（全局单例，追踪触摸位置）
 class FluidCursorController extends ChangeNotifier {
@@ -29,7 +30,7 @@ class FluidCursorController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Color _rippleColor = const Color(0xFF006241);
+  Color _rippleColor = StarbucksCreamColors.greenHouse;
   void setRippleColor(Color c) => _rippleColor = c;
 
   void cleanOldRipples() {
@@ -56,7 +57,7 @@ class FluidCursorOverlay extends StatefulWidget {
   const FluidCursorOverlay({
     super.key,
     required this.child,
-    this.rippleColor = const Color(0xFF006241),
+    this.rippleColor = StarbucksCreamColors.greenHouse,
     this.maxRadius = 80,
     this.enabled = true,
   });

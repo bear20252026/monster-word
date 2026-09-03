@@ -4,6 +4,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/effect_palette.dart';
 
 class ConfettiParticle {
   Offset position;
@@ -77,14 +78,7 @@ class ConfettiOverlay extends StatefulWidget {
     required this.child,
     this.controller,
     this.particleCount = 50,
-    this.colors = const [
-      Color(0xFFFF6B6B),
-      Color(0xFFFFD93D),
-      Color(0xFF6BCB77),
-      Color(0xFF4D96FF),
-      Color(0xFFC77DFF),
-      Color(0xFFFF922B),
-    ],
+    this.colors = PartyColors.confetti,
     this.direction = ConfettiDirection.down,
     this.duration = const Duration(seconds: 3),
     this.gravity = 200,
@@ -338,16 +332,7 @@ class ConfettiPlayer {
     return ConfettiOverlay(
       controller: getController(),
       particleCount: particleCount,
-      colors:
-          colors ??
-          const [
-            Color(0xFFFF6B6B),
-            Color(0xFFFFD93D),
-            Color(0xFF6BCB77),
-            Color(0xFF4D96FF),
-            Color(0xFFC77DFF),
-            Color(0xFFFF922B),
-          ],
+      colors: colors ?? PartyColors.confetti,
       direction: direction,
       duration: duration,
       child: child,

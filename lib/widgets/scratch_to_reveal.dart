@@ -5,6 +5,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 class ScratchToReveal extends StatefulWidget {
   final Widget child; // 被遮盖的内容（揭示后显示）
@@ -90,7 +91,7 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final coverColor = widget.coverColor ?? const Color(0xFF006241);
+    final coverColor = widget.coverColor ?? StarbucksCreamColors.greenHouse;
 
     return GestureDetector(
       onPanUpdate: _onPanUpdate,
@@ -205,7 +206,7 @@ class WordScratchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? const Color(0xFF006241);
+    final c = color ?? StarbucksCreamColors.greenHouse;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

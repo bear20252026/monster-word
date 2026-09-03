@@ -6,6 +6,9 @@ import 'package:word_app/core/router/nav_utils.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
+import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 /// 按单词名深链进入词典（P2-7）。
 ///
@@ -87,6 +90,8 @@ class _NotFoundScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // M5：错误态颜色改语义 token（mutedGold/text1/text3/accent），暗色主题自适应。
+    final skin = context.skin.colors;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -102,14 +107,14 @@ class _NotFoundScaffold extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(failed ? Icons.error_outline : Icons.search_off, size: 56, color: const Color(0xFFB0885A)),
+              Icon(failed ? Icons.error_outline : Icons.search_off, size: 56, color: MistralColors.mutedGold),
               SizedBox(height: 16),
               Text(
                 failed ? '查询失败' : '未找到「$wordName」',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3D3630)),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: skin.text1),
               ),
               SizedBox(height: 8),
-              Text(failed ? '请稍后重试' : '该单词可能不在当前词库中', style: const TextStyle(fontSize: 13, color: Color(0xFF8A8078))),
+              Text(failed ? '请稍后重试' : '该单词可能不在当前词库中', style: TextStyle(fontSize: 13, color: skin.text3)),
               SizedBox(height: 24),
               Builder(
                 builder: (ctx) => ElevatedButton.icon(
@@ -117,7 +122,7 @@ class _NotFoundScaffold extends StatelessWidget {
                   icon: const Icon(Icons.home_outlined, size: 18),
                   label: const Text('返回首页'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF006241),
+                    backgroundColor: StarbucksCreamColors.greenHouse,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -126,8 +126,8 @@ class MwButton extends StatelessWidget {
   }) : variant = MwButtonVariant.inverse;
 
   // ---- 星巴克品牌色常量 ----
-  static const Color _houseGreen = Color(0xFF00754A);
-  static const Color _darkGreen = Color(0xFF1E3932);
+  static const Color _houseGreen = StarbucksCreamColors.greenSignature;
+  static const Color _darkGreen = StarbucksCreamColors.greenBanner;
 
   /// 获取当前变体的描边
   BorderSide get _defaultBorderSide {

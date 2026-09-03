@@ -109,16 +109,8 @@ class _GlobalNavHistoryBarState extends State<GlobalNavHistoryBar> {
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: colors.divider),
               boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF000000).withValues(alpha: 0.08),
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
-                ),
-                BoxShadow(
-                  color: const Color(0xFF000000).withValues(alpha: 0.10),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3, offset: const Offset(0, 1)),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 16, offset: const Offset(0, 6)),
               ],
             ),
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),

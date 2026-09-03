@@ -40,6 +40,13 @@ class FuncColors {
   /// 紫色浅色变体（用于背景）
   static const Color purpleLight = Color(0xFFE1BEE7);
 
+  // ─── 业务语义色（M5 收口，原页面字面量升级为具名 token）──
+  /// 连击火焰橙（签到历史连击天数 > 0 的火焰色）
+  static const Color streakFlame = Color(0xFFE8913A);
+
+  /// 星级琥珀（评分星星，Material Amber）
+  static const Color ratingStar = Color(0xFFFFC107);
+
   // ─── 通用辅助 ───────────────────────────────────────────
   /// 纯白（通用）
   static const Color white = Color(0xFFFFFFFF);

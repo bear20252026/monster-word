@@ -2,6 +2,7 @@
 // 唯一使用方：lib_select_page（词书分类标签）。原 MorphingTabs/MorphingTabIndicator
 // 因长期零引用已于 v2.7.34 删除，如需不等宽测量版请按需重写而非恢复死代码。
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 /// 简化的变形标签（无测量，等宽 tab）
 class SimpleMorphingTabs extends StatefulWidget {
@@ -83,7 +84,7 @@ class _SimpleMorphingTabsState extends State<SimpleMorphingTabs> with TickerProv
   Widget build(BuildContext context) {
     final activeColor = widget.activeColor ?? Colors.white;
     final inactiveColor = widget.inactiveColor ?? Colors.grey;
-    final indicatorColor = widget.indicatorColor ?? const Color(0xFF006241);
+    final indicatorColor = widget.indicatorColor ?? StarbucksCreamColors.greenHouse;
     final bgColor = widget.backgroundColor ?? Colors.grey.withValues(alpha: 0.12);
 
     return LayoutBuilder(

@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 /// 分享图片生成器
 class ShareImageService {
@@ -26,7 +27,7 @@ class ShareImageService {
     final bgGradient = LinearGradient(
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
-      colors: [const Color(0xFF006241), const Color(0xFF1E3932)],
+      colors: [StarbucksCreamColors.greenHouse, StarbucksCreamColors.greenBanner],
     );
     final bgPaint = Paint()..shader = bgGradient.createShader(Rect.fromLTWH(0, 0, width, height));
     canvas.drawRect(Rect.fromLTWH(0, 0, width, height), bgPaint);
@@ -41,7 +42,7 @@ class ShareImageService {
 
     // === 金色分割线 ===
     final linePaint = Paint()
-      ..color = const Color(0xFFCBA258)
+      ..color = StarbucksCreamColors.vipGoldBg
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke;
     canvas.drawLine(Offset(width * 0.1, height * 0.25), Offset(width * 0.9, height * 0.25), linePaint);
@@ -57,7 +58,7 @@ class ShareImageService {
       fontWeight: FontWeight.bold,
     );
 
-    _drawText(canvas, '背单词 · 有态度', width / 2, height * 0.18, fontSize: 36, color: const Color(0xFFCBA258));
+    _drawText(canvas, '背单词 · 有态度', width / 2, height * 0.18, fontSize: 36, color: StarbucksCreamColors.vipGoldBg);
 
     // === 数据统计卡片 ===
     final cardTop = height * 0.32;
@@ -88,7 +89,7 @@ class ShareImageService {
     final bottomY = height * 0.88;
     _drawText(canvas, '每一天，都在进步', width / 2, bottomY, fontSize: 32, color: Colors.white.withValues(alpha: 0.7));
 
-    _drawText(canvas, '— Monster Word —', width / 2, bottomY + 60, fontSize: 24, color: const Color(0xFFCBA258));
+    _drawText(canvas, '— Monster Word —', width / 2, bottomY + 60, fontSize: 24, color: StarbucksCreamColors.vipGoldBg);
 
     // === 二维码占位区域 ===
     final qrSize = 160.0;
@@ -104,7 +105,7 @@ class ShareImageService {
 
     // 二维码内部网格
     final qrInnerPaint = Paint()
-      ..color = const Color(0xFF1E3932)
+      ..color = StarbucksCreamColors.greenBanner
       ..style = PaintingStyle.fill;
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
@@ -180,7 +181,7 @@ class ShareImageService {
       left + 60,
       top + h / 2 - 20,
       fontSize: 48,
-      color: const Color(0xFFCBA258),
+      color: StarbucksCreamColors.vipGoldBg,
     );
 
     // 标签

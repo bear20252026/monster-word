@@ -19,6 +19,7 @@ import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/tokens/effect_palette.dart';
 
 class ImmersiveSwipePage extends StatefulWidget {
   const ImmersiveSwipePage({super.key});
@@ -229,7 +230,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
         particleCount: 40,
         direction: ConfettiDirection.down,
         duration: const Duration(seconds: 3),
-        colors: const [Color(0xFF006241), Color(0xFF00754A), Color(0xFFcba258), Color(0xFFFFD93D), Color(0xFF6BCB77)],
+        colors: GradientEffects.celebration,
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(32),

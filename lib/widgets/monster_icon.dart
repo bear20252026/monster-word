@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/effect_palette.dart';
 
 /// 怪兽尖叫币图标组件
 /// 使用 CustomPainter 绘制可爱的独角怪兽头像
@@ -28,7 +29,7 @@ class MonsterIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = SkinProvider.of(context);
     final body = bodyColor ?? skin.colors.accent; // 默认使用主题强调色（星巴克绿）
-    final belly = bellyColor ?? const Color(0xFFB8E6E0); // 浅青色肚皮
+    final belly = bellyColor ?? MonsterPalette.belly; // 浅青色肚皮
 
     Widget painter = SizedBox(
       width: size,
@@ -118,7 +119,7 @@ class _MonsterPainter extends CustomPainter {
 
     // 瞳孔
     final pupilPaint = Paint()
-      ..color = const Color(0xFF2D2D2D)
+      ..color = MonsterPalette.eye
       ..style = PaintingStyle.fill;
 
     // 左瞳孔
@@ -135,7 +136,7 @@ class _MonsterPainter extends CustomPainter {
 
     // === 5. 嘴巴（小微笑）===
     final mouthPaint = Paint()
-      ..color = const Color(0xFF2D2D2D)
+      ..color = MonsterPalette.eye
       ..style = PaintingStyle.stroke
       ..strokeWidth = r * 0.05
       ..strokeCap = StrokeCap.round;
@@ -147,7 +148,7 @@ class _MonsterPainter extends CustomPainter {
 
     // === 6. 腮红（小粉红圆点）===
     final blushPaint = Paint()
-      ..color = const Color(0xFFFF9999).withValues(alpha: 0.5)
+      ..color = MonsterPalette.blush.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(cx - r * 0.45, cy + r * 0.05), r * 0.08, blushPaint);
     canvas.drawCircle(Offset(cx + r * 0.45, cy + r * 0.05), r * 0.08, blushPaint);

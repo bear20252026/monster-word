@@ -11,6 +11,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/features/checkin/application/check_in_history_reader.dart';
+import 'package:word_app/tokens/func_colors.dart';
 
 class CheckInHistoryPage extends StatefulWidget {
   const CheckInHistoryPage({super.key});
@@ -236,8 +237,8 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
           color: skin.cardBg,
           borderRadius: BorderRadius.circular(context.design.radius.xl),
           boxShadow: const [
-            BoxShadow(color: Color(0x23000000), blurRadius: 0.5, offset: Offset(0, 0)),
-            BoxShadow(color: Color(0x3D000000), blurRadius: 1, offset: Offset(0, 1)),
+            BoxShadow(color: MistralShadows.hairlineShadow, blurRadius: 0.5, offset: Offset(0, 0)),
+            BoxShadow(color: MistralShadows.liftShadow, blurRadius: 1, offset: Offset(0, 1)),
           ],
         ),
         child: Row(
@@ -270,7 +271,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w800,
-                          color: _streak > 0 ? const Color(0xFFE8913A) : skin.text3,
+                          color: _streak > 0 ? FuncColors.streakFlame : skin.text3,
                         ),
                       ),
                       if (_streak > 0)

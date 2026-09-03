@@ -49,6 +49,7 @@ class MistralColors {
   static const Color dangerDark = StarbucksDarkColors.danger;
   static const Color error = StarbucksCreamColors.danger; // 别名，同 danger
   static const Color accent = StarbucksCreamColors.vipGoldBg; // 品牌金 accent
+  static const Color mutedGold = Color(0xFFB0885A); // 错误态图标暗金（词典/路由错误页共用）
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6); // 蓝色 - 新词/信息
   static const Color link = StarbucksCreamColors.greenBrand; // 0xFF006B3F 品牌绿
@@ -68,6 +69,43 @@ class MistralColors {
 
   /// 深色遮罩（对应 Material Colors.black87 的透明度语义）
   static const Color scrim87 = Color(0xDD000000);
+}
+
+/// 阴影 token（M5 收口：原 mw_card 与 5 个页面各写一遍的黑阴影字面量）
+///
+/// 命名对应卡片阴影三档：发丝线（0.5 blur）/ 浮起（1.0 blur + 1px 偏移）/ 柔和。
+class MistralShadows {
+  /// 发丝线阴影 rgba(0,0,0,0.14)，blur 0.5（贴地细影）
+  static const Color hairlineShadow = Color(0x23000000);
+
+  /// 浮起阴影 rgba(0,0,0,0.24)，blur 1.0 + offset(0,1)（1px 下坠影）
+  static const Color liftShadow = Color(0x3D000000);
+
+  /// 柔和阴影 rgba(0,0,0,0.14)（同发丝线色值，独立命名便于语义区分）
+  static const Color softShadow = Color(0x24000000);
+}
+
+/// 第三方平台官方品牌色（M5 收口：绑定外部品牌识别，不可跟随主题）
+class ThirdPartyBrand {
+  /// 微信绿（WeChat 官方品牌色）
+  static const Color wechat = Color(0xFF07C160);
+
+  /// QQ 蓝（QQ 官方品牌色）
+  static const Color qq = Color(0xFF12B7F5);
+
+  /// 微博红（Weibo 官方品牌色）
+  static const Color weibo = Color(0xFFE6162D);
+}
+
+/// 错误边界深色 UI（M5 收口： mw_error_boundary 固定深色错误页专用）
+///
+/// 错误边界独立于主题（崩溃兜底 UI 必须不依赖 SkinSystem 可用性），故为固定深色。
+class ErrorBoundaryColors {
+  static const Color bg = Color(0xFF16181D); // 页面底
+  static const Color panel = Color(0xFF24272D); // 内容面板
+  static const Color border = Color(0xFF3A3E45); // 描边
+  static const Color icon = Color(0xFF8E939B); // 图标灰
+  static const Color text = Color(0xFFB0B4BA); // 正文灰
 }
 
 /// 圆角（圆润温润版）

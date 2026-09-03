@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
 
 class TestimonialItem {
   final String text;
@@ -79,7 +80,7 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = widget.activeColor ?? const Color(0xFF006241);
+    final activeColor = widget.activeColor ?? StarbucksCreamColors.greenHouse;
     final inactiveColor = widget.inactiveColor ?? Colors.grey.withValues(alpha: 0.3);
 
     return SizedBox(

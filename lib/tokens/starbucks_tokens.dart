@@ -20,6 +20,7 @@ class StarbucksCreamColors {
   // 品牌绿四层
   static const Color greenBrand = Color(0xFF006B3F); // CTA 绿（WCAG 深化，与 accent 统一）
   static const Color greenHouse = Color(0xFF006241); // 标题深绿
+  static const Color greenSignature = Color(0xFF00754A); // 招牌绿中调（仅渐变装饰，M5 收口）
   static const Color greenBanner = Color(0xFF1E3932); // 深绿横幅
   static const Color greenSoft = Color(0xFF2B5148); // 辅助深绿
 

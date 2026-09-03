@@ -22,6 +22,7 @@ import 'package:word_app/widgets/mw_button.dart';
 import 'package:word_app/widgets/mw_modal.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:word_app/tokens/func_colors.dart';
 
 /// 更多设置页
 class MoreSettingsPage extends StatefulWidget {
@@ -188,11 +189,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                     onTap: () => setDialogState(() => rating = i + 1),
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 4),
-                      child: Icon(
-                        i < rating ? Icons.star : Icons.star_border,
-                        color: const Color(0xFFFFC107),
-                        size: 36,
-                      ),
+                      child: Icon(i < rating ? Icons.star : Icons.star_border, color: FuncColors.ratingStar, size: 36),
                     ),
                   );
                 }),
@@ -722,8 +719,8 @@ class _SettingGroup extends StatelessWidget {
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(context.design.radius.lg),
         boxShadow: const [
-          BoxShadow(offset: Offset.zero, blurRadius: 0.5, color: Color(0x24000000)),
-          BoxShadow(offset: Offset(0, 1), blurRadius: 1, color: Color(0x3D000000)),
+          BoxShadow(offset: Offset.zero, blurRadius: 0.5, color: MistralShadows.softShadow),
+          BoxShadow(offset: Offset(0, 1), blurRadius: 1, color: MistralShadows.liftShadow),
         ],
       ),
       child: Column(children: children),

@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 接管 Flutter 全局 widget 异常渲染。
 ///
@@ -57,7 +58,7 @@ class _MwErrorPage extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Material(
-        color: const Color(0xFF16181D),
+        color: ErrorBoundaryColors.bg,
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
@@ -68,11 +69,11 @@ class _MwErrorPage extends StatelessWidget {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF24272D),
+                    color: ErrorBoundaryColors.panel,
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF3A3E45)),
+                    border: Border.all(color: ErrorBoundaryColors.border),
                   ),
-                  child: const Icon(Icons.extension_off_rounded, size: 30, color: Color(0xFF8E939B)),
+                  child: const Icon(Icons.extension_off_rounded, size: 30, color: ErrorBoundaryColors.icon),
                 ),
                 const SizedBox(height: 20),
                 const Text(
@@ -83,7 +84,7 @@ class _MwErrorPage extends StatelessWidget {
                 const Text(
                   '这个区域暂时无法显示，返回后重试即可。',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: Color(0xFFB0B4BA)),
+                  style: TextStyle(fontSize: 13, color: ErrorBoundaryColors.text),
                 ),
                 const SizedBox(height: 20),
                 OutlinedButton.icon(
@@ -94,7 +95,7 @@ class _MwErrorPage extends StatelessWidget {
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF3A3E45)),
+                    side: const BorderSide(color: ErrorBoundaryColors.border),
                   ),
                   icon: const Icon(Icons.arrow_back_rounded, size: 18),
                   label: const Text('返回上一页'),

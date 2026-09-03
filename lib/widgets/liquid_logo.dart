@@ -3,6 +3,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/starbucks_tokens.dart';
+import 'package:word_app/tokens/effect_palette.dart';
 
 class LiquidLogo extends StatefulWidget {
   final double size;
@@ -60,9 +62,7 @@ class _LiquidLogoState extends State<LiquidLogo> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final colors =
-        widget.colors ??
-        [const Color(0xFF006241), const Color(0xFF00754A), const Color(0xFF1E3932), const Color(0xFFcba258)];
+    final colors = widget.colors ?? GradientEffects.liquidLogo;
 
     return AnimatedBuilder(
       animation: Listenable.merge([_morphAnim, _floatAnim]),
@@ -137,7 +137,7 @@ class LiquidLoadingIndicator extends StatefulWidget {
   final double size;
   final Color color;
 
-  const LiquidLoadingIndicator({super.key, this.size = 40, this.color = const Color(0xFF006241)});
+  const LiquidLoadingIndicator({super.key, this.size = 40, this.color = StarbucksCreamColors.greenHouse});
 
   @override
   State<LiquidLoadingIndicator> createState() => _LiquidLoadingIndicatorState();
