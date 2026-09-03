@@ -10,6 +10,8 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/mw_card.dart';
+import 'package:word_app/widgets/scale_down_on_press.dart';
 
 class MyFavSentencePage extends StatefulWidget {
   const MyFavSentencePage({super.key});
@@ -123,7 +125,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
           const Spacer(),
           // 学习按钮
           if (_sentences.isNotEmpty && !_isEditMode)
-            GestureDetector(
+            ScaleDownOnPress(
               onTap: _startLearning,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -172,7 +174,10 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
 
         final isSelected = _selectedIndices.contains(index);
 
-        return GestureDetector(
+        // MwCard（v2.7.48）：24px 圆角 + 双层阴影 + ScaleDownOnPress 按压反馈，
+        // 与词典详情页卡片风格统一。编辑态选中视觉改为 primary 淡底色 +
+        // 行首 check_circle 图标（原 2px 描边废弃，图标本身已明确传达选中态）。
+        return MwCard(
           onTap: () {
             if (_isEditMode) {
               setState(() {
@@ -196,17 +201,10 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
               );
             }
           },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 12),
+          color: isSelected ? MistralColors.primary.withValues(alpha: 0.06) : skin.colors.cardBgAlt,
+          child: Padding(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: skin.colors.cardBgAlt,
-              borderRadius: BorderRadius.circular(context.design.radius.lg),
-              border: Border.all(
-                color: isSelected ? MistralColors.primary : skin.colors.divider,
-                width: isSelected ? 2 : 1,
-              ),
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

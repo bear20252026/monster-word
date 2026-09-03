@@ -39,6 +39,7 @@
 | REG-DICT-003 | 词典详情页「例句」tab 整段渲染原始 JSON（{"fid":...} 乱码），「真题」tab 与例句 tab 内容完全相同（双写），dictionary_extra.json 真题数据零消费 | ServiceDictionaryContentReader.getExamExamples 把 word.example 结构化 JSON 当纯文本 split('\n')，未走 ExampleParser | 第三十批（v2.7.45+86） | `test/regression/regression_dictionary_page_test.dart` REG-DICT-003（例句 tab 渲染解析后句子且无 JSON 字段残留、真题 tab 读扩展数据带来源徽章且与例句不双写） |
 | REG-DICT-004 | 全库 84%（21,076/25,191）词条 example 为双重编码 JSON（外层多包一层字符串），ExampleParser.parse 一次解码得 String 后 as List 抛 TypeError 被吞——这些词的例句 tab/学习页例句/导出页例句静默为空 | 词库导入管道对该字段重复 json.dumps 一次；解析器无二次解码兼容 | 第三十一批（v2.7.46+87） | `test/data/example_parser_test.dart`（双重编码 parse/parseCollins 二次解码用例 + 损坏原文返回空不渲染原文） |
 | REG-DICT-005 | 词典详情页「派生」「近义」tab 仍是裸 GestureDetector 卡片（无按压反馈/无阴影、两 tab 圆角 lg/xl 不一致），空状态是旧式「标题+灰字」灰盒，与精致化后的柯林斯/例句/真题 tab 风格割裂 | 两 tab 未随 v2.7.45 六 tab 一体化改造同步升级（遗留旧实现） | 第三十二批（v2.7.47+88） | `test/regression/regression_dictionary_page_test.dart` REG-DICT-005（两 tab MwCard 卡片化锁定、有音标派生词带发音按钮、空状态统一 _emptyTab 图标化、旧式灰盒标题不得复现） |
+| REG-CONTENT-001 | 句库页（例句收藏落点页）例句卡片为裸 GestureDetector+Container：无按压反馈、无阴影、选中态靠 2px 描边，与词典页 MwCard/ExampleTile 风格割裂 | 该页未随 v2.7.45 例句收藏闭环改造同步升级 | 第三十三批（v2.7.48+89） | `test/regression/regression_my_fav_sentence_page_test.dart` REG-CONTENT-001（MwCard 卡片化锁定、编辑态选中 check_circle 不丢、非编辑态 push RouteNames.sentenceDetail 导航契约保持） |
 
 ## 修复新 bug 的流程
 
