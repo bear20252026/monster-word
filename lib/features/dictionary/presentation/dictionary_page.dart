@@ -7,6 +7,7 @@ import 'package:word_app/models/word.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/word_root_tab.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_detail_state.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_feature_providers.dart';
@@ -485,47 +486,28 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
       builder: (context, state, _) {
         final derived = state.derivedWords;
         if (derived.isEmpty) {
-          return Container(
-            padding: EdgeInsets.all(context.design.spacing.md),
-            decoration: BoxDecoration(
-              color: skin.cardBg,
-              borderRadius: BorderRadius.circular(context.design.radius.xl),
-              border: Border.all(color: skin.divider, width: 0.5),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '派生词',
-                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
-                ),
-                SizedBox(height: context.design.spacing.sm),
-                Text('暂无派生词', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
-              ],
-            ),
-          );
+          return _emptyTab('暂无派生词', Icons.account_tree_outlined, skin);
         }
         return ListView.builder(
+          padding: const EdgeInsets.only(top: 2),
           itemCount: derived.length,
           addAutomaticKeepAlives: false,
           addRepaintBoundaries: true,
           itemBuilder: (context, index) {
             final w = derived[index];
             final firstInterp = w.firstInterpretLine;
-            return GestureDetector(
+            // MwCard（v2.7.47）：24px 圆角 + 双层阴影 + ScaleDownOnPress 按压反馈，
+            // 与柯林斯/例句/真题 tab 卡片风格统一（MwCard 的 padding 作用于外层，
+            // 内边距需在 child 内自行 Padding）。
+            return MwCard(
               onTap: () {
                 // 页面已自挂载 DetailScope：直接 push，新页为新单词创建全新状态
                 // （旧写法 Provider.value 复用上一词的状态，导致新词头配旧词数据）
                 Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: w)));
               },
-              child: Container(
-                margin: EdgeInsets.only(bottom: context.design.spacing.sm),
+              margin: EdgeInsets.only(bottom: context.design.spacing.sm),
+              child: Padding(
                 padding: EdgeInsets.all(context.design.spacing.md),
-                decoration: BoxDecoration(
-                  color: skin.cardBg,
-                  borderRadius: BorderRadius.circular(context.design.radius.lg),
-                  border: Border.all(color: skin.divider, width: 0.5),
-                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -537,11 +519,11 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
                             style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                           ),
                           if (w.usPron.isNotEmpty) ...[
-                            SizedBox(height: 2),
+                            const SizedBox(height: 2),
                             Text(w.usPron, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
                           ],
                           if (firstInterp.isNotEmpty) ...[
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               firstInterp,
                               style: MistralTypography.bodySm.copyWith(color: skin.text3),
@@ -552,6 +534,20 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
                         ],
                       ),
                     ),
+                    if (w.usPron.isNotEmpty)
+                      GestureDetector(
+                        // 派生词发音：与头部发音按钮同款 accent 淡底（内层手势优先命中，
+                        // 不会触发整卡跳转）
+                        onTap: () => _playAudio(w.word),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: skin.accent.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(context.design.radius.md),
+                          ),
+                          child: Icon(Icons.volume_up, color: skin.accent, size: 18),
+                        ),
+                      ),
                     Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
                   ],
                 ),
@@ -572,46 +568,25 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
       builder: (context, state, _) {
         final synonyms = state.synonyms;
         if (synonyms.isEmpty) {
-          return Container(
-            padding: EdgeInsets.all(context.design.spacing.md),
-            decoration: BoxDecoration(
-              color: skin.cardBg,
-              borderRadius: BorderRadius.circular(context.design.radius.xl),
-              border: Border.all(color: skin.divider, width: 0.5),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '近义词',
-                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
-                ),
-                SizedBox(height: context.design.spacing.sm),
-                Text('暂无近义词数据', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
-              ],
-            ),
-          );
+          return _emptyTab('暂无近义词', Icons.compare_arrows_outlined, skin);
         }
         return ListView.builder(
+          padding: const EdgeInsets.only(top: 2),
           itemCount: synonyms.length,
           addAutomaticKeepAlives: false,
           addRepaintBoundaries: true,
           itemBuilder: (context, index) {
             final synonym = synonyms[index];
             final firstInterpret = synonym.firstInterpretLine;
-            return GestureDetector(
+            // MwCard（v2.7.47）：与派生 tab 同款卡片，两 tab 视觉完全统一
+            return MwCard(
               onTap: () {
                 // 同上：直接 push，新页自建全新状态
                 Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: synonym)));
               },
-              child: Container(
-                margin: EdgeInsets.only(bottom: context.design.spacing.sm),
+              margin: EdgeInsets.only(bottom: context.design.spacing.sm),
+              child: Padding(
                 padding: EdgeInsets.all(context.design.spacing.md),
-                decoration: BoxDecoration(
-                  color: skin.cardBg,
-                  borderRadius: BorderRadius.circular(context.design.radius.xl),
-                  border: Border.all(color: skin.divider, width: 0.5),
-                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -623,7 +598,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
                             style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                           ),
                           if (firstInterpret.isNotEmpty) ...[
-                            SizedBox(height: context.design.spacing.xs),
+                            const SizedBox(height: 4),
                             Text(
                               firstInterpret,
                               style: MistralTypography.bodySm.copyWith(color: skin.text3),

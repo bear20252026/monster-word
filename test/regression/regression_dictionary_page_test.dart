@@ -18,6 +18,7 @@ import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/widgets/app_dock.dart';
+import 'package:word_app/widgets/mw_card.dart';
 
 // ── Mock 实现（与 dictionary_detail_state_test 同款）─────────
 
@@ -219,6 +220,42 @@ void main() {
     expect(find.textContaining('The new programming language'), findsOneWidget);
     expect(find.text('CET-4'), findsOneWidget);
     expect(find.textContaining(examplePlainText), findsNothing, reason: '真题 tab 不得再复用例句数据（双写）');
+  });
+
+  testWidgets('REG-DICT-005: 派生/近义 tab 卡片化（MwCard + 发音按钮），空状态统一图标化', (tester) async {
+    // 症状：派生/近义 tab 仍是裸 GestureDetector 卡片（无按压反馈、无阴影、
+    //       两 tab 圆角还不一致 lg/xl），空状态是旧式「标题+灰字」灰盒，
+    //       与已精致化的柯林斯/例句/真题 tab 风格割裂；
+    // 修复：v2.7.47 —— 两 tab 统一 MwCard（24px 圆角 + 双层阴影 +
+    //       ScaleDownOnPress 按压反馈），空状态统一 _emptyTab，
+    //       派生卡带音标时显示发音按钮（与页头同款 accent 淡底）。
+    await _pumpDictionaryPage(
+      tester,
+      word: _wordWithDef('alpha', _mainWordCn),
+      derived: [
+        Word(
+          word: 'alphabetism',
+          interpret: '[{"t":"n.","def":[{"en":"eng","cn":"$_derivedWordCn"}]}]',
+          usPron: 'ˌælfəˈbetɪzəm',
+        ),
+        Word(word: 'alphabetical', interpret: '[{"t":"adj.","def":[{"en":"eng","cn":"字母表的"}]}]'),
+      ],
+    );
+
+    // 派生 tab：MwCard 卡片 + 有音标的词条带发音按钮 + 导航箭头仍在
+    await tester.tap(find.text('派生'));
+    await tester.pumpAndSettle();
+    expect(find.byType(MwCard), findsWidgets, reason: '派生词条目必须用 MwCard 卡片化，不得回退裸 Container');
+    // 页头发音按钮 + 有音标派生词的卡片发音按钮 = 2 个 volume_up
+    expect(find.byIcon(Icons.volume_up), findsNWidgets(2), reason: '有音标的派生词应显示发音按钮（页头另有一个）');
+    expect(find.text('ˌælfəˈbetɪzəm'), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_forward_ios), findsWidgets);
+
+    // 近义 tab 空状态：统一 _emptyTab 图标化，不再是旧式标题灰盒
+    await tester.tap(find.text('近义'));
+    await tester.pumpAndSettle();
+    expect(find.text('暂无近义词'), findsOneWidget);
+    expect(find.text('近义词'), findsNothing, reason: '旧式空状态灰盒（标题「近义词」）已废弃');
   });
 
   testWidgets('REG-DOCK-001: FloatingDock.clearance = 底部安全区 + 16 margin + 64 栏高', (tester) async {
