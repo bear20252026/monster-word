@@ -10,6 +10,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/word_root_tab.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_detail_state.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_feature_providers.dart';
+import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_example_tile.dart';
 
 /// 词典详情页。
 ///
@@ -174,7 +175,7 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
           child: Container(
             padding: EdgeInsets.all(context.design.spacing.sm),
             decoration: BoxDecoration(
-              color: skin.cardBgAlt,
+              color: skin.accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(context.design.radius.lg),
             ),
             child: Icon(Icons.volume_up, color: skin.accent, size: 24),
@@ -233,10 +234,8 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (hasUs) _buildPronunciationRow('美式', '/${phonetic.american}/', skin),
-              if (hasUk) ...[
-                SizedBox(height: context.design.spacing.sm),
-                _buildPronunciationRow('英式', '/${phonetic.english}/', skin),
-              ],
+              if (hasUs && hasUk) Divider(height: context.design.spacing.md + 2, thickness: 0.5, color: skin.divider),
+              if (hasUk) _buildPronunciationRow('英式', '/${phonetic.english}/', skin),
             ],
           ),
         );
@@ -281,16 +280,23 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
               ...defs.expand((item) sync* {
                 if (item.partOfSpeech.isNotEmpty) {
                   yield Padding(
-                    padding: EdgeInsets.only(top: context.design.spacing.xs, bottom: 2),
-                    child: Text(
-                      item.partOfSpeech,
-                      style: MistralTypography.bodySm.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
+                    padding: EdgeInsets.only(top: context.design.spacing.xs, bottom: context.design.spacing.xs),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: skin.accent.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(context.design.radius.sm),
+                      ),
+                      child: Text(
+                        item.partOfSpeech,
+                        style: MistralTypography.bodySm.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
+                      ),
                     ),
                   );
                 }
                 for (final d in item.definitions) {
                   yield Padding(
-                    padding: EdgeInsets.only(bottom: context.design.spacing.xs),
+                    padding: EdgeInsets.only(left: 2, bottom: context.design.spacing.sm),
                     child: Text(d, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
                   );
                 }
@@ -314,10 +320,11 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
           child: TabBar(
             controller: _tabController,
             isScrollable: true,
+            dividerColor: Colors.transparent,
             labelColor: skin.accent,
             unselectedLabelColor: skin.text3,
             indicatorColor: skin.accent,
-            indicatorWeight: 3,
+            indicatorWeight: 2.5,
             indicatorSize: TabBarIndicatorSize.label,
             indicatorPadding: EdgeInsets.only(bottom: 2),
             labelStyle: MistralTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
@@ -355,34 +362,28 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
   }
 
   Widget _buildCollinsTab(ThemeVars skin, Word word) {
+    // 柯林斯释义扩展数据尚未接入（与 word_detail 的完整详解互补，后续批次跟进）。
+    return _emptyTab('柯林斯释义数据准备中', Icons.menu_book_outlined, skin);
+  }
+
+  /// tab 区统一空状态：图标 + 文案居中，替代各处零散的纯文本占位。
+  Widget _emptyTab(String message, IconData icon, ThemeVars skin) {
     return Container(
-      padding: EdgeInsets.all(context.design.spacing.md),
+      padding: EdgeInsets.all(context.design.spacing.lg),
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(context.design.radius.xl),
         border: Border.all(color: skin.divider, width: 0.5),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '柯林斯释义',
-                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.refresh, size: 18, color: skin.text3),
-                tooltip: '刷新',
-                onPressed: () => setState(() {}),
-              ),
-            ],
-          ),
-          SizedBox(height: context.design.spacing.sm),
-          Text('暂无柯林斯释义数据', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
-        ],
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 32, color: skin.text3.withValues(alpha: 0.6)),
+            SizedBox(height: context.design.spacing.sm),
+            Text(message, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+          ],
+        ),
       ),
     );
   }
@@ -392,43 +393,18 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
       builder: (context, state, _) {
         final examples = state.examExamples;
         if (examples.isEmpty) {
-          return Container(
-            padding: EdgeInsets.all(context.design.spacing.md),
-            decoration: BoxDecoration(
-              color: skin.cardBg,
-              borderRadius: BorderRadius.circular(context.design.radius.xl),
-              border: Border.all(color: skin.divider, width: 0.5),
-            ),
-            child: Center(
-              child: Text('暂无例句数据', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
-            ),
-          );
+          return _emptyTab('暂无例句', Icons.format_quote_outlined, skin);
         }
+        // 单一事实来源：直接复用 word_detail 的 ExampleTile（<b> 高亮 + 例句发音 +
+        // 句收藏 + 来源标注），两详情页例句体验一致（v2.7.45 收口）。
         return ListView.builder(
+          padding: const EdgeInsets.only(top: 2),
           itemCount: examples.length,
           addAutomaticKeepAlives: false,
           addRepaintBoundaries: true,
           itemBuilder: (context, index) {
             final ex = examples[index];
-            return Container(
-              margin: EdgeInsets.only(bottom: context.design.spacing.sm),
-              padding: EdgeInsets.all(context.design.spacing.md),
-              decoration: BoxDecoration(
-                color: skin.cardBg,
-                borderRadius: BorderRadius.circular(context.design.radius.xl),
-                border: Border.all(color: skin.divider, width: 0.5),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(ex.english, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
-                  if (ex.chinese.isNotEmpty) ...[
-                    SizedBox(height: context.design.spacing.xs),
-                    Text(ex.chinese, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
-                  ],
-                ],
-              ),
-            );
+            return ExampleTile(ex, context.skin, word: word.word, wordId: word.id);
           },
         );
       },
@@ -603,36 +579,23 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
   Widget _buildExamTab(ThemeVars skin, Word word) {
     return Consumer<DictionaryDetailState>(
       builder: (context, state, _) {
-        final examples = state.examExamples;
-        if (examples.isEmpty) {
-          return Container(
-            padding: EdgeInsets.all(context.design.spacing.md),
-            decoration: BoxDecoration(
-              color: skin.cardBg,
-              borderRadius: BorderRadius.circular(context.design.radius.xl),
-              border: Border.all(color: skin.divider, width: 0.5),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '真题例句',
-                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
-                ),
-                SizedBox(height: context.design.spacing.sm),
-                Text('暂无真题例句', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
-              ],
-            ),
-          );
+        // 真题数据源（v2.7.45 修复）：改读 dictionary_extra.json 的真题例句
+        // （CET-4/CET-6/考研），不再与例句 tab 双写同一份数据。
+        final sentences = state.realExamSentences;
+        if (sentences.isEmpty) {
+          return _emptyTab('暂无真题例句', Icons.school_outlined, skin);
         }
         return ListView.builder(
-          itemCount: examples.length,
+          padding: const EdgeInsets.only(top: 2),
+          itemCount: sentences.length,
           addAutomaticKeepAlives: false,
           addRepaintBoundaries: true,
           itemBuilder: (context, index) {
-            final ex = examples[index];
+            final item = sentences[index];
+            final sentence = item['sentence'] ?? '';
+            final source = item['source'] ?? '';
             return Container(
-              margin: EdgeInsets.only(bottom: context.design.spacing.sm),
+              margin: const EdgeInsets.only(bottom: 8),
               padding: EdgeInsets.all(context.design.spacing.md),
               decoration: BoxDecoration(
                 color: skin.cardBg,
@@ -642,10 +605,20 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(ex.english, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
-                  if (ex.chinese.isNotEmpty) ...[
-                    SizedBox(height: context.design.spacing.xs),
-                    Text(ex.chinese, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                  Text(sentence, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
+                  if (source.isNotEmpty) ...[
+                    SizedBox(height: context.design.spacing.sm),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: skin.accent.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(context.design.radius.sm),
+                      ),
+                      child: Text(
+                        source,
+                        style: MistralTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
+                      ),
+                    ),
                   ],
                 ],
               ),

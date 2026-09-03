@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/dictionary/application/dictionary_content_reader.dart';
 import 'package:word_app/features/dictionary/application/dictionary_favorite_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
 import 'package:word_app/features/dictionary/domain/definition_item.dart';
-import 'package:word_app/features/dictionary/domain/example_sentence.dart';
 import 'package:word_app/features/dictionary/domain/phonetic_info.dart';
 
 /// 词典详情页状态。
@@ -46,6 +46,10 @@ class DictionaryDetailState extends ChangeNotifier {
 
   List<ExampleSentence> _examExamples = const [];
   List<ExampleSentence> get examExamples => _examExamples;
+
+  /// 真题例句（dictionary_extra.json，{'sentence','source'}）。
+  List<Map<String, String>> _realExamSentences = const [];
+  List<Map<String, String>> get realExamSentences => _realExamSentences;
 
   // ── 状态标志 ──────────────────────────────────────────────
   bool _isFavorite = false;
@@ -152,16 +156,14 @@ class DictionaryDetailState extends ChangeNotifier {
       _synonyms = const [];
     }
     try {
-      final raw = await _contentReader.getExamExamples(word.word);
-      _examExamples = raw.map((m) {
-        return ExampleSentence.fromRaw(
-          english: m['english'] ?? '',
-          chinese: m['chinese'] ?? '',
-          highlight: m['highlight'],
-        );
-      }).toList();
+      _examExamples = await _contentReader.getExamExamples(word.word);
     } catch (_) {
       _examExamples = const [];
+    }
+    try {
+      _realExamSentences = await _contentReader.getRealExamSentences(word.word);
+    } catch (_) {
+      _realExamSentences = const [];
     }
   }
 

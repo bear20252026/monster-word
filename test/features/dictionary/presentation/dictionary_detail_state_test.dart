@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/features/dictionary/application/dictionary_content_reader.dart';
 import 'package:word_app/features/dictionary/application/dictionary_favorite_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
@@ -23,11 +24,17 @@ class _FakeSearchReader implements DictionarySearchReader {
 }
 
 class _FakeContentReader implements DictionaryContentReader {
-  _FakeContentReader({this.derived = const [], this.synonyms = const [], this.examples = const []});
+  _FakeContentReader({
+    this.derived = const [],
+    this.synonyms = const [],
+    this.examples = const [],
+    this.realExamSentences = const [],
+  });
 
   final List<Word> derived;
   final List<Word> synonyms;
-  final List<Map<String, String>> examples;
+  final List<ExampleSentence> examples;
+  final List<Map<String, String>> realExamSentences;
 
   @override
   Future<List<Word>> getDerivedWords(String word) async => derived;
@@ -36,7 +43,10 @@ class _FakeContentReader implements DictionaryContentReader {
   Future<List<Word>> getSynonyms(String word) async => synonyms;
 
   @override
-  Future<List<Map<String, String>>> getExamExamples(String word) async => examples;
+  Future<List<ExampleSentence>> getExamExamples(String word) async => examples;
+
+  @override
+  Future<List<Map<String, String>>> getRealExamSentences(String word) async => realExamSentences;
 }
 
 class _FakeFavoriteWriter implements DictionaryFavoriteWriter {
@@ -103,11 +113,17 @@ void main() {
     List<Word> searchResults = const [],
     List<Word> derived = const [],
     List<Word> synonyms = const [],
-    List<Map<String, String>> examples = const [],
+    List<ExampleSentence> examples = const [],
+    List<Map<String, String>> realExamSentences = const [],
   }) {
     return DictionaryDetailState(
       searchReader: _FakeSearchReader(results: searchResults),
-      contentReader: _FakeContentReader(derived: derived, synonyms: synonyms, examples: examples),
+      contentReader: _FakeContentReader(
+        derived: derived,
+        synonyms: synonyms,
+        examples: examples,
+        realExamSentences: realExamSentences,
+      ),
       favoriteWriter: _FakeFavoriteWriter(),
       newWordWriter: _FakeNewWordWriter(),
     );

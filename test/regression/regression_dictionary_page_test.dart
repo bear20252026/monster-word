@@ -8,11 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/features/dictionary/application/dictionary_content_reader.dart';
 import 'package:word_app/features/dictionary/application/dictionary_favorite_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
+import 'package:word_app/models/sentence_models.dart';
+import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/widgets/app_dock.dart';
 
@@ -30,9 +33,11 @@ class _FakeSearchReader implements DictionarySearchReader {
 }
 
 class _FakeContentReader implements DictionaryContentReader {
-  _FakeContentReader({this.derived = const []});
+  _FakeContentReader({this.derived = const [], this.examples = const [], this.realExamSentences = const []});
 
   final List<Word> derived;
+  final List<ExampleSentence> examples;
+  final List<Map<String, String>> realExamSentences;
 
   @override
   Future<List<Word>> getDerivedWords(String word) async => derived;
@@ -41,7 +46,30 @@ class _FakeContentReader implements DictionaryContentReader {
   Future<List<Word>> getSynonyms(String word) async => const [];
 
   @override
-  Future<List<Map<String, String>>> getExamExamples(String word) async => const [];
+  Future<List<ExampleSentence>> getExamExamples(String word) async => examples;
+
+  @override
+  Future<List<Map<String, String>>> getRealExamSentences(String word) async => realExamSentences;
+}
+
+class _FakeSentenceFavoritesStore implements SentenceFavoritesStore {
+  @override
+  Future<List<FavSentenceData>> list() async => const [];
+
+  @override
+  Future<bool> remove({required int wordId, required String sentenceId}) async => false;
+
+  @override
+  Future<bool> isFavorite({required int wordId, required String sentenceId}) async => false;
+
+  @override
+  Future<bool> toggle({
+    required int wordId,
+    required String sentenceId,
+    required String english,
+    required String chinese,
+    String source = '',
+  }) async => true;
 }
 
 class _FakeFavoriteWriter implements DictionaryFavoriteWriter {
@@ -71,7 +99,13 @@ const _derivedWordCn = '派生词专属释义甲';
 Word _wordWithDef(String headword, String cnDef) =>
     Word(word: headword, interpret: '[{"t":"n.","def":[{"en":"eng","cn":"$cnDef"}]}]');
 
-Future<void> _pumpDictionaryPage(WidgetTester tester, {required Word word, List<Word> derived = const []}) async {
+Future<void> _pumpDictionaryPage(
+  WidgetTester tester, {
+  required Word word,
+  List<Word> derived = const [],
+  List<ExampleSentence> examples = const [],
+  List<Map<String, String>> realExamSentences = const [],
+}) async {
   // 端口 Provider 挂在 MaterialApp.builder（等价于真实 App 的顶层 feature scope，
   // 位于 Navigator 之上）——这样 push 出的新路由页面同样能读到端口。
   await tester.pumpWidget(
@@ -79,9 +113,13 @@ Future<void> _pumpDictionaryPage(WidgetTester tester, {required Word word, List<
       builder: (context, child) => MultiProvider(
         providers: [
           Provider<DictionarySearchReader>.value(value: _FakeSearchReader()),
-          Provider<DictionaryContentReader>.value(value: _FakeContentReader(derived: derived)),
+          Provider<DictionaryContentReader>.value(
+            value: _FakeContentReader(derived: derived, examples: examples, realExamSentences: realExamSentences),
+          ),
           Provider<DictionaryFavoriteWriter>.value(value: _FakeFavoriteWriter()),
           Provider<DictionaryNewWordWriter>.value(value: _FakeNewWordWriter()),
+          // ExampleTile（例句卡）消费句收藏 store，测试桩同样挂上
+          Provider<SentenceFavoritesStore>.value(value: _FakeSentenceFavoritesStore()),
         ],
         child: child!,
       ),
@@ -136,6 +174,48 @@ void main() {
     expect(find.text(derivedWord), findsOneWidget);
     expect(find.textContaining(_derivedWordCn), findsWidgets);
     expect(find.textContaining(_mainWordCn), findsNothing, reason: '新词页不得再显示上一词的释义（数据错配）');
+  });
+
+  testWidgets('REG-DICT-003: 例句 tab 渲染解析后的例句而非裸 JSON，真题 tab 读扩展数据', (tester) async {
+    // 症状：词典详情页「例句」tab 显示整段原始 JSON（{"fid":...,"sid":...,"e":...}），
+    //       「真题」tab 与例句 tab 内容完全相同（双写）；
+    // 根因：ServiceDictionaryContentReader.getExamExamples 把 word.example 的结构化
+    //       JSON 当纯文本 split('\n') 逐行塞进例句列表，未走 ExampleParser；
+    //       真题 tab 复用同一 state.examExamples，dictionary_extra.json 真题零消费。
+    // 修复：v2.7.45 —— getExamExamples 统一走 ExampleParser（单一事实来源）；
+    //       真题 tab 改读 getRealExamSentences（dictionary_extra.json）；
+    //       例句卡复用 ExampleTile（高亮/发音/句收藏/来源）。
+    const examplePlainText = 'Anyone can download the free app.';
+    await _pumpDictionaryPage(
+      tester,
+      word: _wordWithDef('app', _mainWordCn),
+      examples: [
+        ExampleSentence(
+          en: 'Anyone can <b>download</b> the free <b>app</b>.',
+          cn: '任何人都可以免费下载这款应用。',
+          source: 'VOA慢速-科技报道',
+          audioUrl: 'https://audio.beingfine.cn/sentence/audio/9025550003604481.mp3',
+        ),
+      ],
+      realExamSentences: [
+        {'sentence': 'The new programming language makes it easier to write apps.', 'source': 'CET-4'},
+      ],
+    );
+
+    // 例句 tab：渲染解析后的句子（<b> 已转为高亮 span），无裸 JSON 字段
+    await tester.tap(find.text('例句'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining(examplePlainText, findRichText: true), findsOneWidget);
+    expect(find.textContaining('"fid"'), findsNothing, reason: '例句区不得出现原始 JSON 字段（乱码根因）');
+    expect(find.textContaining('{"v":1'), findsNothing);
+    expect(find.text('VOA慢速-科技报道'), findsOneWidget, reason: '例句来源应随 ExampleTile 展示');
+
+    // 真题 tab：读 dictionary_extra 真数据并带来源徽章，不再与例句双写
+    await tester.tap(find.text('真题'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('The new programming language'), findsOneWidget);
+    expect(find.text('CET-4'), findsOneWidget);
+    expect(find.textContaining(examplePlainText), findsNothing, reason: '真题 tab 不得再复用例句数据（双写）');
   });
 
   testWidgets('REG-DOCK-001: FloatingDock.clearance = 底部安全区 + 16 margin + 64 栏高', (tester) async {

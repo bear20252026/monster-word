@@ -36,6 +36,7 @@
 | REG-CHK-001 | 签到历史页日历恒空、连签天数恒 0（与签到日历不一致） | 双数据源：签到只写尖叫币账本（scare_coin.checkin_dates），另一套 CheckInService（check_in_records_v1/streak_days_v1）只读从不写且 CheckinWriter 零调用方 | 第二十三批（修复）/ 第二十六批（补守护） | `test/regression/regression_checkin_test.dart`（写入→历史/状态读取器同源可读、同日重复签到幂等、三个适配器连签报告一致）；另由 `app_structure_test.dart` 断言 checkin_service.dart 不存在防复活 |
 | REG-ARCH-003 | 复审 A4：app.dart 12 层 Provider scope 嵌套顺序仅 1 对有断言，其余靠注释维护——learning 被跨模块消费 189 处，挪位即全库运行时 ProviderNotFound（编译期静默） | 守卫覆盖缺口（非 bug，复审 H3/A4 半修复补全） | 第二十八批（v2.7.39+80） | `test/architecture/app_structure_test.dart` REG-ARCH-003（锁定 buildWordAudioScope→...→buildWordBrowseFeatureScope→SkinSystem MultiProvider 完整链序） |
 | REG-ARCH-004 | 复审 A5：尖叫币/装备卡片在 my_space_page 与 profile_screen 双写且已漂移（裸 Container vs MwCard、字符串路由 '/scare_coin_history' vs RouteNames、装备数规则 1+(redeemed>0)+(streak>0) 两处各写一遍、装备徽章两套配色） | 双写无单一事实来源（非 bug，UI 分叉） | 第二十九批（v2.7.41+82） | `test/architecture/app_structure_test.dart` A5（共享组件 lib/widgets/scare_coin_summary_cards.dart 唯一持有：双卡类/双路由/装备数规则仅 1 次，两页面零双写、无字符串路由）；共享组件依赖边界由 ImportGuard R-widgets 锁定 |
+| REG-DICT-003 | 词典详情页「例句」tab 整段渲染原始 JSON（{"fid":...} 乱码），「真题」tab 与例句 tab 内容完全相同（双写），dictionary_extra.json 真题数据零消费 | ServiceDictionaryContentReader.getExamExamples 把 word.example 结构化 JSON 当纯文本 split('\n')，未走 ExampleParser | 第三十批（v2.7.45+86） | `test/regression/regression_dictionary_page_test.dart` REG-DICT-003（例句 tab 渲染解析后句子且无 JSON 字段残留、真题 tab 读扩展数据带来源徽章且与例句不双写） |
 
 ## 修复新 bug 的流程
 
