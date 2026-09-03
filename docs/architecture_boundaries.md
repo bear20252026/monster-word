@@ -31,6 +31,15 @@ lib/
 - **依赖方向**：`models/` 只依赖 Dart/Flutter 基础库与序列化库；不得 import `features/`、`data/`、`repositories/`、`services/`、`state/` 任何代码。
 - **迁移期约定**：各 feature 现存私有模型副本在后续 feature 迁移时统一收敛到 `models/`（或明确留在 feature `domain/`），不新增第三种存放位置。
 
+### 1.2 feature 内部分层的既定豁免
+
+理想结构是每个 feature 内部具备 `presentation/`、`domain/`、`data/` 完整三层，但以下 feature 当前为**既定豁免**，按需补齐、不强制形式对齐：
+
+- `content`：目前只有 `presentation/` 层（句库、句子学习等纯展示驱动场景），暂无独立 domain/data 需求；
+- `scare_coin`、`word_browse`：缺少 `domain/` 层，业务规则较薄或暂由页面内联。
+
+豁免不等于许可：这些 feature 新增代码仍须遵守 §2 依赖规则；一旦出现可提炼的领域规则或数据访问，应优先补齐对应层而不是继续堆在 presentation。新增 feature 默认按完整三层建立，不再进入豁免名单。
+
 ## 2. 依赖规则
 
 | 来源 | 允许依赖 | 禁止依赖 |

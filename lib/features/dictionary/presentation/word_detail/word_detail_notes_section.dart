@@ -8,6 +8,7 @@ import 'package:word_app/models/word_note.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/utils/date_format_utils.dart';
 
 /// 笔记区块：列表 + 增删改（自管理加载状态，word 变化时自动重载）
 class WordNotesSection extends StatefulWidget {
@@ -203,7 +204,10 @@ class _NoteCard extends StatelessWidget {
           SizedBox(height: 8),
           Row(
             children: [
-              Text(_formatDate(note.updatedAt), style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
+              Text(
+                formatCompactDateTime(note.updatedAt),
+                style: MistralTypography.micro.copyWith(color: skin.colors.text3),
+              ),
               const Spacer(),
               IconButton(
                 onPressed: onEdit,
@@ -226,12 +230,6 @@ class _NoteCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatDate(String dateStr) {
-    if (dateStr.length < 14) return dateStr;
-    return '${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)} '
-        '${dateStr.substring(8, 10)}:${dateStr.substring(10, 12)}';
   }
 }
 

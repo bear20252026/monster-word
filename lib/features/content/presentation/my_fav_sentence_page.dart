@@ -10,6 +10,7 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/utils/date_format_utils.dart';
 import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 
@@ -235,7 +236,8 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                     ),
                     const Spacer(),
                     Text(
-                      _formatDate(favSentence.updateTime),
+                      // L2 收口：共享 formatMonthDay（v2.7.51），不再手写 substring 解析
+                      formatMonthDay(favSentence.updateTime),
                       style: MistralTypography.micro.copyWith(color: skin.colors.text3),
                     ),
                   ],
@@ -303,17 +305,6 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
         ],
       ),
     );
-  }
-
-  String _formatDate(String updateTime) {
-    if (updateTime.length < 8) return '';
-    try {
-      final month = updateTime.substring(4, 6);
-      final day = updateTime.substring(6, 8);
-      return '$month/$day';
-    } catch (e) {
-      return '';
-    }
   }
 
   void _startLearning() {

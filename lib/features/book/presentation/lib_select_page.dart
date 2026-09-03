@@ -654,12 +654,12 @@ class _LibItemState extends State<_LibItem> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已选中《${widget.book.name}》')));
         // 每日目标仅首次选书时弹出（体验审计 A-3：每次换书都弹是打扰）
         final prefs = AppPreferences();
-        final firstTime = !prefs.getBool('daily_goal_prompt_shown', defaultValue: false);
+        final firstTime = !prefs.getBool(AppPreferences.dailyGoalPromptShownKey, defaultValue: false);
         if (!firstTime) {
           if (context.mounted) Navigator.pop(context);
           return;
         }
-        await prefs.setBool('daily_goal_prompt_shown', true);
+        await prefs.setBool(AppPreferences.dailyGoalPromptShownKey, true);
         if (!context.mounted) return;
         final nav = Navigator.of(context);
         await showModalBottomSheet<void>(

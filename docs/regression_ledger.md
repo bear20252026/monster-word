@@ -42,6 +42,8 @@
 | REG-CONTENT-001 | 句库页（例句收藏落点页）例句卡片为裸 GestureDetector+Container：无按压反馈、无阴影、选中态靠 2px 描边，与词典页 MwCard/ExampleTile 风格割裂 | 该页未随 v2.7.45 例句收藏闭环改造同步升级 | 第三十三批（v2.7.48+89） | `test/regression/regression_my_fav_sentence_page_test.dart` REG-CONTENT-001（MwCard 卡片化锁定、编辑态选中 check_circle 不丢、非编辑态 push RouteNames.sentenceDetail 导航契约保持） |
 | REG-CONTENT-002 | 语义色硬编码绕过 token：例句学习页「不认识」按钮 Colors.orange、FSRS 记忆预测四档 Colors.red/orange/blue/green、仪表盘统计色 Colors.blue/orange/red/green——与 MistralColors.warning/info/danger/success token 脱钩，主题调整时四处漂移 | 直接写 Material 色名未走 design_tokens（token 纪律缺失） | 第三十五批（v2.7.50+91） | `test/features/content/presentation/sentence_learning_page_test.dart`「不认识」按钮 foregroundColor == MistralColors.warning 锁定；翻卡 ScaleDownOnPress 按压反馈同步落地 |
 | REG-DICT-006 | 同一真题数据源（dictionary_extra.examSentences）两套视觉：词典页真题 tab（cardBg/lg 圆角/accent 0.12 徽章在句下）vs 学习侧词详情页「真题例句」区块（cardBgAlt/md 圆角/橙实色徽章在句上）；近义词 Chip 用 0.85 实色+白字，偏离全 App 淡底胶囊规则 | 真题卡两处各自内联实现（双写无单一事实来源） | 第三十四批（v2.7.49+90） | `test/regression/regression_dictionary_page_test.dart` REG-DICT-006（共享 ExamSentenceCard 渲染契约：句子+徽章、徽章文字色=皮肤 accent、空来源无徽章）；两页调用点唯一实现 |
+| REG-AUDIT-L2 | 同一紧凑时间串解析逻辑两处双写：句库页 `_formatDate`（yyyyMMdd→MM/dd）与笔记区 `_formatDate`（yyyyMMddHHmmss→yyyy-MM-dd HH:mm）各自手写 substring，规则漂移无守护 | 日期解析散落页面层，未沉淀共享工具（单一事实来源缺失） | 第三十六批（v2.7.51+92） | `test/unit/date_format_utils_test.dart`（formatMonthDay/formatCompactDateTime 正常解析 + 长度不足降级不抛异常锁定）；两页调用点唯一实现 |
+| REG-AUDIT-L3 | SP key 裸字符串散落：lib_select_page.dart 两处 `'daily_goal_prompt_shown'` 裸 key 直写，与 AppPreferences 常量体系脱钩，拼写漂移即静默丢数据 | SP key 常量未收口到 AppPreferences（key 管理双轨） | 第三十六批（v2.7.51+92） | `lib/core/infrastructure/app_preferences.dart` 新增 `dailyGoalPromptShownKey` 常量，lib_select_page 调用点改为常量引用；守卫由既有 daily_goal 单元测试承担 |
 
 ## 修复新 bug 的流程
 

@@ -142,6 +142,9 @@ class AppPreferences extends BaseSharedPreferences {
   /// 词根词缀显示开关键。
   static const showRootsKey = 'show_roots_v1';
 
+  /// 每日目标弹窗「不再提示」键（lib_select 首次进入提示后置位）。
+  static const dailyGoalPromptShownKey = 'daily_goal_prompt_shown';
+
   /// 助记段落默认顺序（与 LearningPreferences.defaults 一致）。
   static const defaultMnemonicOrder = '派生词,词组搭配,特殊变形,词根词缀';
 
