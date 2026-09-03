@@ -5,6 +5,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+
 import 'package:word_app/models/user_info_bean.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart' hide UserInfoBean;
 import 'package:word_app/core/repositories/user_repository.dart';
@@ -37,7 +39,8 @@ class UserServiceImpl implements UserService {
     if (jsonStr == null || jsonStr.isEmpty) return UserInfoBean();
     try {
       return UserInfoBean.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
-    } catch (_) {
+    } catch (e, s) {
+      reportSwallowedError('用户信息解析失败', e, s);
       return UserInfoBean();
     }
   }

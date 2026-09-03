@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+
 import 'package:word_app/features/learning/data/mastered_repository.dart';
 
 /// 基于 SharedPreferences 的已掌握单词标记仓储。
@@ -21,8 +23,9 @@ class MasteredRepositoryImpl implements MasteredRepository {
       if (saved != null) {
         _masteredWords.addAll(saved);
       }
-    } catch (_) {
+    } catch (e, s) {
       // 存储不可用时保留内存中的安全空集合。
+      reportSwallowedError('已掌握词表加载失败', e, s);
     }
   }
 

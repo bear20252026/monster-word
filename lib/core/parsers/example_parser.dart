@@ -99,12 +99,14 @@ class ExampleParser {
     try {
       decoded = jsonDecode(raw);
     } catch (_) {
+      // B 级豁免：词条/词库数据解析降级，损坏数据不影响主流程（不逐条上报防刷屏，REG-OBS-001）
       return null;
     }
     if (decoded is String) {
       try {
         decoded = jsonDecode(decoded);
       } catch (_) {
+        // B 级豁免：词条/词库数据解析降级，损坏数据不影响主流程（不逐条上报防刷屏，REG-OBS-001）
         return null;
       }
     }

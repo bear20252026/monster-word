@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/models/bb_word_process.dart';
 import 'package:word_app/features/learning/presentation/review_word_actions_state.dart';
 
@@ -63,7 +64,8 @@ class ReviewWordActionCoordinator {
         outcome: isFavorite ? ReviewWordActionOutcome.favoriteAdded : ReviewWordActionOutcome.favoriteRemoved,
         word: currentWord.word,
       );
-    } catch (_) {
+    } catch (e, s) {
+      reportSwallowedError('收藏操作持久化失败 ${currentWord.word}', e, s);
       return ReviewWordActionResult(outcome: ReviewWordActionOutcome.favoritePersistFailed, word: currentWord.word);
     }
   }
@@ -80,7 +82,8 @@ class ReviewWordActionCoordinator {
         outcome: marked ? ReviewWordActionOutcome.manuallyMastered : ReviewWordActionOutcome.alreadyManuallyMastered,
         word: currentWord.word,
       );
-    } catch (_) {
+    } catch (e, s) {
+      reportSwallowedError('手动掌握标记持久化失败 ${currentWord.word}', e, s);
       return ReviewWordActionResult(
         outcome: ReviewWordActionOutcome.manualMasteryPersistFailed,
         word: currentWord.word,

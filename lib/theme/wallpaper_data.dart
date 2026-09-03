@@ -215,6 +215,7 @@ class WallpaperData {
       final list = List<Map<String, dynamic>>.from(const JsonDecoder().convert(jsonStr) as List);
       return list.map((e) => WallpaperItem.fromJson(e)).toList();
     } catch (_) {
+      // B 级豁免：壁纸列表解析降级，壁纸缺失不影响主流程（REG-OBS-001）
       return [];
     }
   }

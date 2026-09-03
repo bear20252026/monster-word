@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 
 /// 正式复习会话初始化命令。
@@ -20,7 +21,8 @@ class ReviewSessionStarter {
     try {
       await _initialize(_snapshot);
       return ReviewSessionStartResult.ready;
-    } catch (_) {
+    } catch (e, s) {
+      reportSwallowedError('复习会话初始化失败', e, s);
       return ReviewSessionStartResult.failed;
     }
   }

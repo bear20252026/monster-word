@@ -152,26 +152,31 @@ class DictionaryDetailState extends ChangeNotifier {
     try {
       _derivedWords = await _contentReader.getDerivedWords(word.word);
     } catch (_) {
+      // C 级豁免：拓展内容按区块独立降级，失败展示空 tab 可重试（REG-OBS-001）
       _derivedWords = const [];
     }
     try {
       _synonyms = await _contentReader.getSynonyms(word.word);
     } catch (_) {
+      // C 级豁免：拓展内容按区块独立降级，失败展示空 tab 可重试（REG-OBS-001）
       _synonyms = const [];
     }
     try {
       _examExamples = await _contentReader.getExamExamples(word.word);
     } catch (_) {
+      // C 级豁免：拓展内容按区块独立降级，失败展示空 tab 可重试（REG-OBS-001）
       _examExamples = const [];
     }
     try {
       _realExamSentences = await _contentReader.getRealExamSentences(word.word);
     } catch (_) {
+      // C 级豁免：拓展内容按区块独立降级，失败展示空 tab 可重试（REG-OBS-001）
       _realExamSentences = const [];
     }
     try {
       _collinsSenses = await _contentReader.getCollinsSenses(word.word);
     } catch (_) {
+      // C 级豁免：拓展内容按区块独立降级，失败展示空 tab 可重试（REG-OBS-001）
       _collinsSenses = const [];
     }
   }

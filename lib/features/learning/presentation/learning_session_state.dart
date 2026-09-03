@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/core/engine/core_engine.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/core/engine/leitner_engine.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
@@ -70,14 +71,18 @@ class LearningSessionState extends ChangeNotifier {
       _todayLearned = prefs.getTodayLearned();
       final savedDate = prefs.getTodayLearnedDate();
       if (savedDate != today) _todayLearned = 0; // 跨天清零
-    } catch (_) {}
+    } catch (e, s) {
+      reportSwallowedError('今日学习数恢复失败', e, s);
+    }
   }
 
   Future<void> _incrementTodayLearned() async {
     _todayLearned++;
     try {
       await AppPreferences().setTodayLearned(_todayLearned, date: _todayLearnedDate);
-    } catch (_) {}
+    } catch (e, s) {
+      reportSwallowedError('今日学习数写入失败', e, s);
+    }
   }
 
   DateTime? _sessionStartTime;

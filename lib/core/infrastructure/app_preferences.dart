@@ -7,6 +7,8 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// 基础 SharedPreferences 封装（原版 BaseSharedPreferences）
@@ -412,7 +414,8 @@ extension UserInfoPrefs on AppPreferences {
     if (jsonStr.isEmpty) return UserInfoBean();
     try {
       return UserInfoBean.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
-    } catch (_) {
+    } catch (e, s) {
+      reportSwallowedError('用户信息解析失败(getUserInfoSync)', e, s);
       return UserInfoBean();
     }
   }
@@ -423,7 +426,8 @@ extension UserInfoPrefs on AppPreferences {
     if (jsonStr.isEmpty) return UserInfoBean();
     try {
       return UserInfoBean.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
-    } catch (_) {
+    } catch (e, s) {
+      reportSwallowedError('用户信息解析失败(getUserInfo)', e, s);
       return UserInfoBean();
     }
   }

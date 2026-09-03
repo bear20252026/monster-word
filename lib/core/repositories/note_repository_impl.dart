@@ -5,6 +5,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+
 import 'package:word_app/models/word_note.dart';
 import 'package:word_app/core/repositories/note_repository.dart';
 
@@ -22,7 +24,8 @@ class NoteRepositoryImpl implements NoteRepository {
     try {
       final list = jsonDecode(jsonStr) as List;
       return list.map((e) => WordNote.fromMap(e as Map<String, dynamic>)).toList();
-    } catch (_) {
+    } catch (e, s) {
+      reportSwallowedError('笔记列表解析失败 wordId=$wordId', e, s);
       return [];
     }
   }
@@ -38,7 +41,9 @@ class NoteRepositoryImpl implements NoteRepository {
       if (jsonStr == null || jsonStr.isEmpty) continue;
       try {
         total += (jsonDecode(jsonStr) as List).length;
-      } catch (_) {}
+      } catch (e, s) {
+        reportSwallowedError('笔记计数解析失败 key=$key', e, s);
+      }
     }
     return total;
   }

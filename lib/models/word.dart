@@ -111,6 +111,7 @@ class Word {
         }
       }
     } catch (_) {}
+    // C 级豁免：解析失败回退原文/原始文本，属内容降级非数据丢失（REG-OBS-001）
     return raw;
   }
 
@@ -156,6 +157,7 @@ class Word {
         }
       }
     } catch (_) {}
+    // B 级豁免：词条/词库数据解析降级，损坏数据不影响主流程（不逐条上报防刷屏，REG-OBS-001）
     _cachedDefinitions = result;
     return result;
   }
@@ -166,6 +168,7 @@ class Word {
       final decoded = jsonDecode(interpret);
       return decoded is List && decoded.isNotEmpty;
     } catch (_) {
+      // B 级豁免：词条/词库数据解析降级，损坏数据不影响主流程（不逐条上报防刷屏，REG-OBS-001）
       return false;
     }
   }

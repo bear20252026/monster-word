@@ -47,6 +47,8 @@
 | REG-LEARN-001 | 词书加载硬编码截断：learning 侧 RepositoryBookWordsReader 硬编码 `limit: 1000`，大词书学习队列静默缺词；且 WordRepositoryImpl `limit ?? 50` 暗坑——漏传 limit 的调用方只会拿到 50 词 | 端口消费方硬编码截断值 + repository 层默认值掩盖语义 | 第三十八批（v2.7.53+94） | `test/features/learning/application/word_list_readers_test.dart` 锁定 loadWords 不传 limit（null=全量）；WordRepositoryImpl 改 `limit ?? -1`（SQLite 无限制语义）并在接口注释声明契约 |
 | REG-ARCH-004 | 跨 feature 端口同名双写：learning 与 book 各声明一个 `BookWordsReader`（行为不同：截断 vs 全量），接错线编译期不报错 | 端口命名冲突无守卫 | 第三十八批（v2.7.53+94） | book 侧整体更名 `BookWordListReader`（文件/类/适配器同步）；`test/architecture/no_duplicate_port_names_test.dart` 扫描全部 feature application 层，锁定抽象端口名不得跨 feature 重复 |
 
+| REG-OBS-001 | 56 处 `catch (_)` 空捕获吞错：数据路径异常对 Sentry 完全不可见——典型为收藏加载失败后用户收藏静默"消失"（fav_repository_impl）；同类的还有笔记、已掌握词表、金币账本、用户信息、今日学习数等 13 处 | 空捕获无上报通道，可观测性盲区 | 第三十九批（v2.7.54+95） | 新增 `lib/core/utils/swallowed_error_report.dart`（debugPrint + Sentry captureEvent，isEnabled 守卫）；A 级 13 处接上报，B/C 级 43 处补豁免注释；`test/architecture/swallowed_error_guard_test.dart` 锁定 A 级文件必须调用上报 |
+
 ## 修复新 bug 的流程
 
 1. 修复前先写失败的回归测试（证明 bug 存在）

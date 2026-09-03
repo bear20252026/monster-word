@@ -2,6 +2,8 @@
 // 基于 SharedPreferences（单词收藏）和 FavSentenceDao（句子收藏）
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+
 import 'package:word_app/core/infrastructure/fav_sentence_dao.dart';
 import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
@@ -21,7 +23,9 @@ class FavRepositoryImpl implements FavRepository {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getStringList(_kFavoritesKey);
       if (raw != null) _favoriteWords.addAll(raw);
-    } catch (_) {}
+    } catch (e, s) {
+      reportSwallowedError('收藏列表加载失败', e, s);
+    }
   }
 
   Future<void> _saveFavorites() async {

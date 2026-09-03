@@ -154,6 +154,7 @@ class BBWordProcess {
         return result;
       }
     } catch (_) {}
+    // B 级豁免：词条/词库数据解析降级，损坏数据不影响主流程（不逐条上报防刷屏，REG-OBS-001）
     _structuredDefs = [];
     return _structuredDefs!;
   }

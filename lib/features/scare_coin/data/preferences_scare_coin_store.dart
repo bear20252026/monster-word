@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/models/scare_coin_entry.dart';
 
@@ -54,7 +55,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
           .toList();
       entries.sort((a, b) => b.time.compareTo(a.time));
       return entries;
-    } catch (_) {
+    } catch (e, s) {
+      reportSwallowedError('金币账本解析失败', e, s);
       return [];
     }
   }
