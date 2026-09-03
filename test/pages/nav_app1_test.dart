@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/app/router/nav_utils.dart';
 
 /// WS-6 APP-1  widget 测试：验证 review 完成触发 goHome、lib_select 空词表不跳转且提示。
 void main() {

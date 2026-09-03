@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:word_app/core/router/route_error_page.dart';
+import 'package:word_app/app/router/route_error_page.dart';
 
 void main() {
   testWidgets('RouteErrorPage 显示「返回首页」按钮', (tester) async {

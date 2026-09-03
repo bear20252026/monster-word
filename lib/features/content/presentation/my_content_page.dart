@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/content/presentation/my_fav_page.dart';
 import 'package:word_app/features/learning/application/learning_collections_reader.dart';
 import 'package:word_app/features/learning/application/learning_session_reader.dart';

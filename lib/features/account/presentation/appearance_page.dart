@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:word_app/core/presentation/responsive.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 

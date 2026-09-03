@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/router/nav_utils.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/nav_utils.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';

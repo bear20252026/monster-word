@@ -6,8 +6,8 @@
 
 ```text
 lib/
-  app/                 # 应用启动、全局 Provider、主题和首页装配
-  core/                # 依赖注册、路由、平台无关基础能力
+  app/                 # 应用启动、全局 Provider、路由装配（app/router/）、主题和首页装配
+  core/                # 依赖注册、平台无关基础能力
   features/            # 后续按业务逐步迁移的垂直功能模块
   data/                # 本地数据库、DAO、持久化实现（迁移期遗留）
   repositories/        # 数据访问接口及实现（迁移期遗留）
@@ -15,9 +15,21 @@ lib/
   state/               # 页面状态 / Controller（迁移期遗留）
   pages/, screens/     # 现有展示层，按 feature 逐步迁移
   widgets/             # 跨功能纯展示组件；不得继续放入业务编排
+  models/              # 跨 feature 共享域模型（定位见下文 §1.1）
+  tokens/              # 设计令牌唯一定义处（色彩/阴影/品牌常量，M5 白名单）
+  theme/               # 皮肤系统与壁纸数据（preset 定义处，M5 白名单）
 ```
 
 `app/` 是应用装配层：`app_bootstrap.dart` 只初始化平台与基础设施，`app.dart` 只装配全局状态、主题、首页和路由。`main.dart` 仅启动这两个边界。
+
+### 1.1 `models/` 的定位
+
+`lib/models/` 是**跨 feature 共享域模型**的统一存放处，而非某个 feature 的私有目录。
+
+- **准入标准**：被两个及以上 feature 消费、且只含数据结构（不可变实体 / 值对象 / 序列化模型）的类。当前存放 `word.dart`、`book.dart`、`definition.dart`、`new_word_record.dart`、`scare_coin_entry.dart` 等十余个模型。
+- **禁止**：业务规则、数据访问、Widget、状态管理进入 `models/`；单 feature 专用的模型应留在该 feature 的 `domain/` 内，不得上提稀释共享层。
+- **依赖方向**：`models/` 只依赖 Dart/Flutter 基础库与序列化库；不得 import `features/`、`data/`、`repositories/`、`services/`、`state/` 任何代码。
+- **迁移期约定**：各 feature 现存私有模型副本在后续 feature 迁移时统一收敛到 `models/`（或明确留在 feature `domain/`），不新增第三种存放位置。
 
 ## 2. 依赖规则
 

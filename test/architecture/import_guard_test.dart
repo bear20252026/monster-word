@@ -95,8 +95,8 @@ void main() {
         check('features/account/presentation/my_page.dart', 'app/app.dart'),
         anyElement(contains('feature 不得 import 壳层 screens/app(R6)')),
       );
-      // 组合根不受限：core/router 可装配 feature 页面
-      expect(check('core/router/learning_routes.dart', 'features/learning/presentation/learn_session.dart'), isEmpty);
+      // 组合根不受限：app/router 可装配 feature 页面
+      expect(check('app/router/learning_routes.dart', 'features/learning/presentation/learn_session.dart'), isEmpty);
     });
 
     test('R6-DI: feature presentation 不得直取 DI 契约（A3 收口）', () {

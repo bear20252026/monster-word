@@ -12,8 +12,8 @@ import 'package:word_app/features/dictionary/presentation/dictionary_by_name_pag
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/presentation/home_screen.dart';
-import 'package:word_app/core/router/route_error_page.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/route_error_page.dart';
+import 'package:word_app/app/router/route_names.dart';
 
 /// 内容与词典功能域的页面映射和参数解析。
 abstract final class ContentRoutes {

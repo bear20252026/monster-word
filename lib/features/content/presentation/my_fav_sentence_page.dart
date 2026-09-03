@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
 import 'package:word_app/features/content/presentation/sentence_learning_page.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';

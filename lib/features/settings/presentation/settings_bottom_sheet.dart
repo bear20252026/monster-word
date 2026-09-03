@@ -2,7 +2,7 @@
 // 此前内联在 settings_page._showBottomSheet，拆出供设置页与学习提醒弹窗复用。
 import 'package:flutter/material.dart';
 
-import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 Future<T?> showSettingsBottomSheet<T>(BuildContext context, {required String title, required Widget child}) {

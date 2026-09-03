@@ -64,21 +64,28 @@ class ImportGuard {
     }
 
     // core 依赖方向：core 不得反向依赖 features。
-    // 例外：core/router 是路由装配边界，按其设计必须引用各页面（只做组装、不承载
-    // 业务逻辑）。组合根本体已上移 app/service_locator.dart（v2.7.37），core/di 不复
-    // 存在；core 其余部分由 app_structure_test 的 REG-ARCH-002 守卫锁定零 feature 依赖。
-    final isCompositionRoot = from.startsWith('core/router/');
+    // 组合根：app/router/ 是路由装配边界，按其设计必须引用各页面（只做组装、不承载
+    // 业务逻辑）。组合根本体已上移 app/service_locator.dart（v2.7.37）、app/router/
+    //（v2.7.44），core/di 不复存在；core 其余部分由 app_structure_test 的
+    // REG-ARCH-002 守卫锁定零 feature 依赖。
+    final isCompositionRoot = from.startsWith('app/router/');
     if (!isCompositionRoot && from.startsWith('core/') && to.startsWith('features/')) {
       violations.add('core 不得 import features(R-core): $from -> $to');
     }
 
     // R6：feature 不得反向依赖壳层 —— feature 不得 import screens/ 或 app/（组合根）。
-    // 壳层只有组合根（app/app.dart、core/router）可以引用 feature；feature 只能
-    // 通过 core 的 routeNames 等契约做跨功能导航，不得 import 壳层实现。
+    // 壳层只有组合根（app/app.dart、app/router/）可以引用 feature；feature 只能
+    // 通过 RouteNames 等路由契约做跨功能导航，不得 import 壳层实现。
     // 豁免：app/service_locator.dart 是 get_it 容器（组合根产出的 DI 契约），
-    // feature 经它访问 sl<> 是两条装配通道之一，不算 import 壳层实现。
+    // feature 经它访问 sl<> 是两条装配通道之一，不算 import 壳层实现；
+    // app/router/ 同理（组合根产出的路由契约：RouteNames 集中表、nav_utils），
+    // feature/widgets 消费契约不算 import 壳层装配实现。
     final isDiContract = to == 'app/service_locator.dart';
-    if (!isDiContract && fromFeature.isNotEmpty && (to.startsWith('screens/') || to.startsWith('app/'))) {
+    final isRouteContract = to.startsWith('app/router/');
+    if (!isDiContract &&
+        !isRouteContract &&
+        fromFeature.isNotEmpty &&
+        (to.startsWith('screens/') || to.startsWith('app/'))) {
       violations.add('feature 不得 import 壳层 screens/app(R6): $from -> $to');
     }
 
@@ -98,7 +105,7 @@ class ImportGuard {
       if (toFeature.isNotEmpty && toLayer != 'application') {
         violations.add('widgets 只能消费 feature application 端口(R-widgets): $from -> $to');
       }
-      if (to.startsWith('app/')) {
+      if (to.startsWith('app/') && !isRouteContract) {
         violations.add('widgets 不得 import 壳层 app/(R-widgets): $from -> $to');
       }
     }

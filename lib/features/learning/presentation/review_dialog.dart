@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/theme/skin_system.dart';

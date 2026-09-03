@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/app/router/nav_utils.dart';
 
 void main() {
   Future<void> pumpWithRoutes(WidgetTester tester) async {

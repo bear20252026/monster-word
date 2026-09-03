@@ -12,7 +12,7 @@ import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/presentation/responsive.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 import 'package:word_app/tokens/star_gold.dart';
@@ -21,7 +21,7 @@ import 'package:word_app/features/learning/presentation/word_lookup_popup.dart';
 import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/scratch_to_reveal.dart';
-import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';

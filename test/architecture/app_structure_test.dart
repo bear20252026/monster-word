@@ -507,7 +507,7 @@ void main() {
     });
 
     test('遗留深链不会重新实例化或保留旧复习会话实现', () {
-      final learningRoutesSource = File('lib/core/router/learning_routes.dart').readAsStringSync();
+      final learningRoutesSource = File('lib/app/router/learning_routes.dart').readAsStringSync();
 
       expect(File('lib/screens/review_session.dart').existsSync(), isFalse);
       expect(learningRoutesSource, isNot(contains("import '../../screens/review_session.dart';")));
@@ -520,12 +520,14 @@ void main() {
       expect(File('lib/app/service_locator.dart').existsSync(), isTrue);
       expect(File('lib/core/audio/word_audio_scope.dart').readAsStringSync(), isNot(contains('service_locator')));
 
-      // core 层禁止 import 任何 feature 包。
-      // 豁免：core/router（导航路由需引用页面，上移 app/ 列为后续独立批次）。
+      // 路由装配边界（组合根另一半）已上移 app/router/（v2.7.44）；core/router 不复存在。
+      expect(Directory('lib/core/router').existsSync(), isFalse);
+      expect(File('lib/app/router/app_router.dart').existsSync(), isTrue);
+
+      // core 层禁止 import 任何 feature 包（路由装配边界已迁出 core，无需再豁免）。
       final offenders = <String>[];
       for (final entity in Directory('lib/core').listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.dart')) continue;
-        if (entity.path.replaceAll('\\', '/').contains('/core/router/')) continue;
         final source = entity.readAsStringSync();
         if (source.contains("import 'package:word_app/features/")) offenders.add(entity.path);
       }

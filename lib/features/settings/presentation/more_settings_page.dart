@@ -10,8 +10,8 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/core/auth/app_session_controller.dart';
 import 'package:word_app/core/web/base_web_page.dart';
-import 'package:word_app/core/router/nav_utils.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/nav_utils.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';

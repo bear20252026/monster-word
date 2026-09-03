@@ -22,7 +22,7 @@ import 'package:word_app/features/settings/presentation/net_diagnosis_page.dart'
 import 'package:word_app/features/settings/presentation/settings_page.dart';
 import 'package:word_app/features/settings/presentation/ui_theme_select_page.dart';
 import 'package:word_app/features/word_browse/presentation/foot_mark_page.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/route_names.dart';
 
 /// 账户、个人中心与设置功能域的页面映射和参数解析。
 abstract final class AccountRoutes {

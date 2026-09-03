@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/service_locator.dart';
-import 'package:word_app/core/router/content_routes.dart';
-import 'package:word_app/core/router/route_error_page.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/content_routes.dart';
+import 'package:word_app/app/router/route_error_page.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_by_name_page.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
 import 'package:word_app/models/word.dart';

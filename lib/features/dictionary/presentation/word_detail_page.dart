@@ -22,7 +22,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/definition_view.dart';
-import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/widgets/word_root_tab.dart';
 
 class WordDetailPage extends StatefulWidget {

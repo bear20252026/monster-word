@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
@@ -19,7 +19,7 @@ import 'package:word_app/tokens/starbucks_tokens.dart';
 /// - 命中：渲染 [DictionaryPage]；
 /// - 未命中 / 查询异常：展示友好错误态，可安全返回或逐级回首页。
 ///
-/// 路由入口见 `lib/core/router/content_routes.dart`（`RouteNames.dictionaryByName`）。
+/// 路由入口见 `lib/app/router/content_routes.dart`（`RouteNames.dictionaryByName`）。
 class DictionaryByNamePage extends StatefulWidget {
   final String wordName;
 

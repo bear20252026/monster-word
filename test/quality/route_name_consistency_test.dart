@@ -6,7 +6,7 @@
 // 与注册名再次分歧（即「前进即失败」类 bug 的通用回归守卫）。
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/book/presentation/book_words_page.dart';
 
 void main() {

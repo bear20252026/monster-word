@@ -1,7 +1,7 @@
 // 会话退出保护：拦截系统返回键/手势返回，防止误触丢失学习进度
 import 'package:flutter/material.dart';
 
-import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/app/router/nav_utils.dart';
 
 /// 学习类页面的返回保护（智能拦截）。
 ///

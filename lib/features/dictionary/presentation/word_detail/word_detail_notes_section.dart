@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:word_app/features/word_browse/application/word_notes_store.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/models/word_note.dart';
-import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 import 'package:word_app/features/account/application/account_profile_store.dart';

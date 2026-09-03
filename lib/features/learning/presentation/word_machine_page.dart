@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
-import 'package:word_app/core/router/nav_utils.dart';
+import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/models/word.dart';

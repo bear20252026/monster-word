@@ -11,7 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:word_app/core/router/navigation_history.dart';
+import 'package:word_app/app/router/navigation_history.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 class GlobalNavHistoryBar extends StatefulWidget {

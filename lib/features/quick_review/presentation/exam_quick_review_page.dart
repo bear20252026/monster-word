@@ -17,7 +17,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/func_colors.dart';
 import 'package:word_app/widgets/monster_icon.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/quick_review/application/quick_review_word_reader.dart';
 import 'package:word_app/features/quick_review/domain/exam_type.dart';
 import 'package:word_app/features/quick_review/domain/quick_review_stats.dart';

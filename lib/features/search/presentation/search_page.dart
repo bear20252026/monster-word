@@ -18,7 +18,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/breathing_word.dart';
 import 'package:word_app/widgets/halo_search.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/search/application/example_reader.dart';
 import 'package:word_app/features/search/application/favorites_accessor.dart';
 import 'package:word_app/features/search/application/search_history_store.dart';

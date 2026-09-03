@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:word_app/core/router/navigation_history.dart';
+import 'package:word_app/app/router/navigation_history.dart';
 
 void main() {
   testWidgets('didPush 入栈后 didPop 记录前进快照，goForward 可恢复', (tester) async {

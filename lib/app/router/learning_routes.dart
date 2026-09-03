@@ -24,8 +24,8 @@ import 'package:word_app/features/learning/presentation/learn_page.dart';
 import 'package:word_app/features/learning/presentation/word_machine_page.dart';
 import 'package:word_app/features/quick_review/presentation/exam_quick_review_page.dart';
 
-import 'package:word_app/core/router/route_error_page.dart';
-import 'package:word_app/core/router/route_names.dart';
+import 'package:word_app/app/router/route_error_page.dart';
+import 'package:word_app/app/router/route_names.dart';
 
 /// 学习功能域的页面映射和参数解析。
 ///
