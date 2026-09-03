@@ -23,9 +23,13 @@
 
 ## 二、代码侧真实开口
 
-### L4（低优）：test/pages/ 14 个批次命名遗留测试文件归位
+### L4（低优）：test/pages/ 14 个批次命名遗留测试文件归位 ✅ 已闭环（2026-09-04）
 
 唯一剩余审计欠账。`test/pages/` 按修复批次命名（fix6 / ux_fix_b / app1），已摸清全部归属：
+
+> **闭环记录（2026-09-04）**：14 文件已全部 `git mv` 归位 + 语义化重命名（纯移动零逻辑改动，零相对 import 无断链风险），`test/pages/` 目录删除：
+> account_fix6→`features/account/presentation/account_profile_session_restore_test`；export_readable→`core/parsers/export_readable_text_test`；learn_page_completion→`features/learning/presentation/learn_completion_summary_test`；nav_app1→`app/nav_root_return_test`；nav_safety_simple→`app/safe_pop_root_behavior_test`；nav_safety→`app/safe_pop_navigation_test`；redemption_center_page_ux→`features/scare_coin/presentation/`（原名）；session_empty_and_mounted→`features/learning/presentation/session_empty_state_test`；uri_scheme_page→`core/web/uri_scheme_page_test`；ux_fix_b_home_book→`models/book_home_cta_test`；ux_fix_c→`models/word_selection_highlight_test`；word_detail_fix3→`features/dictionary/presentation/word_detail_deep_link_error_test`；word_detail_phrase_root→`features/dictionary/presentation/`（原名）；word_dictionary_deeplink→`app/dictionary_route_test`。
+> 纯测试侧改动、零 app 代码变化，仅 push 不发版（v2.7.56+97 仍为当前装机实测目标）。
 
 | 现文件 | 主消费域 | 建议去向 |
 |---|---|---|
