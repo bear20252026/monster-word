@@ -1,10 +1,10 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 由账号4生成
-// 数据模型层：翻译自 bean/（v3.2 源码 1:1）
+// 数据模型层
 // 文件：LexisDict + Interpret（词典词条/释义）
 
-/// 词典词条（翻译自 LexisDict.java）
+/// 词典词条
 class LexisDict {
   String word;
   String definition;
@@ -49,7 +49,7 @@ class LexisDict {
 
   String get interpret => definition;
 
-  /// 生成完整释义文本（原版 setInterpret 逻辑：p + "  " + i，换行分隔）
+  /// 生成完整释义文本（setInterpret 逻辑：p + "  " + i，换行分隔）
   String get interpretComplete {
     final sb = StringBuffer();
     for (var i = 0; i < interpretList.length; i++) {
@@ -69,7 +69,7 @@ class LexisDict {
   Interpret? get firstInterpret => interpretList.isEmpty ? null : interpretList.first;
 }
 
-/// 释义项（翻译自 LexisDict.Interpret）
+/// 释义项
 class Interpret {
   String p; // 词性 (n./vt./adj.)
   String i; // 释义
@@ -81,6 +81,6 @@ class Interpret {
   factory Interpret.fromJson(Map<String, dynamic> json) =>
       Interpret(p: json['p'] ?? '', i: json['i'] ?? '', ei: json['ei'] ?? '', bCi: json['bCi'] ?? false);
 
-  /// 完整释义字符串（原版 getInterpretCompleteString）
+  /// 完整释义字符串（getInterpretCompleteString）
   String get interpretComplete => p.isNotEmpty ? '$p  $i' : i;
 }

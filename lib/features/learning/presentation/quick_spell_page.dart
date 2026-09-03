@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 QuickSpellActivity
 // 快速拼写挑战：限时拼写 + 即时反馈
 import 'dart:async';
 
@@ -164,15 +163,15 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.skin.colors.cardBg,
-        title: Text('挑战完成', style: MistralTypography.heading4.copyWith(color: context.skin.colors.text1)),
+        title: Text('挑战完成', style: MwTypography.heading4.copyWith(color: context.skin.colors.text1)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('正确：$_correctCount', style: MistralTypography.body.copyWith(color: MistralColors.success)),
-            Text('错误：$_wrongCount', style: MistralTypography.body.copyWith(color: MistralColors.danger)),
+            Text('正确：$_correctCount', style: MwTypography.body.copyWith(color: MwColors.success)),
+            Text('错误：$_wrongCount', style: MwTypography.body.copyWith(color: MwColors.danger)),
             const SizedBox(height: 8),
-            Text('正确率：$accuracy%', style: MistralTypography.bodyBold.copyWith(color: context.skin.colors.text1)),
+            Text('正确率：$accuracy%', style: MwTypography.bodyBold.copyWith(color: context.skin.colors.text1)),
           ],
         ),
         actions: [
@@ -188,7 +187,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
               Navigator.pop(ctx);
               _resetChallenge();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: MistralColors.primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: Colors.white),
             child: const Text('再来一次'),
           ),
         ],
@@ -231,7 +230,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
             children: [
               Icon(Icons.keyboard, size: 64, color: skin.colors.text3),
               const SizedBox(height: 16),
-              Text('暂无待学习单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+              Text('暂无待学习单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
               const SizedBox(height: 24),
               TextButton.icon(
                 onPressed: () => NavUtils.goHome(context),
@@ -284,30 +283,24 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
             },
           ),
           const SizedBox(width: 4),
-          Text('快速拼写', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('快速拼写', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           // 计时
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: _secondsLeft <= 10
-                  ? MistralColors.danger.withValues(alpha: 0.1)
-                  : MistralColors.primary.withValues(alpha: 0.1),
+                  ? MwColors.danger.withValues(alpha: 0.1)
+                  : MwColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(context.design.radius.pill),
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.timer_outlined,
-                  size: 16,
-                  color: _secondsLeft <= 10 ? MistralColors.danger : MistralColors.primary,
-                ),
+                Icon(Icons.timer_outlined, size: 16, color: _secondsLeft <= 10 ? MwColors.danger : MwColors.primary),
                 const SizedBox(width: 4),
                 Text(
                   '$_secondsLeft s',
-                  style: MistralTypography.bodyBold.copyWith(
-                    color: _secondsLeft <= 10 ? MistralColors.danger : MistralColors.primary,
-                  ),
+                  style: MwTypography.bodyBold.copyWith(color: _secondsLeft <= 10 ? MwColors.danger : MwColors.primary),
                 ),
               ],
             ),
@@ -325,7 +318,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
         // 进度
         Text(
           '${_currentIndex + 1} / ${_words.length}',
-          style: MistralTypography.heading5.copyWith(color: skin.colors.text3),
+          style: MwTypography.heading5.copyWith(color: skin.colors.text3),
         ),
         const SizedBox(height: 8),
         // 释义提示
@@ -339,7 +332,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
             children: [
               Text(
                 _currentWord.cleanInterpret,
-                style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
+                style: MwTypography.heading4.copyWith(color: skin.colors.text1),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -349,15 +342,15 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: MistralColors.cream,
+                    color: MwColors.cream,
                     borderRadius: BorderRadius.circular(context.design.radius.pill),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.volume_up_outlined, size: 18, color: MistralColors.primary),
+                      Icon(Icons.volume_up_outlined, size: 18, color: MwColors.primary),
                       const SizedBox(width: 6),
-                      Text('听发音', style: MistralTypography.bodySm.copyWith(color: MistralColors.primary)),
+                      Text('听发音', style: MwTypography.bodySm.copyWith(color: MwColors.primary)),
                     ],
                   ),
                 ),
@@ -375,7 +368,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
           style: AppTypography.heroWord.copyWith(color: skin.colors.text1),
           decoration: InputDecoration(
             hintText: '输入英文单词',
-            hintStyle: MistralTypography.body.copyWith(color: skin.colors.text3),
+            hintStyle: MwTypography.body.copyWith(color: skin.colors.text3),
             filled: true,
             fillColor: skin.colors.cardBg,
             border: OutlineInputBorder(
@@ -384,7 +377,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(context.design.radius.lg),
-              borderSide: BorderSide(color: MistralColors.primary, width: 2),
+              borderSide: BorderSide(color: MwColors.primary, width: 2),
             ),
           ),
           onSubmitted: (_) => _showAnswer ? _nextWord() : _checkAnswer(),
@@ -394,8 +387,8 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
         if (_showAnswer) ...[
           Text(
             _feedback,
-            style: MistralTypography.heading5.copyWith(
-              color: _feedback.startsWith('✓') ? MistralColors.success : MistralColors.danger,
+            style: MwTypography.heading5.copyWith(
+              color: _feedback.startsWith('✓') ? MwColors.success : MwColors.danger,
             ),
           ),
           const SizedBox(height: 16),
@@ -409,7 +402,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
                 child: ElevatedButton(
                   onPressed: _checkAnswer,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: MistralColors.primary,
+                    backgroundColor: MwColors.primary,
                     foregroundColor: AppColors.white100,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -422,7 +415,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
                 child: ElevatedButton(
                   onPressed: _nextWord,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: MistralColors.primary,
+                    backgroundColor: MwColors.primary,
                     foregroundColor: AppColors.white100,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -444,9 +437,9 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.emoji_events, size: 64, color: MistralColors.sunshine300),
+        Icon(Icons.emoji_events, size: 64, color: MwColors.sunshine300),
         const SizedBox(height: 16),
-        Text('挑战结束', style: MistralTypography.heading3.copyWith(color: skin.colors.text1)),
+        Text('挑战结束', style: MwTypography.heading3.copyWith(color: skin.colors.text1)),
         const SizedBox(height: 24),
         Container(
           padding: const EdgeInsets.all(24),
@@ -457,21 +450,21 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
           ),
           child: Column(
             children: [
-              Text('正确率：$accuracy%', style: MistralTypography.heading4.copyWith(color: MistralColors.primary)),
+              Text('正确率：$accuracy%', style: MwTypography.heading4.copyWith(color: MwColors.primary)),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Column(
                     children: [
-                      Text('$_correctCount', style: MistralTypography.heading3.copyWith(color: MistralColors.success)),
-                      Text('正确', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                      Text('$_correctCount', style: MwTypography.heading3.copyWith(color: MwColors.success)),
+                      Text('正确', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                     ],
                   ),
                   Column(
                     children: [
-                      Text('$_wrongCount', style: MistralTypography.heading3.copyWith(color: MistralColors.danger)),
-                      Text('错误', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                      Text('$_wrongCount', style: MwTypography.heading3.copyWith(color: MwColors.danger)),
+                      Text('错误', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                     ],
                   ),
                 ],
@@ -485,7 +478,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
           child: ElevatedButton(
             onPressed: _resetChallenge,
             style: ElevatedButton.styleFrom(
-              backgroundColor: MistralColors.primary,
+              backgroundColor: MwColors.primary,
               foregroundColor: AppColors.white100,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
               padding: const EdgeInsets.symmetric(vertical: 14),

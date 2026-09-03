@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 MyWordsActivity
 // 我的单词：显示所有已学单词
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

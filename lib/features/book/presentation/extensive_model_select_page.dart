@@ -87,9 +87,9 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('选择泛听模式', style: MistralTypography.heading3.copyWith(color: skin.colors.text1)),
+                        Text('选择泛听模式', style: MwTypography.heading3.copyWith(color: skin.colors.text1)),
                         const SizedBox(height: 8),
-                        Text(widget.bookName, style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+                        Text(widget.bookName, style: MwTypography.body.copyWith(color: skin.colors.text3)),
                         const SizedBox(height: 48),
                         _ModeCard(
                           icon: Icons.text_fields,
@@ -146,7 +146,7 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
             onPressed: () => NavUtils.safePop(context),
           ),
           const SizedBox(width: 4),
-          Text('泛听模式', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('泛听模式', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );
@@ -186,19 +186,19 @@ class _ModeCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: MistralColors.primary.withValues(alpha: 0.1),
+                color: MwColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(context.design.radius.md),
               ),
-              child: Icon(icon, color: MistralColors.primary, size: 24),
+              child: Icon(icon, color: MwColors.primary, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+                  Text(title, style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                  Text(subtitle, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                 ],
               ),
             ),

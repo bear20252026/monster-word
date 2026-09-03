@@ -99,7 +99,7 @@ class _AppDockState extends State<AppDock> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final bgColor = widget.backgroundColor ?? AppColors.white100.withValues(alpha: 0.92);
     final activeColor = widget.activeColor ?? StarbucksCreamColors.greenHouse;
-    final inactiveColor = widget.inactiveColor ?? MistralColors.grey500;
+    final inactiveColor = widget.inactiveColor ?? MwColors.grey500;
 
     return MouseRegion(
       onExit: (_) => _clearHover(),
@@ -223,7 +223,7 @@ class FloatingDock extends StatelessWidget {
                   Icon(
                     isActive ? (item.activeIcon ?? item.icon) : item.icon,
                     size: 22,
-                    color: isActive ? active : MistralColors.grey500,
+                    color: isActive ? active : MwColors.grey500,
                   ),
                   if (isActive) ...[
                     const SizedBox(width: 6),

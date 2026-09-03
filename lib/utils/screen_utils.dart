@@ -1,11 +1,10 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 翻译自 util/ScreenUtils.dart
 // 屏幕工具 — 支持窗口变化/旋转自动更新
 
 import 'package:flutter/widgets.dart';
 
-/// 屏幕工具（翻译自 ScreenUtils.dart，使用 Flutter MediaQuery）
+/// 屏幕工具
 ///
 /// 改进：实现 [WidgetsBindingObserver]，在窗口尺寸变化（旋转/分屏）时
 /// 自动更新缓存值。需在应用根部调用 [ScreenUtils.init] 注册监听。

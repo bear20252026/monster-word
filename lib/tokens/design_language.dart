@@ -10,7 +10,7 @@
 // 阴影/字体比例响应式变化，而无需改动各页对 token 的引用。
 //
 // 使用约定：
-// - 向下兼容：既有静态常量 AppRadius/AppSpacing/MistralTypography/设计_tokens 保留，
+// - 向下兼容：既有静态常量 AppRadius/AppSpacing/MwTypography/设计_tokens 保留，
 //   仍指向 starbucks 值（默认）。
 // - 迁移态：新增可运行时读取的动态 token `DesignScope.of(context)`（InheritedWidget），
 //   各页据此读取当前 B 档值，实现整套切换。

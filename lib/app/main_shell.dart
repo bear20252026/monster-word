@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:word_app/tokens/starbucks_tokens.dart';
 import 'package:word_app/widgets/app_dock.dart';
 
-/// Tab 定义（原版 TABS）
+/// Tab 定义（TABS）
 class TabDef {
   final String id;
   final String label;
@@ -16,7 +16,7 @@ class TabDef {
   const TabDef({required this.id, required this.label, required this.icon, required this.builder});
 }
 
-/// 主壳（原版 MainShell）
+/// 主壳（MainShell）
 class MainShell extends StatefulWidget {
   final List<TabDef> tabs;
   final int initialTab;

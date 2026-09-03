@@ -146,7 +146,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('随身听', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('随身听', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );
@@ -162,27 +162,27 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [MistralColors.cream, MistralColors.creamDeeper]),
+            gradient: LinearGradient(colors: [MwColors.cream, MwColors.creamDeeper]),
             borderRadius: BorderRadius.circular(skin.design.radius.xl),
           ),
           child: Column(
             children: [
-              Icon(Icons.headphones, size: 48, color: MistralColors.primary),
+              Icon(Icons.headphones, size: 48, color: MwColors.primary),
               const SizedBox(height: 12),
               if (word == null) ...[
-                Text('随身听模式', style: MistralTypography.heading4.copyWith(color: MistralColors.ink)),
+                Text('随身听模式', style: MwTypography.heading4.copyWith(color: MwColors.ink)),
                 const SizedBox(height: 8),
-                Text('选择下方词源开始播放', style: MistralTypography.body.copyWith(color: MistralColors.slate)),
+                Text('选择下方词源开始播放', style: MwTypography.body.copyWith(color: MwColors.slate)),
               ] else ...[
                 Text(
                   word.word,
-                  style: MistralTypography.heading3.copyWith(color: MistralColors.ink),
+                  style: MwTypography.heading3.copyWith(color: MwColors.ink),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
                 Text(
                   word.interpret,
-                  style: MistralTypography.bodySm.copyWith(color: MistralColors.slate),
+                  style: MwTypography.bodySm.copyWith(color: MwColors.slate),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -190,7 +190,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
                 const SizedBox(height: 8),
                 Text(
                   '${_sourceLabel(source)} · ${_player.progressPosition} / ${_player.playlist.length}',
-                  style: MistralTypography.bodySm.copyWith(color: MistralColors.primary),
+                  style: MwTypography.bodySm.copyWith(color: MwColors.primary),
                 ),
               ],
               const SizedBox(height: 16),
@@ -198,7 +198,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.skip_previous, color: MistralColors.ink, size: 32),
+                    icon: Icon(Icons.skip_previous, color: MwColors.ink, size: 32),
                     tooltip: '上一首',
                     onPressed: word == null ? null : () => unawaited(_player.previous()),
                   ),
@@ -206,7 +206,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
                   Container(
                     width: 56,
                     height: 56,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: MistralColors.primary),
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: MwColors.primary),
                     child: IconButton(
                       icon: Icon(_player.isPlaying ? Icons.pause : Icons.play_arrow, color: Colors.white, size: 32),
                       tooltip: _player.isPlaying ? '暂停' : '播放',
@@ -217,7 +217,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
                   ),
                   const SizedBox(width: 16),
                   IconButton(
-                    icon: Icon(Icons.skip_next, color: MistralColors.ink, size: 32),
+                    icon: Icon(Icons.skip_next, color: MwColors.ink, size: 32),
                     tooltip: '下一首',
                     onPressed: word == null ? null : () => unawaited(_player.next()),
                   ),
@@ -283,18 +283,18 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: MistralColors.cream,
+                color: MwColors.cream,
                 borderRadius: BorderRadius.circular(skin.design.radius.md),
               ),
-              child: Icon(icon, color: MistralColors.primary, size: 24),
+              child: Icon(icon, color: MwColors.primary, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: MistralTypography.bodyBold.copyWith(color: skin.colors.text1)),
-                  Text(subtitle, style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                  Text(title, style: MwTypography.bodyBold.copyWith(color: skin.colors.text1)),
+                  Text(subtitle, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                 ],
               ),
             ),

@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 ReViewingWordsActivity
 // 复习中单词：显示正在复习周期中的单词
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

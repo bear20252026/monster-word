@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 由账号4生成
-// 核心学习引擎：翻译自 coreengine/BBCoreEngine.java（v3.2 源码 1:1）
+// 核心学习引擎
 // 抽象引擎：定义学习/复习流程的核心方法 + 4选1干扰项生成
 
 import 'dart:convert';
@@ -10,7 +10,7 @@ import 'dart:math';
 import 'package:word_app/models/bb_word_process.dart';
 import 'package:word_app/models/lexis_dict.dart';
 
-/// 数据准备状态（原版常量）
+/// 数据准备状态（常量）
 enum DataPreparedState {
   finished(0), // DATA_PREPARED_FINISHED
   part(1), // DATA_PREPARED_PART
@@ -20,7 +20,7 @@ enum DataPreparedState {
   final int value;
 }
 
-/// 选项对（单词, 释义）——原版 Pair&lt;String,String&gt;
+/// 选项对（单词, 释义）——键值对
 class WordChoicePair {
   final String word;
   final String interpret;
@@ -97,9 +97,9 @@ class WordChoicePair {
   }
 }
 
-/// 核心学习引擎抽象类（翻译自 BBCoreEngine.java）
+/// 核心学习引擎抽象类
 abstract class BBCoreEngine {
-  /// 学习/复习标签（原版 UMEventLabel：learn/review）
+  /// 学习/复习标签（UMEventLabel：learn/review）
   String eventLabel;
 
   /// 当前单词进度
@@ -119,19 +119,19 @@ abstract class BBCoreEngine {
   /// 上一组数据
   List<BBWordProcess>? getLastGroupData() => null;
 
-  /// 4 选 1 随机选项（原版 getListChoicesRandom）
+  /// 4 选 1 随机选项（getListChoicesRandom）
   List<WordChoicePair> getListChoicesRandom();
 
   /// 单词最大等级
   int getWordMaxLevel();
 
-  /// 不认识（原版 iDontKnow）
+  /// 不认识（iDontKnow）
   void iDontKnow();
 
-  /// 模糊（原版 iMayKnow）
+  /// 模糊（iMayKnow）
   void iMayKnow();
 
-  /// 认识（原版 iReallyKnow）
+  /// 认识（iReallyKnow）
   void iReallyKnow();
 
   /// 是否全部太简单
@@ -158,7 +158,7 @@ abstract class BBCoreEngine {
   /// 更新随机选项
   void updateListChoicesRandom();
 
-  /// 获取释义第一行（原版 getFirstIterpret）
+  /// 获取释义第一行（getFirstIterpret）
   String _getFirstInterpret(String? str) {
     if (str == null) return '';
     final trimmed = str.trim();
@@ -167,7 +167,7 @@ abstract class BBCoreEngine {
     return idx > 0 ? trimmed.substring(0, idx) : trimmed;
   }
 
-  /// 4 选 1 干扰项生成（原版 confuseItemsForChoice，逻辑 1:1）
+  /// 4 选 1 干扰项生成（confuseItemsForChoice，逻辑 1:1）
   /// 优先用当前词的形近词，否则从词库随机取 3 个不同释义
   List<Interpret> confuseItemsForChoice(BBWordProcess? wordProcess) {
     // 分支 1：当前词有形近词（>=3 个）→ 用形近词
@@ -221,13 +221,13 @@ abstract class BBCoreEngine {
     return result;
   }
 
-  /// 随机范围（原版 Tools.randomWithRange，含两端）
+  /// 随机范围（Tools.randomWithRange，含两端）
   int randomWithRange(int min, int max) {
     if (max <= min) return min;
     return min + Random().nextInt(max - min + 1);
   }
 
-  /// 打乱列表（原版 Collections.shuffle 语义）
+  /// 打乱列表（Collections.shuffle 语义）
   List<T> shuffleList<T>(List<T> list) {
     final copy = List<T>.from(list);
     copy.shuffle(Random());

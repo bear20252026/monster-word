@@ -30,9 +30,9 @@
 
 > 判断：原版 IPA 的封面是**网络图**（见 1.4），Flutter 版重写时改用了代码绘制兜底，DB 的 cover 字段成了预留位。
 
-### 1.4 IPA 复刻组件：真正的网络封面实现（未接线）
+### 1.4 IPA 对照组件：真正的网络封面实现（未接线）
 
-`lib/widgets/adapter_widgets.dart` 内有一个完整复刻原版的选书视图：
+`lib/widgets/adapter_widgets.dart` 内有一个完整还原原版的选书视图：
 
 | 位置 | 内容 |
 |---|---|
@@ -96,7 +96,7 @@
 | 明文 HTTP CDN | `http://img.beingfine.cn` 两处硬编码 | ① iOS ATS 默认拦截明文 HTTP（需查 ios/Runner/Info.plist 是否已加例外，未查证前按"可能被拦"对待）；② Android 9+ 同理默认禁明文；③ 中间人风险 | 统一升级 https；URL 集中到一处常量（现分散 2 处） |
 | 无缓存层 | 例句图每次进入页面重新下载 | 弱网下反复转圈/流量浪费/已看过的图再次失败 | 复制 `app_ref_processor` 的"本地文件缓存优先→网络→落盘"模式，或直接引入 `cached_network_image` 包（需 Leader 批准新依赖） |
 | 无 loading 态 | Image.network 只有 errorBuilder | 弱网时图片区域空白突兀 | BrandImagePlaceholder 内置 shimmer/静态占位 |
-| 未来封面联网假设 | 若某天启用 DB cover 字段的 URL | 无网用户看到满屏书本图标（IPA 复刻组件的现状兜底） | 若启用：必须先落 §四缓存层 + 占位组件，且封面 URL 进 DB 校验清单 |
+| 未来封面联网假设 | 若某天启用 DB cover 字段的 URL | 无网用户看到满屏书本图标（IPA 对照组件的现状兜底） | 若启用：必须先落 §四缓存层 + 占位组件，且封面 URL 进 DB 校验清单 |
 
 **结论**：当前 App 的图片网络面很窄（例句图 + app 推荐图标 + 未来头像），且主学习链路完全离线——星巴克化不需要为此新建任何网络图片基础设施，只需把窄面收干净。
 

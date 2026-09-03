@@ -56,11 +56,11 @@ class _WordExportPageState extends State<WordExportPage> {
                     child: ListView(
                       children: [
                         const SizedBox(height: 16),
-                        Text('导出词表', style: MistralTypography.heading4.copyWith(color: skin.colors.text1)),
+                        Text('导出词表', style: MwTypography.heading4.copyWith(color: skin.colors.text1)),
                         const SizedBox(height: 8),
                         Text(
                           widget.bookName.isNotEmpty ? widget.bookName : '当前词书',
-                          style: MistralTypography.body.copyWith(color: skin.colors.text3),
+                          style: MwTypography.body.copyWith(color: skin.colors.text3),
                         ),
                         const SizedBox(height: 32),
                         // 格式选择
@@ -99,14 +99,14 @@ class _WordExportPageState extends State<WordExportPage> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('导出词表', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('导出词表', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );
   }
 
   Widget _buildSectionTitle(String title, SkinSystem skin) {
-    return Text(title, style: MistralTypography.bodyBold.copyWith(color: skin.colors.text1));
+    return Text(title, style: MwTypography.bodyBold.copyWith(color: skin.colors.text1));
   }
 
   Widget _buildFormatSelector(SkinSystem skin) {
@@ -126,12 +126,12 @@ class _WordExportPageState extends State<WordExportPage> {
       label: Text(label),
       selected: selected,
       onSelected: (_) => setState(() => _format = format),
-      selectedColor: MistralColors.primary,
-      labelStyle: MistralTypography.bodySm.copyWith(color: selected ? Colors.white : skin.colors.text1),
+      selectedColor: MwColors.primary,
+      labelStyle: MwTypography.bodySm.copyWith(color: selected ? Colors.white : skin.colors.text1),
       backgroundColor: skin.colors.cardBgAlt,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(context.design.radius.lg),
-        side: BorderSide(color: selected ? MistralColors.primary : skin.colors.divider),
+        side: BorderSide(color: selected ? MwColors.primary : skin.colors.divider),
       ),
     );
   }
@@ -148,10 +148,10 @@ class _WordExportPageState extends State<WordExportPage> {
 
   Widget _checkboxTile(String title, bool value, ValueChanged<bool> onChanged, SkinSystem skin) {
     return CheckboxListTile(
-      title: Text(title, style: MistralTypography.body.copyWith(color: skin.colors.text1)),
+      title: Text(title, style: MwTypography.body.copyWith(color: skin.colors.text1)),
       value: value,
       onChanged: (v) => onChanged(v ?? false),
-      activeColor: MistralColors.primary,
+      activeColor: MwColors.primary,
       checkColor: Colors.white,
       contentPadding: EdgeInsets.zero,
       controlAffinity: ListTileControlAffinity.leading,
@@ -187,7 +187,7 @@ class _WordExportPageState extends State<WordExportPage> {
             icon: const Icon(Icons.share, size: 18),
             label: const Text('分享文本'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: MistralColors.primary,
+              backgroundColor: MwColors.primary,
               foregroundColor: Colors.white,
               minimumSize: const Size(0, 48),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),

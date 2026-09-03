@@ -18,7 +18,7 @@ class AppBuildErrorPage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, size: 56, color: MistralColors.mutedGold),
+              Icon(Icons.error_outline, size: 56, color: MwColors.mutedGold),
               const SizedBox(height: 16),
               const Text(
                 '页面出了一点小问题',

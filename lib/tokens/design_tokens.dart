@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:word_app/tokens/starbucks_tokens.dart';
 
 /// 过渡期颜色（旧名新值）
-class MistralColors {
+class MwColors {
   // 品牌色 → 品牌绿
   static const Color primary = StarbucksCreamColors.greenBrand; // 0xFF006B3F
   static const Color primaryDeep = StarbucksCreamColors.greenHouse; // 0xFF006241
@@ -74,7 +74,7 @@ class MistralColors {
 /// 阴影 token（M5 收口：原 mw_card 与 5 个页面各写一遍的黑阴影字面量）
 ///
 /// 命名对应卡片阴影三档：发丝线（0.5 blur）/ 浮起（1.0 blur + 1px 偏移）/ 柔和。
-class MistralShadows {
+class MwShadows {
   /// 发丝线阴影 rgba(0,0,0,0.14)，blur 0.5（贴地细影）
   static const Color hairlineShadow = Color(0x23000000);
 
@@ -132,7 +132,7 @@ class AppleSpacing {
 }
 
 /// 字体（过渡期：指向 StarbucksTypography 的回退链）
-class MistralTypography {
+class MwTypography {
   static const TextStyle heroDisplay = TextStyle(
     fontFamily: 'Charter',
     fontSize: 64,
@@ -226,9 +226,9 @@ class MistralTypography {
 
 /// 兼容旧代码别名（过渡期指向星巴克 token）
 class AppColors {
-  static const Color successGreen = MistralColors.success;
+  static const Color successGreen = MwColors.success;
   static const Color highlightOrange = StarbucksCreamColors.greenBrand; // 品牌绿
-  static const Color errorRed = MistralColors.danger;
+  static const Color errorRed = MwColors.danger;
   static const Color black87 = Color(0xFF212121); // 正文黑
   static const Color black54 = StarbucksCreamColors.text2; // α=0.70
   static const Color black12 = StarbucksCreamColors.divider; // 0x14000000
@@ -252,7 +252,7 @@ class AppTypography {
   );
   static TextStyle get phonetic =>
       TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.40, color: StarbucksCreamColors.text2);
-  static TextStyle get body => MistralTypography.bodyMd;
+  static TextStyle get body => MwTypography.bodyMd;
   static TextStyle get tabActive => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w600,
@@ -260,12 +260,12 @@ class AppTypography {
   );
   static TextStyle get tabInactive =>
       TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: StarbucksCreamColors.text2);
-  static TextStyle get metricLg => MistralTypography.heading2;
-  static TextStyle get metric => MistralTypography.heading3;
-  static TextStyle get titlePage => MistralTypography.heading5;
-  static TextStyle get titleCard => MistralTypography.heading4;
-  static TextStyle get caption => MistralTypography.bodySm;
-  static TextStyle get footnote => MistralTypography.micro;
+  static TextStyle get metricLg => MwTypography.heading2;
+  static TextStyle get metric => MwTypography.heading3;
+  static TextStyle get titlePage => MwTypography.heading5;
+  static TextStyle get titleCard => MwTypography.heading4;
+  static TextStyle get caption => MwTypography.bodySm;
+  static TextStyle get footnote => MwTypography.micro;
 }
 
 class AppDimens {

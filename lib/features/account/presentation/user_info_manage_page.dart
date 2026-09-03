@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 UserInfoManageActivity
 // 用户信息管理：修改头像、昵称、签名等个人信息
 // 头像选图与落盘走 AvatarStorage 端口（application 层），页面不接触文件系统。
 import 'dart:io';
@@ -55,20 +54,18 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                           height: 80,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: LinearGradient(colors: [MistralColors.cream, MistralColors.creamDeeper]),
-                            border: Border.all(color: MistralColors.hairline, width: 2),
+                            gradient: LinearGradient(colors: [MwColors.cream, MwColors.creamDeeper]),
+                            border: Border.all(color: MwColors.hairline, width: 2),
                             image: profile.avatar.isEmpty
                                 ? null
                                 : DecorationImage(image: FileImage(File(profile.avatar)), fit: BoxFit.cover),
                           ),
-                          child: profile.avatar.isEmpty
-                              ? Icon(Icons.person, size: 40, color: MistralColors.stone)
-                              : null,
+                          child: profile.avatar.isEmpty ? Icon(Icons.person, size: 40, color: MwColors.stone) : null,
                         ),
                       ),
                     ),
                     SizedBox(height: 8),
-                    Text('点击更换头像', style: MistralTypography.micro.copyWith(color: MistralColors.link)),
+                    Text('点击更换头像', style: MwTypography.micro.copyWith(color: MwColors.link)),
                     SizedBox(height: 24),
                     _buildInfoTile(
                       skin,
@@ -112,7 +109,7 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
             onPressed: () => NavUtils.safePop(context),
           ),
           SizedBox(width: 4),
-          Text('个人信息', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('个人信息', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );
@@ -130,12 +127,12 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
           children: [
             SizedBox(
               width: 80,
-              child: Text(label, style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+              child: Text(label, style: MwTypography.body.copyWith(color: skin.colors.text3)),
             ),
             Expanded(
               child: Text(
                 value,
-                style: MistralTypography.body.copyWith(color: isReadOnly ? skin.colors.text3 : skin.colors.text1),
+                style: MwTypography.body.copyWith(color: isReadOnly ? skin.colors.text3 : skin.colors.text1),
               ),
             ),
             if (onTap != null && !isReadOnly) Icon(Icons.chevron_right, color: skin.colors.text3, size: 20),

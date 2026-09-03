@@ -84,7 +84,7 @@ class MyEquipPage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('我的装备', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('我的装备', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );
@@ -144,9 +144,9 @@ class _EquipRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.title, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1)),
+                  Text(item.title, style: MwTypography.bodyMd.copyWith(color: skin.colors.text1)),
                   const SizedBox(height: 2),
-                  Text(item.subtitle, style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
+                  Text(item.subtitle, style: MwTypography.caption.copyWith(color: skin.colors.text3)),
                 ],
               ),
             ),
@@ -156,11 +156,11 @@ class _EquipRow extends StatelessWidget {
                 future: item.future,
                 builder: (context, snap) => Text(
                   snap.data == null ? '—' : '连击 ${snap.data} 天',
-                  style: MistralTypography.bodySm.copyWith(color: skin.colors.text2),
+                  style: MwTypography.bodySm.copyWith(color: skin.colors.text2),
                 ),
               )
             else
-              Text(badge, style: MistralTypography.bodySm.copyWith(color: skin.colors.text2)),
+              Text(badge, style: MwTypography.bodySm.copyWith(color: skin.colors.text2)),
             const SizedBox(width: 4),
             Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
           ],

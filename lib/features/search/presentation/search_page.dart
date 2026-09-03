@@ -183,8 +183,8 @@ class _SearchPageState extends State<SearchPage> {
               hintText: '输入要查询的英文或中文',
               haloColor: skin.accent,
               bgColor: skin.cardBgAlt,
-              textStyle: MistralTypography.bodyMd.copyWith(color: skin.text1),
-              hintStyle: MistralTypography.bodyMd.copyWith(color: MistralColors.muted, fontSize: 15 * resp.fontScale),
+              textStyle: MwTypography.bodyMd.copyWith(color: skin.text1),
+              hintStyle: MwTypography.bodyMd.copyWith(color: MwColors.muted, fontSize: 15 * resp.fontScale),
               onChanged: _onQueryChanged,
               onSubmitted: _search,
               autoFocus: true,
@@ -196,7 +196,7 @@ class _SearchPageState extends State<SearchPage> {
                       },
                       child: Icon(Icons.clear, size: 18, color: skin.text3),
                     )
-                  : Icon(Icons.qr_code_scanner, size: 20, color: MistralColors.slate),
+                  : Icon(Icons.qr_code_scanner, size: 20, color: MwColors.slate),
             ),
           ),
           const SizedBox(width: 12),
@@ -248,7 +248,7 @@ class _SearchPageState extends State<SearchPage> {
               child: ListTile(
                 title: Text(
                   w.word,
-                  style: MistralTypography.bodyMd.copyWith(
+                  style: MwTypography.bodyMd.copyWith(
                     fontWeight: FontWeight.w600,
                     color: _selectedWord?.word == w.word ? skin.accent : skin.text1,
                   ),
@@ -257,7 +257,7 @@ class _SearchPageState extends State<SearchPage> {
                   w.firstInterpretLine,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: MistralTypography.caption.copyWith(color: skin.text3),
+                  style: MwTypography.caption.copyWith(color: skin.text3),
                 ),
               ),
             ),
@@ -294,13 +294,13 @@ class _SearchPageState extends State<SearchPage> {
               Expanded(
                 child: Text(
                   word.word,
-                  style: MistralTypography.heading2.copyWith(color: skin.text1, fontWeight: FontWeight.bold),
+                  style: MwTypography.heading2.copyWith(color: skin.text1, fontWeight: FontWeight.bold),
                 ),
               ),
               IconButton(
                 icon: Icon(
                   isFav ? Icons.star : Icons.star_border,
-                  color: isFav ? MistralColors.warning : skin.text3,
+                  color: isFav ? MwColors.warning : skin.text3,
                   size: 24,
                 ),
                 onPressed: () => favoritesAccessor.toggle(word.word),
@@ -312,9 +312,9 @@ class _SearchPageState extends State<SearchPage> {
             Row(
               children: [
                 if (word.usPron.isNotEmpty)
-                  Text('美 /${word.usPron}/  ', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+                  Text('美 /${word.usPron}/  ', style: MwTypography.bodyMd.copyWith(color: skin.text3)),
                 if (word.ukPron.isNotEmpty)
-                  Text('英 /${word.ukPron}/', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+                  Text('英 /${word.ukPron}/', style: MwTypography.bodyMd.copyWith(color: skin.text3)),
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () => _playAudio(word.word),
@@ -329,14 +329,14 @@ class _SearchPageState extends State<SearchPage> {
               .map(
                 (line) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(line, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
+                  child: Text(line, style: MwTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
                 ),
               ),
           if (examples.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
               '例句',
-              style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
+              style: MwTypography.bodyMd.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
             ),
             const SizedBox(height: 8),
             ...examples.take(3).map((ex) => _buildExampleCard(ex, skin)),
@@ -356,7 +356,7 @@ class _SearchPageState extends State<SearchPage> {
               ),
               child: Text(
                 '查看完整字典',
-                style: MistralTypography.bodyMd.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+                style: MwTypography.bodyMd.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -375,7 +375,7 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           RichText(
             text: TextSpan(
-              style: MistralTypography.bodySm.copyWith(color: skin.text1, height: 1.4),
+              style: MwTypography.bodySm.copyWith(color: skin.text1, height: 1.4),
               children: ex.highlightedParts
                   .map(
                     (p) => TextSpan(
@@ -388,7 +388,7 @@ class _SearchPageState extends State<SearchPage> {
           ),
           if (ex.cn.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(ex.cn, style: MistralTypography.caption.copyWith(color: skin.text3)),
+            Text(ex.cn, style: MwTypography.caption.copyWith(color: skin.text3)),
           ],
           if (ex.audioUrl != null && ex.audioUrl!.isNotEmpty)
             Padding(
@@ -419,12 +419,12 @@ class _SearchPageState extends State<SearchPage> {
             children: [
               Text(
                 '最近搜索',
-                style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
+                style: MwTypography.bodyMd.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
               ),
               const Spacer(),
               ScaleDownOnPress(
                 onTap: _clearHistory,
-                child: Text('清除', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                child: Text('清除', style: MwTypography.bodySm.copyWith(color: skin.text3)),
               ),
             ],
           ),
@@ -441,7 +441,7 @@ class _SearchPageState extends State<SearchPage> {
                 },
                 child: ListTile(
                   leading: Icon(Icons.history, color: skin.text3, size: 20),
-                  title: Text(word, style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
+                  title: Text(word, style: MwTypography.bodyMd.copyWith(color: skin.text1)),
                 ),
               );
             },
@@ -468,7 +468,7 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           Icon(Icons.search, size: 64, color: skin.divider),
           const SizedBox(height: 16),
-          Text('输入单词开始查询', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+          Text('输入单词开始查询', style: MwTypography.bodyMd.copyWith(color: skin.text3)),
           const SizedBox(height: 24),
           // 示例单词呼吸轮换：同一时刻只显示一个词（原波浪滚动文字已废弃）
           BreathingWord(

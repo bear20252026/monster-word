@@ -1,4 +1,4 @@
-// 账号信息页：还原 v3.2 原版账号信息页布局
+// 账号信息页：账号信息页布局
 // 包含：头像 + 相机图标、ID账号、账号、昵称、手机号、绑定平台
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -167,7 +167,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             onPressed: () => Navigator.pop(context),
           ),
           const Spacer(),
-          Text('账号信息', style: MistralTypography.heading5.copyWith(color: skin.text1)),
+          Text('账号信息', style: MwTypography.heading5.copyWith(color: skin.text1)),
           const Spacer(),
           SizedBox(width: 48),
         ],
@@ -259,7 +259,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text('绑定平台', style: MistralTypography.body.copyWith(color: skin.text2, fontSize: 13)),
+            child: Text('绑定平台', style: MwTypography.body.copyWith(color: skin.text2, fontSize: 13)),
           ),
           _buildBindRow(
             skin,
@@ -312,9 +312,9 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
         padding: EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
-            Text(label, style: MistralTypography.body.copyWith(color: skin.text1)),
+            Text(label, style: MwTypography.body.copyWith(color: skin.text1)),
             const Spacer(),
-            Text(value, style: MistralTypography.body.copyWith(color: skin.text2)),
+            Text(value, style: MwTypography.body.copyWith(color: skin.text2)),
             SizedBox(width: 4),
             Icon(Icons.chevron_right, size: 18, color: skin.text3),
           ],
@@ -350,12 +350,12 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
               child: Icon(icon, size: 16, color: iconColor),
             ),
             SizedBox(width: 12),
-            Text(platform, style: MistralTypography.body.copyWith(color: skin.text1)),
+            Text(platform, style: MwTypography.body.copyWith(color: skin.text1)),
             const Spacer(),
             if (isBound && boundName != null)
-              Text(boundName, style: MistralTypography.body.copyWith(color: skin.text2))
+              Text(boundName, style: MwTypography.body.copyWith(color: skin.text2))
             else
-              Text('未绑定', style: MistralTypography.body.copyWith(color: skin.text3)),
+              Text('未绑定', style: MwTypography.body.copyWith(color: skin.text3)),
             SizedBox(width: 4),
             Icon(Icons.chevron_right, size: 18, color: skin.text3),
           ],

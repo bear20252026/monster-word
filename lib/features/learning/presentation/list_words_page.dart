@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 ListWordsActviity（抽象基类）
 // 单词列表基类：支持滑动删除、批量编辑、字母快速索引
 // 归属：learning 功能域（仅被本域单词列表子页继承）
 import 'package:flutter/material.dart';
@@ -128,14 +127,14 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text(pageTitle, style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text(pageTitle, style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           if (_isBatchEditMode) ...[
             TextButton(
               onPressed: _selectAll,
               child: Text(
                 _selectedIndices.length == _words.length ? '取消全选' : '全选',
-                style: TextStyle(color: MistralColors.primary),
+                style: TextStyle(color: MwColors.primary),
               ),
             ),
             TextButton(
@@ -178,7 +177,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
           background: Container(
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 20),
-            color: MistralColors.danger,
+            color: MwColors.danger,
             child: const Icon(Icons.delete, color: AppColors.white100),
           ),
           confirmDismiss: (direction) async {
@@ -202,15 +201,11 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
           child: ListTile(
             onTap: _isBatchEditMode ? () => _toggleSelect(index) : () => _openWordDetail(word),
             leading: _isBatchEditMode
-                ? Checkbox(
-                    value: isSelected,
-                    onChanged: (_) => _toggleSelect(index),
-                    activeColor: MistralColors.primary,
-                  )
+                ? Checkbox(value: isSelected, onChanged: (_) => _toggleSelect(index), activeColor: MwColors.primary)
                 : null,
-            title: Text(word.word, style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+            title: Text(word.word, style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
             subtitle: word.usPron.isNotEmpty
-                ? Text('/${word.usPron}/', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3))
+                ? Text('/${word.usPron}/', style: MwTypography.bodySm.copyWith(color: skin.colors.text3))
                 : null,
             trailing: _isBatchEditMode ? null : Icon(Icons.chevron_right, color: skin.colors.text3),
           ),

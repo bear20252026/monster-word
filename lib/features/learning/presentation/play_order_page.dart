@@ -73,23 +73,23 @@ class _PlayOrderPageState extends State<PlayOrderPage> {
                         color: skin.colors.cardBgAlt,
                         borderRadius: BorderRadius.circular(context.design.radius.lg),
                         border: Border.all(
-                          color: isSelected ? MistralColors.primary : skin.colors.divider,
+                          color: isSelected ? MwColors.primary : skin.colors.divider,
                           width: isSelected ? 2 : 1,
                         ),
                       ),
                       child: Row(
                         children: [
-                          Icon(order.icon, color: isSelected ? MistralColors.primary : skin.colors.text3, size: 24),
+                          Icon(order.icon, color: isSelected ? MwColors.primary : skin.colors.text3, size: 24),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Text(
                               order.label,
-                              style: MistralTypography.bodyBold.copyWith(
-                                color: isSelected ? MistralColors.primary : skin.colors.text1,
+                              style: MwTypography.bodyBold.copyWith(
+                                color: isSelected ? MwColors.primary : skin.colors.text1,
                               ),
                             ),
                           ),
-                          if (isSelected) Icon(Icons.check_circle, color: MistralColors.primary, size: 24),
+                          if (isSelected) Icon(Icons.check_circle, color: MwColors.primary, size: 24),
                         ],
                       ),
                     ),
@@ -115,7 +115,7 @@ class _PlayOrderPageState extends State<PlayOrderPage> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('播放顺序', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('播放顺序', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );

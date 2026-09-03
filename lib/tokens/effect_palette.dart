@@ -2,7 +2,7 @@
 //
 // 这是全库唯一允许承载"特效/装饰类"Color(0x…) 字面量的非定义处白名单文件
 // （见 test/architecture/color_hygiene_test.dart）。规则：
-// - 语义色 → ThemeVars（skin）/ FuncColors / MistralColors，禁入本文件；
+// - 语义色 → ThemeVars（skin）/ FuncColors / MwColors，禁入本文件；
 // - 品牌色 → 引用 StarbucksCreamColors 既有常量，不在本文件复写字面量；
 // - 新特效只能把色值加到这里并具名，禁止组件内裸写字面量。
 import 'package:flutter/material.dart';

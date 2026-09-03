@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 // 句库页面：显示用户收藏的所有例句
-// 移植自 v3.2 MyFavSentenceActivity
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -70,7 +69,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: _isLoading
-                  ? Center(child: CircularProgressIndicator(color: MistralColors.primary))
+                  ? Center(child: CircularProgressIndicator(color: MwColors.primary))
                   : _sentences.isEmpty
                   ? _buildEmptyView(skin)
                   : _buildList(skin),
@@ -94,7 +93,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('句库', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('句库', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           // 编辑按钮
           if (_sentences.isNotEmpty)
@@ -105,10 +104,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                   _selectedIndices.clear();
                 });
               },
-              child: Text(
-                _isEditMode ? '完成' : '编辑',
-                style: MistralTypography.bodySm.copyWith(color: MistralColors.primary),
-              ),
+              child: Text(_isEditMode ? '完成' : '编辑', style: MwTypography.bodySm.copyWith(color: MwColors.primary)),
             ),
         ],
       ),
@@ -122,7 +118,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
         children: [
           Icon(Icons.format_quote, size: 18, color: skin.colors.text3),
           const SizedBox(width: 8),
-          Text('共 ${_sentences.length} 个例句', style: MistralTypography.bodySm.copyWith(color: skin.colors.text2)),
+          Text('共 ${_sentences.length} 个例句', style: MwTypography.bodySm.copyWith(color: skin.colors.text2)),
           const Spacer(),
           // 学习按钮
           if (_sentences.isNotEmpty && !_isEditMode)
@@ -131,7 +127,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: MistralColors.primary,
+                  color: MwColors.primary,
                   borderRadius: BorderRadius.circular(context.design.radius.pill),
                 ),
                 child: Row(
@@ -139,7 +135,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                   children: [
                     const Icon(Icons.play_arrow, size: 16, color: Colors.white),
                     const SizedBox(width: 4),
-                    Text('开始学习', style: MistralTypography.micro.copyWith(color: Colors.white)),
+                    Text('开始学习', style: MwTypography.micro.copyWith(color: Colors.white)),
                   ],
                 ),
               ),
@@ -156,9 +152,9 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
         children: [
           Icon(Icons.format_quote, size: 64, color: skin.colors.text3),
           const SizedBox(height: 16),
-          Text('暂无收藏例句', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+          Text('暂无收藏例句', style: MwTypography.body.copyWith(color: skin.colors.text3)),
           const SizedBox(height: 8),
-          Text('在单词详情页点击 ♡ 收藏例句', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+          Text('在单词详情页点击 ♡ 收藏例句', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
         ],
       ),
     );
@@ -203,7 +199,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
             }
           },
           margin: const EdgeInsets.only(bottom: 12),
-          color: isSelected ? MistralColors.primary.withValues(alpha: 0.06) : skin.colors.cardBgAlt,
+          color: isSelected ? MwColors.primary.withValues(alpha: 0.06) : skin.colors.cardBgAlt,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -216,46 +212,43 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                       Icon(
                         isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
                         size: 20,
-                        color: isSelected ? MistralColors.primary : skin.colors.text3,
+                        color: isSelected ? MwColors.primary : skin.colors.text3,
                       ),
                       const SizedBox(width: 8),
                     ],
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: MistralColors.primary.withValues(alpha: 0.1),
+                        color: MwColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(context.design.radius.sm),
                       ),
                       child: Text(
                         favSentence.word,
-                        style: MistralTypography.bodySm.copyWith(
-                          color: MistralColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: MwTypography.bodySm.copyWith(color: MwColors.primary, fontWeight: FontWeight.w600),
                       ),
                     ),
                     const Spacer(),
                     Text(
                       // L2 收口：共享 formatMonthDay（v2.7.51），不再手写 substring 解析
                       formatMonthDay(favSentence.updateTime),
-                      style: MistralTypography.micro.copyWith(color: skin.colors.text3),
+                      style: MwTypography.micro.copyWith(color: skin.colors.text3),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 // 英文例句
-                Text(sentenceData.e, style: MistralTypography.body.copyWith(color: skin.colors.text1, height: 1.5)),
+                Text(sentenceData.e, style: MwTypography.body.copyWith(color: skin.colors.text1, height: 1.5)),
                 // 中文翻译
                 if (sentenceData.c.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Text(sentenceData.c, style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                  Text(sentenceData.c, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                 ],
                 // 来源
                 if (sentenceData.b.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
                     '— ${sentenceData.b}',
-                    style: MistralTypography.micro.copyWith(color: skin.colors.text3, fontStyle: FontStyle.italic),
+                    style: MwTypography.micro.copyWith(color: skin.colors.text3, fontStyle: FontStyle.italic),
                   ),
                 ],
               ],
@@ -288,7 +281,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
             },
             child: Text(
               _selectedIndices.length == _sentences.length ? '取消全选' : '全选',
-              style: MistralTypography.bodySm.copyWith(color: skin.colors.text2),
+              style: MwTypography.bodySm.copyWith(color: skin.colors.text2),
             ),
           ),
           const Spacer(),

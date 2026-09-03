@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 MessageActivity
 // 消息中心：显示本地消息（欢迎/打卡提醒/连续打卡里程碑等），
 // 数据源为 MessageStore（单一事实来源），支持全部已读与单条已读。
 import 'package:flutter/material.dart';
@@ -43,11 +42,11 @@ class _MessagePageState extends State<MessagePage> {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: !store.loaded
-                  ? Center(child: CircularProgressIndicator(color: MistralColors.primary))
+                  ? Center(child: CircularProgressIndicator(color: MwColors.primary))
                   : store.messages.isEmpty
                   ? _buildEmptyView(skin)
                   : RefreshIndicator(
-                      color: MistralColors.primary,
+                      color: MwColors.primary,
                       onRefresh: () => store.load(),
                       child: ListView.builder(
                         itemCount: store.messages.length,
@@ -75,12 +74,12 @@ class _MessagePageState extends State<MessagePage> {
             onPressed: () => Navigator.pop(context),
           ),
           SizedBox(width: 4),
-          Text('消息中心', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('消息中心', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           if (store.unreadCount > 0)
             TextButton(
               onPressed: () => store.markAllRead(),
-              child: Text('全部已读(${store.unreadCount})', style: TextStyle(color: MistralColors.primary)),
+              child: Text('全部已读(${store.unreadCount})', style: TextStyle(color: MwColors.primary)),
             ),
         ],
       ),
@@ -94,7 +93,7 @@ class _MessagePageState extends State<MessagePage> {
         children: [
           Icon(Icons.mail_outline, size: 64, color: skin.colors.text3),
           SizedBox(height: 16),
-          Text('暂无消息', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+          Text('暂无消息', style: MwTypography.body.copyWith(color: skin.colors.text3)),
         ],
       ),
     );
@@ -119,19 +118,12 @@ class _MessagePageState extends State<MessagePage> {
           leading: Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(
-              color: msg.isRead ? MistralColors.hairline : MistralColors.cream,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.notifications_outlined,
-              color: msg.isRead ? MistralColors.stone : MistralColors.primary,
-              size: 20,
-            ),
+            decoration: BoxDecoration(color: msg.isRead ? MwColors.hairline : MwColors.cream, shape: BoxShape.circle),
+            child: Icon(Icons.notifications_outlined, color: msg.isRead ? MwColors.stone : MwColors.primary, size: 20),
           ),
           title: Text(
             msg.title,
-            style: MistralTypography.bodyBold.copyWith(
+            style: MwTypography.bodyBold.copyWith(
               color: skin.colors.text1,
               fontWeight: msg.isRead ? FontWeight.normal : FontWeight.w600,
             ),
@@ -144,10 +136,10 @@ class _MessagePageState extends State<MessagePage> {
                 msg.content,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
+                style: MwTypography.bodySm.copyWith(color: skin.colors.text3),
               ),
               SizedBox(height: 4),
-              Text(msg.time, style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
+              Text(msg.time, style: MwTypography.micro.copyWith(color: skin.colors.text3)),
             ],
           ),
         ),

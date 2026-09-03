@@ -106,7 +106,7 @@ class _BendingGalleryState extends State<BendingGallery> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: (item.color ?? MistralColors.ink).withValues(alpha: 0.2),
+                  color: (item.color ?? MwColors.ink).withValues(alpha: 0.2),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -180,11 +180,7 @@ class _PerspectiveGalleryState extends State<PerspectiveGallery> {
                   color: widget.items[i].color ?? StarbucksCreamColors.greenHouse,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(
-                      color: MistralColors.black15,
-                      blurRadius: isSelected ? 16 : 8,
-                      offset: const Offset(0, 4),
-                    ),
+                    BoxShadow(color: MwColors.black15, blurRadius: isSelected ? 16 : 8, offset: const Offset(0, 4)),
                   ],
                 ),
                 child: Center(child: widget.items[i].child),

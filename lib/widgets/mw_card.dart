@@ -59,12 +59,12 @@ class MwCard extends StatelessWidget {
   /// 星巴克标准双层阴影
   static const List<BoxShadow> _shadows = [
     BoxShadow(
-      color: MistralShadows.hairlineShadow, // rgba(0,0,0,0.14)
+      color: MwShadows.hairlineShadow, // rgba(0,0,0,0.14)
       blurRadius: 0.5,
       offset: Offset(0, 0),
     ),
     BoxShadow(
-      color: MistralShadows.liftShadow, // rgba(0,0,0,0.24)
+      color: MwShadows.liftShadow, // rgba(0,0,0,0.24)
       blurRadius: 1.0,
       offset: Offset(0, 1),
     ),

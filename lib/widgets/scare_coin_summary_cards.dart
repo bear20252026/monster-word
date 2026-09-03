@@ -9,7 +9,7 @@
 // 依赖边界（由 ImportGuard R-widgets 规则锁定）：
 // - 仅消费 feature 的 application 端口（ScareCoinStore / CheckinStatusReader）；
 // - core 契约（RouteNames / AppPreferences）与共享 UI（MwCard / MonsterAvatar /
-//   MistralTypography / FuncColors）。
+//   MwTypography / FuncColors）。
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -44,7 +44,7 @@ class ScareCoinCard extends StatelessWidget {
               children: [
                 Text(
                   '尖叫币',
-                  style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                  style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(width: 4),
                 Icon(Icons.help_outline_rounded, color: skin.text3, size: 14),
@@ -62,7 +62,7 @@ class ScareCoinCard extends StatelessWidget {
                   builder: (context, snap) {
                     return Text(
                       '${snap.data ?? 0}',
-                      style: MistralTypography.heading4.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
+                      style: MwTypography.heading4.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
                     );
                   },
                 ),
@@ -101,7 +101,7 @@ class EquipCard extends StatelessWidget {
             children: [
               Text(
                 '装备',
-                style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: 6),
               FutureBuilder<int>(
@@ -110,7 +110,7 @@ class EquipCard extends StatelessWidget {
                   final owned = 1 + (redeemedCount > 0 ? 1 : 0) + ((snap.data ?? 0) > 0 ? 1 : 0);
                   return Text(
                     '$owned/${AppPreferences.equipRackCount}',
-                    style: MistralTypography.caption.copyWith(color: skin.text3),
+                    style: MwTypography.caption.copyWith(color: skin.text3),
                   );
                 },
               ),

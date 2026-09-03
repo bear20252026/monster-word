@@ -107,7 +107,7 @@ CI 场景：四个值注入为 GitHub Actions **Secrets**（MW_STORE_PASSWORD �
 | 9 | 冒烟测试：双击运行 | 启动屏→主页→查词发音→复习打卡走一遍 |
 | 10 | 打包 zip | 结构：zip 解压后直接是 `MonsterWord/` 文件夹（exe+data+dll），命名 `MonsterWord_vX.Y.Z_Windows_x64.zip` |
 | 11 | 记录 SHA256 | `Get-FileHash <zip> -Algorithm SHA256`，写入 release notes |
-| 12 | 归档到 `release/`，确认 `_archive/` 内无旧品牌名混入 | 与历史「不背单词」产物隔离 |
+| 12 | 归档到 `release/`，确认 `_archive/` 内无旧品牌名混入 | 与历史原应用产物隔离 |
 
 **版本号同步点澄清**（避免重复维护）：
 
@@ -157,7 +157,7 @@ CI 场景：四个值注入为 GitHub Actions **Secrets**（MW_STORE_PASSWORD �
 - [ ] 冒烟测试通过（启动/查词/发音/复习/设置五项）
 - [ ] git tag vX.Y.Z 已推送
 - [ ] release notes 已写（新特性 + SHA256）
-- [ ] `release/_archive/` 外无「不背单词」等旧品牌字样文件
+- [ ] `release/_archive/` 外无原应用等旧品牌字样文件
 - [ ] 本地归档区无未改名的历史产物外泄风险
 
 ---

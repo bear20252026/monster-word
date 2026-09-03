@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 lib/pages/immersive_swipe_page.dart
 // 沉浸刷词：全屏单词卡片，上滑=认识，下滑=不认识，纯记忆测试
 import 'dart:async';
 
@@ -416,11 +415,11 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
               children: [
                 Icon(Icons.check, color: skin.colors.success, size: 16),
                 const SizedBox(width: 4),
-                Text('$_knownCount', style: MistralTypography.captionBold.copyWith(color: skin.colors.success)),
+                Text('$_knownCount', style: MwTypography.captionBold.copyWith(color: skin.colors.success)),
                 const SizedBox(width: 12),
                 Icon(Icons.close, color: skin.colors.danger, size: 16),
                 const SizedBox(width: 4),
-                Text('$_unknownCount', style: MistralTypography.captionBold.copyWith(color: skin.colors.danger)),
+                Text('$_unknownCount', style: MwTypography.captionBold.copyWith(color: skin.colors.danger)),
               ],
             ),
           ),
@@ -448,7 +447,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
         color: skin.colors.cardBg,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: borderColor, width: 2),
-        boxShadow: [BoxShadow(color: MistralColors.black15, blurRadius: 20, offset: const Offset(0, 8))],
+        boxShadow: [BoxShadow(color: MwColors.black15, blurRadius: 20, offset: const Offset(0, 8))],
       ),
       child: Center(
         child: Padding(
@@ -465,7 +464,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
               const SizedBox(height: 12),
               // 音标
               if (word.usPron.isNotEmpty)
-                Text('/${word.usPron}/', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+                Text('/${word.usPron}/', style: MwTypography.body.copyWith(color: skin.colors.text3)),
               const SizedBox(height: 24),
               // 释义（始终显示，不再需要点击揭示 — 避免破坏"认识/不认识"体验）
               Container(
@@ -474,7 +473,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                 decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(12)),
                 child: Text(
                   word.hasStructuredDefinitions ? word.formattedDefinitions : word.cleanInterpret,
-                  style: MistralTypography.body.copyWith(color: skin.colors.text1, height: 1.5),
+                  style: MwTypography.body.copyWith(color: skin.colors.text1, height: 1.5),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -493,11 +492,11 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
         children: [
           Icon(Icons.arrow_upward, color: skin.colors.success.withValues(alpha: 0.6), size: 18),
           const SizedBox(width: 4),
-          Text('认识', style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
+          Text('认识', style: MwTypography.caption.copyWith(color: skin.colors.text3)),
           const SizedBox(width: 24),
           Icon(Icons.arrow_downward, color: skin.colors.danger.withValues(alpha: 0.6), size: 18),
           const SizedBox(width: 4),
-          Text('不认识', style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
+          Text('不认识', style: MwTypography.caption.copyWith(color: skin.colors.text3)),
         ],
       ),
     );

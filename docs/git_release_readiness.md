@@ -11,7 +11,7 @@
 |---|---|
 | 总提交数 | 56 |
 | 最新提交 | `0f3397a` chore: clean up .gitignore |
-| 首次提交 | `e88e958` feat: 不背单词 Flutter 跨平台复刻版初始提交 |
+| 首次提交 | `e88e958` feat: 原应用 Flutter 跨平台重构版初始提交 |
 | 关键里程碑 | batch1→batch5 全部完成、星巴克 token 层、WCAG 对比度守卫、音标清洗、壁纸修复 |
 
 提交信息规范性：✅ 良好，使用 conventional commits 格式（feat/fix/refactor/chore/docs/test/ci）
@@ -75,7 +75,7 @@
 | 检查项 | 结果 |
 |---|---|
 | `git ls-files release/` | ✅ 空（未被 git 追踪） |
-| 磁盘存在 | 存在（~42 MB：不背单词_v1.0_Windows_x64.zip + 解压目录） |
+| 磁盘存在 | 存在（~42 MB：原应用_v1.0_Windows_x64.zip + 解压目录） |
 | .gitignore 规则 | `release/`（:26）✅ 正确忽略 |
 
 commit `65337c4` 已将 release 二进制从追踪中移除，当前状态正确。

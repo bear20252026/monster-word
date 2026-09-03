@@ -72,7 +72,7 @@ class _BookWordsPageState extends State<BookWordsPage> {
         backgroundColor: skin.cardBg,
         elevation: 0,
         iconTheme: IconThemeData(color: skin.text1),
-        title: Text(book.name, style: MistralTypography.heading5.copyWith(color: skin.text1)),
+        title: Text(book.name, style: MwTypography.heading5.copyWith(color: skin.text1)),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _startLearning(context),
@@ -122,10 +122,7 @@ class _BookWordsPageState extends State<BookWordsPage> {
                   padding: EdgeInsets.only(bottom: context.design.spacing.sm),
                   child: Align(
                     alignment: Alignment.centerRight,
-                    child: Text(
-                      '共 ${words.length} 词（按字母排序）',
-                      style: MistralTypography.micro.copyWith(color: skin.text3),
-                    ),
+                    child: Text('共 ${words.length} 词（按字母排序）', style: MwTypography.micro.copyWith(color: skin.text3)),
                   ),
                 );
               }
@@ -175,11 +172,11 @@ class _WordCard extends StatelessWidget {
                     children: [
                       Text(
                         word.word,
-                        style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                        style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
                       ),
                       if (word.usPron.isNotEmpty) ...[
                         const SizedBox(width: 6),
-                        Text('/${word.usPron}/', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                        Text('/${word.usPron}/', style: MwTypography.bodySm.copyWith(color: skin.text3)),
                       ],
                     ],
                   ),
@@ -187,7 +184,7 @@ class _WordCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       word.firstInterpretLine,
-                      style: MistralTypography.bodySm.copyWith(color: skin.text3),
+                      style: MwTypography.bodySm.copyWith(color: skin.text3),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -198,7 +195,7 @@ class _WordCard extends StatelessWidget {
             IconButton(
               icon: Icon(
                 isFav ? Icons.star : Icons.star_border,
-                color: isFav ? MistralColors.primary : skin.text3,
+                color: isFav ? MwColors.primary : skin.text3,
                 size: 22,
               ),
               onPressed: () => favorites.toggle(word.word),
@@ -206,7 +203,7 @@ class _WordCard extends StatelessWidget {
             IconButton(
               icon: Icon(
                 isNew ? Icons.bookmark_added : Icons.bookmark_add_outlined,
-                color: isNew ? MistralColors.primary : skin.text3,
+                color: isNew ? MwColors.primary : skin.text3,
                 size: 22,
               ),
               onPressed: () => newWords.toggleNewWord(word, source: 'book-${book.id}'),
@@ -258,14 +255,14 @@ class _WordListEmptyDiagnostics extends StatelessWidget {
               children: [
                 Icon(Icons.storage_outlined, size: 48, color: skin.colors.text3),
                 SizedBox(height: context.design.spacing.md),
-                Text('本地词库暂无该书数据', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+                Text('本地词库暂无该书数据', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
                 SizedBox(height: context.design.spacing.sm),
-                Text('词库 100% 内置于安装包，此问题不需要联网。', style: MistralTypography.bodySm.copyWith(color: skin.colors.text2)),
+                Text('词库 100% 内置于安装包，此问题不需要联网。', style: MwTypography.bodySm.copyWith(color: skin.colors.text2)),
                 if (error != null) ...[
                   SizedBox(height: context.design.spacing.sm),
                   Text(
                     '错误详情: $error',
-                    style: MistralTypography.micro.copyWith(color: skin.colors.danger),
+                    style: MwTypography.micro.copyWith(color: skin.colors.danger),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -278,7 +275,7 @@ class _WordListEmptyDiagnostics extends StatelessWidget {
                     borderRadius: BorderRadius.circular(skin.design.radius.md),
                     border: Border.all(color: skin.colors.divider),
                   ),
-                  child: Text(diagText, style: MistralTypography.micro.copyWith(color: skin.colors.text2, height: 1.6)),
+                  child: Text(diagText, style: MwTypography.micro.copyWith(color: skin.colors.text2, height: 1.6)),
                 ),
                 SizedBox(height: context.design.spacing.md),
                 FilledButton.icon(

@@ -114,11 +114,11 @@ class _WordNotesSectionState extends State<WordNotesSection> {
       children: [
         Row(
           children: [
-            Text('笔记', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+            Text('笔记', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
             if (_notes.isNotEmpty)
               Padding(
                 padding: EdgeInsets.only(left: 8),
-                child: Text('${_notes.length}', style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
+                child: Text('${_notes.length}', style: MwTypography.micro.copyWith(color: skin.colors.text3)),
               ),
             const Spacer(),
             GestureDetector(
@@ -134,7 +134,7 @@ class _WordNotesSectionState extends State<WordNotesSection> {
                   children: [
                     Icon(Icons.add, size: 16, color: skin.colors.accent),
                     SizedBox(width: 4),
-                    Text('添加笔记', style: MistralTypography.micro.copyWith(color: skin.colors.accent)),
+                    Text('添加笔记', style: MwTypography.micro.copyWith(color: skin.colors.accent)),
                   ],
                 ),
               ),
@@ -159,9 +159,9 @@ class _WordNotesSectionState extends State<WordNotesSection> {
               children: [
                 Icon(Icons.edit_note, size: 32, color: skin.colors.text3),
                 SizedBox(height: 8),
-                Text('暂无笔记', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                Text('暂无笔记', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                 SizedBox(height: 4),
-                Text('点击上方"添加笔记"记录你的学习心得', style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
+                Text('点击上方"添加笔记"记录你的学习心得', style: MwTypography.micro.copyWith(color: skin.colors.text3)),
               ],
             ),
           )
@@ -200,14 +200,11 @@ class _NoteCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(note.content, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
+          Text(note.content, style: MwTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
           SizedBox(height: 8),
           Row(
             children: [
-              Text(
-                formatCompactDateTime(note.updatedAt),
-                style: MistralTypography.micro.copyWith(color: skin.colors.text3),
-              ),
+              Text(formatCompactDateTime(note.updatedAt), style: MwTypography.micro.copyWith(color: skin.colors.text3)),
               const Spacer(),
               IconButton(
                 onPressed: onEdit,
@@ -248,14 +245,14 @@ class _NoteDialog extends StatelessWidget {
     final skin = context.skin.colors;
     return AlertDialog(
       backgroundColor: skin.cardBg,
-      title: Text(title, style: MistralTypography.heading5.copyWith(color: skin.text1)),
+      title: Text(title, style: MwTypography.heading5.copyWith(color: skin.text1)),
       content: TextField(
         controller: controller,
         maxLines: 5,
         autofocus: true,
         decoration: InputDecoration(
           hintText: '输入笔记内容...',
-          hintStyle: MistralTypography.bodySm.copyWith(color: skin.text3),
+          hintStyle: MwTypography.bodySm.copyWith(color: skin.text3),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(context.design.radius.md),
             borderSide: BorderSide(color: skin.divider),
@@ -265,7 +262,7 @@ class _NoteDialog extends StatelessWidget {
             borderSide: BorderSide(color: skin.accent),
           ),
         ),
-        style: MistralTypography.bodyMd.copyWith(color: skin.text1),
+        style: MwTypography.bodyMd.copyWith(color: skin.text1),
       ),
       actions: [
         TextButton(

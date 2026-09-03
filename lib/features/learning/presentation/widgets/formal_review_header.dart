@@ -56,7 +56,7 @@ class FormalReviewHeader extends StatelessWidget {
             icon: Icon(
               isFavorite ? Icons.star : Icons.star_border,
               size: 22,
-              color: isFavorite ? MistralColors.accent : skin.onGlassText1,
+              color: isFavorite ? MwColors.accent : skin.onGlassText1,
             ),
             tooltip: '收藏',
             onPressed: onToggleFavorite,

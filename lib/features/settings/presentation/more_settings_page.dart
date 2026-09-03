@@ -1,7 +1,6 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
-// 还原原版 v3.2 个人中心 → 更多设置入口
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -9,7 +8,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/auth/app_session_controller.dart';
-import 'package:word_app/core/web/base_web_page.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
@@ -65,14 +63,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           children: [
             const Text('🚩', style: TextStyle(fontSize: 36)),
             SizedBox(height: 8),
-            Text('举报渠道', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
+            Text('举报渠道', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('如发现违法和不良信息，可通过以下官方渠道举报：', style: MistralTypography.bodySm.copyWith(color: context.skin.colors.text2)),
+            Text('如发现违法和不良信息，可通过以下官方渠道举报：', style: MwTypography.bodySm.copyWith(color: context.skin.colors.text2)),
             SizedBox(height: 12),
             _reportChannel('中央网信办举报中心', '电话 12377 · 官网 www.12377.cn'),
             SizedBox(height: 8),
@@ -108,9 +106,9 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             children: [
               Text(
                 title,
-                style: MistralTypography.bodySm.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                style: MwTypography.bodySm.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
               ),
-              Text(detail, style: MistralTypography.caption.copyWith(color: skin.text3)),
+              Text(detail, style: MwTypography.caption.copyWith(color: skin.text3)),
             ],
           ),
         ),
@@ -129,7 +127,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           children: [
             const Text('🧸', style: TextStyle(fontSize: 36)),
             SizedBox(height: 8),
-            Text('Monster Word', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
+            Text('Monster Word', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
           ],
         ),
         content: Column(
@@ -137,13 +135,10 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           children: [
             Text(
               _appVersion.isEmpty ? '正在读取版本…' : '版本 $_appVersion',
-              style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
+              style: MwTypography.body.copyWith(color: context.skin.colors.text2),
             ),
             SizedBox(height: 8),
-            Text(
-              '科学背单词 · 官网 www.beingfine.cn',
-              style: MistralTypography.bodySm.copyWith(color: context.skin.colors.text3),
-            ),
+            Text('Monster Word · 科学背单词', style: MwTypography.bodySm.copyWith(color: context.skin.colors.text3)),
           ],
         ),
         actions: [
@@ -174,13 +169,13 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             children: [
               const Text('⭐', style: TextStyle(fontSize: 36)),
               SizedBox(height: 8),
-              Text('给个好评吧！', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
+              Text('给个好评吧！', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('您的支持是我们前进的动力', style: MistralTypography.body.copyWith(color: context.skin.colors.text2)),
+              Text('您的支持是我们前进的动力', style: MwTypography.body.copyWith(color: context.skin.colors.text2)),
               SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -262,12 +257,12 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             children: [
               const Text('📡', style: TextStyle(fontSize: 36)),
               SizedBox(height: 8),
-              Text('检查失败', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
+              Text('检查失败', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
             ],
           ),
           content: Text(
             '无法连接更新服务器，请检查网络后重试',
-            style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
+            style: MwTypography.body.copyWith(color: context.skin.colors.text2),
             textAlign: TextAlign.center,
           ),
           actions: [_okButton(ctx)],
@@ -289,7 +284,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
               SizedBox(height: 8),
               Text(
                 '发现新版本 v${result.latestVersion}',
-                style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1),
+                style: MwTypography.heading5.copyWith(color: context.skin.colors.text1),
               ),
             ],
           ),
@@ -299,11 +294,11 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             children: [
               Text(
                 '当前版本 v${result.currentVersion}，可前往下载页更新',
-                style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
+                style: MwTypography.body.copyWith(color: context.skin.colors.text2),
               ),
               if (notesPreview.isNotEmpty) ...[
                 SizedBox(height: 12),
-                Text(notesPreview, style: MistralTypography.bodySm.copyWith(color: context.skin.colors.text3)),
+                Text(notesPreview, style: MwTypography.bodySm.copyWith(color: context.skin.colors.text3)),
               ],
             ],
           ),
@@ -340,12 +335,12 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           children: [
             const Text('✅', style: TextStyle(fontSize: 36)),
             SizedBox(height: 8),
-            Text('已是最新版本', style: MistralTypography.heading5.copyWith(color: context.skin.colors.text1)),
+            Text('已是最新版本', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
           ],
         ),
         content: Text(
           _appVersion.isEmpty ? '当前已是最新版本' : '当前版本 v$_appVersion 已是最新（远端 v${result.latestVersion}）',
-          style: MistralTypography.body.copyWith(color: context.skin.colors.text2),
+          style: MwTypography.body.copyWith(color: context.skin.colors.text2),
           textAlign: TextAlign.center,
         ),
         actions: [_okButton(ctx)],
@@ -460,14 +455,11 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                 children: [
                   const Text('👹', style: TextStyle(fontSize: 48)),
                   SizedBox(height: 12),
-                  Text(
-                    'Monster Word',
-                    style: MistralTypography.heading5.copyWith(color: context.skin.colors.onGlassAccent),
-                  ),
+                  Text('Monster Word', style: MwTypography.heading5.copyWith(color: context.skin.colors.onGlassAccent)),
                   SizedBox(height: 4),
                   Text(
                     '背单词，so easy！',
-                    style: MistralTypography.bodySm.copyWith(
+                    style: MwTypography.bodySm.copyWith(
                       color: context.skin.colors.onGlassAccent.withValues(alpha: 0.9),
                     ),
                   ),
@@ -478,13 +470,13 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       color: context.skin.colors.onGlassAccent,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text('扫码下载', style: MistralTypography.micro.copyWith(color: context.skin.colors.accent)),
+                    child: Text('扫码下载', style: MwTypography.micro.copyWith(color: context.skin.colors.accent)),
                   ),
                 ],
               ),
             ),
             SizedBox(height: 16),
-            Text('扫码下载 Monster Word', style: MistralTypography.body.copyWith(color: context.skin.colors.text2)),
+            Text('扫码下载 Monster Word', style: MwTypography.body.copyWith(color: context.skin.colors.text2)),
           ],
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -550,14 +542,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     return _SettingGroup([
       _Cell(
         icon: Icons.help_outline,
-        iconColor: MistralColors.success,
+        iconColor: MwColors.success,
         title: '帮助与反馈',
         onTap: () => Navigator.pushNamed(context, RouteNames.feedback),
       ),
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
         icon: Icons.star_outline,
-        iconColor: MistralColors.warning,
+        iconColor: MwColors.warning,
         title: '评价应用',
         subtitle: _appVersion.isEmpty ? null : 'v$_appVersion',
         onTap: () => _showRatingDialog(context),
@@ -565,14 +557,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
         icon: Icons.system_update_outlined,
-        iconColor: MistralColors.link,
+        iconColor: MwColors.link,
         title: '检查更新',
         onTap: () => _checkForUpdate(),
       ),
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
         icon: Icons.storage_outlined,
-        iconColor: MistralColors.link,
+        iconColor: MwColors.link,
         title: '更新词库数据',
         subtitle: '全量覆盖重建本地词库（含全部词条与索引）',
         onTap: () => _showRebuildWordbookDialog(context),
@@ -580,7 +572,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
         icon: Icons.share_outlined,
-        iconColor: MistralColors.ink,
+        iconColor: MwColors.ink,
         title: '推荐给好友',
         onTap: () => _showShareDialog(context),
       ),
@@ -592,14 +584,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     return _SettingGroup([
       _Cell(
         icon: Icons.redeem_outlined,
-        iconColor: MistralColors.primary,
+        iconColor: MwColors.primary,
         title: '兑换中心',
         onTap: () => Navigator.pushNamed(context, RouteNames.redemption),
       ),
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
         icon: Icons.flag_outlined,
-        iconColor: MistralColors.danger,
+        iconColor: MwColors.danger,
         title: '违法不良信息举报',
         onTap: () => _showReportDialog(context),
       ),
@@ -613,14 +605,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         icon: Icons.description_outlined,
         iconColor: skin.colors.text3,
         title: '服务条款',
-        onTap: () => _openLegalPage('https://www.beingfine.cn/terms', '服务条款'),
+        onTap: () => _showLegalDialog(context, '服务条款'),
       ),
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
         icon: Icons.privacy_tip_outlined,
         iconColor: skin.colors.text3,
         title: '隐私协议',
-        onTap: () => _openLegalPage('https://www.beingfine.cn/privacy', '隐私协议'),
+        onTap: () => _showLegalDialog(context, '隐私协议'),
       ),
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
@@ -633,11 +625,30 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     ]);
   }
 
-  void _openLegalPage(String url, String title) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BaseWebPage(url: url, title: title),
+  /// 服务条款 / 隐私协议说明弹窗（本地展示，正式文本随后续版本发布）
+  void _showLegalDialog(BuildContext context, String title) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.skin.colors.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(title, style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
+        content: Text(
+          'Monster Word 正在完善独立的$title文本，将随后续版本发布。\n\n'
+          '在此之前如有任何疑问，欢迎通过「帮助与反馈」联系我们。',
+          style: MwTypography.body.copyWith(color: context.skin.colors.text2),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.skin.colors.accent,
+              foregroundColor: context.skin.colors.onGlassAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('知道了'),
+          ),
+        ],
       ),
     );
   }
@@ -663,7 +674,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       title: '退出登录',
       child: Text(
         '确定要退出登录吗？退出后学习数据将保留在本地，但同步功能将不可用。',
-        style: MistralTypography.bodyMd.copyWith(color: context.skin.colors.text2),
+        style: MwTypography.bodyMd.copyWith(color: context.skin.colors.text2),
       ),
       actions: [
         MwButton.outlined(label: '取消', onTap: () => Navigator.pop(context)),
@@ -695,7 +706,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             onPressed: () => NavUtils.safePop(context),
           ),
           SizedBox(width: 4),
-          Text('更多设置', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('更多设置', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );
@@ -719,8 +730,8 @@ class _SettingGroup extends StatelessWidget {
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(context.design.radius.lg),
         boxShadow: const [
-          BoxShadow(offset: Offset.zero, blurRadius: 0.5, color: MistralShadows.softShadow),
-          BoxShadow(offset: Offset(0, 1), blurRadius: 1, color: MistralShadows.liftShadow),
+          BoxShadow(offset: Offset.zero, blurRadius: 0.5, color: MwShadows.softShadow),
+          BoxShadow(offset: Offset(0, 1), blurRadius: 1, color: MwShadows.liftShadow),
         ],
       ),
       child: Column(children: children),
@@ -751,12 +762,12 @@ class _Cell extends StatelessWidget {
             Icon(icon, color: iconColor, size: 22),
             SizedBox(width: context.design.spacing.sm),
             Expanded(
-              child: Text(title, style: MistralTypography.bodyMd.copyWith(color: skin.text1)),
+              child: Text(title, style: MwTypography.bodyMd.copyWith(color: skin.text1)),
             ),
             if (subtitle != null)
               Padding(
                 padding: EdgeInsets.only(right: context.design.spacing.xs),
-                child: Text(subtitle!, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                child: Text(subtitle!, style: MwTypography.bodySm.copyWith(color: skin.text3)),
               ),
             Icon(Icons.chevron_right, size: 18, color: skin.text3),
           ],

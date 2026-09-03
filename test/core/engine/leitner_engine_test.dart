@@ -32,7 +32,7 @@ void main() {
     });
   });
 
-  group('四档评分升降级（原版 Java 1:1）', () {
+  group('四档评分升降级（历史版本 1:1 行为）', () {
     test('iReallyKnow：level+1（上限 4），success++，移出 activeList', () {
       final engine = LeitnerCardEngine();
       final w = _w('word1', level: 2);
@@ -105,7 +105,7 @@ void main() {
         expect(engine.lessonIsOver(), isFalse);
         engine.iReallyKnow();
       }
-      // 已知怪癖（Java 原版 1:1 行为）：最后一组学完后 _buildNextGroup 因 activeList
+      // 已知怪癖（历史版本 1:1 行为）：最后一组学完后 _buildNextGroup 因 activeList
       // 已空而跳过，_currentGroup 保留旧组 → lessonIsOver() 恒 false。
       // 该方法在 App 层零消费，完成判定实际走 getDataPreparedState，故不改引擎、锁实际行为。
       expect(engine.lessonIsOver(), isFalse, reason: '引擎怪癖：currentGroup 保留最后一组');

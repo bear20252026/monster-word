@@ -1,4 +1,4 @@
-// Monster Word 皮肤系统 — 还原 v3.2 原版配色
+// Monster Word 皮肤系统
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -113,7 +113,7 @@ class ThemePreset {
   });
 }
 
-/// 三档主题：还原 v3.2 原版配色
+/// 三档主题配色
 /// - 明亮（AppLightTheme）：浅灰背景 + 橙色强调
 /// - 深邃（AppDarkTheme）：深蓝灰背景 + 金色强调
 /// - 极夜（AppBlackTheme）：纯黑背景 + 蓝色强调
@@ -124,13 +124,13 @@ final themes = <String, ThemePreset>{
     uiBrightness: Brightness.light,
     statusBarBrightness: Brightness.dark,
     vars: ThemeVars(
-      pageBg: const Color(0xFFF5F5F5), // 原版亮色背景
-      cardBg: const Color(0xFFFFFFFF), // 原版白色卡片
+      pageBg: const Color(0xFFF5F5F5), // 亮色背景
+      cardBg: const Color(0xFFFFFFFF), // 白色卡片
       cardBgAlt: const Color(0xFFF5F5F5),
-      text1: const Color(0xDE000000), // 87% 黑（原版主文字）
-      text2: const Color(0x8A000000), // 54% 黑（原版次文字）
+      text1: const Color(0xDE000000), // 87% 黑（主文字）
+      text2: const Color(0x8A000000), // 54% 黑（次文字）
       text3: const Color(0x9E000000), // 62% 黑（WCAG AA 达标）
-      divider: const Color(0x14000000), // 8% 黑（原版分割线）
+      divider: const Color(0x14000000), // 8% 黑（分割线）
       accent: const Color(0xFF9E4800), // 深琥珀色（WCAG AA 4.70:1）
       success: const Color(0xFF2E7D32), // 深绿色（WCAG AA 4.70:1）
       danger: const Color(0xFFC02424), // 深红色（WCAG AA 4.60:1）
@@ -149,17 +149,17 @@ final themes = <String, ThemePreset>{
     uiBrightness: Brightness.dark,
     statusBarBrightness: Brightness.light,
     vars: ThemeVars(
-      pageBg: const Color(0xFF212532), // 原版深色背景（深蓝灰）
-      cardBg: const Color(0xFF2E344A), // 原版深色卡片（蓝灰）
-      cardBgAlt: const Color(0xFF292F44), // 原版前景色
-      text1: const Color(0xDEFFFFFF), // 87% 白（原版主文字）
-      text2: const Color(0x8AFFFFFF), // 54% 白（原版次文字）
+      pageBg: const Color(0xFF212532), // 深色背景（深蓝灰）
+      cardBg: const Color(0xFF2E344A), // 深色卡片（蓝灰）
+      cardBgAlt: const Color(0xFF292F44), // 前景色
+      text1: const Color(0xDEFFFFFF), // 87% 白（主文字）
+      text2: const Color(0x8AFFFFFF), // 54% 白（次文字）
       text3: const Color(0x9EFFFFFF), // 62% 白（WCAG AA 达标，与 pure_black 一致）
-      divider: const Color(0x33FFFFFF), // 20% 白（原版分割线）
+      divider: const Color(0x33FFFFFF), // 20% 白（分割线）
       accent: const Color(0xFFFFAB00), // 明亮琥珀色（WCAG AA 7.28:1）
-      success: const Color(0xFF22A18B), // 原版深色成功（青绿）
+      success: const Color(0xFF22A18B), // 深色成功（青绿）
       danger: const Color(0xFFFF5252), // 亮红色（WCAG AA 4.72:1）
-      teal: const Color(0xFF4A90E2), // 原版系统文字色（蓝）
+      teal: const Color(0xFF4A90E2), // 系统文字色（蓝）
       tabBarIcon: const Color(0xDEFFFFFF),
       onGlassText1: const Color(0xDEFFFFFF),
       onGlassText2: const Color(0x8AFFFFFF),
@@ -177,8 +177,8 @@ final themes = <String, ThemePreset>{
     uiBrightness: Brightness.dark,
     statusBarBrightness: Brightness.light,
     vars: ThemeVars(
-      pageBg: const Color(0xFF040404), // 原版极夜背景
-      cardBg: const Color(0xFF1A1B1C), // 原版极夜卡片
+      pageBg: const Color(0xFF040404), // 极夜背景
+      cardBg: const Color(0xFF1A1B1C), // 极夜卡片
       cardBgAlt: const Color(0xFF141415),
       text1: const Color(0xDEFFFFFF), // 87% 白
       text2: const Color(0x8AFFFFFF), // 54% 白

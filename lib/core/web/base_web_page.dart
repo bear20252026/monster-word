@@ -1,7 +1,6 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 BaseWebActivity / AdWebActivity / HeadAdWebActivity
-// 通用 WebView 页面：加载指定 URL
+// 通用 WebView 页面：加载指定 URL（仅白名单内域名可打开）
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -25,8 +24,9 @@ class _BaseWebPageState extends State<BaseWebPage> {
   bool _hasError = false;
   String _pageTitle = '';
 
-  /// 允许的域名白名单
-  static const _allowedDomains = ['beingfine.cn', 'www.beingfine.cn'];
+  /// 允许的域名白名单（当前为空：应用暂无自有 Web 内容域名，
+  /// 任何 URL 都不会放行；新增自有内容站点时在此登记）
+  static const _allowedDomains = <String>[];
 
   /// 检查 URL 是否在白名单内
   bool _isUrlAllowed(String url) {
@@ -113,12 +113,12 @@ class _BaseWebPageState extends State<BaseWebPage> {
                         children: [
                           Icon(Icons.wifi_off, size: 64, color: skin.colors.text3),
                           const SizedBox(height: 16),
-                          Text('页面加载失败', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+                          Text('页面加载失败', style: MwTypography.body.copyWith(color: skin.colors.text3)),
                           const SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: () => _controller.reload(),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: MistralColors.primary,
+                              backgroundColor: MwColors.primary,
                               foregroundColor: Colors.white,
                             ),
                             child: const Text('重试'),
@@ -128,7 +128,7 @@ class _BaseWebPageState extends State<BaseWebPage> {
                     )
                   else
                     WebViewWidget(controller: _controller),
-                  if (_isLoading) Center(child: CircularProgressIndicator(color: MistralColors.primary)),
+                  if (_isLoading) Center(child: CircularProgressIndicator(color: MwColors.primary)),
                 ],
               ),
             ),
@@ -153,7 +153,7 @@ class _BaseWebPageState extends State<BaseWebPage> {
           Expanded(
             child: Text(
               _pageTitle,
-              style: MistralTypography.heading5.copyWith(color: skin.colors.text1),
+              style: MwTypography.heading5.copyWith(color: skin.colors.text1),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -168,7 +168,7 @@ class _BaseWebPageState extends State<BaseWebPage> {
   }
 }
 
-/// 广告 WebView 页面（对应原版 AdWebActivity）
+/// 广告 WebView 页面（历史广告位）
 class AdWebPage extends StatelessWidget {
   final String url;
   const AdWebPage({super.key, required this.url});

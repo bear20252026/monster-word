@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 ListWordListenActivity
 // 单词听写：播放单词语音，用户拼写练习
 // 词源与发音均走既有端口（单一事实来源）：队列取自 LearningSessionState.queue
 // （与听写会话页同源），发音走 AudioPlaybackState.playWord。
@@ -120,7 +119,7 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
     }
     if (_current == null) {
       return Center(
-        child: Text('暂无学习队列，请先选择词书开始学习', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+        child: Text('暂无学习队列，请先选择词书开始学习', style: MwTypography.body.copyWith(color: skin.colors.text3)),
       );
     }
     return Padding(
@@ -128,14 +127,11 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
       child: Column(
         children: [
           // 进度：答题统计 + 队列位置
-          Text(
-            '$_correctCount / $_totalCount',
-            style: MistralTypography.heading4.copyWith(color: MistralColors.primary),
-          ),
+          Text('$_correctCount / $_totalCount', style: MwTypography.heading4.copyWith(color: MwColors.primary)),
           const SizedBox(height: 8),
           Text(
             '第 ${_currentIndex + 1} / ${_words.length} 词',
-            style: MistralTypography.caption.copyWith(color: skin.colors.text3),
+            style: MwTypography.caption.copyWith(color: skin.colors.text3),
           ),
           const SizedBox(height: 24),
           // 播放按钮
@@ -146,33 +142,33 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: MistralColors.cream,
-                border: Border.all(color: MistralColors.primary, width: 2),
+                color: MwColors.cream,
+                border: Border.all(color: MwColors.primary, width: 2),
               ),
-              child: Icon(Icons.volume_up, size: 40, color: MistralColors.primary),
+              child: Icon(Icons.volume_up, size: 40, color: MwColors.primary),
             ),
           ),
           const SizedBox(height: 8),
           TextButton(
             onPressed: _playWord,
-            child: Text('点击播放', style: TextStyle(color: MistralColors.primary)),
+            child: Text('点击播放', style: TextStyle(color: MwColors.primary)),
           ),
           const SizedBox(height: 32),
           // 输入框
           TextField(
             controller: _inputController,
             textAlign: TextAlign.center,
-            style: MistralTypography.heading3.copyWith(color: skin.colors.text1),
+            style: MwTypography.heading3.copyWith(color: skin.colors.text1),
             decoration: InputDecoration(
               hintText: '请输入单词',
-              hintStyle: MistralTypography.body.copyWith(color: skin.colors.text3),
+              hintStyle: MwTypography.body.copyWith(color: skin.colors.text3),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(context.design.radius.lg),
                 borderSide: BorderSide(color: skin.colors.divider),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(context.design.radius.lg),
-                borderSide: BorderSide(color: MistralColors.primary, width: 2),
+                borderSide: BorderSide(color: MwColors.primary, width: 2),
               ),
             ),
             onSubmitted: (_) => _checkSpelling(),
@@ -182,8 +178,8 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
           if (_showAnswer) ...[
             Text(
               _feedback,
-              style: MistralTypography.heading5.copyWith(
-                color: _feedback.startsWith('✓') ? MistralColors.success : MistralColors.danger,
+              style: MwTypography.heading5.copyWith(
+                color: _feedback.startsWith('✓') ? MwColors.success : MwColors.danger,
               ),
             ),
             const SizedBox(height: 16),
@@ -218,7 +214,7 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
                             : () =>
                                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已是最后一个词')))),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: MistralColors.primary,
+                    backgroundColor: MwColors.primary,
                     foregroundColor: AppColors.white100,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -245,7 +241,7 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('单词听写', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('单词听写', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );

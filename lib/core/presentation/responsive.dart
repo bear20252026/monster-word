@@ -1,6 +1,5 @@
 // L6 自适应：断点系统 + 派生尺寸参数
 // 三档适配：手机(<600) / 平板(600-1024) / 桌面(≥1024)
-// 翻译自 Figma useResponsive.js
 import 'package:flutter/material.dart';
 
 import 'package:word_app/tokens/design_tokens.dart';
@@ -8,7 +7,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 /// 屏幕类型枚举
 enum ScreenType { mobile, tablet, desktop }
 
-/// 自适应上下文（原版 useResponsive hook）
+/// 自适应上下文（useResponsive hook）
 class AppResponsive {
   final BuildContext context;
   AppResponsive(this.context);

@@ -158,7 +158,7 @@ buildTypes {
 |------|------|
 | `./assets/db/wordbook.db.gz` | 源文件 |
 | `./build/app/intermediates/assets/debug/mergeDebugAssets/flutter_assets/assets/db/wordbook.db.gz` | Debug 构建 |
-| `./release/不背单词/data/flutter_assets/assets/db/wordbook.db.gz` | Release 构建 |
+| `./release/原应用/data/flutter_assets/assets/db/wordbook.db.gz` | Release 构建 |
 
 **风险分析**:
 - 数据库可被解压并直接读取

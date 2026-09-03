@@ -195,7 +195,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
         backgroundColor: skin.colors.pageBg,
         appBar: AppBar(backgroundColor: skin.colors.pageBg, foregroundColor: skin.colors.text1, elevation: 0),
         body: Center(
-          child: Text('暂无单词可播放', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+          child: Text('暂无单词可播放', style: MwTypography.body.copyWith(color: skin.colors.text3)),
         ),
       );
     }
@@ -255,20 +255,17 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
           Expanded(
             child: Text(
               '随身听${widget.bookName.isNotEmpty ? " · ${widget.bookName}" : ""}',
-              style: MistralTypography.heading5.copyWith(color: skin.colors.text1),
+              style: MwTypography.heading5.copyWith(color: skin.colors.text1),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: MistralColors.primary.withValues(alpha: 0.1),
+              color: MwColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(context.design.radius.sm),
             ),
-            child: Text(
-              _modeName(widget.mode),
-              style: MistralTypography.caption.copyWith(color: MistralColors.primary),
-            ),
+            child: Text(_modeName(widget.mode), style: MwTypography.caption.copyWith(color: MwColors.primary)),
           ),
           const SizedBox(width: 8),
         ],
@@ -283,8 +280,8 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${_currentIndex + 1}', style: MistralTypography.heading4.copyWith(color: MistralColors.primary)),
-            Text(' / ${widget.words.length}', style: MistralTypography.heading5.copyWith(color: skin.colors.text3)),
+            Text('${_currentIndex + 1}', style: MwTypography.heading4.copyWith(color: MwColors.primary)),
+            Text(' / ${widget.words.length}', style: MwTypography.heading5.copyWith(color: skin.colors.text3)),
           ],
         ),
         const SizedBox(height: 8),
@@ -296,7 +293,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
             alignment: Alignment.centerLeft,
             widthFactor: progress,
             child: Container(
-              decoration: BoxDecoration(color: MistralColors.primary, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: MwColors.primary, borderRadius: BorderRadius.circular(8)),
             ),
           ),
         ),
@@ -328,7 +325,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
             const SizedBox(height: 8),
             Text(
               word.usPron.isNotEmpty ? word.usPron : word.ukPron,
-              style: MistralTypography.body.copyWith(color: skin.colors.text3, fontSize: 16 * resp.fontScale),
+              style: MwTypography.body.copyWith(color: skin.colors.text3, fontSize: 16 * resp.fontScale),
               textAlign: TextAlign.center,
             ),
           ],
@@ -339,11 +336,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
               firstChild: const SizedBox.shrink(),
               secondChild: Text(
                 meaningText,
-                style: MistralTypography.body.copyWith(
-                  color: skin.colors.text2,
-                  fontSize: 18 * resp.fontScale,
-                  height: 1.5,
-                ),
+                style: MwTypography.body.copyWith(color: skin.colors.text2, fontSize: 18 * resp.fontScale, height: 1.5),
                 textAlign: TextAlign.center,
               ),
               crossFadeState: _showMeaning ? CrossFadeState.showSecond : CrossFadeState.showFirst,
@@ -353,7 +346,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () => setState(() => _showMeaning = true),
-                child: Text('点击显示释义', style: MistralTypography.caption.copyWith(color: MistralColors.primary)),
+                child: Text('点击显示释义', style: MwTypography.caption.copyWith(color: MwColors.primary)),
               ),
             ],
           ],
@@ -380,7 +373,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
           ),
           child: Text(
             word.example,
-            style: MistralTypography.bodySm.copyWith(color: skin.colors.text2, fontStyle: FontStyle.italic),
+            style: MwTypography.bodySm.copyWith(color: skin.colors.text2, fontStyle: FontStyle.italic),
             textAlign: TextAlign.center,
           ),
         ),
@@ -403,7 +396,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
                   Expanded(
                     child: Text(
                       s.en,
-                      style: MistralTypography.bodySm.copyWith(color: skin.colors.text1, fontStyle: FontStyle.italic),
+                      style: MwTypography.bodySm.copyWith(color: skin.colors.text1, fontStyle: FontStyle.italic),
                     ),
                   ),
                   if (s.audioUrl != null && s.audioUrl!.isNotEmpty)
@@ -418,7 +411,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
               if (s.cn.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
-                  child: Text(s.cn, style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
+                  child: Text(s.cn, style: MwTypography.caption.copyWith(color: skin.colors.text3)),
                 ),
               const SizedBox(height: 8),
             ],
@@ -476,7 +469,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
         children: [
           Icon(Icons.speed, size: 18, color: skin.colors.text3),
           const SizedBox(width: 8),
-          Text('语速', style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
+          Text('语速', style: MwTypography.caption.copyWith(color: skin.colors.text3)),
           const SizedBox(width: 12),
           SizedBox(
             width: 140 * resp.scale,
@@ -485,14 +478,14 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
               min: 0.2,
               max: 0.8,
               divisions: 6,
-              activeColor: MistralColors.primary,
+              activeColor: MwColors.primary,
               inactiveColor: skin.colors.divider,
               onChanged: _onRateChanged,
             ),
           ),
           Text(
             '${(_speechRate * 2).toStringAsFixed(1)}x',
-            style: MistralTypography.caption.copyWith(color: skin.colors.text2),
+            style: MwTypography.caption.copyWith(color: skin.colors.text2),
           ),
         ],
       ),
@@ -518,7 +511,7 @@ class _ControlButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isPrimary ? MistralColors.primary : skin.colors.cardBgAlt,
+      color: isPrimary ? MwColors.primary : skin.colors.cardBgAlt,
       borderRadius: BorderRadius.circular(size / 2),
       child: InkWell(
         onTap: onPressed,

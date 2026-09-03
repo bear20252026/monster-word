@@ -45,7 +45,7 @@ void main() {
         violations,
         isEmpty,
         reason:
-            '发现硬编码色字面量——语义色请走 skin/FuncColors/MistralColors，'
+            '发现硬编码色字面量——语义色请走 skin/FuncColors/MwColors，'
             '品牌色引 StarbucksCreamColors，特效装饰色加到 lib/tokens/effect_palette.dart 并具名',
       );
     });
@@ -85,7 +85,7 @@ void main() {
       // starbucks_tokens：招牌绿中调（渐变专用）
       expect(starbucks, contains('greenSignature'));
       // design_tokens：阴影三档 + 第三方品牌色 + 错误边界色
-      expect(design, contains('class MistralShadows'));
+      expect(design, contains('class MwShadows'));
       expect(design, contains('class ThirdPartyBrand'));
       expect(design, contains('class ErrorBoundaryColors'));
       expect(design, contains('mutedGold'));

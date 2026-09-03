@@ -28,7 +28,7 @@ class ExamSentenceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(sentence, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
+          Text(sentence, style: MwTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
           if (source.isNotEmpty) ...[
             SizedBox(height: context.design.spacing.sm),
             Container(
@@ -39,7 +39,7 @@ class ExamSentenceCard extends StatelessWidget {
               ),
               child: Text(
                 source,
-                style: MistralTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
+                style: MwTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
               ),
             ),
           ],

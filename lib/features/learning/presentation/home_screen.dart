@@ -356,8 +356,8 @@ class HomeScreen extends StatelessWidget {
                   color: skin.colors.cardBg,
                   shape: BoxShape.circle,
                   boxShadow: const [
-                    BoxShadow(color: MistralShadows.hairlineShadow, blurRadius: 0.5, offset: Offset(0, 0)),
-                    BoxShadow(color: MistralShadows.liftShadow, blurRadius: 1.0, offset: Offset(0, 1)),
+                    BoxShadow(color: MwShadows.hairlineShadow, blurRadius: 0.5, offset: Offset(0, 0)),
+                    BoxShadow(color: MwShadows.liftShadow, blurRadius: 1.0, offset: Offset(0, 1)),
                   ],
                 ),
                 child: Icon(Icons.calendar_today, size: 16, color: skin.colors.accent),
@@ -382,7 +382,7 @@ class HomeScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: GameBoyColors.screen, // GameBoy 绿（豁免）
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: MistralColors.black26, blurRadius: 6, offset: const Offset(0, 2))],
+              boxShadow: [BoxShadow(color: MwColors.black26, blurRadius: 6, offset: const Offset(0, 2))],
             ),
             child: const Center(
               child: Text(
@@ -418,8 +418,8 @@ class HomeScreen extends StatelessWidget {
                 color: skin.colors.cardBg,
                 shape: BoxShape.circle,
                 boxShadow: const [
-                  BoxShadow(color: MistralShadows.hairlineShadow, blurRadius: 0.5),
-                  BoxShadow(color: MistralShadows.liftShadow, blurRadius: 1.0, offset: Offset(0, 1)),
+                  BoxShadow(color: MwShadows.hairlineShadow, blurRadius: 0.5),
+                  BoxShadow(color: MwShadows.liftShadow, blurRadius: 1.0, offset: Offset(0, 1)),
                 ],
               ),
               child: Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 24),
@@ -583,7 +583,7 @@ class _CheckInBadgeState extends State<_CheckInBadge> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [AppColors.highlightOrange, MistralColors.sunshine500]),
+          gradient: const LinearGradient(colors: [AppColors.highlightOrange, MwColors.sunshine500]),
           borderRadius: BorderRadius.circular(999),
           boxShadow: [
             BoxShadow(

@@ -53,7 +53,7 @@ class _PhraseGroupCard extends StatelessWidget {
             ),
             child: Text(
               group.type == 0 ? '固定搭配' : '常用词组',
-              style: MistralTypography.caption.copyWith(color: skin.colors.accent),
+              style: MwTypography.caption.copyWith(color: skin.colors.accent),
             ),
           ),
           SizedBox(height: 8),
@@ -70,7 +70,7 @@ class _PhraseGroupCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           item.en,
-                          style: MistralTypography.bodyMd.copyWith(
+                          style: MwTypography.bodyMd.copyWith(
                             color: skin.colors.text1,
                             height: 1.4,
                             fontWeight: FontWeight.w500,
@@ -94,7 +94,7 @@ class _PhraseGroupCard extends StatelessWidget {
                   if (item.cn.isNotEmpty)
                     Padding(
                       padding: EdgeInsets.only(top: 2),
-                      child: Text(item.cn, style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                      child: Text(item.cn, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                     ),
                   if (item.exams.isNotEmpty)
                     Padding(
@@ -110,7 +110,7 @@ class _PhraseGroupCard extends StatelessWidget {
                                   color: skin.colors.cardBgAlt,
                                   borderRadius: BorderRadius.circular(context.design.radius.sm),
                                 ),
-                                child: Text(e, style: MistralTypography.micro.copyWith(color: skin.colors.text2)),
+                                child: Text(e, style: MwTypography.micro.copyWith(color: skin.colors.text2)),
                               ),
                             )
                             .toList(),

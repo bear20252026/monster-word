@@ -1,22 +1,22 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 由账号4生成
-// Leitner 学习引擎：翻译自 coreengine/LeitnerCardInMemoryImp.java（v3.2 源码 1:1）
+// Leitner 学习引擎
 // 学习分组：按等级 0-4 分层（listLevel0..4），每组 GROUP_SIZE 个单词
 import 'package:word_app/models/bb_word_process.dart';
 import 'package:word_app/core/engine/core_engine.dart';
 
-/// 学习策略（原版 LearnUtils.LearnStrategy）
+/// 学习策略（LearnUtils.LearnStrategy）
 class LearnStrategy {
-  final int groupSize; // 每组单词数（原版 GROUP_SIZE）
+  final int groupSize; // 每组单词数（GROUP_SIZE）
   final int newWordCount; // 新词数量
 
   const LearnStrategy({this.groupSize = 10, this.newWordCount = 10});
 }
 
-/// Leitner 学习引擎（翻译自 LeitnerCardInMemoryImp.java）
+/// Leitner 学习引擎
 class LeitnerCardEngine extends BBCoreEngine {
-  /// 当前学习单词的等级列表（原版 listLevel0..4）
+  /// 当前学习单词的等级列表（listLevel0..4）
   final List<BBWordProcess> level0 = []; // 新词/未学
   final List<BBWordProcess> level1 = []; // 第1层
   final List<BBWordProcess> level2 = []; // 第2层
@@ -42,7 +42,7 @@ class LeitnerCardEngine extends BBCoreEngine {
   LeitnerCardEngine({super.eventLabel = 'learn', LearnStrategy? strategy})
     : strategy = strategy ?? const LearnStrategy();
 
-  /// 初始化：填充等级列表（原版 fillTheArray）+ 随机打乱
+  /// 初始化：填充等级列表（fillTheArray）+ 随机打乱
   void init(List<BBWordProcess> allWords) {
     level0.clear();
     level1.clear();
@@ -77,7 +77,7 @@ class LeitnerCardEngine extends BBCoreEngine {
     _buildNextGroup();
   }
 
-  /// 构建下一组（原版逻辑：取 activeList 前 GROUP_SIZE 个）+ 组内打乱
+  /// 构建下一组（逻辑：取 activeList 前 GROUP_SIZE 个）+ 组内打乱
   void _buildNextGroup() {
     final active = _activeList;
     _currentGroup = active.length <= strategy.groupSize
@@ -151,7 +151,7 @@ class LeitnerCardEngine extends BBCoreEngine {
   @override
   int getWordMaxLevel() => 4;
 
-  /// 不认识：词降级/标记失败（原版 iDontKnow）
+  /// 不认识：词降级/标记失败（iDontKnow）
   @override
   void iDontKnow() {
     final w = currentWord();
@@ -162,7 +162,7 @@ class LeitnerCardEngine extends BBCoreEngine {
     _afterRating(w, remember: false);
   }
 
-  /// 模糊（原版 iMayKnow）
+  /// 模糊（iMayKnow）
   @override
   void iMayKnow() {
     final w = currentWord();
@@ -172,7 +172,7 @@ class LeitnerCardEngine extends BBCoreEngine {
     _afterRating(w, remember: false);
   }
 
-  /// 认识（原版 iReallyKnow）
+  /// 认识（iReallyKnow）
   @override
   void iReallyKnow() {
     final w = currentWord();
@@ -182,7 +182,7 @@ class LeitnerCardEngine extends BBCoreEngine {
     _afterRating(w, remember: true);
   }
 
-  /// 太简单（原版 tooEasy）
+  /// 太简单（tooEasy）
   @override
   void tooEasy() {
     final w = currentWord();

@@ -1,4 +1,3 @@
-// 移植自 v3.2 MyFavActivity
 // 单词本：收藏列表 + 学习入口 + 批量操作
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -121,7 +120,7 @@ class _MyFavPageState extends State<MyFavPage> {
             // 内容区
             Expanded(
               child: _isLoading
-                  ? Center(child: CircularProgressIndicator(color: MistralColors.primary))
+                  ? Center(child: CircularProgressIndicator(color: MwColors.primary))
                   : _words.isEmpty
                   ? _buildEmptyView(skin)
                   : _buildWordList(skin),
@@ -145,18 +144,18 @@ class _MyFavPageState extends State<MyFavPage> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('单词本', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('单词本', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const SizedBox(width: 8),
           // 收藏数量徽章
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: MistralColors.primary.withValues(alpha: 0.1),
+              color: MwColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               '${favorites.favoriteCount}',
-              style: MistralTypography.captionBold.copyWith(color: MistralColors.primary),
+              style: MwTypography.captionBold.copyWith(color: MwColors.primary),
             ),
           ),
           const Spacer(),
@@ -165,7 +164,7 @@ class _MyFavPageState extends State<MyFavPage> {
               onPressed: _selectAll,
               child: Text(
                 _selectedIndices.length == _words.length ? '取消全选' : '全选',
-                style: TextStyle(color: MistralColors.primary),
+                style: TextStyle(color: MwColors.primary),
               ),
             ),
             TextButton(
@@ -194,9 +193,9 @@ class _MyFavPageState extends State<MyFavPage> {
         children: [
           Icon(Icons.book_outlined, size: 64, color: skin.colors.text3),
           const SizedBox(height: 16),
-          Text('单词本为空', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('单词本为空', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const SizedBox(height: 8),
-          Text('学习时点击 ❤️ 收藏单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+          Text('学习时点击 ❤️ 收藏单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
           const SizedBox(height: 16),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -233,7 +232,7 @@ class _MyFavPageState extends State<MyFavPage> {
                 icon: const Icon(Icons.play_arrow, size: 22),
                 label: Text('学习单词本 (${_words.length} 词)'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: MistralColors.primary,
+                  backgroundColor: MwColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
                   elevation: 0,
@@ -256,7 +255,7 @@ class _MyFavPageState extends State<MyFavPage> {
                 background: Container(
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 20),
-                  color: MistralColors.danger,
+                  color: MwColors.danger,
                   child: const Icon(Icons.delete, color: Colors.white),
                 ),
                 confirmDismiss: (direction) async {
@@ -285,22 +284,19 @@ class _MyFavPageState extends State<MyFavPage> {
                       ? Checkbox(
                           value: isSelected,
                           onChanged: (_) => _toggleSelect(index),
-                          activeColor: MistralColors.primary,
+                          activeColor: MwColors.primary,
                         )
                       : null,
-                  title: Text(word.word, style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+                  title: Text(word.word, style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
                   subtitle: word.firstInterpretLine.isNotEmpty
                       ? Text(
                           word.firstInterpretLine,
-                          style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
+                          style: MwTypography.bodySm.copyWith(color: skin.colors.text3),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         )
                       : (word.usPron.isNotEmpty
-                            ? Text(
-                                '/${word.usPron}/',
-                                style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
-                              )
+                            ? Text('/${word.usPron}/', style: MwTypography.bodySm.copyWith(color: skin.colors.text3))
                             : null),
                   trailing: _isBatchEditMode ? null : Icon(Icons.chevron_right, color: skin.colors.text3),
                 ),

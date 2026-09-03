@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 由账号4生成
-// 本地存储层：翻译自 sharepreference/（v3.2 源码 1:1）
+// 本地存储层
 // AppPreferences（应用配置）+ UserPreferences（用户配置）+ GuidePreference（引导）
 
 import 'dart:convert';
@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// 基础 SharedPreferences 封装（原版 BaseSharedPreferences）
+/// 基础 SharedPreferences 封装（BaseSharedPreferences）
 abstract class BaseSharedPreferences {
   SharedPreferences? _prefs;
 
@@ -111,7 +111,7 @@ class SecureTokenStorage {
   }
 }
 
-/// 应用配置（翻译自 AppPreferences.java，key = "sysData"）
+/// 应用配置
 class AppPreferences extends BaseSharedPreferences {
   /// 每日新学单词数（settings 与 learning 共享 key，架构审计后上提）
   static const dailyNewWordsKey = 'daily_new_words_v1';
@@ -171,7 +171,7 @@ class AppPreferences extends BaseSharedPreferences {
   factory AppPreferences() => _instance;
   AppPreferences._();
 
-  // === 常量 key（原版 1:1）===
+  // === 常量 key（1:1）===
   static const String appConfig = 'app_config_list';
   static const String appLastRunTime = 'key_appRunLastTime';
   static const String appNeedMigrateToV3 = 'app_need_migrate_to_v3';
@@ -204,7 +204,7 @@ class AppPreferences extends BaseSharedPreferences {
   bool isSkinFollowSystem() => getBool(skinFollowSystem);
   Future<bool> setSkinFollowSystem(bool v) => setBool(skinFollowSystem, v);
 
-  /// 初始化（原版 getInstance 延迟初始化）
+  /// 初始化（getInstance 延迟初始化）
   @override
   Future<void> init() async {
     await super.init();
@@ -252,13 +252,13 @@ class AppPreferences extends BaseSharedPreferences {
   }
 }
 
-/// 用户配置（翻译自 UserPreferences.java，key = "userData"）
+/// 用户配置
 class UserPreferences extends BaseSharedPreferences {
   static final UserPreferences _instance = UserPreferences._();
   factory UserPreferences() => _instance;
   UserPreferences._();
 
-  // === 常量 key（原版 1:1）===
+  // === 常量 key（1:1）===
   static const String autoPlay = 'auto_play_voice';
   static const String checkInDate = 'checkIn_date';
   static const String enableLockScreen = 'enable_lock_screen';
@@ -331,7 +331,7 @@ class UserPreferences extends BaseSharedPreferences {
   Future<bool> setRemindTime(String value) => setString(remindTime, value);
 }
 
-/// 引导偏好（翻译自 GuidePreference.java）
+/// 引导偏好
 class GuidePreference extends BaseSharedPreferences {
   static final GuidePreference _instance = GuidePreference._();
   factory GuidePreference() => _instance;
@@ -360,7 +360,7 @@ class GuidePreference extends BaseSharedPreferences {
   Future<bool> setGuideSpellShown(bool v) => setBool(guideSpell, v);
 }
 
-/// 用户信息 Bean（翻译自 UserInfoBean.java）
+/// 用户信息 Bean
 class UserInfoBean {
   int userId;
   String nickname;

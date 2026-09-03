@@ -115,7 +115,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
               Expanded(
                 child: RichText(
                   text: TextSpan(
-                    style: MistralTypography.bodySm.copyWith(color: widget.skin.colors.text1, height: 1.4),
+                    style: MwTypography.bodySm.copyWith(color: widget.skin.colors.text1, height: 1.4),
                     children: widget.example.highlightedParts
                         .map(
                           (p) => TextSpan(
@@ -163,7 +163,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
             SizedBox(height: 4),
             TextGenerateEffect(
               text: widget.example.cn,
-              style: MistralTypography.micro.copyWith(color: widget.skin.colors.text3),
+              style: MwTypography.micro.copyWith(color: widget.skin.colors.text3),
               duration: const Duration(milliseconds: 600),
               delay: const Duration(milliseconds: 300),
             ),
@@ -171,10 +171,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
           if (widget.example.source.isNotEmpty)
             Padding(
               padding: EdgeInsets.only(top: 4),
-              child: Text(
-                widget.example.source,
-                style: MistralTypography.micro.copyWith(color: widget.skin.colors.text3),
-              ),
+              child: Text(widget.example.source, style: MwTypography.micro.copyWith(color: widget.skin.colors.text3)),
             ),
         ],
       ),

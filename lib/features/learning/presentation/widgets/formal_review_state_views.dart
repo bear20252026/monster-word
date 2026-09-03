@@ -31,12 +31,12 @@ class FormalReviewLoadErrorView extends StatelessWidget {
             children: [
               Icon(Icons.error_outline, color: skin.quizWrongText, size: 56),
               const SizedBox(height: 16),
-              Text('复习数据加载失败', style: MistralTypography.heading3.copyWith(color: skin.text1)),
+              Text('复习数据加载失败', style: MwTypography.heading3.copyWith(color: skin.text1)),
               const SizedBox(height: 8),
               Text(
                 '$error',
                 textAlign: TextAlign.center,
-                style: MistralTypography.bodySm.copyWith(color: skin.text3),
+                style: MwTypography.bodySm.copyWith(color: skin.text3),
               ),
               const SizedBox(height: 20),
               FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh), label: const Text('重试')),
@@ -68,10 +68,10 @@ class FormalReviewCompleteView extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               '今日复习完成！',
-              style: MistralTypography.heading3.copyWith(fontWeight: FontWeight.bold, color: skin.text1),
+              style: MwTypography.heading3.copyWith(fontWeight: FontWeight.bold, color: skin.text1),
             ),
             const SizedBox(height: 8),
-            Text('共复习 $done 个单词', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+            Text('共复习 $done 个单词', style: MwTypography.bodySm.copyWith(color: skin.text3)),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: onReturnHome,

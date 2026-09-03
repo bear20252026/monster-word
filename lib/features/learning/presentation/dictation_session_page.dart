@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 DictationSessionActivity
 // 单词听写会话：播放语音 → 用户拼写 → 即时反馈
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -121,15 +120,15 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.skin.colors.cardBg,
-        title: Text('听写完成', style: MistralTypography.heading4.copyWith(color: context.skin.colors.text1)),
+        title: Text('听写完成', style: MwTypography.heading4.copyWith(color: context.skin.colors.text1)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('正确：$_correctCount', style: MistralTypography.body.copyWith(color: MistralColors.success)),
-            Text('错误：$_wrongCount', style: MistralTypography.body.copyWith(color: MistralColors.danger)),
+            Text('正确：$_correctCount', style: MwTypography.body.copyWith(color: MwColors.success)),
+            Text('错误：$_wrongCount', style: MwTypography.body.copyWith(color: MwColors.danger)),
             const SizedBox(height: 8),
-            Text('正确率：$accuracy%', style: MistralTypography.bodyBold.copyWith(color: context.skin.colors.text1)),
+            Text('正确率：$accuracy%', style: MwTypography.bodyBold.copyWith(color: context.skin.colors.text1)),
           ],
         ),
         actions: [
@@ -145,7 +144,7 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
               Navigator.pop(ctx);
               _resetSession();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: MistralColors.primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: Colors.white),
             child: const Text('再来一次'),
           ),
         ],
@@ -188,7 +187,7 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
             children: [
               Icon(Icons.record_voice_over, size: 64, color: skin.colors.text3),
               const SizedBox(height: 16),
-              Text('暂无待学习单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+              Text('暂无待学习单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
               const SizedBox(height: 24),
               TextButton.icon(
                 onPressed: () => NavUtils.goHome(context),
@@ -238,17 +237,17 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
             onPressed: () => NavUtils.safePop(context),
           ),
           const SizedBox(width: 4),
-          Text('单词听写', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('单词听写', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: MistralColors.primary.withValues(alpha: 0.1),
+              color: MwColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(context.design.radius.pill),
             ),
             child: Text(
               '${_currentIndex + 1} / ${_words.length}',
-              style: MistralTypography.bodyBold.copyWith(color: MistralColors.primary),
+              style: MwTypography.bodyBold.copyWith(color: MwColors.primary),
             ),
           ),
           const SizedBox(width: 12),
@@ -269,16 +268,16 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
             height: 80,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: MistralColors.cream,
-              border: Border.all(color: MistralColors.primary, width: 2),
+              color: MwColors.cream,
+              border: Border.all(color: MwColors.primary, width: 2),
             ),
-            child: Icon(Icons.volume_up, size: 40, color: MistralColors.primary),
+            child: Icon(Icons.volume_up, size: 40, color: MwColors.primary),
           ),
         ),
         const SizedBox(height: 8),
         TextButton(
           onPressed: () => context.read<AudioPlaybackState>().playWord(_currentWord.word),
-          child: Text('点击播放', style: TextStyle(color: MistralColors.primary)),
+          child: Text('点击播放', style: TextStyle(color: MwColors.primary)),
         ),
         const SizedBox(height: 32),
         // 输入框
@@ -287,10 +286,10 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
           focusNode: _focusNode,
           enabled: !_showAnswer,
           textAlign: TextAlign.center,
-          style: MistralTypography.heading3.copyWith(color: skin.colors.text1),
+          style: MwTypography.heading3.copyWith(color: skin.colors.text1),
           decoration: InputDecoration(
             hintText: '请输入单词',
-            hintStyle: MistralTypography.body.copyWith(color: skin.colors.text3),
+            hintStyle: MwTypography.body.copyWith(color: skin.colors.text3),
             filled: true,
             fillColor: skin.colors.cardBg,
             border: OutlineInputBorder(
@@ -299,7 +298,7 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(context.design.radius.lg),
-              borderSide: BorderSide(color: MistralColors.primary, width: 2),
+              borderSide: BorderSide(color: MwColors.primary, width: 2),
             ),
           ),
           onSubmitted: (_) => _showAnswer ? _nextWord() : _checkAnswer(),
@@ -308,8 +307,8 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
         if (_showAnswer) ...[
           Text(
             _feedback,
-            style: MistralTypography.heading5.copyWith(
-              color: _feedback.startsWith('✓') ? MistralColors.success : MistralColors.danger,
+            style: MwTypography.heading5.copyWith(
+              color: _feedback.startsWith('✓') ? MwColors.success : MwColors.danger,
             ),
           ),
           const SizedBox(height: 16),
@@ -321,7 +320,7 @@ class _DictationSessionPageState extends State<DictationSessionPage> {
           child: ElevatedButton(
             onPressed: _showAnswer ? _nextWord : _checkAnswer,
             style: ElevatedButton.styleFrom(
-              backgroundColor: MistralColors.primary,
+              backgroundColor: MwColors.primary,
               foregroundColor: AppColors.white100,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
               padding: const EdgeInsets.symmetric(vertical: 14),

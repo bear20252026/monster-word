@@ -1,4 +1,3 @@
-// 移植自 v3.2 NetDiagnosisActivity
 // 网络诊断：真实检测网络连接、DNS 解析与关键服务可达性
 // （数据源为 NetworkDiagnosisService，dart:io 实现，非硬编码结果）。
 import 'package:flutter/material.dart';
@@ -63,7 +62,7 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
                     Center(
                       child: Padding(
                         padding: EdgeInsets.only(top: 80),
-                        child: Text('点击"开始诊断"检测网络状态', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+                        child: Text('点击"开始诊断"检测网络状态', style: MwTypography.body.copyWith(color: skin.colors.text3)),
                       ),
                     ),
                 ],
@@ -77,7 +76,7 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
                 child: ElevatedButton(
                   onPressed: _isRunning ? null : _startDiagnosis,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: MistralColors.primary,
+                    backgroundColor: MwColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                   ),
@@ -110,7 +109,7 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
             onPressed: () => Navigator.pop(context),
           ),
           SizedBox(width: 4),
-          Text('网络诊断', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('网络诊断', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );
@@ -129,7 +128,7 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
         children: [
           Icon(
             r.success ? Icons.check_circle : Icons.error,
-            color: r.success ? MistralColors.success : MistralColors.danger,
+            color: r.success ? MwColors.success : MwColors.danger,
             size: 24,
           ),
           SizedBox(width: 12),
@@ -137,8 +136,8 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(r.name, style: MistralTypography.bodyBold.copyWith(color: skin.colors.text1)),
-                Text(r.detail, style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                Text(r.name, style: MwTypography.bodyBold.copyWith(color: skin.colors.text1)),
+                Text(r.detail, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
               ],
             ),
           ),

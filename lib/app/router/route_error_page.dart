@@ -27,7 +27,7 @@ class RouteErrorPage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.warning_amber_rounded, size: 56, color: MistralColors.mutedGold),
+              const Icon(Icons.warning_amber_rounded, size: 56, color: MwColors.mutedGold),
               const SizedBox(height: 16),
               Text(
                 '无法打开 $routeName',

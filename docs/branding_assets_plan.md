@@ -130,17 +130,17 @@ flutter_launcher_icons:
 理由：
 
 1. **用户感知层面的 breaking 变化**：品牌重塑（名称/图标/配色）+ UI 重构属于大改版，语义化版本应升 major；
-2. **避免升级检测混乱**：历史产物已占用 v1.0（不背单词_v1.0_Windows_x64.zip），同号不同内容会让"是否更新过"无从判断；2.0.0 与旧包一刀切开；
+2. **避免升级检测混乱**：历史产物已占用 v1.0（原应用_v1.0_Windows_x64.zip），同号不同内容会让"是否更新过"无从判断；2.0.0 与旧包一刀切开；
 3. **build number +2**：保证大于任何已分发包的 build号，为未来接入应用内更新检测留好单调递增空间；
-4. 心理层面：2.0 明确传达"这是新产品"，帮助切断与「不背单词」时期的联想。
+4. 心理层面：2.0 明确传达"这是新产品"，帮助切断与原应用时期的联想。
 
 实施：仅改 pubspec.yaml `version: 2.0.0+2`，Windows 版本资源由 flutter 构建自动注入 Runner.rc，无需手改。
 
 ---
 
-## 5. 商标风险处置：历史产物「不背单词」
+## 5. 商标风险处置：历史产物原应用
 
-审计确认 release/ 下有 `不背单词_v1.0_Windows_x64.zip` 及同名目录。「不背单词」是在册的知名背单词 App 商标。
+审计确认 release/ 下有 `原应用_v1.0_Windows_x64.zip` 及同名目录。原应用是在册的知名背单词 App 商标。
 
 **风险评估**：商标侵权风险主要产生于**商业性使用造成公众混淆**。该 zip 仅存在于本地开发机、从未对外分发 → 当前无实际风险，但拖得越久越容易被误传出去。
 
@@ -148,11 +148,11 @@ flutter_launcher_icons:
 
 ```powershell
 New-Item -ItemType Directory -Path release\_archive
-Move-Item "release\不背单词_v1.0_Windows_x64.zip" "release\_archive\word_app_legacy_v1.0_20260822.zip"
-Move-Item "release\不背单词" "release\_archive\word_app_legacy_v1.0_20260822"
+Move-Item "release\原应用_v1.0_Windows_x64.zip" "release\_archive\word_app_legacy_v1.0_20260822.zip"
+Move-Item "release\原应用" "release\_archive\word_app_legacy_v1.0_20260822"
 ```
 
-- 改名去掉「不背单词」字样，保留日期便于回溯；
+- 改名去掉原应用字样，保留日期便于回溯；
 - 移入 `_archive` 子目录与新产物隔离，防止误上传/误发；
 - 后续正式发布流程中加一条纪律：**发布包命名一律 `MonsterWord_vX.Y.Z_Windows_x64.zip`**，杜绝品牌词混入。
 

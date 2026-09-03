@@ -166,7 +166,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                               Icon(
                                 e.delta >= 0 ? Icons.trending_up : Icons.trending_down,
                                 size: 18,
-                                color: e.delta >= 0 ? skin.success : MistralColors.danger,
+                                color: e.delta >= 0 ? skin.success : MwColors.danger,
                               ),
                               const SizedBox(width: 10),
                               Expanded(
@@ -184,7 +184,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
-                                  color: e.delta >= 0 ? skin.success : MistralColors.danger,
+                                  color: e.delta >= 0 ? skin.success : MwColors.danger,
                                 ),
                               ),
                             ],

@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 UriSchemeProcessActivity
 // URI Scheme 处理：处理 deep link 跳转
 import 'package:flutter/material.dart';
 
@@ -31,8 +30,8 @@ class UriSchemePage extends StatelessWidget {
           children: [
             Text(
               'Monster Word',
-              style: MistralTypography.heading4.copyWith(
-                color: MistralColors.primary,
+              style: MwTypography.heading4.copyWith(
+                color: MwColors.primary,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
               ),
@@ -41,7 +40,7 @@ class UriSchemePage extends StatelessWidget {
             SizedBox(
               width: 28,
               height: 28,
-              child: CircularProgressIndicator(strokeWidth: 2.5, color: MistralColors.primary),
+              child: CircularProgressIndicator(strokeWidth: 2.5, color: MwColors.primary),
             ),
           ],
         ),

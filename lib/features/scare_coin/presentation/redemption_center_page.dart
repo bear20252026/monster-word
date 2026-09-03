@@ -132,7 +132,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
             tooltip: '返回',
             onPressed: () => Navigator.pop(context),
           ),
-          title: Text('兑换中心', style: MistralTypography.heading5.copyWith(color: colors.text1)),
+          title: Text('兑换中心', style: MwTypography.heading5.copyWith(color: colors.text1)),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1),
             child: Container(height: 1, color: colors.divider),
@@ -157,7 +157,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
                   Expanded(
                     child: Text(
                       '所有功能对所有人开放；兑换为纯收集纪念，不附带任何权益',
-                      style: MistralTypography.caption.copyWith(color: colors.text2),
+                      style: MwTypography.caption.copyWith(color: colors.text2),
                     ),
                   ),
                 ],
@@ -197,24 +197,18 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '我的尖叫币',
-                  style: MistralTypography.bodySm.copyWith(color: colors.onGlassAccent.withValues(alpha: 0.8)),
-                ),
+                Text('我的尖叫币', style: MwTypography.bodySm.copyWith(color: colors.onGlassAccent.withValues(alpha: 0.8))),
                 const SizedBox(height: 4),
-                Text('$_coins', style: MistralTypography.heading3.copyWith(color: colors.onGlassAccent)),
+                Text('$_coins', style: MwTypography.heading3.copyWith(color: colors.onGlassAccent)),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                '今日已获得',
-                style: MistralTypography.bodySm.copyWith(color: colors.onGlassAccent.withValues(alpha: 0.8)),
-              ),
+              Text('今日已获得', style: MwTypography.bodySm.copyWith(color: colors.onGlassAccent.withValues(alpha: 0.8))),
               const SizedBox(height: 4),
-              Text('+$_todayEarned', style: MistralTypography.heading4.copyWith(color: colors.onGlassAccent)),
+              Text('+$_todayEarned', style: MwTypography.heading4.copyWith(color: colors.onGlassAccent)),
             ],
           ),
         ],
@@ -247,7 +241,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
         title: Row(
           children: [
             Flexible(
-              child: Text(item.title, style: MistralTypography.bodyBold.copyWith(color: colors.text1)),
+              child: Text(item.title, style: MwTypography.bodyBold.copyWith(color: colors.text1)),
             ),
             if (redeemed) ...[
               const SizedBox(width: 6),
@@ -257,7 +251,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
                   color: colors.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text('已拥有', style: MistralTypography.micro.copyWith(color: colors.accent)),
+                child: Text('已拥有', style: MwTypography.micro.copyWith(color: colors.accent)),
               ),
             ],
           ],
@@ -266,7 +260,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
           padding: const EdgeInsets.only(top: 4),
           child: Text(
             '${item.description} · ${item.cost} 币',
-            style: MistralTypography.caption.copyWith(color: colors.text2),
+            style: MwTypography.caption.copyWith(color: colors.text2),
           ),
         ),
         trailing: redeemed
@@ -282,7 +276,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
                 onPressed: _redeeming ? null : () => _redeem(item),
                 child: _redeeming
                     ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(item.cost.toString(), style: MistralTypography.micro),
+                    : Text(item.cost.toString(), style: MwTypography.micro),
               ),
       ),
     );

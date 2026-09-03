@@ -107,7 +107,7 @@ class _NotFoundScaffold extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(failed ? Icons.error_outline : Icons.search_off, size: 56, color: MistralColors.mutedGold),
+              Icon(failed ? Icons.error_outline : Icons.search_off, size: 56, color: MwColors.mutedGold),
               SizedBox(height: 16),
               Text(
                 failed ? '查询失败' : '未找到「$wordName」',

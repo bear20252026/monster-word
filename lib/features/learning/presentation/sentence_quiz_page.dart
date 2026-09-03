@@ -132,15 +132,15 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.skin.colors.cardBg,
-        title: Text('测验完成', style: MistralTypography.heading4.copyWith(color: context.skin.colors.text1)),
+        title: Text('测验完成', style: MwTypography.heading4.copyWith(color: context.skin.colors.text1)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('正确：$_correctCount', style: MistralTypography.body.copyWith(color: MistralColors.success)),
-            Text('错误：$_wrongCount', style: MistralTypography.body.copyWith(color: MistralColors.danger)),
+            Text('正确：$_correctCount', style: MwTypography.body.copyWith(color: MwColors.success)),
+            Text('错误：$_wrongCount', style: MwTypography.body.copyWith(color: MwColors.danger)),
             const SizedBox(height: 8),
-            Text('正确率：$accuracy%', style: MistralTypography.bodyBold.copyWith(color: context.skin.colors.text1)),
+            Text('正确率：$accuracy%', style: MwTypography.bodyBold.copyWith(color: context.skin.colors.text1)),
           ],
         ),
         actions: [
@@ -156,7 +156,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
               Navigator.pop(ctx);
               _reset();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: MistralColors.primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: Colors.white),
             child: const Text('再来一次'),
           ),
         ],
@@ -197,7 +197,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
             children: [
               Icon(Icons.check_circle_outline, size: 64, color: skin.colors.text3),
               const SizedBox(height: 16),
-              Text('暂无带例句的单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+              Text('暂无带例句的单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
             ],
           ),
         ),
@@ -240,17 +240,17 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
             onPressed: () => NavUtils.safePop(context),
           ),
           const SizedBox(width: 4),
-          Text('句子测验', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('句子测验', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: MistralColors.primary.withValues(alpha: 0.1),
+              color: MwColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(context.design.radius.pill),
             ),
             child: Text(
               '${_currentIndex + 1} / ${_words.length}',
-              style: MistralTypography.bodyBold.copyWith(color: MistralColors.primary),
+              style: MwTypography.bodyBold.copyWith(color: MwColors.primary),
             ),
           ),
           const SizedBox(width: 12),
@@ -265,7 +265,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 中文释义提示
-        Text('请选择正确的英文句子：', style: MistralTypography.bodyBold.copyWith(color: skin.colors.text2)),
+        Text('请选择正确的英文句子：', style: MwTypography.bodyBold.copyWith(color: skin.colors.text2)),
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
@@ -274,10 +274,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
             color: skin.colors.cardBgAlt,
             borderRadius: BorderRadius.circular(context.design.radius.lg),
           ),
-          child: Text(
-            _currentWord.cleanInterpret,
-            style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
-          ),
+          child: Text(_currentWord.cleanInterpret, style: MwTypography.heading4.copyWith(color: skin.colors.text1)),
         ),
         const SizedBox(height: 24),
         // 选项列表
@@ -289,7 +286,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
             child: ElevatedButton(
               onPressed: _next,
               style: ElevatedButton.styleFrom(
-                backgroundColor: MistralColors.primary,
+                backgroundColor: MwColors.primary,
                 foregroundColor: AppColors.white100,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -309,15 +306,15 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
 
     if (_showAnswer) {
       if (option.isCorrect) {
-        borderColor = MistralColors.success;
-        bgColor = MistralColors.success.withValues(alpha: 0.1);
+        borderColor = MwColors.success;
+        bgColor = MwColors.success.withValues(alpha: 0.1);
       } else if (isSelected) {
-        borderColor = MistralColors.danger;
-        bgColor = MistralColors.danger.withValues(alpha: 0.1);
+        borderColor = MwColors.danger;
+        bgColor = MwColors.danger.withValues(alpha: 0.1);
       }
     } else if (isSelected) {
-      borderColor = MistralColors.primary;
-      bgColor = MistralColors.primary.withValues(alpha: 0.1);
+      borderColor = MwColors.primary;
+      bgColor = MwColors.primary.withValues(alpha: 0.1);
     }
 
     return GestureDetector(
@@ -343,18 +340,18 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
               child: Center(
                 child: Text(
                   String.fromCharCode(65 + index), // A, B, C, D
-                  style: MistralTypography.bodyBold.copyWith(color: borderColor),
+                  style: MwTypography.bodyBold.copyWith(color: borderColor),
                 ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(option.text, style: MistralTypography.body.copyWith(color: skin.colors.text1)),
+              child: Text(option.text, style: MwTypography.body.copyWith(color: skin.colors.text1)),
             ),
             if (_showAnswer && option.isCorrect)
-              Icon(Icons.check_circle, color: MistralColors.success, size: 20)
+              Icon(Icons.check_circle, color: MwColors.success, size: 20)
             else if (_showAnswer && isSelected && !option.isCorrect)
-              Icon(Icons.cancel, color: MistralColors.danger, size: 20),
+              Icon(Icons.cancel, color: MwColors.danger, size: 20),
           ],
         ),
       ),

@@ -63,7 +63,7 @@ void main() {
     final againBtn = tester.widget<OutlinedButton>(
       find.ancestor(of: find.text('不认识'), matching: find.byType(OutlinedButton)),
     );
-    expect(againBtn.style?.foregroundColor?.resolve({}), MistralColors.warning);
+    expect(againBtn.style?.foregroundColor?.resolve({}), MwColors.warning);
   });
 
   testWidgets('认识后队列清空进入完成视图，可返回', (tester) async {

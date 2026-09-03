@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 FootMarkActivity
 // 足迹页：显示学习记录入口（全部已学单词、生词本等）
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -106,7 +105,7 @@ class FootMarkPage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('足迹', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('足迹', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );
@@ -117,17 +116,14 @@ class FootMarkPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [MistralColors.cream, MistralColors.creamDeeper]),
+        gradient: LinearGradient(colors: [MwColors.cream, MwColors.creamDeeper]),
         borderRadius: BorderRadius.circular(context.design.radius.xl),
       ),
       child: Column(
         children: [
-          Text(
-            '${statistics.totalLearnedDays}',
-            style: MistralTypography.heading1.copyWith(color: MistralColors.primary),
-          ),
+          Text('${statistics.totalLearnedDays}', style: MwTypography.heading1.copyWith(color: MwColors.primary)),
           const SizedBox(height: 4),
-          Text('累计学习天数', style: MistralTypography.body.copyWith(color: MistralColors.slate)),
+          Text('累计学习天数', style: MwTypography.body.copyWith(color: MwColors.slate)),
         ],
       ),
     );
@@ -156,16 +152,16 @@ class FootMarkPage extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: MistralColors.cream,
+                color: MwColors.cream,
                 borderRadius: BorderRadius.circular(context.design.radius.md),
               ),
-              child: Icon(icon, color: MistralColors.primary, size: 24),
+              child: Icon(icon, color: MwColors.primary, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(title, style: MistralTypography.bodyBold.copyWith(color: skin.colors.text1)),
+              child: Text(title, style: MwTypography.bodyBold.copyWith(color: skin.colors.text1)),
             ),
-            Text('$count', style: MistralTypography.heading5.copyWith(color: MistralColors.primary)),
+            Text('$count', style: MwTypography.heading5.copyWith(color: MwColors.primary)),
             const SizedBox(width: 8),
             Icon(Icons.chevron_right, color: skin.colors.text3),
           ],

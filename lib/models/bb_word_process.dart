@@ -1,14 +1,14 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 由账号4生成
-// 数据模型层：翻译自 bean/BBWordProcess.java（v3.2 源码 1:1）
+// 数据模型层
 // 单词学习进度（SRS 核心数据模型，对应 SQLite 用户表字段）
 
 import 'dart:convert';
 
 import 'package:word_app/models/lexis_dict.dart';
 
-/// 单词学习进度（翻译自 BBWordProcess.java）
+/// 单词学习进度
 class BBWordProcess {
   int id;
   String word;
@@ -41,7 +41,7 @@ class BBWordProcess {
   String zpk; // zpk 文件名
   String oldZpk; // 旧 zpk
 
-  // 派生数据（原版有 setWordBaseInfo/setLexisDict）
+  // 派生数据（含 setWordBaseInfo/setLexisDict 派生字段）
   List<Interpret> confusedList = [];
   List<String> confusedWordList = [];
   List<String> confusedWordExpList = [];

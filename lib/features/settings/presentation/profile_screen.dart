@@ -91,7 +91,7 @@ class ProfileScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.only(top: 8, bottom: 24),
-      color: MistralColors.cream, // 奶油画布纯色（token：#F2F0EB）
+      color: MwColors.cream, // 奶油画布纯色（token：#F2F0EB）
       child: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: resp.contentWidth),
@@ -108,10 +108,10 @@ class ProfileScreen extends StatelessWidget {
                       children: [
                         Text(
                           profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
-                          style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
+                          style: MwTypography.heading4.copyWith(color: skin.colors.text1),
                         ),
                         const SizedBox(height: 4),
-                        Text('VIP 会员', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                        Text('VIP 会员', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                       ],
                     ),
                   ],
@@ -124,7 +124,7 @@ class ProfileScreen extends StatelessWidget {
                     // 用户 ID（用户可自定义）
                     Text(
                       profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
-                      style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
+                      style: MwTypography.heading4.copyWith(color: skin.colors.text1),
                     ),
                   ],
                 ),
@@ -284,7 +284,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: Text(label, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1)),
+                child: Text(label, style: MwTypography.bodyMd.copyWith(color: skin.colors.text1)),
               ),
               if (onTap != null) Icon(Icons.chevron_right, size: 18, color: skin.colors.text3),
             ],

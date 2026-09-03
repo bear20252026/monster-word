@@ -156,9 +156,9 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
               ),
             ),
             SizedBox(height: 32),
-            Text('还没有签到记录', style: MistralTypography.heading5.copyWith(color: skin.text1)),
+            Text('还没有签到记录', style: MwTypography.heading5.copyWith(color: skin.text1)),
             SizedBox(height: 8),
-            Text('每天签到，养成学习好习惯', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+            Text('每天签到，养成学习好习惯', style: MwTypography.bodyMd.copyWith(color: skin.text3)),
             SizedBox(height: 32),
             SizedBox(
               width: 200,
@@ -197,7 +197,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
         SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.fromLTRB(resp.pageMargin, 24, resp.pageMargin, 8),
-            child: Text('签到详情', style: MistralTypography.heading5.copyWith(color: skin.text1)),
+            child: Text('签到详情', style: MwTypography.heading5.copyWith(color: skin.text1)),
           ),
         ),
         // 签到详情列表
@@ -221,7 +221,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
             onPressed: () => Navigator.pop(context),
           ),
           SizedBox(width: 4),
-          Text('签到历史', style: MistralTypography.heading5.copyWith(color: skin.text1)),
+          Text('签到历史', style: MwTypography.heading5.copyWith(color: skin.text1)),
         ],
       ),
     );
@@ -237,8 +237,8 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
           color: skin.cardBg,
           borderRadius: BorderRadius.circular(context.design.radius.xl),
           boxShadow: const [
-            BoxShadow(color: MistralShadows.hairlineShadow, blurRadius: 0.5, offset: Offset(0, 0)),
-            BoxShadow(color: MistralShadows.liftShadow, blurRadius: 1, offset: Offset(0, 1)),
+            BoxShadow(color: MwShadows.hairlineShadow, blurRadius: 0.5, offset: Offset(0, 0)),
+            BoxShadow(color: MwShadows.liftShadow, blurRadius: 1, offset: Offset(0, 1)),
           ],
         ),
         child: Row(
@@ -252,7 +252,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                     style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: skin.accent),
                   ),
                   SizedBox(height: 4),
-                  Text('累计天数', style: MistralTypography.caption.copyWith(color: skin.text3)),
+                  Text('累计天数', style: MwTypography.caption.copyWith(color: skin.text3)),
                 ],
               ),
             ),
@@ -282,7 +282,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                     ],
                   ),
                   SizedBox(height: 4),
-                  Text('连续天数', style: MistralTypography.caption.copyWith(color: skin.text3)),
+                  Text('连续天数', style: MwTypography.caption.copyWith(color: skin.text3)),
                 ],
               ),
             ),
@@ -329,7 +329,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                     ),
                   ),
                   SizedBox(height: 4),
-                  Text('本月进度', style: MistralTypography.caption.copyWith(color: skin.text3)),
+                  Text('本月进度', style: MwTypography.caption.copyWith(color: skin.text3)),
                 ],
               ),
             ),
@@ -356,7 +356,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
               // 月份标签
               Text(
                 '${_currentMonth.year}年${_currentMonth.month}月',
-                style: MistralTypography.heading5.copyWith(color: skin.text1),
+                style: MwTypography.heading5.copyWith(color: skin.text1),
               ),
               SizedBox(width: 8),
               _MonthSwitchArrow(
@@ -528,7 +528,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
               borderRadius: BorderRadius.circular(context.design.radius.lg),
             ),
             child: Center(
-              child: Text('本月还没有签到记录', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+              child: Text('本月还没有签到记录', style: MwTypography.bodyMd.copyWith(color: skin.text3)),
             ),
           ),
         ),
@@ -579,7 +579,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: skin.text1),
                             ),
                             SizedBox(width: 8),
-                            Text(weekday, style: MistralTypography.caption.copyWith(color: skin.text3)),
+                            Text(weekday, style: MwTypography.caption.copyWith(color: skin.text3)),
                             if (isToday) ...[
                               SizedBox(width: 8),
                               Container(
@@ -600,7 +600,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                         Builder(
                           builder: (ctx) => Text(
                             '签到成功 +${ctx.watch<CheckInHistoryReader>().checkInReward} 尖叫币',
-                            style: MistralTypography.caption.copyWith(color: skin.text3),
+                            style: MwTypography.caption.copyWith(color: skin.text3),
                           ),
                         ),
                       ],

@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 UIThemeSelectActivity
 // 主题选择：切换应用主题/皮肤
 import 'package:flutter/material.dart';
 
@@ -67,7 +66,7 @@ class UIThemeSelectPage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           SizedBox(width: 4),
-          Text('主题设置', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('主题设置', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
         ],
       ),
     );
@@ -86,8 +85,8 @@ class UIThemeSelectPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('跟随系统', style: MistralTypography.body.copyWith(color: skin.colors.text1)),
-                Text('根据系统深色/浅色自动切换', style: MistralTypography.caption.copyWith(color: skin.colors.text2)),
+                Text('跟随系统', style: MwTypography.body.copyWith(color: skin.colors.text1)),
+                Text('根据系统深色/浅色自动切换', style: MwTypography.caption.copyWith(color: skin.colors.text2)),
               ],
             ),
           ),
@@ -109,7 +108,7 @@ class UIThemeSelectPage extends StatelessWidget {
       case 'starbucks_dark':
         return '深绿夜空，沉浸式学习';
       case 'bright':
-        return 'Mistral AI 风格，清爽明亮';
+        return '明亮风格，清爽护眼';
       case 'dark':
         return '护眼深色，夜间友好';
       case 'pure_black':
@@ -147,10 +146,7 @@ class UIThemeSelectPage extends StatelessWidget {
         decoration: BoxDecoration(
           color: skin.colors.cardBgAlt,
           borderRadius: BorderRadius.circular(context.design.radius.lg),
-          border: Border.all(
-            color: isSelected ? MistralColors.primary : skin.colors.divider,
-            width: isSelected ? 2 : 1,
-          ),
+          border: Border.all(color: isSelected ? MwColors.primary : skin.colors.divider, width: isSelected ? 2 : 1),
         ),
         child: Row(
           children: [
@@ -168,12 +164,12 @@ class UIThemeSelectPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: MistralTypography.bodyBold.copyWith(color: skin.colors.text1)),
-                  Text(description, style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                  Text(name, style: MwTypography.bodyBold.copyWith(color: skin.colors.text1)),
+                  Text(description, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                 ],
               ),
             ),
-            if (isSelected) Icon(Icons.check_circle, color: MistralColors.primary, size: 24),
+            if (isSelected) Icon(Icons.check_circle, color: MwColors.primary, size: 24),
           ],
         ),
       ),

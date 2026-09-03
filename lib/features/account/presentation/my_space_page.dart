@@ -31,8 +31,8 @@ class MySpacePage extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  MistralColors.sunshine300.withValues(alpha: 0.35),
-                  MistralColors.sunshine500.withValues(alpha: 0.08),
+                  MwColors.sunshine300.withValues(alpha: 0.35),
+                  MwColors.sunshine500.withValues(alpha: 0.08),
                   skin.pageBg,
                 ],
                 stops: const [0.0, 0.6, 1.0],
@@ -113,12 +113,12 @@ class MySpacePage extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [MistralColors.sunshine300, MistralColors.sunshine500],
+                          colors: [MwColors.sunshine300, MwColors.sunshine500],
                         ),
                         border: Border.all(color: skin.cardBg, width: 3),
                         boxShadow: [
                           BoxShadow(
-                            color: MistralColors.sunshine500.withValues(alpha: 0.3),
+                            color: MwColors.sunshine500.withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -133,7 +133,7 @@ class MySpacePage extends StatelessWidget {
                         width: 26,
                         height: 26,
                         decoration: BoxDecoration(
-                          color: MistralColors.sunshine500,
+                          color: MwColors.sunshine500,
                           shape: BoxShape.circle,
                           border: Border.all(color: skin.cardBg, width: 2),
                         ),
@@ -155,7 +155,7 @@ class MySpacePage extends StatelessWidget {
                 children: [
                   Text(
                     profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
-                    style: MistralTypography.bodyMd.copyWith(color: skin.text2),
+                    style: MwTypography.bodyMd.copyWith(color: skin.text2),
                   ),
                 ],
               ),
@@ -176,12 +176,12 @@ class MySpacePage extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [MistralColors.sunshine300, MistralColors.sunshine500],
+                          colors: [MwColors.sunshine300, MwColors.sunshine500],
                         ),
                         border: Border.all(color: skin.cardBg, width: 3),
                         boxShadow: [
                           BoxShadow(
-                            color: MistralColors.sunshine500.withValues(alpha: 0.3),
+                            color: MwColors.sunshine500.withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -196,7 +196,7 @@ class MySpacePage extends StatelessWidget {
                         width: 26,
                         height: 26,
                         decoration: BoxDecoration(
-                          color: MistralColors.sunshine500,
+                          color: MwColors.sunshine500,
                           shape: BoxShape.circle,
                           border: Border.all(color: skin.cardBg, width: 2),
                         ),
@@ -214,7 +214,7 @@ class MySpacePage extends StatelessWidget {
               SizedBox(height: 10),
               Text(
                 profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
-                style: MistralTypography.bodyMd.copyWith(color: skin.text2),
+                style: MwTypography.bodyMd.copyWith(color: skin.text2),
               ),
             ],
           );
@@ -276,16 +276,16 @@ class _MenuItem extends StatelessWidget {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: MistralColors.sunshine300.withValues(alpha: 0.15),
+            color: MwColors.sunshine300.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: skin.accent, size: 20),
         ),
         title: Text(
           title,
-          style: MistralTypography.bodyMd.copyWith(fontWeight: FontWeight.w500, color: skin.text1),
+          style: MwTypography.bodyMd.copyWith(fontWeight: FontWeight.w500, color: skin.text1),
         ),
-        subtitle: Text(subtitle, style: MistralTypography.caption.copyWith(color: skin.text3)),
+        subtitle: Text(subtitle, style: MwTypography.caption.copyWith(color: skin.text3)),
         trailing: Icon(Icons.chevron_right, color: skin.text3, size: 20),
         onTap: onTap,
       ),

@@ -141,11 +141,11 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('句库学习', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('句库学习', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Text('$_masteredCount/$_total', style: MistralTypography.bodySm.copyWith(color: skin.colors.text2)),
+            child: Text('$_masteredCount/$_total', style: MwTypography.bodySm.copyWith(color: skin.colors.text2)),
           ),
         ],
       ),
@@ -161,7 +161,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
           value: _total == 0 ? 0 : _masteredCount / _total,
           minHeight: 4,
           backgroundColor: skin.colors.divider,
-          color: MistralColors.primary,
+          color: MwColors.primary,
         ),
       ),
     );
@@ -203,9 +203,9 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('想想缺失的单词', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+        Text('想想缺失的单词', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
         const SizedBox(height: 16),
-        Text(_maskedSentence(fav), style: MistralTypography.heading4.copyWith(color: skin.colors.text1, height: 1.6)),
+        Text(_maskedSentence(fav), style: MwTypography.heading4.copyWith(color: skin.colors.text1, height: 1.6)),
         const SizedBox(height: 24),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -214,13 +214,13 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
               Icon(Icons.menu_book, size: 14, color: skin.colors.text3),
               const SizedBox(width: 4),
               Flexible(
-                child: Text('— ${data.b}', style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
+                child: Text('— ${data.b}', style: MwTypography.micro.copyWith(color: skin.colors.text3)),
               ),
             ],
           ],
         ),
         const SizedBox(height: 24),
-        Text('点击卡片查看答案', style: MistralTypography.bodySm.copyWith(color: MistralColors.primary)),
+        Text('点击卡片查看答案', style: MwTypography.bodySm.copyWith(color: MwColors.primary)),
       ],
     );
   }
@@ -235,12 +235,12 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: MistralColors.primary.withValues(alpha: 0.1),
+                color: MwColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(context.design.radius.pill),
               ),
               child: Text(
                 fav.word,
-                style: MistralTypography.body.copyWith(color: MistralColors.primary, fontWeight: FontWeight.w700),
+                style: MwTypography.body.copyWith(color: MwColors.primary, fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -248,22 +248,22 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
           Center(
             child: IconButton(
               icon: const Icon(Icons.volume_up),
-              color: MistralColors.primary,
+              color: MwColors.primary,
               onPressed: () => _playAudio(fav),
             ),
           ),
           const SizedBox(height: 8),
           Text.rich(
-            TextSpan(children: _highlightedSentence(fav, MistralColors.primary)),
-            style: MistralTypography.heading4.copyWith(color: skin.colors.text1, height: 1.6),
+            TextSpan(children: _highlightedSentence(fav, MwColors.primary)),
+            style: MwTypography.heading4.copyWith(color: skin.colors.text1, height: 1.6),
           ),
           if (data.c.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Text(data.c, style: MistralTypography.body.copyWith(color: skin.colors.text2)),
+            Text(data.c, style: MwTypography.body.copyWith(color: skin.colors.text2)),
           ],
           if (data.b.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text('— ${data.b}', style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
+            Text('— ${data.b}', style: MwTypography.micro.copyWith(color: skin.colors.text3)),
           ],
         ],
       ),
@@ -278,7 +278,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
         child: ElevatedButton(
           onPressed: () => setState(() => _revealed = true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: MistralColors.primary,
+            backgroundColor: MwColors.primary,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
           ),
@@ -294,8 +294,8 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
             child: OutlinedButton(
               onPressed: _markAgain,
               style: OutlinedButton.styleFrom(
-                foregroundColor: MistralColors.warning,
-                side: const BorderSide(color: MistralColors.warning),
+                foregroundColor: MwColors.warning,
+                side: const BorderSide(color: MwColors.warning),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
               ),
               child: const Text('不认识'),
@@ -309,7 +309,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
             child: ElevatedButton(
               onPressed: _markMastered,
               style: ElevatedButton.styleFrom(
-                backgroundColor: MistralColors.primary,
+                backgroundColor: MwColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
               ),
@@ -326,11 +326,11 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.emoji_events, size: 72, color: MistralColors.primary),
+          const Icon(Icons.emoji_events, size: 72, color: MwColors.primary),
           const SizedBox(height: 16),
-          Text('全部掌握！', style: MistralTypography.heading3.copyWith(color: skin.colors.text1)),
+          Text('全部掌握！', style: MwTypography.heading3.copyWith(color: skin.colors.text1)),
           const SizedBox(height: 8),
-          Text('共 $_total 个例句都学会了', style: MistralTypography.body.copyWith(color: skin.colors.text2)),
+          Text('共 $_total 个例句都学会了', style: MwTypography.body.copyWith(color: skin.colors.text2)),
           const SizedBox(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -338,15 +338,15 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
               OutlinedButton(
                 onPressed: _restart,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: MistralColors.primary,
-                  side: const BorderSide(color: MistralColors.primary),
+                  foregroundColor: MwColors.primary,
+                  side: const BorderSide(color: MwColors.primary),
                 ),
                 child: const Text('再学一轮'),
               ),
               const SizedBox(width: 16),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(backgroundColor: MistralColors.primary, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: Colors.white),
                 child: const Text('完成'),
               ),
             ],

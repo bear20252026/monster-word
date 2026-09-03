@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 SplashActivity
 // 启动页：品牌动画 → 检查登录状态 → 跳转首页或登录页
 import 'dart:async';
 
@@ -37,7 +36,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   // A-2: 持有导航 Timer 以便在 dispose 时取消，避免测试/快速退出时留下 pending Timer。
   Timer? _navTimer;
 
-  // 引导页图片（对应原版 introImages）
+  // 引导页图片
   final List<String> _introAssets = [
     'assets/images/intro_0.png',
     'assets/images/intro_1.png',
@@ -194,7 +193,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     );
   }
 
-  /// 引导页（对应原版 ViewPager + introImages）
+  /// 引导页
   Widget _buildGuideView(SkinSystem skin) {
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
@@ -222,15 +221,12 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                           ),
                         ),
                         SizedBox(height: 24),
-                        Text(
-                          _getGuideTitle(index),
-                          style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
-                        ),
+                        Text(_getGuideTitle(index), style: MwTypography.heading4.copyWith(color: skin.colors.text1)),
                         SizedBox(height: 8),
                         Text(
                           _getGuideDesc(index),
                           textAlign: TextAlign.center,
-                          style: MistralTypography.body.copyWith(color: skin.colors.text3),
+                          style: MwTypography.body.copyWith(color: skin.colors.text3),
                         ),
                       ],
                     ),

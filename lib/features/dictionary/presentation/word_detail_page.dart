@@ -104,9 +104,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
             children: [
               Icon(Icons.search_off, size: 64, color: skin.colors.text3),
               SizedBox(height: 16),
-              Text('未找到单词', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+              Text('未找到单词', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
               SizedBox(height: 8),
-              Text('可能因参数缺失或数据异常', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+              Text('可能因参数缺失或数据异常', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
               SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () => NavUtils.safePop(context),
@@ -153,7 +153,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                       tooltip: '返回',
                       onPressed: () => NavUtils.safePop(context),
                     ),
-                    Text('单词详情', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+                    Text('单词详情', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
                   ],
                 ),
               ),
@@ -261,16 +261,13 @@ class _WordDetailPageState extends State<WordDetailPage> {
                         duration: const Duration(milliseconds: 350),
                         delay: const Duration(milliseconds: 100),
                         reveal: true,
-                        child: Text('释义', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+                        child: Text('释义', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
                       ),
                       SizedBox(height: context.design.spacing.xs),
                       ...lines.map(
                         (line) => Padding(
                           padding: EdgeInsets.only(bottom: 6),
-                          child: Text(
-                            line,
-                            style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5),
-                          ),
+                          child: Text(line, style: MwTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
                         ),
                       ),
                     ],
@@ -282,7 +279,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                         duration: const Duration(milliseconds: 350),
                         delay: const Duration(milliseconds: 200),
                         reveal: true,
-                        child: Text('例句', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+                        child: Text('例句', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
                       ),
                       SizedBox(height: context.design.spacing.xs),
                       ...examples.take(3).map((ex) => ExampleTile(ex, skin, word: word.word, wordId: word.id)),
@@ -294,7 +291,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                     ..._buildMnemonicSections(word, skin, confuseList),
                     // 常见用法
                     SizedBox(height: context.design.spacing.lg),
-                    Text('常见用法', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+                    Text('常见用法', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
                     SizedBox(height: context.design.spacing.xs),
                     Container(
                       padding: EdgeInsets.all(12),
@@ -306,17 +303,14 @@ class _WordDetailPageState extends State<WordDetailPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '${word.word} — 详细用法',
-                            style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1),
-                          ),
+                          Text('${word.word} — 详细用法', style: MwTypography.bodyMd.copyWith(color: skin.colors.text1)),
                           SizedBox(height: 4),
                           if (word.hasStructuredDefinitions)
                             DefinitionView(definitions: word.parsedDefinitions)
                           else
                             Text(
                               '释义: ${word.cleanInterpret}',
-                              style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
+                              style: MwTypography.bodySm.copyWith(color: skin.colors.text3),
                             ),
                         ],
                       ),
@@ -362,13 +356,13 @@ class _WordDetailPageState extends State<WordDetailPage> {
               duration: const Duration(milliseconds: 350),
               delay: const Duration(milliseconds: 100),
               reveal: true,
-              child: Text('释义', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+              child: Text('释义', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
             ),
             SizedBox(height: context.design.spacing.xs),
             ...lines.map(
               (line) => Padding(
                 padding: EdgeInsets.only(bottom: 6),
-                child: Text(line, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
+                child: Text(line, style: MwTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
               ),
             ),
           ],
@@ -380,7 +374,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
               duration: const Duration(milliseconds: 350),
               delay: const Duration(milliseconds: 200),
               reveal: true,
-              child: Text('例句', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+              child: Text('例句', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
             ),
             SizedBox(height: context.design.spacing.xs),
             ...examples.take(3).map((ex) => ExampleTile(ex, skin, word: word.word, wordId: word.id)),
@@ -392,7 +386,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
           ..._buildMnemonicSections(word, skin, confuseList),
           // 常见用法
           SizedBox(height: context.design.spacing.lg),
-          Text('常见用法', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          Text('常见用法', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
           SizedBox(height: context.design.spacing.xs),
           Container(
             padding: EdgeInsets.all(12),
@@ -404,11 +398,11 @@ class _WordDetailPageState extends State<WordDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${word.word} — 详细用法', style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1)),
+                Text('${word.word} — 详细用法', style: MwTypography.bodyMd.copyWith(color: skin.colors.text1)),
                 SizedBox(height: 4),
                 Text(
                   '释义: ${word.hasStructuredDefinitions ? word.formattedDefinitions : word.cleanInterpret}',
-                  style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
+                  style: MwTypography.bodySm.copyWith(color: skin.colors.text3),
                 ),
               ],
             ),
@@ -450,7 +444,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       '特殊变形': [
         if (showSimilarWords && confuseList.isNotEmpty) ...[
           gap,
-          Text('形近词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          Text('形近词', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
           gapSm,
           Wrap(
             spacing: 8,
@@ -458,7 +452,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
             children: confuseList
                 .map(
                   (c) => Chip(
-                    label: Text(c, style: MistralTypography.bodySm.copyWith(color: skin.colors.text1)),
+                    label: Text(c, style: MwTypography.bodySm.copyWith(color: skin.colors.text1)),
                     backgroundColor: skin.colors.pageBg,
                     side: BorderSide(color: skin.colors.divider),
                   ),
@@ -471,7 +465,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       '派生词': [
         if (_extra != null) ...[
           gap,
-          Text('拓展 · 派生词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          Text('拓展 · 派生词', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
           gapSm,
           ..._extra!.derivatives.map(
             (d) => Padding(
@@ -481,14 +475,14 @@ class _WordDetailPageState extends State<WordDetailPage> {
                 children: [
                   const Text('· ', style: TextStyle(fontWeight: FontWeight.bold)),
                   Expanded(
-                    child: Text(d, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
+                    child: Text(d, style: MwTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
                   ),
                 ],
               ),
             ),
           ),
           gap,
-          Text('近义词', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          Text('近义词', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
           gapSm,
           Wrap(
             spacing: 8,
@@ -497,7 +491,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                 .map(
                   // v2.7.49：0.85 实色+白字 → 全 App 统一的 accent 0.12 淡底胶囊
                   (s) => Chip(
-                    label: Text(s, style: MistralTypography.bodySm.copyWith(color: skin.colors.accent)),
+                    label: Text(s, style: MwTypography.bodySm.copyWith(color: skin.colors.accent)),
                     backgroundColor: skin.colors.accent.withValues(alpha: 0.12),
                     side: BorderSide.none,
                   ),
@@ -506,7 +500,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
           ),
           if (_extra!.examSentences.isNotEmpty) ...[
             gap,
-            Text('真题例句', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+            Text('真题例句', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
             gapSm,
             ..._extra!.examSentences.map(
               // 单一事实来源（v2.7.49）：与词典页真题 tab 共用 ExamSentenceCard，
@@ -520,7 +514,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       '词组搭配': [
         if (PhraseParser.hasData(word.phrase)) ...[
           gap,
-          Text('词组/搭配', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          Text('词组/搭配', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
           gapSm,
           PhraseGroupList(raw: word.phrase, skin: skin),
         ],
@@ -529,7 +523,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       '词根词缀': [
         if (showRoots && word.wordRoot.isNotEmpty) ...[
           gap,
-          Text('词根词缀', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
+          Text('词根词缀', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
           gapSm,
           WordRootTab(wordRootJson: word.wordRoot),
         ],
@@ -561,7 +555,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(word.word, style: MistralTypography.heading1.copyWith(color: skin.colors.text1, fontSize: 40)),
+              Text(word.word, style: MwTypography.heading1.copyWith(color: skin.colors.text1, fontSize: 40)),
               SizedBox(width: context.design.spacing.sm),
               Consumer<AudioPlaybackState>(
                 builder: (context, player, _) {
@@ -600,9 +594,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (word.usPron.isNotEmpty)
-                  Text('美 /${word.usPron}/  ', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                  Text('美 /${word.usPron}/  ', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                 if (word.ukPron.isNotEmpty)
-                  Text('英 /${word.ukPron}/', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                  Text('英 /${word.ukPron}/', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
               ],
             ),
           ],

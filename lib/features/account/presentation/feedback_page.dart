@@ -70,7 +70,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
             tooltip: '返回',
             onPressed: () => Navigator.pop(context),
           ),
-          title: Text('帮助与反馈', style: MistralTypography.heading5.copyWith(color: colors.text1)),
+          title: Text('帮助与反馈', style: MwTypography.heading5.copyWith(color: colors.text1)),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(1),
             child: Container(height: 1, color: colors.divider),
@@ -89,13 +89,13 @@ class _FeedbackPageState extends State<FeedbackPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 标题
-          Text('我们很乐意听取您的意见', style: MistralTypography.heading4.copyWith(color: colors.text1)),
+          Text('我们很乐意听取您的意见', style: MwTypography.heading4.copyWith(color: colors.text1)),
           SizedBox(height: 8),
-          Text('请告诉我们您遇到的问题或建议', style: MistralTypography.body.copyWith(color: colors.text2)),
+          Text('请告诉我们您遇到的问题或建议', style: MwTypography.body.copyWith(color: colors.text2)),
           SizedBox(height: 24),
 
           // 反馈内容输入框
-          Text('反馈内容', style: MistralTypography.bodyBold.copyWith(color: colors.text1)),
+          Text('反馈内容', style: MwTypography.bodyBold.copyWith(color: colors.text1)),
           SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
@@ -107,10 +107,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
               controller: _controller,
               maxLines: 6,
               maxLength: 500,
-              style: MistralTypography.body.copyWith(color: colors.text1),
+              style: MwTypography.body.copyWith(color: colors.text1),
               decoration: InputDecoration(
                 hintText: '请详细描述您的问题或建议...',
-                hintStyle: MistralTypography.body.copyWith(color: colors.text3),
+                hintStyle: MwTypography.body.copyWith(color: colors.text3),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.all(context.design.spacing.md),
               ),
@@ -119,7 +119,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
           SizedBox(height: 20),
 
           // 联系方式（可选）
-          Text('联系方式（可选）', style: MistralTypography.bodyBold.copyWith(color: colors.text1)),
+          Text('联系方式（可选）', style: MwTypography.bodyBold.copyWith(color: colors.text1)),
           SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
@@ -129,10 +129,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
             ),
             child: TextField(
               controller: _contactController,
-              style: MistralTypography.body.copyWith(color: colors.text1),
+              style: MwTypography.body.copyWith(color: colors.text1),
               decoration: InputDecoration(
                 hintText: '邮箱或手机号，方便我们回复您',
-                hintStyle: MistralTypography.body.copyWith(color: colors.text3),
+                hintStyle: MwTypography.body.copyWith(color: colors.text3),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.all(context.design.spacing.md),
               ),
@@ -161,7 +161,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                         valueColor: AlwaysStoppedAnimation(colors.onGlassAccent),
                       ),
                     )
-                  : Text('提交反馈', style: MistralTypography.buttonMd.copyWith(color: colors.onGlassAccent)),
+                  : Text('提交反馈', style: MwTypography.buttonMd.copyWith(color: colors.onGlassAccent)),
             ),
           ),
         ],
@@ -184,11 +184,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
               child: Icon(Icons.check_circle, size: 48, color: colors.success),
             ),
             SizedBox(height: 24),
-            Text('感谢你的反馈！', style: MistralTypography.heading3.copyWith(color: colors.text1)),
+            Text('感谢你的反馈！', style: MwTypography.heading3.copyWith(color: colors.text1)),
             SizedBox(height: 12),
             Text(
               '我们会认真阅读您的建议，持续改进产品',
-              style: MistralTypography.body.copyWith(color: colors.text2),
+              style: MwTypography.body.copyWith(color: colors.text2),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 32),
@@ -202,7 +202,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                 ),
                 onPressed: () => Navigator.pop(context),
-                child: Text('返回', style: MistralTypography.buttonMd.copyWith(color: colors.onGlassAccent)),
+                child: Text('返回', style: MwTypography.buttonMd.copyWith(color: colors.onGlassAccent)),
               ),
             ),
           ],

@@ -161,11 +161,11 @@ class _PopupCard extends StatelessWidget {
           children: [
             Text(
               w.word,
-              style: MistralTypography.heading5.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
+              style: MwTypography.heading5.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
             ),
             if (w.usPron.isNotEmpty) ...[
               const SizedBox(width: 8),
-              Text('/${w.usPron}/', style: MistralTypography.body.copyWith(color: skin.text3, fontSize: 13)),
+              Text('/${w.usPron}/', style: MwTypography.body.copyWith(color: skin.text3, fontSize: 13)),
             ],
           ],
         ),
@@ -174,7 +174,7 @@ class _PopupCard extends StatelessWidget {
         if (meaningText.isNotEmpty)
           Text(
             meaningText,
-            style: MistralTypography.body.copyWith(color: skin.text2, fontSize: 14, height: 1.5),
+            style: MwTypography.body.copyWith(color: skin.text2, fontSize: 14, height: 1.5),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
           ),
@@ -184,7 +184,7 @@ class _PopupCard extends StatelessWidget {
           children: [
             Icon(Icons.touch_app, size: 14, color: skin.text3),
             const SizedBox(width: 4),
-            Text('点击查看详情', style: MistralTypography.micro.copyWith(color: skin.text3)),
+            Text('点击查看详情', style: MwTypography.micro.copyWith(color: skin.text3)),
             const Spacer(),
             Icon(Icons.arrow_forward_ios, size: 12, color: skin.text3),
           ],
@@ -200,10 +200,10 @@ class _PopupCard extends StatelessWidget {
       children: [
         Text(
           word,
-          style: MistralTypography.heading5.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
+          style: MwTypography.heading5.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
-        Text('未找到该单词', style: MistralTypography.body.copyWith(color: skin.text3)),
+        Text('未找到该单词', style: MwTypography.body.copyWith(color: skin.text3)),
       ],
     );
   }

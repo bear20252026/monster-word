@@ -103,7 +103,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
             children: [
               Icon(Icons.check_circle_outline, size: 64, color: skin.colors.text3),
               const SizedBox(height: 16),
-              Text('暂无待学习单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+              Text('暂无待学习单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
             ],
           ),
         ),
@@ -146,17 +146,17 @@ class _WordMachinePageState extends State<WordMachinePage> {
             onPressed: () => NavUtils.safePop(context),
           ),
           const SizedBox(width: 4),
-          Text('单词机', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('单词机', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: MistralColors.primary.withValues(alpha: 0.1),
+              color: MwColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(context.design.radius.pill),
             ),
             child: Text(
               '${_currentIndex + 1} / ${_words.length}',
-              style: MistralTypography.bodyBold.copyWith(color: MistralColors.primary),
+              style: MwTypography.bodyBold.copyWith(color: MwColors.primary),
             ),
           ),
           const SizedBox(width: 12),
@@ -195,7 +195,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
                 const SizedBox(height: 8),
                 Text(
                   word.usPron.isNotEmpty ? word.usPron : word.ukPron,
-                  style: MistralTypography.body.copyWith(color: skin.colors.text3, fontSize: 16 * resp.fontScale),
+                  style: MwTypography.body.copyWith(color: skin.colors.text3, fontSize: 16 * resp.fontScale),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -206,7 +206,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
                   firstChild: const SizedBox.shrink(),
                   secondChild: Text(
                     meaningText,
-                    style: MistralTypography.body.copyWith(
+                    style: MwTypography.body.copyWith(
                       color: skin.colors.text2,
                       fontSize: 18 * resp.fontScale,
                       height: 1.5,
@@ -220,7 +220,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
                   const SizedBox(height: 8),
                   GestureDetector(
                     onTap: () => setState(() => _showMeaning = true),
-                    child: Text('点击显示释义', style: MistralTypography.caption.copyWith(color: MistralColors.primary)),
+                    child: Text('点击显示释义', style: MwTypography.caption.copyWith(color: MwColors.primary)),
                   ),
                 ],
               ],
@@ -243,7 +243,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
                             Expanded(
                               child: Text(
                                 s.en,
-                                style: MistralTypography.bodySm.copyWith(
+                                style: MwTypography.bodySm.copyWith(
                                   color: skin.colors.text1,
                                   fontStyle: FontStyle.italic,
                                 ),
@@ -261,7 +261,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
                         if (s.cn.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
-                            child: Text(s.cn, style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
+                            child: Text(s.cn, style: MwTypography.caption.copyWith(color: skin.colors.text3)),
                           ),
                         const SizedBox(height: 8),
                       ],
@@ -310,7 +310,7 @@ class _ControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = isPrimary ? 56.0 : 44.0;
     return Material(
-      color: isPrimary ? MistralColors.primary : skin.colors.cardBgAlt,
+      color: isPrimary ? MwColors.primary : skin.colors.cardBgAlt,
       borderRadius: BorderRadius.circular(size / 2),
       child: InkWell(
         onTap: onPressed,

@@ -1,13 +1,13 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 由账号4生成
-// SuperMemory 复习引擎：翻译自 coreengine/SuperMemoryInMemoryImp.java（v3.2 源码 1:1）
+// SuperMemory 复习引擎
 // 复习调度：到期词 + 测试模式（英译中/四选一/拼写/完成）+ 评分等级 0-6
 
 import 'package:word_app/models/bb_word_process.dart';
 import 'package:word_app/core/engine/core_engine.dart';
 
-/// 测试模式（原版 TEST_MODE_* 常量）
+/// 测试模式（TEST_MODE_* 常量）
 enum TestMode {
   enToCh(0), // TEST_MODE_EN_TO_CH 英译中
   multipleChoice(1), // TEST_MODE_MULTIPLE_CHOICE 四选一
@@ -18,7 +18,7 @@ enum TestMode {
   final int value;
 }
 
-/// 评分等级（原版 RATING_LEVEL_* 常量）
+/// 评分等级（RATING_LEVEL_* 常量）
 enum RatingLevel {
   level0(0),
   levelA(1),
@@ -32,7 +32,7 @@ enum RatingLevel {
   final int value;
 }
 
-/// 测试结果（原版 TEST_RESULT_* 常量）
+/// 测试结果（TEST_RESULT_* 常量）
 enum TestResult {
   default0(0),
   fail(1), // TEST_RESULT_FAIL
@@ -43,7 +43,7 @@ enum TestResult {
   final int value;
 }
 
-/// SuperMemory 复习引擎（翻译自 SuperMemoryInMemoryImp.java）
+/// SuperMemory 复习引擎
 class SuperMemoryEngine extends BBCoreEngine {
   static const int maxDuration = 90; // MAX_DURATION
 
@@ -56,7 +56,7 @@ class SuperMemoryEngine extends BBCoreEngine {
 
   SuperMemoryEngine({super.eventLabel = 'review'});
 
-  /// 初始化复习列表（原版 arrayForReviewWords 逻辑）+ 随机打乱
+  /// 初始化复习列表（arrayForReviewWords 逻辑）+ 随机打乱
   void init(List<BBWordProcess> dueWords) {
     reviewList = List.from(dueWords);
     tooEasyList = [];
@@ -65,14 +65,14 @@ class SuperMemoryEngine extends BBCoreEngine {
     _totalNum = reviewList.length;
     // 随机打乱复习顺序
     reviewList.shuffle();
-    // 为每个单词分配测试模式（原版 reviewTestModeForWord）
+    // 为每个单词分配测试模式（reviewTestModeForWord）
     for (final w in reviewList) {
       w.testMode = _reviewTestModeForWord(w);
     }
     updateListChoicesRandom();
   }
 
-  /// 为单词分配测试模式（原版 reviewTestModeForWord）
+  /// 为单词分配测试模式（reviewTestModeForWord）
   int _reviewTestModeForWord(BBWordProcess w) {
     // 逻辑 1:1：按等级/次数轮换测试模式
     final rating = w.userRating;
@@ -148,7 +148,7 @@ class SuperMemoryEngine extends BBCoreEngine {
   @override
   int getWordMaxLevel() => 0;
 
-  /// 不认识（原版 iDontKnow → fail）
+  /// 不认识（iDontKnow → fail）
   @override
   void iDontKnow() {
     final w = currentWord();
@@ -158,7 +158,7 @@ class SuperMemoryEngine extends BBCoreEngine {
     _afterReview(w, TestResult.fail);
   }
 
-  /// 模糊（原版 iMayKnow → pass）
+  /// 模糊（iMayKnow → pass）
   @override
   void iMayKnow() {
     final w = currentWord();
@@ -168,7 +168,7 @@ class SuperMemoryEngine extends BBCoreEngine {
     _afterReview(w, TestResult.pass);
   }
 
-  /// 认识（原版 iReallyKnow → bingo）
+  /// 认识（iReallyKnow → bingo）
   @override
   void iReallyKnow() {
     final w = currentWord();
@@ -178,7 +178,7 @@ class SuperMemoryEngine extends BBCoreEngine {
     _afterReview(w, TestResult.bingo);
   }
 
-  /// 太简单（原版 tooEasy → 移入 tooEasyList）
+  /// 太简单（tooEasy → 移入 tooEasyList）
   @override
   void tooEasy() {
     final w = currentWord();
@@ -229,7 +229,7 @@ class SuperMemoryEngine extends BBCoreEngine {
 
   int get reviewedCount => alreadyReviewed.length;
 
-  /// 今日应复习数量（原版 todayReviewCount）
+  /// 今日应复习数量（todayReviewCount）
   static int todayReviewCount(List<BBWordProcess> allProcess) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

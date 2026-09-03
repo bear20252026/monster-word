@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 LoginActivity
 // 登录页：支持手机号登录、账号密码登录
 import 'dart:async';
 
@@ -379,35 +378,32 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  /// 主登录选择页（对应原版底部第三方登录区域）
+  /// 主登录选择页
   Widget _buildMainLoginView(SkinSystem skin) {
     return Column(
       children: [
         const Spacer(flex: 2),
-        // Logo 区域（对应原版 bubeidanci + logo）
+        // Logo 区域
         Container(
           width: 100,
           height: 100,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(colors: [MistralColors.cream, MistralColors.creamDeeper]),
+            gradient: LinearGradient(colors: [MwColors.cream, MwColors.creamDeeper]),
           ),
-          child: Icon(Icons.menu_book, size: 56, color: MistralColors.primary),
+          child: Icon(Icons.menu_book, size: 56, color: MwColors.primary),
         ),
         SizedBox(height: 16),
-        Text('Monster Word', style: MistralTypography.heading3.copyWith(letterSpacing: 0.5, color: skin.colors.text1)),
+        Text('Monster Word', style: MwTypography.heading3.copyWith(letterSpacing: 0.5, color: skin.colors.text1)),
         SizedBox(height: 8),
-        // Slogan（对应原版 tv_slogan）
-        Text('在语境中学习单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+        // Slogan
+        Text('在语境中学习单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
         const Spacer(flex: 1),
-        // 上次登录信息（对应原版 mTvLastAccountInfoView）
+        // 上次登录信息
         if (_lastLoginAccountInfo != null && _lastLoginAccountInfo!.isNotEmpty)
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              '上次登录：$_lastLoginAccountInfo',
-              style: MistralTypography.bodySm.copyWith(color: skin.colors.text3),
-            ),
+            child: Text('上次登录：$_lastLoginAccountInfo', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
           ),
         SizedBox(height: 24),
         // 登录方式按钮组
@@ -423,7 +419,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   skin: skin,
                   icon: Icons.phone_android,
                   label: '手机号登录',
-                  color: MistralColors.primary,
+                  color: MwColors.primary,
                   onTap: () => setState(() => _loginMode = 2),
                 ),
               ),
@@ -445,22 +441,22 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           ),
         ),
         SizedBox(height: 16),
-        // 用户协议（对应原版 tv_user_rule）
+        // 用户协议
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 32),
           child: Text.rich(
             TextSpan(
               text: '登录即同意 ',
-              style: MistralTypography.micro.copyWith(color: skin.colors.text3),
+              style: MwTypography.micro.copyWith(color: skin.colors.text3),
               children: [
                 TextSpan(
                   text: '用户协议',
-                  style: TextStyle(color: MistralColors.link),
+                  style: TextStyle(color: MwColors.link),
                 ),
                 const TextSpan(text: ' 和 '),
                 TextSpan(
                   text: '隐私政策',
-                  style: TextStyle(color: MistralColors.link),
+                  style: TextStyle(color: MwColors.link),
                 ),
               ],
             ),
@@ -478,7 +474,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
     return Column(
       children: [
-        // 顶部导航（对应原版 CustomHeadView）
+        // 顶部导航
         Container(
           height: 48,
           padding: EdgeInsets.symmetric(horizontal: 4),
@@ -490,7 +486,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 onPressed: () => setState(() => _loginMode = 0),
               ),
               const Spacer(),
-              Text(isPhone ? '手机号登录' : '账号密码登录', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+              Text(isPhone ? '手机号登录' : '账号密码登录', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
               const Spacer(),
               SizedBox(width: 48), // 占位，保持居中
             ],
@@ -530,9 +526,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                         child: ElevatedButton(
                           onPressed: (_isSendingCode || _countdown > 0) ? null : _sendSmsCode,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: MistralColors.primary,
+                            backgroundColor: MwColors.primary,
                             foregroundColor: AppColors.white100,
-                            disabledBackgroundColor: MistralColors.muted,
+                            disabledBackgroundColor: MwColors.muted,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(context.design.radius.md),
                             ),
@@ -571,7 +567,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: _forgotPassword,
-                      child: Text('忘记密码？', style: MistralTypography.bodySm.copyWith(color: MistralColors.link)),
+                      child: Text('忘记密码？', style: MwTypography.bodySm.copyWith(color: MwColors.link)),
                     ),
                   ),
                 ],
@@ -591,9 +587,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                             }
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: MistralColors.primary,
+                      backgroundColor: MwColors.primary,
                       foregroundColor: AppColors.white100,
-                      disabledBackgroundColor: MistralColors.muted,
+                      disabledBackgroundColor: MwColors.muted,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                     ),
                     child: _isLoading
@@ -626,10 +622,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscure,
-      style: MistralTypography.body.copyWith(color: skin.colors.text1),
+      style: MwTypography.body.copyWith(color: skin.colors.text1),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: MistralTypography.body.copyWith(color: skin.colors.text3),
+        hintStyle: MwTypography.body.copyWith(color: skin.colors.text3),
         prefixIcon: Icon(icon, color: skin.colors.text3, size: 20),
         suffixIcon: suffixIcon,
         filled: true,
@@ -644,7 +640,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(context.design.radius.md),
-          borderSide: BorderSide(color: MistralColors.primary, width: 2),
+          borderSide: BorderSide(color: MwColors.primary, width: 2),
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),

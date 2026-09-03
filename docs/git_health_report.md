@@ -47,13 +47,13 @@
 初始提交（`e88e958`）中包含了完整的 Windows 构建产物：
 
 ```
-release/不背单词词/word_app.exe
-release/不背单词词/flutter_windows.dll
-release/不背单词词/sqlite3.dll
-release/不背单词词/audioplayers_windows_plugin.dll
-release/不背单词词/dartjni.dll
-release/不背单词词/data/app.so
-release/不背单词词/data/flutter_assets/assets/db/wordbook.db.gz
+release/原应用词/word_app.exe
+release/原应用词/flutter_windows.dll
+release/原应用词/sqlite3.dll
+release/原应用词/audioplayers_windows_plugin.dll
+release/原应用词/dartjni.dll
+release/原应用词/data/app.so
+release/原应用词/data/flutter_assets/assets/db/wordbook.db.gz
 ...（共约 15 个二进制文件）
 ```
 

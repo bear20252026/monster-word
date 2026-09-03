@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 由账号4生成
-// 词书选择页：1:1 复刻原版 activity_lib_select.xml + lv_item_select_library.xml
+// 词书选择页：词书列表 + 分类过滤
 // 结构：顶部导航栏 + 分类选项卡(TabPageIndicator) + 词书列表(封面+名称+描述+单词量, 120dp/项)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -71,7 +71,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
     return books;
   }
 
-  /// 按分类过滤词书（复刻原版分类逻辑）
+  /// 按分类过滤词书
   List<Book> _filterByTab(List<Book> books, int tab) {
     if (tab == 0) return books;
     final code = _tabs[tab];
@@ -105,7 +105,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // ===== 顶部导航栏（原版 CustomHeadView：左箭头 + 标题 + 搜索/眼睛）=====
+            // ===== 顶部导航栏（CustomHeadView：左箭头 + 标题 + 搜索/眼睛）=====
             Container(
               height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -170,7 +170,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
               ),
             ),
             Container(height: 1, color: colors.divider),
-            // ===== 词书列表（原版 ListView，每项 120dp）=====
+            // ===== 词书列表（ListView，每项 120dp）=====
             Expanded(
               child: FutureBuilder<List<Book>>(
                 future: _booksFuture,
@@ -190,9 +190,9 @@ class _LibSelectPageState extends State<LibSelectPage> {
                         children: [
                           Icon(Icons.library_books_outlined, size: 64, color: skin.divider),
                           const SizedBox(height: 16),
-                          Text('暂无词书', style: MistralTypography.bodyMd.copyWith(color: skin.text3)),
+                          Text('暂无词书', style: MwTypography.bodyMd.copyWith(color: skin.text3)),
                           const SizedBox(height: 8),
-                          Text('当前分类下没有词书，请切换分类或刷新', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                          Text('当前分类下没有词书，请切换分类或刷新', style: MwTypography.bodySm.copyWith(color: skin.text3)),
                           const SizedBox(height: 24),
                           OutlinedButton.icon(
                             onPressed: () => setState(() => _booksFuture = _load()),
@@ -284,7 +284,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                                   const SizedBox(height: 8),
                                   Text(
                                     book.code,
-                                    style: MistralTypography.bodyMd.copyWith(
+                                    style: MwTypography.bodyMd.copyWith(
                                       color: AppColors.white100,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -295,7 +295,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                                   const SizedBox(height: 2),
                                   Text(
                                     '${book.wordCount} 词',
-                                    style: MistralTypography.caption.copyWith(
+                                    style: MwTypography.caption.copyWith(
                                       color: AppColors.white100.withValues(alpha: 0.75),
                                     ),
                                   ),
@@ -342,7 +342,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                 },
               ),
             ),
-            // ===== 底部工具栏（原版底部操作栏）=====
+            // ===== 底部工具栏 =====
             _buildBottomToolbar(colors),
           ],
         ),
@@ -493,7 +493,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 }
 
-/// 词书列表项（复刻原版 lv_item_select_library：120dp 高）
+/// 词书列表项（120dp 高）
 class _LibItem extends StatefulWidget {
   const _LibItem({required this.book, this.showDescription = true});
 
@@ -596,7 +596,7 @@ class _LibItemState extends State<_LibItem> {
               ),
             ),
             const SizedBox(width: 16),
-            // ===== 右侧文字区（原版 tv_lib_name + tv_desc + tv_word_count）=====
+            // ===== 右侧文字区（tv_lib_name + tv_desc + tv_word_count）=====
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -611,7 +611,7 @@ class _LibItemState extends State<_LibItem> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // 正在学习标签（原版 right_tag）
+                      // 正在学习标签（right_tag）
                       if (isLearning)
                         Text(
                           '正在学习',

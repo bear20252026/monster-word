@@ -1,4 +1,3 @@
-// 移植自 v3.2 LinkedMEMiddleActivty
 // 联想记忆中间页：展示单词的联想记忆方法
 import 'package:flutter/material.dart';
 
@@ -35,21 +34,21 @@ class LinkedMeMiddlePage extends StatelessWidget {
                       width: double.infinity,
                       padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: MistralColors.cream,
+                        color: MwColors.cream,
                         borderRadius: BorderRadius.circular(context.design.radius.xl),
                       ),
                       child: Column(
                         children: [
-                          Text(word, style: MistralTypography.heading2.copyWith(color: MistralColors.ink)),
+                          Text(word, style: MwTypography.heading2.copyWith(color: MwColors.ink)),
                           SizedBox(height: 8),
-                          Text('联想记忆', style: MistralTypography.body.copyWith(color: MistralColors.slate)),
+                          Text('联想记忆', style: MwTypography.body.copyWith(color: MwColors.slate)),
                         ],
                       ),
                     ),
                     SizedBox(height: 24),
                     // 联想内容
                     if (association != null) ...[
-                      Text('记忆方法', style: MistralTypography.bodyBold.copyWith(color: skin.colors.text1)),
+                      Text('记忆方法', style: MwTypography.bodyBold.copyWith(color: skin.colors.text1)),
                       SizedBox(height: 12),
                       Container(
                         width: double.infinity,
@@ -61,7 +60,7 @@ class LinkedMeMiddlePage extends StatelessWidget {
                         ),
                         child: Text(
                           association!,
-                          style: MistralTypography.body.copyWith(color: skin.colors.text1, height: 1.8),
+                          style: MwTypography.body.copyWith(color: skin.colors.text1, height: 1.8),
                         ),
                       ),
                     ] else ...[
@@ -71,7 +70,7 @@ class LinkedMeMiddlePage extends StatelessWidget {
                             SizedBox(height: 80),
                             Icon(Icons.lightbulb_outline, size: 64, color: skin.colors.text3),
                             SizedBox(height: 16),
-                            Text('暂无联想记忆', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+                            Text('暂无联想记忆', style: MwTypography.body.copyWith(color: skin.colors.text3)),
                           ],
                         ),
                       ),

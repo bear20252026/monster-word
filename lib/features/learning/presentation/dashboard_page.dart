@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 lib/pages/dashboard_page.dart
 // 仪表盘页：顶部导航 + 正在学习(词书卡片+进度条) + 我的数据(学习时长/单词量)
 // 已接入 SkinSystem 主题
 import 'package:flutter/material.dart';
@@ -43,7 +42,7 @@ class DashboardPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // 正在学习
-                        Text('正在学习', style: MistralTypography.heading4.copyWith(color: skin.text1)),
+                        Text('正在学习', style: MwTypography.heading4.copyWith(color: skin.text1)),
                         const SizedBox(height: 12),
                         _buildCurrentBookCard(context, book, learned, skin),
                         const SizedBox(height: 24),
@@ -68,7 +67,7 @@ class DashboardPage extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 4),
-          Text('仪表盘', style: MistralTypography.heading5.copyWith(color: skin.text1)),
+          Text('仪表盘', style: MwTypography.heading5.copyWith(color: skin.text1)),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.share, size: 20),
@@ -109,7 +108,7 @@ class DashboardPage extends StatelessWidget {
                 child: Center(
                   child: Text(
                     _shortName(book?.name ?? '未选择'),
-                    style: MistralTypography.micro.copyWith(color: AppColors.white100, fontWeight: FontWeight.bold),
+                    style: MwTypography.micro.copyWith(color: AppColors.white100, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -120,10 +119,10 @@ class DashboardPage extends StatelessWidget {
                   children: [
                     Text(
                       book?.name ?? '请先选择词书',
-                      style: MistralTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w500),
+                      style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 6),
-                    Text('${book?.wordCount ?? 0} 词', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                    Text('${book?.wordCount ?? 0} 词', style: MwTypography.bodySm.copyWith(color: skin.text3)),
                   ],
                 ),
               ),
@@ -143,9 +142,9 @@ class DashboardPage extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              Text('已学习 $learned', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+              Text('已学习 $learned', style: MwTypography.bodySm.copyWith(color: skin.text3)),
               const Spacer(),
-              Text('总词数 ${book?.wordCount ?? 0}', style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+              Text('总词数 ${book?.wordCount ?? 0}', style: MwTypography.bodySm.copyWith(color: skin.text3)),
             ],
           ),
         ],
@@ -159,7 +158,7 @@ class DashboardPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('我的数据', style: MistralTypography.heading4.copyWith(color: skin.text1)),
+        Text('我的数据', style: MwTypography.heading4.copyWith(color: skin.text1)),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(20),
@@ -189,19 +188,19 @@ class DashboardPage extends StatelessWidget {
       return Row(
         children: [
           Expanded(
-            child: _DataItem(label: '新词', value: '$newCount', color: MistralColors.info),
+            child: _DataItem(label: '新词', value: '$newCount', color: MwColors.info),
           ),
           Container(width: 1, height: 40, color: skin.divider),
           Expanded(
-            child: _DataItem(label: '学习中', value: '$learningCount', color: MistralColors.warning),
+            child: _DataItem(label: '学习中', value: '$learningCount', color: MwColors.warning),
           ),
           Container(width: 1, height: 40, color: skin.divider),
           Expanded(
-            child: _DataItem(label: '待复习', value: '$dueCount', color: MistralColors.danger),
+            child: _DataItem(label: '待复习', value: '$dueCount', color: MwColors.danger),
           ),
           Container(width: 1, height: 40, color: skin.divider),
           Expanded(
-            child: _DataItem(label: '已掌握', value: '$matureCount', color: MistralColors.success),
+            child: _DataItem(label: '已掌握', value: '$matureCount', color: MwColors.success),
           ),
           Container(width: 1, height: 40, color: skin.divider),
           Expanded(
@@ -215,16 +214,16 @@ class DashboardPage extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _DataItem(label: '新词', value: '$newCount', color: MistralColors.info),
-            _DataItem(label: '学习中', value: '$learningCount', color: MistralColors.warning),
-            _DataItem(label: '待复习', value: '$dueCount', color: MistralColors.danger),
+            _DataItem(label: '新词', value: '$newCount', color: MwColors.info),
+            _DataItem(label: '学习中', value: '$learningCount', color: MwColors.warning),
+            _DataItem(label: '待复习', value: '$dueCount', color: MwColors.danger),
           ],
         ),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _DataItem(label: '已掌握', value: '$matureCount', color: MistralColors.success),
+            _DataItem(label: '已掌握', value: '$matureCount', color: MwColors.success),
             _DataItem(label: '总词汇', value: '$totalCount'),
             _DataItem(label: '今日已学', value: '${todayStats['learned'] ?? 0}'),
           ],
@@ -274,10 +273,10 @@ class _DataItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: MistralTypography.heading3.copyWith(color: color ?? skin.success, fontWeight: FontWeight.bold),
+          style: MwTypography.heading3.copyWith(color: color ?? skin.success, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
-        Text(label, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+        Text(label, style: MwTypography.bodySm.copyWith(color: skin.text3)),
       ],
     );
   }

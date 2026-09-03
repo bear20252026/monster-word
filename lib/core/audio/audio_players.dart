@@ -1,5 +1,5 @@
-// 播放器层：翻译自 player/（v3.2 源码 9 个类）
-// 文件：完整移植 MediaPlayStateListener / PlayAudioListener
+// 播放器层
+// 文件：媒体播放状态与播放回调接口层
 //      + BBAudioPlayer（音频播放封装）+ PhoneticAudioPlayer（单词发音）
 //      + SentenceAudioPlayer（例句播放）+ TextAudioPlayer（TTS 播放）
 //
@@ -52,10 +52,10 @@ Future<void> initMobileAudioSession() async {
 }
 
 // ============================================================
-// 接口层（翻译自 MediaPlayStateListener.java + PlayAudioListener.java）
+// 接口层
 // ============================================================
 
-/// 播放状态监听（原版 MediaPlayStateListener 接口）
+/// 播放状态监听（MediaPlayStateListener 接口）
 class MediaPlayStateListener {
   void Function(String url)? onPlayStartCb;
   void Function(String url)? onPlayPauseCb;
@@ -78,7 +78,7 @@ class MediaPlayStateListener {
   void onPlayError(String url) => onPlayErrorCb?.call(url);
 }
 
-/// 播放监听（原版 PlayAudioListener，完整 8 个回调）
+/// 播放监听（PlayAudioListener，完整 8 个回调）
 abstract class PlayAudioListener {
   void onLoadStart(String url);
   void onLoadSuc(String url);
@@ -111,8 +111,8 @@ class PlayAudioListenerAdapter implements PlayAudioListener {
 }
 
 // ============================================================
-// BBAudioPlayer（翻译自 BBAudioPlayer.java）
-// 原版根据 Android API 选择 SystemMediaPlayer / ExoMediaPlayer，
+// BBAudioPlayer
+// 根据 Android API 选择 SystemMediaPlayer / ExoMediaPlayer，
 // Flutter 中统一使用 audioplayers。
 // ============================================================
 
@@ -155,7 +155,7 @@ class BBAudioPlayer {
     });
   }
 
-  /// 播放 URL（原版 play）- 带移动端错误处理
+  /// 播放 URL（play）- 带移动端错误处理
   Future<void> play(String url) async {
     if (_lock) {
       debugPrint('[BBAudioPlayer] play() skipped - player locked');
@@ -188,7 +188,7 @@ class BBAudioPlayer {
     }
   }
 
-  /// 播放本地文件（原版 play(File, float)）- 带移动端错误处理
+  /// 播放本地文件（play(File, float)）- 带移动端错误处理
   Future<void> playFile(File file, {double speed = 1.0}) async {
     if (_lock) {
       debugPrint('[BBAudioPlayer] playFile() skipped - player locked');
@@ -228,7 +228,7 @@ class BBAudioPlayer {
     await playFile(File(filePath), speed: speed);
   }
 
-  /// 停止（原版 stop）
+  /// 停止（stop）
   Future<void> stop() async {
     try {
       await _player.stop();
@@ -237,7 +237,7 @@ class BBAudioPlayer {
     }
   }
 
-  /// 暂停（原版 pause）
+  /// 暂停（pause）
   Future<void> pause() async {
     try {
       await _player.pause();
@@ -249,7 +249,7 @@ class BBAudioPlayer {
     }
   }
 
-  /// 释放（原版 release）—— 取消所有流订阅并释放播放器，防止内存泄漏
+  /// 释放（release）—— 取消所有流订阅并释放播放器，防止内存泄漏
   Future<void> release() async {
     await _playerStateSub?.cancel();
     _playerStateSub = null;
@@ -266,19 +266,19 @@ class BBAudioPlayer {
   /// 是否正在播放
   bool get isPlaying => _player.playerState.playing;
 
-  /// 锁定播放（原版 setLock）
+  /// 锁定播放（setLock）
   void setLock(bool lock) {
     _lock = lock;
   }
 
-  /// 设置监听（原版 setPlayStateListener）
+  /// 设置监听（setPlayStateListener）
   void setPlayStateListener(MediaPlayStateListener? listener) {
     playStateListener = listener;
   }
 }
 
 // ============================================================
-// 公共下载工具（原版 DownloadHttpClient 的简化替代）
+// 公共下载工具（DownloadHttpClient 的简化替代）
 // ============================================================
 
 /// 下载结果
@@ -290,7 +290,7 @@ class _DownloadResult {
   _DownloadResult({this.file, this.success = false, this.statusCode = 0});
 }
 
-/// 简化的下载客户端（替代原版 DownloadHttpClient）
+/// 简化的下载客户端（替代 DownloadHttpClient）
 class _AudioDownloader {
   static const int _connectTimeout = 5;
   static const int _readTimeout = 10;
@@ -334,7 +334,7 @@ class _AudioDownloader {
 }
 
 // ============================================================
-// 缓存目录工具（原版 LexisFileSystem / FileUtils 的简化替代）
+// 缓存目录工具（LexisFileSystem / FileUtils 的简化替代）
 // ============================================================
 
 /// 音频缓存目录管理
@@ -399,7 +399,7 @@ class _AudioCacheDir {
 }
 
 // ============================================================
-// 有道词典发音 URL 构建（原版 PronounceUtils / LexisFileSystem）
+// 有道词典发音 URL 构建（PronounceUtils / LexisFileSystem）
 // ============================================================
 
 /// 有道词典发音 URL
@@ -408,18 +408,18 @@ String _buildYoudaoUrl(String word, {bool isUK = false}) {
   return 'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(word)}&type=$type';
 }
 
-/// beingfine 音频服务器 URL（原版 PublicConstants.BASE_AUDIO_URL）
+/// 音频服务器 URL（audio.beingfine.cn，词库内置音频地址）
 const String _baseAudioUrl = 'https://audio.beingfine.cn/';
 
-/// 七牛 CDN URL（原版 PublicConstants.QINIU_RESOURCE_URL，下载备用）
+/// 七牛 CDN URL（PublicConstants.QINIU_RESOURCE_URL，下载备用）
 const String _qiniuResourceUrl = 'https://7ncdn.beingfine.cn/';
 
 // ============================================================
-// PhoneticAudioPlayer（翻译自 PhoneticAudioPlayer.java）
+// PhoneticAudioPlayer
 // 单词发音播放器：先查本地缓存，没有则下载后播放
 // ============================================================
 
-/// 单词发音播放器（翻译自 PhoneticAudioPlayer.java：单例）
+/// 单词发音播放器
 class PhoneticAudioPlayer {
   static final PhoneticAudioPlayer _instance = PhoneticAudioPlayer._();
   factory PhoneticAudioPlayer() => _instance;
@@ -443,12 +443,12 @@ class PhoneticAudioPlayer {
   /// （症状：例句响、单词不响）。
   final bool _needPlay = true;
 
-  /// 播放单词发音（原版 playAudio；DI 化后由 AudioServiceImpl 注入调用）
+  /// 播放单词发音（playAudio；DI 化后由 AudioServiceImpl 注入调用）
   Future<void> playAudio(String word, {bool? isUK}) async {
     await _playPhoneticAudio(word, isUK ?? _isPronounceUK);
   }
 
-  /// 内部播放（原版 playPhoneticAudio）
+  /// 内部播放（playPhoneticAudio）
   Future<void> _playPhoneticAudio(String word, bool isUK) async {
     _isPronounceUK = isUK;
     if (word.isEmpty) return;
@@ -479,7 +479,7 @@ class PhoneticAudioPlayer {
     _audioPlayer.playFile(file);
   }
 
-  /// 下载并播放（原版 downloadAudioAndPlay_internal）
+  /// 下载并播放（downloadAudioAndPlay_internal）
   Future<void> _downloadAndPlay(String word, String localPath) async {
     playStateListener?.onLoadStart(localPath);
 
@@ -502,29 +502,29 @@ class PhoneticAudioPlayer {
   @visibleForTesting
   bool get needPlayForTest => _needPlay;
 
-  /// 暂停（原版 pause）
+  /// 暂停（pause）
   void pause() {
     _audioPlayer.pause();
   }
 
-  /// 设置监听（原版 setPhoneticAudioPlayListener）
+  /// 设置监听（setPhoneticAudioPlayListener）
   void setPhoneticAudioPlayListener(PlayAudioListener? listener) {
     playStateListener = listener;
   }
 }
 
 // ============================================================
-// SentenceAudioPlayer（翻译自 SentenceAudioPlayer.java）
+// SentenceAudioPlayer
 // 例句播放器：支持下载缓存、播放速度控制
 // ============================================================
 
-/// 例句播放监听（原版 SentencePlayListener）
+/// 例句播放监听（SentencePlayListener）
 abstract class SentencePlayListener {
   bool checkWhetherPlay(String url);
   void onPlayComplete(String url);
 }
 
-/// 例句播放器（翻译自 SentenceAudioPlayer.java：单例）
+/// 例句播放器
 class SentenceAudioPlayer {
   static final SentenceAudioPlayer _instance = SentenceAudioPlayer._();
   factory SentenceAudioPlayer() => _instance;
@@ -568,7 +568,7 @@ class SentenceAudioPlayer {
     return '';
   }
 
-  /// 播放例句音频（原版 playAudio 静态方法）
+  /// 播放例句音频（playAudio 静态方法）
   Future<void> playAudio(String url, {double speed = 1.0}) async {
     if (url.isNotEmpty) {
       await _playSentenceAudio(url, speed);
@@ -620,7 +620,7 @@ class SentenceAudioPlayer {
     _audioPlayer.playFile(file, speed: speed);
   }
 
-  /// 下载并播放（原版 downloadAudioAndPlay_internal）
+  /// 下载并播放（downloadAudioAndPlay_internal）
   Future<void> _downloadAndPlay(String fullUrl, String localPath, double speed) async {
     playStateListener?.onLoadStart(fullUrl);
 
@@ -640,34 +640,34 @@ class SentenceAudioPlayer {
     }
   }
 
-  /// 获取监听（原版 getListener）
+  /// 获取监听（getListener）
   SentencePlayListener? getListener() => _sentenceListener;
 
-  /// 设置监听（原版 setListener）
+  /// 设置监听（setListener）
   void setListener(SentencePlayListener? listener) {
     _sentenceListener = listener;
   }
 
-  /// 暂停（原版 pause）
+  /// 暂停（pause）
   void pause() {
     _audioPlayer.pause();
   }
 
-  /// 是否正在播放（原版 isPlaying）
+  /// 是否正在播放（isPlaying）
   bool isPlaying() => _audioPlayer.isPlaying;
 
-  /// 设置播放状态监听（原版 setSentencePlayStateListener）
+  /// 设置播放状态监听（setSentencePlayStateListener）
   void setSentencePlayStateListener(PlayAudioListener? listener) {
     playStateListener = listener;
   }
 }
 
 // ============================================================
-// TextAudioPlayer（翻译自 TextAudioPlayer.java）
+// TextAudioPlayer
 // TTS 音频播放器：请求服务器获取音频 URL，下载后播放
 // ============================================================
 
-/// TTS 音频播放器（翻译自 TextAudioPlayer.java：单例）
+/// TTS 音频播放器
 class TextAudioPlayer {
   static final TextAudioPlayer _instance = TextAudioPlayer._();
   factory TextAudioPlayer() => _instance;
@@ -688,12 +688,12 @@ class TextAudioPlayer {
   /// 获取单例
   static TextAudioPlayer getInstance() => _instance;
 
-  /// 设置监听（原版 setTextPlayListener）
+  /// 设置监听（setTextPlayListener）
   void setTextPlayListener(PlayAudioListener? listener) {
     playStateListener = listener;
   }
 
-  /// 播放 TTS 音频（原版 playText）
+  /// 播放 TTS 音频（playText）
   Future<void> playText(String text, {double speed = 1.0}) async {
     if (text.isEmpty) return;
 
@@ -721,9 +721,9 @@ class TextAudioPlayer {
     }
   }
 
-  /// 请求 TTS 音频 URL（原版 GetAudioWithTextService.requestAudio）
+  /// 请求 TTS 音频 URL（GetAudioWithTextService.requestAudio）
   Future<String?> _requestTtsAudioUrl(String text) async {
-    // 原版通过 GetAudioWithTextService 向服务器请求音频路径
+    // 通过 GetAudioWithTextService 向服务器请求音频路径
     // 返回 JSON: {"path": "xxx/xxx.mp3"}
     // 这里简化为使用有道 TTS 接口
     return 'https://dict.youdao.com/dictvoice?audio=${Uri.encodeComponent(text)}&type=2';
@@ -734,9 +734,9 @@ class TextAudioPlayer {
     _audioPlayer.playFile(file, speed: speed);
   }
 
-  /// 下载并播放（原版 downLoadTextAudioPlay_internal）
+  /// 下载并播放（downLoadTextAudioPlay_internal）
   Future<void> _downloadAndPlay(String audioUrl, String localPath, double speed) async {
-    // 主 URL：beingfine
+    // 主 URL：audio.beingfine.cn
     final primaryUrl = '$_baseAudioUrl$audioUrl';
     // 备用 URL：七牛
     final fallbackUrl = '$_qiniuResourceUrl$audioUrl';

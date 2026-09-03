@@ -1,4 +1,4 @@
-/// 用户信息 Bean（翻译自 UserInfoBean.java）
+/// 用户信息 Bean
 ///
 /// 从 data/app_preferences.dart 迁移到 models/ 层，
 /// 使 Service 层可以不依赖 data/ 层。

@@ -14,7 +14,7 @@
 
 - 当前态引用一律使用 **Monster Word / MonsterWord**；
 - 文档中残留的旧名称出现均为**合法保留项**（历史记录、数据来源描述、代码标识符、归档路径），替换它们反而会破坏法律审计文档与技术文档的准确性；
-- v1 审计建议「将 Mistral/不背单词 统一替换为 Monster Word」属于误报，本版予以纠正。
+- v1 审计建议「将 Mistral/原应用 统一替换为 Monster Word」属于误报，本版予以纠正。
 
 ---
 
@@ -47,11 +47,11 @@
 
 对 v1 扫描出的全部命中逐条人工复核上下文，分类如下：
 
-### 3.1 「不背单词」（原 App 品牌）—— 全部为合法保留
+### 3.1 原应用（原 App 品牌）—— 全部为合法保留
 
 | 上下文类型 | 代表文档 | 裁定 |
 |---|---|---|
-| 数据来源/权属描述（法律审计核心内容） | wordbook_license_audit.md、dictionary_license_review.md、privacy_security_report.md | **必须保留**——这些文档的职责就是证明数据来自「不背单词」服务端，替换后失去证据效力 |
+| 数据来源/权属描述（法律审计核心内容） | wordbook_license_audit.md、dictionary_license_review.md、privacy_security_report.md | **必须保留**——这些文档的职责就是证明数据来自原应用服务端，替换后失去证据效力 |
 | 历史版本记录 | changelog_v2.0.0.md、git_release_readiness.md、git_health_report.md | **保留**——历史事实不可改写 |
 | 旧产物隔离/清理清单 | release_checklist.md、release_pipeline.md、build_config_audit.md、branding_assets_plan.md | **保留**——清单本身就是要按这个名字去检查清理 |
 | 归档路径引用 | security_reverse_engineering_report.md、reference_index.md | **保留**——指向实际存在的归档目录名 |
@@ -77,7 +77,7 @@ v1 版本（脚本生成于 2026-08-24）存在系统性误报：
 
 | v1 问题 | 说明 | 本版处置 |
 |---|---|---|
-| 将所有「不背单词」判定为应替换 | 忽略了上下文（历史记录/数据来源/清理清单均不可替换） | 纠正为「合法保留」 |
+| 将所有原应用判定为应替换 | 忽略了上下文（历史记录/数据来源/清理清单均不可替换） | 纠正为「合法保留」 |
 | 将 `MistralColors.*` 等 Token 类名判定为应替换为 "Monster Word" | 这些是真实存在的代码标识符，替换会破坏技术文档正确性 | 纠正为「合法保留」 |
 | 未区分「展示名」与「产物名」双形态规范 | 导致规范表述自相矛盾 | 本版第 2 节明确规范并实测验证 |
 

@@ -1,14 +1,14 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 由账号4生成
-// 转场动画控件：翻译自 widget/ 中的转场类
+// 转场动画控件
 // 文件：SplashTransition, MySpaceTransition, UserInfoManageReturnFadeTransition
 
 import 'package:flutter/material.dart';
 
 import 'package:word_app/widgets/animations.dart';
 
-/// 启动页转场动画（翻译自 SplashTransition.dart）
+/// 启动页转场动画
 /// 向上滑动 + 渐隐
 class SplashExitTransition extends StatefulWidget {
   final Widget child;
@@ -71,7 +71,7 @@ class _SplashExitTransitionState extends State<SplashExitTransition> with Single
   }
 }
 
-/// 页面转场路由（翻译自 SplashTransition / MySpaceTransition）
+/// 页面转场路由
 /// 通用的页面转场效果
 class SlideUpRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
@@ -91,7 +91,7 @@ class SlideUpRoute<T> extends PageRouteBuilder<T> {
       );
 }
 
-/// 渐隐转场路由（翻译自 UserInfoManageReturnFadeTransition.dart）
+/// 渐隐转场路由
 class FadeRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
   final Duration duration;

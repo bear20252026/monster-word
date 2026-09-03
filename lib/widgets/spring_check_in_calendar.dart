@@ -174,7 +174,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
                     gradient: LinearGradient(
                       colors: [
                         AppColors.highlightOrange.withValues(alpha: 0.9),
-                        MistralColors.sunshine500.withValues(alpha: 0.9),
+                        MwColors.sunshine500.withValues(alpha: 0.9),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(999),

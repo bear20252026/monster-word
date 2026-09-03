@@ -46,7 +46,7 @@
 - [x] 版本号 `2.0.0+2` — pubspec.yaml / Runner.rc 同步
 - [x] 启动屏 — 浅色 #F2F0EB / 深色 #1E3932 双模式
 - [x] Launcher 图标 — ✅ 方案A1（M+眼睛）已集成，三平台 flutter_launcher_icons 生成完成
-- [x] 旧品牌「不背单词」字样 — release 归档区外无残留
+- [x] 旧品牌原应用字样 — release 归档区外无残留
 
 ---
 

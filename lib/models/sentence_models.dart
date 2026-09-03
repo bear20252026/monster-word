@@ -1,11 +1,11 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 数据模型层：翻译自 bean/sentence/（v3.2 源码 1:1）
+// 数据模型层
 // 文件：SentenceData + AcceptationSentence + NormalAcceptationSentence + OldAcceptationSentence + Acceptation + SentenceUsage + FavSentenceData + FavSentenceSyncData
 
 import 'package:word_app/models/lexis_dict.dart';
 
-/// 例句数据（翻译自 SentenceData.java）
+/// 例句数据
 class SentenceData {
   String sid; // sentence ID
   String eid; // episode/course ID
@@ -56,7 +56,7 @@ class SentenceData {
   Map<String, dynamic> toJson() => {'sid': sid, 'eid': eid, 'fid': fid, 'u': u, 'i': i, 'b': b, 'e': e, 'c': c};
 }
 
-/// 词义句子基类（翻译自 AcceptationSentence.java，抽象类）
+/// 词义句子基类
 abstract class AcceptationSentence {
   static const int typeNormalMeaning = 1;
   static const int typeExtendMeaning = 2;
@@ -120,7 +120,7 @@ abstract class AcceptationSentence {
   }
 }
 
-/// 普通词义句子（翻译自 NormalAcceptationSentence.java）
+/// 普通词义句子
 class NormalAcceptationSentence extends AcceptationSentence {
   Acceptation? i; // 词义信息
   List<SentenceUsage> g; // 用法+例句列表
@@ -192,7 +192,7 @@ class NormalAcceptationSentence extends AcceptationSentence {
   }
 }
 
-/// 旧版词义句子（翻译自 OldAcceptationSentence.java）
+/// 旧版词义句子
 class OldAcceptationSentence extends AcceptationSentence {
   List<Interpret>? interprets; // 释义列表
   List<SentenceData> g; // 例句列表
@@ -224,7 +224,7 @@ class OldAcceptationSentence extends AcceptationSentence {
   }
 }
 
-/// 词义信息（翻译自 Acceptation.java）
+/// 词义信息
 class Acceptation {
   String p; // word property (词性)
   String e; // english interpret
@@ -246,7 +246,7 @@ class Acceptation {
   Map<String, dynamic> toJson() => {'p': p, 'e': e, 'c': c, 't': t, 'u': u};
 }
 
-/// 例句用法（翻译自 SentenceUsage.java）
+/// 例句用法
 class SentenceUsage {
   String u; // usage text
   List<SentenceData> s; // sentence list
@@ -265,7 +265,7 @@ class SentenceUsage {
   Map<String, dynamic> toJson() => {'u': u, 's': s.map((e) => e.toJson()).toList()};
 }
 
-/// 收藏例句数据（翻译自 FavSentenceData.java）
+/// 收藏例句数据
 class FavSentenceData {
   String word;
   int wordId;
@@ -325,7 +325,7 @@ class FavSentenceData {
   };
 }
 
-/// 收藏例句同步数据（翻译自 FavSentenceSyncData.java）
+/// 收藏例句同步数据
 class FavSentenceSyncData {
   String word;
   int wordId;

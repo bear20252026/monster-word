@@ -2,7 +2,7 @@
 
 > 审计范围：`pubspec.yaml` / `windows/` / `android/` / `release/`
 > 方式：只读检查，未执行任何构建，未修改任何文件。
-> 结论先行：**发布面（名称、图标、启动屏、签名、权限）几乎全部停留在 Flutter 模板默认状态**，且 `release/` 中存在使用旧品牌「不背单词」的历史产物，需在重构收尾时统一清理与替换。
+> 结论先行：**发布面（名称、图标、启动屏、签名、权限）几乎全部停留在 Flutter 模板默认状态**，且 `release/` 中存在使用旧品牌原应用的历史产物，需在重构收尾时统一清理与替换。
 
 ---
 
@@ -93,9 +93,9 @@ dev_dependencies：仅 `flutter_test` + `flutter_lints ^6.0.0`（标准模板，
 
 ```
 release/
-├── 不背单词_v1.0_Windows_x64.zip          （约 43.7 MB，2026-08-22 构建）
-└── 不背单词/
-    ├── word_app.exe                        （注意：exe 名仍是 word_app，外层目录却叫「不背单词」）
+├── 原应用_v1.0_Windows_x64.zip          （约 43.7 MB，2026-08-22 构建）
+└── 原应用/
+    ├── word_app.exe                        （注意：exe 名仍是 word_app，外层目录却叫原应用）
     ├── flutter_windows.dll / sqlite3.dll / dartjni.dll
     ├── audioplayers_windows_plugin.dll     （印证 audioplayers 在 Windows 端实际启用）
     └── data/
@@ -108,8 +108,8 @@ release/
 
 观察：
 
-1. 产物命名混乱：zip/目录用旧品牌「不背单词」，exe 却是通用 `word_app.exe`。
-2. 「不背单词」是知名第三方背单词 App 的名称，**继续沿用存在商标/混淆风险**，重构后应彻底弃用。
+1. 产物命名混乱：zip/目录用旧品牌原应用，exe 却是通用 `word_app.exe`。
+2. 原应用是知名第三方背单词 App 的名称，**继续沿用存在商标/混淆风险**，重构后应彻底弃用。
 3. 该产物的 FontManifest 只含 Material/Cupertino 图标字体，**未见 Inter/Charter** → 构建于字体声明加入之前，属过期产物，不可作为当前基线参考。
 
 ---
@@ -129,7 +129,7 @@ release/
 | 7 | 🟡 pubspec `description` 仍是模板文案、`version 1.0.0+1` 与旧 zip 同号 | 更新描述；版本 bump（如 1.1.0+2 或 2.0.0+2）避免升级检测冲突 |
 | 8 | 🟡 audioplayers 与 just_audio 冗余并存 | 择一保留 |
 | 9 | 🟡 无 google_fonts，字体本地打包 Inter+Charter | 新设计如换字体需同步替换 assets/fonts 与 pubspec 声明 |
-| 10 | 🟢 release/ 旧产物带「不背单词」商标风险且已过期 | 新版打包后归档或删除旧产物，勿混入发布渠道 |
+| 10 | 🟢 release/ 旧产物带原应用商标风险且已过期 | 新版打包后归档或删除旧产物，勿混入发布渠道 |
 
 ---
 

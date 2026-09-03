@@ -1,5 +1,5 @@
 // 壁纸数据模型与持久化
-// 对应原版 App 的背景系统：纯色/渐变/照片壁纸
+// 应用背景系统：纯色/渐变/照片壁纸
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -63,7 +63,7 @@ class WallpaperItem {
 class WallpaperData {
   static const _prefKey = 'selected_wallpaper_id';
 
-  // 默认壁纸（浅灰纯色，对应原版 #F5F5F5）
+  // 默认壁纸（浅灰纯色）
   static const defaultWallpaper = WallpaperItem(
     id: 'default',
     name: '默认',
@@ -71,7 +71,7 @@ class WallpaperData {
     colors: [Color(0xFFF5F5F5)],
   );
 
-  // 品牌渐变壁纸（橙色渐变，对应原版特色）
+  // 品牌渐变壁纸（橙色渐变品牌色）
   static const brandGradient = WallpaperItem(
     id: 'brand_gradient',
     name: '日落橙',

@@ -16,7 +16,7 @@ class DefinitionView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (definitions.isEmpty) {
-      return Text('暂无释义', style: MistralTypography.bodySm);
+      return Text('暂无释义', style: MwTypography.bodySm);
     }
 
     final skin = SkinProvider.of(context);
@@ -45,7 +45,7 @@ class DefinitionView extends StatelessWidget {
                 ),
                 child: Text(
                   entry.key,
-                  style: MistralTypography.caption.copyWith(color: skin.colors.accent, fontWeight: FontWeight.w600),
+                  style: MwTypography.caption.copyWith(color: skin.colors.accent, fontWeight: FontWeight.w600),
                 ),
               ),
               const SizedBox(height: 6),
@@ -63,12 +63,12 @@ class DefinitionView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (!compact) ...[
-                            Text('$idx. ', style: MistralTypography.bodySm.copyWith(color: skin.colors.text3)),
+                            Text('$idx. ', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                           ],
                           Expanded(
                             child: RichText(
                               text: TextSpan(
-                                style: MistralTypography.body.copyWith(color: skin.colors.text1),
+                                style: MwTypography.body.copyWith(color: skin.colors.text1),
                                 children: [
                                   if (def.cnDef.isNotEmpty)
                                     TextSpan(
@@ -102,11 +102,11 @@ class DefinitionView extends StatelessWidget {
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('• ', style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
+                                    Text('• ', style: MwTypography.caption.copyWith(color: skin.colors.text3)),
                                     Expanded(
                                       child: RichText(
                                         text: TextSpan(
-                                          style: MistralTypography.caption.copyWith(color: skin.colors.text2),
+                                          style: MwTypography.caption.copyWith(color: skin.colors.text2),
                                           children: [
                                             TextSpan(text: ex.en),
                                             if (ex.en.isNotEmpty && ex.cn.isNotEmpty) const TextSpan(text: '  '),

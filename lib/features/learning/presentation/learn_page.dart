@@ -1,7 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 由账号4生成
-// 学习页：Mistral AI 设计风格
+// 学习页：明亮简约设计风格
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -720,8 +720,8 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
               boxShadow: isCorrect || isWrong
                   ? null
                   : const [
-                      BoxShadow(color: MistralShadows.softShadow, blurRadius: 0.5, offset: Offset(0, 0)),
-                      BoxShadow(color: MistralShadows.liftShadow, blurRadius: 1, offset: Offset(0, 1)),
+                      BoxShadow(color: MwShadows.softShadow, blurRadius: 0.5, offset: Offset(0, 0)),
+                      BoxShadow(color: MwShadows.liftShadow, blurRadius: 1, offset: Offset(0, 1)),
                     ],
             ),
             child: Center(

@@ -11,7 +11,7 @@
 
 | 项目 | 详情 |
 |---|---|
-| 应用名 | Monster Word（v2.0.0，原「不背单词」） |
+| 应用名 | Monster Word（v2.0.0，原原应用） |
 | 技术栈 | Flutter 3.47.0 / Dart 3.13.0 |
 | 目标平台 | Windows / Android / iOS |
 | 设计方向 | 星巴克设计语言重构（DESIGN.md 规范） |

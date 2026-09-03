@@ -111,7 +111,7 @@
 | 排查项 | 结果 | 结论 |
 |---|---|---|
 | assets 内 json/xml | 无任何非 db 资产文件 | ❌ 无本地映射 |
-| 项目 docs/ 反编译引用 | reference_index.md 记录原应用为「不背单词」(beingfine.cn)，v3.2 反编译源翻译而来 | 提供线索方向 |
+| 项目 docs/ 反编译引用 | reference_index.md 记录原应用为原应用(beingfine.cn)，v3.2 反编译源翻译而来 | 提供线索方向 |
 | D:\tools 逆向报告 | monster_word_database_analysis.md 等文件均无 book_code→名称数据；ui_compare_word_list.md 仅证实原版列表项含「书名 + 描述行」结构（示例格式「考研核心高频 \| 2026」） | ❌ 无现成表，但证实 UI 需要 name + desc 两行 |
 | ui_review 原版截图 | 文件名为哈希，未逐张 OCR；词书列表页截图可能含真名 | ⚠️ 可作人工校对参考 |
 | **原服务端 API** | ✅ `GET https://sapi.beingfine.cn/v3/2/bb/wordbooks` —— **获取词书分组列表接口已移植**（lib/services/api_services.dart:226 `getLexisGroupBooks`，需登录 token）。原版 App 选书页的分组与书名正来自此接口；Flutter 版目前透传响应未落库，这正是 name=code 乱码的根因链 | **最权威映射源** |

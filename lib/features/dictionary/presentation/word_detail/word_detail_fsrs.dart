@@ -26,7 +26,7 @@ class FsrsPredictionCard extends StatelessWidget {
             Icon(Icons.psychology_outlined, color: skin.colors.accent, size: 20),
             SizedBox(width: 12),
             Expanded(
-              child: Text('新词 — 开始学习后将生成记忆预测', style: MistralTypography.bodyMd.copyWith(color: skin.colors.text2)),
+              child: Text('新词 — 开始学习后将生成记忆预测', style: MwTypography.bodyMd.copyWith(color: skin.colors.text2)),
             ),
           ],
         ),
@@ -36,12 +36,12 @@ class FsrsPredictionCard extends StatelessWidget {
     if (prediction == null) return const SizedBox.shrink();
     final r = prediction.stability;
     final statusColor = r < 3
-        ? MistralColors.danger
+        ? MwColors.danger
         : r < 7
-        ? MistralColors.warning
+        ? MwColors.warning
         : r < 14
-        ? MistralColors.info
-        : MistralColors.success;
+        ? MwColors.info
+        : MwColors.success;
     return MwCard(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -51,7 +51,7 @@ class FsrsPredictionCard extends StatelessWidget {
             children: [
               Icon(Icons.psychology_outlined, color: skin.colors.accent, size: 20),
               SizedBox(width: 8),
-              Text('记忆预测', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+              Text('记忆预测', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
               const Spacer(),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -67,7 +67,7 @@ class FsrsPredictionCard extends StatelessWidget {
                       : r < 14
                       ? '一般'
                       : '牢固',
-                  style: MistralTypography.caption.copyWith(color: statusColor),
+                  style: MwTypography.caption.copyWith(color: statusColor),
                 ),
               ),
             ],
@@ -100,11 +100,11 @@ class _FsrsStat extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: MistralTypography.caption.copyWith(color: skin.colors.text3)),
+        Text(label, style: MwTypography.caption.copyWith(color: skin.colors.text3)),
         SizedBox(height: 2),
         Text(
           value,
-          style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w600),
+          style: MwTypography.bodyMd.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w600),
         ),
       ],
     );

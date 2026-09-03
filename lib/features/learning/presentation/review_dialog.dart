@@ -49,7 +49,7 @@ class _ReviewDialog extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
               child: Row(
                 children: [
-                  Text('回顾', style: MistralTypography.heading5.copyWith(color: skin.text1)),
+                  Text('回顾', style: MwTypography.heading5.copyWith(color: skin.text1)),
                   const Spacer(),
                   IconButton(
                     icon: Icon(Icons.close, color: skin.text3, size: 22),
@@ -78,12 +78,12 @@ class _ReviewDialog extends StatelessWidget {
         children: [
           Icon(Icons.check_circle_outline, size: 56, color: skin.success),
           const SizedBox(height: 16),
-          Text('今天没有需要复习的单词', style: MistralTypography.heading5.copyWith(color: skin.text1)),
+          Text('今天没有需要复习的单词', style: MwTypography.heading5.copyWith(color: skin.text1)),
           const SizedBox(height: 8),
           Text(
             '太棒了！今天的复习任务已完成，休息一下吧。',
             textAlign: TextAlign.center,
-            style: MistralTypography.bodyMd.copyWith(color: skin.text3),
+            style: MwTypography.bodyMd.copyWith(color: skin.text3),
           ),
           const SizedBox(height: 24),
           SizedBox(
@@ -155,10 +155,10 @@ class _ReviewDialog extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('学习进度', style: MistralTypography.caption.copyWith(color: skin.text3)),
+                  Text('学习进度', style: MwTypography.caption.copyWith(color: skin.text3)),
                   Text(
                     session.total > 0 ? '${((session.learnedNum / session.total) * 100).toInt()}%' : '0%',
-                    style: MistralTypography.captionBold.copyWith(color: skin.accent),
+                    style: MwTypography.captionBold.copyWith(color: skin.accent),
                   ),
                 ],
               ),
@@ -259,7 +259,7 @@ class _StatCard extends StatelessWidget {
             children: [
               Icon(icon, color: color, size: 18),
               const SizedBox(width: 6),
-              Text(label, style: MistralTypography.micro.copyWith(color: skin.text3)),
+              Text(label, style: MwTypography.micro.copyWith(color: skin.text3)),
             ],
           ),
           const SizedBox(height: 10),
@@ -268,12 +268,12 @@ class _StatCard extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: MistralTypography.heading2.copyWith(color: color, fontWeight: FontWeight.w700),
+                style: MwTypography.heading2.copyWith(color: color, fontWeight: FontWeight.w700),
               ),
               const SizedBox(width: 4),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
-                child: Text(unit, style: MistralTypography.caption.copyWith(color: skin.text3)),
+                child: Text(unit, style: MwTypography.caption.copyWith(color: skin.text3)),
               ),
             ],
           ),

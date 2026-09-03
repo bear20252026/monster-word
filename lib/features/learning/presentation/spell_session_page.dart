@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 SpellSessionActivity
 // 拼写会话：基于学习会话状态的拼写练习流程
 import 'dart:async';
 
@@ -123,15 +122,15 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.skin.colors.cardBg,
-        title: Text('拼写练习完成', style: MistralTypography.heading4.copyWith(color: context.skin.colors.text1)),
+        title: Text('拼写练习完成', style: MwTypography.heading4.copyWith(color: context.skin.colors.text1)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('正确：$_correctCount', style: MistralTypography.body.copyWith(color: MistralColors.success)),
-            Text('错误：$_wrongCount', style: MistralTypography.body.copyWith(color: MistralColors.danger)),
+            Text('正确：$_correctCount', style: MwTypography.body.copyWith(color: MwColors.success)),
+            Text('错误：$_wrongCount', style: MwTypography.body.copyWith(color: MwColors.danger)),
             const SizedBox(height: 8),
-            Text('正确率：$accuracy%', style: MistralTypography.bodyBold.copyWith(color: context.skin.colors.text1)),
+            Text('正确率：$accuracy%', style: MwTypography.bodyBold.copyWith(color: context.skin.colors.text1)),
           ],
         ),
         actions: [
@@ -147,7 +146,7 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
               Navigator.pop(ctx);
               _resetSession();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: MistralColors.primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: Colors.white),
             child: const Text('再来一次'),
           ),
         ],
@@ -190,7 +189,7 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
             children: [
               Icon(Icons.check_circle_outline, size: 64, color: skin.colors.text3),
               const SizedBox(height: 16),
-              Text('暂无待学习单词', style: MistralTypography.body.copyWith(color: skin.colors.text3)),
+              Text('暂无待学习单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
             ],
           ),
         ),
@@ -233,17 +232,17 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
             onPressed: () => NavUtils.safePop(context),
           ),
           const SizedBox(width: 4),
-          Text('拼写练习', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('拼写练习', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: MistralColors.primary.withValues(alpha: 0.1),
+              color: MwColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(context.design.radius.pill),
             ),
             child: Text(
               '${_currentIndex + 1} / ${_words.length}',
-              style: MistralTypography.bodyBold.copyWith(color: MistralColors.primary),
+              style: MwTypography.bodyBold.copyWith(color: MwColors.primary),
             ),
           ),
           const SizedBox(width: 12),
@@ -267,7 +266,7 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
             children: [
               Text(
                 _currentWord.cleanInterpret,
-                style: MistralTypography.heading4.copyWith(color: skin.colors.text1),
+                style: MwTypography.heading4.copyWith(color: skin.colors.text1),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -276,15 +275,15 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: MistralColors.cream,
+                    color: MwColors.cream,
                     borderRadius: BorderRadius.circular(context.design.radius.pill),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.volume_up_outlined, size: 18, color: MistralColors.primary),
+                      Icon(Icons.volume_up_outlined, size: 18, color: MwColors.primary),
                       const SizedBox(width: 6),
-                      Text('听发音', style: MistralTypography.bodySm.copyWith(color: MistralColors.primary)),
+                      Text('听发音', style: MwTypography.bodySm.copyWith(color: MwColors.primary)),
                     ],
                   ),
                 ),
@@ -302,7 +301,7 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
           style: AppTypography.heroWord.copyWith(color: skin.colors.text1),
           decoration: InputDecoration(
             hintText: '输入英文单词',
-            hintStyle: MistralTypography.body.copyWith(color: skin.colors.text3),
+            hintStyle: MwTypography.body.copyWith(color: skin.colors.text3),
             filled: true,
             fillColor: skin.colors.cardBg,
             border: OutlineInputBorder(
@@ -311,7 +310,7 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(context.design.radius.lg),
-              borderSide: BorderSide(color: MistralColors.primary, width: 2),
+              borderSide: BorderSide(color: MwColors.primary, width: 2),
             ),
           ),
           onSubmitted: (_) => _showAnswer ? _nextWord() : _checkAnswer(),
@@ -320,8 +319,8 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
         if (_showAnswer) ...[
           Text(
             _feedback,
-            style: MistralTypography.heading5.copyWith(
-              color: _feedback.startsWith('✓') ? MistralColors.success : MistralColors.danger,
+            style: MwTypography.heading5.copyWith(
+              color: _feedback.startsWith('✓') ? MwColors.success : MwColors.danger,
             ),
           ),
           const SizedBox(height: 16),
@@ -333,7 +332,7 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
           child: ElevatedButton(
             onPressed: _showAnswer ? _nextWord : _checkAnswer,
             style: ElevatedButton.styleFrom(
-              backgroundColor: MistralColors.primary,
+              backgroundColor: MwColors.primary,
               foregroundColor: AppColors.white100,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
               padding: const EdgeInsets.symmetric(vertical: 14),

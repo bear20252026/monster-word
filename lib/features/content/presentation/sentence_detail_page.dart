@@ -1,6 +1,5 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 移植自 v3.2 SentenceDetailActivity
 // 例句详情页：显示单词的完整例句及翻译
 // 发音走既有端口 AudioPlaybackState（例句本身无音频 URL 时播所属单词，有道 TTS 回退）。
 import 'package:flutter/material.dart';
@@ -39,7 +38,7 @@ class SentenceDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 单词标题
-                    Text(word, style: MistralTypography.heading3.copyWith(color: skin.colors.text1)),
+                    Text(word, style: MwTypography.heading3.copyWith(color: skin.colors.text1)),
                     const SizedBox(height: 24),
                     // 例句
                     Container(
@@ -55,18 +54,18 @@ class SentenceDetailPage extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.format_quote, size: 20, color: MistralColors.primary),
+                              Icon(Icons.format_quote, size: 20, color: MwColors.primary),
                               const SizedBox(width: 8),
-                              Text('例句', style: MistralTypography.bodyBold.copyWith(color: skin.colors.text1)),
+                              Text('例句', style: MwTypography.bodyBold.copyWith(color: skin.colors.text1)),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          Text(sentence, style: MistralTypography.body.copyWith(color: skin.colors.text1, height: 1.6)),
+                          Text(sentence, style: MwTypography.body.copyWith(color: skin.colors.text1, height: 1.6)),
                           if (translation != null) ...[
                             const SizedBox(height: 12),
                             Text(
                               translation!,
-                              style: MistralTypography.body.copyWith(color: skin.colors.text3, height: 1.6),
+                              style: MwTypography.body.copyWith(color: skin.colors.text3, height: 1.6),
                             ),
                           ],
                         ],
@@ -78,7 +77,7 @@ class SentenceDetailPage extends StatelessWidget {
                         children: [
                           Icon(Icons.source, size: 16, color: skin.colors.text3),
                           const SizedBox(width: 8),
-                          Text('来源：$source', style: MistralTypography.micro.copyWith(color: skin.colors.text3)),
+                          Text('来源：$source', style: MwTypography.micro.copyWith(color: skin.colors.text3)),
                         ],
                       ),
                     ],
@@ -104,7 +103,7 @@ class SentenceDetailPage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 4),
-          Text('例句详情', style: MistralTypography.heading5.copyWith(color: skin.colors.text1)),
+          Text('例句详情', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           IconButton(
             icon: Icon(Icons.volume_up_outlined, color: skin.colors.text1, size: 22),
