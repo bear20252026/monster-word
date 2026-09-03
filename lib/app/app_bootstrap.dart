@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-
-import 'dart:async';
-
 import 'package:flutter/widgets.dart';
 
 import 'package:word_app/app/app_error_widget.dart';
@@ -59,17 +56,6 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
     print('[Bootstrap] 初始化进度 ${i + 1}/$total: ${labels[i]}');
     onProgress?.call(i + 1, total, labels[i]);
   }
-}
-
-/// A-2: 用 runZonedGuarded 包裹 runApp — 异步异常不再无兜底崩溃，统一上报/友好兜底。
-///
-/// 顶层异步异常（Future 错误、Timer 回调等）会被此 zone 捕获，避免直接闪退；
-/// 生产环境可将 onZoneError 替换为 Crashlytics/Sentry 上报。
-void runAppGuarded(Widget app) {
-  runZonedGuarded(() => runApp(app), (error, stack) {
-    debugPrint('[runZonedGuarded] 未捕获异常: $error');
-    debugPrint('$stack');
-  });
 }
 
 void _configureGlobalErrorHandling() {

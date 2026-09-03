@@ -23,7 +23,7 @@ import 'package:word_app/widgets/daily_goal_picker.dart';
 import 'package:word_app/widgets/morphing_tabs.dart';
 import 'package:word_app/widgets/word_globe.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
-import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
 import 'package:word_app/features/book/presentation/books_page.dart';
 import 'package:word_app/features/book/presentation/extensive_model_select_page.dart';
@@ -436,7 +436,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   Future<void> _startDictation(BuildContext context, Book book) async {
-    final words = await context.read<BookWordsReader>().loadWords(book.id);
+    final words = await context.read<BookWordListReader>().loadWords(book.id);
     if (!context.mounted) return;
     if (words.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));
@@ -448,7 +448,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   Future<void> _startQuickSpell(BuildContext context, Book book) async {
-    final words = await context.read<BookWordsReader>().loadWords(book.id);
+    final words = await context.read<BookWordListReader>().loadWords(book.id);
     if (!context.mounted) return;
     if (words.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));

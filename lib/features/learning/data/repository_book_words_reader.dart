@@ -9,5 +9,5 @@ class RepositoryBookWordsReader implements BookWordsReader {
   final WordRepository _repository;
 
   @override
-  Future<List<Word>> loadWords(int bookId) => _repository.getWordsByBookId(bookId, limit: 1000);
+  Future<List<Word>> loadWords(int bookId) => _repository.getWordsByBookId(bookId);
 }

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_selection_writer.dart';
-import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
@@ -41,8 +41,8 @@ class FakeBookSelectionWriter implements BookSelectionWriter {
   Future<Book?> getCurrentBook() async => _currentBook;
 }
 
-/// 模拟 BookWordsReader
-class FakeBookWordsReader implements BookWordsReader {
+/// 模拟 BookWordListReader
+class FakeBookWordListReader implements BookWordListReader {
   List<Word> _words = [];
 
   void setWords(List<Word> words) => _words = words;
@@ -55,13 +55,13 @@ void main() {
   group('BookState', () {
     late FakeBookCatalogReader catalogReader;
     late FakeBookSelectionWriter selectionWriter;
-    late FakeBookWordsReader wordsReader;
+    late FakeBookWordListReader wordsReader;
     late BookState state;
 
     setUp(() {
       catalogReader = FakeBookCatalogReader();
       selectionWriter = FakeBookSelectionWriter();
-      wordsReader = FakeBookWordsReader();
+      wordsReader = FakeBookWordListReader();
       state = BookState(
         catalogReader: catalogReader,
         selectionWriter: selectionWriter,
@@ -129,7 +129,7 @@ void main() {
       await state.load();
       // 模拟 wordsReader 抛异常
       wordsReader.setWords([]);
-      final errorReader = _ErrorBookWordsReader();
+      final errorReader = _ErrorBookWordListReader();
       final errorState = BookState(
         catalogReader: catalogReader,
         selectionWriter: selectionWriter,
@@ -175,8 +175,8 @@ void main() {
   });
 }
 
-/// 模拟会抛异常的 BookWordsReader
-class _ErrorBookWordsReader implements BookWordsReader {
+/// 模拟会抛异常的 BookWordListReader
+class _ErrorBookWordListReader implements BookWordListReader {
   @override
   Future<List<Word>> loadWords(int bookId, {int limit = 50, int offset = 0}) async {
     throw Exception('模拟数据库异常');

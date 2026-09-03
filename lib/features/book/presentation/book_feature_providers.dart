@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:word_app/features/learning/application/learning_progress_reader.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_selection_writer.dart';
-import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/features/book/data/repository_book_catalog_reader.dart';
 import 'package:word_app/features/book/data/repository_book_selection_writer.dart';
-import 'package:word_app/features/book/data/repository_book_words_reader.dart';
+import 'package:word_app/features/book/data/repository_book_word_list_reader.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
 
 /// 装配词书功能域的全部依赖。
@@ -22,7 +22,7 @@ Widget buildBookFeatureScope({required Widget child}) {
     providers: [
       Provider<BookCatalogReader>(create: (_) => RepositoryBookCatalogReader.fromServiceLocator()),
       Provider<BookSelectionWriter>(create: (_) => RepositoryBookSelectionWriter()),
-      Provider<BookWordsReader>(create: (_) => RepositoryBookWordsReader()),
+      Provider<BookWordListReader>(create: (_) => RepositoryBookWordListReader()),
     ],
     child: buildBookStateScope(child: child),
   );
@@ -38,7 +38,7 @@ Widget buildBookStateScope({required Widget child}) {
     create: (context) => BookState(
       catalogReader: context.read<BookCatalogReader>(),
       selectionWriter: context.read<BookSelectionWriter>(),
-      wordsReader: context.read<BookWordsReader>(),
+      wordsReader: context.read<BookWordListReader>(),
       progressReader: context.read<LearningProgressReader>(),
     )..load(),
     child: child,

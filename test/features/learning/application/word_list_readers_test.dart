@@ -107,13 +107,13 @@ void main() {
     expect(wordRepository.requestedTexts, isNull);
   });
 
-  test('词书读取器保留词书编号与列表加载上限', () async {
+  test('词书读取器保留词书编号，全量加载不传截断 limit（REG-LEARN-001）', () async {
     final wordRepository = _FakeWordRepository();
     final reader = RepositoryBookWordsReader(repository: wordRepository);
 
     expect(await reader.loadWords(42), isEmpty);
     expect(wordRepository.requestedBookId, 42);
-    expect(wordRepository.requestedBookLimit, 1000);
+    expect(wordRepository.requestedBookLimit, isNull, reason: 'limit 不传 = 全量，禁止硬编码截断值');
   });
 
   test('生词读取器按加入顺序解析可用词条', () async {

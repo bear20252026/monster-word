@@ -11,7 +11,7 @@ import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/application/book_word_list_reader.dart';
 
 class ExtensiveModelSelectPage extends StatefulWidget {
   final String bookId;
@@ -35,7 +35,7 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
 
   Future<void> _loadWords() async {
     try {
-      final words = await context.read<BookWordsReader>().loadWords(int.parse(widget.bookId));
+      final words = await context.read<BookWordListReader>().loadWords(int.parse(widget.bookId));
       if (!mounted) return;
       setState(() {
         _words = words;

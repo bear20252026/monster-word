@@ -20,7 +20,9 @@ class WordRepositoryImpl implements WordRepository {
       ORDER BY wb.rowid
       LIMIT ? OFFSET ?
       ''',
-      [bookId, limit ?? 50, offset ?? 0],
+      // LIMIT -1 = SQLite 无限制语义：limit 不传即全量（REG-LEARN-001 收口，
+      // 旧默认 50 会让漏传 limit 的调用方静默截断）
+      [bookId, limit ?? -1, offset ?? 0],
     );
     return maps.map(Word.fromMap).toList();
   }

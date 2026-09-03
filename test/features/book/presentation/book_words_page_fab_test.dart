@@ -12,7 +12,7 @@ import 'package:word_app/features/learning/application/learning_session_starter.
 import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_selection_writer.dart';
-import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
 import 'package:word_app/features/book/presentation/book_words_page.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
@@ -83,8 +83,8 @@ class MockSelectionWriter implements BookSelectionWriter {
   Future<void> selectBook(int bookId) async {}
 }
 
-/// 模拟 BookWordsReader（book 端口）
-class MockBookWordsReader implements BookWordsReader {
+/// 模拟 BookWordListReader（book 端口）
+class MockBookWordListReader implements BookWordListReader {
   @override
   Future<List<Word>> loadWords(int bookId, {int limit = 50, int offset = 0}) async => [];
 }
@@ -282,7 +282,7 @@ void main() {
       final state = BookState(
         catalogReader: MockCatalogReader(),
         selectionWriter: MockSelectionWriter(),
-        wordsReader: MockBookWordsReader(),
+        wordsReader: MockBookWordListReader(),
         progressReader: fakeProgressReader,
       );
       state.setWordsForTest([Word(id: 1, word: 'apple'), Word(id: 2, word: 'banana')]);
@@ -298,7 +298,7 @@ void main() {
       final state = BookState(
         catalogReader: MockCatalogReader(),
         selectionWriter: MockSelectionWriter(),
-        wordsReader: MockBookWordsReader(),
+        wordsReader: MockBookWordListReader(),
         progressReader: fakeProgressReader,
       );
       state.setWordsForTest([Word(id: 1, word: 'apple')]);

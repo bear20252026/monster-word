@@ -5,7 +5,7 @@ import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_selection_writer.dart';
-import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/features/book/domain/book_statistics.dart';
 
 /// 词书模块聚合状态。
@@ -16,7 +16,7 @@ class BookState extends ChangeNotifier {
   BookState({
     required BookCatalogReader catalogReader,
     required BookSelectionWriter selectionWriter,
-    required BookWordsReader wordsReader,
+    required BookWordListReader wordsReader,
     required LearningProgressReader progressReader,
   }) : _catalogReader = catalogReader,
        _selectionWriter = selectionWriter,
@@ -26,7 +26,7 @@ class BookState extends ChangeNotifier {
 
   final BookCatalogReader _catalogReader;
   final BookSelectionWriter _selectionWriter;
-  final BookWordsReader _wordsReader;
+  final BookWordListReader _wordsReader;
   final LearningProgressReader _progressReader;
 
   // ── 词书目录 ──────────────────────────────────────────────

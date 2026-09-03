@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_selection_writer.dart';
-import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
 import 'package:word_app/features/book/presentation/book_words_page.dart';
 import 'package:word_app/models/book.dart';
@@ -32,8 +32,8 @@ class MockSelectionWriter implements BookSelectionWriter {
   Future<void> selectBook(int bookId) async {}
 }
 
-/// 模拟 BookWordsReader
-class MockWordsReader implements BookWordsReader {
+/// 模拟 BookWordListReader
+class MockWordsReader implements BookWordListReader {
   @override
   Future<List<Word>> loadWords(int bookId, {int limit = 50, int offset = 0}) async => [];
 }
@@ -48,12 +48,12 @@ void main() {
           providers: [
             Provider<BookCatalogReader>.value(value: MockCatalogReader()),
             Provider<BookSelectionWriter>.value(value: MockSelectionWriter()),
-            Provider<BookWordsReader>.value(value: MockWordsReader()),
+            Provider<BookWordListReader>.value(value: MockWordsReader()),
             ChangeNotifierProvider<BookState>(
               create: (context) => BookState(
                 catalogReader: context.read<BookCatalogReader>(),
                 selectionWriter: context.read<BookSelectionWriter>(),
-                wordsReader: context.read<BookWordsReader>(),
+                wordsReader: context.read<BookWordListReader>(),
                 progressReader: FakeLearningProgressReader(),
               )..load(),
             ),

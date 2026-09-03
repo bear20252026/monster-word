@@ -11,7 +11,7 @@ import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/core/parsers/phrase_parser.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/features/book/application/book_words_reader.dart';
+import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
@@ -199,7 +199,7 @@ class _WordExportPageState extends State<WordExportPage> {
   }
 
   Future<List<Word>> _loadWords() {
-    return context.read<BookWordsReader>().loadWords(widget.bookId);
+    return context.read<BookWordListReader>().loadWords(widget.bookId);
   }
 
   String _generateContent(List<Word> words) {

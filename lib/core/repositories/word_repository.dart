@@ -19,6 +19,9 @@ import 'package:word_app/models/word.dart';
 /// 提供单词（Word）的查询和管理操作抽象。
 abstract class WordRepository {
   /// 获取指定词书的所有单词
+  ///
+  /// [limit] 不传或传 null = 全量加载（SQLite LIMIT -1）；
+  /// 传具体值才截断。禁止在端口消费方硬编码截断值（REG-LEARN-001）。
   Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset});
 
   /// 根据 ID 获取单词

@@ -44,6 +44,8 @@
 | REG-DICT-006 | 同一真题数据源（dictionary_extra.examSentences）两套视觉：词典页真题 tab（cardBg/lg 圆角/accent 0.12 徽章在句下）vs 学习侧词详情页「真题例句」区块（cardBgAlt/md 圆角/橙实色徽章在句上）；近义词 Chip 用 0.85 实色+白字，偏离全 App 淡底胶囊规则 | 真题卡两处各自内联实现（双写无单一事实来源） | 第三十四批（v2.7.49+90） | `test/regression/regression_dictionary_page_test.dart` REG-DICT-006（共享 ExamSentenceCard 渲染契约：句子+徽章、徽章文字色=皮肤 accent、空来源无徽章）；两页调用点唯一实现 |
 | REG-AUDIT-L2 | 同一紧凑时间串解析逻辑两处双写：句库页 `_formatDate`（yyyyMMdd→MM/dd）与笔记区 `_formatDate`（yyyyMMddHHmmss→yyyy-MM-dd HH:mm）各自手写 substring，规则漂移无守护 | 日期解析散落页面层，未沉淀共享工具（单一事实来源缺失） | 第三十六批（v2.7.51+92） | `test/unit/date_format_utils_test.dart`（formatMonthDay/formatCompactDateTime 正常解析 + 长度不足降级不抛异常锁定）；两页调用点唯一实现 |
 | REG-AUDIT-L3 | SP key 裸字符串散落：lib_select_page.dart 两处 `'daily_goal_prompt_shown'` 裸 key 直写，与 AppPreferences 常量体系脱钩，拼写漂移即静默丢数据 | SP key 常量未收口到 AppPreferences（key 管理双轨） | 第三十六批（v2.7.51+92） | `lib/core/infrastructure/app_preferences.dart` 新增 `dailyGoalPromptShownKey` 常量，lib_select_page 调用点改为常量引用；守卫由既有 daily_goal 单元测试承担 |
+| REG-LEARN-001 | 词书加载硬编码截断：learning 侧 RepositoryBookWordsReader 硬编码 `limit: 1000`，大词书学习队列静默缺词；且 WordRepositoryImpl `limit ?? 50` 暗坑——漏传 limit 的调用方只会拿到 50 词 | 端口消费方硬编码截断值 + repository 层默认值掩盖语义 | 第三十八批（v2.7.53+94） | `test/features/learning/application/word_list_readers_test.dart` 锁定 loadWords 不传 limit（null=全量）；WordRepositoryImpl 改 `limit ?? -1`（SQLite 无限制语义）并在接口注释声明契约 |
+| REG-ARCH-004 | 跨 feature 端口同名双写：learning 与 book 各声明一个 `BookWordsReader`（行为不同：截断 vs 全量），接错线编译期不报错 | 端口命名冲突无守卫 | 第三十八批（v2.7.53+94） | book 侧整体更名 `BookWordListReader`（文件/类/适配器同步）；`test/architecture/no_duplicate_port_names_test.dart` 扫描全部 feature application 层，锁定抽象端口名不得跨 feature 重复 |
 
 ## 修复新 bug 的流程
 

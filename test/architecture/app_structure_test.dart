@@ -208,10 +208,10 @@ void main() {
       expect(pageSource, isNot(contains('sl<')));
     });
 
-    test('词语导出页通过 BookWordsReader 读取词书单词', () {
+    test('词语导出页通过 BookWordListReader 读取词书单词', () {
       final pageSource = File('lib/features/book/presentation/word_export_page.dart').readAsStringSync();
 
-      expect(pageSource, contains('BookWordsReader'));
+      expect(pageSource, contains('BookWordListReader'));
       expect(pageSource, isNot(contains('LearningQueueRepository')));
       expect(pageSource, isNot(contains('WordRepository')));
       expect(pageSource, isNot(contains('sl<')));
@@ -338,8 +338,8 @@ void main() {
       expect(bookWordsAdapterSource, contains('implements BookWordsReader'));
       expect(bookWordsAdapterSource, contains('WordRepository'));
       expect(providersSource, contains('RepositoryBookCatalogReader'));
-      expect(selectPageSource, contains('BookWordsReader'));
-      expect(extensiveModeSource, contains('BookWordsReader'));
+      expect(selectPageSource, contains('BookWordListReader'));
+      expect(extensiveModeSource, contains('BookWordListReader'));
       for (final source in [selectPageSource, homeSource]) {
         expect(source, contains('BookCatalogReader'));
         expect(source, isNot(contains('sl<')));
