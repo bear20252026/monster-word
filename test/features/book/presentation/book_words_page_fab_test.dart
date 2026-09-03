@@ -34,6 +34,7 @@ import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
 import 'package:word_app/core/repositories/new_word_repository.dart';
 import 'package:word_app/core/audio/audio_service.dart';
+import 'package:word_app/core/application/wordbook_maintenance_service.dart';
 
 import '../test_helpers/fake_learning_progress_reader.dart';
 
@@ -264,6 +265,7 @@ void main() {
         ListenableProxyProvider<NewWordsState, NewWordsStore>(update: (_, state, _) => state),
         ChangeNotifierProvider<AudioPlaybackState>(create: (_) => AudioPlaybackState(audioService: MockAudioService())),
         ChangeNotifierProvider<BookState>.value(value: bookState),
+        Provider<WordBookMaintenanceService>.value(value: const WordBookMaintenanceService()),
       ],
       child: MaterialApp(
         home: BookWordsPage(book: testBook),
@@ -324,6 +326,7 @@ void main() {
               create: (_) => AudioPlaybackState(audioService: MockAudioService()),
             ),
             ChangeNotifierProvider<BookState>.value(value: state),
+            Provider<WordBookMaintenanceService>.value(value: const WordBookMaintenanceService()),
           ],
           child: MaterialApp(
             home: BookWordsPage(book: testBook),

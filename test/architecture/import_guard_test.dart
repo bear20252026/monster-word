@@ -113,6 +113,27 @@ void main() {
       expect(check('features/learning/data/repository_favorites_port.dart', 'app/service_locator.dart'), isEmpty);
     });
 
+    test('R-DB: presentation 不得直连数据库单例（REG-ARCH-005 收口）', () {
+      // presentation 页面 import 数据库单例 → 违规（改经 application 服务 + Provider）
+      expect(
+        check('features/book/presentation/book_words_page.dart', 'core/infrastructure/wordbook_database.dart'),
+        anyElement(contains('presentation 不得直连数据库单例(R-DB)')),
+      );
+      expect(
+        check('features/settings/presentation/more_settings_page.dart', 'core/infrastructure/user_database.dart'),
+        anyElement(contains('presentation 不得直连数据库单例(R-DB)')),
+      );
+      // data 层适配器与 application 服务消费数据库实现 → 放行
+      expect(
+        check('features/book/data/repository_book_catalog_reader.dart', 'core/infrastructure/wordbook_database.dart'),
+        isEmpty,
+      );
+      expect(
+        check('core/application/wordbook_maintenance_service.dart', 'core/infrastructure/wordbook_database.dart'),
+        isEmpty,
+      );
+    });
+
     test('R-widgets: widgets 层只能消费 feature application 端口（A2 收口）', () {
       // widgets import feature presentation/data/domain → 违规
       expect(

@@ -49,6 +49,8 @@
 
 | REG-OBS-001 | 56 处 `catch (_)` 空捕获吞错：数据路径异常对 Sentry 完全不可见——典型为收藏加载失败后用户收藏静默"消失"（fav_repository_impl）；同类的还有笔记、已掌握词表、金币账本、用户信息、今日学习数等 13 处 | 空捕获无上报通道，可观测性盲区 | 第三十九批（v2.7.54+95） | 新增 `lib/core/utils/swallowed_error_report.dart`（debugPrint + Sentry captureEvent，isEnabled 守卫）；A 级 13 处接上报，B/C 级 43 处补豁免注释；`test/architecture/swallowed_error_guard_test.dart` 锁定 A 级文件必须调用上报 |
 
+| REG-ARCH-005 | presentation 直连数据库单例 3 处：word_detail_page（getWord 常规读）、book_words_page（forceRebuild + diagnostics）、more_settings_page（forceRebuild），违反 architecture_boundaries.md §2；且 ImportGuard 只拦反向依赖，此类正向直连 CI 拦不住 | 管理操作与查询无 application 入口，页面绕过端口直取单例 | 第四十批（v2.7.55+96） | 新增 `core/application/wordbook_maintenance_service.dart`（诊断/重建唯一入口，类型经 export 转发）+ book/settings providers 注入；word_detail 改走既有 WordRepository Provider 通道（getWordByText 语义等价）；ImportGuard 新增 R-DB 规则 + import_guard_test 用例 |
+
 ## 修复新 bug 的流程
 
 1. 修复前先写失败的回归测试（证明 bug 存在）

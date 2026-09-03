@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
-import 'package:word_app/core/infrastructure/wordbook_database.dart';
+import 'package:word_app/core/application/wordbook_maintenance_service.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 import 'package:word_app/features/learning/application/learning_session_starter.dart';
 import 'package:word_app/features/learning/application/new_words_store.dart';
@@ -95,7 +97,7 @@ class _BookWordsPageState extends State<BookWordsPage> {
                 final messenger = ScaffoldMessenger.maybeOf(context);
                 final bookState = context.read<BookState>();
                 try {
-                  final result = await WordBookDatabase.instance.forceRebuild();
+                  final result = await context.read<WordBookMaintenanceService>().forceRebuild();
                   await bookState.reloadWords();
                   messenger?.showSnackBar(
                     SnackBar(
@@ -238,7 +240,7 @@ class _WordListEmptyDiagnostics extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin;
     return FutureBuilder<DbDiagnostics>(
-      future: WordBookDatabase.instance.diagnostics(),
+      future: context.read<WordBookMaintenanceService>().diagnostics(),
       builder: (context, snap) {
         final diag = snap.data;
         final diagText = diag == null

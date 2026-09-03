@@ -13,7 +13,7 @@ import 'package:word_app/core/web/base_web_page.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
-import 'package:word_app/core/infrastructure/wordbook_database.dart';
+import 'package:word_app/core/application/wordbook_maintenance_service.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
 import 'package:word_app/features/settings/data/github_update_check_service.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -405,7 +405,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
 
     DbRebuildResult result;
     try {
-      result = await WordBookDatabase.instance.forceRebuild();
+      result = await context.read<WordBookMaintenanceService>().forceRebuild();
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();

@@ -3,7 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/infrastructure/wordbook_database.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/dictionary/data/dictionary_extra.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
@@ -70,7 +71,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
     final word = _resolveTargetWord(null);
     if (word == null || word.example.isNotEmpty) return; // 已是完整词
     try {
-      final full = await WordBookDatabase.instance.getWord(word.word);
+      final full = await context.read<WordRepository>().getWordByText(word.word);
       if (full != null && mounted) setState(() => _fullWord = full);
     } catch (e) {
       debugPrint('[WordDetail] 完整词重查失败: $e');

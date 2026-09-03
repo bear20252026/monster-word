@@ -18,6 +18,7 @@ import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/audio/audio_service.dart';
+import 'package:word_app/core/application/wordbook_maintenance_service.dart';
 
 import '../test_helpers/fake_learning_progress_reader.dart';
 
@@ -124,6 +125,7 @@ void main() {
             Provider<BookCatalogReader>.value(value: MockCatalogReader()),
             Provider<BookSelectionWriter>.value(value: MockSelectionWriter()),
             Provider<BookWordListReader>.value(value: MockBookWordListReader()),
+            Provider<WordBookMaintenanceService>.value(value: const WordBookMaintenanceService()),
             ChangeNotifierProvider<BookState>.value(value: bookState),
             ChangeNotifierProvider<LearningFavoritesState>(
               create: (_) =>

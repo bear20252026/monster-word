@@ -96,6 +96,16 @@ class ImportGuard {
       violations.add('presentation 不得直取 DI 契约(R6-DI): $from -> $to（改走 Provider 注入）');
     }
 
+    // R-DB（REG-ARCH-005 收口）：presentation 禁止直连数据库单例。
+    // 此前 book_words_page/more_settings_page/word_detail_page 直接
+    // `WordBookDatabase.instance` 调用 forceRebuild/diagnostics/getWord——
+    // 查询/管理操作一律经 application 服务 + Provider 通道（如
+    // core/application/wordbook_maintenance_service.dart、WordRepository 端口）。
+    const dbSingletonTargets = ['core/infrastructure/wordbook_database.dart', 'core/infrastructure/user_database.dart'];
+    if (fromFeature.isNotEmpty && fromLayer == 'presentation' && dbSingletonTargets.contains(to)) {
+      violations.add('presentation 不得直连数据库单例(R-DB): $from -> $to（改经 application 服务 + Provider）');
+    }
+
     // R-widgets（A2 收口）：共享组件层（widgets/）位于 R4/R6 的 from 域之外，
     // 此前完全脱离守卫。规则：可消费 feature 的 application 端口（端口-适配器
     // 允许的功能间通道），不得进入 feature 的 domain/data/presentation 内部，
