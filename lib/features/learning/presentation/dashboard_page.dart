@@ -189,19 +189,19 @@ class DashboardPage extends StatelessWidget {
       return Row(
         children: [
           Expanded(
-            child: _DataItem(label: '新词', value: '$newCount', color: Colors.blue),
+            child: _DataItem(label: '新词', value: '$newCount', color: MistralColors.info),
           ),
           Container(width: 1, height: 40, color: skin.divider),
           Expanded(
-            child: _DataItem(label: '学习中', value: '$learningCount', color: Colors.orange),
+            child: _DataItem(label: '学习中', value: '$learningCount', color: MistralColors.warning),
           ),
           Container(width: 1, height: 40, color: skin.divider),
           Expanded(
-            child: _DataItem(label: '待复习', value: '$dueCount', color: Colors.red),
+            child: _DataItem(label: '待复习', value: '$dueCount', color: MistralColors.danger),
           ),
           Container(width: 1, height: 40, color: skin.divider),
           Expanded(
-            child: _DataItem(label: '已掌握', value: '$matureCount', color: Colors.green),
+            child: _DataItem(label: '已掌握', value: '$matureCount', color: MistralColors.success),
           ),
           Container(width: 1, height: 40, color: skin.divider),
           Expanded(
@@ -215,16 +215,16 @@ class DashboardPage extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _DataItem(label: '新词', value: '$newCount', color: Colors.blue),
-            _DataItem(label: '学习中', value: '$learningCount', color: Colors.orange),
-            _DataItem(label: '待复习', value: '$dueCount', color: Colors.red),
+            _DataItem(label: '新词', value: '$newCount', color: MistralColors.info),
+            _DataItem(label: '学习中', value: '$learningCount', color: MistralColors.warning),
+            _DataItem(label: '待复习', value: '$dueCount', color: MistralColors.danger),
           ],
         ),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _DataItem(label: '已掌握', value: '$matureCount', color: Colors.green),
+            _DataItem(label: '已掌握', value: '$matureCount', color: MistralColors.success),
             _DataItem(label: '总词汇', value: '$totalCount'),
             _DataItem(label: '今日已学', value: '${todayStats['learned'] ?? 0}'),
           ],

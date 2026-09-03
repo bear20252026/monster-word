@@ -36,12 +36,12 @@ class FsrsPredictionCard extends StatelessWidget {
     if (prediction == null) return const SizedBox.shrink();
     final r = prediction.stability;
     final statusColor = r < 3
-        ? Colors.red
+        ? MistralColors.danger
         : r < 7
-        ? Colors.orange
+        ? MistralColors.warning
         : r < 14
-        ? Colors.blue
-        : Colors.green;
+        ? MistralColors.info
+        : MistralColors.success;
     return MwCard(
       padding: EdgeInsets.all(16),
       child: Column(

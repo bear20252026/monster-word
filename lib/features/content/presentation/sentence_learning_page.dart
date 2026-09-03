@@ -6,6 +6,7 @@ import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/scale_down_on_press.dart';
 
 /// 单句学习项。
 class _LearningItem {
@@ -174,7 +175,8 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
       child: Column(
         children: [
           Expanded(
-            child: GestureDetector(
+            // ScaleDownOnPress（v2.7.50）：翻转闪卡加按压反馈，与全 App 交互统一
+            child: ScaleDownOnPress(
               onTap: () {
                 if (!_revealed) setState(() => _revealed = true);
               },
@@ -292,8 +294,8 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
             child: OutlinedButton(
               onPressed: _markAgain,
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.orange,
-                side: const BorderSide(color: Colors.orange),
+                foregroundColor: MistralColors.warning,
+                side: const BorderSide(color: MistralColors.warning),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
               ),
               child: const Text('不认识'),

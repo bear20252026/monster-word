@@ -6,6 +6,7 @@ import 'package:get_it/get_it.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/features/content/presentation/sentence_learning_page.dart';
 import 'package:word_app/models/sentence_models.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class _StubAudioService implements AudioService {
   @override
@@ -57,6 +58,12 @@ void main() {
     expect(find.text('我今天吃了一个苹果。'), findsOneWidget);
     expect(find.text('认识'), findsOneWidget);
     expect(find.text('不认识'), findsOneWidget);
+
+    // 语义色契约（v2.7.50）：「不认识」按钮必须用 token warning，禁止回退硬编码 Colors.orange
+    final againBtn = tester.widget<OutlinedButton>(
+      find.ancestor(of: find.text('不认识'), matching: find.byType(OutlinedButton)),
+    );
+    expect(againBtn.style?.foregroundColor?.resolve({}), MistralColors.warning);
   });
 
   testWidgets('认识后队列清空进入完成视图，可返回', (tester) async {
