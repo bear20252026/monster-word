@@ -51,6 +51,10 @@ class DictionaryDetailState extends ChangeNotifier {
   List<Map<String, String>> _realExamSentences = const [];
   List<Map<String, String>> get realExamSentences => _realExamSentences;
 
+  /// 柯林斯式结构化释义（释义 + 用法 + 分组例句）。
+  List<CollinsSense> _collinsSenses = const [];
+  List<CollinsSense> get collinsSenses => _collinsSenses;
+
   // ── 状态标志 ──────────────────────────────────────────────
   bool _isFavorite = false;
   bool get isFavorite => _isFavorite;
@@ -164,6 +168,11 @@ class DictionaryDetailState extends ChangeNotifier {
       _realExamSentences = await _contentReader.getRealExamSentences(word.word);
     } catch (_) {
       _realExamSentences = const [];
+    }
+    try {
+      _collinsSenses = await _contentReader.getCollinsSenses(word.word);
+    } catch (_) {
+      _collinsSenses = const [];
     }
   }
 

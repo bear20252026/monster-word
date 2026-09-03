@@ -59,4 +59,12 @@ class ServiceDictionaryContentReader implements DictionaryContentReader {
     if (extra == null) return [];
     return extra.examSentences.map((s) => {'sentence': s.sentence, 'source': s.source}).toList();
   }
+
+  @override
+  Future<List<CollinsSense>> getCollinsSenses(String word) async {
+    if (word.trim().isEmpty) return [];
+    final wordData = await _db.getWord(word);
+    if (wordData == null || wordData.example.isEmpty) return [];
+    return ExampleParser.parseCollins(wordData.example);
+  }
 }

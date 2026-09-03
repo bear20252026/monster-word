@@ -362,8 +362,77 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
   }
 
   Widget _buildCollinsTab(ThemeVars skin, Word word) {
-    // 柯林斯释义扩展数据尚未接入（与 word_detail 的完整详解互补，后续批次跟进）。
-    return _emptyTab('柯林斯释义数据准备中', Icons.menu_book_outlined, skin);
+    return Consumer<DictionaryDetailState>(
+      builder: (context, state, _) {
+        // 柯林斯式结构化释义（v2.7.46 接入真数据）：释义 i + 用法说明 g.u +
+        // 分组例句 g.s（ExampleTile 复用，与例句 tab 体验一致）。
+        final senses = state.collinsSenses;
+        if (senses.isEmpty) {
+          return _emptyTab('暂无柯林斯释义', Icons.menu_book_outlined, skin);
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.only(top: 2),
+          itemCount: senses.length,
+          addAutomaticKeepAlives: false,
+          addRepaintBoundaries: true,
+          itemBuilder: (context, index) {
+            final sense = senses[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: EdgeInsets.all(context.design.spacing.md),
+              decoration: BoxDecoration(
+                color: skin.cardBg,
+                borderRadius: BorderRadius.circular(context.design.radius.lg),
+                border: Border.all(color: skin.divider, width: 0.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (sense.pos.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: skin.accent.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(context.design.radius.sm),
+                      ),
+                      child: Text(
+                        sense.pos,
+                        style: MistralTypography.bodySm.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    SizedBox(height: context.design.spacing.xs),
+                  ],
+                  if (sense.enDef.isNotEmpty)
+                    Text(sense.enDef, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
+                  if (sense.cnDef.isNotEmpty) ...[
+                    SizedBox(height: context.design.spacing.xs),
+                    Text(sense.cnDef, style: MistralTypography.bodySm.copyWith(color: skin.text3)),
+                  ],
+                  if (sense.usage.isNotEmpty) ...[
+                    SizedBox(height: context.design.spacing.sm),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: skin.accent.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(context.design.radius.sm),
+                      ),
+                      child: Text(
+                        sense.usage,
+                        style: MistralTypography.bodySm.copyWith(color: skin.accent, fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                  ],
+                  if (sense.examples.isNotEmpty) ...[
+                    SizedBox(height: context.design.spacing.sm),
+                    ...sense.examples.map((ex) => ExampleTile(ex, context.skin, word: word.word, wordId: word.id)),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   /// tab 区统一空状态：图标 + 文案居中，替代各处零散的纯文本占位。

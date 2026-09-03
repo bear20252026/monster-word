@@ -16,4 +16,7 @@ abstract interface class DictionaryContentReader {
   /// 真题例句（dictionary_extra.json 扩展数据，带 CET-4/CET-6/考研等来源标注）。
   /// 返回 {'sentence': 句子, 'source': 来源}。
   Future<List<Map<String, String>>> getRealExamSentences(String word);
+
+  /// 柯林斯式结构化释义（释义 + 用法说明 + 分组例句），经 [ExampleParser.parseCollins] 解析。
+  Future<List<CollinsSense>> getCollinsSenses(String word);
 }

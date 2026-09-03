@@ -50,6 +50,9 @@ class _FakeContentReader implements DictionaryContentReader {
 
   @override
   Future<List<Map<String, String>>> getRealExamSentences(String word) async => realExamSentences;
+
+  @override
+  Future<List<CollinsSense>> getCollinsSenses(String word) async => const [];
 }
 
 class _FakeSentenceFavoritesStore implements SentenceFavoritesStore {
