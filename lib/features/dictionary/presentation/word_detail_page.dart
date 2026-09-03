@@ -7,6 +7,7 @@ import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/dictionary/data/dictionary_extra.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
+import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_exam_sentence_card.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_example_tile.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_fsrs.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_notes_section.dart';
@@ -493,9 +494,10 @@ class _WordDetailPageState extends State<WordDetailPage> {
             runSpacing: 8,
             children: _extra!.synonyms
                 .map(
+                  // v2.7.49：0.85 实色+白字 → 全 App 统一的 accent 0.12 淡底胶囊
                   (s) => Chip(
-                    label: Text(s, style: MistralTypography.bodySm.copyWith(color: AppColors.white100)),
-                    backgroundColor: skin.colors.accent.withValues(alpha: 0.85),
+                    label: Text(s, style: MistralTypography.bodySm.copyWith(color: skin.colors.accent)),
+                    backgroundColor: skin.colors.accent.withValues(alpha: 0.12),
                     side: BorderSide.none,
                   ),
                 )
@@ -506,29 +508,9 @@ class _WordDetailPageState extends State<WordDetailPage> {
             Text('真题例句', style: MistralTypography.heading5.copyWith(color: skin.colors.text2)),
             gapSm,
             ..._extra!.examSentences.map(
-              (e) => Container(
-                margin: EdgeInsets.only(bottom: 8),
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: skin.colors.cardBgAlt,
-                  borderRadius: BorderRadius.circular(context.design.radius.md),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: AppColors.highlightOrange,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(e.source, style: MistralTypography.caption.copyWith(color: AppColors.white100)),
-                    ),
-                    SizedBox(height: 6),
-                    Text(e.sentence, style: MistralTypography.bodyMd.copyWith(color: skin.colors.text1, height: 1.5)),
-                  ],
-                ),
-              ),
+              // 单一事实来源（v2.7.49）：与词典页真题 tab 共用 ExamSentenceCard，
+              // 收口此前两套真题卡样式（cardBgAlt/md 圆角/橙徽章在句上 → 统一卡）
+              (e) => ExamSentenceCard(sentence: e.sentence, source: e.source),
             ),
           ],
         ],

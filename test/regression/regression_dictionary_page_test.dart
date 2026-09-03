@@ -14,9 +14,11 @@ import 'package:word_app/features/dictionary/application/dictionary_favorite_wri
 import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
+import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_exam_sentence_card.dart';
 import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
 import 'package:word_app/models/word.dart';
+import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/app_dock.dart';
 import 'package:word_app/widgets/mw_card.dart';
 
@@ -256,6 +258,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('暂无近义词'), findsOneWidget);
     expect(find.text('近义词'), findsNothing, reason: '旧式空状态灰盒（标题「近义词」）已废弃');
+  });
+
+  testWidgets('REG-DICT-006: 真题例句卡单一事实来源（ExamSentenceCard），来源徽章 accent 淡底契约', (tester) async {
+    // 问题：同一真题数据源（dictionary_extra.examSentences）两套视觉——
+    //       词典页真题 tab（cardBg/lg 圆角/accent 0.12 徽章在句下）vs
+    //       学习侧词详情页「真题例句」区块（cardBgAlt/md 圆角/橙实色徽章在句上）；
+    // 修复：v2.7.49 —— 抽取共享 ExamSentenceCard，两处唯一实现，
+    //       徽章配色同步全 App 统一规则（accent 0.12 淡底 + accent 文字）。
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ExamSentenceCard(sentence: 'The new app makes it easier.', source: 'CET-4'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 句子在上、来源徽章在下，均渲染
+    expect(find.text('The new app makes it easier.'), findsOneWidget);
+    expect(find.text('CET-4'), findsOneWidget);
+
+    // 徽章文字色 = 当前皮肤 accent（不得回退橙实色/白字旧样式）
+    final badgeText = tester.widget<Text>(find.text('CET-4'));
+    final accent = SkinSystem().colors.accent;
+    expect(badgeText.style?.color, accent, reason: '来源徽章文字必须用皮肤 accent 色');
+
+    // 空来源不渲染徽章
+    await tester.pumpWidget(const MaterialApp(home: ExamSentenceCard(sentence: 'Another sentence without source.')));
+    await tester.pumpAndSettle();
+    expect(find.text('CET-4'), findsNothing);
   });
 
   testWidgets('REG-DOCK-001: FloatingDock.clearance = 底部安全区 + 16 margin + 64 栏高', (tester) async {

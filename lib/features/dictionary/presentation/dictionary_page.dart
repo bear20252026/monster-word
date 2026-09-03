@@ -11,6 +11,7 @@ import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/word_root_tab.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_detail_state.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_feature_providers.dart';
+import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_exam_sentence_card.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_example_tile.dart';
 
 /// 词典详情页。
@@ -638,35 +639,8 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             final item = sentences[index];
             final sentence = item['sentence'] ?? '';
             final source = item['source'] ?? '';
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: EdgeInsets.all(context.design.spacing.md),
-              decoration: BoxDecoration(
-                color: skin.cardBg,
-                borderRadius: BorderRadius.circular(context.design.radius.lg),
-                border: Border.all(color: skin.divider, width: 0.5),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(sentence, style: MistralTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
-                  if (source.isNotEmpty) ...[
-                    SizedBox(height: context.design.spacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: skin.accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(context.design.radius.sm),
-                      ),
-                      child: Text(
-                        source,
-                        style: MistralTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            );
+            // 单一事实来源：与 word_detail「真题例句」区块共用 ExamSentenceCard
+            return ExamSentenceCard(sentence: sentence, source: source);
           },
         );
       },
