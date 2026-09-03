@@ -1,7 +1,14 @@
 # FSRS 学习记录迁移 SQLite 方案（批次 E · 待评审）
 
-> 状态：**方案评审中，未动工**。学习记录是不可再生产的用户数据，本方案按最保守路径设计。
+> 状态：**E1 已实施（v2.7.56+97，2026-09-04）**。方案经用户批准三项拍板后落地。
 > 前置安全网：FSRS-6 引擎 29 项官方公式测试已在位（v2.7.52+93）。
+>
+> 实施记录：
+> - 新增 `lib/features/learning/data/review_schedule_store.dart`（三表 schema、UPSERT 单事务写路径、事务内行数校验的批量导入）
+> - `review_schedule_repository.dart` 切换持久化层 + 首启迁移编排（`_migrateFromSpIfNeeded`：损坏行跳过并聚合上报、全成功才写 `fsrs6_migrated_v1` 标记、任何异常降级 SP 模式）
+> - SP 空 + SQLite 空的机器直接写标记（避免每次启动空转）
+> - 旧 SP key 未删除（只读回滚快照），E2 清理待观察 2~3 版 Sentry 无迁移错误后另批执行
+> - 测试：`review_schedule_store_test.dart`（4 用例）+ `review_schedule_migration_test.dart`（6 用例，sqflite_common_ffi 内存库）
 
 ## 一、现状与问题
 

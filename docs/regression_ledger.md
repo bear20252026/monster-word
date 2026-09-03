@@ -51,6 +51,8 @@
 
 | REG-ARCH-005 | presentation 直连数据库单例 3 处：word_detail_page（getWord 常规读）、book_words_page（forceRebuild + diagnostics）、more_settings_page（forceRebuild），违反 architecture_boundaries.md §2；且 ImportGuard 只拦反向依赖，此类正向直连 CI 拦不住 | 管理操作与查询无 application 入口，页面绕过端口直取单例 | 第四十批（v2.7.55+96） | 新增 `core/application/wordbook_maintenance_service.dart`（诊断/重建唯一入口，类型经 export 转发）+ book/settings providers 注入；word_detail 改走既有 WordRepository Provider 通道（getWordByText 语义等价）；ImportGuard 新增 R-DB 规则 + import_guard_test 用例 |
 
+| REG-LEARN-002 | FSRS 学习记录以 3 个 SP key 全量 blob 存储且每次评分 3 次 jsonEncode 全量重写（词量数千时每次评分重写数 MB）；写入中途被杀 = 整个 blob 损坏丢全部学习记录，且 SP 无事务 | 持久化层选型失误（blob 全量写而非行式存储），写入口高度收敛（load 1 处 + rateWord/forget）具备无损切换条件 | 第四十一批（v2.7.56+97，批次 E1） | 新增 `lib/features/learning/data/review_schedule_store.dart`（独立 review_schedule.db 三表，与词库物理隔离防重建误伤）+ repository 首启事务迁移（损坏行跳过上报、行数校验在事务内、失败降级 SP 下次重试）+ 写路径单事务 O(1)；旧 SP key 保留为只读回滚快照（E2 另批清理）；`test/features/learning/data/review_schedule_store_test.dart`（4 用例）+ `review_schedule_migration_test.dart`（6 用例：迁移/防重复迁移/空数据/损坏降级/往返/SP 模式回写） |
+
 ## 修复新 bug 的流程
 
 1. 修复前先写失败的回归测试（证明 bug 存在）
