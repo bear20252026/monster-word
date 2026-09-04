@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/features/learning/presentation/widgets/formal_review_state_views.dart';
 
 /// 正式复习页面内容的当前阶段。
@@ -25,7 +25,7 @@ class FormalReviewPageContent extends StatelessWidget {
   final FormalReviewPagePhase phase;
   final Object? loadError;
   final int done;
-  final BBWordProcess? word;
+  final MwWordProcess? word;
   final VoidCallback onRetry;
   final VoidCallback onReturnHome;
   final FormalReviewContentBuilder reviewingBuilder;
@@ -42,7 +42,7 @@ class FormalReviewPageContent extends StatelessWidget {
 }
 
 /// 注入进行中答题布局的构建器。
-typedef FormalReviewContentBuilder = Widget Function(BuildContext context, BBWordProcess word);
+typedef FormalReviewContentBuilder = Widget Function(BuildContext context, MwWordProcess word);
 
 /// 从会话快照映射页面内容阶段。
 FormalReviewPagePhase formalReviewPagePhase({

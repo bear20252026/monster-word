@@ -5,7 +5,7 @@ import 'package:word_app/features/learning/application/mastered_writer_port.dart
 import 'package:word_app/features/learning/presentation/review_word_action_coordinator.dart';
 import 'package:word_app/features/learning/presentation/review_word_action_feedback.dart';
 import 'package:word_app/features/learning/presentation/review_word_actions_state.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/models/word.dart';
 
 void main() {
@@ -58,7 +58,7 @@ void main() {
       );
       final coordinator = ReviewWordActionCoordinator(
         wordActions: actions,
-        currentWord: () => BBWordProcess(word: 'reviewed'),
+        currentWord: () => MwWordProcess(word: 'reviewed'),
         markCurrentWordAsKnown: () => true,
       );
 
@@ -81,7 +81,7 @@ void main() {
       var advanceCalls = 0;
       final coordinator = ReviewWordActionCoordinator(
         wordActions: actions,
-        currentWord: () => BBWordProcess(word: 'reviewed'),
+        currentWord: () => MwWordProcess(word: 'reviewed'),
         markCurrentWordAsKnown: () {
           advanceCalls++;
           return true;
@@ -115,7 +115,7 @@ void main() {
           masteredReader: _FakeMasteredWordsReader(masteredWords),
           masteredWriter: _FakeMasteredWriterPort(masteredWords),
         ),
-        currentWord: () => BBWordProcess(word: 'reviewed'),
+        currentWord: () => MwWordProcess(word: 'reviewed'),
         markCurrentWordAsKnown: () => true,
       );
 

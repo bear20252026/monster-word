@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/engine/srs_engine.dart' show RecallRating;
 import 'package:word_app/core/engine/super_memory_engine.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
 import 'package:word_app/features/learning/application/review_session_question_factory.dart';
@@ -51,7 +51,7 @@ class ReviewSessionState extends ChangeNotifier {
   List<WordChoicePair> get choices => _choices;
   int get total => _total;
   int get done => _done;
-  BBWordProcess? get currentWord => _engine.currentWord();
+  MwWordProcess? get currentWord => _engine.currentWord();
 
   void updateRatingWriter(ReviewRatingWriter ratingWriter) {
     _ratingExecutor.updateRatingWriter(ratingWriter);

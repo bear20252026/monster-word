@@ -1,7 +1,7 @@
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/engine/srs_engine.dart' show RecallRating;
 import 'package:word_app/core/engine/super_memory_engine.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
 
 /// 正式复习评分执行器。
@@ -18,7 +18,7 @@ class ReviewSessionRatingExecutor {
     _ratingWriter = ratingWriter;
   }
 
-  void rate({required BBWordProcess reviewedWord, required RecallRating rating}) {
+  void rate({required MwWordProcess reviewedWord, required RecallRating rating}) {
     _advanceEngine(rating);
     _ratingWriter.rate(word: reviewedWord.word, rating: _toFsrsRating(rating));
   }

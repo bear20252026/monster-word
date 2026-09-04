@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/learning/application/review_session_question_factory.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/models/word.dart';
 
 void main() {
@@ -30,14 +30,14 @@ void main() {
     });
 
     test('从当前题和余下词池生成包含正确答案的四选一候选项', () {
-      final current = BBWordProcess(word: 'correct', interpret: '正确释义');
+      final current = MwWordProcess(word: 'correct', interpret: '正确释义');
       final choices = factory.createChoices(
         currentWord: current,
         reviewWords: [
           current,
-          BBWordProcess(word: 'other-1', interpret: '干扰释义一'),
-          BBWordProcess(word: 'other-2', interpret: '干扰释义二'),
-          BBWordProcess(word: 'other-3', interpret: '干扰释义三'),
+          MwWordProcess(word: 'other-1', interpret: '干扰释义一'),
+          MwWordProcess(word: 'other-2', interpret: '干扰释义二'),
+          MwWordProcess(word: 'other-3', interpret: '干扰释义三'),
         ],
       );
 

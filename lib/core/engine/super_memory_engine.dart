@@ -4,7 +4,7 @@
 // SuperMemory 复习引擎
 // 复习调度：到期词 + 测试模式（英译中/四选一/拼写/完成）+ 评分等级 0-6
 
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/core/engine/core_engine.dart';
 
 /// 测试模式（TEST_MODE_* 常量）
@@ -44,12 +44,12 @@ enum TestResult {
 }
 
 /// SuperMemory 复习引擎
-class SuperMemoryEngine extends BBCoreEngine {
+class SuperMemoryEngine extends MwCoreEngine {
   static const int maxDuration = 90; // MAX_DURATION
 
-  List<BBWordProcess> reviewList = []; // 待复习列表
-  List<BBWordProcess> tooEasyList = []; // 太简单列表
-  List<BBWordProcess> alreadyReviewed = []; // 已复习列表
+  List<MwWordProcess> reviewList = []; // 待复习列表
+  List<MwWordProcess> tooEasyList = []; // 太简单列表
+  List<MwWordProcess> alreadyReviewed = []; // 已复习列表
   int _currentIndex = 0;
   int _totalNum = 0;
   List<WordChoicePair> _choicesRandom = [];
@@ -57,7 +57,7 @@ class SuperMemoryEngine extends BBCoreEngine {
   SuperMemoryEngine({super.eventLabel = 'review'});
 
   /// 初始化复习列表（arrayForReviewWords 逻辑）+ 随机打乱
-  void init(List<BBWordProcess> dueWords) {
+  void init(List<MwWordProcess> dueWords) {
     reviewList = List.from(dueWords);
     tooEasyList = [];
     alreadyReviewed = [];
@@ -73,7 +73,7 @@ class SuperMemoryEngine extends BBCoreEngine {
   }
 
   /// 为单词分配测试模式（reviewTestModeForWord）
-  int _reviewTestModeForWord(BBWordProcess w) {
+  int _reviewTestModeForWord(MwWordProcess w) {
     // 逻辑 1:1：按等级/次数轮换测试模式
     final rating = w.userRating;
     if (rating <= RatingLevel.levelA.value) {
@@ -87,7 +87,7 @@ class SuperMemoryEngine extends BBCoreEngine {
   }
 
   @override
-  BBWordProcess? currentWord() {
+  MwWordProcess? currentWord() {
     if (reviewList.isEmpty) return null;
     if (_currentIndex >= reviewList.length) return null;
     final w = reviewList[_currentIndex];
@@ -191,7 +191,7 @@ class SuperMemoryEngine extends BBCoreEngine {
     _afterReview(w, TestResult.bingo, removeFromList: false);
   }
 
-  void _afterReview(BBWordProcess w, TestResult result, {bool removeFromList = true}) {
+  void _afterReview(MwWordProcess w, TestResult result, {bool removeFromList = true}) {
     if (removeFromList) {
       alreadyReviewed.add(w);
       if (_currentIndex < reviewList.length) {
@@ -214,7 +214,7 @@ class SuperMemoryEngine extends BBCoreEngine {
   }
 
   @override
-  BBWordProcess? nextWord() {
+  MwWordProcess? nextWord() {
     if (_currentIndex < reviewList.length) _currentIndex++;
     return currentWord();
   }
@@ -230,7 +230,7 @@ class SuperMemoryEngine extends BBCoreEngine {
   int get reviewedCount => alreadyReviewed.length;
 
   /// 今日应复习数量（todayReviewCount）
-  static int todayReviewCount(List<BBWordProcess> allProcess) {
+  static int todayReviewCount(List<MwWordProcess> allProcess) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return allProcess

@@ -7,7 +7,7 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/models/lexis_dict.dart';
 
 /// 数据准备状态（常量）
@@ -98,17 +98,17 @@ class WordChoicePair {
 }
 
 /// 核心学习引擎抽象类
-abstract class BBCoreEngine {
+abstract class MwCoreEngine {
   /// 学习/复习标签（UMEventLabel：learn/review）
   String eventLabel;
 
   /// 当前单词进度
-  BBWordProcess? currentWordProcess;
+  MwWordProcess? currentWordProcess;
 
-  BBCoreEngine({this.eventLabel = 'learn'});
+  MwCoreEngine({this.eventLabel = 'learn'});
 
   /// 当前单词
-  BBWordProcess? currentWord();
+  MwWordProcess? currentWord();
 
   /// 已完成数量
   int finishedNum();
@@ -117,7 +117,7 @@ abstract class BBCoreEngine {
   DataPreparedState getDataPreparedState();
 
   /// 上一组数据
-  List<BBWordProcess>? getLastGroupData() => null;
+  List<MwWordProcess>? getLastGroupData() => null;
 
   /// 4 选 1 随机选项（getListChoicesRandom）
   List<WordChoicePair> getListChoicesRandom();
@@ -144,7 +144,7 @@ abstract class BBCoreEngine {
   void nextGroup();
 
   /// 下一个单词
-  BBWordProcess? nextWord();
+  MwWordProcess? nextWord();
 
   /// 剩余单词数
   int remainWordsNum();
@@ -169,7 +169,7 @@ abstract class BBCoreEngine {
 
   /// 4 选 1 干扰项生成（confuseItemsForChoice，逻辑 1:1）
   /// 优先用当前词的形近词，否则从词库随机取 3 个不同释义
-  List<Interpret> confuseItemsForChoice(BBWordProcess? wordProcess) {
+  List<Interpret> confuseItemsForChoice(MwWordProcess? wordProcess) {
     // 分支 1：当前词有形近词（>=3 个）→ 用形近词
     final confusedList = wordProcess?.confusedList ?? [];
     if (wordProcess != null && confusedList.length >= 3) {

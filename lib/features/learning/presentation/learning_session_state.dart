@@ -13,7 +13,7 @@ import 'package:word_app/features/learning/application/learning_progress_port.da
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/domain/definition_formatter.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 
@@ -161,7 +161,7 @@ class LearningSessionState extends ChangeNotifier {
     _currentIndex = 0;
     _showAnswer = false;
     _choices = [];
-    _leitnerEngine.init(const <BBWordProcess>[]);
+    _leitnerEngine.init(const <MwWordProcess>[]);
     _errorWords.clear();
     _totalAnswered = 0;
     _sessionStartTime = null;
@@ -294,7 +294,7 @@ class LearningSessionState extends ChangeNotifier {
     _leitnerEngine.init(
       _queue
           .map(
-            (word) => BBWordProcess(
+            (word) => MwWordProcess(
               word: word.word,
               wordId: word.id,
               interpret: word.interpret,

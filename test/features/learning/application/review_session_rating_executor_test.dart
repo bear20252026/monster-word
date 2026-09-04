@@ -4,14 +4,14 @@ import 'package:word_app/core/engine/srs_engine.dart';
 import 'package:word_app/core/engine/super_memory_engine.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
 import 'package:word_app/features/learning/application/review_session_rating_executor.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 
 void main() {
   group('ReviewSessionRatingExecutor', () {
     test('使用推进前捕获的词条写入对应 FSRS 评分并推进引擎', () async {
       String? persistedWord;
       FsrsRating? persistedRating;
-      final engine = SuperMemoryEngine()..init([BBWordProcess(word: 'first'), BBWordProcess(word: 'second')]);
+      final engine = SuperMemoryEngine()..init([MwWordProcess(word: 'first'), MwWordProcess(word: 'second')]);
       final executor = ReviewSessionRatingExecutor(
         engine: engine,
         ratingWriter: ReviewRatingWriter(
@@ -38,7 +38,7 @@ void main() {
         (recall: RecallRating.easy, fsrs: FsrsRating.easy),
       ]) {
         FsrsRating? persistedRating;
-        final engine = SuperMemoryEngine()..init([BBWordProcess(word: expectation.recall.name)]);
+        final engine = SuperMemoryEngine()..init([MwWordProcess(word: expectation.recall.name)]);
         final executor = ReviewSessionRatingExecutor(
           engine: engine,
           ratingWriter: ReviewRatingWriter(
@@ -57,7 +57,7 @@ void main() {
     test('更新评分写入端口后使用新端口，手动掌握不产生 FSRS 写入', () async {
       var oldWrites = 0;
       var newWrites = 0;
-      final engine = SuperMemoryEngine()..init([BBWordProcess(word: 'first'), BBWordProcess(word: 'second')]);
+      final engine = SuperMemoryEngine()..init([MwWordProcess(word: 'first'), MwWordProcess(word: 'second')]);
       final executor = ReviewSessionRatingExecutor(
         engine: engine,
         ratingWriter: ReviewRatingWriter(writeRating: ({required word, required rating}) async => oldWrites++),

@@ -1,6 +1,6 @@
 import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/engine/super_memory_engine.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/domain/choice_generator.dart';
 
@@ -12,10 +12,10 @@ import 'package:word_app/features/learning/domain/choice_generator.dart';
 class ReviewSessionQuestionFactory {
   const ReviewSessionQuestionFactory();
 
-  List<BBWordProcess> createProcesses(Iterable<Word> words) {
+  List<MwWordProcess> createProcesses(Iterable<Word> words) {
     return words
         .map(
-          (word) => BBWordProcess(
+          (word) => MwWordProcess(
             word: word.word,
             wordId: word.id,
             interpret: word.interpret,
@@ -28,8 +28,8 @@ class ReviewSessionQuestionFactory {
   }
 
   List<WordChoicePair> createChoices({
-    required BBWordProcess? currentWord,
-    required Iterable<BBWordProcess> reviewWords,
+    required MwWordProcess? currentWord,
+    required Iterable<MwWordProcess> reviewWords,
   }) {
     if (currentWord == null) return const [];
 

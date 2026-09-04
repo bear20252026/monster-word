@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'package:word_app/models/lexis_dict.dart';
 
 /// 单词学习进度
-class BBWordProcess {
+class MwWordProcess {
   int id;
   String word;
   int wordId; // word_id
@@ -47,7 +47,7 @@ class BBWordProcess {
   List<String> confusedWordExpList = [];
   List<String> spells = [];
 
-  BBWordProcess({
+  MwWordProcess({
     this.id = 0,
     this.word = '',
     this.wordId = 0,
@@ -86,8 +86,8 @@ class BBWordProcess {
        spells = spells ?? [];
 
   /// 从词库 JSON（zpk 词条）初始化
-  factory BBWordProcess.fromWordJson(String word, Map<String, dynamic> json, {String? zpk}) {
-    return BBWordProcess(
+  factory MwWordProcess.fromWordJson(String word, Map<String, dynamic> json, {String? zpk}) {
+    return MwWordProcess(
       word: word,
       wordId: (json['word_id'] as num?)?.toInt() ?? 0,
       interpret: json['interpret'] ?? '',
@@ -180,7 +180,7 @@ class BBWordProcess {
   /// 形近词列表
   List<String> get confusedWordListSafe => confusedWordList;
 
-  factory BBWordProcess.fromMap(Map<String, dynamic> map) => BBWordProcess(
+  factory MwWordProcess.fromMap(Map<String, dynamic> map) => MwWordProcess(
     id: (map['id'] as num?)?.toInt() ?? 0,
     word: map['word'] ?? '',
     wordId: (map['word_id'] as num?)?.toInt() ?? 0,

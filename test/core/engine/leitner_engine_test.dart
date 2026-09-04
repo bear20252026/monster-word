@@ -7,9 +7,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/engine/core_engine.dart';
 import 'package:word_app/core/engine/leitner_engine.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 
-BBWordProcess _w(String word, {int level = 0}) => BBWordProcess(word: word, interpret: '释义 $word', level: level);
+MwWordProcess _w(String word, {int level = 0}) => MwWordProcess(word: word, interpret: '释义 $word', level: level);
 
 void main() {
   group('init 等级分桶', () {

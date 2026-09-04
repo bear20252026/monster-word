@@ -11,7 +11,7 @@ import 'package:word_app/features/learning/presentation/review_word_action_feedb
 import 'package:word_app/features/learning/presentation/review_session_state.dart';
 import 'package:word_app/features/learning/presentation/review_word_actions_state.dart';
 import 'package:word_app/features/learning/presentation/widgets/formal_review_widgets.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/theme/wallpaper_state.dart';
 import 'package:word_app/app/router/nav_utils.dart';
@@ -70,7 +70,7 @@ class _ReviewPageState extends State<ReviewPage> {
 
   Widget _buildReviewingContent({
     required BuildContext context,
-    required BBWordProcess word,
+    required MwWordProcess word,
     required ReviewSessionState session,
     required ReviewWordActionsState wordActions,
     required ReviewAudioState reviewAudio,
@@ -147,11 +147,11 @@ class _ReviewPageState extends State<ReviewPage> {
     );
   }
 
-  void _openWordDetails(BBWordProcess word) {
+  void _openWordDetails(MwWordProcess word) {
     Navigator.pushNamed(context, RouteNames.dictionary, arguments: word.toDictionaryWord());
   }
 
-  Future<void> _playWordAudio(BBWordProcess word) async {
+  Future<void> _playWordAudio(MwWordProcess word) async {
     try {
       await context.read<ReviewAudioState>().playWord(word.word);
     } catch (_) {

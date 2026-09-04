@@ -3,7 +3,7 @@
 // 由账号4生成
 // Leitner 学习引擎
 // 学习分组：按等级 0-4 分层（listLevel0..4），每组 GROUP_SIZE 个单词
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/core/engine/core_engine.dart';
 
 /// 学习策略（LearnUtils.LearnStrategy）
@@ -15,23 +15,23 @@ class LearnStrategy {
 }
 
 /// Leitner 学习引擎
-class LeitnerCardEngine extends BBCoreEngine {
+class LeitnerCardEngine extends MwCoreEngine {
   /// 当前学习单词的等级列表（listLevel0..4）
-  final List<BBWordProcess> level0 = []; // 新词/未学
-  final List<BBWordProcess> level1 = []; // 第1层
-  final List<BBWordProcess> level2 = []; // 第2层
-  final List<BBWordProcess> level3 = []; // 第3层
-  final List<BBWordProcess> level4 = []; // 第4层（最熟）
+  final List<MwWordProcess> level0 = []; // 新词/未学
+  final List<MwWordProcess> level1 = []; // 第1层
+  final List<MwWordProcess> level2 = []; // 第2层
+  final List<MwWordProcess> level3 = []; // 第3层
+  final List<MwWordProcess> level4 = []; // 第4层（最熟）
 
-  final List<BBWordProcess> _finishedLearned = []; // 已完成学习的单词
+  final List<MwWordProcess> _finishedLearned = []; // 已完成学习的单词
   final LearnStrategy strategy;
   int _learnedNumber = 0; // 已学数量
   int _currentIndexInGroup = 0;
-  List<BBWordProcess> _currentGroup = [];
+  List<MwWordProcess> _currentGroup = [];
   List<WordChoicePair> _choicesRandom = [];
 
   /// 当前选中等级列表（按优先级：先新词 level0，再低层）
-  List<BBWordProcess> get _activeList {
+  List<MwWordProcess> get _activeList {
     if (level0.isNotEmpty) return level0;
     if (level1.isNotEmpty) return level1;
     if (level2.isNotEmpty) return level2;
@@ -43,7 +43,7 @@ class LeitnerCardEngine extends BBCoreEngine {
     : strategy = strategy ?? const LearnStrategy();
 
   /// 初始化：填充等级列表（fillTheArray）+ 随机打乱
-  void init(List<BBWordProcess> allWords) {
+  void init(List<MwWordProcess> allWords) {
     level0.clear();
     level1.clear();
     level2.clear();
@@ -90,7 +90,7 @@ class LeitnerCardEngine extends BBCoreEngine {
   }
 
   @override
-  BBWordProcess? currentWord() {
+  MwWordProcess? currentWord() {
     if (_currentGroup.isEmpty) return null;
     if (_currentIndexInGroup >= _currentGroup.length) return null;
     final w = _currentGroup[_currentIndexInGroup];
@@ -193,7 +193,7 @@ class LeitnerCardEngine extends BBCoreEngine {
   }
 
   /// 评分后处理：移动到下一单词/完成本组
-  void _afterRating(BBWordProcess w, {required bool remember, bool tooEasy = false}) {
+  void _afterRating(MwWordProcess w, {required bool remember, bool tooEasy = false}) {
     _learnedNumber++;
     _finishedLearned.add(w);
     // 从 activeList 移除
@@ -222,7 +222,7 @@ class LeitnerCardEngine extends BBCoreEngine {
   }
 
   @override
-  BBWordProcess? nextWord() {
+  MwWordProcess? nextWord() {
     _currentIndexInGroup++;
     return currentWord();
   }

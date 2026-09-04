@@ -13,7 +13,7 @@ import 'package:word_app/core/audio/system_tts.dart';
 ///
 /// 播放优先级：audioUrl > 音标音频(本地缓存→Youdao下载) > 系统 TTS 兜底。
 class AudioServiceImpl implements AudioService {
-  final BBAudioPlayer _bbPlayer = BBAudioPlayer();
+  final MwAudioPlayer _bbPlayer = MwAudioPlayer();
   final PhoneticAudioPlayer _phoneticPlayer;
   final SentenceAudioPlayer _sentencePlayer;
   bool _disposed = false;

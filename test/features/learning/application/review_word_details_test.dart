@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/learning/application/review_word_details.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 
 void main() {
   test('正式复习词条映射为词典详情所需的 Word 字段', () {
-    final reviewWord = BBWordProcess(
+    final reviewWord = MwWordProcess(
       wordId: 42,
       word: 'resilient',
       interpret: '有韧性的',

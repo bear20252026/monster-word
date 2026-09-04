@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/presentation/responsive.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/features/learning/presentation/widgets/formal_review_choice_card.dart';
 
@@ -10,9 +10,9 @@ import 'package:word_app/features/learning/presentation/widgets/formal_review_ch
 class FormalReviewWordPrompt extends StatelessWidget {
   const FormalReviewWordPrompt({super.key, required this.word, required this.audioLoading, required this.onPlayAudio});
 
-  final BBWordProcess word;
+  final MwWordProcess word;
   final bool audioLoading;
-  final ValueChanged<BBWordProcess> onPlayAudio;
+  final ValueChanged<MwWordProcess> onPlayAudio;
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +92,7 @@ class FormalReviewChoiceGrid extends StatelessWidget {
     required this.onSelectChoice,
   });
 
-  final BBWordProcess word;
+  final MwWordProcess word;
   final List<WordChoicePair> choices;
   final String? selectedWrongChoice;
   final bool showAnswer;

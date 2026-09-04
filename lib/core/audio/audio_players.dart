@@ -1,6 +1,6 @@
 // 播放器层
 // 文件：媒体播放状态与播放回调接口层
-//      + BBAudioPlayer（音频播放封装）+ PhoneticAudioPlayer（单词发音）
+//      + MwAudioPlayer（音频播放封装）+ PhoneticAudioPlayer（单词发音）
 //      + SentenceAudioPlayer（例句播放）+ TextAudioPlayer（TTS 播放）
 //
 // 注：BaseMediaPlayer / SystemMediaPlayer / ExoMediaPlayer 在 Flutter 中不需要，
@@ -111,13 +111,13 @@ class PlayAudioListenerAdapter implements PlayAudioListener {
 }
 
 // ============================================================
-// BBAudioPlayer
+// MwAudioPlayer
 // 根据 Android API 选择 SystemMediaPlayer / ExoMediaPlayer，
 // Flutter 中统一使用 audioplayers。
 // ============================================================
 
 /// 音频播放封装
-class BBAudioPlayer {
+class MwAudioPlayer {
   final AudioPlayer _player = AudioPlayer();
   StreamSubscription? _playerStateSub;
   StreamSubscription? _processingStateSub;
@@ -134,12 +134,12 @@ class BBAudioPlayer {
   /// 惰性创建：纯 Dart 测试环境无 audioplayers 插件，构造期创建会抛
   ap.AudioPlayer get _apPlayer => _apPlayerInstance ??= ap.AudioPlayer();
 
-  BBAudioPlayer() {
-    debugPrint('[BBAudioPlayer] Created new player instance');
+  MwAudioPlayer() {
+    debugPrint('[MwAudioPlayer] Created new player instance');
     // 监听播放状态变化
     _playerStateSub = _player.playerStateStream.listen((playerState) {
       if (_currentFileName.isEmpty) return;
-      debugPrint('[BBAudioPlayer] Player state: playing=${playerState.playing}, fileName=$_currentFileName');
+      debugPrint('[MwAudioPlayer] Player state: playing=${playerState.playing}, fileName=$_currentFileName');
       if (playerState.playing) {
         playStateListener?.onPlayStart(_currentFileName);
       } else {
@@ -148,7 +148,7 @@ class BBAudioPlayer {
     });
     // 监听播放完成
     _processingStateSub = _player.processingStateStream.listen((state) {
-      debugPrint('[BBAudioPlayer] Processing state: $state for $_currentFileName');
+      debugPrint('[MwAudioPlayer] Processing state: $state for $_currentFileName');
       if (state == ProcessingState.completed) {
         playStateListener?.onPlayComplete(_currentFileName);
       }
@@ -158,19 +158,19 @@ class BBAudioPlayer {
   /// 播放 URL（play）- 带移动端错误处理
   Future<void> play(String url) async {
     if (_lock) {
-      debugPrint('[BBAudioPlayer] play() skipped - player locked');
+      debugPrint('[MwAudioPlayer] play() skipped - player locked');
       return;
     }
     _currentFileName = url;
-    debugPrint('[BBAudioPlayer] play() URL: $url');
+    debugPrint('[MwAudioPlayer] play() URL: $url');
     playStateListener?.onPlayStart(url);
     if (_useAudioPlayersDesktop) {
       try {
         await _apPlayer.stop();
         await _apPlayer.play(ap.UrlSource(url));
-        debugPrint('[BBAudioPlayer] desktop play() started successfully');
+        debugPrint('[MwAudioPlayer] desktop play() started successfully');
       } catch (e) {
-        debugPrint('[BBAudioPlayer] ERROR in desktop play(): $e');
+        debugPrint('[MwAudioPlayer] ERROR in desktop play(): $e');
         playStateListener?.onPlayError(url);
       }
       return;
@@ -179,11 +179,11 @@ class BBAudioPlayer {
       await _player.stop(); // 先停止当前播放
       await _player.setUrl(url);
       await _player.play();
-      debugPrint('[BBAudioPlayer] play() started successfully');
+      debugPrint('[MwAudioPlayer] play() started successfully');
     } catch (e) {
-      debugPrint('[BBAudioPlayer] ERROR in play(): $e');
-      debugPrint('[BBAudioPlayer] URL: $url');
-      debugPrint('[BBAudioPlayer] Stack trace: ${StackTrace.current}');
+      debugPrint('[MwAudioPlayer] ERROR in play(): $e');
+      debugPrint('[MwAudioPlayer] URL: $url');
+      debugPrint('[MwAudioPlayer] Stack trace: ${StackTrace.current}');
       playStateListener?.onPlayError(url);
     }
   }
@@ -191,20 +191,20 @@ class BBAudioPlayer {
   /// 播放本地文件（play(File, float)）- 带移动端错误处理
   Future<void> playFile(File file, {double speed = 1.0}) async {
     if (_lock) {
-      debugPrint('[BBAudioPlayer] playFile() skipped - player locked');
+      debugPrint('[MwAudioPlayer] playFile() skipped - player locked');
       return;
     }
     _currentFileName = p.basename(file.path);
-    debugPrint('[BBAudioPlayer] playFile() path: ${file.path}, speed: $speed');
+    debugPrint('[MwAudioPlayer] playFile() path: ${file.path}, speed: $speed');
     playStateListener?.onPlayStart(_currentFileName);
     if (_useAudioPlayersDesktop) {
       try {
         await _apPlayer.stop();
         if (speed != 1.0) await _apPlayer.setPlaybackRate(speed);
         await _apPlayer.play(ap.DeviceFileSource(file.path));
-        debugPrint('[BBAudioPlayer] desktop playFile() started successfully');
+        debugPrint('[MwAudioPlayer] desktop playFile() started successfully');
       } catch (e) {
-        debugPrint('[BBAudioPlayer] ERROR in desktop playFile(): $e');
+        debugPrint('[MwAudioPlayer] ERROR in desktop playFile(): $e');
         playStateListener?.onPlayError(_currentFileName);
       }
       return;
@@ -214,11 +214,11 @@ class BBAudioPlayer {
       await _player.setSpeed(speed);
       await _player.setFilePath(file.path);
       await _player.play();
-      debugPrint('[BBAudioPlayer] playFile() started successfully');
+      debugPrint('[MwAudioPlayer] playFile() started successfully');
     } catch (e) {
-      debugPrint('[BBAudioPlayer] ERROR in playFile(): $e');
-      debugPrint('[BBAudioPlayer] File path: ${file.path}');
-      debugPrint('[BBAudioPlayer] Stack trace: ${StackTrace.current}');
+      debugPrint('[MwAudioPlayer] ERROR in playFile(): $e');
+      debugPrint('[MwAudioPlayer] File path: ${file.path}');
+      debugPrint('[MwAudioPlayer] Stack trace: ${StackTrace.current}');
       playStateListener?.onPlayError(_currentFileName);
     }
   }
@@ -233,7 +233,7 @@ class BBAudioPlayer {
     try {
       await _player.stop();
     } catch (e) {
-      debugPrint('[BBAudioPlayer] stop() error (player may be disposed): $e');
+      debugPrint('[MwAudioPlayer] stop() error (player may be disposed): $e');
     }
   }
 
@@ -242,7 +242,7 @@ class BBAudioPlayer {
     try {
       await _player.pause();
     } catch (e) {
-      debugPrint('[BBAudioPlayer] pause() error (player may be disposed): $e');
+      debugPrint('[MwAudioPlayer] pause() error (player may be disposed): $e');
     }
     if (_currentFileName.isNotEmpty) {
       playStateListener?.onPlayPause(_currentFileName);
@@ -259,7 +259,7 @@ class BBAudioPlayer {
     try {
       await _player.dispose();
     } catch (e) {
-      debugPrint('[BBAudioPlayer] release() dispose error: $e');
+      debugPrint('[MwAudioPlayer] release() dispose error: $e');
     }
   }
 
@@ -434,7 +434,7 @@ class PhoneticAudioPlayer {
     );
   }
 
-  final BBAudioPlayer _audioPlayer = BBAudioPlayer();
+  final MwAudioPlayer _audioPlayer = MwAudioPlayer();
   PlayAudioListener? playStateListener;
   bool _isPronounceUK = false;
 
@@ -549,7 +549,7 @@ class SentenceAudioPlayer {
     );
   }
 
-  final BBAudioPlayer _audioPlayer = BBAudioPlayer();
+  final MwAudioPlayer _audioPlayer = MwAudioPlayer();
   PlayAudioListener? playStateListener;
   SentencePlayListener? _sentenceListener;
   String _currentUrl = '';
@@ -682,7 +682,7 @@ class TextAudioPlayer {
     );
   }
 
-  final BBAudioPlayer _audioPlayer = BBAudioPlayer();
+  final MwAudioPlayer _audioPlayer = MwAudioPlayer();
   PlayAudioListener? playStateListener;
 
   /// 获取单例

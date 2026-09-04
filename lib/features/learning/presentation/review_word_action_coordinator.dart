@@ -1,9 +1,9 @@
 import 'package:word_app/core/utils/swallowed_error_report.dart';
-import 'package:word_app/models/bb_word_process.dart';
+import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/features/learning/presentation/review_word_actions_state.dart';
 
 /// 从当前正式复习会话读取词条的只读端口。
-typedef CurrentReviewWord = BBWordProcess? Function();
+typedef CurrentReviewWord = MwWordProcess? Function();
 
 /// 推进当前正式复习词条的“手动掌握”命令端口。
 typedef MarkCurrentReviewWordAsKnown = bool Function();
