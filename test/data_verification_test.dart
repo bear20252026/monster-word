@@ -1,5 +1,5 @@
-// Curated wordbook database verification tests
-// Expected: ~50 books / ~25,000 words / curated university-level library
+// Wordbook database verification tests
+// Expected: 191 books / ~32,000 words / full official library
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -49,18 +49,9 @@ void main() {
       allBooks = await WordBookDatabase.instance.getBooks();
     });
 
-    test('Book count within curated range (40-60)', () async {
-      // Curated library: ~50 books (university level and above)
-      expect(
-        allBooks.length,
-        greaterThanOrEqualTo(40),
-        reason: 'Curated library should have at least 40 books, got ${allBooks.length}',
-      );
-      expect(
-        allBooks.length,
-        lessThanOrEqualTo(60),
-        reason: 'Curated library should have at most 60 books, got ${allBooks.length}',
-      );
+    test('Book count matches full library (191)', () async {
+      // Full official library restored from 191-book dataset
+      expect(allBooks.length, 191, reason: 'Full library should have exactly 191 books, got ${allBooks.length}');
       for (final b in allBooks) {
         expect(b.code.isNotEmpty, true, reason: 'id=${b.id} code should not be empty');
         expect(b.wordCount >= 0, true, reason: '${b.code} wordCount should be non-negative');
