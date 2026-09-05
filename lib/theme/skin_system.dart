@@ -94,6 +94,62 @@ class ThemeSummary {
   const ThemeSummary({required this.id, required this.name, required this.isDark, required this.previewColors});
 }
 
+/// 精选风格（用户唯一可感知的"风格"概念 = A 档颜色主题 + B 档设计语言的固定组合）。
+class MwStyle {
+  final String id;
+  final String name;
+  final String desc;
+
+  /// 绑定的 A 档颜色主题 id（[themes] 的键）
+  final String themeId;
+
+  /// 绑定的 B 档设计语言 id（[DesignLanguages.all] 的键）
+  final String languageId;
+  const MwStyle({
+    required this.id,
+    required this.name,
+    required this.desc,
+    required this.themeId,
+    required this.languageId,
+  });
+}
+
+/// 精选风格注册表：用户只做 6 选 1，不再暴露 11 主题 × 6 语言的双轴组合
+/// （66 种组合对用户是选择灾难）。`themes` 色板库仍保留全部 11 套
+/// （对比度守卫测试遍历全库），但非精选主题不再出现在任何用户界面。
+const List<MwStyle> kMwStyles = [
+  MwStyle(
+    id: 'starbucks_cream',
+    name: '星巴克 · 奶油',
+    desc: '奶油画布与品牌绿，温润耐看（默认）',
+    themeId: 'starbucks_cream',
+    languageId: 'starbucks',
+  ),
+  MwStyle(
+    id: 'starbucks_dark',
+    name: '星巴克 · 墨绿',
+    desc: '墨绿深夜画布，专注不刺眼',
+    themeId: 'starbucks_dark',
+    languageId: 'starbucks',
+  ),
+  MwStyle(
+    id: 'apple_light',
+    name: 'Apple · 简约',
+    desc: '珍珠白配 Action Blue，克制精准',
+    themeId: 'apple_light',
+    languageId: 'apple',
+  ),
+  MwStyle(id: 'claude_cream', name: 'Claude · 暖调', desc: '暖纸质感与赤陶色，书卷气', themeId: 'claude_cream', languageId: 'claude'),
+  MwStyle(id: 'nike_mono', name: 'Nike · 锐利', desc: '黑白单色大字，快节奏运动感', themeId: 'nike_mono', languageId: 'nike'),
+  MwStyle(
+    id: 'airbnb_light',
+    name: 'Airbnb · 友好',
+    desc: '纯白画布配珊瑚红，亲和明快',
+    themeId: 'airbnb_light',
+    languageId: 'airbnb',
+  ),
+];
+
 class ThemePreset {
   final String id;
   final String name;
@@ -513,7 +569,16 @@ final themes = <String, ThemePreset>{
 };
 
 class SkinSystem extends ChangeNotifier {
-  String _themeId = 'bright';
+  /// 旧主题 id → 精选风格（老用户升级时的偏好迁移，幂等）
+  static const Map<String, String> legacyThemeMigration = {
+    'bright': 'starbucks_cream',
+    'warm_orange': 'starbucks_cream',
+    'dark': 'starbucks_dark',
+    'pure_black': 'starbucks_dark',
+    'clickhouse_dark': 'starbucks_dark',
+  };
+
+  String _themeId = 'starbucks_cream';
   bool _followSystem = false;
 
   /// 用户选择的字体覆盖（null = 默认 Inter）。持久化走独立的 SharedPreferences 键，
@@ -537,18 +602,26 @@ class SkinSystem extends ChangeNotifier {
   /// 用户当前选中的 B 档设计语言 id。
   String get designLanguageId => _designLanguageId;
 
-  /// 所有可用主题的摘要信息（供主题选择页展示）
-  List<ThemeSummary> get availableThemes => themes.values
-      .map(
-        (p) => ThemeSummary(
-          id: p.id,
-          name: p.name,
-          isDark: p.uiBrightness == Brightness.dark,
-          // 用 pageBg + accent 两个最具辨识度的色代表该主题
-          previewColors: [p.vars.pageBg, p.vars.accent],
-        ),
-      )
-      .toList();
+  /// 当前生效的精选风格 id（主题+语言精确匹配 → 仅主题匹配 → 默认）。
+  String get currentStyleId {
+    final t = effectiveThemeId;
+    for (final s in kMwStyles) {
+      if (s.themeId == t && s.languageId == _designLanguageId) return s.id;
+    }
+    for (final s in kMwStyles) {
+      if (s.themeId == t) return s.id;
+    }
+    return kMwStyles.first.id;
+  }
+
+  /// 一键切换精选风格：同时绑定 A 档颜色主题与 B 档设计语言，原子生效。
+  void setStyle(String id) {
+    if (currentStyleId == id) return;
+    final style = kMwStyles.where((s) => s.id == id).firstOrNull;
+    if (style == null) return;
+    setDesignLanguage(style.languageId);
+    setTheme(style.themeId);
+  }
 
   /// 当前系统亮度（监听刷新）
   Brightness _systemBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
@@ -556,11 +629,13 @@ class SkinSystem extends ChangeNotifier {
   SkinSystem() {
     try {
       final saved = AppPreferences().getSkinThemeId();
-      _themeId = themes.containsKey(saved) ? saved : 'bright'; // 非法值兜底
+      // 旧偏好（明亮/暖阳橙/深邃/极夜/ClickHouse）迁移到最近的精选风格主题
+      _themeId = themes.containsKey(saved) ? saved : 'starbucks_cream';
+      _themeId = legacyThemeMigration[_themeId] ?? _themeId;
       _followSystem = AppPreferences().isSkinFollowSystem();
     } catch (e) {
       // 测试环境或未初始化时使用默认值
-      _themeId = 'bright';
+      _themeId = 'starbucks_cream';
       _followSystem = false;
     }
     // 异步恢复字体偏好（构造器是同步的，加载后通知刷新）

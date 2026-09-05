@@ -8,6 +8,7 @@ import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/mw_style_grid.dart';
 
 /// 外观 & 沉浸场景页
 class AppearancePage extends StatefulWidget {
@@ -41,8 +42,13 @@ class _AppearancePageState extends State<AppearancePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: context.design.spacing.lg),
-                        // 主题选择圆圈（明亮/深邃/极夜）
-                        _buildThemeCircles(skin),
+                        // 精选风格（6 选 1：颜色主题 + 设计语言一次绑定）
+                        Text(
+                          '风格',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: skin.colors.text3),
+                        ),
+                        SizedBox(height: context.design.spacing.sm),
+                        const MwStyleGrid(),
                         SizedBox(height: context.design.spacing.md),
                         // 跟随系统开关
                         _buildFollowSystemRow(skin),
@@ -87,52 +93,6 @@ class _AppearancePageState extends State<AppearancePage> {
           ),
           SizedBox(width: 48),
         ],
-      ),
-    );
-  }
-
-  /// 主题选择圆圈
-  Widget _buildThemeCircles(SkinSystem skin) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(context.design.radius.xl),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: themes.values.map((preset) {
-          final isSelected = skin.effectiveThemeId == preset.id;
-          return GestureDetector(
-            onTap: () => skin.setTheme(preset.id),
-            child: Column(
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: preset.vars.pageBg,
-                    border: Border.all(
-                      color: isSelected ? skin.colors.accent : preset.vars.divider,
-                      width: isSelected ? 3 : 1,
-                    ),
-                  ),
-                  child: isSelected ? Center(child: Icon(Icons.check, color: skin.colors.accent, size: 20)) : null,
-                ),
-                SizedBox(height: context.design.spacing.xs),
-                Text(
-                  preset.name,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? skin.colors.text1 : skin.colors.text3,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
       ),
     );
   }
