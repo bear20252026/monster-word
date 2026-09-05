@@ -62,4 +62,16 @@ class DefinitionFormatter {
       return '';
     }
   }
+
+  static final RegExp _duplicatedPosDots = RegExp(
+    r'\b(n|v|vi|vt|adj|adv|a|ad|prep|conj|pron|art|num|interj)\.(?=\.)(\.+)',
+  );
+
+  /// 规范化用于选项/释义展示的文本：收紧词性标记后的重复句点。
+  ///
+  /// 词库原始数据存在 `"n.. 错误"`、`"adv.. 明显地"` 等脏格式，直接展示
+  /// 观感差；此处仅在词性标记位置收紧（不影响释义中的省略号）。
+  static String normalizeDisplay(String interpret) {
+    return interpret.replaceAllMapped(_duplicatedPosDots, (match) => '${match.group(1)}.');
+  }
 }

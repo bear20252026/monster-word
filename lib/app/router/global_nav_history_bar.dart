@@ -96,43 +96,49 @@ class _GlobalNavHistoryBarState extends State<GlobalNavHistoryBar> {
     final canForward = widget.history.canGoForward;
     final colors = skin.colors;
 
+    // 本组件渲染于 MaterialApp.builder 层（Navigator/Overlay 之外），
+    // 没有隐式 Material 祖先：InkWell 水波纹必须显式提供 Material，否则
+    // 悬停即抛 "No Material widget found"（此前会撑出整排错误面板）。
     return AnimatedOpacity(
       opacity: (canBack || canForward) ? 1 : 0.25,
       duration: const Duration(milliseconds: 200),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            decoration: BoxDecoration(
-              color: colors.cardBg.withValues(alpha: 0.82),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: colors.divider),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3, offset: const Offset(0, 1)),
-                BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 16, offset: const Offset(0, 6)),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _NavButton(
-                  icon: Icons.arrow_back_ios_new_rounded,
-                  tooltip: '返回 (Alt+←)',
-                  enabled: canBack,
-                  color: colors,
-                  onTap: _goBack,
-                ),
-                const SizedBox(width: 2),
-                _NavButton(
-                  icon: Icons.arrow_forward_ios_rounded,
-                  tooltip: '前进 (Alt+→)',
-                  enabled: canForward,
-                  color: colors,
-                  onTap: _goForward,
-                ),
-              ],
+      child: Material(
+        type: MaterialType.transparency,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: colors.cardBg.withValues(alpha: 0.82),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: colors.divider),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3, offset: const Offset(0, 1)),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 16, offset: const Offset(0, 6)),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _NavButton(
+                    icon: Icons.arrow_back_ios_new_rounded,
+                    tooltip: '返回 (Alt+←)',
+                    enabled: canBack,
+                    color: colors,
+                    onTap: _goBack,
+                  ),
+                  const SizedBox(width: 2),
+                  _NavButton(
+                    icon: Icons.arrow_forward_ios_rounded,
+                    tooltip: '前进 (Alt+→)',
+                    enabled: canForward,
+                    color: colors,
+                    onTap: _goForward,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

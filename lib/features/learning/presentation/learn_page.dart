@@ -20,6 +20,7 @@ import 'package:word_app/widgets/animations.dart';
 import 'package:word_app/features/learning/presentation/word_lookup_popup.dart';
 import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/confetti.dart';
+import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/scratch_to_reveal.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
@@ -86,42 +87,49 @@ class _LearnPageState extends State<LearnPage> {
                 child: Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
-                    child: isLandscape
-                        ? Row(
-                            children: [
-                              Expanded(
-                                child: _WordArea(
-                                  word: word,
-                                  skin: skin,
-                                  resp: resp,
-                                  audioLoading: player.isLoading && player.currentWord == word.word,
-                                  onPlayAudio: _playAudio,
+                    child: Column(
+                      children: [
+                        // 会话进度栏：竖屏/横屏共用（此前横屏分支缺失，无进度/返回/收藏）
+                        _TopBar(skin: skin, state: state),
+                        Expanded(
+                          child: isLandscape
+                              ? Row(
+                                  children: [
+                                    Expanded(
+                                      child: _WordArea(
+                                        word: word,
+                                        skin: skin,
+                                        resp: resp,
+                                        audioLoading: player.isLoading && player.currentWord == word.word,
+                                        onPlayAudio: _playAudio,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: _QuizArea(word: word, state: state, skin: skin),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  children: [
+                                    Expanded(
+                                      flex: 4,
+                                      child: _WordArea(
+                                        word: word,
+                                        skin: skin,
+                                        resp: resp,
+                                        audioLoading: player.isLoading && player.currentWord == word.word,
+                                        onPlayAudio: _playAudio,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 6,
+                                      child: _QuizArea(word: word, state: state, skin: skin),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              Expanded(
-                                child: _QuizArea(word: word, state: state, skin: skin),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              _TopBar(skin: skin, state: state),
-                              Expanded(
-                                flex: 4,
-                                child: _WordArea(
-                                  word: word,
-                                  skin: skin,
-                                  resp: resp,
-                                  audioLoading: player.isLoading && player.currentWord == word.word,
-                                  onPlayAudio: _playAudio,
-                                ),
-                              ),
-                              Expanded(
-                                flex: 6,
-                                child: _QuizArea(word: word, state: state, skin: skin),
-                              ),
-                            ],
-                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -297,7 +305,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
               Icon(Icons.celebration, size: 80, color: colors.accent),
               const SizedBox(height: 24),
               Text(
-                '🎉 今日学习完成！',
+                '今日学习完成！',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colors.text1),
               ),
               const SizedBox(height: 12),
@@ -318,7 +326,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('🏅', style: TextStyle(fontSize: 16)),
+                      Icon(Icons.emoji_events_rounded, size: 16, color: colors.accent),
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
@@ -404,7 +412,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('👹', style: TextStyle(fontSize: 16)),
+          const MonsterAvatar(size: 20),
           const SizedBox(width: 6),
           Text(
             '尖叫币 +$_grantedCoins',

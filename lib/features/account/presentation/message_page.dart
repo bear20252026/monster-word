@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/features/account/application/message_store.dart';
 import 'package:word_app/features/account/domain/message_item.dart';
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
@@ -24,7 +25,13 @@ class _MessagePageState extends State<MessagePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<MessageStore>().load();
+      if (!mounted) return;
+      final store = context.read<MessageStore>();
+      // load 前补注签到端口（Account 作用域创建时读不到，见 MessageStore 注释）。
+      try {
+        store.attachCheckinReader(context.read<CheckinStatusReader>());
+      } on ProviderNotFoundException catch (_) {}
+      store.load();
     });
   }
 

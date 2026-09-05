@@ -6,11 +6,13 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
+import 'package:word_app/features/learning/application/favorites_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/domain/choice_generator.dart';
+import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
@@ -59,6 +61,10 @@ void main() {
           ChangeNotifierProvider<LearningSessionState>.value(value: session),
           ChangeNotifierProvider<AudioPlaybackState>(
             create: (_) => AudioPlaybackState(audioService: _FakeAudioService()),
+          ),
+          // 会话顶栏（横屏同样渲染）需要收藏状态；测试补齐最小装配。
+          ChangeNotifierProvider<LearningFavoritesState>(
+            create: (_) => LearningFavoritesState(favoritesPort: _FakeFavoritesPort(), queuePort: _FakeQueuePort(const [])),
           ),
         ],
         // 把 Provider 放在 MaterialApp 之上，使 push 出来的 WordDetailPage 路由也能访问。
@@ -112,6 +118,17 @@ class _FakeProgressPort implements LearningProgressPort {
 
   @override
   Future<void> save({required Book currentBook, required int currentIndex, required List<Word> queue}) async {}
+}
+
+class _FakeFavoritesPort implements FavoritesPort {
+  @override
+  Future<Set<String>> getFavoriteWords() async => const {};
+
+  @override
+  Future<void> toggleFavorite(String word) async {}
+
+  @override
+  bool isFavorite(String word) => false;
 }
 
 class _FakeChoicePort implements ChoiceGeneratorPort {

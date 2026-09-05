@@ -3,6 +3,7 @@ import 'package:word_app/core/engine/super_memory_engine.dart';
 import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/domain/choice_generator.dart';
+import 'package:word_app/features/learning/domain/definition_formatter.dart';
 
 /// 正式复习会话的题目数据工厂。
 ///
@@ -34,8 +35,13 @@ class ReviewSessionQuestionFactory {
     if (currentWord == null) return const [];
 
     final choices = ChoiceGenerator.generate(
-      correct: ChoiceCandidate(word: currentWord.word, interpret: currentWord.interpret),
-      candidates: reviewWords.map((word) => ChoiceCandidate(word: word.word, interpret: word.interpret)),
+      correct: ChoiceCandidate(
+        word: currentWord.word,
+        interpret: DefinitionFormatter.normalizeDisplay(currentWord.interpret),
+      ),
+      candidates: reviewWords.map(
+        (word) => ChoiceCandidate(word: word.word, interpret: DefinitionFormatter.normalizeDisplay(word.interpret)),
+      ),
     );
     return choices.map((choice) => WordChoicePair(choice.word, choice.interpret)).toList();
   }

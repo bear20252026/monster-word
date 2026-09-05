@@ -317,8 +317,13 @@ class LearningSessionState extends ChangeNotifier {
     }
 
     final generated = _choicePort.generate(
-      correct: ChoiceCandidate(word: current.word, interpret: current.interpret),
-      candidates: _queue.map((word) => ChoiceCandidate(word: word.word, interpret: word.interpret)),
+      correct: ChoiceCandidate(
+        word: current.word,
+        interpret: DefinitionFormatter.normalizeDisplay(current.interpret),
+      ),
+      candidates: _queue.map(
+        (word) => ChoiceCandidate(word: word.word, interpret: DefinitionFormatter.normalizeDisplay(word.interpret)),
+      ),
     );
     _choices = generated.map((c) => WordChoicePair(c.word, c.interpret)).toList(growable: false);
   }

@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
+// 跨 feature 只依赖 application 端口（R4 通道）：经 LearningStatisticsReader 读取统计
+import 'package:word_app/features/learning/application/learning_statistics_reader.dart';
 import 'package:word_app/features/settings/presentation/more_settings_page.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -91,7 +93,7 @@ class ProfileScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.only(top: 8, bottom: 24),
-      color: MwColors.cream, // 奶油画布纯色（token：#F2F0EB）
+      color: skin.colors.pageBg, // 跟随主题画布（勿硬编码奶油色，深色主题下会断裂）
       child: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: resp.contentWidth),
@@ -99,8 +101,8 @@ class ProfileScreen extends StatelessWidget {
               ? Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // 头像 + VIP 徽章
-                    _buildAvatar(skin, profile),
+                    // 头像（点击进入资料编辑）
+                    _buildAvatar(context, skin, profile),
                     const SizedBox(width: 20),
                     // 用户信息
                     Column(
@@ -110,22 +112,24 @@ class ProfileScreen extends StatelessWidget {
                           profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
                           style: MwTypography.heading4.copyWith(color: skin.colors.text1),
                         ),
-                        const SizedBox(height: 4),
-                        Text('VIP 会员', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
+                        const SizedBox(height: 6),
+                        const _ProfileStatsRow(),
                       ],
                     ),
                   ],
                 )
               : Column(
                   children: [
-                    // 头像 + VIP 徽章
-                    _buildAvatar(skin, profile),
+                    // 头像（点击进入资料编辑）
+                    _buildAvatar(context, skin, profile),
                     const SizedBox(height: 12),
                     // 用户 ID（用户可自定义）
                     Text(
                       profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
                       style: MwTypography.heading4.copyWith(color: skin.colors.text1),
                     ),
+                    const SizedBox(height: 6),
+                    const _ProfileStatsRow(),
                   ],
                 ),
         ),
@@ -133,45 +137,48 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(SkinSystem skin, AccountProfileState profile) {
-    return SizedBox(
-      width: 88,
-      height: 88,
-      child: Stack(
-        children: [
-          Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.white100,
-              border: Border.all(color: AppColors.white100, width: 3),
-              image: profile.avatar.isEmpty
-                  ? null
-                  : DecorationImage(image: FileImage(File(profile.avatar)), fit: BoxFit.cover),
-            ),
-            child: profile.avatar.isEmpty ? Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 40) : null,
-          ),
-          Positioned(
-            right: 0,
-            bottom: 0,
-            child: Container(
-              width: 28,
-              height: 28,
+  Widget _buildAvatar(BuildContext context, SkinSystem skin, AccountProfileState profile) {
+    return ScaleDownOnPress(
+      onTap: () => Navigator.pushNamed(context, RouteNames.accountInfo),
+      child: SizedBox(
+        width: 88,
+        height: 88,
+        child: Stack(
+          children: [
+            Container(
+              width: 88,
+              height: 88,
               decoration: BoxDecoration(
-                color: skin.colors.accent,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.white100, width: 2),
+                color: AppColors.white100,
+                border: Border.all(color: skin.colors.divider, width: 1),
+                boxShadow: const [
+                  BoxShadow(color: MwShadows.hairlineShadow, blurRadius: 0.5),
+                  BoxShadow(color: MwShadows.liftShadow, blurRadius: 1.0, offset: Offset(0, 1)),
+                ],
+                image: profile.avatar.isEmpty
+                    ? null
+                    : DecorationImage(image: FileImage(File(profile.avatar)), fit: BoxFit.cover),
               ),
-              child: const Center(
-                child: Text(
-                  'VIP',
-                  style: TextStyle(color: AppColors.white100, fontSize: 9, fontWeight: FontWeight.bold),
+              child: profile.avatar.isEmpty ? Icon(Icons.menu_book_rounded, color: skin.colors.accent, size: 40) : null,
+            ),
+            // 编辑角标（点击头像进入资料编辑）
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: skin.colors.accent,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: skin.colors.cardBg, width: 2),
                 ),
+                child: const Center(child: Icon(Icons.edit_rounded, color: Colors.white, size: 13)),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -291,6 +298,35 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 头像下方真实学习数据行（替代此前的硬编码「VIP 会员」假标签）。
+class _ProfileStatsRow extends StatelessWidget {
+  const _ProfileStatsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.skin;
+    return Selector<LearningStatisticsReader, (int, int)>(
+      selector: (_, s) => (s.totalLearnedDays, s.learnedCount),
+      builder: (context, stats, _) {
+        final (days, words) = stats;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              days > 0 ? '已坚持 $days 天' : '开始你的第一天',
+              style: MwTypography.bodySm.copyWith(color: skin.colors.text3),
+            ),
+            const SizedBox(width: 8),
+            Container(width: 3, height: 3, decoration: BoxDecoration(color: skin.colors.text3, shape: BoxShape.circle)),
+            const SizedBox(width: 8),
+            Text('掌握 $words 词', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
+          ],
+        );
+      },
     );
   }
 }

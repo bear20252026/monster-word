@@ -51,6 +51,47 @@ Color coverColorFor(BuildContext context, String code) {
   return hsl.withLightness((hsl.lightness + lightnessDelta[index]).clamp(0.15, 0.85)).toColor();
 }
 
+/// 词书展示名：数据层 name 缺失时回退为原始 code（如 CET4DGCH），观感差。
+/// 这里只解码有把握的命名规则（拼音首字母后缀 + 已知词表缩写），
+/// 无法识别时原样返回，不臆造名称。
+String friendlyBookName(String raw) {
+  final name = raw.replaceAll('MonsterWord_', '');
+  // 已含中文即视为可读名
+  if (name.contains(RegExp(r'[\u4e00-\u9fff]'))) return name;
+
+  // 已知词表缩写（官方/通用命名，把握高）
+  const exact = {
+    'AWL': '学术词汇 AWL',
+    'BARRONSAT': '巴朗 SAT 词汇',
+    'BECHIGHER': 'BEC 高级',
+    'BECVAN': 'BEC 中级',
+    'BECPRE': 'BEC 初级',
+  };
+  final exactName = exact[name];
+  if (exactName != null) return exactName;
+
+  // 拼音首字母后缀：DGCH=大纲词汇 / HXCH=核心词汇（如 CET4DGCH → 四级大纲词汇）
+  final suffix = RegExp(r'(DGCH|HXCH)$').firstMatch(name);
+  if (suffix != null) {
+    final stem = name.substring(0, name.length - 4);
+    final category = _categoryNameOf(stem);
+    if (category != null) {
+      return '$category${suffix.group(1) == 'DGCH' ? '大纲词汇' : '核心词汇'}';
+    }
+  }
+  return name;
+}
+
+String? _categoryNameOf(String code) {
+  if (code.startsWith('CET4')) return '四级';
+  if (code.startsWith('CET6')) return '六级';
+  if (code.startsWith('GK')) return '高考';
+  if (code.startsWith('KY')) return '考研';
+  if (code.startsWith('IELTS')) return '雅思';
+  if (code.startsWith('TOEFL') || code.startsWith('GDTOEFL')) return '托福';
+  return null;
+}
+
 class _LibSelectPageState extends State<LibSelectPage> {
   late Future<List<Book>> _booksFuture;
   List<Book> _allBooks = [];
@@ -96,6 +137,127 @@ class _LibSelectPageState extends State<LibSelectPage> {
     Navigator.pushNamed(context, RouteNames.bookWords, arguments: book);
   }
 
+  // ===== 顶部导航栏（左箭头 + 标题 + 搜索/眼睛/更多）=====
+  Widget _buildTopNav(ThemeVars colors) {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      color: colors.cardBg,
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+            color: colors.text1,
+            onPressed: () => NavUtils.safePop(context),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text('选择词书', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1)),
+          ),
+          IconButton(
+            icon: const Icon(Icons.search, size: 22),
+            color: colors.text1,
+            onPressed: () => Navigator.pushNamed(context, RouteNames.search),
+          ),
+          IconButton(
+            icon: Icon(_showDescription ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 22),
+            color: colors.text1,
+            tooltip: _showDescription ? '隐藏词书描述' : '显示词书描述',
+            onPressed: () => setState(() => _showDescription = !_showDescription),
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_horiz, size: 22),
+            color: colors.text1,
+            onPressed: () => _showMoreMenu(context, colors),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===== 精选区：词源星球品牌展示 + 弯曲画廊 =====
+  Widget _buildFeaturedStrip(BuildContext context, ThemeVars colors, List<Book> featured) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: colors.cardBgAlt, borderRadius: BorderRadius.circular(24)),
+            child: Row(
+              children: [
+                WordGlobe(
+                  size: 100,
+                  arcColor: colors.accent,
+                  atmosphereColor: colors.accent,
+                  points: WordOriginData.origins,
+                  arcs: WordOriginData.connections,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '单词的环球之旅',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.text1),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '从罗马到伦敦，追溯每个词的起源与传播路径。拖动星球旋转，双指缩放探索。',
+                        style: TextStyle(fontSize: 12, height: 1.4, color: colors.text2),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text('精选词书 · 左右滑动探索', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.text2)),
+          ),
+        ),
+        const SizedBox(height: 8),
+        BendingGallery(
+          height: 175,
+          itemWidth: 112,
+          curvature: 0.35,
+          activeColor: colors.accent,
+          items: featured.map((book) {
+            return BendingGalleryItem(
+              label: friendlyBookName(book.name),
+              color: coverColorFor(context, book.code),
+              onTap: () => _openBookFromGallery(context, book),
+              // 画廊单元格固定约 112×122，放不下完整卡片，
+              // 这里用紧凑封面内容（图标 + 名称 + 词数）
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.menu_book, color: AppColors.white100, size: 26),
+                  const SizedBox(height: 8),
+                  Text(
+                    friendlyBookName(book.name),
+                    style: MwTypography.bodyMd.copyWith(color: AppColors.white100, fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text('${book.wordCount} 词', style: MwTypography.caption.copyWith(color: AppColors.white100.withValues(alpha: 0.75))),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.skin.colors;
@@ -106,52 +268,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
         child: Column(
           children: [
             // ===== 顶部导航栏（CustomHeadView：左箭头 + 标题 + 搜索/眼睛）=====
-            Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              color: colors.cardBg,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                    color: colors.text1,
-                    onPressed: () => NavUtils.safePop(context),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      '选择词书',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1),
-                    ),
-                  ),
-                  // 搜索图标
-                  IconButton(
-                    icon: const Icon(Icons.search, size: 22),
-                    color: colors.text1,
-                    onPressed: () {
-                      Navigator.pushNamed(context, RouteNames.search);
-                    },
-                  ),
-                  // 眼睛图标（显示/隐藏词书描述）
-                  IconButton(
-                    icon: Icon(_showDescription ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 22),
-                    color: colors.text1,
-                    tooltip: _showDescription ? '隐藏词书描述' : '显示词书描述',
-                    onPressed: () {
-                      setState(() => _showDescription = !_showDescription);
-                    },
-                  ),
-                  // 更多选项菜单
-                  IconButton(
-                    icon: const Icon(Icons.more_horiz, size: 22),
-                    color: colors.text1,
-                    onPressed: () {
-                      _showMoreMenu(context, colors);
-                    },
-                  ),
-                ],
-              ),
-            ),
+            _buildTopNav(colors),
             Container(height: 1, color: colors.divider),
             // ===== 分类选项卡（Morphing Tabs 变形标签）=====
             Padding(
@@ -213,97 +330,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                     return Column(
                       children: [
                         const SizedBox(height: 10),
-                        // ===== 词源星球品牌展示（3D 旋转地球 + 六大词源地，可拖拽/缩放）=====
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(color: colors.cardBgAlt, borderRadius: BorderRadius.circular(24)),
-                            child: Row(
-                              children: [
-                                WordGlobe(
-                                  size: 100,
-                                  arcColor: colors.accent,
-                                  atmosphereColor: colors.accent,
-                                  points: WordOriginData.origins,
-                                  arcs: WordOriginData.connections,
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '单词的环球之旅',
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w700,
-                                          color: colors.text1,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '从罗马到伦敦，追溯每个词的起源与传播路径。拖动星球旋转，双指缩放探索。',
-                                        style: TextStyle(fontSize: 12, height: 1.4, color: colors.text2),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              '精选词书 · 左右滑动探索',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.text2),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        BendingGallery(
-                          height: 175,
-                          itemWidth: 112,
-                          curvature: 0.35,
-                          activeColor: colors.accent,
-                          items: featured.map((book) {
-                            return BendingGalleryItem(
-                              label: book.name,
-                              color: coverColorFor(context, book.code),
-                              onTap: () => _openBookFromGallery(context, book),
-                              // 画廊单元格固定约 112×122，放不下完整卡片，
-                              // 这里用紧凑封面内容（图标 + 编码 + 词数）
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.menu_book, color: AppColors.white100, size: 26),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    book.code,
-                                    style: MwTypography.bodyMd.copyWith(
-                                      color: AppColors.white100,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '${book.wordCount} 词',
-                                    style: MwTypography.caption.copyWith(
-                                      color: AppColors.white100.withValues(alpha: 0.75),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
+                        _buildFeaturedStrip(context, colors, featured),
                         const Divider(height: 1),
                         Expanded(
                           child: ListView.builder(
@@ -524,8 +551,11 @@ class _LibItemState extends State<_LibItem> {
   }
 
   String _coverText() {
-    final name = widget.book.name.replaceAll(RegExp(r'MonsterWord_'), '');
-    return name.length > 4 ? name.substring(0, 4) : name;
+    final name = friendlyBookName(widget.book.name).replaceAll(RegExp(r'\s'), '');
+    // 中文显示名最多取 4 字，编码名最多取 6 字符，避免封面溢出
+    final isChinese = name.contains(RegExp(r'[\u4e00-\u9fff]'));
+    final limit = isChinese ? 4 : 6;
+    return name.length > limit ? name.substring(0, limit) : name;
   }
 
   /// 底部行：单词量 + 「查看单词」入口（进词书展示页浏览全部单词）
@@ -605,7 +635,7 @@ class _LibItemState extends State<_LibItem> {
                     children: [
                       Expanded(
                         child: Text(
-                          book.name,
+                          friendlyBookName(book.name),
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

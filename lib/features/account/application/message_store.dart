@@ -24,7 +24,14 @@ class MessageStore extends ChangeNotifier {
   SharedPreferences? prefsOverride;
 
   /// 签到状态读取端口（跨 feature application 端口，R4 通道）；null 时不刷新学习消息。
-  final CheckinStatusReader? checkinReader;
+  ///
+  /// 作用域说明：MessageStore 注册于 Account 作用域（位于 CheckIn 作用域之外），
+  /// 创建时通常读不到 CheckinStatusReader；由入口页（消息角标/消息页）在
+  /// load 前经 [attachCheckinReader] 补注。
+  CheckinStatusReader? checkinReader;
+
+  /// 运行期补注签到端口（幂等）。
+  void attachCheckinReader(CheckinStatusReader reader) => checkinReader ??= reader;
 
   List<MessageItem> _messages = <MessageItem>[];
   bool _loaded = false;

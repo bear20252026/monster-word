@@ -30,7 +30,20 @@ Widget buildAccountFeatureScope({required Widget child}) {
       Provider<SmsCodeService>(create: (_) => SpugSmsCodeService()),
       Provider<PasswordAuthStore>(create: (_) => SecurePasswordAuthStore()),
       // 消息中心单一事实来源；跨 feature 仅依赖 checkin 的 application 端口（R4 通道）。
-      ChangeNotifierProvider(create: (context) => MessageStore(checkinReader: context.read<CheckinStatusReader>())),
+      // 注意：Account 作用域在 CheckIn 作用域之外，create 的 context 读不到
+      // CheckinStatusReader（上层无法下探），故此处容错降级为 null，
+      // 由入口页在 load 前 attachCheckinReader 补注（见 message_badge_icon）。
+      ChangeNotifierProvider(
+        create: (context) {
+          CheckinStatusReader? reader;
+          try {
+            reader = context.read<CheckinStatusReader>();
+          } on ProviderNotFoundException catch (_) {
+            reader = null;
+          }
+          return MessageStore(checkinReader: reader);
+        },
+      ),
       ChangeNotifierProvider(
         create: (context) => AccountProfileState(profileStore: context.read<AccountProfileStore>())..refresh(),
       ),

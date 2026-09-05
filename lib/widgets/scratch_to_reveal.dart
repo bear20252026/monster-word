@@ -216,7 +216,7 @@ class WordScratchCard extends StatelessWidget {
           width: width,
           height: height,
           coverColor: c,
-          coverText: '👆 刮开查看释义',
+          // 默认提示用 touch 图标（比 emoji 更符合品牌质感）
           child: Container(
             decoration: BoxDecoration(color: c.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
             alignment: Alignment.center,

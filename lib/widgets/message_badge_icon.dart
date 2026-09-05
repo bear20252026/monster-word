@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/account/application/message_store.dart';
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 class MessageBadgeIcon extends StatefulWidget {
@@ -30,6 +31,11 @@ class _MessageBadgeIconState extends State<MessageBadgeIcon> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final store = context.read<MessageStore>();
+      // 补注签到端口：Account 作用域创建 store 时读不到 CheckIn 作用域的端口，
+      // 而本组件位于下层页面可以读到；读取失败不阻塞消息中心可用性。
+      try {
+        store.attachCheckinReader(context.read<CheckinStatusReader>());
+      } on ProviderNotFoundException catch (_) {}
       if (!store.loaded) store.load();
     });
   }
