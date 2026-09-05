@@ -316,12 +316,13 @@ class _ProfileStatsRow extends StatelessWidget {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              days > 0 ? '已坚持 $days 天' : '开始你的第一天',
-              style: MwTypography.bodySm.copyWith(color: skin.colors.text3),
-            ),
+            Text(days > 0 ? '已坚持 $days 天' : '开始你的第一天', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
             const SizedBox(width: 8),
-            Container(width: 3, height: 3, decoration: BoxDecoration(color: skin.colors.text3, shape: BoxShape.circle)),
+            Container(
+              width: 3,
+              height: 3,
+              decoration: BoxDecoration(color: skin.colors.text3, shape: BoxShape.circle),
+            ),
             const SizedBox(width: 8),
             Text('掌握 $words 词', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
           ],

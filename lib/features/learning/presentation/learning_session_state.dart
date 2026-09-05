@@ -317,10 +317,7 @@ class LearningSessionState extends ChangeNotifier {
     }
 
     final generated = _choicePort.generate(
-      correct: ChoiceCandidate(
-        word: current.word,
-        interpret: DefinitionFormatter.normalizeDisplay(current.interpret),
-      ),
+      correct: ChoiceCandidate(word: current.word, interpret: DefinitionFormatter.normalizeDisplay(current.interpret)),
       candidates: _queue.map(
         (word) => ChoiceCandidate(word: word.word, interpret: DefinitionFormatter.normalizeDisplay(word.interpret)),
       ),

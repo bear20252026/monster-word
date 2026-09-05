@@ -642,7 +642,10 @@ class _CheckInStripState extends State<_CheckInStrip> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: ShapeDecoration(color: skin.colors.accent, shape: const StadiumBorder()),
-                child: const Text('签到 +10', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+                child: const Text(
+                  '签到 +10',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
               )
             else
               Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
@@ -696,7 +699,10 @@ class _BookStrip extends StatelessWidget {
                 decoration: ShapeDecoration(
                   shape: StadiumBorder(side: BorderSide(color: skin.colors.accent.withValues(alpha: 0.4))),
                 ),
-                child: Text('切换', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: skin.colors.accent)),
+                child: Text(
+                  '切换',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: skin.colors.accent),
+                ),
               ),
             ],
           ),
@@ -749,15 +755,15 @@ class _GoalChipsState extends State<_GoalChips> {
     final current = UserPreferences().getDailyGoal();
     return Row(
       children: [
-        Text('每日目标', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: skin.colors.text3)),
+        Text(
+          '每日目标',
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: skin.colors.text3),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Row(
             children: [
-              for (final value in _presets) ...[
-                _goalChip(value, current == value, skin),
-                const SizedBox(width: 8),
-              ],
+              for (final value in _presets) ...[_goalChip(value, current == value, skin), const SizedBox(width: 8)],
               // 当前值不在预设档位时，展示当前值 chip（选中态）
               if (!_presets.contains(current)) ...[_goalChip(current, true, skin), const SizedBox(width: 8)],
               _customChip(skin),
@@ -777,9 +783,7 @@ class _GoalChipsState extends State<_GoalChips> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: ShapeDecoration(
           color: selected ? skin.colors.accent : skin.colors.cardBg,
-          shape: StadiumBorder(
-            side: BorderSide(color: selected ? skin.colors.accent : skin.colors.divider),
-          ),
+          shape: StadiumBorder(side: BorderSide(color: selected ? skin.colors.accent : skin.colors.divider)),
         ),
         child: Text(
           '$value',
@@ -807,7 +811,10 @@ class _GoalChipsState extends State<_GoalChips> {
           children: [
             Icon(Icons.tune, size: 14, color: skin.colors.text2),
             const SizedBox(width: 4),
-            Text('自定义', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: skin.colors.text2)),
+            Text(
+              '自定义',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: skin.colors.text2),
+            ),
           ],
         ),
       ),

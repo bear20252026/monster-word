@@ -152,7 +152,10 @@ class _LibSelectPageState extends State<LibSelectPage> {
           ),
           const SizedBox(width: 4),
           Expanded(
-            child: Text('选择词书', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1)),
+            child: Text(
+              '选择词书',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.search, size: 22),
@@ -219,7 +222,10 @@ class _LibSelectPageState extends State<LibSelectPage> {
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text('精选词书 · 左右滑动探索', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.text2)),
+            child: Text(
+              '精选词书 · 左右滑动探索',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.text2),
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -248,7 +254,10 @@ class _LibSelectPageState extends State<LibSelectPage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
-                  Text('${book.wordCount} 词', style: MwTypography.caption.copyWith(color: AppColors.white100.withValues(alpha: 0.75))),
+                  Text(
+                    '${book.wordCount} 词',
+                    style: MwTypography.caption.copyWith(color: AppColors.white100.withValues(alpha: 0.75)),
+                  ),
                 ],
               ),
             );

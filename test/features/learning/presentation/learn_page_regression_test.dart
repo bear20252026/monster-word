@@ -64,7 +64,8 @@ void main() {
           ),
           // 会话顶栏（横屏同样渲染）需要收藏状态；测试补齐最小装配。
           ChangeNotifierProvider<LearningFavoritesState>(
-            create: (_) => LearningFavoritesState(favoritesPort: _FakeFavoritesPort(), queuePort: _FakeQueuePort(const [])),
+            create: (_) =>
+                LearningFavoritesState(favoritesPort: _FakeFavoritesPort(), queuePort: _FakeQueuePort(const [])),
           ),
         ],
         // 把 Provider 放在 MaterialApp 之上，使 push 出来的 WordDetailPage 路由也能访问。
