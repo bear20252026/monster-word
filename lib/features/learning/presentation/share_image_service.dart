@@ -81,7 +81,7 @@ class ShareImageService {
       width * 0.8,
       cardHeight,
       '连续签到',
-      '$streakDays 天 🔥',
+      '$streakDays 天',
       Icons.local_fire_department,
     );
 

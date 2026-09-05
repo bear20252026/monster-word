@@ -14,6 +14,7 @@ import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/widgets/confetti.dart';
+import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -239,7 +240,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                 Icon(Icons.celebration, size: 80, color: skin.colors.accent),
                 const SizedBox(height: 24),
                 Text(
-                  '🎉 刷词完成！',
+                  '刷词完成！',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: skin.colors.text1),
                 ),
                 const SizedBox(height: 12),
@@ -257,7 +258,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('👹', style: TextStyle(fontSize: 16)),
+                        const MonsterAvatar(size: 20),
                         const SizedBox(width: 6),
                         Text(
                           '尖叫币 +$_grantedCoins',
@@ -320,7 +321,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
     );
   }
 
-  /// 今日目标达成横幅（🏅 已学 X / 目标 Y）
+  /// 今日目标达成横幅（已学 X / 目标 Y）
   Widget _buildGoalAchievedBanner(SkinSystem skin, LearningSessionState state) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -332,7 +333,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🏅', style: TextStyle(fontSize: 16)),
+          Icon(Icons.emoji_events_rounded, size: 16, color: skin.colors.accent),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
@@ -455,10 +456,16 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 单词
+              // 单词（衬线词头，与词详情页同一编辑气质）
               Text(
                 word.word,
-                style: TextStyle(fontSize: resp.heroFontSize, fontWeight: FontWeight.w700, color: skin.colors.text1),
+                style: TextStyle(
+                  fontFamily: 'Charter',
+                  fontSize: resp.heroFontSize,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: -1,
+                  color: skin.colors.text1,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),

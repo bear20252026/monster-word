@@ -7,6 +7,7 @@ import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/monster_icon.dart';
 
 /// 兑换中心页面。
 ///
@@ -103,7 +104,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('$_redeemedPrefix${item.id}', true);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！「${item.title}」已收入囊中 👹')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！「${item.title}」已收入囊中')));
       await _reload();
     } catch (_) {
       if (mounted) {
@@ -191,7 +192,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       ),
       child: Row(
         children: [
-          ExcludeSemantics(child: const Text('👹', style: TextStyle(fontSize: 32))),
+          ExcludeSemantics(child: const MonsterAvatar(size: 36)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

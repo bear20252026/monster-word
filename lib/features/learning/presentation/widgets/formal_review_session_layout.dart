@@ -68,64 +68,71 @@ class FormalReviewSessionLayout extends StatelessWidget {
           child: Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : responsive.contentMaxWidth),
-              child: isLandscape
-                  ? Row(
-                      children: [
-                        Expanded(
-                          child: FormalReviewWordPrompt(
-                            word: word,
-                            audioLoading: audioLoading,
-                            onPlayAudio: onPlayAudio,
+              child: Column(
+                children: [
+                  // 进度与操作栏：竖屏/横屏共用（此前横屏缺失，无进度/返回/看答案）
+                  FormalReviewHeader(
+                    done: done,
+                    total: total,
+                    isFavorite: isFavorite,
+                    onBack: onBack,
+                    onToggleFavorite: onToggleFavorite,
+                    onRevealAnswer: onRevealAnswer,
+                    onMarkAsKnown: onMarkAsKnown,
+                    onShowMore: onShowMore,
+                  ),
+                  Expanded(
+                    child: isLandscape
+                        ? Row(
+                            children: [
+                              Expanded(
+                                child: FormalReviewWordPrompt(
+                                  word: word,
+                                  audioLoading: audioLoading,
+                                  onPlayAudio: onPlayAudio,
+                                ),
+                              ),
+                              Expanded(
+                                child: FormalReviewChoiceGrid(
+                                  word: word,
+                                  choices: choices,
+                                  selectedWrongChoice: selectedWrongChoice,
+                                  showAnswer: showAnswer,
+                                  onSelectChoice: onSelectChoice,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              Expanded(
+                                flex: 4,
+                                child: FormalReviewWordPrompt(
+                                  word: word,
+                                  audioLoading: audioLoading,
+                                  onPlayAudio: onPlayAudio,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 6,
+                                child: FormalReviewChoiceGrid(
+                                  word: word,
+                                  choices: choices,
+                                  selectedWrongChoice: selectedWrongChoice,
+                                  showAnswer: showAnswer,
+                                  onSelectChoice: onSelectChoice,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        Expanded(
-                          child: FormalReviewChoiceGrid(
-                            word: word,
-                            choices: choices,
-                            selectedWrongChoice: selectedWrongChoice,
-                            showAnswer: showAnswer,
-                            onSelectChoice: onSelectChoice,
-                          ),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        FormalReviewHeader(
-                          done: done,
-                          total: total,
-                          isFavorite: isFavorite,
-                          onBack: onBack,
-                          onToggleFavorite: onToggleFavorite,
-                          onRevealAnswer: onRevealAnswer,
-                          onMarkAsKnown: onMarkAsKnown,
-                          onShowMore: onShowMore,
-                        ),
-                        Expanded(
-                          flex: 4,
-                          child: FormalReviewWordPrompt(
-                            word: word,
-                            audioLoading: audioLoading,
-                            onPlayAudio: onPlayAudio,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 6,
-                          child: FormalReviewChoiceGrid(
-                            word: word,
-                            choices: choices,
-                            selectedWrongChoice: selectedWrongChoice,
-                            showAnswer: showAnswer,
-                            onSelectChoice: onSelectChoice,
-                          ),
-                        ),
-                        FormalReviewAnswerAction(
-                          showAnswer: showAnswer,
-                          onRevealAnswer: onRevealAnswer,
-                          onContinueWithGoodRating: onContinueWithGoodRating,
-                        ),
-                      ],
-                    ),
+                  ),
+                  FormalReviewAnswerAction(
+                    showAnswer: showAnswer,
+                    onRevealAnswer: onRevealAnswer,
+                    onContinueWithGoodRating: onContinueWithGoodRating,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -33,6 +33,7 @@ class FormalReviewHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     final responsive = context.responsive;
+    final progress = total == 0 ? 0.0 : (done / total).clamp(0.0, 1.0);
     return Container(
       height: context.design.spacing.navH,
       margin: const EdgeInsets.only(top: 4),
@@ -47,9 +48,27 @@ class FormalReviewHeader extends StatelessWidget {
           Text(
             '$done/$total',
             style: TextStyle(
-              fontSize: 16 * responsive.fontScale,
+              fontSize: 15 * responsive.fontScale,
               fontWeight: FontWeight.w600,
               color: skin.onGlassText1,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(end: progress),
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: value,
+                  minHeight: 4,
+                  backgroundColor: skin.onGlassText2.withValues(alpha: 0.18),
+                  valueColor: AlwaysStoppedAnimation(skin.accent),
+                ),
+              ),
             ),
           ),
           IconButton(
@@ -61,30 +80,16 @@ class FormalReviewHeader extends StatelessWidget {
             tooltip: '收藏',
             onPressed: onToggleFavorite,
           ),
-          GestureDetector(
-            onTap: onRevealAnswer,
-            child: Text(
-              'abc',
-              style: TextStyle(
-                fontSize: 16 * responsive.fontScale,
-                fontWeight: FontWeight.w700,
-                color: skin.onGlassText1,
-              ),
-            ),
+          IconButton(
+            icon: Icon(Icons.visibility_outlined, size: 21, color: skin.onGlassText1),
+            tooltip: '看答案',
+            onPressed: onRevealAnswer,
           ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: onMarkAsKnown,
-            child: Text(
-              '熟',
-              style: TextStyle(
-                fontSize: 16 * responsive.fontScale,
-                fontWeight: FontWeight.w700,
-                color: skin.onGlassText1,
-              ),
-            ),
+          IconButton(
+            icon: Icon(Icons.check_circle_outline, size: 21, color: skin.onGlassText1),
+            tooltip: '标记已掌握',
+            onPressed: onMarkAsKnown,
           ),
-          const SizedBox(width: 8),
           IconButton(
             icon: Icon(Icons.more_horiz, size: 22, color: skin.onGlassText1),
             tooltip: '更多',

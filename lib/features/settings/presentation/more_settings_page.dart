@@ -16,6 +16,7 @@ import 'package:word_app/features/settings/application/update_check_service.dart
 import 'package:word_app/features/settings/data/github_update_check_service.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/mw_button.dart';
 import 'package:word_app/widgets/mw_modal.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
@@ -167,7 +168,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Column(
             children: [
-              const Text('⭐', style: TextStyle(fontSize: 36)),
+              Icon(Icons.star_rounded, size: 44, color: context.skin.colors.accent),
               SizedBox(height: 8),
               Text('给个好评吧！', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
             ],
@@ -280,7 +281,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Column(
             children: [
-              const Text('🎉', style: TextStyle(fontSize: 36)),
+              Icon(Icons.celebration_rounded, size: 40, color: context.skin.colors.accent),
               SizedBox(height: 8),
               Text(
                 '发现新版本 v${result.latestVersion}',
@@ -453,7 +454,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('👹', style: TextStyle(fontSize: 48)),
+                  const MonsterAvatar(size: 56),
                   SizedBox(height: 12),
                   Text('Monster Word', style: MwTypography.heading5.copyWith(color: context.skin.colors.onGlassAccent)),
                   SizedBox(height: 4),

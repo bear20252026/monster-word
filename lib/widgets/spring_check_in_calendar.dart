@@ -3,7 +3,7 @@
 // 特性：
 // 1) 日期格子以弹簧曲线错峰入场（scale 过冲回弹）
 // 2) 已签到日期显示弹跳对勾标记
-// 3) 连续签到期数「连击」特效：🔥 计数脉冲 + 今日签到后整卡弹跳、+10 浮层上升
+// 3) 连续签到期数「连击」特效：火焰计数脉冲 + 今日签到后整卡弹跳、+10 浮层上升
 // 4) 接入现有 check-in 逻辑：context.read<ScareCoinStore>().checkIn()（每日 +10 尖叫币）
 // 5) 颜色全部来自 SkinSystem，跟随全局主题切换
 import 'package:flutter/material.dart';
@@ -182,7 +182,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('🔥', style: TextStyle(fontSize: 13)),
+                      const Icon(Icons.local_fire_department_rounded, size: 14, color: AppColors.white100),
                       const SizedBox(width: 4),
                       Text(
                         '连击 $_streak',

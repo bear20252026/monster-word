@@ -25,8 +25,10 @@ class FormalReviewWordPrompt extends StatelessWidget {
           Text(
             word.word,
             style: TextStyle(
-              fontSize: 42 * responsive.fontScale,
-              fontWeight: FontWeight.w800,
+              fontFamily: 'Charter',
+              fontSize: 44 * responsive.fontScale,
+              fontWeight: FontWeight.w400,
+              letterSpacing: -0.8,
               color: skin.onGlassText1,
               height: 1.1,
             ),
@@ -73,7 +75,11 @@ class FormalReviewWordPrompt extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             '先回想词义再选择，想不起来「看答案」',
-            style: TextStyle(fontSize: 14 * responsive.fontScale, color: skin.onGlassText2.withValues(alpha: 0.7)),
+            style: TextStyle(
+              fontSize: 13 * responsive.fontScale,
+              fontStyle: FontStyle.italic,
+              color: skin.onGlassText2.withValues(alpha: 0.7),
+            ),
           ),
         ],
       ),
@@ -108,15 +114,16 @@ class FormalReviewChoiceGrid extends StatelessWidget {
         children: [
           const SizedBox(height: 8),
           if (choices.isNotEmpty)
-            ...choices.map(
-              (choice) => FormalReviewChoiceCard(
-                pair: choice,
-                isCorrect: choice.word == word.word,
-                isSelectedWrong: choice.word == selectedWrongChoice,
+            ...choices.asMap().entries.map(
+              (entry) => FormalReviewChoiceCard(
+                pair: entry.value,
+                index: entry.key,
+                isCorrect: entry.value.word == word.word,
+                isSelectedWrong: entry.value.word == selectedWrongChoice,
                 showAnswer: showAnswer,
                 skin: skin,
                 responsive: responsive,
-                onTap: () => onSelectChoice(choice.word),
+                onTap: () => onSelectChoice(entry.value.word),
               ),
             ),
         ],
@@ -125,7 +132,7 @@ class FormalReviewChoiceGrid extends StatelessWidget {
   }
 }
 
-/// 底部“看答案 / 继续”操作栏。
+/// 底部“看答案 / 继续”胶囊操作钮。
 class FormalReviewAnswerAction extends StatelessWidget {
   const FormalReviewAnswerAction({
     super.key,
@@ -141,27 +148,40 @@ class FormalReviewAnswerAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
-    return Container(
-      padding: const EdgeInsets.only(bottom: 24),
+    final responsive = context.responsive;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(responsive.horizontalPadding, 8, responsive.horizontalPadding, 20),
       child: GestureDetector(
         onTap: showAnswer ? onContinueWithGoodRating : onRevealAnswer,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              showAnswer ? '继续' : '看答案',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: skin.onGlassText1),
+        child: Container(
+          height: 46,
+          alignment: Alignment.center,
+          decoration: ShapeDecoration(
+            color: showAnswer ? skin.accent : Colors.transparent,
+            shape: StadiumBorder(
+              side: BorderSide(color: showAnswer ? skin.accent : skin.onGlassText2.withValues(alpha: 0.5)),
             ),
-            const SizedBox(height: 6),
-            Container(
-              width: 24,
-              height: 3,
-              decoration: BoxDecoration(
-                color: showAnswer ? skin.quizCorrectText : skin.quizWrongText,
-                borderRadius: BorderRadius.circular(1.5),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                showAnswer ? Icons.arrow_forward_rounded : Icons.visibility_outlined,
+                size: 19,
+                color: showAnswer ? Colors.white : skin.onGlassText1,
               ),
-            ),
-          ],
+              const SizedBox(width: 6),
+              Text(
+                showAnswer ? '继续' : '看答案',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: showAnswer ? Colors.white : skin.onGlassText1,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

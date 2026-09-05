@@ -95,10 +95,12 @@ String? _categoryNameOf(String code) {
 class _LibSelectPageState extends State<LibSelectPage> {
   late Future<List<Book>> _booksFuture;
   List<Book> _allBooks = [];
-  int _tabIndex = 0;
+  int _tabIndex = 0; // 当前分组下标（对应 _groupDefs 的组号，0 = 全部）
   bool _showDescription = true; // 眼睛图标：显示/隐藏词书描述
 
-  static const _tabs = ['全部', 'CET4', 'CET6', '高考', '考研', '雅思', '托福', '专业出国', '其他'];
+  // 分组排布：按学习场景归堆（此前是 9 个生硬的考试标签平铺）。
+  // 组号固定，UI 上只展示当前词库里非空的组（数据驱动，空组不显示空标签）。
+  static const _groupDefs = <int, String>{0: '全部', 1: '四级六级', 2: '高考考研', 3: '雅思托福', 4: '专业出国', 5: '专题精选', 6: '其他'};
 
   @override
   void initState() {
@@ -109,27 +111,33 @@ class _LibSelectPageState extends State<LibSelectPage> {
   Future<List<Book>> _load() async {
     final books = await context.read<BookCatalogReader>().listBooks();
     _allBooks = books;
+    // 分组标签依赖 _allBooks 计算非空组，加载完成后刷新（标签栏在 FutureBuilder 之外）
+    if (mounted) setState(() {});
     return books;
   }
 
-  /// 按分类过滤词书
-  List<Book> _filterByTab(List<Book> books, int tab) {
-    if (tab == 0) return books;
-    final code = _tabs[tab];
-    return books.where((b) => _categoryOf(b.code) == code).toList();
+  /// 词书 code → 分组下标（6 = 其他兜底）
+  static int _tabOf(String code) {
+    if (RegExp(r'^(PHRASEIDIOM|ROOTAFFIX|SYNNOTE|COLLOC|USAGENOTE)$').hasMatch(code)) return 5;
+    if (RegExp(r'CET4|四级|CET6|六级').hasMatch(code)) return 1;
+    if (RegExp(r'GK|高考|KAOYAN|考研|KY|LLYC').hasMatch(code)) return 2;
+    if (RegExp(r'IELTS|雅思|TOEFL|托福|GDTOEFL').hasMatch(code)) return 3;
+    if (RegExp(r'GRE|GMAT|SAT|BEC|TEM|专四|专八|PRO4|PRO8|XHPRO|PETS|AWL|BARRONSAT|BIZLAW').hasMatch(code)) {
+      return 4;
+    }
+    return 6;
   }
 
-  String _categoryOf(String code) {
-    if (RegExp(r'CET4|四级').hasMatch(code)) return 'CET4';
-    if (RegExp(r'CET6|六级').hasMatch(code)) return 'CET6';
-    if (RegExp(r'GK|高考|GKCJ|GKHX|GKSG').hasMatch(code)) return '高考';
-    if (RegExp(r'KY|考研|KAOYAN|LLYC|KYSG').hasMatch(code)) return '考研';
-    if (RegExp(r'IELTS|雅思').hasMatch(code)) return '雅思';
-    if (RegExp(r'TOEFL|托福|GDTOEFL').hasMatch(code)) return '托福';
-    if (RegExp(r'GRE|GMAT|SAT|BEC|TEM|专四|专八|PRO4|PRO8|XHPRO|PETS').hasMatch(code)) {
-      return '专业出国';
-    }
-    return '其他';
+  /// 当前词库中非空的分组（有序）
+  List<int> get _visibleGroups {
+    final present = _allBooks.map((b) => _tabOf(b.code)).toSet();
+    return _groupDefs.keys.where((g) => g == 0 || present.contains(g)).toList();
+  }
+
+  /// 按分组过滤词书
+  List<Book> _filterByTab(List<Book> books, int tab) {
+    if (tab == 0) return books;
+    return books.where((b) => _tabOf(b.code) == tab).toList();
   }
 
   /// 从弯曲画廊打开词书（导航到词书内容页）
@@ -279,12 +287,12 @@ class _LibSelectPageState extends State<LibSelectPage> {
             // ===== 顶部导航栏（CustomHeadView：左箭头 + 标题 + 搜索/眼睛）=====
             _buildTopNav(colors),
             Container(height: 1, color: colors.divider),
-            // ===== 分类选项卡（Morphing Tabs 变形标签）=====
+            // ===== 分类选项卡（Morphing Tabs 变形标签，仅展示非空分组）=====
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               child: SimpleMorphingTabs(
-                labels: _tabs.toList(),
-                initialIndex: _tabIndex,
+                labels: _visibleGroups.map((g) => _groupDefs[g]!).toList(),
+                initialIndex: 0,
                 height: 36,
                 borderRadius: 14,
                 padding: const EdgeInsets.all(3),
@@ -292,7 +300,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                 inactiveColor: colors.text3,
                 indicatorColor: colors.accent,
                 backgroundColor: colors.cardBgAlt,
-                onChanged: (i) => setState(() => _tabIndex = i),
+                onChanged: (i) => setState(() => _tabIndex = _visibleGroups[i]),
               ),
             ),
             Container(height: 1, color: colors.divider),

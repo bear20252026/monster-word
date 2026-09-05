@@ -277,7 +277,11 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                       if (_streak > 0)
                         Padding(
                           padding: EdgeInsets.only(left: 2, bottom: 4),
-                          child: Text('🔥', style: TextStyle(fontSize: _streak >= 7 ? 20 : 16)),
+                          child: Icon(
+                            Icons.local_fire_department_rounded,
+                            size: _streak >= 7 ? 20 : 16,
+                            color: FuncColors.streakFlame,
+                          ),
                         ),
                     ],
                   ),
@@ -495,8 +499,13 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                             : skin.text1,
                       ),
                     ),
-              // 🔥 连续签到标记
-              if (isConsecutive) Positioned(top: -3, right: -3, child: Text('🔥', style: TextStyle(fontSize: 10))),
+              // 连续签到火焰标记
+              if (isConsecutive)
+                Positioned(
+                  top: -3,
+                  right: -3,
+                  child: Icon(Icons.local_fire_department_rounded, size: 11, color: FuncColors.streakFlame),
+                ),
             ],
           ),
         ),

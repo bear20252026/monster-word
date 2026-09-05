@@ -56,7 +56,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('今天已经签到过啦，明天再来～')));
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('签到成功！尖叫币 +${store.checkInReward} 👹')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('签到成功！尖叫币 +${store.checkInReward}')));
     await _refresh();
   }
 
