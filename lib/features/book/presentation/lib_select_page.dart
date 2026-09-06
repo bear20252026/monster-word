@@ -140,15 +140,18 @@ class _LibSelectPageState extends State<LibSelectPage> {
       color: colors.cardBg,
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: colors.text1,
-            onPressed: () => NavUtils.safePop(context),
-          ),
-          const SizedBox(width: 4),
+          // 作为 tab 时无返回箭头（标题「课程」）；被「切换」push 时标题「选择词书」
+          if (Navigator.of(context).canPop())
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+              color: colors.text1,
+              onPressed: () => NavUtils.safePop(context),
+            )
+          else
+            const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '选择词书',
+              Navigator.of(context).canPop() ? '选择词书' : '课程',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1),
             ),
           ),
@@ -173,77 +176,66 @@ class _LibSelectPageState extends State<LibSelectPage> {
     );
   }
 
-  // ===== 精选区：词源星球品牌展示 + 弯曲画廊 =====
+  // ===== 精选区：词源星球（品牌一刻）+ 弯曲画廊，卡片名只出现一次 =====
   Widget _buildFeaturedStrip(BuildContext context, ThemeVars colors, List<Book> featured) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: colors.cardBgAlt, borderRadius: BorderRadius.circular(24)),
-            child: Row(
-              children: [
-                WordGlobe(
-                  size: 100,
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 56,
+                height: 56,
+                child: WordGlobe(
+                  size: 56,
                   arcColor: colors.accent,
                   atmosphereColor: colors.accent,
                   points: WordOriginData.origins,
                   arcs: WordOriginData.connections,
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '单词的环球之旅',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.text1),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '从罗马到伦敦，追溯每个词的起源与传播路径。拖动星球旋转，双指缩放探索。',
-                        style: TextStyle(fontSize: 12, height: 1.4, color: colors.text2),
-                      ),
-                    ],
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '单词的环球之旅',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.text1),
+                    ),
+                    const SizedBox(height: 2),
+                    Text('拖动星球，追溯每个词的起源与传播路径', style: TextStyle(fontSize: 11, height: 1.3, color: colors.text3)),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '精选词书 · 左右滑动探索',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.text2),
-            ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),
         BendingGallery(
-          height: 175,
-          itemWidth: 112,
+          height: 148,
+          itemWidth: 104,
           curvature: 0.35,
           activeColor: colors.accent,
           items: featured.map((book) {
             return BendingGalleryItem(
-              label: friendlyBookName(book.name),
               color: coverColorFor(context, book.code),
               onTap: () => _openBookFromGallery(context, book),
-              // 画廊单元格固定约 112×122，放不下完整卡片，
-              // 这里用紧凑封面内容（图标 + 名称 + 词数）
+              // 封面内已含名称与词数，不再传 label（旧版名称出现两次）
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.menu_book, color: AppColors.white100, size: 26),
-                  const SizedBox(height: 8),
+                  const Icon(Icons.menu_book_rounded, color: AppColors.white100, size: 22),
+                  const SizedBox(height: 6),
                   Text(
                     friendlyBookName(book.name),
-                    style: MwTypography.bodyMd.copyWith(color: AppColors.white100, fontWeight: FontWeight.w700),
+                    style: MwTypography.bodySm.copyWith(
+                      color: AppColors.white100,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -251,7 +243,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                   const SizedBox(height: 2),
                   Text(
                     '${book.wordCount} 词',
-                    style: MwTypography.caption.copyWith(color: AppColors.white100.withValues(alpha: 0.75)),
+                    style: MwTypography.micro.copyWith(color: AppColors.white100.withValues(alpha: 0.75)),
                   ),
                 ],
               ),
@@ -266,118 +258,129 @@ class _LibSelectPageState extends State<LibSelectPage> {
   Widget build(BuildContext context) {
     final colors = context.skin.colors;
     final resp = context.responsive;
+    // 桌面端把内容收窄到阅读宽度，避免整条柱拉满全宽显得散
+    final contentMaxWidth = resp.isDesktop ? 1200.0 : double.infinity;
     return Scaffold(
       backgroundColor: colors.cardBg,
       body: SafeArea(
-        child: Column(
-          children: [
-            // ===== 顶部导航栏（CustomHeadView：左箭头 + 标题 + 搜索/眼睛）=====
-            _buildTopNav(colors),
-            Container(height: 1, color: colors.divider),
-            // ===== 分类选项卡（Morphing Tabs 变形标签，仅展示非空分组）=====
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: SimpleMorphingTabs(
-                labels: _visibleGroups.map((g) => kBookGroupNames[g]).toList(),
-                initialIndex: 0,
-                height: 36,
-                borderRadius: 14,
-                padding: const EdgeInsets.all(3),
-                activeColor: AppColors.white100,
-                inactiveColor: colors.text3,
-                indicatorColor: colors.accent,
-                backgroundColor: colors.cardBgAlt,
-                onChanged: (i) => setState(() => _tabIndex = _visibleGroups[i]),
-              ),
-            ),
-            Container(height: 1, color: colors.divider),
-            // ===== 词书列表（ListView，每项 120dp）=====
-            Expanded(
-              child: FutureBuilder<List<Book>>(
-                future: _booksFuture,
-                builder: (context, snapshot) {
-                  final skin = context.skin.colors;
-                  if (snapshot.connectionState != ConnectionState.done) {
-                    return const MwSkeletonGrid(count: 6);
-                  }
-                  if (snapshot.hasError) {
-                    return const MwEmptyState(kind: MwEmptyKind.error, title: '词书加载失败', subtitle: '检查网络后重试，或稍后再来');
-                  }
-                  final books = _filterByTab(_allBooks, _tabIndex);
-                  if (books.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.library_books_outlined, size: 64, color: skin.divider),
-                          const SizedBox(height: 16),
-                          Text('暂无词书', style: MwTypography.bodyMd.copyWith(color: skin.text3)),
-                          const SizedBox(height: 8),
-                          Text('当前分类下没有词书，请切换分类或刷新', style: MwTypography.bodySm.copyWith(color: skin.text3)),
-                          const SizedBox(height: 24),
-                          OutlinedButton.icon(
-                            onPressed: () => setState(() => _booksFuture = _load()),
-                            icon: const Icon(Icons.refresh, size: 18),
-                            label: const Text('刷新'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: skin.text2,
-                              side: BorderSide(color: skin.divider),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  // 全部标签页顶部展示推荐词书「弯曲画廊」（3D透视+交互弯曲）
-                  if (_tabIndex == 0 && books.length > 3) {
-                    final featured = books.take(8).toList();
-                    return Column(
-                      children: [
-                        const SizedBox(height: 10),
-                        _buildFeaturedStrip(context, colors, featured),
-                        const Divider(height: 1),
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: books.length,
-                            itemBuilder: (context, index) {
-                              final book = books[index];
-                              return _LibItem(book: book, showDescription: _showDescription);
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-                  return resp.isDesktop
-                      ? GridView.builder(
-                          padding: EdgeInsets.all(resp.horizontalPadding),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: resp.bookGridColumns,
-                            childAspectRatio: 0.75,
-                            crossAxisSpacing: resp.horizontalPadding,
-                            mainAxisSpacing: resp.horizontalPadding,
-                          ),
-                          itemCount: books.length,
-                          itemBuilder: (context, index) {
-                            final book = books[index];
-                            return _LibItem(book: book, showDescription: _showDescription);
-                          },
-                        )
-                      : ListView.builder(
-                          itemCount: books.length,
-                          itemBuilder: (context, index) {
-                            final book = books[index];
-                            return _LibItem(book: book, showDescription: _showDescription);
-                          },
-                        );
-                },
-              ),
-            ),
-            // ===== 底部工具栏 =====
-            _buildBottomToolbar(colors),
-          ],
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: contentMaxWidth),
+            child: _buildBody(colors, resp),
+          ),
         ),
       ),
+    );
+  }
+
+  /// 课程页主体：顶部导航 + 分类签 + 词书列表 + 底部工具栏。
+  Widget _buildBody(ThemeVars colors, AppResponsive resp) {
+    return Column(
+      children: [
+        _buildTopNav(colors),
+        Container(height: 1, color: colors.divider),
+        // ===== 分类选项卡（Morphing Tabs 变形标签，仅展示非空分组）=====
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: SimpleMorphingTabs(
+            labels: _visibleGroups.map((g) => kBookGroupNames[g]).toList(),
+            initialIndex: 0,
+            height: 36,
+            borderRadius: 14,
+            padding: const EdgeInsets.all(3),
+            activeColor: AppColors.white100,
+            inactiveColor: colors.text3,
+            indicatorColor: colors.accent,
+            backgroundColor: colors.cardBgAlt,
+            onChanged: (i) => setState(() => _tabIndex = _visibleGroups[i]),
+          ),
+        ),
+        Container(height: 1, color: colors.divider),
+        // ===== 词书列表（ListView，每项 120dp）=====
+        Expanded(
+          child: FutureBuilder<List<Book>>(
+            future: _booksFuture,
+            builder: (context, snapshot) {
+              final skin = context.skin.colors;
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const MwSkeletonGrid(count: 6);
+              }
+              if (snapshot.hasError) {
+                return const MwEmptyState(kind: MwEmptyKind.error, title: '词书加载失败', subtitle: '检查网络后重试，或稍后再来');
+              }
+              final books = _filterByTab(_allBooks, _tabIndex);
+              if (books.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.library_books_outlined, size: 64, color: skin.divider),
+                      const SizedBox(height: 16),
+                      Text('暂无词书', style: MwTypography.bodyMd.copyWith(color: skin.text3)),
+                      const SizedBox(height: 8),
+                      Text('当前分类下没有词书，请切换分类或刷新', style: MwTypography.bodySm.copyWith(color: skin.text3)),
+                      const SizedBox(height: 24),
+                      OutlinedButton.icon(
+                        onPressed: () => setState(() => _booksFuture = _load()),
+                        icon: const Icon(Icons.refresh, size: 18),
+                        label: const Text('刷新'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: skin.text2,
+                          side: BorderSide(color: skin.divider),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              // 全部标签页顶部展示推荐词书「弯曲画廊」（3D透视+交互弯曲）
+              if (_tabIndex == 0 && books.length > 3) {
+                final featured = books.take(8).toList();
+                return Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    _buildFeaturedStrip(context, colors, featured),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: books.length,
+                        itemBuilder: (context, index) {
+                          final book = books[index];
+                          return _LibItem(book: book, showDescription: _showDescription);
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return resp.isDesktop
+                  ? GridView.builder(
+                      padding: EdgeInsets.all(resp.horizontalPadding),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: resp.bookGridColumns,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: resp.horizontalPadding,
+                        mainAxisSpacing: resp.horizontalPadding,
+                      ),
+                      itemCount: books.length,
+                      itemBuilder: (context, index) {
+                        final book = books[index];
+                        return _LibItem(book: book, showDescription: _showDescription);
+                      },
+                    )
+                  : ListView.builder(
+                      itemCount: books.length,
+                      itemBuilder: (context, index) {
+                        final book = books[index];
+                        return _LibItem(book: book, showDescription: _showDescription);
+                      },
+                    );
+            },
+          ),
+        ),
+        // ===== 底部工具栏 =====
+        _buildBottomToolbar(colors),
+      ],
     );
   }
 
