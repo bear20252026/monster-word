@@ -2,6 +2,7 @@
 
 // 单词列表基类：支持滑动删除、批量编辑、字母快速索引
 // 归属：learning 功能域（仅被本域单词列表子页继承）
+
 import 'package:flutter/material.dart';
 
 import 'package:word_app/app/router/route_names.dart';
@@ -128,6 +129,24 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
           ),
           const SizedBox(width: 4),
           Text(pageTitle, style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
+          if (!_isLoading && _words.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: skin.colors.accent.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '${_words.length}',
+                style: MwTypography.micro.copyWith(
+                  color: skin.colors.accent,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+          ],
           const Spacer(),
           if (_isBatchEditMode) ...[
             TextButton(
@@ -198,16 +217,75 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
           onDismissed: (direction) {
             setState(() => _words.remove(word));
           },
-          child: ListTile(
-            onTap: _isBatchEditMode ? () => _toggleSelect(index) : () => _openWordDetail(word),
-            leading: _isBatchEditMode
-                ? Checkbox(value: isSelected, onChanged: (_) => _toggleSelect(index), activeColor: MwColors.primary)
-                : null,
-            title: Text(word.word, style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-            subtitle: word.usPron.isNotEmpty
-                ? Text('/${word.usPron}/', style: MwTypography.bodySm.copyWith(color: skin.colors.text3))
-                : null,
-            trailing: _isBatchEditMode ? null : Icon(Icons.chevron_right, color: skin.colors.text3),
+          child: Material(
+            color: skin.colors.pageBg,
+            child: InkWell(
+              onTap: _isBatchEditMode ? () => _toggleSelect(index) : () => _openWordDetail(word),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                    child: Row(
+                      children: [
+                        if (_isBatchEditMode) ...[
+                          Checkbox(
+                            value: isSelected,
+                            onChanged: (_) => _toggleSelect(index),
+                            activeColor: MwColors.primary,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      word.word,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: MwTypography.bodyMd.copyWith(
+                                        color: skin.colors.text1,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  if (word.usPron.isNotEmpty) ...[
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '/${word.usPron}/',
+                                      style: MwTypography.micro.copyWith(color: skin.colors.text3),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              if (word.firstInterpretLine.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  word.firstInterpretLine,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: MwTypography.bodySm.copyWith(color: skin.colors.text3, height: 1.4),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.chevron_right, size: 18, color: skin.colors.text3),
+                      ],
+                    ),
+                  ),
+                  Divider(height: 0.5, thickness: 0.5, indent: 16, color: skin.colors.divider),
+                ],
+              ),
+            ),
           ),
         );
       },

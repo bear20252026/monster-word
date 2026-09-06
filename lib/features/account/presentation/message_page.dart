@@ -10,6 +10,7 @@ import 'package:word_app/features/account/domain/message_item.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/common/mw_empty_state.dart';
 
 class MessagePage extends StatefulWidget {
   const MessagePage({super.key});
@@ -94,16 +95,7 @@ class _MessagePageState extends State<MessagePage> {
   }
 
   Widget _buildEmptyView(SkinSystem skin) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.mail_outline, size: 64, color: skin.colors.text3),
-          SizedBox(height: 16),
-          Text('暂无消息', style: MwTypography.body.copyWith(color: skin.colors.text3)),
-        ],
-      ),
-    );
+    return const MwEmptyState(kind: MwEmptyKind.empty, title: '暂无消息', subtitle: '学习提醒与成就祝贺都会出现在这里');
   }
 
   Widget _buildMessageItem(SkinSystem skin, MessageStore store, MessageItem msg) {
@@ -125,15 +117,38 @@ class _MessagePageState extends State<MessagePage> {
           leading: Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(color: msg.isRead ? MwColors.hairline : MwColors.cream, shape: BoxShape.circle),
-            child: Icon(Icons.notifications_outlined, color: msg.isRead ? MwColors.stone : MwColors.primary, size: 20),
-          ),
-          title: Text(
-            msg.title,
-            style: MwTypography.bodyBold.copyWith(
-              color: skin.colors.text1,
-              fontWeight: msg.isRead ? FontWeight.normal : FontWeight.w600,
+            decoration: BoxDecoration(
+              color: msg.isRead
+                  ? skin.colors.divider.withValues(alpha: 0.5)
+                  : skin.colors.accent.withValues(alpha: 0.10),
+              shape: BoxShape.circle,
             ),
+            child: Icon(
+              Icons.notifications_outlined,
+              color: msg.isRead ? skin.colors.text3 : skin.colors.accent,
+              size: 20,
+            ),
+          ),
+          title: Row(
+            children: [
+              if (!msg.isRead) ...[
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(color: skin.colors.danger, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Expanded(
+                child: Text(
+                  msg.title,
+                  style: MwTypography.bodyBold.copyWith(
+                    color: skin.colors.text1,
+                    fontWeight: msg.isRead ? FontWeight.normal : FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

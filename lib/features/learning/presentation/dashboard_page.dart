@@ -1,7 +1,8 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 仪表盘页：顶部导航 + 正在学习(词书卡片+进度条) + 我的数据(学习时长/单词量)
-// 已接入 SkinSystem 主题
+// 仪表盘页 — 编辑式记忆图谱版面。
+// v2.7.61 重构：以「总词汇量」大数字为视觉锚点，FSRS 记忆状态收敛为
+// 单条堆叠比例条 + 图例（一眼读出记忆构成）；正学习词书卡保留进度条。
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -41,12 +42,14 @@ class DashboardPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 正在学习
-                        Text('正在学习', style: MwTypography.heading4.copyWith(color: skin.text1)),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 4),
+                        _SectionHeader(title: '正在学习', skin: skin),
+                        const SizedBox(height: 14),
                         _buildCurrentBookCard(context, book, learned, skin),
-                        const SizedBox(height: 24),
-                        _buildMyDataSection(context, state, skin),
+                        const SizedBox(height: 32),
+                        _SectionHeader(title: '记忆图谱', skin: skin),
+                        const SizedBox(height: 6),
+                        _buildMemoryMap(context, state, skin),
                       ],
                     ),
                   ),
@@ -70,9 +73,9 @@ class DashboardPage extends StatelessWidget {
           Text('仪表盘', style: MwTypography.heading5.copyWith(color: skin.text1)),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.share, size: 20),
+            icon: const Icon(Icons.ios_share_rounded, size: 20),
             color: skin.text1,
-            tooltip: '分享',
+            tooltip: '分享学习海报',
             onPressed: () => _sharePoster(context),
           ),
         ],
@@ -82,11 +85,12 @@ class DashboardPage extends StatelessWidget {
 
   /// 当前词书卡片（封面 + 名称 + 学习进度条）
   Widget _buildCurrentBookCard(BuildContext context, Book? book, int learned, ThemeVars skin) {
+    final progress = book == null || book.wordCount == 0 ? 0.0 : (learned / book.wordCount).clamp(0.0, 1.0);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(context.design.radius.lg),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: skin.divider),
       ),
       child: Column(
@@ -103,12 +107,16 @@ class DashboardPage extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: [skin.pageBg, skin.cardBgAlt],
                   ),
-                  borderRadius: BorderRadius.circular(context.design.radius.sm),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: skin.divider, width: 0.5),
                 ),
                 child: Center(
                   child: Text(
                     _shortName(book?.name ?? '未选择'),
-                    style: MwTypography.micro.copyWith(color: AppColors.white100, fontWeight: FontWeight.bold),
+                    style: MwTypography.micro.copyWith(color: skin.text2, fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
@@ -119,115 +127,137 @@ class DashboardPage extends StatelessWidget {
                   children: [
                     Text(
                       book?.name ?? '请先选择词书',
-                      style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w500),
+                      style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
-                    Text('${book?.wordCount ?? 0} 词', style: MwTypography.bodySm.copyWith(color: skin.text3)),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '$learned',
+                          style: TextStyle(
+                            fontFamily: 'Charter',
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: skin.accent,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Text('/ ${book?.wordCount ?? 0} 词已学', style: MwTypography.bodySm.copyWith(color: skin.text3)),
+                      ],
+                    ),
                   ],
                 ),
               ),
+              // 进度百分数
+              Text(
+                '${(progress * 100).round()}%',
+                style: TextStyle(fontFamily: 'Charter', fontSize: 22, fontStyle: FontStyle.italic, color: skin.text3),
+              ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           // 学习进度条
           ClipRRect(
-            borderRadius: BorderRadius.circular(context.design.radius.sm),
-            child: LinearProgressIndicator(
-              value: book == null || book.wordCount == 0 ? 0 : learned / book.wordCount,
-              minHeight: 8,
-              backgroundColor: skin.divider,
-              valueColor: AlwaysStoppedAnimation(skin.success),
+            borderRadius: BorderRadius.circular(4),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(end: progress),
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => LinearProgressIndicator(
+                value: value,
+                minHeight: 6,
+                backgroundColor: skin.divider,
+                valueColor: AlwaysStoppedAnimation(skin.accent),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Text('已学习 $learned', style: MwTypography.bodySm.copyWith(color: skin.text3)),
-              const Spacer(),
-              Text('总词数 ${book?.wordCount ?? 0}', style: MwTypography.bodySm.copyWith(color: skin.text3)),
-            ],
           ),
         ],
       ),
     );
   }
 
-  /// 我的数据统计卡片
-  Widget _buildMyDataSection(BuildContext context, LearningStatisticsState state, ThemeVars skin) {
-    final resp = context.responsive;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('我的数据', style: MwTypography.heading4.copyWith(color: skin.text1)),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: skin.cardBg,
-            borderRadius: BorderRadius.circular(context.design.radius.lg),
-            border: Border.all(color: skin.divider),
-          ),
-          // FSRS-6 记忆统计（基于精确记忆曲线）
-          child: _buildFsrsStats(context, state, skin, resp),
-        ),
-      ],
-    );
-  }
-
-  /// FSRS-6 记忆统计面板
-  Widget _buildFsrsStats(BuildContext context, LearningStatisticsState state, ThemeVars skin, AppResponsive resp) {
+  /// 记忆图谱：总词量大数字 + FSRS 记忆状态堆叠条 + 图例
+  Widget _buildMemoryMap(BuildContext context, LearningStatisticsState state, ThemeVars skin) {
     final stats = state.memoryStats;
-    final todayStats = state.todayStats;
     final newCount = stats['new'] ?? 0;
     final dueCount = stats['due'] ?? 0;
     final learningCount = stats['learning'] ?? 0;
     final matureCount = stats['mature'] ?? 0;
     final totalCount = stats['total'] ?? 0;
 
-    if (resp.isDesktop) {
-      return Row(
-        children: [
-          Expanded(
-            child: _DataItem(label: '新词', value: '$newCount', color: MwColors.info),
-          ),
-          Container(width: 1, height: 40, color: skin.divider),
-          Expanded(
-            child: _DataItem(label: '学习中', value: '$learningCount', color: MwColors.warning),
-          ),
-          Container(width: 1, height: 40, color: skin.divider),
-          Expanded(
-            child: _DataItem(label: '待复习', value: '$dueCount', color: MwColors.danger),
-          ),
-          Container(width: 1, height: 40, color: skin.divider),
-          Expanded(
-            child: _DataItem(label: '已掌握', value: '$matureCount', color: MwColors.success),
-          ),
-          Container(width: 1, height: 40, color: skin.divider),
-          Expanded(
-            child: _DataItem(label: '总词汇', value: '$totalCount'),
-          ),
-        ],
-      );
-    }
+    final segments = <_MemorySegment>[
+      _MemorySegment(label: '新词', value: newCount, color: MwColors.info),
+      _MemorySegment(label: '学习中', value: learningCount, color: MwColors.warning),
+      _MemorySegment(label: '待复习', value: dueCount, color: MwColors.danger),
+      _MemorySegment(label: '已掌握', value: matureCount, color: MwColors.success),
+    ];
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // 总词量大数字（视觉锚点）
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
           children: [
-            _DataItem(label: '新词', value: '$newCount', color: MwColors.info),
-            _DataItem(label: '学习中', value: '$learningCount', color: MwColors.warning),
-            _DataItem(label: '待复习', value: '$dueCount', color: MwColors.danger),
+            TweenAnimationBuilder<int>(
+              tween: IntTween(begin: 0, end: totalCount),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => Text(
+                '$value',
+                style: TextStyle(
+                  fontFamily: 'Charter',
+                  fontSize: 56,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: -2,
+                  height: 1.05,
+                  color: skin.text1,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text('个词在你的记忆里', style: MwTypography.bodySm.copyWith(color: skin.text3)),
           ],
         ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+        const SizedBox(height: 20),
+        // 记忆状态堆叠条
+        ClipRRect(
+          borderRadius: BorderRadius.circular(5),
+          child: SizedBox(
+            height: 12,
+            child: totalCount == 0
+                ? ColoredBox(color: skin.divider)
+                : Row(
+                    children: [
+                      for (final segment in segments)
+                        if (segment.value > 0)
+                          Expanded(
+                            flex: segment.value,
+                            child: ColoredBox(color: segment.color),
+                          ),
+                    ],
+                  ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        // 图例
+        Wrap(
+          spacing: 18,
+          runSpacing: 8,
           children: [
-            _DataItem(label: '已掌握', value: '$matureCount', color: MwColors.success),
-            _DataItem(label: '总词汇', value: '$totalCount'),
-            _DataItem(label: '今日已学', value: '${todayStats['learned'] ?? 0}'),
+            for (final segment in segments)
+              _LegendItem(color: segment.color, label: segment.label, value: '${segment.value}', skin: skin),
           ],
         ),
+        if (totalCount == 0) ...[
+          const SizedBox(height: 14),
+          Text('开始学习后，这里会呈现你的记忆构成变化。', style: MwTypography.bodySm.copyWith(color: skin.text3)),
+        ],
       ],
     );
   }
@@ -260,23 +290,69 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
-class _DataItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color? color;
-  const _DataItem({required this.label, required this.value, this.color});
+/// 区块头：强调色竖条 + 标题 + 延伸发丝线（与词典页同语言）
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, required this.skin});
+
+  final String title;
+  final ThemeVars skin;
 
   @override
   Widget build(BuildContext context) {
-    final skin = context.skin.colors;
-    return Column(
+    return Row(
       children: [
+        Container(
+          width: 4,
+          height: 16,
+          decoration: BoxDecoration(color: skin.accent, borderRadius: BorderRadius.circular(2)),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: Container(height: 0.5, color: skin.divider)),
+      ],
+    );
+  }
+}
+
+/// 记忆状态堆叠条的单个分段。
+class _MemorySegment {
+  const _MemorySegment({required this.label, required this.value, required this.color});
+
+  final String label;
+  final int value;
+  final Color color;
+}
+
+/// 图例项：色点 + 标签 + 数值
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({required this.color, required this.label, required this.value, required this.skin});
+
+  final Color color;
+  final String label;
+  final String value;
+  final ThemeVars skin;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: MwTypography.bodySm.copyWith(color: skin.text2)),
+        const SizedBox(width: 5),
         Text(
           value,
-          style: MwTypography.heading3.copyWith(color: color ?? skin.success, fontWeight: FontWeight.bold),
+          style: MwTypography.bodySm.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
         ),
-        const SizedBox(height: 4),
-        Text(label, style: MwTypography.bodySm.copyWith(color: skin.text3)),
       ],
     );
   }
