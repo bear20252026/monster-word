@@ -49,9 +49,9 @@ void main() {
       allBooks = await WordBookDatabase.instance.getBooks();
     });
 
-    test('Book count matches full library (191)', () async {
-      // Full official library restored from 191-book dataset
-      expect(allBooks.length, 191, reason: 'Full library should have exactly 191 books, got ${allBooks.length}');
+    test('Book count matches full library (191+81=272)', () async {
+      // 191 本官方词书 + 81 本 kajweb 词书（云端/全量数据导入管线产出）
+      expect(allBooks.length, 272, reason: 'Full library should have exactly 272 books, got ${allBooks.length}');
       for (final b in allBooks) {
         expect(b.code.isNotEmpty, true, reason: 'id=${b.id} code should not be empty');
         expect(b.wordCount >= 0, true, reason: '${b.code} wordCount should be non-negative');
