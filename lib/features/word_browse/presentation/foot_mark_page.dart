@@ -11,6 +11,7 @@ import 'package:word_app/features/learning/application/learning_statistics_reade
 import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/func_colors.dart';
 
 class FootMarkPage extends StatelessWidget {
   const FootMarkPage({super.key});
@@ -43,6 +44,7 @@ class FootMarkPage extends StatelessWidget {
                       context: context,
                       skin: skin,
                       icon: Icons.menu_book,
+                      color: skin.colors.success,
                       title: '全部已学单词',
                       count: session.learnedNum,
                       onTap: () => Navigator.pushNamed(context, RouteNames.myWords),
@@ -52,6 +54,7 @@ class FootMarkPage extends StatelessWidget {
                       context: context,
                       skin: skin,
                       icon: Icons.fiber_new,
+                      color: FuncColors.info,
                       title: '生词本',
                       count: newWords.count,
                       onTap: () => Navigator.pushNamed(context, RouteNames.newWords),
@@ -61,6 +64,7 @@ class FootMarkPage extends StatelessWidget {
                       context: context,
                       skin: skin,
                       icon: Icons.check_circle_outline,
+                      color: skin.colors.accent,
                       title: '已掌握单词',
                       count: collections.masteredCount,
                       onTap: () => Navigator.pushNamed(context, RouteNames.masteredWords),
@@ -70,6 +74,7 @@ class FootMarkPage extends StatelessWidget {
                       context: context,
                       skin: skin,
                       icon: Icons.hourglass_empty,
+                      color: FuncColors.warning,
                       title: '未学习单词',
                       count: session.total - session.learnedNum,
                       onTap: () => Navigator.pushNamed(context, RouteNames.notLearnedWords),
@@ -79,6 +84,7 @@ class FootMarkPage extends StatelessWidget {
                       context: context,
                       skin: skin,
                       icon: Icons.replay,
+                      color: skin.colors.danger,
                       title: '复习中单词',
                       count: statistics.dueCount,
                       onTap: () => Navigator.pushNamed(context, RouteNames.reviewingWords),
@@ -116,14 +122,15 @@ class FootMarkPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [MwColors.cream, MwColors.creamDeeper]),
+        gradient: LinearGradient(colors: [skin.colors.cardBg, skin.colors.cardBgAlt]),
         borderRadius: BorderRadius.circular(context.design.radius.xl),
+        border: Border.all(color: skin.colors.divider),
       ),
       child: Column(
         children: [
-          Text('${statistics.totalLearnedDays}', style: MwTypography.heading1.copyWith(color: MwColors.primary)),
+          Text('${statistics.totalLearnedDays}', style: MwTypography.heading1.copyWith(color: skin.colors.accent)),
           const SizedBox(height: 4),
-          Text('累计学习天数', style: MwTypography.body.copyWith(color: MwColors.slate)),
+          Text('累计学习天数', style: MwTypography.body.copyWith(color: skin.colors.text3)),
         ],
       ),
     );
@@ -133,16 +140,18 @@ class FootMarkPage extends StatelessWidget {
     required BuildContext context,
     required SkinSystem skin,
     required IconData icon,
+    required Color color,
     required String title,
     required int count,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: skin.colors.cardBgAlt,
+          color: skin.colors.cardBg,
           borderRadius: BorderRadius.circular(context.design.radius.lg),
           border: Border.all(color: skin.colors.divider),
         ),
@@ -152,16 +161,19 @@ class FootMarkPage extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: MwColors.cream,
+                color: color.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(context.design.radius.md),
               ),
-              child: Icon(icon, color: MwColors.primary, size: 24),
+              child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(title, style: MwTypography.bodyBold.copyWith(color: skin.colors.text1)),
+              child: Text(
+                title,
+                style: MwTypography.bodyMd.copyWith(color: skin.colors.text1, fontWeight: FontWeight.w600),
+              ),
             ),
-            Text('$count', style: MwTypography.heading5.copyWith(color: MwColors.primary)),
+            Text('$count', style: MwTypography.heading5.copyWith(color: color)),
             const SizedBox(width: 8),
             Icon(Icons.chevron_right, color: skin.colors.text3),
           ],

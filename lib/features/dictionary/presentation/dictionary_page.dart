@@ -9,6 +9,7 @@ import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/mw_card.dart';
+import 'package:word_app/widgets/mw_section_header.dart';
 import 'package:word_app/widgets/word_root_tab.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_detail_state.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_feature_providers.dart';
@@ -344,26 +345,10 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final skin = context.skin.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 4,
-              height: 16,
-              decoration: BoxDecoration(color: skin.accent, borderRadius: BorderRadius.circular(2)),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w700, letterSpacing: 0.5),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Container(height: 0.5, color: skin.divider)),
-          ],
-        ),
+        MwSectionHeader(title: title),
         const SizedBox(height: 14),
         child,
       ],

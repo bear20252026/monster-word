@@ -13,6 +13,7 @@ import 'package:word_app/features/learning/presentation/share_image_service.dart
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
+import 'package:word_app/widgets/mw_section_header.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -43,11 +44,11 @@ class DashboardPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 4),
-                        _SectionHeader(title: '正在学习', skin: skin),
+                        MwSectionHeader(title: '正在学习'),
                         const SizedBox(height: 14),
                         _buildCurrentBookCard(context, book, learned, skin),
                         const SizedBox(height: 32),
-                        _SectionHeader(title: '记忆图谱', skin: skin),
+                        MwSectionHeader(title: '记忆图谱'),
                         const SizedBox(height: 6),
                         _buildMemoryMap(context, state, skin),
                       ],
@@ -287,34 +288,6 @@ class DashboardPage extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('分享失败: $e')));
       }
     }
-  }
-}
-
-/// 区块头：强调色竖条 + 标题 + 延伸发丝线（与词典页同语言）
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.skin});
-
-  final String title;
-  final ThemeVars skin;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 4,
-          height: 16,
-          decoration: BoxDecoration(color: skin.accent, borderRadius: BorderRadius.circular(2)),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w700, letterSpacing: 0.5),
-        ),
-        const SizedBox(width: 12),
-        Expanded(child: Container(height: 0.5, color: skin.divider)),
-      ],
-    );
   }
 }
 

@@ -9,6 +9,9 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/message_badge_icon.dart';
 import 'package:word_app/widgets/scare_coin_summary_cards.dart';
+import 'package:word_app/widgets/monster_icon.dart';
+import 'package:word_app/widgets/mw_list_row.dart';
+import 'package:word_app/widgets/mw_section_header.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 
 class MySpacePage extends StatelessWidget {
@@ -92,202 +95,83 @@ class MySpacePage extends StatelessWidget {
     );
   }
 
-  /// 头像 + VIP 徽章 + 用户 ID + 会员状态条
+  /// 品牌头像与用户信息：手机/桌面共用同一套组件，避免两套布局漂移。
   Widget _buildProfileHeader(BuildContext context, ThemeVars skin, AccountProfileState profile) {
     final resp = context.responsive;
-    return resp.isDesktop
-        ? Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // 头像
-              SizedBox(
-                width: 80,
-                height: 80,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [MwColors.sunshine300, MwColors.sunshine500],
-                        ),
-                        border: Border.all(color: skin.cardBg, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: MwColors.sunshine500.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(Icons.person, color: skin.cardBg, size: 40),
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          color: MwColors.sunshine500,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: skin.cardBg, width: 2),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'V',
-                            style: TextStyle(color: skin.cardBg, fontSize: 13, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 16),
-              // 用户信息
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
-                    style: MwTypography.bodyMd.copyWith(color: skin.text2),
-                  ),
-                ],
-              ),
-            ],
-          )
-        : Column(
-            children: [
-              SizedBox(
-                width: 80,
-                height: 80,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [MwColors.sunshine300, MwColors.sunshine500],
-                        ),
-                        border: Border.all(color: skin.cardBg, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: MwColors.sunshine500.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(Icons.person, color: skin.cardBg, size: 40),
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          color: MwColors.sunshine500,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: skin.cardBg, width: 2),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'V',
-                            style: TextStyle(color: skin.cardBg, fontSize: 13, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
-                style: MwTypography.bodyMd.copyWith(color: skin.text2),
-              ),
-            ],
-          );
-  }
-
-  /// 菜单列表
-  Widget _buildMenuList(BuildContext context, dynamic skin) {
-    final resp = context.responsive;
-    return ListView(
-      padding: EdgeInsets.symmetric(horizontal: resp.isWide ? 24 : 20),
+    final identity = Column(
+      crossAxisAlignment: resp.isDesktop ? CrossAxisAlignment.start : CrossAxisAlignment.center,
       children: [
-        _MenuItem(
-          icon: Icons.palette_outlined,
-          title: '外观 & 沉浸场景',
-          subtitle: '主题、壁纸、字体',
-          skin: skin,
-          onTap: () => Navigator.pushNamed(context, RouteNames.appearance),
+        Text(
+          profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
+          style: TextStyle(
+            fontFamily: 'Charter',
+            fontSize: 22,
+            fontWeight: FontWeight.w400,
+            letterSpacing: -0.3,
+            color: skin.text1,
+          ),
         ),
-        _MenuItem(
-          icon: Icons.school_outlined,
-          title: '学习偏好',
-          subtitle: '发音、节奏、题型',
-          skin: skin,
-          onTap: () => Navigator.pushNamed(context, RouteNames.settings),
-        ),
-        _MenuItem(
-          icon: Icons.tune,
-          title: '更多设置',
-          subtitle: '账号、通知、关于',
-          skin: skin,
-          onTap: () => Navigator.pushNamed(context, RouteNames.moreSettings),
-        ),
+        const SizedBox(height: 5),
+        Text('在词海里，持续成为更好的自己', style: MwTypography.caption.copyWith(color: skin.text3)),
       ],
     );
-  }
-}
 
-/// 菜单项
-class _MenuItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final ThemeVars skin;
-  final VoidCallback? onTap;
-  const _MenuItem({required this.icon, required this.title, required this.subtitle, required this.skin, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10),
+    final avatar = Container(
+      width: 84,
+      height: 84,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: skin.cardBg,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: skin.text1.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        shape: BoxShape.circle,
+        color: skin.accent.withValues(alpha: 0.10),
+        border: Border.all(color: skin.accent.withValues(alpha: 0.22), width: 1),
       ),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: MwColors.sunshine300.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(10),
+      child: const MonsterAvatar(size: 62),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+      child: resp.isDesktop
+          ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [avatar, const SizedBox(width: 18), identity])
+          : Column(children: [avatar, const SizedBox(height: 12), identity]),
+    );
+  }
+
+  /// 菜单列表：统一使用共享列表行，视觉与设置页/我的内容页一致。
+  Widget _buildMenuList(BuildContext context, dynamic skin) {
+    final resp = context.responsive;
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(resp.isWide ? 24 : 20, 8, resp.isWide ? 24 : 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          MwSectionHeader(title: '空间设置'),
+          const SizedBox(height: 12),
+          MwListGroup(
+            children: [
+              MwListRow(
+                icon: Icons.palette_outlined,
+                iconColor: skin.accent,
+                title: '外观 & 沉浸场景',
+                subtitle: '主题、字体与沉浸学习',
+                onTap: () => Navigator.pushNamed(context, RouteNames.appearance),
+              ),
+              MwListRow(
+                icon: Icons.school_outlined,
+                iconColor: skin.success,
+                title: '学习偏好',
+                subtitle: '发音、节奏与题型',
+                onTap: () => Navigator.pushNamed(context, RouteNames.settings),
+              ),
+              MwListRow(
+                icon: Icons.tune_rounded,
+                iconColor: skin.teal,
+                title: '更多设置',
+                subtitle: '账号、通知与关于',
+                onTap: () => Navigator.pushNamed(context, RouteNames.moreSettings),
+              ),
+            ],
           ),
-          child: Icon(icon, color: skin.accent, size: 20),
-        ),
-        title: Text(
-          title,
-          style: MwTypography.bodyMd.copyWith(fontWeight: FontWeight.w500, color: skin.text1),
-        ),
-        subtitle: Text(subtitle, style: MwTypography.caption.copyWith(color: skin.text3)),
-        trailing: Icon(Icons.chevron_right, color: skin.text3, size: 20),
-        onTap: onTap,
+        ],
       ),
     );
   }
