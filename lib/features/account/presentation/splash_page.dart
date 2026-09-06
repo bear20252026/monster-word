@@ -1,6 +1,8 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 启动页：品牌动画 → 检查登录状态 → 跳转首页或登录页
+// 启动页：品牌开场动画「记忆生长」→ 检查登录状态 → 跳转首页或登录页。
+// 动画分镜见 lib/widgets/brand_intro.dart；全程点按可跳过（最短展示 800ms
+// 的会话安全下限保留，避免会话未恢复时误判登录态）。
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -8,14 +10,9 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/widgets/animations.dart';
-import 'package:word_app/widgets/breathing_word.dart';
-import 'package:word_app/widgets/liquid_logo.dart';
-import 'package:word_app/widgets/meteors.dart';
+import 'package:word_app/widgets/brand_intro.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 import 'package:word_app/features/account/presentation/login_page.dart';
-import 'package:word_app/tokens/effect_palette.dart';
-import 'package:word_app/tokens/starbucks_tokens.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -28,13 +25,13 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
   late AnimationController _animController;
-  late Animation<double> _fadeAnim;
-  late Animation<Offset> _slideAnim;
   bool _showGuide = false;
   final PageController _pageController = PageController();
   int _currentPage = 0;
   // A-2: 持有导航 Timer 以便在 dispose 时取消，避免测试/快速退出时留下 pending Timer。
   Timer? _navTimer;
+  DateTime _createdAt = DateTime.now();
+  bool _proceeding = false;
 
   // 引导页图片
   final List<String> _introAssets = [
@@ -46,30 +43,47 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
-    _fadeAnim = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _animController, curve: const Interval(0.0, 0.6)));
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animController, curve: standardCurve));
+    // 「记忆生长」开场：2.8s 完整时间线；无障碍关闭动画时压缩到 300ms 快速淡入。
+    final reduceMotion = WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
+    _animController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: reduceMotion ? 300 : 2800),
+    );
+    _createdAt = DateTime.now();
     _animController.forward();
     _checkLoginAndNavigate();
   }
 
   Future<void> _checkLoginAndNavigate() async {
-    // 体验审计 C1：原固定等待 2 秒纯延时。改为最短展示 800ms（覆盖入场动画），
-    // 初始化就绪即走，冷启动可交互时间显著缩短。
+    // 开场动画完整播完（2.8s）后导航；点按任意处可提前跳过（_skipIntro），
+    // 但最短展示 800ms —— 会话恢复需要这一安全下限，避免误判登录态。
     _navTimer?.cancel();
-    _navTimer = Timer(const Duration(milliseconds: 800), () {
+    _navTimer = Timer(const Duration(milliseconds: 2800), () {
       if (!mounted) return;
       _proceedToRoute();
     });
   }
 
+  /// 点按跳过：动画快进到收尾，并越过剩余等待直接导航（不低于 800ms 安全下限）。
+  void _skipIntro() {
+    if (_proceeding || _showGuide) return;
+    final elapsed = DateTime.now().difference(_createdAt);
+    _animController.animateTo(1.0, duration: const Duration(milliseconds: 180), curve: Curves.easeOut);
+    final remaining = const Duration(milliseconds: 800) - elapsed;
+    if (remaining <= Duration.zero) {
+      _proceedToRoute();
+    } else {
+      _navTimer?.cancel();
+      _navTimer = Timer(remaining, () {
+        if (!mounted) return;
+        _proceedToRoute();
+      });
+    }
+  }
+
   Future<void> _proceedToRoute() async {
+    if (_proceeding) return;
+    _proceeding = true;
     // fail-safe：启动导航绝不允许卡在 Splash。任何异常都强制跳到
     // 登录页（未登录）或主页（已登录），让用户继续操作而非卡死。
     var isLoggedIn = false;
@@ -130,65 +144,11 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
-      body: Stack(
-        children: [
-          // 流星雨背景（仅在深色主题时显示）
-          if (skin.colors.pageBg.computeLuminance() < 0.3)
-            const Positioned.fill(child: MeteorShower(count: 15, enableStars: true, colors: GradientEffects.splash)),
-          Center(
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: SlideTransition(
-                position: _slideAnim,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // 液态 Logo 动画
-                    LiquidLogo(
-                      size: 100,
-                      colors: [
-                        skin.colors.accent,
-                        skin.colors.accent.withValues(alpha: 0.8),
-                        StarbucksCreamColors.greenBanner,
-                        StarbucksCreamColors.vipGoldBg,
-                      ],
-                      child: ExcludeSemantics(
-                        child: Text(
-                          '怪',
-                          style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white, height: 1.0),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    // 品牌名
-                    Text(
-                      'Monster Word',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: skin.colors.text1,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text('背单词 · 从未如此有趣', style: TextStyle(fontSize: 13, color: skin.colors.text3)),
-                    SizedBox(height: 24),
-                    // 品牌词呼吸轮换：同一时刻只显示一个词（原波浪滚动文字已废弃）
-                    BreathingWord(
-                      words: const ['Monster Word', '背单词', '从未如此有趣'],
-                      perWord: const Duration(seconds: 4),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: skin.colors.text3.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+      // 全屏点按 = 跳过开场
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _skipIntro,
+        child: Center(child: BrandIntro(animation: _animController)),
       ),
     );
   }
