@@ -349,7 +349,9 @@ class _LibSelectPageState extends State<LibSelectPage> {
   Widget _buildBottomToolbar(ThemeVars colors) {
     return Padding(
       padding: EdgeInsets.only(bottom: FloatingDock.clearance(context)),
+      // key 挂在可见条带上：几何回归测试测量的是可见内容底边（不含预留区）
       child: Container(
+        key: const ValueKey('lib-select-bottom-toolbar'),
         decoration: BoxDecoration(
           color: colors.cardBg,
           border: Border(top: BorderSide(color: colors.divider)),
