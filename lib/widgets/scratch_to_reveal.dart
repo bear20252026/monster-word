@@ -2,6 +2,10 @@
 // 手指/鼠标滑动擦除覆盖层，超过阈值自动完全揭示
 // 颜色/阈值均可自定义
 // 适用于：单词释义揭示、隐藏答案揭示、每日奖励揭示
+//
+// v2.8.3 修复：跨词状态复用导致"第一词刮开后后续词自动揭示"的泄答案 bug。
+// - [resetToken] 变化（如换词）时 didUpdateWidget 强制重置揭示状态；
+// - 面积估算从"随点数加速增长"的启发式改为固定网格覆盖率（公平可刮）。
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -19,6 +23,10 @@ class ScratchToReveal extends StatefulWidget {
   final Duration animDuration;
   final double strokeWidth;
 
+  /// 重置令牌：换词/换内容时传入新值，强制重新遮盖。
+  /// 为空（null）时组件表现与旧版一致（不自重置，由调用方 key 保证）。
+  final Object? resetToken;
+
   const ScratchToReveal({
     super.key,
     required this.child,
@@ -31,6 +39,7 @@ class ScratchToReveal extends StatefulWidget {
     this.onReveal,
     this.animDuration = const Duration(milliseconds: 400),
     this.strokeWidth = 30,
+    this.resetToken,
   });
 
   @override
@@ -43,6 +52,12 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
   late AnimationController _revealController;
   late Animation<double> _revealAnim;
   double _scratchedArea = 0;
+  final Set<int> _coveredCells = {};
+
+  // 覆盖率网格：把卡面划分为固定格子，滑过的格子计入覆盖面积。
+  // 相比"点数加速增长"的旧启发式，覆盖率与真实涂抹范围线性对应，手感公平。
+  static const int _gridCols = 16;
+  static const int _gridRows = 10;
 
   @override
   void initState() {
@@ -60,6 +75,24 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
   }
 
   @override
+  void didUpdateWidget(covariant ScratchToReveal oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 换词（resetToken 变化）→ 重新遮盖。否则第一词刮开后，
+    // Element 复用会让后续词自动露出答案（泄答案 bug）。
+    if (widget.resetToken != oldWidget.resetToken) {
+      _resetCover();
+    }
+  }
+
+  void _resetCover() {
+    _revealed = false;
+    _points.clear();
+    _coveredCells.clear();
+    _scratchedArea = 0;
+    _revealController.reset();
+  }
+
+  @override
   void dispose() {
     _revealController.dispose();
     super.dispose();
@@ -74,8 +107,27 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
     final localPos = box.globalToLocal(details.globalPosition);
     setState(() {
       _points.add(localPos);
-      // 估算擦除面积
-      _scratchedArea = math.min(1.0, _scratchedArea + 0.002 * _points.length / 100);
+      if (box.size.width > 0 && box.size.height > 0) {
+        // 按笔刷半径标记覆盖格：格心落在 strokeWidth/2 内即视为已擦除，
+        // 与视觉擦除范围一致，避免"看起来刮开了却不算数"。
+        final cellW = box.size.width / _gridCols;
+        final cellH = box.size.height / _gridRows;
+        final r = widget.strokeWidth / 2;
+        final colMin = ((localPos.dx - r) / cellW).floor().clamp(0, _gridCols - 1);
+        final colMax = ((localPos.dx + r) / cellW).ceil().clamp(0, _gridCols - 1);
+        final rowMin = ((localPos.dy - r) / cellH).floor().clamp(0, _gridRows - 1);
+        final rowMax = ((localPos.dy + r) / cellH).ceil().clamp(0, _gridRows - 1);
+        for (var row = rowMin; row <= rowMax; row++) {
+          for (var col = colMin; col <= colMax; col++) {
+            final cx = (col + 0.5) * cellW;
+            final cy = (row + 0.5) * cellH;
+            if (math.sqrt(math.pow(cx - localPos.dx, 2) + math.pow(cy - localPos.dy, 2)) <= r) {
+              _coveredCells.add(row * _gridCols + col);
+            }
+          }
+        }
+        _scratchedArea = _coveredCells.length / (_gridCols * _gridRows);
+      }
     });
 
     if (_scratchedArea >= widget.revealThreshold) {
@@ -96,7 +148,7 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
     return GestureDetector(
       onPanUpdate: _onPanUpdate,
       onPanEnd: (_) {
-        // 松手时如果擦除面积超过 50% 也触发揭示
+        // 松手时如果擦除面积超过 40% 也触发揭示
         if (!_revealed && _scratchedArea > 0.4) {
           _doReveal();
         }
@@ -195,6 +247,9 @@ class WordScratchCard extends StatelessWidget {
   final double width;
   final double height;
 
+  /// 重置令牌：换词时传入新词形，保证每词都需手动刮开（防泄答案）。
+  final Object? resetToken;
+
   const WordScratchCard({
     super.key,
     required this.word,
@@ -202,6 +257,7 @@ class WordScratchCard extends StatelessWidget {
     this.color,
     this.width = 260,
     this.height = 100,
+    this.resetToken,
   });
 
   @override
@@ -216,6 +272,7 @@ class WordScratchCard extends StatelessWidget {
           width: width,
           height: height,
           coverColor: c,
+          resetToken: resetToken,
           // 默认提示用 touch 图标（比 emoji 更符合品牌质感）
           child: Container(
             decoration: BoxDecoration(color: c.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),

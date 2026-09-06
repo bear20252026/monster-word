@@ -2,7 +2,6 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/learning/application/learning_statistics_reader.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
@@ -90,11 +89,8 @@ class LearningStatisticsState extends ChangeNotifier implements LearningStatisti
   @override
   int get learnedCount => _snapshot.learnedCount;
 
-  /// 今日目标与已学（Learning 卡剩余联动：剩余 = 目标 - 已学）。
-  /// 直读 AppPreferences（今日计数跨会话持久化于 core 层）。
-  int get todayGoal => AppPreferences().getDailyNewWords();
-  int get todayLearned => AppPreferences().getTodayLearned();
-  int get todayRemaining => todayGoal > 0 ? (todayGoal - todayLearned).clamp(0, todayGoal) : 0;
+  // 今日目标/已学/剩余已收敛到 TodayProgressStore 单一事实源；
+  // 此处不再暴露第二套口径（旧实现直读废弃键 daily_new_words_v1，造成数字打架）。
 
   @override
   int get totalLearnedDays => _snapshot.totalLearnedDays;

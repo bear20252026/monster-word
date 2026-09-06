@@ -17,7 +17,9 @@ import 'package:word_app/features/learning/presentation/learning_session_state.d
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/presentation/learn_page.dart';
+import 'package:word_app/widgets/scratch_to_reveal.dart';
 import 'package:word_app/core/audio/audio_service.dart';
+import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/theme/skin_system.dart';
 
 /// 假音频服务。
@@ -90,6 +92,75 @@ void main() {
 
     // "查看详解"文本位于一个 ElevatedButton 内部（证明它是真实可点的按钮）。
     expect(find.ancestor(of: find.text('查看详解'), matching: find.byType(ElevatedButton)), findsOneWidget);
+  });
+
+  testWidgets('REG-SCRATCH-001: 刮刮提示每词独立遮盖——第一词刮开后下一词仍需手动刮（防泄答案）', (tester) async {
+    // 症状（用户实测）：第一个词的提示刮开后，后续词的提示不再需要刮，
+    //   直接自动展示释义——等于把答案告诉了用户。
+    // 根因：WordScratchCard 在学习页同一树位置渲染且无 key，
+    //   ScratchToRevealState 无 didUpdateWidget 重置——Element 复用让
+    //   _revealed=true 与旧擦除轨迹延续到后续所有词。
+    // 修复：换词以 ValueKey(word.word) 强制重建 + resetToken 触发层内重置。
+    final schedule = ReviewScheduleRepository();
+    await schedule.initialize();
+    final session = LearningSessionState(
+      queuePort: _FakeQueuePort([
+        Word(id: 1, word: 'first', interpret: '第一释义'),
+        Word(id: 2, word: 'second', interpret: '第二释义'),
+      ]),
+      progressPort: _FakeProgressPort(),
+      reviewSchedulePort: RepositoryReviewScheduleWriterPort(schedule),
+      choicePort: _FakeChoicePort(),
+    );
+    await session.loadBook(_testBook, shuffle: false);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<LearningSessionState>.value(value: session),
+          ChangeNotifierProvider<AudioPlaybackState>(
+            create: (_) => AudioPlaybackState(audioService: _FakeAudioService()),
+          ),
+          ChangeNotifierProvider<LearningFavoritesState>(
+            create: (_) =>
+                LearningFavoritesState(favoritesPort: _FakeFavoritesPort(), queuePort: _FakeQueuePort(const [])),
+          ),
+        ],
+        child: MaterialApp(
+          home: SkinProvider(skin: SkinSystem(), child: const LearnPage()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 第一词：提示遮盖存在（touch 图标为遮盖层唯一 oracle）
+    expect(find.byIcon(Icons.touch_app), findsOneWidget);
+
+    // 刮开第一词：三行横扫产生足够网格覆盖（onPanEnd 阈值 0.4）
+    final center = tester.getCenter(find.byType(ScratchToReveal));
+    Future<void> scratchPass(double dy) async {
+      final gesture = await tester.startGesture(center - Offset(100, dy));
+      for (var i = 0; i < 28; i++) {
+        await gesture.moveBy(const Offset(8, 0));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+
+    await scratchPass(-30);
+    await scratchPass(0);
+    await scratchPass(30);
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.touch_app), findsNothing, reason: '第一词刮开后遮盖应消失');
+
+    // 推进到第二词（直接评分推进队列）
+    await session.rate(FsrsRating.good);
+    await tester.pumpAndSettle();
+    expect(session.currentWord!.word, 'second');
+
+    // 关键回归断言：第二词的遮盖必须重新出现（修复前此断言失败=自动泄答案）
+    expect(find.byIcon(Icons.touch_app), findsOneWidget, reason: '换词后提示必须重新遮盖，不得自动露出');
   });
 }
 

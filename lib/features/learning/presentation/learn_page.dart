@@ -540,7 +540,15 @@ class _WordArea extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 18),
-            WordScratchCard(word: '刮开看提示', meaning: _hintText(word), color: colors.accent),
+            // ValueKey + resetToken 双保险：换词时强制重建/重置刮刮层，
+            // 杜绝"第一词刮开后后续词自动露出提示"的泄答案 bug。
+            WordScratchCard(
+              key: ValueKey(word.word),
+              word: '刮开看提示',
+              meaning: _hintText(word),
+              color: colors.accent,
+              resetToken: word.word,
+            ),
           ],
         ),
       ),
