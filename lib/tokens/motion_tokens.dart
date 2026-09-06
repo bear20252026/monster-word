@@ -21,6 +21,15 @@ class MotionDurations {
 
   /// 450ms — 仅限整屏级入场与庆祝时刻（底栏首次入场、学习完成）
   static const expressive = Duration(milliseconds: 450);
+
+  /// 700ms — 数据可视化与进度环的计数/入场（首页进度、仪表盘）
+  static const count = Duration(milliseconds: 700);
+
+  /// 2800ms — Splash 品牌开场完整时间线（记忆生长）
+  static const splash = Duration(milliseconds: 2800);
+
+  /// 300ms — Splash 无障碍（关闭动画）快速淡入
+  static const splashQuick = Duration(milliseconds: 300);
 }
 
 /// 动效曲线档位（MotionCurves）

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:word_app/widgets/brand_intro.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 import 'package:word_app/features/account/presentation/login_page.dart';
@@ -23,15 +24,19 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
+enum _SplashPhase { playing, routing, guide, completed }
+
 class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   bool _showGuide = false;
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  // A-2: 持有导航 Timer 以便在 dispose 时取消，避免测试/快速退出时留下 pending Timer。
-  Timer? _navTimer;
+  _SplashPhase _phase = _SplashPhase.playing;
   DateTime _createdAt = DateTime.now();
-  bool _proceeding = false;
+
+  /// 会话恢复与最短展示准备（由 _prepareSession 完成），与动画时间线并行等待。
+  Future<void>? _sessionReady;
+  Timer? _minShowTimer;
 
   // 引导页图片
   final List<String> _introAssets = [
@@ -43,47 +48,58 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    // 「记忆生长」开场：2.8s 完整时间线；无障碍关闭动画时压缩到 300ms 快速淡入。
+    // 「记忆生长」开场：2.8s 完整时间线；无障碍关闭动画时压缩到 300ms。
+    // 路由由 AnimationStatus.completed 单一驱动，不再另设独立导航 Timer，
+    // 消除动画时长与路由等待的双时间线竞态。
     final reduceMotion = WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
     _animController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: reduceMotion ? 300 : 2800),
+      duration: reduceMotion ? MotionDurations.splashQuick : MotionDurations.splash,
     );
+    _animController.addStatusListener(_onAnimStatus);
     _createdAt = DateTime.now();
     _animController.forward();
-    _checkLoginAndNavigate();
+    _prepareSession();
   }
 
-  Future<void> _checkLoginAndNavigate() async {
-    // 开场动画完整播完（2.8s）后导航；点按任意处可提前跳过（_skipIntro），
-    // 但最短展示 800ms —— 会话恢复需要这一安全下限，避免误判登录态。
-    _navTimer?.cancel();
-    _navTimer = Timer(const Duration(milliseconds: 2800), () {
-      if (!mounted) return;
-      _proceedToRoute();
-    });
+  void _onAnimStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed) _finishSplash();
   }
 
-  /// 点按跳过：动画快进到收尾，并越过剩余等待直接导航（不低于 800ms 安全下限）。
-  void _skipIntro() {
-    if (_proceeding || _showGuide) return;
+  /// 会话恢复与最短展示准备：不负责路由（路由统一在 _finishSplash）。
+  void _prepareSession() {
+    final minShow = Completer<void>();
+    // 保留最短 800ms 展示：保证会话恢复完成、避免误判登录态（体验审计 C1）。
+    // 用可取消 Timer 替代 Future.delayed，dispose 时取消，避免测试/快速退出挂起 Timer。
     final elapsed = DateTime.now().difference(_createdAt);
-    _animController.animateTo(1.0, duration: const Duration(milliseconds: 180), curve: Curves.easeOut);
-    final remaining = const Duration(milliseconds: 800) - elapsed;
-    if (remaining <= Duration.zero) {
-      _proceedToRoute();
+    final rest = const Duration(milliseconds: 800) - elapsed;
+    if (rest <= Duration.zero) {
+      minShow.complete();
     } else {
-      _navTimer?.cancel();
-      _navTimer = Timer(remaining, () {
-        if (!mounted) return;
-        _proceedToRoute();
-      });
+      _minShowTimer = Timer(rest, () => minShow.complete());
     }
+    _sessionReady = minShow.future;
   }
 
-  Future<void> _proceedToRoute() async {
-    if (_proceeding) return;
-    _proceeding = true;
+  /// 点按跳过：把动画快进到收尾，由状态监听器触发 _finishSplash，无重复导航。
+  void _skipIntro() {
+    if (_phase != _SplashPhase.playing || _showGuide) return;
+    _animController.animateTo(1.0, duration: const Duration(milliseconds: 180), curve: Curves.easeOut);
+  }
+
+  /// 唯一导航入口：幂等，等待最短展示 + 会话恢复后按登录态路由。
+  Future<void> _finishSplash() async {
+    if (_phase == _SplashPhase.routing || _phase == _SplashPhase.guide || _phase == _SplashPhase.completed) {
+      return;
+    }
+    _phase = _SplashPhase.routing;
+    try {
+      await _sessionReady;
+      if (!mounted) return;
+    } catch (_) {
+      // 会话准备异常不阻塞路由，走下方 fail-safe。
+    }
+
     // fail-safe：启动导航绝不允许卡在 Splash。任何异常都强制跳到
     // 登录页（未登录）或主页（已登录），让用户继续操作而非卡死。
     var isLoggedIn = false;
@@ -103,11 +119,14 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
         if (!hasShownGuide) {
           await context.read<AppSessionState>().setHasShownInitGuide(true);
           if (!mounted) return;
+          _phase = _SplashPhase.guide;
           setState(() => _showGuide = true);
         } else {
+          _phase = _SplashPhase.completed;
           _goToMain();
         }
       } else {
+        _phase = _SplashPhase.completed;
         _goToLogin();
       }
     } catch (e) {
@@ -128,7 +147,8 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
 
   @override
   void dispose() {
-    _navTimer?.cancel();
+    _minShowTimer?.cancel();
+    _animController.removeStatusListener(_onAnimStatus);
     _animController.dispose();
     _pageController.dispose();
     super.dispose();
