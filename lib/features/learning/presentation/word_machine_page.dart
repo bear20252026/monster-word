@@ -12,6 +12,7 @@ import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 
 class WordMachinePage extends StatefulWidget {
   const WordMachinePage({super.key});
@@ -214,7 +215,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
                     textAlign: TextAlign.center,
                   ),
                   crossFadeState: _showMeaning ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                  duration: const Duration(milliseconds: 300),
+                  duration: MotionDurations.slow,
                 ),
                 if (!_showMeaning) ...[
                   const SizedBox(height: 8),
@@ -322,7 +323,7 @@ class _ControlButton extends StatelessWidget {
             icon,
             size: size * 0.5,
             color: isPrimary
-                ? Colors.white
+                ? AppColors.white100
                 : (onPressed != null ? skin.colors.text1 : skin.colors.text3.withValues(alpha: 0.3)),
           ),
         ),

@@ -61,7 +61,13 @@ void main() {
       expect(File('lib/services/learn_service_impl.dart').existsSync(), isFalse);
       expect(File('lib/modules/learn/learn_module.dart').existsSync(), isFalse);
       for (final path in migratedPages) {
-        final source = File(path).readAsStringSync();
+        var source = File(path).readAsStringSync();
+        // home 页族含 part 文件
+        final homePartsDir = Directory('lib/features/learning/presentation/home');
+        if (path.endsWith('home_screen.dart') && homePartsDir.existsSync()) {
+          final partSources = homePartsDir.listSync().whereType<File>().map((f) => f.readAsStringSync()).join('\n');
+          source += partSources;
+        }
         expect(source, contains('LearningSessionState'), reason: '$path 应使用专用学习会话');
         expect(source, isNot(contains('LearnState')), reason: '$path 不应回流旧练习状态');
       }
@@ -325,7 +331,13 @@ void main() {
       final wordsPageSource = File('lib/features/book/presentation/book_words_page.dart').readAsStringSync();
       final extensiveModeSource = File('lib/features/book/presentation/extensive_model_select_page.dart')
           .readAsStringSync();
-      final homeSource = File('lib/features/learning/presentation/home_screen.dart').readAsStringSync();
+      // home 页族 = 主文件 + part 文件（B3 拆分后 _startLearning 等在 part 内）
+      final homeParts = Directory('lib/features/learning/presentation/home')
+          .listSync()
+          .whereType<File>()
+          .map((f) => f.readAsStringSync())
+          .join();
+      final homeSource = File('lib/features/learning/presentation/home_screen.dart').readAsStringSync() + homeParts;
       final providersSource = File('lib/features/book/presentation/book_feature_providers.dart').readAsStringSync();
 
       expect(appSource, contains('buildBookFeatureScope('));

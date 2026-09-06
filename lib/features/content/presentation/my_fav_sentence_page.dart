@@ -133,9 +133,9 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.play_arrow, size: 16, color: Colors.white),
+                    const Icon(Icons.play_arrow, size: 16, color: AppColors.white100),
                     const SizedBox(width: 4),
-                    Text('开始学习', style: MwTypography.micro.copyWith(color: Colors.white)),
+                    Text('开始学习', style: MwTypography.micro.copyWith(color: AppColors.white100)),
                   ],
                 ),
               ),
@@ -290,7 +290,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
             onPressed: _selectedIndices.isEmpty ? null : _deleteSelected,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white100,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
             ),
             child: Text('删除 (${_selectedIndices.length})'),

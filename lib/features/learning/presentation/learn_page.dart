@@ -28,6 +28,7 @@ import 'package:word_app/features/learning/presentation/learning_favorites_state
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 
 class LearnPage extends StatefulWidget {
   const LearnPage({super.key});
@@ -578,9 +579,9 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _shakeController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
-    _bounceController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
-    _checkController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
+    _shakeController = AnimationController(duration: MotionDurations.slow, vsync: this);
+    _bounceController = AnimationController(duration: MotionDurations.slow, vsync: this);
+    _checkController = AnimationController(duration: MotionDurations.base, vsync: this);
     _confettiController = ConfettiController();
   }
 
@@ -650,7 +651,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
               for (int i = 0; i < state.choices.length && i < 4; i++)
                 BoxReveal(
                   direction: BoxRevealDirection.left,
-                  duration: const Duration(milliseconds: 300),
+                  duration: MotionDurations.slow,
                   delay: Duration(milliseconds: 50 * i),
                   reveal: true,
                   child: _buildChoice(i),
@@ -664,11 +665,11 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
                     onPressed: () {
                       Navigator.of(context).pushNamed(RouteNames.wordDetail, arguments: {'fromLearn': true});
                     },
-                    icon: Icon(Icons.arrow_forward, size: 20, color: Colors.white),
+                    icon: Icon(Icons.arrow_forward, size: 20, color: AppColors.white100),
                     label: Text('查看详解', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.accent,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.white100,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
                   ),
@@ -725,7 +726,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
         alignment: Alignment.centerRight,
         children: [
           AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: MotionDurations.base,
             height: 56 * resp.scale,
             margin: const EdgeInsets.only(bottom: 16),
             padding: EdgeInsets.symmetric(horizontal: 14 * resp.scale),
@@ -783,12 +784,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     }
 
     if (_correctIndex >= 0 && !isCorrect) {
-      tile = AnimatedOpacity(
-        opacity: 0.40,
-        duration: const Duration(milliseconds: 200),
-        curve: standardCurve,
-        child: tile,
-      );
+      tile = AnimatedOpacity(opacity: 0.40, duration: MotionDurations.base, curve: standardCurve, child: tile);
     }
 
     return RepaintBoundary(child: tile);

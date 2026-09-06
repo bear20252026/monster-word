@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 Future<T?> showSettingsBottomSheet<T>(BuildContext context, {required String title, required Widget child}) {
   final skin = context.skin.colors;
@@ -80,9 +81,9 @@ class SettingsSheetSwitchRow extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: Colors.white,
+            activeThumbColor: AppColors.white100,
             activeTrackColor: skin.accent,
-            inactiveThumbColor: Colors.white,
+            inactiveThumbColor: AppColors.white100,
             inactiveTrackColor: skin.text3,
           ),
         ],

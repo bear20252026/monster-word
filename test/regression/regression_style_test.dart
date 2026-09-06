@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/theme/skin_system.dart';
-import 'package:word_app/tokens/design_language.dart';
 
 void main() {
   // SkinSystem 构造器读取系统亮度（platformDispatcher），需先初始化绑定

@@ -6,7 +6,7 @@ void main() {
     test('defaults 返回所有字段的默认值', () {
       const prefs = LearningPreferences.defaults();
 
-      expect(prefs.dailyNewWords, 10);
+      expect(prefs.learnPace, 10);
       expect(prefs.autoPlayAudio, isTrue);
       expect(prefs.showPhonetic, isTrue);
       expect(prefs.darkMode, isFalse);
@@ -25,9 +25,8 @@ void main() {
 
     test('copyWith 保留未修改字段', () {
       const original = LearningPreferences.defaults();
-      final modified = original.copyWith(dailyNewWords: 30, darkMode: true);
+      final modified = original.copyWith(darkMode: true);
 
-      expect(modified.dailyNewWords, 30);
       expect(modified.darkMode, isTrue);
       expect(modified.autoPlayAudio, original.autoPlayAudio);
       expect(modified.pronunciationType, original.pronunciationType);
@@ -39,17 +38,17 @@ void main() {
       final modified = original.copyWith(learnPace: 20);
 
       expect(modified.learnPace, 20);
-      expect(modified.dailyNewWords, original.dailyNewWords);
+      expect(original.learnPace, 10);
       expect(modified.autoPlayAudio, original.autoPlayAudio);
     });
 
     test('不可变性：copyWith 返回新实例', () {
       const original = LearningPreferences.defaults();
-      final modified = original.copyWith(dailyNewWords: 50);
+      final modified = original.copyWith(learnPace: 50);
 
       expect(identical(original, modified), isFalse);
-      expect(original.dailyNewWords, 10);
-      expect(modified.dailyNewWords, 50);
+      expect(original.learnPace, 10);
+      expect(modified.learnPace, 50);
     });
   });
 }

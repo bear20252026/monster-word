@@ -11,6 +11,7 @@ import 'package:word_app/features/word_browse/application/sentence_favorites_sto
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/text_generate_effect.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 
 /// 例句条目（带收藏按钮）
 class ExampleTile extends StatefulWidget {
@@ -35,7 +36,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
     super.initState();
     _favAnimController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: MotionDurations.base,
       lowerBound: 0.0,
       upperBound: 1.0,
     );

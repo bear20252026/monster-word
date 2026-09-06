@@ -14,7 +14,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// 颜色字面量的允许出现位置（"颜色的家"：token 定义与主题/壁纸数据定义）
 const _whitelistPrefixes = <String>[
   'lib/tokens/', // 全部 token 定义（含 effect_palette.dart）
-  'lib/theme/skin_system.dart', // 皮肤 preset 定义处（用户拍板豁免）
+  'lib/theme/skin_system.dart', // 皮肤运行时（用户拍板豁免）
+  'lib/theme/theme_presets.dart', // 11 套色板 preset 定义处（随拆分从 skin_system 迁入）
+  'lib/theme/theme_vars.dart', // ThemeVars 默认参数定义处（随拆分从 skin_system 迁入）
   'lib/theme/wallpaper_data.dart', // 壁纸颜色数据定义处
 ];
 

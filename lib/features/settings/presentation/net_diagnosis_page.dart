@@ -77,14 +77,14 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
                   onPressed: _isRunning ? null : _startDiagnosis,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MwColors.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white100,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                   ),
                   child: _isRunning
                       ? SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white100),
                         )
                       : const Text('开始诊断'),
                 ),

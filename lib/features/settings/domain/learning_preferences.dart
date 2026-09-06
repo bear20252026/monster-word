@@ -11,7 +11,6 @@ class LearningPreferences {
   static const String defaultMnemonicOrder = AppPreferences.defaultMnemonicOrder;
 
   const LearningPreferences({
-    required this.dailyNewWords,
     required this.autoPlayAudio,
     required this.showPhonetic,
     required this.darkMode,
@@ -32,8 +31,7 @@ class LearningPreferences {
   });
 
   const LearningPreferences.defaults()
-    : dailyNewWords = 10,
-      autoPlayAudio = true,
+    : autoPlayAudio = true,
       showPhonetic = true,
       darkMode = false,
       wechatReminder = false,
@@ -52,7 +50,6 @@ class LearningPreferences {
       showRoots = true,
       reminderTime = defaultReminderTime;
 
-  final int dailyNewWords;
   final bool autoPlayAudio;
   final bool showPhonetic;
   final bool darkMode;
@@ -80,7 +77,6 @@ class LearningPreferences {
   final String reminderTime;
 
   LearningPreferences copyWith({
-    int? dailyNewWords,
     bool? autoPlayAudio,
     bool? showPhonetic,
     bool? darkMode,
@@ -100,7 +96,6 @@ class LearningPreferences {
     String? reminderTime,
   }) {
     return LearningPreferences(
-      dailyNewWords: dailyNewWords ?? this.dailyNewWords,
       autoPlayAudio: autoPlayAudio ?? this.autoPlayAudio,
       showPhonetic: showPhonetic ?? this.showPhonetic,
       darkMode: darkMode ?? this.darkMode,

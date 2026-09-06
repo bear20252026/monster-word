@@ -253,7 +253,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                             onPressed: _goToMain,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: skin.colors.accent,
-                              foregroundColor: Colors.white,
+                              foregroundColor: AppColors.white100,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(context.design.radius.pill),
                               ),
@@ -262,14 +262,11 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                           )
                         : ElevatedButton(
                             onPressed: () {
-                              _pageController.nextPage(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOutCubic,
-                              );
+                              _pageController.nextPage(duration: MotionDurations.slow, curve: Curves.easeOutCubic);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: skin.colors.accent,
-                              foregroundColor: Colors.white,
+                              foregroundColor: AppColors.white100,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(context.design.radius.pill),
                               ),

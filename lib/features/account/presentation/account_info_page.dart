@@ -204,7 +204,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                 color: skin.accent,
                 border: Border.all(color: skin.cardBg, width: 2),
               ),
-              child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
+              child: const Icon(Icons.camera_alt, color: AppColors.white100, size: 14),
             ),
           ),
         ],

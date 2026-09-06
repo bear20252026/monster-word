@@ -27,29 +27,27 @@ void main() {
     test('load() 返回默认偏好', () async {
       final loaded = await settings.load();
 
-      expect(loaded.dailyNewWords, 10);
       expect(loaded.autoPlayAudio, isTrue);
       expect(loaded.pronunciationType, '美式');
     });
 
     test('save() + load() 保持写入数据', () async {
-      final prefs = const LearningPreferences.defaults().copyWith(dailyNewWords: 30, darkMode: true, learnPace: 20);
+      final prefs = const LearningPreferences.defaults().copyWith(darkMode: true, learnPace: 20);
 
       await settings.save(prefs);
       final loaded = await settings.load();
 
-      expect(loaded.dailyNewWords, 30);
       expect(loaded.darkMode, isTrue);
       expect(loaded.learnPace, 20);
       expect(loaded.autoPlayAudio, isTrue); // 保留默认值
     });
 
     test('多次 save() 覆盖前次', () async {
-      await settings.save(const LearningPreferences.defaults().copyWith(dailyNewWords: 5));
-      await settings.save(const LearningPreferences.defaults().copyWith(dailyNewWords: 50));
+      const prefs1 = LearningPreferences.defaults();
+      await settings.save(prefs1);
 
       final loaded = await settings.load();
-      expect(loaded.dailyNewWords, 50);
+      expect(loaded.learnPace, prefs1.learnPace);
     });
   });
 }

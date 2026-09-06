@@ -208,7 +208,11 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
                     height: 56,
                     decoration: BoxDecoration(shape: BoxShape.circle, color: MwColors.primary),
                     child: IconButton(
-                      icon: Icon(_player.isPlaying ? Icons.pause : Icons.play_arrow, color: Colors.white, size: 32),
+                      icon: Icon(
+                        _player.isPlaying ? Icons.pause : Icons.play_arrow,
+                        color: AppColors.white100,
+                        size: 32,
+                      ),
                       tooltip: _player.isPlaying ? '暂停' : '播放',
                       onPressed: word == null
                           ? null

@@ -114,7 +114,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                 label: const Text('返回上一页'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: skin.colors.accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white100,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
               ),
@@ -211,7 +211,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
             label: Text(fromLearnPage ? '下一词' : '返回'),
             style: ElevatedButton.styleFrom(
               backgroundColor: skin.colors.accent,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white100,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),

@@ -226,7 +226,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                             onPressed: _hasChecked ? _reset : _check,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: MwColors.primary,
-                              foregroundColor: Colors.white,
+                              foregroundColor: AppColors.white100,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(context.design.radius.md),
                               ),

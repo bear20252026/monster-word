@@ -10,9 +10,6 @@ import 'package:word_app/features/settings/domain/learning_preferences.dart';
 /// 原全局设置状态已使用的四个键保持不变。原先仅留在设置页面内存中的选项采用
 /// 独立、语义化键名，首次读取时返回页面过去的默认值。
 class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
-  /// 兼容旧 API 名称，但实际绑定每日目标唯一事实源 A。
-  /// 旧 B 键只由 TodayProgressStore 在启动时迁移，不再被设置仓库消费。
-  static const dailyNewWordsKey = UserPreferences.dailyGoal;
   static const autoPlayAudioKey = 'auto_play_audio_v1';
   static const showPhoneticKey = 'show_phonetic_v1';
   static const darkModeKey = 'dark_mode_v1';
@@ -38,7 +35,6 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
     final prefs = await SharedPreferences.getInstance();
     const defaults = LearningPreferences.defaults();
     return LearningPreferences(
-      dailyNewWords: prefs.getInt(dailyNewWordsKey) ?? defaults.dailyNewWords,
       autoPlayAudio: prefs.getBool(autoPlayAudioKey) ?? defaults.autoPlayAudio,
       showPhonetic: prefs.getBool(showPhoneticKey) ?? defaults.showPhonetic,
       darkMode: prefs.getBool(darkModeKey) ?? defaults.darkMode,
@@ -63,7 +59,6 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
   Future<void> save(LearningPreferences preferences) async {
     final prefs = await SharedPreferences.getInstance();
     await Future.wait([
-      prefs.setInt(dailyNewWordsKey, preferences.dailyNewWords),
       prefs.setBool(autoPlayAudioKey, preferences.autoPlayAudio),
       prefs.setBool(showPhoneticKey, preferences.showPhonetic),
       prefs.setBool(darkModeKey, preferences.darkMode),

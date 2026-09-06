@@ -95,7 +95,7 @@ class _ReviewDialog extends StatelessWidget {
               label: const Text('好的'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: skin.accent,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white100,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.sm)),
                 elevation: 0,
@@ -211,7 +211,7 @@ class _ReviewDialog extends StatelessWidget {
                   label: const Text('开始复习'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: skin.accent,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white100,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.sm)),
                     elevation: 0,

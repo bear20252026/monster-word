@@ -279,7 +279,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
           onPressed: () => setState(() => _revealed = true),
           style: ElevatedButton.styleFrom(
             backgroundColor: MwColors.primary,
-            foregroundColor: Colors.white,
+            foregroundColor: AppColors.white100,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
           ),
           child: const Text('显示答案'),
@@ -310,7 +310,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
               onPressed: _markMastered,
               style: ElevatedButton.styleFrom(
                 backgroundColor: MwColors.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white100,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
               ),
               child: const Text('认识'),
@@ -346,7 +346,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
               const SizedBox(width: 16),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: AppColors.white100),
                 child: const Text('完成'),
               ),
             ],

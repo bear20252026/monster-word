@@ -350,13 +350,13 @@ class _SearchPageState extends State<SearchPage> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: skin.accent,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white100,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
               ),
               child: Text(
                 '查看完整字典',
-                style: MwTypography.bodyMd.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+                style: MwTypography.bodyMd.copyWith(color: AppColors.white100, fontWeight: FontWeight.w600),
               ),
             ),
           ),

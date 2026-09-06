@@ -22,7 +22,6 @@ class LearningPreferencesState extends ChangeNotifier {
   bool get isLoading => _isLoading;
   Object? get loadError => _loadError;
 
-  int get dailyNewWords => _preferences.dailyNewWords;
   bool get autoPlayAudio => _preferences.autoPlayAudio;
   bool get showPhonetic => _preferences.showPhonetic;
   bool get darkMode => _preferences.darkMode;
@@ -60,7 +59,6 @@ class LearningPreferencesState extends ChangeNotifier {
     }
   }
 
-  Future<void> setDailyNewWords(int value) => _update(_preferences.copyWith(dailyNewWords: value));
   Future<void> setAutoPlayAudio(bool value) => _update(_preferences.copyWith(autoPlayAudio: value));
   Future<void> setShowPhonetic(bool value) => _update(_preferences.copyWith(showPhonetic: value));
   Future<void> setDarkMode(bool value) => _update(_preferences.copyWith(darkMode: value));

@@ -8,9 +8,8 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('学习偏好状态加载旧 SettingsState 的每日新学和发音键', () async {
+  test('学习偏好状态加载旧 SettingsState 的发音键', () async {
     SharedPreferences.setMockInitialValues({
-      LearningPreferencesRepository.dailyNewWordsKey: 30,
       LearningPreferencesRepository.autoPlayAudioKey: false,
       LearningPreferencesRepository.showPhoneticKey: false,
       LearningPreferencesRepository.darkModeKey: true,
@@ -20,7 +19,6 @@ void main() {
 
     await state.initialize();
 
-    expect(state.dailyNewWords, 30);
     expect(state.autoPlayAudio, isFalse);
     expect(state.showPhonetic, isFalse);
     expect(state.darkMode, isTrue);
@@ -32,7 +30,6 @@ void main() {
     final state = LearningPreferencesState(reader: repo, writer: repo);
     await state.initialize();
 
-    await state.setDailyNewWords(20);
     await state.setPronunciationType('英式');
     await state.setAutoPlayExampleAudio(true);
     await state.setLearnPace(15);
@@ -40,13 +37,12 @@ void main() {
     await state.setAudioMeaningQuestion(false);
 
     final preferences = await SharedPreferences.getInstance();
-    expect(state.dailyNewWords, 20);
+
     expect(state.pronunciationType, '英式');
     expect(state.autoPlayExampleAudio, isTrue);
     expect(state.learnPace, 15);
     expect(state.spellRightSwipe, isFalse);
     expect(state.audioMeaningQuestion, isFalse);
-    expect(preferences.getInt(LearningPreferencesRepository.dailyNewWordsKey), 20);
     expect(preferences.getString(LearningPreferencesRepository.pronunciationTypeKey), '英式');
     expect(preferences.getBool(LearningPreferencesRepository.spellRightSwipeKey), isFalse);
   });

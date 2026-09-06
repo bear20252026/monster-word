@@ -127,7 +127,7 @@ class _WordExportPageState extends State<WordExportPage> {
       selected: selected,
       onSelected: (_) => setState(() => _format = format),
       selectedColor: MwColors.primary,
-      labelStyle: MwTypography.bodySm.copyWith(color: selected ? Colors.white : skin.colors.text1),
+      labelStyle: MwTypography.bodySm.copyWith(color: selected ? AppColors.white100 : skin.colors.text1),
       backgroundColor: skin.colors.cardBgAlt,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(context.design.radius.lg),
@@ -152,7 +152,7 @@ class _WordExportPageState extends State<WordExportPage> {
       value: value,
       onChanged: (v) => onChanged(v ?? false),
       activeColor: MwColors.primary,
-      checkColor: Colors.white,
+      checkColor: AppColors.white100,
       contentPadding: EdgeInsets.zero,
       controlAffinity: ListTileControlAffinity.leading,
     );
@@ -188,7 +188,7 @@ class _WordExportPageState extends State<WordExportPage> {
             label: const Text('分享文本'),
             style: ElevatedButton.styleFrom(
               backgroundColor: MwColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white100,
               minimumSize: const Size(0, 48),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
             ),

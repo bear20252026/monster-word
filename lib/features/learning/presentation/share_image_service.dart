@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:word_app/tokens/starbucks_tokens.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 分享图片生成器
 class ShareImageService {
@@ -34,7 +35,7 @@ class ShareImageService {
 
     // === 装饰圆 ===
     final circlePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.05)
+      ..color = AppColors.white100.withValues(alpha: 0.05)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(width * 0.8, height * 0.15), 200, circlePaint);
     canvas.drawCircle(Offset(width * 0.2, height * 0.7), 300, circlePaint);
@@ -54,7 +55,7 @@ class ShareImageService {
       width / 2,
       height * 0.12,
       fontSize: 72,
-      color: Colors.white,
+      color: AppColors.white100,
       fontWeight: FontWeight.bold,
     );
 
@@ -87,7 +88,7 @@ class ShareImageService {
 
     // === 底部装饰 ===
     final bottomY = height * 0.88;
-    _drawText(canvas, '每一天，都在进步', width / 2, bottomY, fontSize: 32, color: Colors.white.withValues(alpha: 0.7));
+    _drawText(canvas, '每一天，都在进步', width / 2, bottomY, fontSize: 32, color: AppColors.white100.withValues(alpha: 0.7));
 
     _drawText(canvas, '— Monster Word —', width / 2, bottomY + 60, fontSize: 24, color: StarbucksCreamColors.vipGoldBg);
 
@@ -96,7 +97,7 @@ class ShareImageService {
     final qrLeft = (width - qrSize) / 2;
     final qrTop = height * 0.72;
     final qrPaint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.white100
       ..style = PaintingStyle.fill;
     canvas.drawRRect(
       RRect.fromRectAndRadius(Rect.fromLTWH(qrLeft, qrTop, qrSize, qrSize), const Radius.circular(16)),
@@ -121,7 +122,7 @@ class ShareImageService {
       width / 2,
       qrTop + qrSize + 30,
       fontSize: 20,
-      color: Colors.white.withValues(alpha: 0.6),
+      color: AppColors.white100.withValues(alpha: 0.6),
     );
 
     // === 渲染 ===
@@ -137,7 +138,7 @@ class ShareImageService {
     double x,
     double y, {
     double fontSize = 32,
-    Color color = Colors.white,
+    Color color = AppColors.white100,
     FontWeight fontWeight = FontWeight.normal,
   }) {
     final tp = TextPainter(
@@ -163,13 +164,13 @@ class ShareImageService {
   ) {
     // 卡片背景
     final cardPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.1)
+      ..color = AppColors.white100.withValues(alpha: 0.1)
       ..style = PaintingStyle.fill;
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(left, top, w, h), const Radius.circular(20)), cardPaint);
 
     // 卡片边框
     final borderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.2)
+      ..color = AppColors.white100.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(left, top, w, h), const Radius.circular(20)), borderPaint);
@@ -185,7 +186,14 @@ class ShareImageService {
     );
 
     // 标签
-    _drawText(canvas, label, left + 130, top + h / 2 - 30, fontSize: 28, color: Colors.white.withValues(alpha: 0.7));
+    _drawText(
+      canvas,
+      label,
+      left + 130,
+      top + h / 2 - 30,
+      fontSize: 28,
+      color: AppColors.white100.withValues(alpha: 0.7),
+    );
 
     // 数值
     _drawText(
@@ -194,7 +202,7 @@ class ShareImageService {
       left + 130,
       top + h / 2 + 30,
       fontSize: 42,
-      color: Colors.white,
+      color: AppColors.white100,
       fontWeight: FontWeight.bold,
     );
   }

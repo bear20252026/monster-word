@@ -4,6 +4,7 @@ import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/learning/presentation/widgets/formal_review_choice_card.dart';
 
 /// 单词、音标和发音入口。
@@ -169,7 +170,7 @@ class FormalReviewAnswerAction extends StatelessWidget {
               Icon(
                 showAnswer ? Icons.arrow_forward_rounded : Icons.visibility_outlined,
                 size: 19,
-                color: showAnswer ? Colors.white : skin.onGlassText1,
+                color: showAnswer ? AppColors.white100 : skin.onGlassText1,
               ),
               const SizedBox(width: 6),
               Text(
@@ -177,7 +178,7 @@ class FormalReviewAnswerAction extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: showAnswer ? Colors.white : skin.onGlassText1,
+                  color: showAnswer ? AppColors.white100 : skin.onGlassText1,
                 ),
               ),
             ],

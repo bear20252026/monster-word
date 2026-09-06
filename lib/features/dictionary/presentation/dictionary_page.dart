@@ -10,6 +10,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/mw_section_header.dart';
+import 'package:word_app/widgets/mw_word_row.dart';
 import 'package:word_app/widgets/word_root_tab.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_detail_state.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_feature_providers.dart';
@@ -499,35 +500,13 @@ class _RelatedWordCard extends StatelessWidget {
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: word))),
       margin: const EdgeInsets.only(bottom: 10),
       borderRadius: 16,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-        child: Row(
+      child: MwWordRow(
+        word: word.word,
+        phonetic: word.usPron,
+        definition: firstInterp,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    word.word,
-                    style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
-                  ),
-                  if (word.usPron.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text('/${word.usPron}/', style: MwTypography.micro.copyWith(color: skin.text3)),
-                  ],
-                  if (firstInterp.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      firstInterp,
-                      style: MwTypography.bodySm.copyWith(color: skin.text3),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
             if (onPlayAudio != null && word.usPron.isNotEmpty) ...[
               GestureDetector(
                 onTap: () => onPlayAudio!(word.word),
@@ -540,7 +519,7 @@ class _RelatedWordCard extends StatelessWidget {
                   child: Icon(Icons.volume_up, color: skin.accent, size: 16),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
             ],
             Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
           ],

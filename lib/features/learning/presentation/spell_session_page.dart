@@ -146,7 +146,7 @@ class _SpellSessionPageState extends State<SpellSessionPage> {
               Navigator.pop(ctx);
               _resetSession();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: AppColors.white100),
             child: const Text('再来一次'),
           ),
         ],

@@ -156,7 +156,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
               Navigator.pop(ctx);
               _reset();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: AppColors.white100),
             child: const Text('再来一次'),
           ),
         ],

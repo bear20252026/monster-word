@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/models/book.dart';
+import 'package:word_app/features/book/domain/book_groups.dart';
 import 'package:word_app/widgets/app_dock.dart';
 import 'package:word_app/widgets/common/mw_empty_state.dart';
 import 'package:word_app/widgets/common/mw_skeleton.dart';
@@ -98,10 +99,8 @@ class _LibSelectPageState extends State<LibSelectPage> {
   int _tabIndex = 0; // 当前分组下标（对应 _groupDefs 的组号，0 = 全部）
   bool _showDescription = true; // 眼睛图标：显示/隐藏词书描述
 
-  // 分组排布：按学习场景归堆（此前是 9 个生硬的考试标签平铺）。
-  // 组号固定，UI 上只展示当前词库里非空的组（数据驱动，空组不显示空标签）。
-  static const _groupDefs = <int, String>{0: '全部', 1: '四级六级', 2: '高考考研', 3: '雅思托福', 4: '专业出国', 5: '专题精选', 6: '其他'};
-
+  // 分组排布：规则下沉在 book/domain/book_groups.dart，UI 只消费结果；
+  // 标签栏数据驱动，仅展示当前词库里非空的组。
   @override
   void initState() {
     super.initState();
@@ -116,28 +115,16 @@ class _LibSelectPageState extends State<LibSelectPage> {
     return books;
   }
 
-  /// 词书 code → 分组下标（6 = 其他兜底）
-  static int _tabOf(String code) {
-    if (RegExp(r'^(PHRASEIDIOM|ROOTAFFIX|SYNNOTE|COLLOC|USAGENOTE)$').hasMatch(code)) return 5;
-    if (RegExp(r'CET4|四级|CET6|六级').hasMatch(code)) return 1;
-    if (RegExp(r'GK|高考|KAOYAN|考研|KY|LLYC').hasMatch(code)) return 2;
-    if (RegExp(r'IELTS|雅思|TOEFL|托福|GDTOEFL').hasMatch(code)) return 3;
-    if (RegExp(r'GRE|GMAT|SAT|BEC|TEM|专四|专八|PRO4|PRO8|XHPRO|PETS|AWL|BARRONSAT|BIZLAW').hasMatch(code)) {
-      return 4;
-    }
-    return 6;
-  }
-
   /// 当前词库中非空的分组（有序）
   List<int> get _visibleGroups {
-    final present = _allBooks.map((b) => _tabOf(b.code)).toSet();
-    return _groupDefs.keys.where((g) => g == 0 || present.contains(g)).toList();
+    final present = _allBooks.map((b) => bookGroupOf(b.code)).toSet();
+    return kBookGroupNames.indexed.map((e) => e.$1).where((g) => g == BookGroup.all || present.contains(g)).toList();
   }
 
   /// 按分组过滤词书
   List<Book> _filterByTab(List<Book> books, int tab) {
-    if (tab == 0) return books;
-    return books.where((b) => _tabOf(b.code) == tab).toList();
+    if (tab == BookGroup.all) return books;
+    return books.where((b) => bookGroupOf(b.code) == tab).toList();
   }
 
   /// 从弯曲画廊打开词书（导航到词书内容页）
@@ -291,7 +278,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               child: SimpleMorphingTabs(
-                labels: _visibleGroups.map((g) => _groupDefs[g]!).toList(),
+                labels: _visibleGroups.map((g) => kBookGroupNames[g]).toList(),
                 initialIndex: 0,
                 height: 36,
                 borderRadius: 14,

@@ -14,6 +14,7 @@ import 'package:word_app/features/settings/presentation/study_reminder_sheet.dar
 import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -653,9 +654,9 @@ class _SwitchCell extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged == null ? null : (next) => onChanged!(next),
-            activeThumbColor: Colors.white,
+            activeThumbColor: AppColors.white100,
             activeTrackColor: skin.accent,
-            inactiveThumbColor: Colors.white,
+            inactiveThumbColor: AppColors.white100,
             inactiveTrackColor: skin.text3,
           ),
         ],
@@ -694,9 +695,9 @@ class _SwitchCellWithDesc extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged == null ? null : (next) => onChanged!(next),
-            activeThumbColor: Colors.white,
+            activeThumbColor: AppColors.white100,
             activeTrackColor: skin.accent,
-            inactiveThumbColor: Colors.white,
+            inactiveThumbColor: AppColors.white100,
             inactiveTrackColor: skin.text3,
           ),
         ],

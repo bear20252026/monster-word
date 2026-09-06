@@ -187,7 +187,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
               Navigator.pop(ctx);
               _resetChallenge();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: AppColors.white100),
             child: const Text('再来一次'),
           ),
         ],

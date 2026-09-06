@@ -233,7 +233,7 @@ class _MyFavPageState extends State<MyFavPage> {
                 label: Text('学习单词本 (${_words.length} 词)'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: MwColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white100,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
                   elevation: 0,
                 ),
@@ -256,7 +256,7 @@ class _MyFavPageState extends State<MyFavPage> {
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 20),
                   color: MwColors.danger,
-                  child: const Icon(Icons.delete, color: Colors.white),
+                  child: const Icon(Icons.delete, color: AppColors.white100),
                 ),
                 confirmDismiss: (direction) async {
                   return await showDialog<bool>(

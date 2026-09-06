@@ -16,6 +16,7 @@ import 'package:word_app/features/learning/application/listening_mode.dart';
 export 'package:word_app/features/learning/application/listening_mode.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/mw_card.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 
 class ListeningPlayerPage extends StatefulWidget {
   final List<Word> words;
@@ -51,7 +52,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
   void initState() {
     super.initState();
     _currentIndex = widget.startIndex;
-    _progressController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _progressController = AnimationController(vsync: this, duration: MotionDurations.slow);
     _tts = SystemTts();
     _tts.onComplete = _onSpeechComplete;
     _tts.onErrorHandler = _onSpeechError;
@@ -340,7 +341,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
                 textAlign: TextAlign.center,
               ),
               crossFadeState: _showMeaning ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-              duration: const Duration(milliseconds: 300),
+              duration: MotionDurations.slow,
             ),
             if (!_showMeaning) ...[
               const SizedBox(height: 8),
@@ -523,7 +524,7 @@ class _ControlButton extends StatelessWidget {
             icon,
             size: size * 0.5,
             color: isPrimary
-                ? Colors.white
+                ? AppColors.white100
                 : (onPressed != null ? skin.colors.text1 : skin.colors.text3.withValues(alpha: 0.3)),
           ),
         ),

@@ -4,6 +4,7 @@ import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 
 /// 候选卡片：字母徽标 + 释义，按压缩放反馈，正误态带图标。
 ///
@@ -48,7 +49,7 @@ class FormalReviewChoiceCard extends StatelessWidget {
     return ScaleDownOnPress(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: MotionDurations.base,
         curve: Curves.easeOut,
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 10),
@@ -80,7 +81,7 @@ class FormalReviewChoiceCard extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 200),
+                duration: MotionDurations.base,
                 opacity: dimmed ? 0.45 : 1.0,
                 child: Text(
                   pair.interpret,

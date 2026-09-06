@@ -149,7 +149,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                     child: Container(
                       padding: EdgeInsets.all(6),
                       decoration: BoxDecoration(color: skin.accent, shape: BoxShape.circle),
-                      child: const Icon(Icons.add, size: 18, color: Colors.white),
+                      child: const Icon(Icons.add, size: 18, color: AppColors.white100),
                     ),
                   ),
                 ],
@@ -166,7 +166,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
               child: FilledButton.icon(
                 style: FilledButton.styleFrom(
                   backgroundColor: skin.accent,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white100,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                 ),
                 onPressed: () {
@@ -486,7 +486,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
             children: [
               // 日期数字或对勾
               isChecked
-                  ? const Icon(Icons.check_rounded, size: 18, color: Colors.white)
+                  ? const Icon(Icons.check_rounded, size: 18, color: AppColors.white100)
                   : Text(
                       '${index + 1}',
                       style: TextStyle(

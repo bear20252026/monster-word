@@ -174,7 +174,7 @@ class ProfileScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(color: skin.colors.cardBg, width: 2),
                 ),
-                child: const Center(child: Icon(Icons.edit_rounded, color: Colors.white, size: 13)),
+                child: const Center(child: Icon(Icons.edit_rounded, color: AppColors.white100, size: 13)),
               ),
             ),
           ],

@@ -20,6 +20,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/tokens/effect_palette.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 
 class ImmersiveSwipePage extends StatefulWidget {
   const ImmersiveSwipePage({super.key});
@@ -67,8 +68,8 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
     super.initState();
     _sessionStart = DateTime.now();
     _confettiController = ConfettiController();
-    _slideController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
-    _fadeController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
+    _slideController = AnimationController(duration: MotionDurations.slow, vsync: this);
+    _fadeController = AnimationController(duration: MotionDurations.base, vsync: this);
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
       end: Offset.zero,
