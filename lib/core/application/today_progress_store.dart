@@ -12,8 +12,27 @@ import 'package:flutter/foundation.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 
 class TodayProgressStore extends ChangeNotifier {
-  TodayProgressStore() {
-    _migrateLegacyGoal();
+  TodayProgressStore();
+
+  static bool _persistentStateInitialized = false;
+
+  /// 在 bootstrap 中、页面/Provider 创建前串行完成旧目标迁移，避免首帧默认 10 竞态。
+  static Future<void> initializePersistentState() async {
+    if (_persistentStateInitialized) return;
+    final app = AppPreferences();
+    final user = UserPreferences();
+    if (app.isTodayGoalMigrated) {
+      _persistentStateInitialized = true;
+      return;
+    }
+    final legacy = app.getDailyNewWords();
+    final current = user.getDailyGoal();
+    // B 非默认且 A 仍为默认：认为旧设置页值是用户意图，迁移到真实目标 A。
+    if (legacy != 10 && current == 10) {
+      await user.setDailyGoal(legacy);
+    }
+    await app.markTodayGoalMigrated();
+    _persistentStateInitialized = true;
   }
 
   int _due = 0;
@@ -73,20 +92,4 @@ class TodayProgressStore extends ChangeNotifier {
 
   static String _date(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
-  /// 一次性迁移：旧 daily_new_words_v1(B) 若曾被用户改过（≠ 默认 10 且 ≠ A），
-  /// 视为用户真实意图并入 A；此后 B 废弃不再消费。
-  void _migrateLegacyGoal() {
-    try {
-      if (AppPreferences().isTodayGoalMigrated) return;
-      final legacy = AppPreferences().getDailyNewWords();
-      final current = UserPreferences().getDailyGoal();
-      if (legacy != 10 && legacy != current) {
-        UserPreferences().setDailyGoal(legacy);
-      }
-      AppPreferences().markTodayGoalMigrated();
-    } catch (_) {
-      // 测试/未初始化环境静默，不阻塞
-    }
-  }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:word_app/app/app_error_widget.dart';
 import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/infrastructure/user_database.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
@@ -43,7 +44,12 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
       await WordBookDatabase.ensurePlatform();
       await Future.wait([WordBookDatabase.instance.initialize(), UserDatabase.instance.initialize()]);
     },
-    () => AppPreferences().init(),
+    () async {
+      // 两套偏好必须在 Provider/页面创建前就绪，防止每日目标首帧回退到默认 10。
+      await AppPreferences().init();
+      await UserPreferences().init();
+      await TodayProgressStore.initializePersistentState();
+    },
     () => initMobileAudioSession(),
     () => setupServiceLocator(),
   ];

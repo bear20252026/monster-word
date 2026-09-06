@@ -2,7 +2,8 @@
 // 用户可通过滚动选择每天学习的单词数量（1-200）
 
 import 'package:flutter/material.dart';
-import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/mw_card.dart';
@@ -24,7 +25,7 @@ class _DailyGoalPickerState extends State<DailyGoalPicker> {
   @override
   void initState() {
     super.initState();
-    _currentValue = UserPreferences().getDailyGoal();
+    _currentValue = context.read<TodayProgressStore>().goal;
     _controller = FixedExtentScrollController(initialItem: (_currentValue - _minGoal).clamp(0, _maxGoal - _minGoal));
   }
 
@@ -38,7 +39,7 @@ class _DailyGoalPickerState extends State<DailyGoalPicker> {
     final value = index + _minGoal;
     if (value == _currentValue) return;
     setState(() => _currentValue = value);
-    await UserPreferences().setDailyGoal(value);
+    await context.read<TodayProgressStore>().setGoal(value);
   }
 
   @override
