@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
@@ -30,6 +31,7 @@ void main() {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
+            ChangeNotifierProvider<TodayProgressStore>(create: (_) => TodayProgressStore()),
             ChangeNotifierProvider<ReviewScheduleReader>.value(value: _StubScheduleReader(dueCount: 0)),
             ChangeNotifierProvider<LearningSessionState>.value(value: _StubSessionState()),
           ],
@@ -54,6 +56,7 @@ void main() {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
+            ChangeNotifierProvider<TodayProgressStore>(create: (_) => TodayProgressStore()),
             ChangeNotifierProvider<ReviewScheduleReader>.value(value: _StubScheduleReader(dueCount: 5)),
             ChangeNotifierProvider<LearningSessionState>.value(value: _StubSessionState()),
           ],
@@ -65,7 +68,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // 验证统计卡片展示
-      expect(find.text('今日已学'), findsOneWidget);
+      expect(find.text('今日新学'), findsOneWidget);
       expect(find.text('今日复习'), findsOneWidget);
       // 验证按钮展示
       expect(find.text('继续学习'), findsOneWidget);

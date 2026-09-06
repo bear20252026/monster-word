@@ -133,6 +133,11 @@ class AppPreferences extends BaseSharedPreferences {
   /// 已存日期（用于跨天判断）
   String getTodayLearnedDate() => getString(todayLearnedDateKey);
 
+  /// 「旧 daily_new_words_v1 → daily_learn_goal」一次性迁移完成标记。
+  static const todayGoalMigratedKey = 'today_goal_migrated_v1';
+  bool get isTodayGoalMigrated => getBool(todayGoalMigratedKey, defaultValue: false);
+  Future<void> markTodayGoalMigrated() => setBool(todayGoalMigratedKey, true);
+
   // ── 助记展示偏好（settings 与 dictionary 共享 key，架构审计后上提）──
 
   /// 助记段落顺序键（逗号分隔段落名，单词详情页按此排序消费）。

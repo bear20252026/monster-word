@@ -11,6 +11,7 @@ import 'package:word_app/features/settings/domain/learning_preferences.dart';
 import 'package:word_app/features/settings/presentation/learning_preferences_state.dart';
 import 'package:word_app/features/settings/presentation/settings_bottom_sheet.dart';
 import 'package:word_app/features/settings/presentation/study_reminder_sheet.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
@@ -133,7 +134,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _Cell(
             title: '每日新学',
             icon: Icons.flag_outlined,
-            value: '${settings.dailyNewWords} 词',
+            value: '${context.watch<TodayProgressStore>().goal} 词',
             onTap: () => _showDailyNewWordsDialog(),
           ),
           _Cell(
@@ -302,12 +303,12 @@ class _SettingsPageState extends State<SettingsPage> {
   void _showDailyNewWordsDialog() {
     // 安全审计 R2：controller 提到方法级（此前在 StatefulBuilder builder 内
     // 每次 setState 重建都会新建一个永不释放的 controller）
-    final textCtrl = TextEditingController(text: '${_preferences.dailyNewWords}');
+    final textCtrl = TextEditingController(text: '${context.read<TodayProgressStore>().goal}');
     _showBottomSheet(
       title: '每日新学',
       child: StatefulBuilder(
         builder: (ctx, setSheetState) {
-          final value = _preferences.dailyNewWords;
+          final value = context.read<TodayProgressStore>().goal;
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -323,7 +324,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 label: '$value',
                 onChanged: (v) async {
                   final n = v.round();
-                  await _preferences.setDailyNewWords(n);
+                  await context.read<TodayProgressStore>().setGoal(n);
                   textCtrl.text = '$n';
                   if (ctx.mounted) setSheetState(() {});
                 },
@@ -340,7 +341,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   onSubmitted: (s) async {
                     final n = int.tryParse(s) ?? value;
                     if (n >= 1 && n <= 100) {
-                      await _preferences.setDailyNewWords(n);
+                      await context.read<TodayProgressStore>().setGoal(n);
                       if (ctx.mounted) setSheetState(() {});
                     }
                   },

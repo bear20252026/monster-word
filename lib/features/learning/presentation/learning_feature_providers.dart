@@ -44,6 +44,7 @@ import 'package:word_app/features/learning/presentation/learning_mastered_state.
 import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 import 'package:word_app/features/learning/presentation/learning_queue_word_lists_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
 import 'package:word_app/features/learning/presentation/new_words_state.dart';
 import 'package:word_app/features/learning/presentation/review_audio_state.dart';
@@ -109,6 +110,11 @@ Widget buildLearningFeatureScope({required Widget child}) {
         create: (_) => LearningStatisticsState(),
         update: (_, queue, schedule, statistics) =>
             (statistics ?? LearningStatisticsState())..synchronize(queue: queue.snapshot, schedule: schedule),
+      ),
+      // 今日进度单一事实源：订阅会话(已学/目标) + 复习调度(待复习)，全站同步。
+      ChangeNotifierProxyProvider2<LearningSessionState, ReviewScheduleReader, TodayProgressStore>(
+        create: (_) => TodayProgressStore(),
+        update: (_, session, schedule, store) => (store ?? TodayProgressStore())..sync(due: schedule.dueCount),
       ),
       // 只读统计端口：暴露给其它 feature（如 word_browse 的 foot_mark）读取统计。
       // 装配为具体状态实现 core 只读契约，消费方经类型注入依赖 core，而非 learning/presentation。

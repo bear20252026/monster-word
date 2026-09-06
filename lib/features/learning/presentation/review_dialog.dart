@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/route_names.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -123,8 +124,8 @@ class _ReviewDialog extends StatelessWidget {
             children: [
               Expanded(
                 child: _StatCard(
-                  label: '今日已学',
-                  value: '${schedule.todayLearnCount}',
+                  label: '今日新学',
+                  value: '${context.read<TodayProgressStore>().learned}',
                   unit: '词',
                   icon: Icons.school_outlined,
                   color: skin.accent,

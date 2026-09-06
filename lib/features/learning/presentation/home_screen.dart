@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/route_names.dart';
-import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
@@ -33,15 +33,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  /// 目标档位变更信号：设置后首页主卡的进度环/文案立即重读偏好刷新。
-  final ValueNotifier<int> _goalSignal = ValueNotifier(0);
-
-  @override
-  void dispose() {
-    _goalSignal.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
@@ -86,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
           delayMs: 80,
           child: Padding(
             padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 12),
-            child: _TodayHeroCard(goalSignal: _goalSignal),
+            child: const _TodayHeroCard(),
           ),
         ),
         // 签到条
@@ -110,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
           delayMs: 340,
           child: Padding(
             padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 0),
-            child: _GoalChips(goalSignal: _goalSignal),
+            child: const _GoalChips(),
           ),
         ),
         const Spacer(flex: 2),
@@ -131,10 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: Padding(
-                  padding: EdgeInsets.all(resp.pageMargin),
-                  child: _TodayHeroCard(goalSignal: _goalSignal),
-                ),
+                child: Padding(padding: EdgeInsets.all(resp.pageMargin), child: const _TodayHeroCard()),
               ),
               Expanded(
                 child: Padding(
@@ -146,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 12),
                       _EntranceIn(delayMs: 260, child: const _BookStrip()),
                       const SizedBox(height: 12),
-                      _EntranceIn(delayMs: 340, child: _GoalChips(goalSignal: _goalSignal)),
+                      _EntranceIn(delayMs: 340, child: const _GoalChips()),
                       const SizedBox(height: 16),
                       _EntranceIn(delayMs: 420, child: const _QuoteFooter()),
                     ],
@@ -264,92 +252,88 @@ class _HeaderIconButton extends StatelessWidget {
 
 /// 今日进度主卡：进度环 + 目标文案 + Learn/Review 双 CTA。
 ///
-/// 进度数据直读偏好（今日已学/每日目标，与会话队列实际限额同源）；
-/// 复习到期数来自 [LearningStatisticsState]。goalSignal 变更时重读刷新。
+/// 数据统一来自 [TodayProgressStore]（目标/已学/待复习单一事实源），
+/// 学习会话、复习调度或改目标都会 notify → 本卡即时刷新，不再各自直读偏好。
 class _TodayHeroCard extends StatelessWidget {
-  const _TodayHeroCard({required this.goalSignal});
-
-  final ValueNotifier<int> goalSignal;
+  const _TodayHeroCard();
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
     final resp = context.responsive;
-    return Selector<LearningStatisticsState, int>(
-      selector: (_, s) => s.dueCount,
-      builder: (context, dueCount, _) => ValueListenableBuilder<int>(
-        valueListenable: goalSignal,
-        builder: (context, _, _) {
-          final goal = UserPreferences().getDailyGoal();
-          final learned = AppPreferences().getTodayLearned();
-          final progress = goal > 0 ? (learned / goal).clamp(0.0, 1.0) : 0.0;
-          final done = goal > 0 && learned >= goal;
+    return Selector<TodayProgressStore, ({int goal, int learned, int due})>(
+      selector: (_, s) => (goal: s.goal, learned: s.learned, due: s.due),
+      builder: (context, p, _) {
+        final goal = p.goal;
+        final learned = p.learned;
+        final dueCount = p.due;
+        final progress = goal > 0 ? (learned / goal).clamp(0.0, 1.0) : 0.0;
+        final done = goal > 0 && learned >= goal;
 
-          return MwCard(
-            padding: EdgeInsets.all(24 * resp.scale),
-            child: Row(
-              children: [
-                _ProgressRing(
-                  size: 96 * resp.scale,
-                  progress: progress,
-                  trackColor: skin.colors.divider,
-                  progressColor: skin.colors.accent,
-                  learned: learned,
-                  goal: goal,
-                ),
-                SizedBox(width: 22 * resp.scale),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        done ? '今日目标已完成' : '还差 ${goal - learned} 个单词',
-                        style: TextStyle(
-                          fontSize: 19 * resp.fontScale,
-                          fontWeight: FontWeight.w700,
-                          height: 1.25,
-                          letterSpacing: -0.3,
-                          color: skin.colors.text1,
+        return MwCard(
+          padding: EdgeInsets.all(24 * resp.scale),
+          child: Row(
+            children: [
+              _ProgressRing(
+                size: 96 * resp.scale,
+                progress: progress,
+                trackColor: skin.colors.divider,
+                progressColor: skin.colors.accent,
+                learned: learned,
+                goal: goal,
+              ),
+              SizedBox(width: 22 * resp.scale),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      done ? '今日目标已完成' : '还差 ${goal - learned} 个单词',
+                      style: TextStyle(
+                        fontSize: 19 * resp.fontScale,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                        letterSpacing: -0.3,
+                        color: skin.colors.text1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '已学 $learned / $goal · 待复习 $dueCount',
+                      style: TextStyle(fontSize: 13 * resp.fontScale, color: skin.colors.text3),
+                    ),
+                    SizedBox(height: 16 * resp.scale),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _HeroCta(
+                            label: done ? '再加一组' : '开始学习',
+                            icon: done ? Icons.add_rounded : Icons.play_arrow_rounded,
+                            backgroundColor: skin.colors.accent,
+                            foregroundColor: Colors.white,
+                            onTap: () => _startLearning(context),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '已学 $learned / $goal · 待复习 $dueCount',
-                        style: TextStyle(fontSize: 13 * resp.fontScale, color: skin.colors.text3),
-                      ),
-                      SizedBox(height: 16 * resp.scale),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _HeroCta(
-                              label: done ? '再加一组' : '开始学习',
-                              icon: done ? Icons.add_rounded : Icons.play_arrow_rounded,
-                              backgroundColor: skin.colors.accent,
-                              foregroundColor: Colors.white,
-                              onTap: () => _startLearning(context),
-                            ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _HeroCta(
+                            label: '复习 $dueCount',
+                            icon: Icons.history_rounded,
+                            backgroundColor: skin.colors.accent.withValues(alpha: 0.10),
+                            foregroundColor: skin.colors.accent,
+                            onTap: () => showReviewDialog(context),
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _HeroCta(
-                              label: '复习 $dueCount',
-                              icon: Icons.history_rounded,
-                              backgroundColor: skin.colors.accent.withValues(alpha: 0.10),
-                              foregroundColor: skin.colors.accent,
-                              onTap: () => showReviewDialog(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -713,10 +697,9 @@ class _BookStrip extends StatelessWidget {
 }
 
 /// 每日目标快捷档位：预设 chip + 自定义（打开原有滚轮选择弹层）。
+/// 统一走 [TodayProgressStore.setGoal]，全站即时同步。
 class _GoalChips extends StatefulWidget {
-  const _GoalChips({required this.goalSignal});
-
-  final ValueNotifier<int> goalSignal;
+  const _GoalChips();
 
   @override
   State<_GoalChips> createState() => _GoalChipsState();
@@ -726,10 +709,8 @@ class _GoalChipsState extends State<_GoalChips> {
   static const _presets = [10, 20, 50, 100];
 
   Future<void> _select(int value) async {
-    await UserPreferences().setDailyGoal(value);
-    if (!mounted) return;
-    setState(() {});
-    widget.goalSignal.value++;
+    await context.read<TodayProgressStore>().setGoal(value);
+    if (mounted) setState(() {});
   }
 
   Future<void> _openCustomPicker() async {
@@ -744,15 +725,13 @@ class _GoalChipsState extends State<_GoalChips> {
         ),
       ),
     );
-    if (!mounted) return;
-    setState(() {});
-    widget.goalSignal.value++;
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    final current = UserPreferences().getDailyGoal();
+    final current = context.watch<TodayProgressStore>().goal;
     return Row(
       children: [
         Text(
