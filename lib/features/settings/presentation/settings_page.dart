@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/app/router/route_names.dart';
-import 'package:word_app/tokens/design_language.dart';
 import 'package:word_app/features/settings/application/study_reminder_service.dart';
 import 'package:word_app/features/settings/domain/learning_preferences.dart';
 import 'package:word_app/features/settings/presentation/learning_preferences_state.dart';
@@ -83,14 +82,22 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: EdgeInsets.symmetric(horizontal: resp.isWide ? 24 : 16, vertical: 16),
       children: [
         // --- 第一组：学习提醒 ---
-        _SettingGroup([_Cell(title: '学习提醒', onTap: () => _showReminderDialog())]),
+        _SettingGroup([
+          _Cell(title: '学习提醒', icon: Icons.notifications_active_outlined, onTap: () => _showReminderDialog()),
+        ]),
         SizedBox(height: 16),
 
         // --- 第二组：发音设置 ---
         _SettingGroup([
-          _Cell(title: '单词发音类型', value: settings.pronunciationType, onTap: () => _showPronTypeDialog()),
+          _Cell(
+            title: '单词发音类型',
+            icon: Icons.volume_up_outlined,
+            value: settings.pronunciationType,
+            onTap: () => _showPronTypeDialog(),
+          ),
           _CellWithDesc(
             title: '自动发音',
+            icon: Icons.graphic_eq_outlined,
             desc: settings.autoPlayAudio
                 ? (settings.autoPlayExampleAudio ? '单词、词义页面例句' : '单词')
                 : (settings.autoPlayExampleAudio ? '词义页面例句' : '已关闭'),
@@ -99,39 +106,69 @@ class _SettingsPageState extends State<SettingsPage> {
         ]),
         SizedBox(height: 16),
 
-        // --- 设计语言（B档：字体/圆角/间距/阴影整体风格，运行时切换） ---
+        // --- 风格（颜色主题 + 设计语言已收敛为 6 精选风格） ---
         _SettingGroup([
           _Cell(
-            title: '设计语言',
-            value: DesignLanguages.byId(context.skin.designLanguageId).name,
+            title: '风格',
+            icon: Icons.palette_outlined,
+            value: context.skin.currentStyleName,
             onTap: () => Navigator.pushNamed(context, RouteNames.designLanguage),
           ),
         ]),
         SizedBox(height: 16),
 
         // --- 第三组：拼写设置 ---
-        _SettingGroup([_CellWithDesc(title: '拼写', desc: _spellDesc(settings), onTap: () => _showSpellDialog())]),
+        _SettingGroup([
+          _CellWithDesc(
+            title: '拼写',
+            icon: Icons.edit_outlined,
+            desc: _spellDesc(settings),
+            onTap: () => _showSpellDialog(),
+          ),
+        ]),
         SizedBox(height: 16),
 
         // --- 第四组：学习节奏 ---
         _SettingGroup([
-          _Cell(title: '每日新学', value: '${settings.dailyNewWords} 词', onTap: () => _showDailyNewWordsDialog()),
-          _Cell(title: '学习节奏', value: '${settings.learnPace} 词/小结', onTap: () => _showLearnPaceDialog()),
+          _Cell(
+            title: '每日新学',
+            icon: Icons.flag_outlined,
+            value: '${settings.dailyNewWords} 词',
+            onTap: () => _showDailyNewWordsDialog(),
+          ),
+          _Cell(
+            title: '学习节奏',
+            icon: Icons.speed_outlined,
+            value: '${settings.learnPace} 词/小结',
+            onTap: () => _showLearnPaceDialog(),
+          ),
         ]),
         SizedBox(height: 16),
 
         // --- 第五组：题型/助记 ---
         _SettingGroup([
-          _SwitchCell('听音选义题型', value: settings.audioMeaningQuestion, onChanged: settings.setAudioMeaningQuestion),
-          _Cell(title: '助记顺序', value: settings.mnemonicSegments.join(' - '), onTap: () => _showMnemonicOrderDialog()),
+          _SwitchCell(
+            '听音选义题型',
+            icon: Icons.headphones_outlined,
+            value: settings.audioMeaningQuestion,
+            onChanged: settings.setAudioMeaningQuestion,
+          ),
+          _Cell(
+            title: '助记顺序',
+            icon: Icons.low_priority_outlined,
+            value: settings.mnemonicSegments.join(' - '),
+            onTap: () => _showMnemonicOrderDialog(),
+          ),
           _SwitchCellWithDesc(
             title: '拆分助记',
+            icon: Icons.extension_outlined,
             desc: '学习时自动拆分单词',
             value: settings.splitMnemonic,
             onChanged: settings.setSplitMnemonic,
           ),
           _SwitchCellWithDesc(
             title: '混淆项辨析',
+            icon: Icons.compare_arrows_outlined,
             desc: '显示选择题错误选项词义',
             value: settings.showConfusableMeanings,
             onChanged: settings.setShowConfusableMeanings,
@@ -140,7 +177,7 @@ class _SettingsPageState extends State<SettingsPage> {
         SizedBox(height: 16),
 
         // --- 第六组：更多设置 ---
-        _SettingGroup([_Cell(title: '更多学习偏好', onTap: () => _showMorePrefsDialog())]),
+        _SettingGroup([_Cell(title: '更多学习偏好', icon: Icons.tune, onTap: () => _showMorePrefsDialog())]),
       ],
     );
   }
@@ -472,8 +509,16 @@ class _SettingGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(16)),
-      child: Column(children: children),
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) Divider(height: 0.5, thickness: 0.5, indent: 60, color: skin.divider),
+            children[i],
+          ],
+        ],
+      ),
     );
   }
 }
@@ -482,8 +527,9 @@ class _SettingGroup extends StatelessWidget {
 class _Cell extends StatelessWidget {
   final String title;
   final String? value;
+  final IconData? icon;
   final VoidCallback? onTap;
-  const _Cell({required this.title, this.value, this.onTap});
+  const _Cell({required this.title, this.value, this.icon, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -494,17 +540,26 @@ class _Cell extends StatelessWidget {
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          height: 56,
-          padding: EdgeInsets.symmetric(horizontal: 16),
+          height: 60,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
+              _SettingIcon(icon: icon),
               Expanded(
                 child: Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
               ),
               if (value != null)
-                Padding(
-                  padding: EdgeInsets.only(right: 8),
-                  child: Text(value!, style: TextStyle(fontSize: 14, color: skin.text3)),
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8, left: 8),
+                    child: Text(
+                      value!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: skin.text2),
+                    ),
+                  ),
                 ),
               Icon(Icons.chevron_right, size: 20, color: skin.text3),
             ],
@@ -515,12 +570,32 @@ class _Cell extends StatelessWidget {
   }
 }
 
+/// 设置行首图标块：淡 accent 底圆角方块（与个人中心菜单行同语言）
+class _SettingIcon extends StatelessWidget {
+  final IconData? icon;
+  const _SettingIcon({this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.skin.colors;
+    if (icon == null) return const SizedBox(width: 4);
+    return Container(
+      width: 32,
+      height: 32,
+      margin: const EdgeInsets.only(right: 14),
+      decoration: BoxDecoration(color: skin.accent.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(9)),
+      child: Icon(icon, size: 18, color: skin.accent),
+    );
+  }
+}
+
 /// 带描述的设置项
 class _CellWithDesc extends StatelessWidget {
   final String title;
   final String desc;
+  final IconData? icon;
   final VoidCallback? onTap;
-  const _CellWithDesc({required this.title, required this.desc, this.onTap});
+  const _CellWithDesc({required this.title, required this.desc, this.icon, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -531,9 +606,10 @@ class _CellWithDesc extends StatelessWidget {
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
+              _SettingIcon(icon: icon),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -556,18 +632,20 @@ class _CellWithDesc extends StatelessWidget {
 /// 开关设置项
 class _SwitchCell extends StatelessWidget {
   final String title;
+  final IconData? icon;
   final bool value;
   final Future<void> Function(bool)? onChanged;
-  const _SwitchCell(this.title, {required this.value, this.onChanged});
+  const _SwitchCell(this.title, {this.icon, required this.value, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     return Container(
-      height: 56,
-      padding: EdgeInsets.symmetric(horizontal: 16),
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
+          _SettingIcon(icon: icon),
           Expanded(
             child: Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
           ),
@@ -589,17 +667,19 @@ class _SwitchCell extends StatelessWidget {
 class _SwitchCellWithDesc extends StatelessWidget {
   final String title;
   final String desc;
+  final IconData? icon;
   final bool value;
   final Future<void> Function(bool)? onChanged;
-  const _SwitchCellWithDesc({required this.title, required this.desc, required this.value, this.onChanged});
+  const _SwitchCellWithDesc({required this.title, required this.desc, this.icon, required this.value, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
+          _SettingIcon(icon: icon),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

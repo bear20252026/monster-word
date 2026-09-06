@@ -142,14 +142,14 @@ void main() {
     //       buildDictionaryDetailScope 定义后全工程零调用，页面所有 Consumer 构建即崩。
     // 修复：commit 305113b —— DictionaryPage.build 自包裹 buildDictionaryDetailScope。
     // 本测试模拟路由裸 push（content_routes 正常路径），修复前此用例抛
-    // ProviderNotFoundException，修复后页面完整渲染（标签栏 + 释义区块）。
+    // ProviderNotFoundException，修复后页面完整渲染（释义区块 + 词头）。
+    // v2.7.61 版式重构（6 标签 → 单页编辑式排版）：tab 断言改为区块断言。
     await _pumpDictionaryPage(tester, word: _wordWithDef('alpha', _mainWordCn));
 
     expect(find.text('页面出错了'), findsNothing);
     expect(find.byType(DictionaryPage), findsOneWidget);
-    // TabBar 六个标签正常渲染（此前整个标签区都是错误占位块）
-    expect(find.text('柯林斯'), findsOneWidget);
-    expect(find.text('派生'), findsOneWidget);
+    // 单页排版的释义区块头正常渲染（此前整个区块都是错误占位块）
+    expect(find.text('释义'), findsOneWidget);
     // 释义区块读到当前词的数据（此前整个区块都是错误占位块）
     expect(find.textContaining(_mainWordCn), findsWidgets);
   });
@@ -169,15 +169,14 @@ void main() {
       derived: [_wordWithDef(derivedWord, _derivedWordCn)],
     );
 
-    // 切到「派生」标签并点击派生词条目
-    await tester.tap(find.text('派生'));
-    await tester.pumpAndSettle();
-    expect(find.text(derivedWord), findsOneWidget);
+    // v2.7.61 版式重构：派生词区块直接内联渲染（不再需要切 tab）
+    expect(find.text('派生词'), findsOneWidget);
     await tester.tap(find.text(derivedWord));
     await tester.pumpAndSettle();
 
     // 新页面栈顶是派生词的词典页，且释义是派生词自己的数据
-    expect(find.text(derivedWord), findsOneWidget);
+    // （词头 + 新页派生区块可能都含该词形，故用 findsWidgets）
+    expect(find.text(derivedWord), findsWidgets);
     expect(find.textContaining(_derivedWordCn), findsWidgets);
     expect(find.textContaining(_mainWordCn), findsNothing, reason: '新词页不得再显示上一词的释义（数据错配）');
   });
@@ -208,20 +207,21 @@ void main() {
       ],
     );
 
-    // 例句 tab：渲染解析后的句子（<b> 已转为高亮 span），无裸 JSON 字段
-    await tester.tap(find.text('例句'));
+    // 例句区块：渲染解析后的句子（<b> 已转为高亮 span），无裸 JSON 字段
+    // 单页排版下例句卡随首帧渲染：其打字机动画有 200ms 延迟启动，
+    // 需推进测试时钟触发回调并完成动画，避免挂起 Timer
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
     expect(find.textContaining(examplePlainText, findRichText: true), findsOneWidget);
     expect(find.textContaining('"fid"'), findsNothing, reason: '例句区不得出现原始 JSON 字段（乱码根因）');
     expect(find.textContaining('{"v":1'), findsNothing);
     expect(find.text('VOA慢速-科技报道'), findsOneWidget, reason: '例句来源应随 ExampleTile 展示');
 
-    // 真题 tab：读 dictionary_extra 真数据并带来源徽章，不再与例句双写
-    await tester.tap(find.text('真题'));
-    await tester.pumpAndSettle();
+    // 真题区块：读 dictionary_extra 真数据并带来源徽章；单页排版下例句/真题
+    // 同页共存，双写回归表现为同一句出现两次
     expect(find.textContaining('The new programming language'), findsOneWidget);
     expect(find.text('CET-4'), findsOneWidget);
-    expect(find.textContaining(examplePlainText), findsNothing, reason: '真题 tab 不得再复用例句数据（双写）');
+    expect(find.textContaining(examplePlainText, findRichText: true), findsOneWidget, reason: '例句不得因真题数据双写而重复出现');
   });
 
   testWidgets('REG-DICT-005: 派生/近义 tab 卡片化（MwCard + 发音按钮），空状态统一图标化', (tester) async {
@@ -244,20 +244,16 @@ void main() {
       ],
     );
 
-    // 派生 tab：MwCard 卡片 + 有音标的词条带发音按钮 + 导航箭头仍在
-    await tester.tap(find.text('派生'));
-    await tester.pumpAndSettle();
+    // 派生区块（内联渲染）：MwCard 卡片 + 有音标的词条带发音按钮 + 导航箭头仍在
+    expect(find.text('派生词'), findsOneWidget);
     expect(find.byType(MwCard), findsWidgets, reason: '派生词条目必须用 MwCard 卡片化，不得回退裸 Container');
-    // 页头发音按钮 + 有音标派生词的卡片发音按钮 = 2 个 volume_up
-    expect(find.byIcon(Icons.volume_up), findsNWidgets(2), reason: '有音标的派生词应显示发音按钮（页头另有一个）');
-    expect(find.text('ˌælfəˈbetɪzəm'), findsOneWidget);
+    // 有音标派生词的卡片发音按钮（页头音标胶囊用 volume_up_rounded，不计入）
+    expect(find.byIcon(Icons.volume_up), findsNWidgets(1), reason: '有音标的派生词应显示发音按钮');
+    expect(find.text('/ˌælfəˈbetɪzəm/'), findsOneWidget, reason: '派生词卡应渲染带斜杠的音标行');
     expect(find.byIcon(Icons.arrow_forward_ios), findsWidgets);
 
-    // 近义 tab 空状态：统一 _emptyTab 图标化，不再是旧式标题灰盒
-    await tester.tap(find.text('近义'));
-    await tester.pumpAndSettle();
-    expect(find.text('暂无近义词'), findsOneWidget);
-    expect(find.text('近义词'), findsNothing, reason: '旧式空状态灰盒（标题「近义词」）已废弃');
+    // 近义词为空时整个区块省略（v2.7.61：空区块不再渲染占位盒）
+    expect(find.text('近义词'), findsNothing, reason: '空区块应整体省略，不得渲染占位盒');
   });
 
   testWidgets('REG-DICT-006: 真题例句卡单一事实来源（ExamSentenceCard），来源徽章 accent 淡底契约', (tester) async {

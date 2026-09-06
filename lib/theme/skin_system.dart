@@ -623,6 +623,12 @@ class SkinSystem extends ChangeNotifier {
     setTheme(style.themeId);
   }
 
+  /// 当前风格的展示名（设置行值用）。
+  String get currentStyleName {
+    final id = currentStyleId;
+    return kMwStyles.where((s) => s.id == id).firstOrNull?.name ?? '';
+  }
+
   /// 当前系统亮度（监听刷新）
   Brightness _systemBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
 

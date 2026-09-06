@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
+import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/mw_card.dart';
@@ -14,11 +15,15 @@ import 'package:word_app/features/dictionary/presentation/dictionary_feature_pro
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_exam_sentence_card.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_example_tile.dart';
 
-/// 词典详情页。
+/// 词典详情页 — 编辑式单页排版。
 ///
-/// 展示单词的完整释义、音标、例句、派生、词根、近义词及真题。
-/// 通过 [DictionaryDetailState] 获取数据与状态，
-/// 支持收藏、加入生词本、播放发音等交互。
+/// 设计原则（v2.7.61 重构）：
+/// - 废除 6 标签页 + 360px 固定窗口的旧版式（嵌套滚动难翻、空标签占位），
+///   改为单页连贯流：有数据的区块才出现，空区块整个消失，一次滚动看全。
+/// - 桌面/手机同构：内容列由 [AppResponsive.contentMaxWidth] 约束，
+///   宽屏自然居中成阅读版面。
+/// - 展示数据源与交互（ExampleTile / ExamSentenceCard / WordRootTab /
+///   派生·近义跳转）与旧版一致。
 class DictionaryPage extends StatefulWidget {
   final Word word;
   const DictionaryPage({super.key, required this.word});
@@ -29,27 +34,11 @@ class DictionaryPage extends StatefulWidget {
   State<DictionaryPage> createState() => _DictionaryPageState();
 }
 
-class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 6, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
+class _DictionaryPageState extends State<DictionaryPage> {
   @override
   Widget build(BuildContext context) {
     // 根因修复（error_boundary.log 实锤 Provider<DictionaryDetailState> not found）：
-    // buildDictionaryDetailScope 此前全工程零调用，页面所有 Consumer 均因缺 Provider
-    // 构建即崩（"页面出错了"）。页面自挂载数据源，任何入口（路由/按名/跳转）都自洽。
-    // 注意：scope 读取的四个端口由 app.dart 顶层 buildDictionaryFeatureScope 提供。
+    // 页面自挂载数据源，任何入口（路由/按名/跳转）都自洽。
     return buildDictionaryDetailScope(
       word: widget.word,
       child: Builder(builder: (context) => _buildPage(context)),
@@ -58,43 +47,133 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
 
   Widget _buildPage(BuildContext context) {
     final skin = context.skin.colors;
-    final word = widget.word;
+    final resp = context.responsive;
 
     return Scaffold(
       backgroundColor: skin.pageBg,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(context, skin, word),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(context.design.spacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildWordHeader(skin, word),
-                    SizedBox(height: context.design.spacing.lg),
-                    _buildPronunciation(skin, word),
-                    SizedBox(height: context.design.spacing.lg),
-                    _buildInterpretation(skin, word),
-                    SizedBox(height: context.design.spacing.lg),
-                    _buildTabs(skin, word),
-                  ],
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: _buildTopBar(context, skin, widget.word)),
+                SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: resp.pageMargin),
+                  sliver: SliverList.list(
+                    children: [
+                      const SizedBox(height: 8),
+                      _WordHero(word: widget.word, onPlayAudio: _playAudio),
+                      const SizedBox(height: 24),
+                      _buildBody(context, skin, widget.word),
+                      const SizedBox(height: 48),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
+  /// 正文：所有内容区块按阅读动线排序，空区块整个省略。
+  Widget _buildBody(BuildContext context, ThemeVars skin, Word word) {
+    return Consumer<DictionaryDetailState>(
+      builder: (context, state, _) {
+        final sections = <Widget>[
+          if (state.definitions.isNotEmpty)
+            _Section(
+              title: '释义',
+              child: _DefinitionList(state: state, skin: skin),
+            ),
+          if (state.collinsSenses.isNotEmpty)
+            _Section(
+              title: '柯林斯释义',
+              child: _CollinsList(state: state, skin: skin, word: word),
+            ),
+          if (state.examExamples.isNotEmpty)
+            _Section(
+              title: '例句',
+              child: Column(
+                children: [
+                  for (final ex in state.examExamples) ExampleTile(ex, context.skin, word: word.word, wordId: word.id),
+                ],
+              ),
+            ),
+          if (state.realExamSentences.isNotEmpty)
+            _Section(
+              title: '真题例句',
+              child: Column(
+                children: [
+                  for (final item in state.realExamSentences)
+                    ExamSentenceCard(sentence: item['sentence'] ?? '', source: item['source'] ?? ''),
+                ],
+              ),
+            ),
+          if (_hasRoots(word))
+            _Section(
+              title: '词根词缀',
+              child: WordRootTab(wordRootJson: word.wordRoot),
+            ),
+          if (state.derivedWords.isNotEmpty)
+            _Section(
+              title: '派生词',
+              child: Column(
+                children: [
+                  for (final w in state.derivedWords) _RelatedWordCard(word: w, skin: skin, onPlayAudio: _playAudio),
+                ],
+              ),
+            ),
+          if (state.synonyms.isNotEmpty)
+            _Section(
+              title: '近义词',
+              child: Column(
+                children: [for (final w in state.synonyms) _RelatedWordCard(word: w, skin: skin)],
+              ),
+            ),
+        ];
+
+        if (sections.isEmpty) {
+          return _Section(
+            title: '释义',
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.menu_book_outlined, size: 36, color: skin.text3.withValues(alpha: 0.6)),
+                    const SizedBox(height: 12),
+                    Text('这个词的扩展释义还没有收录', style: MwTypography.bodySm.copyWith(color: skin.text3)),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+        // 区块间以呼吸感分隔（编辑式版面：留白即层次）
+        return Column(
+          children: [
+            for (var i = 0; i < sections.length; i++) ...[if (i > 0) const SizedBox(height: 28), sections[i]],
+          ],
+        );
+      },
+    );
+  }
+
+  bool _hasRoots(Word word) {
+    final raw = word.wordRoot.trim();
+    if (raw.isEmpty || raw == '{}' || raw == '[]' || raw == '[{}]') return false;
+    return raw.contains('roots') || raw.contains('prefix') || raw.contains('suffix');
+  }
+
   Widget _buildTopBar(BuildContext context, ThemeVars skin, Word word) {
     return Container(
       height: context.design.spacing.navH,
-      padding: EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
-        color: skin.cardBg,
+        color: skin.pageBg,
         border: Border(bottom: BorderSide(color: skin.divider, width: 0.5)),
       ),
       child: Row(
@@ -104,10 +183,10 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             color: skin.text1,
             onPressed: () => Navigator.pop(context),
           ),
-          SizedBox(width: 4),
+          const SizedBox(width: 4),
           Expanded(
             child: Text(
-              '字典',
+              '词典',
               style: MwTypography.heading5.copyWith(color: skin.text1, fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
@@ -155,498 +234,6 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
     );
   }
 
-  Widget _buildWordHeader(ThemeVars skin, Word word) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                word.word,
-                style: MwTypography.heading2.copyWith(color: skin.text1, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: context.design.spacing.xs),
-              _buildCETTags(skin),
-            ],
-          ),
-        ),
-        GestureDetector(
-          onTap: () => _playAudio(word.word),
-          child: Container(
-            padding: EdgeInsets.all(context.design.spacing.sm),
-            decoration: BoxDecoration(
-              color: skin.accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(context.design.radius.lg),
-            ),
-            child: Icon(Icons.volume_up, color: skin.accent, size: 24),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCETTags(ThemeVars skin) {
-    final wordLen = widget.word.word.length;
-    final label = wordLen <= 4
-        ? '基础'
-        : wordLen <= 8
-        ? '核心'
-        : '进阶';
-    final color = wordLen <= 4
-        ? MwColors.success
-        : wordLen <= 8
-        ? skin.accent
-        : MwColors.warning;
-    return Row(children: [_buildTag(label, color, skin)]);
-  }
-
-  Widget _buildTag(String text, Color color, ThemeVars skin) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(context.design.radius.sm),
-      ),
-      child: Text(
-        text,
-        style: MwTypography.micro.copyWith(color: color, fontWeight: FontWeight.w600, fontSize: 11),
-      ),
-    );
-  }
-
-  Widget _buildPronunciation(ThemeVars skin, Word word) {
-    return Consumer<DictionaryDetailState>(
-      builder: (context, state, _) {
-        final phonetic = state.phonetic;
-        if (phonetic == null || (phonetic.american.isEmpty && phonetic.english.isEmpty)) {
-          return const SizedBox.shrink();
-        }
-        final hasUs = phonetic.american.isNotEmpty;
-        final hasUk = phonetic.english.isNotEmpty;
-        return Container(
-          padding: EdgeInsets.all(context.design.spacing.md),
-          decoration: BoxDecoration(
-            color: skin.cardBg,
-            borderRadius: BorderRadius.circular(context.design.radius.xl),
-            border: Border.all(color: skin.divider, width: 0.5),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (hasUs) _buildPronunciationRow('美式', '/${phonetic.american}/', skin),
-              if (hasUs && hasUk) Divider(height: context.design.spacing.md + 2, thickness: 0.5, color: skin.divider),
-              if (hasUk) _buildPronunciationRow('英式', '/${phonetic.english}/', skin),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildPronunciationRow(String label, String phonetic, ThemeVars skin) {
-    return Row(
-      children: [
-        Text(
-          label,
-          style: MwTypography.bodySm.copyWith(color: skin.text3, fontWeight: FontWeight.w500),
-        ),
-        SizedBox(width: context.design.spacing.sm),
-        Text(phonetic, style: MwTypography.bodyMd.copyWith(color: skin.text1)),
-      ],
-    );
-  }
-
-  Widget _buildInterpretation(ThemeVars skin, Word word) {
-    return Consumer<DictionaryDetailState>(
-      builder: (context, state, _) {
-        final defs = state.definitions;
-        if (defs.isEmpty) return const SizedBox.shrink();
-        return Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(context.design.spacing.md),
-          decoration: BoxDecoration(
-            color: skin.cardBg,
-            borderRadius: BorderRadius.circular(context.design.radius.xl),
-            border: Border.all(color: skin.divider, width: 0.5),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '释义',
-                style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
-              ),
-              SizedBox(height: context.design.spacing.sm),
-              ...defs.expand((item) sync* {
-                if (item.partOfSpeech.isNotEmpty) {
-                  yield Padding(
-                    padding: EdgeInsets.only(top: context.design.spacing.xs, bottom: context.design.spacing.xs),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: skin.accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(context.design.radius.sm),
-                      ),
-                      child: Text(
-                        item.partOfSpeech,
-                        style: MwTypography.bodySm.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  );
-                }
-                for (final d in item.definitions) {
-                  yield Padding(
-                    padding: EdgeInsets.only(left: 2, bottom: context.design.spacing.sm),
-                    child: Text(d, style: MwTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
-                  );
-                }
-              }),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTabs(ThemeVars skin, Word word) {
-    return Column(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: skin.cardBg,
-            borderRadius: BorderRadius.circular(context.design.radius.xl),
-            border: Border.all(color: skin.divider, width: 0.5),
-          ),
-          child: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            dividerColor: Colors.transparent,
-            labelColor: skin.accent,
-            unselectedLabelColor: skin.text3,
-            indicatorColor: skin.accent,
-            indicatorWeight: 2.5,
-            indicatorSize: TabBarIndicatorSize.label,
-            indicatorPadding: EdgeInsets.only(bottom: 2),
-            labelStyle: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
-            unselectedLabelStyle: MwTypography.bodySm,
-            tabs: const [
-              Tab(text: '柯林斯'),
-              Tab(text: '例句'),
-              Tab(text: '派生'),
-              Tab(text: '词根'),
-              Tab(text: '近义'),
-              Tab(text: '真题'),
-            ],
-          ),
-        ),
-        SizedBox(height: context.design.spacing.md),
-        // 修复：本页整体位于 SingleChildScrollView 内（高度无界），
-        // Expanded 在此非法、构建即崩（页面曾显示"页面出错了"）。
-        // TabBarView 需要有界高度，改为固定高度（约 6 行内容，可滚动）。
-        SizedBox(
-          height: 360,
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildCollinsTab(skin, word),
-              _buildExamplesTab(skin, word),
-              _buildDerivativesTab(skin, word),
-              _buildRootsTab(skin, word),
-              _buildSynonymsTab(skin, word),
-              _buildExamTab(skin, word),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCollinsTab(ThemeVars skin, Word word) {
-    return Consumer<DictionaryDetailState>(
-      builder: (context, state, _) {
-        // 柯林斯式结构化释义（v2.7.46 接入真数据）：释义 i + 用法说明 g.u +
-        // 分组例句 g.s（ExampleTile 复用，与例句 tab 体验一致）。
-        final senses = state.collinsSenses;
-        if (senses.isEmpty) {
-          return _emptyTab('暂无柯林斯释义', Icons.menu_book_outlined, skin);
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.only(top: 2),
-          itemCount: senses.length,
-          addAutomaticKeepAlives: false,
-          addRepaintBoundaries: true,
-          itemBuilder: (context, index) {
-            final sense = senses[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: EdgeInsets.all(context.design.spacing.md),
-              decoration: BoxDecoration(
-                color: skin.cardBg,
-                borderRadius: BorderRadius.circular(context.design.radius.lg),
-                border: Border.all(color: skin.divider, width: 0.5),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (sense.pos.isNotEmpty) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: skin.accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(context.design.radius.sm),
-                      ),
-                      child: Text(
-                        sense.pos,
-                        style: MwTypography.bodySm.copyWith(color: skin.accent, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    SizedBox(height: context.design.spacing.xs),
-                  ],
-                  if (sense.enDef.isNotEmpty)
-                    Text(sense.enDef, style: MwTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
-                  if (sense.cnDef.isNotEmpty) ...[
-                    SizedBox(height: context.design.spacing.xs),
-                    Text(sense.cnDef, style: MwTypography.bodySm.copyWith(color: skin.text3)),
-                  ],
-                  if (sense.usage.isNotEmpty) ...[
-                    SizedBox(height: context.design.spacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: skin.accent.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(context.design.radius.sm),
-                      ),
-                      child: Text(
-                        sense.usage,
-                        style: MwTypography.bodySm.copyWith(color: skin.accent, fontStyle: FontStyle.italic),
-                      ),
-                    ),
-                  ],
-                  if (sense.examples.isNotEmpty) ...[
-                    SizedBox(height: context.design.spacing.sm),
-                    ...sense.examples.map((ex) => ExampleTile(ex, context.skin, word: word.word, wordId: word.id)),
-                  ],
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  /// tab 区统一空状态：图标 + 文案居中，替代各处零散的纯文本占位。
-  Widget _emptyTab(String message, IconData icon, ThemeVars skin) {
-    return Container(
-      padding: EdgeInsets.all(context.design.spacing.lg),
-      decoration: BoxDecoration(
-        color: skin.cardBg,
-        borderRadius: BorderRadius.circular(context.design.radius.xl),
-        border: Border.all(color: skin.divider, width: 0.5),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 32, color: skin.text3.withValues(alpha: 0.6)),
-            SizedBox(height: context.design.spacing.sm),
-            Text(message, style: MwTypography.bodySm.copyWith(color: skin.text3)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExamplesTab(ThemeVars skin, Word word) {
-    return Consumer<DictionaryDetailState>(
-      builder: (context, state, _) {
-        final examples = state.examExamples;
-        if (examples.isEmpty) {
-          return _emptyTab('暂无例句', Icons.format_quote_outlined, skin);
-        }
-        // 单一事实来源：直接复用 word_detail 的 ExampleTile（<b> 高亮 + 例句发音 +
-        // 句收藏 + 来源标注），两详情页例句体验一致（v2.7.45 收口）。
-        return ListView.builder(
-          padding: const EdgeInsets.only(top: 2),
-          itemCount: examples.length,
-          addAutomaticKeepAlives: false,
-          addRepaintBoundaries: true,
-          itemBuilder: (context, index) {
-            final ex = examples[index];
-            return ExampleTile(ex, context.skin, word: word.word, wordId: word.id);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildDerivativesTab(ThemeVars skin, Word word) {
-    return Consumer<DictionaryDetailState>(
-      builder: (context, state, _) {
-        final derived = state.derivedWords;
-        if (derived.isEmpty) {
-          return _emptyTab('暂无派生词', Icons.account_tree_outlined, skin);
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.only(top: 2),
-          itemCount: derived.length,
-          addAutomaticKeepAlives: false,
-          addRepaintBoundaries: true,
-          itemBuilder: (context, index) {
-            final w = derived[index];
-            final firstInterp = w.firstInterpretLine;
-            // MwCard（v2.7.47）：24px 圆角 + 双层阴影 + ScaleDownOnPress 按压反馈，
-            // 与柯林斯/例句/真题 tab 卡片风格统一（MwCard 的 padding 作用于外层，
-            // 内边距需在 child 内自行 Padding）。
-            return MwCard(
-              onTap: () {
-                // 页面已自挂载 DetailScope：直接 push，新页为新单词创建全新状态
-                // （旧写法 Provider.value 复用上一词的状态，导致新词头配旧词数据）
-                Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: w)));
-              },
-              margin: EdgeInsets.only(bottom: context.design.spacing.sm),
-              child: Padding(
-                padding: EdgeInsets.all(context.design.spacing.md),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            w.word,
-                            style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
-                          ),
-                          if (w.usPron.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(w.usPron, style: MwTypography.bodySm.copyWith(color: skin.text3)),
-                          ],
-                          if (firstInterp.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              firstInterp,
-                              style: MwTypography.bodySm.copyWith(color: skin.text3),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    if (w.usPron.isNotEmpty)
-                      GestureDetector(
-                        // 派生词发音：与头部发音按钮同款 accent 淡底（内层手势优先命中，
-                        // 不会触发整卡跳转）
-                        onTap: () => _playAudio(w.word),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: skin.accent.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(context.design.radius.md),
-                          ),
-                          child: Icon(Icons.volume_up, color: skin.accent, size: 18),
-                        ),
-                      ),
-                    Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildRootsTab(ThemeVars skin, Word word) {
-    return WordRootTab(wordRootJson: word.wordRoot);
-  }
-
-  Widget _buildSynonymsTab(ThemeVars skin, Word word) {
-    return Consumer<DictionaryDetailState>(
-      builder: (context, state, _) {
-        final synonyms = state.synonyms;
-        if (synonyms.isEmpty) {
-          return _emptyTab('暂无近义词', Icons.compare_arrows_outlined, skin);
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.only(top: 2),
-          itemCount: synonyms.length,
-          addAutomaticKeepAlives: false,
-          addRepaintBoundaries: true,
-          itemBuilder: (context, index) {
-            final synonym = synonyms[index];
-            final firstInterpret = synonym.firstInterpretLine;
-            // MwCard（v2.7.47）：与派生 tab 同款卡片，两 tab 视觉完全统一
-            return MwCard(
-              onTap: () {
-                // 同上：直接 push，新页自建全新状态
-                Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: synonym)));
-              },
-              margin: EdgeInsets.only(bottom: context.design.spacing.sm),
-              child: Padding(
-                padding: EdgeInsets.all(context.design.spacing.md),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            synonym.word,
-                            style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
-                          ),
-                          if (firstInterpret.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              firstInterpret,
-                              style: MwTypography.bodySm.copyWith(color: skin.text3),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildExamTab(ThemeVars skin, Word word) {
-    return Consumer<DictionaryDetailState>(
-      builder: (context, state, _) {
-        // 真题数据源（v2.7.45 修复）：改读 dictionary_extra.json 的真题例句
-        // （CET-4/CET-6/考研），不再与例句 tab 双写同一份数据。
-        final sentences = state.realExamSentences;
-        if (sentences.isEmpty) {
-          return _emptyTab('暂无真题例句', Icons.school_outlined, skin);
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.only(top: 2),
-          itemCount: sentences.length,
-          addAutomaticKeepAlives: false,
-          addRepaintBoundaries: true,
-          itemBuilder: (context, index) {
-            final item = sentences[index];
-            final sentence = item['sentence'] ?? '';
-            final source = item['source'] ?? '';
-            // 单一事实来源：与 word_detail「真题例句」区块共用 ExamSentenceCard
-            return ExamSentenceCard(sentence: sentence, source: source);
-          },
-        );
-      },
-    );
-  }
-
   Future<void> _playAudio(String word) async {
     try {
       await context.read<AudioPlaybackState>().playWord(word);
@@ -656,5 +243,324 @@ class _DictionaryPageState extends State<DictionaryPage> with SingleTickerProvid
             .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
       }
     }
+  }
+}
+
+/// 词头：衬线大词 + 音标胶囊（点按即读）。
+class _WordHero extends StatelessWidget {
+  const _WordHero({required this.word, required this.onPlayAudio});
+
+  final Word word;
+  final ValueChanged<String> onPlayAudio;
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.skin.colors;
+    final resp = context.responsive;
+    return Consumer<DictionaryDetailState>(
+      builder: (context, state, _) {
+        final phonetic = state.phonetic;
+        final us = phonetic?.american ?? '';
+        final uk = phonetic?.english ?? '';
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              word.word,
+              style: TextStyle(
+                fontFamily: 'Charter',
+                fontSize: 40.0 * resp.fontScale,
+                fontWeight: FontWeight.w400,
+                letterSpacing: -0.8,
+                height: 1.15,
+                color: skin.text1,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (us.isNotEmpty)
+                  _PhoneticChip(label: '美', phonetic: us, accent: skin.accent, onTap: () => onPlayAudio(word.word)),
+                if (uk.isNotEmpty)
+                  _PhoneticChip(label: '英', phonetic: uk, accent: skin.accent, onTap: () => onPlayAudio(word.word)),
+                if (us.isEmpty && uk.isEmpty)
+                  _PhoneticChip(label: '发音', phonetic: '', accent: skin.accent, onTap: () => onPlayAudio(word.word)),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// 音标胶囊：词性标签 + 音标 + 喇叭，整体可点播放。
+class _PhoneticChip extends StatelessWidget {
+  const _PhoneticChip({required this.label, required this.phonetic, required this.accent, required this.onTap});
+
+  final String label;
+  final String phonetic;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.skin.colors;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: ShapeDecoration(
+          color: skin.cardBg,
+          shape: StadiumBorder(side: BorderSide(color: skin.divider)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: MwTypography.micro.copyWith(color: accent, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(width: 6),
+            if (phonetic.isNotEmpty) Text('/$phonetic/', style: MwTypography.bodySm.copyWith(color: skin.text2)),
+            const SizedBox(width: 6),
+            Icon(Icons.volume_up_rounded, size: 15, color: accent),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 编辑式区块头：强调色小竖条 + 标题 + 延伸发丝线。
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.skin.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 4,
+              height: 16,
+              decoration: BoxDecoration(color: skin.accent, borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Container(height: 0.5, color: skin.divider)),
+          ],
+        ),
+        const SizedBox(height: 14),
+        child,
+      ],
+    );
+  }
+}
+
+/// 结构化释义：词性徽标悬挂 + 义项列表（词性不再逐条断行）。
+class _DefinitionList extends StatelessWidget {
+  const _DefinitionList({required this.state, required this.skin});
+
+  final DictionaryDetailState state;
+  final ThemeVars skin;
+
+  @override
+  Widget build(BuildContext context) {
+    final defs = state.definitions;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < defs.length; i++) ...[
+          if (i > 0) const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (defs[i].partOfSpeech.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(top: 2, right: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: skin.accent.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    defs[i].partOfSpeech,
+                    style: MwTypography.micro.copyWith(color: skin.accent, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final d in defs[i].definitions)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(d, style: MwTypography.bodyMd.copyWith(color: skin.text1, height: 1.6)),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// 柯林斯释义：义项卡（英文定义 + 中文对译 + 用法 + 例句组）。
+class _CollinsList extends StatelessWidget {
+  const _CollinsList({required this.state, required this.skin, required this.word});
+
+  final DictionaryDetailState state;
+  final ThemeVars skin;
+  final Word word;
+
+  @override
+  Widget build(BuildContext context) {
+    final senses = state.collinsSenses;
+    return Column(
+      children: [
+        for (var i = 0; i < senses.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: skin.cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: skin.divider, width: 0.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 义项序号：衬线数字，编辑感
+                    SizedBox(
+                      width: 22,
+                      child: Text(
+                        '${i + 1}',
+                        style: TextStyle(
+                          fontFamily: 'Charter',
+                          fontSize: 17,
+                          fontStyle: FontStyle.italic,
+                          color: skin.accent,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (senses[i].enDef.isNotEmpty)
+                            Text(senses[i].enDef, style: MwTypography.bodyMd.copyWith(color: skin.text1, height: 1.55)),
+                          if (senses[i].cnDef.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(senses[i].cnDef, style: MwTypography.bodyMd.copyWith(color: skin.text2, height: 1.5)),
+                          ],
+                          if (senses[i].usage.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              senses[i].usage,
+                              style: MwTypography.bodySm.copyWith(color: skin.text3, fontStyle: FontStyle.italic),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (senses[i].examples.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  ...senses[i].examples.map((ex) => ExampleTile(ex, context.skin, word: word.word, wordId: word.id)),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// 派生词/近义词卡：词头 + 首行释义 + 整卡跳转（跳转后即新词典页）。
+class _RelatedWordCard extends StatelessWidget {
+  const _RelatedWordCard({required this.word, required this.skin, this.onPlayAudio});
+
+  final Word word;
+  final ThemeVars skin;
+  final ValueChanged<String>? onPlayAudio;
+
+  @override
+  Widget build(BuildContext context) {
+    final firstInterp = word.firstInterpretLine;
+    return MwCard(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DictionaryPage(word: word))),
+      margin: const EdgeInsets.only(bottom: 10),
+      borderRadius: 16,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    word.word,
+                    style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                  ),
+                  if (word.usPron.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text('/${word.usPron}/', style: MwTypography.micro.copyWith(color: skin.text3)),
+                  ],
+                  if (firstInterp.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      firstInterp,
+                      style: MwTypography.bodySm.copyWith(color: skin.text3),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (onPlayAudio != null && word.usPron.isNotEmpty) ...[
+              GestureDetector(
+                onTap: () => onPlayAudio!(word.word),
+                child: Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: skin.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Icon(Icons.volume_up, color: skin.accent, size: 16),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Icon(Icons.arrow_forward_ios, color: skin.text3, size: 14),
+          ],
+        ),
+      ),
+    );
   }
 }
