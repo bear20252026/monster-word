@@ -172,7 +172,13 @@ class _WordCard extends StatelessWidget {
                     children: [
                       Text(
                         word.word,
-                        style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontFamily: 'Charter',
+                          fontSize: 21,
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: -0.3,
+                          color: skin.text1,
+                        ),
                       ),
                       if (word.usPron.isNotEmpty) ...[
                         const SizedBox(width: 6),

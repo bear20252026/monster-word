@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/animations.dart';
 import 'package:word_app/features/account/application/password_auth_store.dart';
 import 'package:word_app/features/account/application/sms_code_service.dart';
@@ -383,21 +384,40 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     return Column(
       children: [
         const Spacer(flex: 2),
-        // Logo 区域
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(colors: [MwColors.cream, MwColors.creamDeeper]),
+        // 品牌标记：怪兽头像 + 强调色柔环
+        SizedBox(
+          width: 108,
+          height: 108,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: skin.colors.accent.withValues(alpha: 0.06),
+                  border: Border.all(color: skin.colors.accent.withValues(alpha: 0.18), width: 1),
+                ),
+              ),
+              const MonsterAvatar(size: 72),
+            ],
           ),
-          child: Icon(Icons.menu_book, size: 56, color: MwColors.primary),
         ),
-        SizedBox(height: 16),
-        Text('Monster Word', style: MwTypography.heading3.copyWith(letterSpacing: 0.5, color: skin.colors.text1)),
-        SizedBox(height: 8),
-        // Slogan
-        Text('在语境中学习单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
+        const SizedBox(height: 20),
+        // 衬线词标
+        Text(
+          'Monster Word',
+          style: TextStyle(
+            fontFamily: 'Charter',
+            fontSize: 34,
+            fontWeight: FontWeight.w400,
+            letterSpacing: -0.5,
+            color: skin.colors.text1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text('在语境中学习单词', style: MwTypography.body.copyWith(color: skin.colors.text2)),
         const Spacer(flex: 1),
         // 上次登录信息
         if (_lastLoginAccountInfo != null && _lastLoginAccountInfo!.isNotEmpty)
@@ -411,26 +431,26 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           padding: EdgeInsets.symmetric(horizontal: 32),
           child: Column(
             children: [
-              // 手机号登录
+              // 手机号登录（主胶囊）
               Semantics(
                 label: '手机号登录',
                 button: true,
                 child: _buildSocialLoginButton(
                   skin: skin,
-                  icon: Icons.phone_android,
+                  icon: Icons.phone_android_rounded,
                   label: '手机号登录',
-                  color: MwColors.primary,
+                  color: skin.colors.accent,
                   onTap: () => setState(() => _loginMode = 2),
                 ),
               ),
-              SizedBox(height: 12),
-              // 账号密码登录
+              const SizedBox(height: 12),
+              // 账号密码登录（描边胶囊）
               Semantics(
                 label: '账号密码登录',
                 button: true,
                 child: _buildSocialLoginButton(
                   skin: skin,
-                  icon: Icons.email_outlined,
+                  icon: Icons.alternate_email_rounded,
                   label: '账号密码登录',
                   color: skin.colors.text1,
                   onTap: () => setState(() => _loginMode = 1),
@@ -657,25 +677,28 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }) {
     return SizedBox(
       width: double.infinity,
-      height: 48,
+      height: 52,
       child: outlined
           ? OutlinedButton.icon(
               onPressed: onTap,
-              icon: Icon(icon, color: color, size: 20),
-              label: Text(label, style: TextStyle(color: color)),
+              icon: Icon(icon, color: skin.colors.text1, size: 20),
+              label: Text(
+                label,
+                style: TextStyle(color: skin.colors.text1, fontWeight: FontWeight.w600, letterSpacing: 0.3),
+              ),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: skin.colors.divider),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
+                side: BorderSide(color: skin.colors.text1.withValues(alpha: 0.35)),
+                shape: const StadiumBorder(),
               ),
             )
           : ElevatedButton.icon(
               onPressed: onTap,
               icon: Icon(icon, color: AppColors.white100, size: 20),
-              label: Text(label, style: const TextStyle(color: AppColors.white100)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: color,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
+              label: Text(
+                label,
+                style: const TextStyle(color: AppColors.white100, fontWeight: FontWeight.w600, letterSpacing: 0.3),
               ),
+              style: ElevatedButton.styleFrom(backgroundColor: color, shape: const StadiumBorder(), elevation: 0),
             ),
     );
   }

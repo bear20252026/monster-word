@@ -392,7 +392,7 @@ class _ListGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     return Container(
-      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(context.design.radius.lg)),
       child: Column(
         children: [
           for (int i = 0; i < children.length; i++) ...[
@@ -449,10 +449,10 @@ class _ListItem extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: skin.text1),
+                style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w500),
               ),
             ),
-            Text(value, style: TextStyle(fontSize: 14, color: skin.text3)),
+            Text(value, style: MwTypography.bodySm.copyWith(color: skin.text3)),
             const SizedBox(width: 4),
             if (onTap != null) Icon(Icons.chevron_right, size: 20, color: skin.text3),
           ],
