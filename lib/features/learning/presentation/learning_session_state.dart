@@ -262,7 +262,9 @@ class LearningSessionState extends ChangeNotifier {
     final generation = _queueGeneration;
     try {
       final saved = await _progressPort.load();
-      if (saved != null && generation == _queueGeneration) {
+      // 空队列时 clamp(0, -1) 会抛 ArgumentError——启动时队列必然为空，
+      // 此处必须跳过而不是吞异常（否则每次冷启动都打一条错误日志）。
+      if (saved != null && _queue.isNotEmpty && generation == _queueGeneration) {
         _currentIndex = saved.currentIndex.clamp(0, _queue.length - 1);
       }
     } catch (error) {
