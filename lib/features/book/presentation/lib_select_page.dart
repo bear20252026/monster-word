@@ -344,30 +344,34 @@ class _LibSelectPageState extends State<LibSelectPage> {
   }
 
   // ===== 底部工具栏 =====
-  // 预留悬浮 Dock 高度：否则工具栏与主壳悬浮 Dock 重叠（v2.7.22 用户实测）。
+  // 预留悬浮 Dock 高度：否则工具栏与主壳悬浮 Dock 重叠（v2.7.22 用户实测；
+  // v2.8.3 课程页重写时回归，必须保留 FloatingDock.clearance 底部预留）。
   Widget _buildBottomToolbar(ThemeVars colors) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.cardBg,
-        border: Border(top: BorderSide(color: colors.divider)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _BottomToolItem(icon: Icons.dashboard_outlined, label: '词书主页', onTap: () => _openBookDashboard(context)),
-            _BottomToolItem(icon: Icons.style, label: '沉浸刷词', onTap: () => _onToolTap(context, 'immersive')),
-            _BottomToolItem(icon: Icons.headphones, label: '随身听', onTap: () => _onToolTap(context, 'listen')),
-            _BottomToolItem(icon: Icons.edit_note, label: '听写', onTap: () => _onToolTap(context, 'dictation')),
-            _BottomToolItem(icon: Icons.spellcheck, label: '随手拼', onTap: () => _onToolTap(context, 'spell')),
-            _BottomToolItem(
-              icon: Icons.file_download_outlined,
-              label: '导出',
-              onTap: () => _onToolTap(context, 'export'),
-            ),
-            _BottomToolItem(icon: Icons.bolt, label: '考试速刷', onTap: () => _onToolTap(context, 'quickReview')),
-          ],
+    return Padding(
+      padding: EdgeInsets.only(bottom: FloatingDock.clearance(context)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.cardBg,
+          border: Border(top: BorderSide(color: colors.divider)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _BottomToolItem(icon: Icons.dashboard_outlined, label: '词书主页', onTap: () => _openBookDashboard(context)),
+              _BottomToolItem(icon: Icons.style, label: '沉浸刷词', onTap: () => _onToolTap(context, 'immersive')),
+              _BottomToolItem(icon: Icons.headphones, label: '随身听', onTap: () => _onToolTap(context, 'listen')),
+              _BottomToolItem(icon: Icons.edit_note, label: '听写', onTap: () => _onToolTap(context, 'dictation')),
+              _BottomToolItem(icon: Icons.spellcheck, label: '随手拼', onTap: () => _onToolTap(context, 'spell')),
+              _BottomToolItem(
+                icon: Icons.file_download_outlined,
+                label: '导出',
+                onTap: () => _onToolTap(context, 'export'),
+              ),
+              _BottomToolItem(icon: Icons.bolt, label: '考试速刷', onTap: () => _onToolTap(context, 'quickReview')),
+            ],
+          ),
         ),
       ),
     );
