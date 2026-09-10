@@ -154,7 +154,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
           const SizedBox(height: 16),
           Text('暂无收藏例句', style: MwTypography.body.copyWith(color: skin.colors.text3)),
           const SizedBox(height: 8),
-          Text('在单词详情页点击 ♡ 收藏例句', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
+          Text('在单词详情页点击心形图标收藏例句', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
         ],
       ),
     );

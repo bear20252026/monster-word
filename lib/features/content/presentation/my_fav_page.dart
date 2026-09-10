@@ -195,7 +195,7 @@ class _MyFavPageState extends State<MyFavPage> {
           const SizedBox(height: 16),
           Text('单词本为空', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const SizedBox(height: 8),
-          Text('学习时点击 ❤️ 收藏单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
+          Text('学习时点击心形图标收藏单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
           const SizedBox(height: 16),
           Row(
             mainAxisSize: MainAxisSize.min,

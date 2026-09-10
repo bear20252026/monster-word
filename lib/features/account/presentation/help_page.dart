@@ -41,7 +41,7 @@ class _HelpPageState extends State<HelpPage> {
 </style>
 </head>
 <body>
-<h2>🧸 Monster Word 帮助</h2>
+<h2>Monster Word 帮助</h2>
 <ul>
   <li><b>开始学习</b>：在首页选择词书，进入学习页即可开始背单词。</li>
   <li><b>复习安排</b>：App 会根据你的作答自动安排复习间隔，忘得越快复习越勤。</li>

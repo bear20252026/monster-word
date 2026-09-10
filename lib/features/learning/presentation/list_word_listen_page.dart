@@ -28,6 +28,9 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
   int _currentIndex = -1;
   bool _loading = true;
   String _feedback = '';
+
+  /// 三态判分：null=查看答案（未作答），true/false=作答对错。
+  bool? _wasCorrect;
   bool _showAnswer = false;
   int _correctCount = 0;
   int _totalCount = 0;
@@ -73,6 +76,7 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
     setState(() {
       _currentIndex++;
       _feedback = '';
+      _wasCorrect = null;
       _showAnswer = false;
       _inputController.clear();
     });
@@ -85,11 +89,12 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
     final input = _inputController.text.trim().toLowerCase();
     setState(() {
       _totalCount++;
-      if (input == word.word.toLowerCase()) {
+      _wasCorrect = input == word.word.toLowerCase();
+      if (_wasCorrect!) {
         _correctCount++;
-        _feedback = '✓ 正确！';
+        _feedback = '回答正确';
       } else {
-        _feedback = '✗ 正确答案：${word.word}';
+        _feedback = '正确答案：${word.word}';
       }
       _showAnswer = true;
     });
@@ -176,11 +181,36 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
           const SizedBox(height: 16),
           // 反馈
           if (_showAnswer) ...[
-            Text(
-              _feedback,
-              style: MwTypography.heading5.copyWith(
-                color: _feedback.startsWith('✓') ? MwColors.success : MwColors.danger,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  _wasCorrect == null
+                      ? Icons.info_rounded
+                      : _wasCorrect!
+                      ? Icons.check_circle_rounded
+                      : Icons.cancel_rounded,
+                  size: 24,
+                  color: _wasCorrect == null
+                      ? skin.colors.text2
+                      : _wasCorrect!
+                      ? MwColors.success
+                      : MwColors.danger,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    _feedback,
+                    style: MwTypography.heading5.copyWith(
+                      color: _wasCorrect == null
+                          ? skin.colors.text2
+                          : _wasCorrect!
+                          ? MwColors.success
+                          : MwColors.danger,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
           ],
@@ -193,7 +223,8 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
                   onPressed: () {
                     setState(() {
                       _showAnswer = true;
-                      _feedback = '答案：${_current!.word}';
+                      _feedback = '正确答案：${_current!.word}';
+                      _wasCorrect = null;
                     });
                   },
                   style: OutlinedButton.styleFrom(
