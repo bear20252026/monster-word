@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 预置空态场景，避免各页图标/文案各写各的。
 enum MwEmptyKind {
@@ -86,13 +87,13 @@ class MwEmptyState extends StatelessWidget {
             SizedBox(height: design.spacing.lg),
             Text(
               title ?? kind.defaultTitle,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: c.text1),
+              style: MwTypography.bodyBold.copyWith(fontWeight: FontWeight.w600, color: c.text1),
             ),
             SizedBox(height: design.spacing.xs),
             Text(
               subtitle ?? kind.defaultSubtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: c.text2),
+              style: MwTypography.caption.copyWith(color: c.text2),
             ),
             if (actionLabel != null && onAction != null) ...[
               SizedBox(height: design.spacing.lg),

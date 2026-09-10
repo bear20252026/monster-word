@@ -45,7 +45,10 @@ class _AppearancePageState extends State<AppearancePage> {
                         // 精选风格（6 选 1：颜色主题 + 设计语言一次绑定）
                         Text(
                           '风格',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: skin.colors.text3),
+                          style: MwTypography.captionBold.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: skin.colors.text3,
+                          ),
                         ),
                         SizedBox(height: context.design.spacing.sm),
                         const MwStyleGrid(),
@@ -87,7 +90,7 @@ class _AppearancePageState extends State<AppearancePage> {
             child: Center(
               child: Text(
                 '外观 & 沉浸场景',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.colors.text1),
+                style: MwTypography.bodyBold.copyWith(fontWeight: FontWeight.w600, color: skin.colors.text1),
               ),
             ),
           ),
@@ -108,7 +111,7 @@ class _AppearancePageState extends State<AppearancePage> {
       child: Row(
         children: [
           Expanded(
-            child: Text('跟随系统', style: TextStyle(fontSize: 16, color: skin.colors.text1)),
+            child: Text('跟随系统', style: MwTypography.bodyMd.copyWith(color: skin.colors.text1)),
           ),
           Switch(
             value: skin.followSystem,
@@ -147,9 +150,9 @@ class _AppearancePageState extends State<AppearancePage> {
         child: Row(
           children: [
             Expanded(
-              child: Text('风格字体', style: TextStyle(fontSize: 16, color: skin.colors.text1)),
+              child: Text('风格字体', style: MwTypography.bodyMd.copyWith(color: skin.colors.text1)),
             ),
-            Text(currentLabel, style: TextStyle(fontSize: 14, color: skin.colors.text3)),
+            Text(currentLabel, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
             SizedBox(width: context.design.spacing.xxs),
             Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
           ],
@@ -201,9 +204,9 @@ class _AppearancePageState extends State<AppearancePage> {
         child: Row(
           children: [
             Expanded(
-              child: Text('沉浸场景', style: TextStyle(fontSize: 16, color: skin.colors.text1)),
+              child: Text('沉浸场景', style: MwTypography.bodyMd.copyWith(color: skin.colors.text1)),
             ),
-            Text('点击体验', style: TextStyle(fontSize: 14, color: skin.colors.text3)),
+            Text('点击体验', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
             SizedBox(width: context.design.spacing.xxs),
             Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
           ],
@@ -226,7 +229,7 @@ class _AppearancePageState extends State<AppearancePage> {
             children: [
               Text(
                 '沉浸场景',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: skin.colors.text1),
+                style: MwTypography.heading5.copyWith(fontWeight: FontWeight.bold, color: skin.colors.text1),
               ),
               SizedBox(height: 12),
               Text(

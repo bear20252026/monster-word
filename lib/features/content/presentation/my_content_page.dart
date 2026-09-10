@@ -179,7 +179,7 @@ class _NavBar extends StatelessWidget {
             child: Center(
               child: Text(
                 '我的内容',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
+                style: MwTypography.bodyBold.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
               ),
             ),
           ),
@@ -322,7 +322,7 @@ class _FeatureCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     title,
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: skin.text1),
+                    style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w700, color: skin.text1),
                   ),
                 ],
               ),
@@ -360,11 +360,14 @@ class _MiniCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: skin.text1),
+              style: MwTypography.captionBold.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
             ),
             if (count.isNotEmpty) ...[
               const SizedBox(height: 2),
-              Text(count, style: TextStyle(fontSize: 12, color: skin.text3)),
+              Text(
+                count,
+                style: MwTypography.micro.copyWith(fontWeight: FontWeight.w400, color: skin.text3),
+              ),
             ],
             const Spacer(),
             Align(

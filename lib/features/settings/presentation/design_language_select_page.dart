@@ -59,7 +59,7 @@ class DesignLanguageSelectPage extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             '风格设置',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
+            style: MwTypography.bodyBold.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
           ),
         ],
       ),

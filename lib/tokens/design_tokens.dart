@@ -174,6 +174,30 @@ class MwTypography {
     height: 1.40,
     color: StarbucksCreamColors.greenHouse,
   );
+
+  /// 屏级标题（20/w600）——填补 18 与 22 之间的字号阶梯。
+  static const TextStyle titleLg = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    height: 1.35,
+    color: StarbucksCreamColors.text1,
+  );
+
+  /// 大数字/强调展示（24/w600）——统计卡、完成页主数字。
+  static const TextStyle displaySm = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w600,
+    height: 1.30,
+    color: StarbucksCreamColors.text1,
+  );
+
+  /// 仪表盘特大数字（32/w700）——设置页词量统计等。
+  static const TextStyle stat = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.w700,
+    height: 1.20,
+    color: StarbucksCreamColors.text1,
+  );
   static const TextStyle bodyMd = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w400,

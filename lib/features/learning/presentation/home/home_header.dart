@@ -44,7 +44,7 @@ class _Header extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 3),
-                Text(_dateLabel(), style: TextStyle(fontSize: 13, color: colors.text3)),
+                Text(_dateLabel(), style: MwTypography.caption.copyWith(color: colors.text3)),
               ],
             ),
           ),

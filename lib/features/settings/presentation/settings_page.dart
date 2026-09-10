@@ -59,7 +59,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: Center(
                           child: Text(
                             '设置',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
+                            style: MwTypography.bodyBold.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
                           ),
                         ),
                       ),
@@ -396,7 +396,7 @@ class _SettingsPageState extends State<SettingsPage> {
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('单词详情页助记段落的显示顺序', style: TextStyle(fontSize: 13, color: skin.text3)),
+              Text('单词详情页助记段落的显示顺序', style: MwTypography.caption.copyWith(color: skin.text3)),
               SizedBox(height: 12),
               for (var i = 0; i < segments.length; i++)
                 Container(
@@ -406,7 +406,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text('${i + 1}. ${segments[i]}', style: TextStyle(fontSize: 15, color: skin.text1)),
+                        child: Text('${i + 1}. ${segments[i]}', style: MwTypography.bodySm.copyWith(color: skin.text1)),
                       ),
                       GestureDetector(
                         onTap: i == 0
@@ -548,7 +548,7 @@ class _Cell extends StatelessWidget {
             children: [
               _SettingIcon(icon: icon),
               Expanded(
-                child: Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
+                child: Text(title, style: MwTypography.bodyMd.copyWith(color: skin.text1)),
               ),
               if (value != null)
                 Flexible(
@@ -559,7 +559,7 @@ class _Cell extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.right,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: skin.text2),
+                      style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w500, color: skin.text2),
                     ),
                   ),
                 ),
@@ -616,9 +616,12 @@ class _CellWithDesc extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
+                    Text(title, style: MwTypography.bodyMd.copyWith(color: skin.text1)),
                     SizedBox(height: 4),
-                    Text(desc, style: TextStyle(fontSize: 12, color: skin.text3)),
+                    Text(
+                      desc,
+                      style: MwTypography.micro.copyWith(fontWeight: FontWeight.w400, color: skin.text3),
+                    ),
                   ],
                 ),
               ),
@@ -649,7 +652,7 @@ class _SwitchCell extends StatelessWidget {
         children: [
           _SettingIcon(icon: icon),
           Expanded(
-            child: Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
+            child: Text(title, style: MwTypography.bodyMd.copyWith(color: skin.text1)),
           ),
           Switch(
             value: value,
@@ -686,9 +689,12 @@ class _SwitchCellWithDesc extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 16, color: skin.text1)),
+                Text(title, style: MwTypography.bodyMd.copyWith(color: skin.text1)),
                 SizedBox(height: 4),
-                Text(desc, style: TextStyle(fontSize: 12, color: skin.text3)),
+                Text(
+                  desc,
+                  style: MwTypography.micro.copyWith(fontWeight: FontWeight.w400, color: skin.text3),
+                ),
               ],
             ),
           ),

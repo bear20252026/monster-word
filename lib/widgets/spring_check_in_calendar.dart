@@ -186,7 +186,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
                       const SizedBox(width: 4),
                       Text(
                         '连击 $_streak',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white100),
+                        style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: AppColors.white100),
                       ),
                     ],
                   ),
@@ -209,7 +209,10 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
           .map(
             (l) => Expanded(
               child: Center(
-                child: Text(l, style: TextStyle(fontSize: 12, color: skin.text3)),
+                child: Text(
+                  l,
+                  style: MwTypography.micro.copyWith(fontWeight: FontWeight.w400, color: skin.text3),
+                ),
               ),
             ),
           )
@@ -332,7 +335,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
                   children: [
                     Text(
                       '+${context.read<ScareCoinStore>().checkInReward}',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: skin.success),
+                      style: MwTypography.heading4.copyWith(fontWeight: FontWeight.w900, color: skin.success),
                     ),
                     const SizedBox(width: 4),
                     MonsterIcon(size: 24, bodyColor: skin.success),

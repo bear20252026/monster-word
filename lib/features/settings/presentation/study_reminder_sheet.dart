@@ -7,6 +7,7 @@ import 'package:word_app/features/settings/domain/reminder_time.dart';
 import 'package:word_app/features/settings/presentation/learning_preferences_state.dart';
 import 'package:word_app/features/settings/presentation/settings_bottom_sheet.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 Future<void> showStudyReminderSheet(
   BuildContext context, {
@@ -135,11 +136,11 @@ class _SheetTimeRow extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: Text(title, style: TextStyle(fontSize: 15, color: enabled ? skin.text1 : skin.text3)),
+                child: Text(title, style: MwTypography.bodySm.copyWith(color: enabled ? skin.text1 : skin.text3)),
               ),
               Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: Text(value, style: TextStyle(fontSize: 14, color: skin.accent)),
+                child: Text(value, style: MwTypography.bodySm.copyWith(color: skin.accent)),
               ),
               Icon(Icons.chevron_right, size: 20, color: skin.text3),
             ],

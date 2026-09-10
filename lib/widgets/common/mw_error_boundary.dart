@@ -81,10 +81,10 @@ class _MwErrorPage extends StatelessWidget {
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   '这个区域暂时无法显示，返回后重试即可。',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: ErrorBoundaryColors.text),
+                  style: MwTypography.caption.copyWith(color: ErrorBoundaryColors.text),
                 ),
                 const SizedBox(height: 20),
                 OutlinedButton.icon(

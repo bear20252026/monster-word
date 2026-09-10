@@ -178,12 +178,12 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                 const SizedBox(height: 20),
                 Text(
                   '还没有可刷的单词',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colors.text1),
+                  style: MwTypography.titleLg.copyWith(fontWeight: FontWeight.bold, color: colors.text1),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '先去选择一本词书，再来体验沉浸刷词吧',
-                  style: TextStyle(fontSize: 15, color: colors.text2),
+                  style: MwTypography.bodySm.copyWith(color: colors.text2),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
@@ -242,7 +242,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                 const SizedBox(height: 24),
                 Text(
                   '刷词完成！',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: skin.colors.text1),
+                  style: MwTypography.displaySm.copyWith(fontWeight: FontWeight.bold, color: skin.colors.text1),
                 ),
                 const SizedBox(height: 12),
                 // 今日目标达成庆祝横幅
@@ -263,7 +263,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                         const SizedBox(width: 6),
                         Text(
                           '尖叫币 +$_grantedCoins',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: skin.colors.accent),
+                          style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w700, color: skin.colors.accent),
                         ),
                       ],
                     ),
@@ -272,7 +272,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                 ],
                 Text(
                   '本次共刷过 $total 个单词',
-                  style: TextStyle(fontSize: 16, color: skin.colors.text2),
+                  style: MwTypography.bodyMd.copyWith(color: skin.colors.text2),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -339,7 +339,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
           Flexible(
             child: Text(
               '今日目标达成！已学 ${state.todayLearned} / 目标 ${state.dailyGoal}',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: skin.colors.accent),
+              style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w700, color: skin.colors.accent),
             ),
           ),
         ],
@@ -525,10 +525,13 @@ class _ImmersiveStatItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colors.accent),
+          style: MwTypography.heading4.copyWith(fontWeight: FontWeight.bold, color: colors.accent),
         ),
         const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: colors.text3)),
+        Text(
+          label,
+          style: MwTypography.micro.copyWith(fontWeight: FontWeight.w400, color: colors.text3),
+        ),
       ],
     );
   }

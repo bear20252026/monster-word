@@ -50,7 +50,7 @@ Future<T?> showSettingsBottomSheet<T>(BuildContext context, {required String tit
           // 标题
           Text(
             title,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: skin.text1),
+            style: MwTypography.heading5.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
           ),
           const SizedBox(height: 16),
           // 内容
@@ -76,7 +76,7 @@ class SettingsSheetSwitchRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(title, style: TextStyle(fontSize: 15, color: skin.text1)),
+            child: Text(title, style: MwTypography.bodySm.copyWith(color: skin.text1)),
           ),
           Switch(
             value: value,

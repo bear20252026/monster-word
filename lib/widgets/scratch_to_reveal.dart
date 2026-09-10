@@ -10,6 +10,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:word_app/tokens/starbucks_tokens.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class ScratchToReveal extends StatefulWidget {
   final Widget child; // 被遮盖的内容（揭示后显示）
@@ -279,7 +280,7 @@ class WordScratchCard extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               meaning,
-              style: TextStyle(fontSize: 16, color: c, fontWeight: FontWeight.w600),
+              style: MwTypography.bodyBold.copyWith(fontWeight: FontWeight.w600, color: c),
               textAlign: TextAlign.center,
             ),
           ),

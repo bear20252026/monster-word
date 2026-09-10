@@ -229,7 +229,7 @@ class FloatingDock extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       item.label,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: active),
+                      style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, color: active),
                     ),
                   ],
                 ],

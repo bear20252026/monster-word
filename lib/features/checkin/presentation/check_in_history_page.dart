@@ -249,7 +249,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                 children: [
                   Text(
                     '$_totalDays',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: skin.accent),
+                    style: MwTypography.stat.copyWith(fontWeight: FontWeight.w800, color: skin.accent),
                   ),
                   SizedBox(height: 4),
                   Text('累计天数', style: MwTypography.caption.copyWith(color: skin.text3)),
@@ -324,7 +324,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                             builder: (context, child) {
                               return Text(
                                 '${(_monthlyProgress * _progressAnim.value * 100).round()}%',
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: skin.text1),
+                                style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: skin.text1),
                               );
                             },
                           ),
@@ -416,7 +416,10 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                 .map(
                   (l) => Expanded(
                     child: Center(
-                      child: Text(l, style: TextStyle(fontSize: 12, color: skin.text3)),
+                      child: Text(
+                        l,
+                        style: MwTypography.micro.copyWith(fontWeight: FontWeight.w400, color: skin.text3),
+                      ),
                     ),
                   ),
                 )
@@ -585,7 +588,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                           children: [
                             Text(
                               '$month月$day日',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: skin.text1),
+                              style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
                             ),
                             SizedBox(width: 8),
                             Text(weekday, style: MwTypography.caption.copyWith(color: skin.text3)),

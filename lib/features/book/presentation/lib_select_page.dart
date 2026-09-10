@@ -147,7 +147,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
           Expanded(
             child: Text(
               title,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1),
+              style: MwTypography.bodyBold.copyWith(fontWeight: FontWeight.w600, color: colors.text1),
             ),
           ),
           IconButton(

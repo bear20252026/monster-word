@@ -164,7 +164,7 @@ class _TopBar extends StatelessWidget {
           ),
           Text(
             '${state.currentIndex + 1}/${state.total}',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.text1),
+            style: MwTypography.bodyBold.copyWith(fontWeight: FontWeight.w600, color: colors.text1),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -307,7 +307,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
               const SizedBox(height: 24),
               Text(
                 '今日学习完成！',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colors.text1),
+                style: MwTypography.displaySm.copyWith(fontWeight: FontWeight.bold, color: colors.text1),
               ),
               const SizedBox(height: 12),
               // 尖叫币奖励横幅（本次会话结算所得）
@@ -332,7 +332,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                       Flexible(
                         child: Text(
                           '今日目标达成！已学 $todayLearned / 目标 $dailyGoal',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.accent),
+                          style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w700, color: colors.accent),
                         ),
                       ),
                     ],
@@ -344,7 +344,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                 onReviewErrors != null && errorCount > 0
                     ? '本次学习了 $totalAnswered 个单词，错了 $errorCount 个'
                     : '你已经完成了今天的所有单词，太棒了！',
-                style: TextStyle(fontSize: 16, color: colors.text2),
+                style: MwTypography.bodyMd.copyWith(color: colors.text2),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -417,7 +417,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
           const SizedBox(width: 6),
           Text(
             '尖叫币 +$_grantedCoins',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.accent),
+            style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w700, color: colors.accent),
           ),
         ],
       ),
@@ -449,10 +449,13 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colors.text1),
+          style: MwTypography.titleLg.copyWith(fontWeight: FontWeight.bold, color: colors.text1),
         ),
         const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: colors.text3)),
+        Text(
+          label,
+          style: MwTypography.micro.copyWith(fontWeight: FontWeight.w400, color: colors.text3),
+        ),
       ],
     );
   }

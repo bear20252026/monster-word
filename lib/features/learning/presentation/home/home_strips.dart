@@ -68,16 +68,16 @@ class _CheckInStripState extends State<_CheckInStrip> {
             Expanded(
               child: Text(
                 checked ? '已连续签到 $_streakDays 天，保持下去' : '今天还没签到，别断啦',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: skin.colors.text1),
+                style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: skin.colors.text1),
               ),
             ),
             if (!checked)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: ShapeDecoration(color: skin.colors.accent, shape: const StadiumBorder()),
-                child: const Text(
+                child: Text(
                   '签到 +10',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.white100),
+                  style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: AppColors.white100),
                 ),
               )
             else
@@ -122,7 +122,7 @@ class _BookStrip extends StatelessWidget {
                       bookName ?? '还没有选择词书',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: skin.colors.text1),
+                      style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: skin.colors.text1),
                     ),
                   ],
                 ),
@@ -134,7 +134,7 @@ class _BookStrip extends StatelessWidget {
                 ),
                 child: Text(
                   '切换',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: skin.colors.accent),
+                  style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, color: skin.colors.accent),
                 ),
               ),
             ],
@@ -185,7 +185,7 @@ class _GoalChipsState extends State<_GoalChips> {
       children: [
         Text(
           '每日目标',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: skin.colors.text3),
+          style: MwTypography.caption.copyWith(fontWeight: FontWeight.w500, color: skin.colors.text3),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -241,7 +241,7 @@ class _GoalChipsState extends State<_GoalChips> {
             const SizedBox(width: 4),
             Text(
               '自定义',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: skin.colors.text2),
+              style: MwTypography.caption.copyWith(fontWeight: FontWeight.w500, color: skin.colors.text2),
             ),
           ],
         ),

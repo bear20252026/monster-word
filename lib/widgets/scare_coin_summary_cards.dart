@@ -67,7 +67,10 @@ class ScareCoinCard extends StatelessWidget {
                   },
                 ),
                 const SizedBox(width: 8),
-                Text('学习奖励', style: TextStyle(fontSize: 12, color: skin.text3)),
+                Text(
+                  '学习奖励',
+                  style: MwTypography.micro.copyWith(fontWeight: FontWeight.w400, color: skin.text3),
+                ),
               ],
             ),
           ],

@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 星巴克模态框模式
 enum MwModalMode {
@@ -132,7 +133,7 @@ class MwModal extends StatelessWidget {
               if (title != null) ...[
                 Text(
                   title!,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.text1),
+                  style: MwTypography.heading5.copyWith(fontWeight: FontWeight.w600, color: colors.text1),
                 ),
                 const SizedBox(height: 16),
               ],

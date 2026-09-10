@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/models/word_root_model.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 词根词缀Tab组件
 class WordRootTab extends StatelessWidget {
@@ -26,7 +27,7 @@ class WordRootTab extends StatelessWidget {
           children: [
             Icon(Icons.info_outline, size: 48, color: skin.text3),
             const SizedBox(height: 12),
-            Text('暂无词根数据', style: TextStyle(fontSize: 16, color: skin.text3)),
+            Text('暂无词根数据', style: MwTypography.bodyMd.copyWith(color: skin.text3)),
           ],
         ),
       );
@@ -66,7 +67,7 @@ class WordRootTab extends StatelessWidget {
         children: [
           Text(
             '词根结构',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
+            style: MwTypography.bodyBold.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -82,14 +83,11 @@ class WordRootTab extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      component.typeName,
-                      style: TextStyle(fontSize: 12, color: Color(component.colorValue), fontWeight: FontWeight.w500),
-                    ),
+                    Text(component.typeName, style: MwTypography.micro.copyWith(color: Color(component.colorValue))),
                     const SizedBox(height: 4),
                     Text(
                       component.text,
-                      style: TextStyle(fontSize: 14, color: skin.text1, fontWeight: FontWeight.w600),
+                      style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
                     ),
                   ],
                 ),
@@ -115,7 +113,7 @@ class WordRootTab extends StatelessWidget {
         children: [
           Text(
             '词根解释',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
+            style: MwTypography.bodyBold.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
           ),
           const SizedBox(height: 12),
 
@@ -148,10 +146,7 @@ class WordRootTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
-          child: Text(
-            type,
-            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500),
-          ),
+          child: Text(type, style: MwTypography.micro.copyWith(color: color)),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -182,7 +177,7 @@ class WordRootTab extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 '记忆技巧',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: skin.text1),
+                style: MwTypography.bodyBold.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
               ),
             ],
           ),

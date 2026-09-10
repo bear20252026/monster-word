@@ -98,10 +98,10 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('我的尖叫币', style: TextStyle(fontSize: 13, color: skin.text3)),
+                        Text('我的尖叫币', style: MwTypography.caption.copyWith(color: skin.text3)),
                         Text(
                           '$_balance',
-                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: skin.text1),
+                          style: MwTypography.heading3.copyWith(fontWeight: FontWeight.w800, color: skin.text1),
                         ),
                       ],
                     ),
@@ -127,7 +127,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   '获取记录',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: skin.text1),
+                  style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: skin.text1),
                 ),
               ),
             ),
@@ -138,7 +138,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('还没有记录，先去签到吧～', style: TextStyle(fontSize: 14, color: skin.text3)),
+                          Text('还没有记录，先去签到吧～', style: MwTypography.bodySm.copyWith(color: skin.text3)),
                           const SizedBox(height: 12),
                           OutlinedButton.icon(
                             onPressed: () => Navigator.pop(context),
@@ -173,9 +173,15 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(e.reason, style: TextStyle(fontSize: 14, color: skin.text1)),
+                                    Text(e.reason, style: MwTypography.bodySm.copyWith(color: skin.text1)),
                                     const SizedBox(height: 2),
-                                    Text(_formatTime(e.time), style: TextStyle(fontSize: 12, color: skin.text3)),
+                                    Text(
+                                      _formatTime(e.time),
+                                      style: MwTypography.micro.copyWith(
+                                        fontWeight: FontWeight.w400,
+                                        color: skin.text3,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),

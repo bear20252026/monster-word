@@ -111,10 +111,10 @@ class _NotFoundScaffold extends StatelessWidget {
               SizedBox(height: 16),
               Text(
                 failed ? '查询失败' : '未找到「$wordName」',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: skin.text1),
+                style: MwTypography.heading5.copyWith(fontWeight: FontWeight.bold, color: skin.text1),
               ),
               SizedBox(height: 8),
-              Text(failed ? '请稍后重试' : '该单词可能不在当前词库中', style: TextStyle(fontSize: 13, color: skin.text3)),
+              Text(failed ? '请稍后重试' : '该单词可能不在当前词库中', style: MwTypography.caption.copyWith(color: skin.text3)),
               SizedBox(height: 24),
               Builder(
                 builder: (ctx) => ElevatedButton.icon(
