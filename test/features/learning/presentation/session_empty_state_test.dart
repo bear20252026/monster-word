@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/learning/presentation/dictation_session_page.dart';
 import 'package:word_app/features/learning/presentation/quick_spell_page.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
+import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 void main() {
@@ -22,7 +23,7 @@ void main() {
 
       expect(find.text('暂无待学习单词'), findsOneWidget);
       expect(find.text('返回首页'), findsOneWidget);
-      expect(find.byIcon(Icons.record_voice_over), findsOneWidget);
+      expect(find.byType(MonsterIcon), findsOneWidget);
     });
 
     testWidgets('空 words 点击返回首页触发 goHome 回到根路由', (tester) async {
@@ -67,7 +68,7 @@ void main() {
 
       expect(find.text('暂无待学习单词'), findsOneWidget);
       expect(find.text('返回首页'), findsOneWidget);
-      expect(find.byIcon(Icons.keyboard), findsOneWidget);
+      expect(find.byType(MonsterIcon), findsOneWidget);
     });
 
     testWidgets('空 words 点击返回首页触发 goHome 回到根路由', (tester) async {
