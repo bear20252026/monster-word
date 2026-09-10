@@ -10,7 +10,7 @@
 ; 版本可由命令行覆盖：ISCC.exe /DMyAppVersion=X.Y.Z installer.iss
 ; （CI 从 pubspec.yaml 读取后传入；未传入时用下方默认值）
 #ifndef MyAppVersion
-#define MyAppVersion "2.8.2"
+#define MyAppVersion "2.9.2"
 #endif
 #define MyAppPublisher "MonsterWord"
 #define MyAppExeName "MonsterWord.exe"
