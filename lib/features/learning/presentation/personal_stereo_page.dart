@@ -1,7 +1,10 @@
-// 由 Claude 团队生成 | Monster Word App
+// 由 Claude 团队 生成 | Monster Word App
 
-// 随身听：碎片时间听记单词（词源四选 + 顺序连播 + 播放控制）
+// 随身听：磁带机隐喻的碎片时间听记（词源四选 + 顺序连播 + 播放控制）。
+// hero 是一台「正在转卷轴的盒式磁带」——播放中双卷轴持续旋转，
+// 暂停即停转，把播放状态变成看得见的机械隐喻。
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +20,9 @@ import 'package:word_app/features/learning/presentation/review_queue_state.dart'
 import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/func_colors.dart';
+import 'package:word_app/widgets/mw_list_row.dart';
+import 'package:word_app/widgets/mw_section_header.dart';
 
 class PersonalStereoPage extends StatefulWidget {
   const PersonalStereoPage({super.key});
@@ -82,48 +88,13 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildPlayerCard(skin),
                     const SizedBox(height: 24),
-                    _buildSourceCard(
-                      skin: skin,
-                      icon: Icons.play_circle_outline,
-                      title: '今日已学单词',
-                      subtitle: '巩固今天学习的单词',
-                      source: StereoSource.todayLearned,
-                    ),
+                    const MwSectionHeader(title: '选择词源'),
                     const SizedBox(height: 12),
-                    _buildSourceCard(
-                      skin: skin,
-                      icon: Icons.replay,
-                      title: '复习中单词',
-                      subtitle: '播放正在复习的单词',
-                      source: StereoSource.reviewing,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSourceCard(
-                      skin: skin,
-                      icon: Icons.fiber_new,
-                      title: '生词本',
-                      subtitle: '播放生词本中的单词',
-                      source: StereoSource.newWords,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildSourceCard(
-                      skin: skin,
-                      icon: Icons.favorite_border,
-                      title: '收藏单词',
-                      subtitle: '播放收藏的单词',
-                      source: StereoSource.favorites,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildMenuCard(
-                      skin: skin,
-                      icon: Icons.shuffle,
-                      title: '播放顺序',
-                      subtitle: '设置单词播放顺序',
-                      onTap: () => Navigator.pushNamed(context, PlayOrderPage.routeName),
-                    ),
+                    MwListGroup(children: _buildSourceRows()),
                   ],
                 ),
               ),
@@ -152,23 +123,62 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
     );
   }
 
+  List<Widget> _buildSourceRows() {
+    return [
+      MwListRow(
+        icon: Icons.play_circle_outline,
+        iconColor: MwColors.primary,
+        title: '今日已学单词',
+        subtitle: '巩固今天学习的单词',
+        onTap: () => unawaited(_startSource(StereoSource.todayLearned)),
+      ),
+      MwListRow(
+        icon: Icons.replay,
+        iconColor: FuncColors.warning,
+        title: '复习中单词',
+        subtitle: '播放正在复习的单词',
+        onTap: () => unawaited(_startSource(StereoSource.reviewing)),
+      ),
+      MwListRow(
+        icon: Icons.fiber_new,
+        iconColor: FuncColors.purple,
+        title: '生词本',
+        subtitle: '播放生词本中的单词',
+        onTap: () => unawaited(_startSource(StereoSource.newWords)),
+      ),
+      MwListRow(
+        icon: Icons.favorite_border,
+        iconColor: MwColors.danger,
+        title: '收藏单词',
+        subtitle: '播放收藏的单词',
+        onTap: () => unawaited(_startSource(StereoSource.favorites)),
+      ),
+      MwListRow(
+        icon: Icons.shuffle,
+        iconColor: FuncColors.success,
+        title: '播放顺序',
+        subtitle: '设置单词播放顺序',
+        onTap: () => Navigator.pushNamed(context, PlayOrderPage.routeName),
+      ),
+    ];
+  }
+
   Widget _buildPlayerCard(SkinSystem skin) {
     return ListenableBuilder(
       listenable: _player,
       builder: (context, _) {
         final word = _player.currentWord;
-        final source = _player.source;
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [MwColors.cream, MwColors.creamDeeper]),
+            gradient: const LinearGradient(colors: [MwColors.cream, MwColors.creamDeeper]),
             borderRadius: BorderRadius.circular(skin.design.radius.xl),
           ),
           child: Column(
             children: [
-              Icon(Icons.headphones, size: 48, color: MwColors.primary),
-              const SizedBox(height: 12),
+              CassetteTape(spinning: _player.isPlaying),
+              const SizedBox(height: 16),
               if (word == null) ...[
                 Text('随身听模式', style: MwTypography.heading4.copyWith(color: MwColors.ink)),
                 const SizedBox(height: 8),
@@ -176,7 +186,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
               ] else ...[
                 Text(
                   word.word,
-                  style: MwTypography.heading3.copyWith(color: MwColors.ink),
+                  style: MwTypography.heading3.copyWith(color: MwColors.ink, fontFamily: 'Charter'),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
@@ -189,48 +199,65 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${_sourceLabel(source)} · ${_player.progressPosition} / ${_player.playlist.length}',
+                  '${_sourceLabel(_player.source)} · ${_player.progressPosition} / ${_player.playlist.length}',
                   style: MwTypography.bodySm.copyWith(color: MwColors.primary),
                 ),
+                const SizedBox(height: 8),
+                _buildProgressBar(),
               ],
               const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.skip_previous, color: MwColors.ink, size: 32),
-                    tooltip: '上一首',
-                    onPressed: word == null ? null : () => unawaited(_player.previous()),
-                  ),
-                  const SizedBox(width: 16),
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: MwColors.primary),
-                    child: IconButton(
-                      icon: Icon(
-                        _player.isPlaying ? Icons.pause : Icons.play_arrow,
-                        color: AppColors.white100,
-                        size: 32,
-                      ),
-                      tooltip: _player.isPlaying ? '暂停' : '播放',
-                      onPressed: word == null
-                          ? null
-                          : () => _player.isPlaying ? unawaited(_player.pause()) : _player.resume(),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  IconButton(
-                    icon: Icon(Icons.skip_next, color: MwColors.ink, size: 32),
-                    tooltip: '下一首',
-                    onPressed: word == null ? null : () => unawaited(_player.next()),
-                  ),
-                ],
-              ),
+              _buildControls(word == null),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildProgressBar() {
+    final total = _player.playlist.length;
+    if (total == 0) return const SizedBox.shrink();
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(9999),
+      child: SizedBox(
+        height: 4,
+        child: LinearProgressIndicator(
+          value: _player.progressPosition / total,
+          backgroundColor: AppColors.white100.withValues(alpha: 0.6),
+          valueColor: const AlwaysStoppedAnimation(MwColors.primary),
+          minHeight: 4,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildControls(bool disabled) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: Icon(Icons.skip_previous, color: MwColors.ink, size: 32),
+          tooltip: '上一首',
+          onPressed: disabled ? null : () => unawaited(_player.previous()),
+        ),
+        const SizedBox(width: 16),
+        Container(
+          width: 56,
+          height: 56,
+          decoration: const BoxDecoration(shape: BoxShape.circle, color: MwColors.primary),
+          child: IconButton(
+            icon: Icon(_player.isPlaying ? Icons.pause : Icons.play_arrow, color: AppColors.white100, size: 32),
+            tooltip: _player.isPlaying ? '暂停' : '播放',
+            onPressed: disabled ? null : () => _player.isPlaying ? unawaited(_player.pause()) : _player.resume(),
+          ),
+        ),
+        const SizedBox(width: 16),
+        IconButton(
+          icon: Icon(Icons.skip_next, color: MwColors.ink, size: 32),
+          tooltip: '下一首',
+          onPressed: disabled ? null : () => unawaited(_player.next()),
+        ),
+      ],
     );
   }
 
@@ -248,64 +275,115 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
         return '随身听';
     }
   }
+}
 
-  Widget _buildSourceCard({
-    required SkinSystem skin,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required StereoSource source,
-  }) {
-    return _buildMenuCard(
-      skin: skin,
-      icon: icon,
-      title: title,
-      subtitle: subtitle,
-      onTap: () => unawaited(_startSource(source)),
-    );
+/// 盒式磁带：奶油机身 + 双卷轴 + 磁带窗；[spinning] 为真时卷轴持续旋转。
+class CassetteTape extends StatefulWidget {
+  const CassetteTape({super.key, this.spinning = false, this.size = const Size(176, 92)});
+
+  final bool spinning;
+
+  /// 磁带整体尺寸（宽 × 高）。
+  final Size size;
+
+  @override
+  State<CassetteTape> createState() => _CassetteTapeState();
+}
+
+class _CassetteTapeState extends State<CassetteTape> with SingleTickerProviderStateMixin {
+  late final AnimationController _reel = AnimationController(vsync: this, duration: const Duration(seconds: 3));
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.spinning) _reel.repeat();
   }
 
-  Widget _buildMenuCard({
-    required SkinSystem skin,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: skin.colors.cardBgAlt,
-          borderRadius: BorderRadius.circular(skin.design.radius.lg),
-          border: Border.all(color: skin.colors.divider),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: MwColors.cream,
-                borderRadius: BorderRadius.circular(skin.design.radius.md),
-              ),
-              child: Icon(icon, color: MwColors.primary, size: 24),
+  @override
+  void didUpdateWidget(CassetteTape old) {
+    super.didUpdateWidget(old);
+    if (widget.spinning == old.spinning) return;
+    widget.spinning ? _reel.repeat() : _reel.stop();
+  }
+
+  @override
+  void dispose() {
+    _reel.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reelSize = widget.size.height * 0.44;
+    return Container(
+      width: widget.size.width,
+      height: widget.size.height,
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.white100,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: MwColors.slate.withValues(alpha: 0.35)),
+        boxShadow: [BoxShadow(color: MwColors.ink.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _spinningReel(reelSize),
+          Container(
+            width: reelSize * 0.72,
+            height: reelSize * 0.6,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: MwColors.slate.withValues(alpha: 0.5), width: 2),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: MwTypography.bodyBold.copyWith(color: skin.colors.text1)),
-                  Text(subtitle, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: skin.colors.text3),
-          ],
-        ),
+          ),
+          _spinningReel(reelSize),
+        ],
       ),
     );
   }
+
+  Widget _spinningReel(double size) {
+    return AnimatedBuilder(
+      animation: _reel,
+      builder: (context, child) => Transform.rotate(angle: _reel.value * 2 * math.pi, child: child),
+      child: CustomPaint(
+        size: Size(size, size),
+        painter: _ReelPainter(color: MwColors.ink),
+      ),
+    );
+  }
+}
+
+/// 卷轴：外圈 + 三辐条 + 轴心。
+class _ReelPainter extends CustomPainter {
+  _ReelPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round;
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.shortestSide / 2 - 2;
+
+    canvas.drawCircle(center, radius, paint);
+    for (var i = 0; i < 3; i++) {
+      final angle = i * 2 * math.pi / 3;
+      canvas.drawLine(
+        center + Offset(math.cos(angle) * radius * 0.25, math.sin(angle) * radius * 0.25),
+        center + Offset(math.cos(angle) * radius * 0.92, math.sin(angle) * radius * 0.92),
+        paint,
+      );
+    }
+    paint.style = PaintingStyle.fill;
+    canvas.drawCircle(center, 3.2, paint);
+  }
+
+  @override
+  bool shouldRepaint(_ReelPainter oldDelegate) => color != oldDelegate.color;
 }
