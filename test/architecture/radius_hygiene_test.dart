@@ -17,7 +17,7 @@ const _whitelist = <String>[
 const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app'];
 
 /// 棘轮上限：当前存量。只允许下降；清理存量后请把数字改小。
-const _ceiling = 50;
+const _ceiling = 49;
 
 final _pattern = RegExp(r'BorderRadius\.circular\(\d+\)');
 

@@ -62,7 +62,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
         title: Column(
           children: [
-            const Text('🚩', style: TextStyle(fontSize: 36)),
+            Icon(Icons.flag_rounded, size: 40, color: context.skin.colors.danger),
             SizedBox(height: 8),
             Text('举报渠道', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
           ],
@@ -126,7 +126,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
         title: Column(
           children: [
-            const Text('🧸', style: TextStyle(fontSize: 36)),
+            const MonsterIcon(size: 40, showCircle: true),
             SizedBox(height: 8),
             Text('Monster Word', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
           ],
@@ -211,7 +211,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       if (rating >= 4) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('感谢您的 $rating 星好评！欢迎去 GitHub 给我们一个 ⭐'),
+                            content: Text('感谢您的 $rating 星好评！欢迎去 GitHub 给我们点一个 Star'),
                             backgroundColor: context.skin.colors.success,
                           ),
                         );
@@ -256,7 +256,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
           title: Column(
             children: [
-              const Text('📡', style: TextStyle(fontSize: 36)),
+              Icon(Icons.cloud_off_rounded, size: 40, color: context.skin.colors.text3),
               SizedBox(height: 8),
               Text('检查失败', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
             ],
@@ -334,7 +334,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
         title: Column(
           children: [
-            const Text('✅', style: TextStyle(fontSize: 36)),
+            Icon(Icons.check_circle_rounded, size: 40, color: context.skin.colors.success),
             SizedBox(height: 8),
             Text('已是最新版本', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
           ],
@@ -449,7 +449,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(context.design.radius.sm),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
