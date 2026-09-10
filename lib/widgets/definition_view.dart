@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:word_app/models/definition.dart';
 import 'package:word_app/theme/skin_system.dart' show SkinProvider;
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
 
 /// 结构化释义展示
 class DefinitionView extends StatelessWidget {
@@ -41,7 +42,7 @@ class DefinitionView extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: skin.colors.accent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(context.design.radius.xs),
                 ),
                 child: Text(
                   entry.key,

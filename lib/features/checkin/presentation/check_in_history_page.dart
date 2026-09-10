@@ -598,7 +598,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                                 padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: skin.accent.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(context.design.radius.sm),
                                 ),
                                 child: Text(
                                   '今天',

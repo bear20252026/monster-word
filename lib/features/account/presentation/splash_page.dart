@@ -194,7 +194,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                         Expanded(
                           child: Container(
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(context.design.radius.control),
                               color: skin.colors.pageBg,
                             ),
                             child: Center(child: Icon(_getGuideIcon(index), size: 120, color: skin.colors.accent)),

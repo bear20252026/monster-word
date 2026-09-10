@@ -381,7 +381,7 @@ class _DefinitionList extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: skin.accent.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(context.design.radius.xs),
                   ),
                   child: Text(
                     defs[i].partOfSpeech,
@@ -428,7 +428,7 @@ class _CollinsList extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: skin.cardBg,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(context.design.radius.control),
               border: Border.all(color: skin.divider, width: 0.5),
             ),
             child: Column(

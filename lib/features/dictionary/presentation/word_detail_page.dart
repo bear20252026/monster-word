@@ -115,7 +115,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: skin.colors.accent,
                   foregroundColor: AppColors.white100,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
                 ),
               ),
             ],
@@ -212,7 +212,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: skin.colors.accent,
               foregroundColor: AppColors.white100,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
               textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),

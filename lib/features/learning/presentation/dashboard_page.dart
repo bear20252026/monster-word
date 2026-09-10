@@ -91,7 +91,7 @@ class DashboardPage extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: skin.cardBg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(context.design.radius.lg),
         border: Border.all(color: skin.divider),
       ),
       child: Column(
@@ -108,7 +108,7 @@ class DashboardPage extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: [skin.pageBg, skin.cardBgAlt],
                   ),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(context.design.radius.sm),
                   border: Border.all(color: skin.divider, width: 0.5),
                 ),
                 child: Center(

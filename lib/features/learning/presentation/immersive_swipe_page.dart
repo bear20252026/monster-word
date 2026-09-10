@@ -280,7 +280,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: skin.colors.cardBg,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(context.design.radius.control),
                     border: Border.all(color: skin.colors.divider),
                   ),
                   child: Row(
@@ -411,7 +411,10 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
           // 统计
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(
+              color: skin.colors.cardBgAlt,
+              borderRadius: BorderRadius.circular(context.design.radius.lg),
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -447,7 +450,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       margin: EdgeInsets.symmetric(horizontal: resp.pageMargin, vertical: 16),
       decoration: BoxDecoration(
         color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(context.design.radius.lg),
         border: Border.all(color: borderColor, width: 2),
         boxShadow: [BoxShadow(color: MwColors.black15, blurRadius: 20, offset: const Offset(0, 8))],
       ),

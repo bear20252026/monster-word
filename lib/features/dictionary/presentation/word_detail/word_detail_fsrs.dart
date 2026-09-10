@@ -57,7 +57,7 @@ class FsrsPredictionCard extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(context.design.radius.sm),
                 ),
                 child: Text(
                   r < 3

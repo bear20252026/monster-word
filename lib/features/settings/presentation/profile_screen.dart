@@ -285,7 +285,7 @@ class ProfileScreen extends StatelessWidget {
                 height: 36,
                 decoration: BoxDecoration(
                   color: iconColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(skin.design.radius.sm),
                 ),
                 child: Icon(icon, color: iconColor, size: 20),
               ),

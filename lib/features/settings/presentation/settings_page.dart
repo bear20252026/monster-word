@@ -512,7 +512,7 @@ class _SettingGroup extends StatelessWidget {
     final skin = context.skin.colors;
     return Container(
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: skin.cardBg, borderRadius: BorderRadius.circular(context.design.radius.control)),
       child: Column(
         children: [
           for (var i = 0; i < children.length; i++) ...[

@@ -506,7 +506,7 @@ class _CurrentBookHero extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: skin.accent.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(context.design.radius.control),
             border: Border.all(color: skin.accent.withValues(alpha: 0.18)),
           ),
           child: Row(
@@ -532,7 +532,7 @@ class _CurrentBookHero extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: skin.cardBg,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(context.design.radius.control),
             border: Border.all(color: skin.divider),
           ),
           child: Row(
@@ -627,7 +627,10 @@ class _BookCard extends StatelessWidget {
                 Positioned.fill(
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: coverColor, borderRadius: BorderRadius.circular(14)),
+                    decoration: BoxDecoration(
+                      color: coverColor,
+                      borderRadius: BorderRadius.circular(context.design.radius.md),
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

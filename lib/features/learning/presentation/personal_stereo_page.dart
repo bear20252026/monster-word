@@ -218,7 +218,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
     final total = _player.playlist.length;
     if (total == 0) return const SizedBox.shrink();
     return ClipRRect(
-      borderRadius: BorderRadius.circular(9999),
+      borderRadius: BorderRadius.circular(context.design.radius.pill),
       child: SizedBox(
         height: 4,
         child: LinearProgressIndicator(
@@ -321,7 +321,7 @@ class _CassetteTapeState extends State<CassetteTape> with SingleTickerProviderSt
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.white100,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(context.design.radius.md),
         border: Border.all(color: MwColors.slate.withValues(alpha: 0.35)),
         boxShadow: [BoxShadow(color: MwColors.ink.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 4))],
       ),
@@ -333,7 +333,7 @@ class _CassetteTapeState extends State<CassetteTape> with SingleTickerProviderSt
             width: reelSize * 0.72,
             height: reelSize * 0.6,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(context.design.radius.xs),
               border: Border.all(color: MwColors.slate.withValues(alpha: 0.5), width: 2),
             ),
           ),

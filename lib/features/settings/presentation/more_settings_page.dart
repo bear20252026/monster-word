@@ -59,7 +59,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.skin.colors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
         title: Column(
           children: [
             const Text('🚩', style: TextStyle(fontSize: 36)),
@@ -85,7 +85,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: context.skin.colors.accent,
               foregroundColor: context.skin.colors.onGlassAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
             ),
             onPressed: () => Navigator.pop(ctx),
             child: const Text('知道了'),
@@ -123,7 +123,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.skin.colors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
         title: Column(
           children: [
             const Text('🧸', style: TextStyle(fontSize: 36)),
@@ -147,7 +147,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: context.skin.colors.accent,
               foregroundColor: context.skin.colors.onGlassAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
             ),
             onPressed: () => Navigator.pop(ctx),
             child: const Text('知道了'),
@@ -165,7 +165,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: context.skin.colors.cardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
           title: Column(
             children: [
               Icon(Icons.star_rounded, size: 44, color: context.skin.colors.accent),
@@ -201,7 +201,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.skin.colors.accent,
                 foregroundColor: context.skin.colors.onGlassAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
               ),
               onPressed: rating == 0
                   ? null
@@ -253,7 +253,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: context.skin.colors.cardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
           title: Column(
             children: [
               const Text('📡', style: TextStyle(fontSize: 36)),
@@ -278,7 +278,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: context.skin.colors.cardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
           title: Column(
             children: [
               Icon(Icons.celebration_rounded, size: 40, color: context.skin.colors.accent),
@@ -312,7 +312,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.skin.colors.accent,
                 foregroundColor: context.skin.colors.onGlassAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
               ),
               onPressed: () async {
                 Navigator.pop(ctx);
@@ -331,7 +331,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.skin.colors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
         title: Column(
           children: [
             const Text('✅', style: TextStyle(fontSize: 36)),
@@ -354,7 +354,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       style: ElevatedButton.styleFrom(
         backgroundColor: context.skin.colors.accent,
         foregroundColor: context.skin.colors.onGlassAccent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
       ),
       onPressed: () => Navigator.pop(ctx),
       child: const Text('知道了'),
@@ -435,7 +435,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.skin.colors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -469,7 +469,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
                       color: context.skin.colors.onGlassAccent,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(context.design.radius.lg),
                     ),
                     child: Text('扫码下载', style: MwTypography.micro.copyWith(color: context.skin.colors.accent)),
                   ),
@@ -632,7 +632,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.skin.colors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
         title: Text(title, style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
         content: Text(
           'Monster Word 正在完善独立的$title文本，将随后续版本发布。\n\n'
@@ -644,7 +644,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: context.skin.colors.accent,
               foregroundColor: context.skin.colors.onGlassAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
             ),
             onPressed: () => Navigator.pop(ctx),
             child: const Text('知道了'),

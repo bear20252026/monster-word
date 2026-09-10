@@ -352,7 +352,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: colors.cardBg,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(context.design.radius.control),
                   border: Border.all(color: colors.divider),
                 ),
                 child: Row(
@@ -673,7 +673,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.accent,
                       foregroundColor: AppColors.white100,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
                     ),
                   ),
                 ),

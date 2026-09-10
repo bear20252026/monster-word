@@ -11,6 +11,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:word_app/tokens/starbucks_tokens.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
 
 class ScratchToReveal extends StatefulWidget {
   final Widget child; // 被遮盖的内容（揭示后显示）
@@ -158,7 +159,7 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
         width: widget.width,
         height: widget.height,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(context.design.radius.control),
           child: Stack(
             children: [
               // 底层内容（揭示后显示）
@@ -276,7 +277,10 @@ class WordScratchCard extends StatelessWidget {
           resetToken: resetToken,
           // 默认提示用 touch 图标（比 emoji 更符合品牌质感）
           child: Container(
-            decoration: BoxDecoration(color: c.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
+            decoration: BoxDecoration(
+              color: c.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(context.design.radius.control),
+            ),
             alignment: Alignment.center,
             child: Text(
               meaning,

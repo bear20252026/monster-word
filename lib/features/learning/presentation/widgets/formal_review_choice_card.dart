@@ -56,7 +56,7 @@ class FormalReviewChoiceCard extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 18 * responsive.scale, vertical: 16 * responsive.scale),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(context.design.radius.md),
           border: Border.all(color: borderColor, width: (isCorrect && showAnswer) || isSelectedWrong ? 1.2 : 0.5),
         ),
         child: Row(

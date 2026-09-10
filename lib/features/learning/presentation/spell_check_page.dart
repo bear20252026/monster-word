@@ -121,7 +121,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
                                 color: MwColors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(context.design.radius.lg),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,

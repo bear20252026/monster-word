@@ -95,7 +95,7 @@ class MwModal extends StatelessWidget {
       builder: (_) => Dialog(
         backgroundColor: colors.cardBg,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.xl)),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: modal.maxWidth ?? 360),
           child: modal, // ignore: sort_child_properties_last — modal is the final child

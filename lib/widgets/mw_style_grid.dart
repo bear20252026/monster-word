@@ -37,7 +37,7 @@ class MwStyleGrid extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: skin.colors.cardBg,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(context.design.radius.control),
               border: Border.all(
                 color: isSelected ? skin.colors.accent : skin.colors.divider,
                 width: isSelected ? 1.6 : 1,

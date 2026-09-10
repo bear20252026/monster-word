@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/starbucks_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
 
 class DockItem {
   final IconData icon;
@@ -196,7 +197,7 @@ class FloatingDock extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.white100.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
         boxShadow: [BoxShadow(color: AppColors.black12, blurRadius: 24, offset: const Offset(0, 8))],
       ),
       child: Row(
@@ -215,7 +216,7 @@ class FloatingDock extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: isActive ? 16 : 12, vertical: 10),
               decoration: BoxDecoration(
                 color: isActive ? active.withValues(alpha: 0.1) : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(context.design.radius.control),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

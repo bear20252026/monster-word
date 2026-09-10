@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:word_app/tokens/starbucks_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
 
 class TestimonialItem {
   final String text;
@@ -145,7 +146,7 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
             (item.color ?? activeColor).withValues(alpha: 0.05),
           ],
         ),
-        borderRadius: widget.borderRadius ?? BorderRadius.circular(16),
+        borderRadius: widget.borderRadius ?? BorderRadius.circular(context.design.radius.control),
         border: Border.all(color: (item.color ?? activeColor).withValues(alpha: 0.2)),
       ),
       child: Column(

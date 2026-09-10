@@ -64,7 +64,10 @@ class UIThemeSelectPage extends StatelessWidget {
   Widget _buildFollowSystemToggle(BuildContext context, SkinSystem skin) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: skin.colors.cardBgAlt,
+        borderRadius: BorderRadius.circular(context.design.radius.control),
+      ),
       child: Row(
         children: [
           Icon(Icons.brightness_6, color: skin.colors.accent),
