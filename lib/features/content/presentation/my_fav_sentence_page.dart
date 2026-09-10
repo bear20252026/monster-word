@@ -69,7 +69,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: _isLoading
-                  ? Center(child: CircularProgressIndicator(color: MwColors.primary))
+                  ? Center(child: CircularProgressIndicator(color: context.skin.colors.accent))
                   : _sentences.isEmpty
                   ? _buildEmptyView(skin)
                   : _buildList(skin),
@@ -104,7 +104,10 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                   _selectedIndices.clear();
                 });
               },
-              child: Text(_isEditMode ? '完成' : '编辑', style: MwTypography.bodySm.copyWith(color: MwColors.primary)),
+              child: Text(
+                _isEditMode ? '完成' : '编辑',
+                style: MwTypography.bodySm.copyWith(color: context.skin.colors.accent),
+              ),
             ),
         ],
       ),
@@ -127,7 +130,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: MwColors.primary,
+                  color: context.skin.colors.accent,
                   borderRadius: BorderRadius.circular(context.design.radius.pill),
                 ),
                 child: Row(
@@ -199,7 +202,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
             }
           },
           margin: const EdgeInsets.only(bottom: 12),
-          color: isSelected ? MwColors.primary.withValues(alpha: 0.06) : skin.colors.cardBgAlt,
+          color: isSelected ? context.skin.colors.accent.withValues(alpha: 0.06) : skin.colors.cardBgAlt,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -212,19 +215,22 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                       Icon(
                         isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
                         size: 20,
-                        color: isSelected ? MwColors.primary : skin.colors.text3,
+                        color: isSelected ? context.skin.colors.accent : skin.colors.text3,
                       ),
                       const SizedBox(width: 8),
                     ],
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: MwColors.primary.withValues(alpha: 0.1),
+                        color: context.skin.colors.accent.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(context.design.radius.sm),
                       ),
                       child: Text(
                         favSentence.word,
-                        style: MwTypography.bodySm.copyWith(color: MwColors.primary, fontWeight: FontWeight.w600),
+                        style: MwTypography.bodySm.copyWith(
+                          color: context.skin.colors.accent,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const Spacer(),

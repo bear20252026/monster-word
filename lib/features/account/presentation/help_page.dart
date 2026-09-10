@@ -115,7 +115,7 @@ class _HelpPageState extends State<HelpPage> {
                           ElevatedButton(
                             onPressed: () => _controller.reload(),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: MwColors.primary,
+                              backgroundColor: context.skin.colors.accent,
                               foregroundColor: AppColors.white100,
                             ),
                             child: const Text('重试'),
@@ -125,7 +125,7 @@ class _HelpPageState extends State<HelpPage> {
                     )
                   else
                     WebViewWidget(controller: _controller),
-                  if (_isLoading) Center(child: CircularProgressIndicator(color: MwColors.primary)),
+                  if (_isLoading) Center(child: CircularProgressIndicator(color: context.skin.colors.accent)),
                 ],
               ),
             ),

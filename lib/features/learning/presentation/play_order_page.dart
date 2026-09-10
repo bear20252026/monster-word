@@ -73,23 +73,27 @@ class _PlayOrderPageState extends State<PlayOrderPage> {
                         color: skin.colors.cardBgAlt,
                         borderRadius: BorderRadius.circular(context.design.radius.lg),
                         border: Border.all(
-                          color: isSelected ? MwColors.primary : skin.colors.divider,
+                          color: isSelected ? context.skin.colors.accent : skin.colors.divider,
                           width: isSelected ? 2 : 1,
                         ),
                       ),
                       child: Row(
                         children: [
-                          Icon(order.icon, color: isSelected ? MwColors.primary : skin.colors.text3, size: 24),
+                          Icon(
+                            order.icon,
+                            color: isSelected ? context.skin.colors.accent : skin.colors.text3,
+                            size: 24,
+                          ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Text(
                               order.label,
                               style: MwTypography.bodyBold.copyWith(
-                                color: isSelected ? MwColors.primary : skin.colors.text1,
+                                color: isSelected ? context.skin.colors.accent : skin.colors.text1,
                               ),
                             ),
                           ),
-                          if (isSelected) Icon(Icons.check_circle, color: MwColors.primary, size: 24),
+                          if (isSelected) Icon(Icons.check_circle, color: context.skin.colors.accent, size: 24),
                         ],
                       ),
                     ),

@@ -4,7 +4,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:word_app/tokens/starbucks_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
 
 /// 流体光标控制器（全局单例，追踪触摸位置）
 class FluidCursorController extends ChangeNotifier {
@@ -24,13 +24,15 @@ class FluidCursorController extends ChangeNotifier {
   void setPressed(bool pressed) {
     _isPressed = pressed;
     if (pressed && _position != null) {
-      _ripples.add(FluidRipple(position: _position!, startTime: DateTime.now(), color: _rippleColor));
+      _ripples.add(
+        FluidRipple(position: _position!, startTime: DateTime.now(), color: _rippleColor ?? Colors.transparent),
+      );
       if (_ripples.length > 5) _ripples.removeAt(0);
     }
     notifyListeners();
   }
 
-  Color _rippleColor = StarbucksCreamColors.greenHouse;
+  Color? _rippleColor;
   void setRippleColor(Color c) => _rippleColor = c;
 
   void cleanOldRipples() {
@@ -50,14 +52,14 @@ class FluidRipple {
 /// 流体光标覆盖层（放在最上层，拦截触摸事件）
 class FluidCursorOverlay extends StatefulWidget {
   final Widget child;
-  final Color rippleColor;
+  final Color? rippleColor;
   final double maxRadius;
   final bool enabled;
 
   const FluidCursorOverlay({
     super.key,
     required this.child,
-    this.rippleColor = StarbucksCreamColors.greenHouse,
+    this.rippleColor,
     this.maxRadius = 80,
     this.enabled = true,
   });
@@ -73,7 +75,7 @@ class _FluidCursorOverlayState extends State<FluidCursorOverlay> with SingleTick
   @override
   void initState() {
     super.initState();
-    _controller = FluidCursorController()..setRippleColor(widget.rippleColor);
+    _controller = FluidCursorController()..setRippleColor(widget.rippleColor ?? context.skin.colors.accent);
     _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
     _controller.addListener(_onControllerChanged);
   }
@@ -94,7 +96,7 @@ class _FluidCursorOverlayState extends State<FluidCursorOverlay> with SingleTick
   void didUpdateWidget(covariant FluidCursorOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.rippleColor != widget.rippleColor) {
-      _controller.setRippleColor(widget.rippleColor);
+      _controller.setRippleColor(widget.rippleColor ?? context.skin.colors.accent);
     }
   }
 
@@ -124,7 +126,7 @@ class _FluidCursorOverlayState extends State<FluidCursorOverlay> with SingleTick
                     ripples: _controller.ripples,
                     now: now,
                     maxRadius: widget.maxRadius,
-                    color: widget.rippleColor,
+                    color: widget.rippleColor ?? context.skin.colors.accent,
                   ),
                 );
               },

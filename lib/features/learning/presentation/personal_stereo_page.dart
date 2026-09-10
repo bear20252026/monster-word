@@ -127,7 +127,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
     return [
       MwListRow(
         icon: Icons.play_circle_outline,
-        iconColor: MwColors.primary,
+        iconColor: context.skin.colors.accent,
         title: '今日已学单词',
         subtitle: '巩固今天学习的单词',
         onTap: () => unawaited(_startSource(StereoSource.todayLearned)),
@@ -148,7 +148,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
       ),
       MwListRow(
         icon: Icons.favorite_border,
-        iconColor: MwColors.danger,
+        iconColor: context.skin.colors.danger,
         title: '收藏单词',
         subtitle: '播放收藏的单词',
         onTap: () => unawaited(_startSource(StereoSource.favorites)),
@@ -172,7 +172,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [MwColors.cream, MwColors.creamDeeper]),
+            gradient: LinearGradient(colors: [context.skin.colors.cardBgAlt, context.skin.colors.cardBg]),
             borderRadius: BorderRadius.circular(skin.design.radius.xl),
           ),
           child: Column(
@@ -180,19 +180,19 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
               CassetteTape(spinning: _player.isPlaying),
               const SizedBox(height: 16),
               if (word == null) ...[
-                Text('随身听模式', style: MwTypography.heading4.copyWith(color: MwColors.ink)),
+                Text('随身听模式', style: MwTypography.heading4.copyWith(color: context.skin.colors.text1)),
                 const SizedBox(height: 8),
-                Text('选择下方词源开始播放', style: MwTypography.body.copyWith(color: MwColors.slate)),
+                Text('选择下方词源开始播放', style: MwTypography.body.copyWith(color: context.skin.colors.text2)),
               ] else ...[
                 Text(
                   word.word,
-                  style: MwTypography.heading3.copyWith(color: MwColors.ink, fontFamily: 'Charter'),
+                  style: MwTypography.heading3.copyWith(color: context.skin.colors.text1, fontFamily: 'Charter'),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
                 Text(
                   word.interpret,
-                  style: MwTypography.bodySm.copyWith(color: MwColors.slate),
+                  style: MwTypography.bodySm.copyWith(color: context.skin.colors.text2),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -200,7 +200,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
                 const SizedBox(height: 8),
                 Text(
                   '${_sourceLabel(_player.source)} · ${_player.progressPosition} / ${_player.playlist.length}',
-                  style: MwTypography.bodySm.copyWith(color: MwColors.primary),
+                  style: MwTypography.bodySm.copyWith(color: context.skin.colors.accent),
                 ),
                 const SizedBox(height: 8),
                 _buildProgressBar(),
@@ -224,7 +224,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
         child: LinearProgressIndicator(
           value: _player.progressPosition / total,
           backgroundColor: AppColors.white100.withValues(alpha: 0.6),
-          valueColor: const AlwaysStoppedAnimation(MwColors.primary),
+          valueColor: AlwaysStoppedAnimation(context.skin.colors.accent),
           minHeight: 4,
         ),
       ),
@@ -236,7 +236,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
-          icon: Icon(Icons.skip_previous, color: MwColors.ink, size: 32),
+          icon: Icon(Icons.skip_previous, color: context.skin.colors.text1, size: 32),
           tooltip: '上一首',
           onPressed: disabled ? null : () => unawaited(_player.previous()),
         ),
@@ -244,7 +244,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
         Container(
           width: 56,
           height: 56,
-          decoration: const BoxDecoration(shape: BoxShape.circle, color: MwColors.primary),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: context.skin.colors.accent),
           child: IconButton(
             icon: Icon(_player.isPlaying ? Icons.pause : Icons.play_arrow, color: AppColors.white100, size: 32),
             tooltip: _player.isPlaying ? '暂停' : '播放',
@@ -253,7 +253,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
         ),
         const SizedBox(width: 16),
         IconButton(
-          icon: Icon(Icons.skip_next, color: MwColors.ink, size: 32),
+          icon: Icon(Icons.skip_next, color: context.skin.colors.text1, size: 32),
           tooltip: '下一首',
           onPressed: disabled ? null : () => unawaited(_player.next()),
         ),
@@ -322,8 +322,14 @@ class _CassetteTapeState extends State<CassetteTape> with SingleTickerProviderSt
       decoration: BoxDecoration(
         color: AppColors.white100,
         borderRadius: BorderRadius.circular(context.design.radius.md),
-        border: Border.all(color: MwColors.slate.withValues(alpha: 0.35)),
-        boxShadow: [BoxShadow(color: MwColors.ink.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: context.skin.colors.text2.withValues(alpha: 0.35)),
+        boxShadow: [
+          BoxShadow(
+            color: context.skin.colors.text1.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -334,7 +340,7 @@ class _CassetteTapeState extends State<CassetteTape> with SingleTickerProviderSt
             height: reelSize * 0.6,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(context.design.radius.xs),
-              border: Border.all(color: MwColors.slate.withValues(alpha: 0.5), width: 2),
+              border: Border.all(color: context.skin.colors.text2.withValues(alpha: 0.5), width: 2),
             ),
           ),
           _spinningReel(reelSize),
@@ -349,7 +355,7 @@ class _CassetteTapeState extends State<CassetteTape> with SingleTickerProviderSt
       builder: (context, child) => Transform.rotate(angle: _reel.value * 2 * math.pi, child: child),
       child: CustomPaint(
         size: Size(size, size),
-        painter: _ReelPainter(color: MwColors.ink),
+        painter: _ReelPainter(color: context.skin.colors.text1),
       ),
     );
   }

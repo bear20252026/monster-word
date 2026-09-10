@@ -193,8 +193,8 @@ class DashboardPage extends StatelessWidget {
     final segments = <_MemorySegment>[
       _MemorySegment(label: '新词', value: newCount, color: MwColors.info),
       _MemorySegment(label: '学习中', value: learningCount, color: MwColors.warning),
-      _MemorySegment(label: '待复习', value: dueCount, color: MwColors.danger),
-      _MemorySegment(label: '已掌握', value: matureCount, color: MwColors.success),
+      _MemorySegment(label: '待复习', value: dueCount, color: context.skin.colors.danger),
+      _MemorySegment(label: '已掌握', value: matureCount, color: context.skin.colors.success),
     ];
 
     return Column(

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
 import 'package:word_app/tokens/starbucks_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
 
 class Meteor {
   Offset position;
@@ -37,7 +38,7 @@ class Meteor {
 class MeteorShower extends StatefulWidget {
   final Widget? child;
   final int count;
-  final List<Color> colors;
+  final List<Color>? colors;
   final double speed;
   final double minLength;
   final double maxLength;
@@ -52,13 +53,7 @@ class MeteorShower extends StatefulWidget {
     super.key,
     this.child,
     this.count = 12,
-    this.colors = const [
-      StarbucksCreamColors.greenHouse,
-      StarbucksCreamColors.greenSignature,
-      StarbucksCreamColors.vipGoldBg,
-      PartyColors.blue,
-      PartyColors.purple,
-    ],
+    this.colors,
     this.speed = 1.0,
     this.minLength = 40,
     this.maxLength = 120,
@@ -156,7 +151,16 @@ class _MeteorShowerState extends State<MeteorShower> with SingleTickerProviderSt
     final angle = widget.angle + (_random.nextDouble() - 0.5) * 0.3;
     final speed = 150 + _random.nextDouble() * 200;
     final length = widget.minLength + _random.nextDouble() * (widget.maxLength - widget.minLength);
-    final color = widget.colors[_random.nextInt(widget.colors.length)];
+    final palette =
+        widget.colors ??
+        [
+          context.skin.colors.accent,
+          context.skin.colors.accent,
+          StarbucksCreamColors.vipGoldBg,
+          PartyColors.blue,
+          PartyColors.purple,
+        ];
+    final color = palette[_random.nextInt(palette.length)];
 
     return Meteor(
       position: Offset(_random.nextDouble() * 400 - 50, -20 - _random.nextDouble() * 100),
@@ -183,7 +187,7 @@ class _MeteorShowerState extends State<MeteorShower> with SingleTickerProviderSt
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [MeteorPalette.nightSky, StarbucksCreamColors.greenBanner.withValues(alpha: 0.8)],
+                      colors: [MeteorPalette.nightSky, context.skin.colors.accent.withValues(alpha: 0.8)],
                     ),
                   )
                 : null,
@@ -296,18 +300,9 @@ class _MeteorPainter extends CustomPainter {
 class MeteorBackground extends StatelessWidget {
   final Widget child;
   final int meteorCount;
-  final List<Color> colors;
+  final List<Color>? colors;
 
-  const MeteorBackground({
-    super.key,
-    required this.child,
-    this.meteorCount = 8,
-    this.colors = const [
-      StarbucksCreamColors.greenHouse,
-      StarbucksCreamColors.greenSignature,
-      StarbucksCreamColors.vipGoldBg,
-    ],
-  });
+  const MeteorBackground({super.key, required this.child, this.meteorCount = 8, this.colors});
 
   @override
   Widget build(BuildContext context) {

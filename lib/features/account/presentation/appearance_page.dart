@@ -119,7 +119,7 @@ class _AppearancePageState extends State<AppearancePage> {
             activeThumbColor: AppColors.white100,
             activeTrackColor: skin.colors.accent,
             inactiveThumbColor: AppColors.white100,
-            inactiveTrackColor: MwColors.hairline,
+            inactiveTrackColor: context.skin.colors.divider,
           ),
         ],
       ),

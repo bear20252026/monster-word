@@ -471,12 +471,12 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               children: [
                 TextSpan(
                   text: '用户协议',
-                  style: TextStyle(color: MwColors.link),
+                  style: TextStyle(color: context.skin.colors.accent),
                 ),
                 const TextSpan(text: ' 和 '),
                 TextSpan(
                   text: '隐私政策',
-                  style: TextStyle(color: MwColors.link),
+                  style: TextStyle(color: context.skin.colors.accent),
                 ),
               ],
             ),
@@ -546,9 +546,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                         child: ElevatedButton(
                           onPressed: (_isSendingCode || _countdown > 0) ? null : _sendSmsCode,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: MwColors.primary,
+                            backgroundColor: context.skin.colors.accent,
                             foregroundColor: AppColors.white100,
-                            disabledBackgroundColor: MwColors.muted,
+                            disabledBackgroundColor: context.skin.colors.text2,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(context.design.radius.md),
                             ),
@@ -587,7 +587,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: _forgotPassword,
-                      child: Text('忘记密码？', style: MwTypography.bodySm.copyWith(color: MwColors.link)),
+                      child: Text('忘记密码？', style: MwTypography.bodySm.copyWith(color: context.skin.colors.accent)),
                     ),
                   ),
                 ],
@@ -607,9 +607,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                             }
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: MwColors.primary,
+                      backgroundColor: context.skin.colors.accent,
                       foregroundColor: AppColors.white100,
-                      disabledBackgroundColor: MwColors.muted,
+                      disabledBackgroundColor: context.skin.colors.text2,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                     ),
                     child: _isLoading
@@ -660,7 +660,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(context.design.radius.md),
-          borderSide: BorderSide(color: MwColors.primary, width: 2),
+          borderSide: BorderSide(color: context.skin.colors.accent, width: 2),
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),

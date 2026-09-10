@@ -132,7 +132,10 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
       child: Column(
         children: [
           // 进度：答题统计 + 队列位置
-          Text('$_correctCount / $_totalCount', style: MwTypography.heading4.copyWith(color: MwColors.primary)),
+          Text(
+            '$_correctCount / $_totalCount',
+            style: MwTypography.heading4.copyWith(color: context.skin.colors.accent),
+          ),
           const SizedBox(height: 8),
           Text(
             '第 ${_currentIndex + 1} / ${_words.length} 词',
@@ -147,16 +150,16 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: MwColors.cream,
-                border: Border.all(color: MwColors.primary, width: 2),
+                color: context.skin.colors.cardBgAlt,
+                border: Border.all(color: context.skin.colors.accent, width: 2),
               ),
-              child: Icon(Icons.volume_up, size: 40, color: MwColors.primary),
+              child: Icon(Icons.volume_up, size: 40, color: context.skin.colors.accent),
             ),
           ),
           const SizedBox(height: 8),
           TextButton(
             onPressed: _playWord,
-            child: Text('点击播放', style: TextStyle(color: MwColors.primary)),
+            child: Text('点击播放', style: TextStyle(color: context.skin.colors.accent)),
           ),
           const SizedBox(height: 32),
           // 输入框
@@ -173,7 +176,7 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(context.design.radius.lg),
-                borderSide: BorderSide(color: MwColors.primary, width: 2),
+                borderSide: BorderSide(color: context.skin.colors.accent, width: 2),
               ),
             ),
             onSubmitted: (_) => _checkSpelling(),
@@ -194,8 +197,8 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
                   color: _wasCorrect == null
                       ? skin.colors.text2
                       : _wasCorrect!
-                      ? MwColors.success
-                      : MwColors.danger,
+                      ? context.skin.colors.success
+                      : context.skin.colors.danger,
                 ),
                 const SizedBox(width: 8),
                 Flexible(
@@ -205,8 +208,8 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
                       color: _wasCorrect == null
                           ? skin.colors.text2
                           : _wasCorrect!
-                          ? MwColors.success
-                          : MwColors.danger,
+                          ? context.skin.colors.success
+                          : context.skin.colors.danger,
                     ),
                   ),
                 ),
@@ -245,7 +248,7 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
                             : () =>
                                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已是最后一个词')))),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: MwColors.primary,
+                    backgroundColor: context.skin.colors.accent,
                     foregroundColor: AppColors.white100,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
                     padding: const EdgeInsets.symmetric(vertical: 14),

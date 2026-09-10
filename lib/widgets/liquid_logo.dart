@@ -3,8 +3,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:word_app/tokens/starbucks_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
+import 'package:word_app/theme/skin_system.dart';
 
 class LiquidLogo extends StatefulWidget {
   final double size;
@@ -135,9 +135,9 @@ class _LiquidPainter extends CustomPainter {
 /// 简化的液态加载指示器
 class LiquidLoadingIndicator extends StatefulWidget {
   final double size;
-  final Color color;
+  final Color? color;
 
-  const LiquidLoadingIndicator({super.key, this.size = 40, this.color = StarbucksCreamColors.greenHouse});
+  const LiquidLoadingIndicator({super.key, this.size = 40, this.color});
 
   @override
   State<LiquidLoadingIndicator> createState() => _LiquidLoadingIndicatorState();
@@ -165,7 +165,7 @@ class _LiquidLoadingIndicatorState extends State<LiquidLoadingIndicator> with Si
       builder: (context, _) {
         return CustomPaint(
           size: Size(widget.size, widget.size),
-          painter: _LiquidDropPainter(progress: _controller.value, color: widget.color),
+          painter: _LiquidDropPainter(progress: _controller.value, color: widget.color ?? context.skin.colors.accent),
         );
       },
     );

@@ -153,7 +153,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
               onPressed: _selectAll,
               child: Text(
                 _selectedIndices.length == _words.length ? '取消全选' : '全选',
-                style: TextStyle(color: MwColors.primary),
+                style: TextStyle(color: context.skin.colors.accent),
               ),
             ),
             TextButton(
@@ -196,7 +196,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
           background: Container(
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 20),
-            color: MwColors.danger,
+            color: context.skin.colors.danger,
             child: const Icon(Icons.delete, color: AppColors.white100),
           ),
           confirmDismiss: (direction) async {
@@ -231,7 +231,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
                           Checkbox(
                             value: isSelected,
                             onChanged: (_) => _toggleSelect(index),
-                            activeColor: MwColors.primary,
+                            activeColor: context.skin.colors.accent,
                           ),
                           const SizedBox(width: 4),
                         ],

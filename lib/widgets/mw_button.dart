@@ -125,19 +125,13 @@ class MwButton extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
   }) : variant = MwButtonVariant.inverse;
 
-  // ---- 星巴克品牌色常量 ----
-  static const Color _houseGreen = StarbucksCreamColors.greenSignature;
-  static const Color _darkGreen = StarbucksCreamColors.greenBanner;
-
-  /// 获取当前变体的描边
-  BorderSide get _defaultBorderSide {
+  /// 获取当前变体的描边（颜色随当前主题 accent）
+  BorderSide _borderSide(ThemeVars colors) {
     switch (variant) {
       case MwButtonVariant.primary:
-        return const BorderSide(color: _houseGreen, width: 1);
       case MwButtonVariant.outlined:
-        return const BorderSide(color: _houseGreen, width: 1);
+        return BorderSide(color: colors.accent, width: 1);
       case MwButtonVariant.dark:
-        return BorderSide.none;
       case MwButtonVariant.inverse:
         return BorderSide.none;
     }
@@ -147,13 +141,11 @@ class MwButton extends StatelessWidget {
   Color _resolveFillColor(ThemeVars colors) {
     switch (variant) {
       case MwButtonVariant.primary:
-        return _houseGreen;
+        return colors.accent;
       case MwButtonVariant.outlined:
         return Colors.transparent;
       case MwButtonVariant.dark:
-        // 深色画布上 #1E3932 对比度不足，深色模式下提亮至 greenSoft
-        final isDark = colors.pageBg == StarbucksDarkColors.pageBg;
-        return isDark ? StarbucksCreamColors.greenSoft : _darkGreen;
+        return colors.accent;
       case MwButtonVariant.inverse:
         return colors.cardBg; // 适配深色模式
     }
@@ -181,7 +173,7 @@ class MwButton extends StatelessWidget {
     // 深色模式下动态适配变体默认色
     final resolvedFill = fillColor ?? _resolveFillColor(colors);
     final resolvedColor = textColor ?? _resolveTextColor(colors);
-    final side = borderSide ?? _defaultBorderSide;
+    final side = borderSide ?? _borderSide(colors);
 
     return ScaleDownOnPress(
       onTap: _isInteractive ? onTap : null,

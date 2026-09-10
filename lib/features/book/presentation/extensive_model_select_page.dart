@@ -186,10 +186,10 @@ class _ModeCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: MwColors.primary.withValues(alpha: 0.1),
+                color: context.skin.colors.accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(context.design.radius.md),
               ),
-              child: Icon(icon, color: MwColors.primary, size: 24),
+              child: Icon(icon, color: context.skin.colors.accent, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(

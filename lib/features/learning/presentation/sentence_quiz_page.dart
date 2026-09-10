@@ -137,8 +137,8 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('正确：$_correctCount', style: MwTypography.body.copyWith(color: MwColors.success)),
-            Text('错误：$_wrongCount', style: MwTypography.body.copyWith(color: MwColors.danger)),
+            Text('正确：$_correctCount', style: MwTypography.body.copyWith(color: context.skin.colors.success)),
+            Text('错误：$_wrongCount', style: MwTypography.body.copyWith(color: context.skin.colors.danger)),
             const SizedBox(height: 8),
             Text('正确率：$accuracy%', style: MwTypography.bodyBold.copyWith(color: context.skin.colors.text1)),
           ],
@@ -156,7 +156,10 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
               Navigator.pop(ctx);
               _reset();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: AppColors.white100),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.skin.colors.accent,
+              foregroundColor: AppColors.white100,
+            ),
             child: const Text('再来一次'),
           ),
         ],
@@ -245,12 +248,12 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: MwColors.primary.withValues(alpha: 0.1),
+              color: context.skin.colors.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(context.design.radius.pill),
             ),
             child: Text(
               '${_currentIndex + 1} / ${_words.length}',
-              style: MwTypography.bodyBold.copyWith(color: MwColors.primary),
+              style: MwTypography.bodyBold.copyWith(color: context.skin.colors.accent),
             ),
           ),
           const SizedBox(width: 12),
@@ -286,7 +289,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
             child: ElevatedButton(
               onPressed: _next,
               style: ElevatedButton.styleFrom(
-                backgroundColor: MwColors.primary,
+                backgroundColor: context.skin.colors.accent,
                 foregroundColor: AppColors.white100,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -306,15 +309,15 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
 
     if (_showAnswer) {
       if (option.isCorrect) {
-        borderColor = MwColors.success;
-        bgColor = MwColors.success.withValues(alpha: 0.1);
+        borderColor = context.skin.colors.success;
+        bgColor = context.skin.colors.success.withValues(alpha: 0.1);
       } else if (isSelected) {
-        borderColor = MwColors.danger;
-        bgColor = MwColors.danger.withValues(alpha: 0.1);
+        borderColor = context.skin.colors.danger;
+        bgColor = context.skin.colors.danger.withValues(alpha: 0.1);
       }
     } else if (isSelected) {
-      borderColor = MwColors.primary;
-      bgColor = MwColors.primary.withValues(alpha: 0.1);
+      borderColor = context.skin.colors.accent;
+      bgColor = context.skin.colors.accent.withValues(alpha: 0.1);
     }
 
     return GestureDetector(
@@ -349,9 +352,9 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
               child: Text(option.text, style: MwTypography.body.copyWith(color: skin.colors.text1)),
             ),
             if (_showAnswer && option.isCorrect)
-              Icon(Icons.check_circle, color: MwColors.success, size: 20)
+              Icon(Icons.check_circle, color: context.skin.colors.success, size: 20)
             else if (_showAnswer && isSelected && !option.isCorrect)
-              Icon(Icons.cancel, color: MwColors.danger, size: 20),
+              Icon(Icons.cancel, color: context.skin.colors.danger, size: 20),
           ],
         ),
       ),

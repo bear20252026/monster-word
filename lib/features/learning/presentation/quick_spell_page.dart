@@ -85,7 +85,7 @@ class _QuickSpellPageState extends State<QuickSpellPage> {
 
   Widget _buildTimerPill() {
     final urgent = _secondsLeft <= 10;
-    final color = urgent ? MwColors.danger : MwColors.primary;
+    final color = urgent ? context.skin.colors.danger : context.skin.colors.accent;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(

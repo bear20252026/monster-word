@@ -263,10 +263,13 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: MwColors.primary.withValues(alpha: 0.1),
+              color: context.skin.colors.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(context.design.radius.sm),
             ),
-            child: Text(_modeName(widget.mode), style: MwTypography.caption.copyWith(color: MwColors.primary)),
+            child: Text(
+              _modeName(widget.mode),
+              style: MwTypography.caption.copyWith(color: context.skin.colors.accent),
+            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -281,7 +284,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${_currentIndex + 1}', style: MwTypography.heading4.copyWith(color: MwColors.primary)),
+            Text('${_currentIndex + 1}', style: MwTypography.heading4.copyWith(color: context.skin.colors.accent)),
             Text(' / ${widget.words.length}', style: MwTypography.heading5.copyWith(color: skin.colors.text3)),
           ],
         ),
@@ -294,7 +297,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
             alignment: Alignment.centerLeft,
             widthFactor: progress,
             child: Container(
-              decoration: BoxDecoration(color: MwColors.primary, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: context.skin.colors.accent, borderRadius: BorderRadius.circular(8)),
             ),
           ),
         ),
@@ -347,7 +350,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () => setState(() => _showMeaning = true),
-                child: Text('点击显示释义', style: MwTypography.caption.copyWith(color: MwColors.primary)),
+                child: Text('点击显示释义', style: MwTypography.caption.copyWith(color: context.skin.colors.accent)),
               ),
             ],
           ],
@@ -479,7 +482,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
               min: 0.2,
               max: 0.8,
               divisions: 6,
-              activeColor: MwColors.primary,
+              activeColor: context.skin.colors.accent,
               inactiveColor: skin.colors.divider,
               onChanged: _onRateChanged,
             ),
@@ -512,7 +515,7 @@ class _ControlButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isPrimary ? MwColors.primary : skin.colors.cardBgAlt,
+      color: isPrimary ? context.skin.colors.accent : skin.colors.cardBgAlt,
       borderRadius: BorderRadius.circular(size / 2),
       child: InkWell(
         onTap: onPressed,

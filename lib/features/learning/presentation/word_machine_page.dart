@@ -152,12 +152,12 @@ class _WordMachinePageState extends State<WordMachinePage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: MwColors.primary.withValues(alpha: 0.1),
+              color: context.skin.colors.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(context.design.radius.pill),
             ),
             child: Text(
               '${_currentIndex + 1} / ${_words.length}',
-              style: MwTypography.bodyBold.copyWith(color: MwColors.primary),
+              style: MwTypography.bodyBold.copyWith(color: context.skin.colors.accent),
             ),
           ),
           const SizedBox(width: 12),
@@ -221,7 +221,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
                   const SizedBox(height: 8),
                   GestureDetector(
                     onTap: () => setState(() => _showMeaning = true),
-                    child: Text('点击显示释义', style: MwTypography.caption.copyWith(color: MwColors.primary)),
+                    child: Text('点击显示释义', style: MwTypography.caption.copyWith(color: context.skin.colors.accent)),
                   ),
                 ],
               ],
@@ -311,7 +311,7 @@ class _ControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = isPrimary ? 56.0 : 44.0;
     return Material(
-      color: isPrimary ? MwColors.primary : skin.colors.cardBgAlt,
+      color: isPrimary ? context.skin.colors.accent : skin.colors.cardBgAlt,
       borderRadius: BorderRadius.circular(size / 2),
       child: InkWell(
         onTap: onPressed,

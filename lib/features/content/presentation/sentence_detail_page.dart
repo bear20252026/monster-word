@@ -54,7 +54,7 @@ class SentenceDetailPage extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.format_quote, size: 20, color: MwColors.primary),
+                              Icon(Icons.format_quote, size: 20, color: context.skin.colors.accent),
                               const SizedBox(width: 8),
                               Text('例句', style: MwTypography.bodyBold.copyWith(color: skin.colors.text1)),
                             ],

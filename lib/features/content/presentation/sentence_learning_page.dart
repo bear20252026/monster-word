@@ -161,7 +161,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
           value: _total == 0 ? 0 : _masteredCount / _total,
           minHeight: 4,
           backgroundColor: skin.colors.divider,
-          color: MwColors.primary,
+          color: context.skin.colors.accent,
         ),
       ),
     );
@@ -220,7 +220,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
           ],
         ),
         const SizedBox(height: 24),
-        Text('点击卡片查看答案', style: MwTypography.bodySm.copyWith(color: MwColors.primary)),
+        Text('点击卡片查看答案', style: MwTypography.bodySm.copyWith(color: context.skin.colors.accent)),
       ],
     );
   }
@@ -235,12 +235,12 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: MwColors.primary.withValues(alpha: 0.1),
+                color: context.skin.colors.accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(context.design.radius.pill),
               ),
               child: Text(
                 fav.word,
-                style: MwTypography.body.copyWith(color: MwColors.primary, fontWeight: FontWeight.w700),
+                style: MwTypography.body.copyWith(color: context.skin.colors.accent, fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -248,13 +248,13 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
           Center(
             child: IconButton(
               icon: const Icon(Icons.volume_up),
-              color: MwColors.primary,
+              color: context.skin.colors.accent,
               onPressed: () => _playAudio(fav),
             ),
           ),
           const SizedBox(height: 8),
           Text.rich(
-            TextSpan(children: _highlightedSentence(fav, MwColors.primary)),
+            TextSpan(children: _highlightedSentence(fav, context.skin.colors.accent)),
             style: MwTypography.heading4.copyWith(color: skin.colors.text1, height: 1.6),
           ),
           if (data.c.isNotEmpty) ...[
@@ -278,7 +278,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
         child: ElevatedButton(
           onPressed: () => setState(() => _revealed = true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: MwColors.primary,
+            backgroundColor: context.skin.colors.accent,
             foregroundColor: AppColors.white100,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
           ),
@@ -309,7 +309,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
             child: ElevatedButton(
               onPressed: _markMastered,
               style: ElevatedButton.styleFrom(
-                backgroundColor: MwColors.primary,
+                backgroundColor: context.skin.colors.accent,
                 foregroundColor: AppColors.white100,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
               ),
@@ -326,7 +326,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.emoji_events, size: 72, color: MwColors.primary),
+          Icon(Icons.emoji_events, size: 72, color: context.skin.colors.accent),
           const SizedBox(height: 16),
           Text('全部掌握！', style: MwTypography.heading3.copyWith(color: skin.colors.text1)),
           const SizedBox(height: 8),
@@ -338,15 +338,18 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
               OutlinedButton(
                 onPressed: _restart,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: MwColors.primary,
-                  side: const BorderSide(color: MwColors.primary),
+                  foregroundColor: context.skin.colors.accent,
+                  side: BorderSide(color: context.skin.colors.accent),
                 ),
                 child: const Text('再学一轮'),
               ),
               const SizedBox(width: 16),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(backgroundColor: MwColors.primary, foregroundColor: AppColors.white100),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.skin.colors.accent,
+                  foregroundColor: AppColors.white100,
+                ),
                 child: const Text('完成'),
               ),
             ],

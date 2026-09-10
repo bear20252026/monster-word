@@ -283,7 +283,7 @@ class _SpellingQuizScaffoldState extends State<SpellingQuizScaffold> {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
-          IconButton(icon: const Icon(Icons.arrow_back_ios_new, size: 20), color: skin.colors.text1, onPressed: _exit),
+          IconButton(icon: Icon(Icons.arrow_back_ios_new, size: 20), color: skin.colors.text1, onPressed: _exit),
           const SizedBox(width: 4),
           Text(widget.title, style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
@@ -298,12 +298,12 @@ class _SpellingQuizScaffoldState extends State<SpellingQuizScaffold> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: MwColors.primary.withValues(alpha: 0.1),
+        color: context.skin.colors.accent.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(context.design.radius.pill),
       ),
       child: Text(
         '${controller.index + 1} / ${controller.total}',
-        style: MwTypography.bodyBold.copyWith(color: MwColors.primary),
+        style: MwTypography.bodyBold.copyWith(color: context.skin.colors.accent),
       ),
     );
   }
@@ -350,7 +350,7 @@ class _SpellingQuizScaffoldState extends State<SpellingQuizScaffold> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(context.design.radius.lg),
-          borderSide: BorderSide(color: MwColors.primary, width: 2),
+          borderSide: BorderSide(color: context.skin.colors.accent, width: 2),
         ),
       ),
       onSubmitted: (_) => _primaryAction(),
@@ -360,7 +360,7 @@ class _SpellingQuizScaffoldState extends State<SpellingQuizScaffold> {
   Widget _buildFeedback(SkinSystem skin) {
     final controller = widget.controller;
     if (!controller.showAnswer) return const SizedBox(height: 40);
-    final color = controller.wasCorrect ? MwColors.success : MwColors.danger;
+    final color = controller.wasCorrect ? context.skin.colors.success : context.skin.colors.danger;
     return AnimatedSwitcher(
       duration: MotionDurations.base,
       child: Row(
@@ -415,13 +415,13 @@ class _SpellingQuizScaffoldState extends State<SpellingQuizScaffold> {
           ),
           child: Column(
             children: [
-              Text('正确率 $accuracy%', style: MwTypography.heading4.copyWith(color: MwColors.primary)),
+              Text('正确率 $accuracy%', style: MwTypography.heading4.copyWith(color: context.skin.colors.accent)),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _finishStat(skin, '${controller.correctCount}', '正确', MwColors.success),
-                  _finishStat(skin, '${controller.wrongCount}', '错误', MwColors.danger),
+                  _finishStat(skin, '${controller.correctCount}', '正确', context.skin.colors.success),
+                  _finishStat(skin, '${controller.wrongCount}', '错误', context.skin.colors.danger),
                 ],
               ),
             ],
@@ -492,15 +492,15 @@ class QuizPromptCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: MwColors.cream,
+                  color: context.skin.colors.cardBgAlt,
                   borderRadius: BorderRadius.circular(context.design.radius.pill),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.volume_up_outlined, size: 18, color: MwColors.primary),
+                    Icon(Icons.volume_up_outlined, size: 18, color: context.skin.colors.accent),
                     const SizedBox(width: 6),
-                    Text('听发音', style: MwTypography.bodySm.copyWith(color: MwColors.primary)),
+                    Text('听发音', style: MwTypography.bodySm.copyWith(color: context.skin.colors.accent)),
                   ],
                 ),
               ),

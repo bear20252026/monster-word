@@ -4,7 +4,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/tokens/starbucks_tokens.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 class DockItem {
@@ -99,8 +98,8 @@ class _AppDockState extends State<AppDock> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final bgColor = widget.backgroundColor ?? AppColors.white100.withValues(alpha: 0.92);
-    final activeColor = widget.activeColor ?? StarbucksCreamColors.greenHouse;
-    final inactiveColor = widget.inactiveColor ?? MwColors.grey500;
+    final activeColor = widget.activeColor ?? context.skin.colors.accent;
+    final inactiveColor = widget.inactiveColor ?? context.skin.colors.text2;
 
     return MouseRegion(
       onExit: (_) => _clearHover(),
@@ -190,7 +189,7 @@ class FloatingDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final active = activeColor ?? StarbucksCreamColors.greenHouse;
+    final active = activeColor ?? context.skin.colors.accent;
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -224,7 +223,7 @@ class FloatingDock extends StatelessWidget {
                   Icon(
                     isActive ? (item.activeIcon ?? item.icon) : item.icon,
                     size: 22,
-                    color: isActive ? active : MwColors.grey500,
+                    color: isActive ? active : context.skin.colors.text2,
                   ),
                   if (isActive) ...[
                     const SizedBox(width: 6),

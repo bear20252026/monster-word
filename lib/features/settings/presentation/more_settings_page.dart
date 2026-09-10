@@ -543,7 +543,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     return _SettingGroup([
       _Cell(
         icon: Icons.help_outline,
-        iconColor: MwColors.success,
+        iconColor: context.skin.colors.success,
         title: '帮助与反馈',
         onTap: () => Navigator.pushNamed(context, RouteNames.feedback),
       ),
@@ -558,14 +558,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
         icon: Icons.system_update_outlined,
-        iconColor: MwColors.link,
+        iconColor: context.skin.colors.accent,
         title: '检查更新',
         onTap: () => _checkForUpdate(),
       ),
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
         icon: Icons.storage_outlined,
-        iconColor: MwColors.link,
+        iconColor: context.skin.colors.accent,
         title: '更新词库数据',
         subtitle: '全量覆盖重建本地词库（含全部词条与索引）',
         onTap: () => _showRebuildWordbookDialog(context),
@@ -573,7 +573,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
         icon: Icons.share_outlined,
-        iconColor: MwColors.ink,
+        iconColor: context.skin.colors.text1,
         title: '推荐给好友',
         onTap: () => _showShareDialog(context),
       ),
@@ -585,14 +585,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     return _SettingGroup([
       _Cell(
         icon: Icons.redeem_outlined,
-        iconColor: MwColors.primary,
+        iconColor: context.skin.colors.accent,
         title: '兑换中心',
         onTap: () => Navigator.pushNamed(context, RouteNames.redemption),
       ),
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
         icon: Icons.flag_outlined,
-        iconColor: MwColors.danger,
+        iconColor: context.skin.colors.danger,
         title: '违法不良信息举报',
         onTap: () => _showReportDialog(context),
       ),

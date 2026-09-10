@@ -50,11 +50,11 @@ class _MessagePageState extends State<MessagePage> {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: !store.loaded
-                  ? Center(child: CircularProgressIndicator(color: MwColors.primary))
+                  ? Center(child: CircularProgressIndicator(color: context.skin.colors.accent))
                   : store.messages.isEmpty
                   ? _buildEmptyView(skin)
                   : RefreshIndicator(
-                      color: MwColors.primary,
+                      color: context.skin.colors.accent,
                       onRefresh: () => store.load(),
                       child: ListView.builder(
                         itemCount: store.messages.length,
@@ -87,7 +87,7 @@ class _MessagePageState extends State<MessagePage> {
           if (store.unreadCount > 0)
             TextButton(
               onPressed: () => store.markAllRead(),
-              child: Text('全部已读(${store.unreadCount})', style: TextStyle(color: MwColors.primary)),
+              child: Text('全部已读(${store.unreadCount})', style: TextStyle(color: context.skin.colors.accent)),
             ),
         ],
       ),

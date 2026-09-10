@@ -34,14 +34,14 @@ class LinkedMeMiddlePage extends StatelessWidget {
                       width: double.infinity,
                       padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: MwColors.cream,
+                        color: context.skin.colors.cardBgAlt,
                         borderRadius: BorderRadius.circular(context.design.radius.xl),
                       ),
                       child: Column(
                         children: [
-                          Text(word, style: MwTypography.heading2.copyWith(color: MwColors.ink)),
+                          Text(word, style: MwTypography.heading2.copyWith(color: context.skin.colors.text1)),
                           SizedBox(height: 8),
-                          Text('联想记忆', style: MwTypography.body.copyWith(color: MwColors.slate)),
+                          Text('联想记忆', style: MwTypography.body.copyWith(color: context.skin.colors.text2)),
                         ],
                       ),
                     ),

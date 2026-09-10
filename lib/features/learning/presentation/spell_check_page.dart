@@ -100,18 +100,21 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: MwColors.cream,
+                        color: context.skin.colors.cardBgAlt,
                         borderRadius: BorderRadius.circular(context.design.radius.xl),
                       ),
                       child: Column(
                         children: [
                           Text(
                             _buildHint(),
-                            style: MwTypography.heading2.copyWith(color: MwColors.ink, letterSpacing: 4),
+                            style: MwTypography.heading2.copyWith(color: context.skin.colors.text1, letterSpacing: 4),
                           ),
                           if (widget.phonetic != null) ...[
                             const SizedBox(height: 8),
-                            Text('/${widget.phonetic}/', style: MwTypography.body.copyWith(color: MwColors.slate)),
+                            Text(
+                              '/${widget.phonetic}/',
+                              style: MwTypography.body.copyWith(color: context.skin.colors.text2),
+                            ),
                           ],
                           const SizedBox(height: 12),
                           // 播放音频按钮
@@ -120,18 +123,18 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
-                                color: MwColors.primary.withValues(alpha: 0.1),
+                                color: context.skin.colors.accent.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(context.design.radius.lg),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.volume_up, color: MwColors.primary, size: 20),
+                                  Icon(Icons.volume_up, color: context.skin.colors.accent, size: 20),
                                   const SizedBox(width: 6),
                                   Text(
                                     '播放发音',
                                     style: MwTypography.caption.copyWith(
-                                      color: MwColors.primary,
+                                      color: context.skin.colors.accent,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -161,7 +164,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(context.design.radius.lg),
-                          borderSide: BorderSide(color: MwColors.primary, width: 2),
+                          borderSide: BorderSide(color: context.skin.colors.accent, width: 2),
                         ),
                       ),
                       onSubmitted: (_) => _check(),
@@ -174,23 +177,25 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: _isCorrect
-                              ? MwColors.success.withValues(alpha: 0.1)
-                              : MwColors.danger.withValues(alpha: 0.1),
+                              ? context.skin.colors.success.withValues(alpha: 0.1)
+                              : context.skin.colors.danger.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(context.design.radius.md),
-                          border: Border.all(color: _isCorrect ? MwColors.success : MwColors.danger),
+                          border: Border.all(
+                            color: _isCorrect ? context.skin.colors.success : context.skin.colors.danger,
+                          ),
                         ),
                         child: Row(
                           children: [
                             Icon(
                               _isCorrect ? Icons.check_circle : Icons.error,
-                              color: _isCorrect ? MwColors.success : MwColors.danger,
+                              color: _isCorrect ? context.skin.colors.success : context.skin.colors.danger,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 _result,
                                 style: MwTypography.bodyBold.copyWith(
-                                  color: _isCorrect ? MwColors.success : MwColors.danger,
+                                  color: _isCorrect ? context.skin.colors.success : context.skin.colors.danger,
                                 ),
                               ),
                             ),
@@ -225,7 +230,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                           child: ElevatedButton(
                             onPressed: _hasChecked ? _reset : _check,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: MwColors.primary,
+                              backgroundColor: context.skin.colors.accent,
                               foregroundColor: AppColors.white100,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(context.design.radius.md),

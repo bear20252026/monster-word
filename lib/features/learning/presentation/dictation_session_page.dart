@@ -9,6 +9,7 @@ import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/features/learning/presentation/spelling_quiz_flow.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
 
 class DictationSessionPage extends StatefulWidget {
   const DictationSessionPage({super.key});
@@ -65,16 +66,16 @@ class _DictationPrompt extends StatelessWidget {
             height: 80,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: MwColors.cream,
-              border: Border.all(color: MwColors.primary, width: 2),
+              color: context.skin.colors.cardBgAlt,
+              border: Border.all(color: context.skin.colors.accent, width: 2),
             ),
-            child: Icon(Icons.volume_up, size: 40, color: MwColors.primary),
+            child: Icon(Icons.volume_up, size: 40, color: context.skin.colors.accent),
           ),
         ),
         const SizedBox(height: 8),
         TextButton(
           onPressed: () => context.read<AudioPlaybackState>().playWord(word.word),
-          child: Text('点击播放', style: TextStyle(color: MwColors.primary)),
+          child: Text('点击播放', style: TextStyle(color: context.skin.colors.accent)),
         ),
       ],
     );

@@ -201,7 +201,7 @@ class _WordCard extends StatelessWidget {
             IconButton(
               icon: Icon(
                 isFav ? Icons.star : Icons.star_border,
-                color: isFav ? MwColors.primary : skin.text3,
+                color: isFav ? context.skin.colors.accent : skin.text3,
                 size: 22,
               ),
               onPressed: () => favorites.toggle(word.word),
@@ -209,7 +209,7 @@ class _WordCard extends StatelessWidget {
             IconButton(
               icon: Icon(
                 isNew ? Icons.bookmark_added : Icons.bookmark_add_outlined,
-                color: isNew ? MwColors.primary : skin.text3,
+                color: isNew ? context.skin.colors.accent : skin.text3,
                 size: 22,
               ),
               onPressed: () => newWords.toggleNewWord(word, source: 'book-${book.id}'),

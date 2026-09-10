@@ -8,7 +8,6 @@ import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/tokens/starbucks_tokens.dart';
 
 /// 按单词名深链进入词典（P2-7）。
 ///
@@ -122,7 +121,7 @@ class _NotFoundScaffold extends StatelessWidget {
                   icon: const Icon(Icons.home_outlined, size: 18),
                   label: const Text('返回首页'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: StarbucksCreamColors.greenHouse,
+                    backgroundColor: context.skin.colors.accent,
                     foregroundColor: AppColors.white100,
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

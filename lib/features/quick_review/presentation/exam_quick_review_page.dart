@@ -258,10 +258,10 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
                   child: SizedBox(
                     height: 52,
                     child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(side: BorderSide(color: MwColors.danger)),
+                      style: OutlinedButton.styleFrom(side: BorderSide(color: context.skin.colors.danger)),
                       onPressed: _onUnknown,
-                      icon: const Icon(Icons.close, color: MwColors.danger),
-                      label: const Text('不认识', style: TextStyle(color: MwColors.danger)),
+                      icon: Icon(Icons.close, color: context.skin.colors.danger),
+                      label: Text('不认识', style: TextStyle(color: context.skin.colors.danger)),
                     ),
                   ),
                 ),

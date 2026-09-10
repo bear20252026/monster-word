@@ -4,7 +4,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:word_app/tokens/starbucks_tokens.dart';
+import 'package:word_app/theme/skin_system.dart';
 
 class HaloSearchField extends StatefulWidget {
   final TextEditingController? controller;
@@ -186,9 +186,9 @@ class _HaloPainter extends CustomPainter {
 /// 搜索页 Halo 背景装饰
 class HaloSearchBackground extends StatefulWidget {
   final Widget child;
-  final Color color;
+  final Color? color;
 
-  const HaloSearchBackground({super.key, required this.child, this.color = StarbucksCreamColors.greenHouse});
+  const HaloSearchBackground({super.key, required this.child, this.color});
 
   @override
   State<HaloSearchBackground> createState() => _HaloSearchBackgroundState();
@@ -215,7 +215,7 @@ class _HaloSearchBackgroundState extends State<HaloSearchBackground> with Single
       animation: _controller,
       builder: (context, child) {
         return CustomPaint(
-          painter: _HaloBgPainter(progress: _controller.value, color: widget.color),
+          painter: _HaloBgPainter(progress: _controller.value, color: widget.color ?? context.skin.colors.accent),
           child: child,
         );
       },

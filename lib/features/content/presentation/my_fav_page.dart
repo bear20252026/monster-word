@@ -120,7 +120,7 @@ class _MyFavPageState extends State<MyFavPage> {
             // 内容区
             Expanded(
               child: _isLoading
-                  ? Center(child: CircularProgressIndicator(color: MwColors.primary))
+                  ? Center(child: CircularProgressIndicator(color: context.skin.colors.accent))
                   : _words.isEmpty
                   ? _buildEmptyView(skin)
                   : _buildWordList(skin),
@@ -150,12 +150,12 @@ class _MyFavPageState extends State<MyFavPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: MwColors.primary.withValues(alpha: 0.1),
+              color: context.skin.colors.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(context.design.radius.sm),
             ),
             child: Text(
               '${favorites.favoriteCount}',
-              style: MwTypography.captionBold.copyWith(color: MwColors.primary),
+              style: MwTypography.captionBold.copyWith(color: context.skin.colors.accent),
             ),
           ),
           const Spacer(),
@@ -164,7 +164,7 @@ class _MyFavPageState extends State<MyFavPage> {
               onPressed: _selectAll,
               child: Text(
                 _selectedIndices.length == _words.length ? '取消全选' : '全选',
-                style: TextStyle(color: MwColors.primary),
+                style: TextStyle(color: context.skin.colors.accent),
               ),
             ),
             TextButton(
@@ -232,7 +232,7 @@ class _MyFavPageState extends State<MyFavPage> {
                 icon: const Icon(Icons.play_arrow, size: 22),
                 label: Text('学习单词本 (${_words.length} 词)'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: MwColors.primary,
+                  backgroundColor: context.skin.colors.accent,
                   foregroundColor: AppColors.white100,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
                   elevation: 0,
@@ -255,7 +255,7 @@ class _MyFavPageState extends State<MyFavPage> {
                 background: Container(
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 20),
-                  color: MwColors.danger,
+                  color: context.skin.colors.danger,
                   child: const Icon(Icons.delete, color: AppColors.white100),
                 ),
                 confirmDismiss: (direction) async {
@@ -284,7 +284,7 @@ class _MyFavPageState extends State<MyFavPage> {
                       ? Checkbox(
                           value: isSelected,
                           onChanged: (_) => _toggleSelect(index),
-                          activeColor: MwColors.primary,
+                          activeColor: context.skin.colors.accent,
                         )
                       : null,
                   title: Text(word.word, style: MwTypography.heading5.copyWith(color: skin.colors.text1)),

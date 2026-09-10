@@ -173,7 +173,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        AppColors.highlightOrange.withValues(alpha: 0.9),
+                        context.skin.colors.accent.withValues(alpha: 0.9),
                         MwColors.sunshine500.withValues(alpha: 0.9),
                       ],
                     ),
@@ -287,7 +287,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
                   Positioned(
                     top: -2,
                     right: -2,
-                    child: Icon(Icons.star_rounded, size: 11, color: AppColors.highlightOrange.withValues(alpha: 0.9)),
+                    child: Icon(Icons.star_rounded, size: 11, color: context.skin.colors.accent.withValues(alpha: 0.9)),
                   ),
               ],
             ),

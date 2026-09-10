@@ -54,18 +54,22 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                           height: 80,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: LinearGradient(colors: [MwColors.cream, MwColors.creamDeeper]),
-                            border: Border.all(color: MwColors.hairline, width: 2),
+                            gradient: LinearGradient(
+                              colors: [context.skin.colors.cardBgAlt, context.skin.colors.cardBg],
+                            ),
+                            border: Border.all(color: context.skin.colors.divider, width: 2),
                             image: profile.avatar.isEmpty
                                 ? null
                                 : DecorationImage(image: FileImage(File(profile.avatar)), fit: BoxFit.cover),
                           ),
-                          child: profile.avatar.isEmpty ? Icon(Icons.person, size: 40, color: MwColors.stone) : null,
+                          child: profile.avatar.isEmpty
+                              ? Icon(Icons.person, size: 40, color: context.skin.colors.text3)
+                              : null,
                         ),
                       ),
                     ),
                     SizedBox(height: 8),
-                    Text('点击更换头像', style: MwTypography.micro.copyWith(color: MwColors.link)),
+                    Text('点击更换头像', style: MwTypography.micro.copyWith(color: context.skin.colors.accent)),
                     SizedBox(height: 24),
                     _buildInfoTile(
                       skin,

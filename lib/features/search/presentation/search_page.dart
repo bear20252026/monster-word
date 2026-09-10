@@ -184,7 +184,7 @@ class _SearchPageState extends State<SearchPage> {
               haloColor: skin.accent,
               bgColor: skin.cardBgAlt,
               textStyle: MwTypography.bodyMd.copyWith(color: skin.text1),
-              hintStyle: MwTypography.bodyMd.copyWith(color: MwColors.muted, fontSize: 15 * resp.fontScale),
+              hintStyle: MwTypography.bodyMd.copyWith(color: context.skin.colors.text2, fontSize: 15 * resp.fontScale),
               onChanged: _onQueryChanged,
               onSubmitted: _search,
               autoFocus: true,
@@ -196,7 +196,7 @@ class _SearchPageState extends State<SearchPage> {
                       },
                       child: Icon(Icons.clear, size: 18, color: skin.text3),
                     )
-                  : Icon(Icons.qr_code_scanner, size: 20, color: MwColors.slate),
+                  : Icon(Icons.qr_code_scanner, size: 20, color: context.skin.colors.text2),
             ),
           ),
           const SizedBox(width: 12),

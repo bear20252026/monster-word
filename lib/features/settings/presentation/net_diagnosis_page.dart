@@ -76,7 +76,7 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
                 child: ElevatedButton(
                   onPressed: _isRunning ? null : _startDiagnosis,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: MwColors.primary,
+                    backgroundColor: context.skin.colors.accent,
                     foregroundColor: AppColors.white100,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                   ),
@@ -128,7 +128,7 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
         children: [
           Icon(
             r.success ? Icons.check_circle : Icons.error,
-            color: r.success ? MwColors.success : MwColors.danger,
+            color: r.success ? context.skin.colors.success : context.skin.colors.danger,
             size: 24,
           ),
           SizedBox(width: 12),

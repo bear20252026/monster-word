@@ -200,7 +200,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
                   IconButton(
                     icon: Icon(
                       state.isNewWord ? Icons.bookmark_added : Icons.bookmark_add_outlined,
-                      color: state.isNewWord ? MwColors.primary : skin.text3,
+                      color: state.isNewWord ? context.skin.colors.accent : skin.text3,
                       size: 24,
                     ),
                     tooltip: state.isNewWord ? '移出生词本' : '加入生词本',
@@ -218,7 +218,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
                   IconButton(
                     icon: Icon(
                       state.isFavorite ? Icons.star : Icons.star_border,
-                      color: state.isFavorite ? MwColors.primary : skin.text3,
+                      color: state.isFavorite ? context.skin.colors.accent : skin.text3,
                       size: 24,
                     ),
                     tooltip: state.isFavorite ? '取消收藏' : '收藏单词',

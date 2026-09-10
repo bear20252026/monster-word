@@ -9,7 +9,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:word_app/tokens/starbucks_tokens.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/theme/skin_system.dart';
 
@@ -145,7 +144,7 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final coverColor = widget.coverColor ?? StarbucksCreamColors.greenHouse;
+    final coverColor = widget.coverColor ?? context.skin.colors.accent;
 
     return GestureDetector(
       onPanUpdate: _onPanUpdate,
@@ -264,7 +263,7 @@ class WordScratchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? StarbucksCreamColors.greenHouse;
+    final c = color ?? context.skin.colors.accent;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
