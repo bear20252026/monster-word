@@ -6,8 +6,6 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
-import 'package:word_app/models/word.dart';
-import 'package:word_app/models/word_root_model.dart';
 
 /// 用 App 的真实解析器校验词库结构化字段，防止未来数据写入破坏格式。
 /// REG-DICT-005：word_root 必须是 {"prefix","roots","suffix"} 结构；
@@ -46,7 +44,7 @@ void main() {
   group('REG-DICT-005 structured field integrity', () {
     // Bounded sample: first 6 books, up to 300 words each — enough to catch a
     // malformed field without scanning the whole 770k-word dictionary.
-    Future<List<Word>> _sample() async {
+    Future<List<Word>> sampleWords() async {
       final books = await WordBookDatabase.instance.getBooks();
       final out = <Word>[];
       for (final book in books.take(6)) {
@@ -57,7 +55,7 @@ void main() {
     }
 
     test('every non-empty word_root is valid JSON with string/list fields', () async {
-      final words = await _sample();
+      final words = await sampleWords();
       var checked = 0;
       for (final w in words) {
         if (w.wordRoot.trim().isEmpty) continue;
@@ -75,7 +73,7 @@ void main() {
     });
 
     test('every non-empty example parses to non-empty sentences', () async {
-      final words = await _sample();
+      final words = await sampleWords();
       var checked = 0;
       for (final w in words) {
         if (w.example.trim().isEmpty) continue;
@@ -88,7 +86,7 @@ void main() {
     });
 
     test('example payloads are valid JSON when double-encoded', () async {
-      final words = await _sample();
+      final words = await sampleWords();
       for (final w in words) {
         if (w.example.trim().isEmpty) continue;
         final decoded = jsonDecode(w.example);
