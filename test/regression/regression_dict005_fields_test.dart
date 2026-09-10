@@ -64,8 +64,11 @@ void main() {
         final decoded = jsonDecode(w.wordRoot);
         // Contract: word_root must be a valid JSON object. Individual keys are
         // optional — WordRootData.fromJson defaults missing keys to ''/[].
-        expect(decoded, isA<Map<String, dynamic>>(),
-            reason: 'word_root must be a JSON object for "${w.word}" (id=${w.id})');
+        expect(
+          decoded,
+          isA<Map<String, dynamic>>(),
+          reason: 'word_root must be a JSON object for "${w.word}" (id=${w.id})',
+        );
         checked++;
       }
       expect(checked, greaterThan(0), reason: 'should have at least one non-empty word_root');
@@ -77,8 +80,7 @@ void main() {
       for (final w in words) {
         if (w.example.trim().isEmpty) continue;
         final sentences = ExampleParser.parse(w.example);
-        expect(sentences, isNotEmpty,
-            reason: 'example should yield >=1 sentence for "${w.word}" (id=${w.id})');
+        expect(sentences, isNotEmpty, reason: 'example should yield >=1 sentence for "${w.word}" (id=${w.id})');
         expect(sentences.first.en.trim(), isNotEmpty);
         checked++;
       }
