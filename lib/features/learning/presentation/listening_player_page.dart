@@ -280,10 +280,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
       ),
       child: Column(
         children: [
-          CassetteTape(
-            spinning: _isPlaying && !_isPaused,
-            size: Size(200 * resp.scale, 104 * resp.scale),
-          ),
+          CassetteTape(spinning: _isPlaying && !_isPaused, size: Size(200 * resp.scale, 104 * resp.scale)),
           const SizedBox(height: 16),
           _buildProgress(skin),
           const SizedBox(height: 20),
