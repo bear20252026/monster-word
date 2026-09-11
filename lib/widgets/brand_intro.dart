@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/monster_icon.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class BrandIntro extends StatelessWidget {
   const BrandIntro({super.key, required this.animation});
@@ -66,7 +67,7 @@ class BrandIntro extends StatelessWidget {
                             'Monster Word',
                             style: TextStyle(
                               fontFamily: 'Charter',
-                              fontSize: 34,
+                              fontSize: MwTypography.stat.fontSize,
                               fontWeight: FontWeight.w400,
                               letterSpacing: -0.5,
                               color: skin.text1,

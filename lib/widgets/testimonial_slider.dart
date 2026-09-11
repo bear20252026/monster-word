@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class TestimonialItem {
   final String text;
@@ -122,7 +123,7 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 decoration: BoxDecoration(
                   color: isActive ? activeColor : inactiveColor,
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
                 ),
               );
             }),
@@ -174,7 +175,10 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
             const SizedBox(height: 4),
             Text(
               '— ${item.author}${item.source != null ? ' · ${item.source}' : ''}',
-              style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45)),
+              style: TextStyle(
+                fontSize: MwTypography.micro.fontSize,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
+              ),
             ),
           ],
         ],

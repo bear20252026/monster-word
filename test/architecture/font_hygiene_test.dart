@@ -20,7 +20,7 @@ const _whitelist = <String>[
 const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app'];
 
 /// 棘轮上限：当前存量。只允许下降；清理存量后请把数字改小。
-const _ceiling = 64;
+const _ceiling = 44;
 
 final _pattern = RegExp(r'fontSize:\s*\d+\s*[,)]');
 

@@ -135,7 +135,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: skin.colors.accent.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: Text(
                 '${_words.length}',

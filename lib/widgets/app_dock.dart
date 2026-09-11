@@ -146,7 +146,7 @@ class _AppDockState extends State<AppDock> with TickerProviderStateMixin {
                         Text(
                           item.label,
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: MwTypography.microXs.fontSize,
                             fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                             color: isActive
                                 ? activeColor

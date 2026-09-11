@@ -31,7 +31,7 @@ Future<T?> showSettingsBottomSheet<T>(BuildContext context, {required String tit
                   child: Container(
                     width: 36,
                     height: 4,
-                    decoration: BoxDecoration(color: skin.divider, borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: skin.divider, borderRadius: BorderRadius.circular(AppRadius.sm)),
                   ),
                 ),
               ),
@@ -113,7 +113,7 @@ class SettingsSheetOptionRow extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: MwTypography.bodySm.fontSize,
                   color: selected ? skin.accent : skin.text1,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 ),

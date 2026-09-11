@@ -48,7 +48,7 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                       button: true,
                       child: InkWell(
                         onTap: _changeAvatar,
-                        borderRadius: BorderRadius.circular(40),
+                        borderRadius: BorderRadius.circular(AppRadius.xxl),
                         child: Container(
                           width: 80,
                           height: 80,

@@ -189,7 +189,11 @@ class _DictionaryPageState extends State<DictionaryPage> {
           Expanded(
             child: Text(
               '词典',
-              style: MwTypography.heading5.copyWith(color: skin.text1, fontSize: 17, fontWeight: FontWeight.w600),
+              style: MwTypography.heading5.copyWith(
+                color: skin.text1,
+                fontSize: MwTypography.bodyMd.fontSize,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           Consumer<DictionaryDetailState>(
@@ -312,7 +316,7 @@ class _PhoneticChip extends StatelessWidget {
     final skin = context.skin.colors;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(AppRadius.pill),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: ShapeDecoration(
@@ -444,7 +448,7 @@ class _CollinsList extends StatelessWidget {
                         '${i + 1}',
                         style: TextStyle(
                           fontFamily: 'Charter',
-                          fontSize: 17,
+                          fontSize: MwTypography.bodyMd.fontSize,
                           fontStyle: FontStyle.italic,
                           color: skin.accent,
                         ),
@@ -514,7 +518,7 @@ class _RelatedWordCard extends StatelessWidget {
                   padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
                     color: skin.accent.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(9),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Icon(Icons.volume_up, color: skin.accent, size: 16),
                 ),

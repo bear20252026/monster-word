@@ -163,7 +163,7 @@ class DashboardPage extends StatelessWidget {
           const SizedBox(height: 16),
           // 学习进度条
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppRadius.xs),
             child: TweenAnimationBuilder<double>(
               tween: Tween(end: progress),
               duration: const Duration(milliseconds: 700),
@@ -213,7 +213,7 @@ class DashboardPage extends StatelessWidget {
                 '$value',
                 style: TextStyle(
                   fontFamily: 'Charter',
-                  fontSize: 56,
+                  fontSize: MwTypography.heading1.fontSize,
                   fontWeight: FontWeight.w400,
                   letterSpacing: -2,
                   height: 1.05,
@@ -228,7 +228,7 @@ class DashboardPage extends StatelessWidget {
         const SizedBox(height: 20),
         // 记忆状态堆叠条
         ClipRRect(
-          borderRadius: BorderRadius.circular(5),
+          borderRadius: BorderRadius.circular(AppRadius.xs),
           child: SizedBox(
             height: 12,
             child: totalCount == 0

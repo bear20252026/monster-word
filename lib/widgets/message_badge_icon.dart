@@ -10,6 +10,7 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/account/application/message_store.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 class MessageBadgeIcon extends StatefulWidget {
   const MessageBadgeIcon({super.key, this.iconSize = 22, this.color});
@@ -65,12 +66,17 @@ class _MessageBadgeIconState extends State<MessageBadgeIcon> {
               decoration: BoxDecoration(
                 color: colors.danger,
                 shape: unread > 9 ? BoxShape.rectangle : BoxShape.circle,
-                borderRadius: unread > 9 ? BorderRadius.circular(8) : null,
+                borderRadius: unread > 9 ? BorderRadius.circular(AppRadius.sm) : null,
                 border: Border.all(color: colors.pageBg, width: 1.5),
               ),
               child: Text(
                 unread > 99 ? '99+' : '$unread',
-                style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700, height: 1),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: MwTypography.microXs.fontSize,
+                  fontWeight: FontWeight.w700,
+                  height: 1,
+                ),
               ),
             ),
           ),

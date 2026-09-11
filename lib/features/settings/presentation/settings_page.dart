@@ -402,7 +402,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Container(
                   margin: EdgeInsets.only(bottom: 8),
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(AppRadius.md)),
                   child: Row(
                     children: [
                       Expanded(
@@ -585,7 +585,10 @@ class _SettingIcon extends StatelessWidget {
       width: 32,
       height: 32,
       margin: const EdgeInsets.only(right: 14),
-      decoration: BoxDecoration(color: skin.accent.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(9)),
+      decoration: BoxDecoration(
+        color: skin.accent.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
       child: Icon(icon, size: 18, color: skin.accent),
     );
   }

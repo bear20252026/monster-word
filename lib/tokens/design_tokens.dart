@@ -234,6 +234,15 @@ class MwTypography {
     height: 1.55,
     color: StarbucksCreamColors.text1,
   );
+
+  /// 徽章最小字（10/w700）——通知角标等极小数字。
+  static const TextStyle microXs = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w700,
+    height: 1.1,
+    color: StarbucksCreamColors.text1,
+  );
+
   static const TextStyle micro = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w500,

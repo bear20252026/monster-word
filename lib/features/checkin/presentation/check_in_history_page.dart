@@ -174,7 +174,10 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                   NavUtils.safePop(context);
                 },
                 icon: const Icon(Icons.redeem, size: 20),
-                label: const Text('去签到', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                label: Text(
+                  '去签到',
+                  style: TextStyle(fontSize: MwTypography.bodySm.fontSize, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ],
@@ -602,7 +605,11 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                                 ),
                                 child: Text(
                                   '今天',
-                                  style: TextStyle(fontSize: 11, color: skin.accent, fontWeight: FontWeight.w600),
+                                  style: TextStyle(
+                                    fontSize: MwTypography.micro.fontSize,
+                                    color: skin.accent,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ],

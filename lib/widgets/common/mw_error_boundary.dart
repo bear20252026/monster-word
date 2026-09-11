@@ -76,9 +76,13 @@ class _MwErrorPage extends StatelessWidget {
                   child: const Icon(Icons.extension_off_rounded, size: 30, color: ErrorBoundaryColors.icon),
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   '页面出错了',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: MwTypography.bodyMd.fontSize,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(

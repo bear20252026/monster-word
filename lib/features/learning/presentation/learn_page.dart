@@ -173,7 +173,7 @@ class _TopBar extends StatelessWidget {
               duration: const Duration(milliseconds: 400),
               curve: standardCurve,
               builder: (context, value, _) => ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
                 child: LinearProgressIndicator(
                   value: value,
                   minHeight: 6,
@@ -321,7 +321,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: colors.accent.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                     border: Border.all(color: colors.accent.withValues(alpha: 0.4)),
                   ),
                   child: Row(
@@ -388,7 +388,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.accent,
                     foregroundColor: colors.onGlassAccent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                   ),
                   onPressed: () => NavUtils.goHome(context),
                   child: const Text('返回首页', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -407,7 +407,7 @@ class _CompletionScreenState extends State<_CompletionScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: colors.accent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(color: colors.accent.withValues(alpha: 0.4)),
       ),
       child: Row(
@@ -735,7 +735,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
             padding: EdgeInsets.symmetric(horizontal: 14 * resp.scale),
             decoration: BoxDecoration(
               color: bgColor,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(color: borderColor, width: isCorrect || isWrong ? 1.5 : 0.5),
               boxShadow: isCorrect || isWrong
                   ? null

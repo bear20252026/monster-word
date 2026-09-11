@@ -116,7 +116,10 @@ class _BookStrip extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('当前词书', style: TextStyle(fontSize: 11, color: skin.colors.text3)),
+                    Text(
+                      '当前词书',
+                      style: TextStyle(fontSize: MwTypography.micro.fontSize, color: skin.colors.text3),
+                    ),
                     const SizedBox(height: 1),
                     Text(
                       bookName ?? '还没有选择词书',

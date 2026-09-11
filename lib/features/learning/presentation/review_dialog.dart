@@ -43,7 +43,7 @@ class _ReviewDialog extends StatelessWidget {
               margin: const EdgeInsets.only(top: 10),
               width: 36,
               height: 4,
-              decoration: BoxDecoration(color: skin.divider, borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: skin.divider, borderRadius: BorderRadius.circular(AppRadius.xs)),
             ),
             // 标题栏
             Padding(
@@ -165,7 +165,7 @@ class _ReviewDialog extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
                 child: LinearProgressIndicator(
                   value: session.total > 0 ? session.learnedNum / session.total : 0,
                   minHeight: 8,

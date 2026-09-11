@@ -1,5 +1,7 @@
 // 随身听播放器页面
-// 使用系统 TTS 引擎顺序播放单词，支持多种播放模式
+// 使用系统 TTS 引擎顺序播放单词，支持多种播放模式。
+// 视觉与 personal_stereo 同族：磁带机 hero 卡（播放中卷轴旋转）+
+// Charter 衬线词头 + 细进度条。
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -15,7 +17,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/features/learning/application/listening_mode.dart';
 export 'package:word_app/features/learning/application/listening_mode.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/widgets/mw_card.dart';
+import 'package:word_app/widgets/cassette_tape.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
 
 class ListeningPlayerPage extends StatefulWidget {
@@ -38,7 +40,7 @@ class ListeningPlayerPage extends StatefulWidget {
   State<ListeningPlayerPage> createState() => _ListeningPlayerPageState();
 }
 
-class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTickerProviderStateMixin {
+class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
   late SystemTts _tts;
   int _currentIndex = 0;
   bool _isPlaying = false;
@@ -46,13 +48,11 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
   bool _showMeaning = false;
   double _speechRate = 0.5;
   Timer? _autoPlayTimer;
-  late AnimationController _progressController;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.startIndex;
-    _progressController = AnimationController(vsync: this, duration: MotionDurations.slow);
     _tts = SystemTts();
     _tts.onComplete = _onSpeechComplete;
     _tts.onErrorHandler = _onSpeechError;
@@ -61,7 +61,6 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
   @override
   void dispose() {
     _autoPlayTimer?.cancel();
-    _progressController.dispose();
     _tts.stop();
     super.dispose();
   }
@@ -208,26 +207,18 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
         body: SafeArea(
           child: Column(
             children: [
-              _buildNavBar(skin, resp),
+              _buildNavBar(skin),
+              Container(height: 1, color: skin.colors.divider),
               Expanded(
                 child: Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: resp.contentMaxWidth),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: resp.horizontalPadding),
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(horizontal: resp.horizontalPadding, vertical: 24),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // 进度指示
-                          _buildProgress(skin),
-                          const SizedBox(height: 32),
-                          // 单词卡片
-                          _buildWordCard(skin, resp),
-                          const SizedBox(height: 48),
-                          // 播放控制
-                          _buildControls(skin, resp),
-                          const SizedBox(height: 24),
-                          // 语速控制
+                          _buildHeroCard(skin, resp),
+                          const SizedBox(height: 20),
                           _buildRateControl(skin, resp),
                         ],
                       ),
@@ -242,7 +233,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
     );
   }
 
-  Widget _buildNavBar(SkinSystem skin, AppResponsive resp) {
+  Widget _buildNavBar(SkinSystem skin) {
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -277,6 +268,33 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
     );
   }
 
+  /// 磁带机 hero 卡：磁带（播放中转轴）+ 进度 + Charter 词头 + 释义 + 播放控制。
+  Widget _buildHeroCard(SkinSystem skin, AppResponsive resp) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(resp.pageMargin * 1.2),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [skin.colors.cardBgAlt, skin.colors.cardBg]),
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
+        border: Border.all(color: skin.colors.divider),
+      ),
+      child: Column(
+        children: [
+          CassetteTape(
+            spinning: _isPlaying && !_isPaused,
+            size: Size(200 * resp.scale, 104 * resp.scale),
+          ),
+          const SizedBox(height: 16),
+          _buildProgress(skin),
+          const SizedBox(height: 20),
+          _buildWordBody(skin, resp),
+          const SizedBox(height: 20),
+          _buildControls(skin, resp),
+        ],
+      ),
+    );
+  }
+
   Widget _buildProgress(SkinSystem skin) {
     final progress = widget.words.isEmpty ? 0.0 : (_currentIndex + 1) / widget.words.length;
     return Column(
@@ -290,14 +308,17 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
         ),
         const SizedBox(height: 8),
         Container(
-          height: 6,
+          height: 4,
           width: 200,
-          decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(color: skin.colors.divider, borderRadius: BorderRadius.circular(AppRadius.pill)),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
             widthFactor: progress,
             child: Container(
-              decoration: BoxDecoration(color: context.skin.colors.accent, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: context.skin.colors.accent,
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+              ),
             ),
           ),
         ),
@@ -305,62 +326,53 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
     );
   }
 
-  Widget _buildWordCard(SkinSystem skin, AppResponsive resp) {
+  Widget _buildWordBody(SkinSystem skin, AppResponsive resp) {
     final word = _currentWord;
     final meaningText = word.hasStructuredDefinitions ? word.formattedDefinitions : word.cleanInterpret;
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(resp.pageMargin * 1.5),
-      decoration: BoxDecoration(
-        color: skin.colors.cardBg,
-        borderRadius: BorderRadius.circular(context.design.radius.xl),
-        border: Border.all(color: skin.colors.divider),
-      ),
-      child: Column(
-        children: [
-          // 单词
+    return Column(
+      children: [
+        // 单词
+        Text(
+          word.word,
+          style: AppTypography.heroWord.copyWith(color: skin.colors.text1, fontSize: 48 * resp.fontScale),
+          textAlign: TextAlign.center,
+        ),
+        // 音标
+        if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[
+          const SizedBox(height: 8),
           Text(
-            word.word,
-            style: AppTypography.heroWord.copyWith(color: skin.colors.text1, fontSize: 48 * resp.fontScale),
+            word.usPron.isNotEmpty ? word.usPron : word.ukPron,
+            style: MwTypography.body.copyWith(color: skin.colors.text3, fontSize: 16 * resp.fontScale),
             textAlign: TextAlign.center,
           ),
-          // 音标
-          if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              word.usPron.isNotEmpty ? word.usPron : word.ukPron,
-              style: MwTypography.body.copyWith(color: skin.colors.text3, fontSize: 16 * resp.fontScale),
+        ],
+        // 释义（可显示/隐藏，优先结构化释义）
+        if (meaningText.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Text(
+              meaningText,
+              style: MwTypography.body.copyWith(color: skin.colors.text2, fontSize: 18 * resp.fontScale, height: 1.5),
               textAlign: TextAlign.center,
             ),
-          ],
-          // 释义（可显示/隐藏，优先结构化释义）
-          if (meaningText.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            AnimatedCrossFade(
-              firstChild: const SizedBox.shrink(),
-              secondChild: Text(
-                meaningText,
-                style: MwTypography.body.copyWith(color: skin.colors.text2, fontSize: 18 * resp.fontScale, height: 1.5),
-                textAlign: TextAlign.center,
-              ),
-              crossFadeState: _showMeaning ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-              duration: MotionDurations.slow,
+            crossFadeState: _showMeaning ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: MotionDurations.slow,
+          ),
+          if (!_showMeaning) ...[
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () => setState(() => _showMeaning = true),
+              child: Text('点击显示释义', style: MwTypography.caption.copyWith(color: context.skin.colors.accent)),
             ),
-            if (!_showMeaning) ...[
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: () => setState(() => _showMeaning = true),
-                child: Text('点击显示释义', style: MwTypography.caption.copyWith(color: context.skin.colors.accent)),
-              ),
-            ],
-          ],
-          // 例句（结构化）
-          if (_showMeaning && word.example.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            ..._buildStructuredExample(word, skin),
           ],
         ],
-      ),
+        // 例句（结构化）
+        if (_showMeaning && word.example.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          ..._buildStructuredExample(word, skin),
+        ],
+      ],
     );
   }
 
@@ -370,6 +382,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
     if (sentences.isEmpty) {
       return [
         Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: skin.colors.cardBgAlt,
@@ -385,6 +398,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
     }
     return [
       Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: skin.colors.cardBgAlt,
@@ -427,37 +441,34 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> with SingleTi
 
   Widget _buildControls(SkinSystem skin, AppResponsive resp) {
     final buttonSize = 56.0 * resp.scale;
-    return MwCard(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // 上一首
-          _ControlButton(
-            icon: Icons.skip_previous_rounded,
-            size: buttonSize,
-            onPressed: _currentIndex > 0 ? _previous : null,
-            skin: skin,
-          ),
-          const SizedBox(width: 32),
-          // 播放/暂停（主按钮）
-          _ControlButton(
-            icon: _isPlaying && !_isPaused ? Icons.pause_rounded : Icons.play_arrow_rounded,
-            size: buttonSize * 1.5,
-            onPressed: _togglePlayPause,
-            skin: skin,
-            isPrimary: true,
-          ),
-          const SizedBox(width: 32),
-          // 下一首
-          _ControlButton(
-            icon: Icons.skip_next_rounded,
-            size: buttonSize,
-            onPressed: _currentIndex < widget.words.length - 1 ? _next : null,
-            skin: skin,
-          ),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // 上一首
+        _ControlButton(
+          icon: Icons.skip_previous_rounded,
+          size: buttonSize,
+          onPressed: _currentIndex > 0 ? _previous : null,
+          skin: skin,
+        ),
+        const SizedBox(width: 32),
+        // 播放/暂停（主按钮）
+        _ControlButton(
+          icon: _isPlaying && !_isPaused ? Icons.pause_rounded : Icons.play_arrow_rounded,
+          size: buttonSize * 1.5,
+          onPressed: _togglePlayPause,
+          skin: skin,
+          isPrimary: true,
+        ),
+        const SizedBox(width: 32),
+        // 下一首
+        _ControlButton(
+          icon: Icons.skip_next_rounded,
+          size: buttonSize,
+          onPressed: _currentIndex < widget.words.length - 1 ? _next : null,
+          skin: skin,
+        ),
+      ],
     );
   }
 

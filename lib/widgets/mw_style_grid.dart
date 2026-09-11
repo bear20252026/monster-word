@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 6 个精选风格卡片网格：每卡为「画布预览条 + 名称 + 一句气质描述」。
 class MwStyleGrid extends StatelessWidget {
@@ -110,7 +111,7 @@ class MwStyleGrid extends StatelessWidget {
                   style.desc,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, height: 1.3, color: skin.colors.text3),
+                  style: TextStyle(fontSize: MwTypography.micro.fontSize, height: 1.3, color: skin.colors.text3),
                 ),
               ],
             ),

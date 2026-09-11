@@ -141,7 +141,7 @@ class EquipCard extends StatelessWidget {
     return Container(
       width: 28,
       height: 28,
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(AppRadius.md)),
       child: Icon(icon, color: fg, size: 16),
     );
   }

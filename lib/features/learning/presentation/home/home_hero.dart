@@ -287,7 +287,7 @@ class _HeroCta extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: MwTypography.bodySm.fontSize,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.15,
                   color: foregroundColor,

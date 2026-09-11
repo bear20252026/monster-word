@@ -194,7 +194,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.accent,
                       foregroundColor: colors.onGlassAccent,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     onPressed: () {
                       Navigator.pop(context);
@@ -253,7 +253,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: skin.colors.accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                       border: Border.all(color: skin.colors.accent.withValues(alpha: 0.4)),
                     ),
                     child: Row(
@@ -308,7 +308,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                     style: ElevatedButton.styleFrom(
                       backgroundColor: skin.colors.accent,
                       foregroundColor: skin.colors.onGlassAccent,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     onPressed: () => NavUtils.goHome(context),
                     child: const Text('返回首页', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -328,7 +328,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: skin.colors.accent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(color: skin.colors.accent.withValues(alpha: 0.4)),
       ),
       child: Row(
@@ -481,7 +481,10 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: skin.colors.cardBgAlt, borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(
+                  color: skin.colors.cardBgAlt,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
                 child: Text(
                   word.hasStructuredDefinitions ? word.formattedDefinitions : word.cleanInterpret,
                   style: MwTypography.body.copyWith(color: skin.colors.text1, height: 1.5),

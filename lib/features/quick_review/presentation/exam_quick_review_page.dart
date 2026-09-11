@@ -224,7 +224,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
               Text('${_currentIndex + 1} / ${_words.length}', style: MwTypography.caption.copyWith(color: skin.text3)),
               const SizedBox(height: 8),
               ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppRadius.xs),
                 child: LinearProgressIndicator(
                   value: (_currentIndex + 1) / _words.length,
                   backgroundColor: skin.divider,

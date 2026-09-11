@@ -44,7 +44,7 @@ class AppBuildErrorPage extends StatelessWidget {
                   backgroundColor: StarbucksCreamColors.greenHouse,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                 ),
               ),
             ],

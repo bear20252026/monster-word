@@ -153,7 +153,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
       children: [
         Text(
           '${_month.year}年${_month.month}月',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: skin.text1),
+          style: TextStyle(fontSize: MwTypography.bodyMd.fontSize, fontWeight: FontWeight.w700, color: skin.text1),
         ),
         const Spacer(),
         // 连击特效徽章
@@ -177,7 +177,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
                         MwColors.sunshine500.withValues(alpha: 0.9),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -314,7 +314,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
             icon: Icon(_todayChecked ? Icons.check_circle_outline : Icons.redeem, size: 20),
             label: Text(
               _todayChecked ? '今日已签到，明天再来～' : '签到领 ${context.read<ScareCoinStore>().checkInReward} 尖叫币',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: MwTypography.bodySm.fontSize, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -361,7 +361,7 @@ class _MonthArrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppRadius.sm),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.all(4),

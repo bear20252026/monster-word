@@ -543,7 +543,7 @@ class _CurrentBookHero extends StatelessWidget {
                 height: 72,
                 decoration: BoxDecoration(
                   color: coverColorFor(context, book.code),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
                 alignment: Alignment.center,
                 child: Icon(Icons.menu_book_rounded, color: AppColors.white100, size: 24),
@@ -571,7 +571,7 @@ class _CurrentBookHero extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.circular(AppRadius.xs),
                       child: TweenAnimationBuilder<double>(
                         tween: Tween(end: progress),
                         duration: MotionDurations.count,
@@ -662,7 +662,7 @@ class _BookCard extends StatelessWidget {
                   right: 4,
                   child: InkWell(
                     onTap: onViewWords,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                     child: Padding(
                       padding: const EdgeInsets.all(4),
                       child: Icon(Icons.list_alt_rounded, size: 17, color: AppColors.white100.withValues(alpha: 0.85)),
@@ -677,7 +677,7 @@ class _BookCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
                         color: AppColors.white100.withValues(alpha: 0.92),
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
                       child: Text(
                         '在学',
@@ -744,7 +744,10 @@ class _BottomToolItem extends StatelessWidget {
           children: [
             Icon(icon, size: 22, color: colors.text1),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 11, color: colors.text1)),
+            Text(
+              label,
+              style: TextStyle(fontSize: MwTypography.micro.fontSize, color: colors.text1),
+            ),
           ],
         ),
       ),

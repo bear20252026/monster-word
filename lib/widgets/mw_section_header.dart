@@ -21,7 +21,7 @@ class MwSectionHeader extends StatelessWidget {
         Container(
           width: 4,
           height: 16,
-          decoration: BoxDecoration(color: skin.accent, borderRadius: BorderRadius.circular(2)),
+          decoration: BoxDecoration(color: skin.accent, borderRadius: BorderRadius.circular(AppRadius.xs)),
         ),
         const SizedBox(width: 8),
         Text(

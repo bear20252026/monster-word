@@ -250,7 +250,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: colors.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text('已拥有', style: MwTypography.micro.copyWith(color: colors.accent)),
               ),

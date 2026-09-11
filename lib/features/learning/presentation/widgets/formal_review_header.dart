@@ -61,7 +61,7 @@ class FormalReviewHeader extends StatelessWidget {
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeOutCubic,
               builder: (context, value, _) => ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppRadius.xs),
                 child: LinearProgressIndicator(
                   value: value,
                   minHeight: 4,

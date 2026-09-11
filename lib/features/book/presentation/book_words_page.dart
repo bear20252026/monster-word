@@ -174,7 +174,7 @@ class _WordCard extends StatelessWidget {
                         word.word,
                         style: TextStyle(
                           fontFamily: 'Charter',
-                          fontSize: 21,
+                          fontSize: MwTypography.titleLg.fontSize,
                           fontWeight: FontWeight.w400,
                           letterSpacing: -0.3,
                           color: skin.text1,

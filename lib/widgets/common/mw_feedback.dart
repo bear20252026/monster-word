@@ -3,6 +3,7 @@
 // 约定：新代码的用户反馈一律走本文件 helper，不再直接
 // ScaffoldMessenger.of(context).showSnackBar(...)。
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 轻提示（替代散落各处的 ScaffoldMessenger.showSnackBar）
 /// [type] 控制左侧色条语义色；[duration] 默认 2 秒。
@@ -28,7 +29,7 @@ void showMwToast(
       content: Text(message),
       behavior: SnackBarBehavior.floating,
       duration: duration,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
       backgroundColor: accent.withValues(alpha: 0.95),
     ),
   );
