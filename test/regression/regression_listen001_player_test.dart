@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:word_app/features/learning/application/listening_mode.dart';
 import 'package:word_app/features/learning/presentation/listening_player_page.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
