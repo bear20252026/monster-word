@@ -6,7 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
-import 'package:word_app/features/dictionary/data/dictionary_extra.dart';
+import 'package:word_app/features/dictionary/application/dictionary_extra_reader.dart';
+import 'package:word_app/features/dictionary/domain/dictionary_extra.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_exam_sentence_card.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_example_tile.dart';
@@ -81,9 +82,14 @@ class _WordDetailPageState extends State<WordDetailPage> {
   Future<void> _loadExtra() async {
     final word = _resolveTargetWord(null);
     if (word == null) return;
-    final extra = await DictionaryExtraStore.forWord(word.word);
-    if (!mounted || extra == null || extra.isEmpty) return;
-    setState(() => _extra = extra);
+    try {
+      final extra = await context.read<DictionaryExtraReader>().forWord(word.word);
+      if (!mounted || extra == null || extra.isEmpty) return;
+      setState(() => _extra = extra);
+    } catch (e) {
+      // 装配缺失（裸 push / 测试未挂 dictionary scope）时降级：详情主内容仍可渲染
+      debugPrint('[WordDetail] 字典补充数据加载失败: $e');
+    }
   }
 
   @override

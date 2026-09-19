@@ -89,11 +89,18 @@ class ImportGuard {
       violations.add('feature 不得 import 壳层 screens/app(R6): $from -> $to');
     }
 
-    // R6-DI（A3 收口）：DI 契约仅 data 层适配器与 *_feature_providers.dart 装配边界
-    // 可用；feature 的 presentation 页面必须走 Provider 注入，不得直取 sl<>。
+    // R6-DI（A3 收口 + 2026-09-19 封堵）：DI 契约仅 data 层适配器与
+    // *_feature_providers.dart 装配边界可用；feature 的 presentation 页面必须走
+    // Provider 注入，不得直取 sl<>，也不得绕道 package:get_it（GetIt.I）。
     final isProviderAssembly = from.endsWith('_feature_providers.dart');
-    if (isDiContract && fromFeature.isNotEmpty && fromLayer == 'presentation' && !isProviderAssembly) {
-      violations.add('presentation 不得直取 DI 契约(R6-DI): $from -> $to（改走 Provider 注入）');
+    final isGetItPackage = to == 'package:get_it/get_it.dart' || to.startsWith('package:get_it/');
+    if (fromFeature.isNotEmpty && fromLayer == 'presentation' && !isProviderAssembly) {
+      if (isDiContract) {
+        violations.add('presentation 不得直取 DI 契约(R6-DI): $from -> $to（改走 Provider 注入）');
+      }
+      if (isGetItPackage) {
+        violations.add('presentation 不得 import package:get_it(R6-DI): $from -> $to（改走 Provider 注入）');
+      }
     }
 
     // R-DB（REG-ARCH-005 收口）：presentation 禁止直连数据库单例。
@@ -131,6 +138,11 @@ class ImportGuard {
       }
       if (fromLayer == 'data' && toLayer == 'presentation') {
         violations.add('R3: data 不得依赖同功能的 presentation 层: $from -> $to');
+      }
+      // 2026-09-19：presentation→data 反向直连封堵（word_detail/more_settings 曾现实违规）。
+      // *_feature_providers.dart 是装配边界例外，允许 import data 适配器。
+      if (fromLayer == 'presentation' && toLayer == 'data' && !isProviderAssembly) {
+        violations.add('R3: presentation 不得依赖同功能的 data 层: $from -> $to（改经 application 端口 + Provider）');
       }
     }
 

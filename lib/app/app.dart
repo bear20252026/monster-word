@@ -53,7 +53,7 @@ class WordApp extends StatelessWidget {
               child: buildQuickReviewFeatureScope(
                 // [6] QuickReview — QuickReviewWordReader。仅读词；依赖较浅。
                 child: buildBookFeatureScope(
-                  // [7] Book — BookCatalogReader/BookWordsReader(book 侧)/BookState。✅ 必须位于 learning 内层：BookState 消费 learning 祖先的 LearningProgressReader + LearningSessionStarter。
+                  // [7] Book — BookCatalogReader/BookWordListReader/BookState。✅ 必须位于 learning 内层：BookState 消费 learning 祖先的 LearningProgressReader + LearningSessionStarter。
                   child: buildScareCoinFeatureScope(
                     // [8] ScareCoin — ScareCoinStore。✅ 是 checkin 的上游渠道；亦被 profile/redemption/日历消费。
                     child: buildCheckInFeatureScope(

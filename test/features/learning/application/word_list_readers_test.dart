@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:word_app/features/learning/data/repository_book_words_reader.dart';
 import 'package:word_app/features/learning/data/repository_mastered_words_reader.dart';
 import 'package:word_app/features/learning/data/repository_new_words_reader.dart';
 import 'package:word_app/models/new_word_record.dart';
@@ -107,13 +108,14 @@ void main() {
     expect(wordRepository.requestedTexts, isNull);
   });
 
-  test('词书读取器保留词书编号，全量加载不传截断 limit（REG-LEARN-001）', () async {
-    final wordRepository = _FakeWordRepository();
-    final reader = RepositoryBookWordsReader(repository: wordRepository);
+  test('词书列表端口全量加载，禁止硬编码截断（REG-LEARN-001）', () {
+    final listReader = File('lib/features/book/data/repository_book_word_list_reader.dart').readAsStringSync();
+    expect(listReader, contains('getWordsByBook(bookId, lightweight: true)'));
+    expect(listReader, isNot(contains('limit:')));
 
-    expect(await reader.loadWords(42), isEmpty);
-    expect(wordRepository.requestedBookId, 42);
-    expect(wordRepository.requestedBookLimit, isNull, reason: 'limit 不传 = 全量，禁止硬编码截断值');
+    final queueRepo = File('lib/features/learning/data/learning_queue_repository.dart').readAsStringSync();
+    expect(queueRepo, isNot(contains('limit: 1000')));
+    expect(File('lib/features/learning/application/book_words_reader.dart').existsSync(), isFalse);
   });
 
   test('生词读取器按加入顺序解析可用词条', () async {

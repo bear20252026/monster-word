@@ -6,24 +6,10 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
-/// 一个词条的补充数据
-class DictionaryExtra {
-  final List<String> derivatives; // 派生词（含简短中文注释）
-  final List<String> synonyms; // 近义词
-  final List<ExamSentence> examSentences; // 真题例句
+import 'package:word_app/features/dictionary/application/dictionary_extra_reader.dart';
+import 'package:word_app/features/dictionary/domain/dictionary_extra.dart';
 
-  const DictionaryExtra({required this.derivatives, required this.synonyms, required this.examSentences});
-
-  bool get isEmpty => derivatives.isEmpty && synonyms.isEmpty && examSentences.isEmpty;
-}
-
-/// 真题例句（带来源标注）
-class ExamSentence {
-  final String sentence;
-  final String source; // 如 CET-4 / CET-6 / 考研
-
-  const ExamSentence({required this.sentence, required this.source});
-}
+export 'package:word_app/features/dictionary/domain/dictionary_extra.dart';
 
 class DictionaryExtraStore {
   DictionaryExtraStore._();
@@ -75,4 +61,12 @@ class DictionaryExtraStore {
         .toList();
     return DictionaryExtra(derivatives: derivatives, synonyms: synonyms, examSentences: examSentences);
   }
+}
+
+/// [DictionaryExtraReader] 的 data 层适配器。
+class RepositoryDictionaryExtraReader implements DictionaryExtraReader {
+  const RepositoryDictionaryExtraReader();
+
+  @override
+  Future<DictionaryExtra?> forWord(String word) => DictionaryExtraStore.forWord(word);
 }

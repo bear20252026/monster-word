@@ -11,7 +11,6 @@ import 'package:word_app/features/learning/application/learning_session_starter.
 import 'package:word_app/features/learning/application/learning_collections_reader.dart';
 import 'package:word_app/features/learning/application/learning_statistics_reader.dart';
 import 'package:word_app/features/learning/application/new_words_store.dart';
-import 'package:word_app/features/learning/application/book_words_reader.dart';
 import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 import 'package:word_app/features/learning/application/new_words_reader.dart';
 import 'package:word_app/features/learning/application/review_audio_player.dart';
@@ -155,7 +154,6 @@ Widget buildLearningFeatureScope({required Widget child}) {
         )..initialize(),
       ),
       ChangeNotifierProvider(create: (_) => ReviewAudioState(audioPlayer: sl<ReviewAudioPlayer>())),
-      Provider<BookWordsReader>.value(value: sl<BookWordsReader>()),
       Provider<MasteredWordsReader>.value(value: sl<MasteredWordsReader>()),
       Provider<NewWordsReader>.value(value: sl<NewWordsReader>()),
       Provider<ReviewQueueReader>.value(value: sl<ReviewQueueReader>()),

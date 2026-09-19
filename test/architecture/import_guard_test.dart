@@ -35,9 +35,18 @@ void main() {
       );
     });
 
-    test('同功能内部 import 允许', () {
-      expect(check('features/learning/presentation/page.dart', 'features/learning/data/repo.dart'), isEmpty);
+    test('同功能内部：data→application 允许；presentation→data 被拒（R3 2026-09-19）', () {
       expect(check('features/learning/data/repo.dart', 'features/learning/application/port.dart'), isEmpty);
+      expect(check('features/learning/presentation/page.dart', 'features/learning/application/port.dart'), isEmpty);
+      expect(
+        check('features/learning/presentation/page.dart', 'features/learning/data/repo.dart'),
+        anyElement(contains('R3: presentation 不得依赖同功能的 data 层')),
+      );
+      // 装配边界豁免
+      expect(
+        check('features/learning/presentation/learning_feature_providers.dart', 'features/learning/data/repo.dart'),
+        isEmpty,
+      );
     });
 
     test('feature 依赖 core/models 允许；core 依赖 features 被拒绝', () {
@@ -104,6 +113,11 @@ void main() {
       expect(
         check('features/learning/presentation/personal_stereo_page.dart', 'app/service_locator.dart'),
         anyElement(contains('presentation 不得直取 DI 契约(R6-DI)')),
+      );
+      // 绕道 package:get_it 同样违规（2026-09-19 封堵 GetIt.I）
+      expect(
+        check('features/content/presentation/sentence_learning_page.dart', 'package:get_it/get_it.dart'),
+        anyElement(contains('presentation 不得 import package:get_it(R6-DI)')),
       );
       // 装配边界（*_feature_providers.dart）与 data 层适配器放行
       expect(

@@ -1,9 +1,9 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 跨 feature application 端口重名守卫（审计跟进批次 B / REG-ARCH-004）。
-// 背景：learning 与 book 各有一个同名 BookWordsReader，行为不同（截断 vs 全量），
-// 接错线编译期不报错。book 侧已更名 BookWordListReader 消歧，本测试锁定：
-// 任何 feature 的 application 层不得声明与其它 feature 同名的抽象端口。
+// 背景：learning 与 book 曾各有同名 BookWordsReader，行为不同（截断 vs 全量），
+// 接错线编译期不报错。book 侧更名 BookWordListReader，learning 侧僵尸端口已删除；
+// 本测试锁定：任何 feature 的 application 层不得声明与其它 feature 同名的抽象端口。
 
 import 'dart:io';
 

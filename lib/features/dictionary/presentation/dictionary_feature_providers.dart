@@ -5,9 +5,11 @@ import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/dictionary/application/dictionary_content_reader.dart';
+import 'package:word_app/features/dictionary/application/dictionary_extra_reader.dart';
 import 'package:word_app/features/dictionary/application/dictionary_favorite_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
+import 'package:word_app/features/dictionary/data/dictionary_extra.dart';
 import 'package:word_app/features/dictionary/data/service_dictionary_content_reader.dart';
 import 'package:word_app/features/dictionary/data/service_dictionary_favorite_writer.dart';
 import 'package:word_app/features/dictionary/data/service_dictionary_new_word_writer.dart';
@@ -25,6 +27,8 @@ Widget buildDictionaryFeatureScope({required Widget child}) {
       Provider<DictionarySearchReader>(create: (_) => ServiceDictionarySearchReader()),
       Provider<DictionaryFavoriteWriter>(create: (_) => ServiceDictionaryFavoriteWriter()),
       Provider<DictionaryNewWordWriter>(create: (_) => ServiceDictionaryNewWordWriter()),
+      // 字典补充数据（派生/近义/真题）：presentation 只经端口消费（R3 presentation↛data）
+      Provider<DictionaryExtraReader>(create: (_) => const RepositoryDictionaryExtraReader()),
       // core 仓储转发（深链页经 Provider 通道消费，禁止直取 sl<>——A3 收口）
       Provider<WordRepository>.value(value: sl<WordRepository>()),
     ],

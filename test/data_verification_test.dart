@@ -7,6 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 
+/// 词库全量解压 + 抽样 I/O 过重，默认 30s 在并行测试下会超时（2026-09-19 审计 N4）。
+const _kHeavyTimeout = Timeout(Duration(minutes: 3));
+
 /// Use temp directory to replace system app dir
 class _FakePathProvider extends PathProviderPlatform {
   final String dir;
@@ -82,7 +85,7 @@ void main() {
         final words = await WordBookDatabase.instance.getWordsByBook(b.id);
         expect(words.isNotEmpty, true, reason: 'Book ${b.name}(id=${b.id}) should have words');
       }
-    });
+    }, timeout: _kHeavyTimeout);
 
     test('Word field coverage meets real-world standard', () async {
       final cet4Book = books.firstWhere((b) => b.code.toUpperCase().contains('CET4'), orElse: () => books.first);
@@ -109,7 +112,7 @@ void main() {
         reason: 'Phonetic gap rate abnormal: $noPhonetic/${words.length}',
       );
       expect(noExample, 0, reason: 'Example JSON should be complete, missing $noExample');
-    });
+    }, timeout: _kHeavyTimeout);
 
     test('getWord round-trip consistency', () async {
       final cet4Book = books.firstWhere((b) => b.code.toUpperCase().contains('CET4'), orElse: () => books.first);

@@ -38,12 +38,8 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   Future<void>? _sessionReady;
   Timer? _minShowTimer;
 
-  // 引导页图片
-  final List<String> _introAssets = [
-    'assets/images/intro_0.png',
-    'assets/images/intro_1.png',
-    'assets/images/intro_2.png',
-  ];
+  // 引导页页数（不再引用盘上不存在的 intro_*.png 资产，仅作分页锚点）
+  static const int _introPageCount = 3;
 
   @override
   void initState() {
@@ -183,7 +179,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: _introAssets.length,
+                itemCount: _introPageCount,
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 itemBuilder: (context, index) {
                   return Padding(
@@ -223,7 +219,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      if (_currentPage < _introAssets.length - 1)
+                      if (_currentPage < _introPageCount - 1)
                         TextButton(
                           onPressed: _goToMain,
                           child: Text('跳过', style: TextStyle(color: skin.colors.text3)),
@@ -232,7 +228,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_introAssets.length, (i) {
+                    children: List.generate(_introPageCount, (i) {
                       return Container(
                         width: 8,
                         height: 8,
@@ -248,7 +244,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                   SizedBox(
                     width: double.infinity,
                     height: 48,
-                    child: _currentPage == _introAssets.length - 1
+                    child: _currentPage == _introPageCount - 1
                         ? ElevatedButton(
                             onPressed: _goToMain,
                             style: ElevatedButton.styleFrom(

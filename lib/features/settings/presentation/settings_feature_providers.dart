@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
 import 'package:word_app/features/settings/application/network_diagnosis_service.dart';
 import 'package:word_app/features/settings/application/study_reminder_service.dart';
+import 'package:word_app/features/settings/application/update_check_service.dart';
+import 'package:word_app/features/settings/data/github_update_check_service.dart';
 import 'package:word_app/features/settings/data/io_network_diagnosis_service.dart';
 import 'package:word_app/features/settings/data/local_study_reminder_service.dart';
 import 'package:word_app/features/settings/data/learning_preferences_repository.dart';
@@ -23,6 +25,8 @@ Widget buildSettingsFeatureScope({required Widget child}) {
       Provider<NetworkDiagnosisService>(create: (_) => IoNetworkDiagnosisService()),
       // 学习提醒：本地通知真实现（Android + Windows）。
       Provider<StudyReminderService>(create: (_) => LocalStudyReminderService()),
+      // 检查更新：presentation 经端口消费，禁止直连 data 实现（R3）
+      Provider<UpdateCheckService>(create: (_) => GithubUpdateCheckService()),
       // 词库维护（诊断/重建）：presentation 不直连数据库单例（REG-ARCH-005）
       Provider<WordBookMaintenanceService>(create: (_) => const WordBookMaintenanceService()),
       ChangeNotifierProvider<LearningPreferencesState>(

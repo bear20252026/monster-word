@@ -12,7 +12,7 @@ import 'package:word_app/features/settings/domain/version_compare.dart';
 class GithubUpdateCheckService implements UpdateCheckService {
   GithubUpdateCheckService({this.fetchOverride});
 
-  static const String repoUrl = 'https://github.com/bear20252026/monster-word';
+  static const String repoUrl = appGitHubRepoUrl;
   static const String _latestApiUrl = '$repoUrl/releases/latest';
   static const Duration _timeout = Duration(seconds: 10);
 

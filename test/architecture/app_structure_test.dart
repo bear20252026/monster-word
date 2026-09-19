@@ -342,13 +342,17 @@ void main() {
 
       expect(appSource, contains('buildBookFeatureScope('));
       expect(File('lib/features/book/application/book_catalog_reader.dart').existsSync(), isTrue);
-      final bookWordsPortSource = File('lib/features/learning/application/book_words_reader.dart').readAsStringSync();
-      final bookWordsAdapterSource = File('lib/features/learning/data/repository_book_words_reader.dart')
-          .readAsStringSync();
-      expect(bookWordsPortSource, contains('abstract interface class BookWordsReader'));
-      expect(bookWordsPortSource, isNot(contains('WordRepository')));
-      expect(bookWordsAdapterSource, contains('implements BookWordsReader'));
-      expect(bookWordsAdapterSource, contains('WordRepository'));
+      // 学习侧僵尸 BookWordsReader 已删除（2026-09-19 卫生批）；书页唯一词表端口是 BookWordListReader
+      expect(File('lib/features/learning/application/book_words_reader.dart').existsSync(), isFalse);
+      expect(File('lib/features/learning/data/repository_book_words_reader.dart').existsSync(), isFalse);
+      expect(
+        File('lib/features/book/application/book_word_list_reader.dart').readAsStringSync(),
+        contains('abstract class BookWordListReader'),
+      );
+      expect(
+        File('lib/features/book/data/repository_book_word_list_reader.dart').readAsStringSync(),
+        contains('implements BookWordListReader'),
+      );
       expect(providersSource, contains('RepositoryBookCatalogReader'));
       expect(selectPageSource, contains('BookWordListReader'));
       expect(extensiveModeSource, contains('BookWordListReader'));
