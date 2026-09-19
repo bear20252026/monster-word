@@ -82,9 +82,14 @@ class _WordDetailPageState extends State<WordDetailPage> {
   Future<void> _loadExtra() async {
     final word = _resolveTargetWord(null);
     if (word == null) return;
-    final extra = await context.read<DictionaryExtraReader>().forWord(word.word);
-    if (!mounted || extra == null || extra.isEmpty) return;
-    setState(() => _extra = extra);
+    try {
+      final extra = await context.read<DictionaryExtraReader>().forWord(word.word);
+      if (!mounted || extra == null || extra.isEmpty) return;
+      setState(() => _extra = extra);
+    } catch (e) {
+      // 装配缺失（裸 push / 测试未挂 dictionary scope）时降级：详情主内容仍可渲染
+      debugPrint('[WordDetail] 字典补充数据加载失败: $e');
+    }
   }
 
   @override
