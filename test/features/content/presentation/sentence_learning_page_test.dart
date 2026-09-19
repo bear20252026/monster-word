@@ -1,7 +1,7 @@
 // 句库翻卡学习器回归测试：挖空/翻卡/认识/不认识循环/完成视图
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
+import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/features/content/presentation/sentence_learning_page.dart';
@@ -31,18 +31,18 @@ FavSentenceData _fav(String word, String english, String chinese) => FavSentence
 );
 
 Future<void> _pumpPage(WidgetTester tester, List<FavSentenceData> sentences) async {
-  await tester.pumpWidget(MaterialApp(home: SentenceLearningPage(sentences: sentences)));
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Provider<AudioService>(
+        create: (_) => _StubAudioService(),
+        child: SentenceLearningPage(sentences: sentences),
+      ),
+    ),
+  );
   await tester.pumpAndSettle();
 }
 
 void main() {
-  setUpAll(() {
-    final sl = GetIt.I;
-    if (!sl.isRegistered<AudioService>()) {
-      sl.registerSingleton<AudioService>(_StubAudioService());
-    }
-  });
-
   testWidgets('正面显示挖空句与提示，不直接暴露答案', (tester) async {
     await _pumpPage(tester, [_fav('apple', 'I ate an apple today.', '我今天吃了一个苹果。')]);
     expect(find.textContaining('____'), findsOneWidget);

@@ -1,6 +1,6 @@
 // 句库翻卡学习器：看句猜词 → 翻卡看答案 → 认识/不认识，不认识的句子回到队尾循环
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
+import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/models/sentence_models.dart';
@@ -30,7 +30,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
   int _masteredCount = 0;
   bool _revealed = false;
 
-  AudioService get _audio => GetIt.I<AudioService>();
+  AudioService get _audio => context.read<AudioService>();
 
   @override
   void initState() {

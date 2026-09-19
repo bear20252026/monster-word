@@ -3,9 +3,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:word_app/models/definition.dart';
-import 'package:word_app/theme/skin_system.dart' show SkinProvider;
-import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 结构化释义展示
 class DefinitionView extends StatelessWidget {

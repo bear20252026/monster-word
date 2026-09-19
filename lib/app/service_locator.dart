@@ -23,9 +23,7 @@ import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/core/audio/audio_service_impl.dart';
 import 'package:word_app/features/account/data/user_service.dart';
 import 'package:word_app/features/account/data/user_service_impl.dart';
-import 'package:word_app/features/learning/application/book_words_reader.dart';
 import 'package:word_app/features/learning/data/learning_progress_repository.dart';
-import 'package:word_app/features/learning/data/repository_book_words_reader.dart';
 import 'package:word_app/features/learning/data/repository_mastered_words_reader.dart';
 import 'package:word_app/features/learning/data/repository_new_words_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_queue_reader.dart';
@@ -99,11 +97,6 @@ Future<void> setupServiceLocator() async {
   // NewWordRepository
   if (!sl.isRegistered<NewWordRepository>()) {
     sl.registerLazySingleton<NewWordRepository>(() => NewWordRepositoryImpl(sl<UserDatabase>()));
-  }
-
-  // BookWordsReader
-  if (!sl.isRegistered<BookWordsReader>()) {
-    sl.registerLazySingleton<BookWordsReader>(() => RepositoryBookWordsReader(repository: sl<WordRepository>()));
   }
 
   // MasteredWordsReader

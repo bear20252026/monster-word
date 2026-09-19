@@ -52,8 +52,4 @@ class LearningQueueRepository {
     if (words.isNotEmpty) return words;
     return currentQueue.where((word) => favorites.contains(word.word)).toList(growable: false);
   }
-
-  Future<List<Word>> loadWordsByBook(int bookId) {
-    return _wordSource.getWordsByBook(bookId, limit: 1000, offset: 0);
-  }
 }

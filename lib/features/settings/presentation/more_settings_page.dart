@@ -13,7 +13,6 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
-import 'package:word_app/features/settings/data/github_update_check_service.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
@@ -41,7 +40,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   /// 真实应用版本号（package_info_plus；替换原硬编码 v5.11.1）。
   String _appVersion = '';
 
-  UpdateCheckService get _updateService => widget.updateServiceOverride ?? GithubUpdateCheckService();
+  UpdateCheckService get _updateService => widget.updateServiceOverride ?? context.read<UpdateCheckService>();
 
   @override
   void initState() {
@@ -215,10 +214,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                             backgroundColor: context.skin.colors.success,
                           ),
                         );
-                        await launchUrl(
-                          Uri.parse(GithubUpdateCheckService.repoUrl),
-                          mode: LaunchMode.externalApplication,
-                        );
+                        await launchUrl(Uri.parse(appGitHubRepoUrl), mode: LaunchMode.externalApplication);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(

@@ -203,7 +203,7 @@ class _MyFavPageState extends State<MyFavPage> {
               OutlinedButton.icon(
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.pushNamed(context, '/lib_select');
+                  Navigator.pushNamed(context, RouteNames.libSelect);
                 },
                 icon: const Icon(Icons.explore_outlined, size: 18),
                 label: const Text('去选词书'),
