@@ -10,7 +10,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/application/theme_prefs.dart';
 
 import 'package:word_app/tokens/design_language.dart';
 
@@ -33,6 +33,8 @@ class SkinSystem extends ChangeNotifier {
     'pure_black': 'starbucks_dark',
     'clickhouse_dark': 'starbucks_dark',
   };
+
+  final ThemePrefs _themePrefs;
 
   String _themeId = 'starbucks_cream';
   bool _followSystem = false;
@@ -88,13 +90,13 @@ class SkinSystem extends ChangeNotifier {
   /// 当前系统亮度（监听刷新）
   Brightness _systemBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
 
-  SkinSystem() {
+  SkinSystem({ThemePrefs? themePrefs}) : _themePrefs = themePrefs ?? ThemePrefs() {
     try {
-      final saved = AppPreferences().getSkinThemeId();
+      final saved = _themePrefs.getThemeId();
       // 旧偏好（明亮/暖阳橙/深邃/极夜/ClickHouse）迁移到最近的精选风格主题
       _themeId = themes.containsKey(saved) ? saved : 'starbucks_cream';
       _themeId = legacyThemeMigration[_themeId] ?? _themeId;
-      _followSystem = AppPreferences().isSkinFollowSystem();
+      _followSystem = _themePrefs.isFollowSystem();
     } catch (e) {
       // 测试环境或未初始化时使用默认值
       _themeId = 'starbucks_cream';
@@ -168,7 +170,7 @@ class SkinSystem extends ChangeNotifier {
       _themeId = themeId;
       if (_followSystem) setFollowSystem(false); // 手动品牌选择即退出跟随
       notifyListeners();
-      AppPreferences().setSkinThemeId(_themeId);
+      _themePrefs.setThemeId(_themeId);
     }
   }
 
@@ -192,7 +194,7 @@ class SkinSystem extends ChangeNotifier {
     if (_followSystem == v) return;
     _followSystem = v;
     notifyListeners();
-    AppPreferences().setSkinFollowSystem(v); // fire-and-forget
+    _themePrefs.setFollowSystem(v); // fire-and-forget
   }
 
   void setTheme(String id) {
@@ -200,7 +202,7 @@ class SkinSystem extends ChangeNotifier {
     _themeId = id;
     if (_followSystem) setFollowSystem(false); // 手动选择即退出跟随
     notifyListeners();
-    AppPreferences().setSkinThemeId(_themeId); // ← 持久化落点
+    _themePrefs.setThemeId(_themeId); // ← 持久化落点
   }
 
   /// 权威计算：跟随系统时按系统亮度映射到星巴克双主题

@@ -27,8 +27,14 @@ void main() {
       final providersSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
           .readAsStringSync();
 
-      expect(providersSource, contains('ReviewScheduleRepository'));
-      expect(providersSource, contains('ReviewRatingWriter(writeRating: schedule.rateWord)'));
+      // Score90：展示侧只暴露 ReviewScheduleReader；评分写经 sl→ReviewRatingWriter。
+      expect(providersSource, contains('ReviewScheduleReader'));
+      expect(providersSource, contains('sl<ReviewScheduleRepository>().rateWord'));
+      expect(
+        providersSource.contains('ChangeNotifierProvider<ReviewScheduleRepository>'),
+        isFalse,
+        reason: '不得把 data 仓储以 ChangeNotifierProvider 具体类型暴露给 UI',
+      );
       expect(providersSource, contains('LearningSessionState'));
       expect(providersSource, contains('LearningFavoritesState'));
       expect(providersSource, contains('LearningMasteredState'));
