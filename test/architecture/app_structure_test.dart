@@ -421,7 +421,13 @@ void main() {
       expect(cardsSource, contains('class EquipCard'));
       expect(cardsSource, contains('RouteNames.scareCoinHistory'));
       expect(cardsSource, contains('RouteNames.myEquip'));
-      expect(cardsSource, contains('AppPreferences.equipRackCount'));
+      // R1：断言**代码**使用 PresentationPrefs.equipRackCount，禁止只命中注释造成假绿
+      expect(cardsSource, contains('PresentationPrefs.equipRackCount'));
+      expect(
+        RegExp(r'[^/]\s*AppPreferences\.equipRackCount').hasMatch(cardsSource),
+        isFalse,
+        reason: '共享组件不得在代码中使用 AppPreferences.equipRackCount（注释亦应已迁移）',
+      );
       const ownedRule = '1 + (redeemedCount > 0 ? 1 : 0) + ((snap.data ?? 0) > 0 ? 1 : 0)';
       expect(ownedRule.allMatches(cardsSource).length, 1, reason: '装备数规则只能写一遍');
 
@@ -431,7 +437,11 @@ void main() {
         expect(entry.value, isNot(contains('class _EquipCard')), reason: '${entry.key} 不得再私有实现卡片');
         expect(entry.value, contains('ScareCoinCard('), reason: '${entry.key} 应消费共享组件');
         expect(entry.value, contains('EquipCard('), reason: '${entry.key} 应消费共享组件');
-        expect(entry.value, isNot(contains('AppPreferences.equipRackCount')), reason: '${entry.key} 不得重写装备数规则');
+        expect(
+          entry.value.contains('equipRackCount'),
+          isFalse,
+          reason: '${entry.key} 不得重写装备数规则（含 PresentationPrefs.equipRackCount）',
+        );
         expect(entry.value, isNot(contains("'/scare_coin_history'")), reason: '${entry.key} 不得使用字符串路由');
       }
     });

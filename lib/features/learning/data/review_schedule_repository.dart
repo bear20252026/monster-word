@@ -187,12 +187,28 @@ class ReviewScheduleRepository extends ChangeNotifier {
       reportSwallowedError('ReviewScheduleSQLite init', error, stack);
     }
     if (!sqliteReady) {
-      // 降级路径：旧 SP blob 模式（迁移失败或无 SQLite 环境的机器）。
+      // 降级路径：旧 SP blob 模式（迁移失败或无 SQLite 环境）。
+      // R3：SP 活键为空时优先从 E2 应急备份恢复（fsrs6_emergency_backup_v1），
+      // 避免「SQLite 损坏 + 已清 SP」导致学习记录在 UI 中不可见。
       try {
         final prefs = await SharedPreferences.getInstance();
-        _cards = _readCards(prefs.getString(cardsPrefKey));
-        _dailyStats = _readDailyStats(prefs.getString(dailyStatsPrefKey));
-        _activeDates = (prefs.getStringList(activeDatesPrefKey) ?? const <String>[]).toSet();
+        var cardsRaw = prefs.getString(cardsPrefKey);
+        var statsRaw = prefs.getString(dailyStatsPrefKey);
+        var datesList = prefs.getStringList(activeDatesPrefKey);
+        if (cardsRaw == null || cardsRaw.isEmpty) {
+          final backup = prefs.getString(emergencyBackupKey);
+          if (backup != null && backup.isNotEmpty) {
+            final map = jsonDecode(backup) as Map<String, dynamic>;
+            cardsRaw = map[cardsPrefKey] as String?;
+            statsRaw = (map[dailyStatsPrefKey] as String?) ?? statsRaw;
+            final dates = map[activeDatesPrefKey];
+            if (dates is List) datesList = dates.cast<String>();
+            debugPrint('[FSRS] degraded load restored from $emergencyBackupKey');
+          }
+        }
+        _cards = _readCards(cardsRaw);
+        _dailyStats = _readDailyStats(statsRaw);
+        _activeDates = (datesList ?? const <String>[]).toSet();
       } catch (error, stack) {
         debugPrint('Review schedule loading error: $error');
         reportSwallowedError('ReviewScheduleSP degraded load', error, stack);

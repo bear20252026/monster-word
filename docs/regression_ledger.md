@@ -79,6 +79,8 @@
 | REG-OPS-001 | build_full_wordbook 无备份覆盖 assets | H4 只覆盖 expanded 脚本 | N2 批 | 默认 OUT 到 inputs/；`ALLOW_ASSET_OVERWRITE` + `.bak` |
 | REG-NAV-005 | 页面 routeName 字面量与 RouteNames 双源 | 无单源守卫 | N3 批 | presentation `routeName = RouteNames.*`；路由表唯一事实来源 |
 
+| REG-ARCH-010 | 守卫断言匹配注释假绿；dictionary 内层第二 PresentationPrefs；E2 备份未自动恢复 | N1 迁移后测试未改；providers 遮蔽；降级只读空 SP | R1–R3 批（2026-09-20） | app_structure 断言 PresentationPrefs.equipRackCount；dictionary 去 create；降级 load 读 emergency_backup |
+
 ## 修复新 bug 的流程
 
 
