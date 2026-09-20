@@ -55,6 +55,8 @@ lib/
 
 ## 3. 服务定位器与偏好规则
 
+**主题偏好（Score90）**：`lib/theme/skin_system.dart` 经 `core/application/ThemePrefs` 读写皮肤 id/跟随系统，**不得** import `core/infrastructure/app_preferences.dart`。
+
 `GetIt` 仅允许在组合根及 Provider 工厂使用：`app/service_locator.dart`、`*_feature_providers.dart` 或测试初始化代码。页面、Widget、domain 代码不得新增 `sl<T>()` 或 `package:get_it`（R6-DI）。页面应通过 `Provider` 获取明确的 State/Controller。
 
 **偏好与仓储（R-prefs / R-core-repo，2026-09-19）**：presentation 不得 import `core/infrastructure/app_preferences.dart` 或 `core/repositories/**`；统一经 `core/application/presentation_prefs.dart`、`word_lookup_reader.dart` 等端口 + Provider 消费。

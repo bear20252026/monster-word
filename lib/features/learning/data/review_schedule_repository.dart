@@ -26,9 +26,10 @@ import 'package:word_app/features/learning/data/review_schedule_store.dart';
 /// 该仓储不持有当前学习队列，也不推进任何会话引擎；调用方必须显式提供需筛选的
 /// 词条或要评分的实际词条。
 ///
-/// N5（有意设计，非缺陷）：本类 extends ChangeNotifier，且 learning providers 以
-/// 具体类型 `ChangeNotifierProvider<ReviewScheduleRepository>` 暴露给 UI——评分后
-/// 直接通知 FSRS 仪表盘重建。长期若拆只读 Reader 适配器，须保持 rateWord 通知链路。
+/// Score90：本类仍为 ChangeNotifier（评分后通知），但 **不再** 以
+/// `Provider<ReviewScheduleRepository>` 暴露给 UI；展示侧统一经
+/// `ReviewScheduleReader`（`RepositoryReviewScheduleReader` 监听本仓储）。
+/// 评分写入经 `ReviewRatingWriter` 组合根注入。
 class ReviewScheduleRepository extends ChangeNotifier {
   static const cardsPrefKey = 'fsrs6_cards_v1';
   static const dailyStatsPrefKey = 'daily_stats_v1';

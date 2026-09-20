@@ -67,7 +67,8 @@ Widget buildLearningFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
       Provider<PresentationPrefs>.value(value: presentationPrefs),
-      ChangeNotifierProvider<ReviewScheduleRepository>.value(value: sl<ReviewScheduleRepository>()),
+      // Score90：UI 只消费只读端口 ReviewScheduleReader；评分写经 ReviewRatingWriter(sl)。
+      // 不再把 data 层 ReviewScheduleRepository 暴露到 Provider 树。
       ChangeNotifierProvider<ReviewScheduleReader>(
         create: (_) => RepositoryReviewScheduleReader(repository: sl<ReviewScheduleRepository>()),
       ),
@@ -146,8 +147,8 @@ Widget buildLearningFeatureScope({required Widget child}) {
         update: (_, queue, schedule, reviewQueue) =>
             (reviewQueue ?? ReviewQueueState())..synchronize(queue: queue.snapshot, schedule: schedule),
       ),
-      ProxyProvider<ReviewScheduleRepository, ReviewRatingWriter>(
-        update: (_, schedule, _) => ReviewRatingWriter(writeRating: schedule.rateWord),
+      Provider<ReviewRatingWriter>(
+        create: (_) => ReviewRatingWriter(writeRating: sl<ReviewScheduleRepository>().rateWord),
       ),
       ChangeNotifierProxyProvider<ReviewRatingWriter, ReviewSessionState>(
         create: (context) =>
