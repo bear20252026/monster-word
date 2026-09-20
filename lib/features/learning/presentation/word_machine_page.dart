@@ -2,6 +2,7 @@
 
 // 单词机：单词卡片机样式展示，支持滑动浏览
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
@@ -17,7 +18,7 @@ import 'package:word_app/tokens/motion_tokens.dart';
 class WordMachinePage extends StatefulWidget {
   const WordMachinePage({super.key});
 
-  static const routeName = '/word_machine';
+  static const routeName = RouteNames.wordMachine;
 
   @override
   State<WordMachinePage> createState() => _WordMachinePageState();

@@ -1,6 +1,9 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
@@ -209,11 +212,14 @@ final _testBook = Book(id: 1, code: 'TEST', name: '测试', wordCount: 2);
 LearningSessionState _sessionWithWords({required List<Word> words, ReviewScheduleRepository? schedule}) {
   final effectiveSchedule = schedule ?? ReviewScheduleRepository();
   return LearningSessionState(
-    shuffler: (words) => words, // 确定性顺序（顺序无关断言由其他用例覆盖）
+    // 确定性顺序（顺序无关断言由其他用例覆盖）
+    shuffler: (wordst) => words,
     queuePort: _FakeQueuePort(words),
     progressPort: _FakeProgressPort(),
     reviewSchedulePort: RepositoryReviewScheduleWriterPort(effectiveSchedule),
     choicePort: _FakeChoicePort(),
+    todayStore: TodayProgressStore(),
+    prefs: PresentationPrefs(),
   );
 }
 

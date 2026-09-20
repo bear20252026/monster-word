@@ -256,12 +256,21 @@ def main():
     out.close()
 
     # 6) 压缩为 App 资产
-    if os.path.exists(OUT_GZ):
-        os.remove(OUT_GZ)
-    with open(OUT_DB, "rb") as f, gzip.open(OUT_GZ, "wb", compresslevel=9) as g:
+    # H4：默认不覆盖正式 assets；覆盖前强制 .bak（与 build_expanded_wordbook 对齐）
+    if os.environ.get("ALLOW_ASSET_OVERWRITE", "").lower() not in ("1", "true", "yes"):
+        dest = os.environ.get("OUT_GZ_TARGET", os.path.join(INPUTS, "wordbook_full.db.gz"))
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        target = dest
+    else:
+        if os.path.exists(OUT_GZ):
+            backup = OUT_GZ + ".bak"
+            shutil.copy2(OUT_GZ, backup)
+            print("H4 backup:", backup)
+        target = OUT_GZ
+    with open(OUT_DB, "rb") as f, gzip.open(target, "wb", compresslevel=9) as g:
         shutil.copyfileobj(f, g, length=8 * 1024 * 1024)
     print("OUT_DB:", round(os.path.getsize(OUT_DB) / 1048576, 1), "MB")
-    print("OUT_GZ:", round(os.path.getsize(OUT_GZ) / 1048576, 1), "MB ->", OUT_GZ)
+    print("OUT_GZ:", round(os.path.getsize(target) / 1048576, 1), "MB ->", target)
 
 
 if __name__ == "__main__":

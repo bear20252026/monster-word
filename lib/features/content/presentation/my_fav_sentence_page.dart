@@ -16,7 +16,7 @@ import 'package:word_app/widgets/scale_down_on_press.dart';
 class MyFavSentencePage extends StatefulWidget {
   const MyFavSentencePage({super.key});
 
-  static const routeName = '/my_fav_sentence';
+  static const routeName = RouteNames.myFavSentence;
 
   @override
   State<MyFavSentencePage> createState() => _MyFavSentencePageState();

@@ -13,7 +13,7 @@ import 'package:word_app/models/word.dart';
 
 class MyFavPage extends StatefulWidget {
   const MyFavPage({super.key});
-  static const routeName = '/my_fav';
+  static const routeName = RouteNames.myFav;
 
   @override
   State<MyFavPage> createState() => _MyFavPageState();

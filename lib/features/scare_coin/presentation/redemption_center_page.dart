@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,7 +16,7 @@ import 'package:word_app/widgets/monster_icon.dart';
 /// - 兑换为纯收集/纪念性质：真实扣币、真实入账，但不附带任何功能权益。
 /// - 商品一经兑换永久持有（按 id 记录在本地，不提供退换）。
 class RedemptionCenterPage extends StatefulWidget {
-  static const String routeName = '/redemption';
+  static const String routeName = RouteNames.redemption;
   const RedemptionCenterPage({super.key});
 
   @override
@@ -276,7 +277,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
                 onPressed: _redeeming ? null : () => _redeem(item),
                 child: _redeeming
                     ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(item.cost.toString(), style: MwTypography.micro),
+                    : Text(item.cost.toString(), style: MwTypography.micro.copyWith(color: context.skin.colors.text1)),
               ),
       ),
     );

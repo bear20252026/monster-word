@@ -18,7 +18,7 @@ import 'package:word_app/widgets/scale_down_on_press.dart';
 class MyEquipPage extends StatelessWidget {
   const MyEquipPage({super.key});
 
-  static const routeName = '/my_equip';
+  static const routeName = RouteNames.myEquip;
 
   @override
   Widget build(BuildContext context) {

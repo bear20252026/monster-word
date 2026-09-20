@@ -3,6 +3,9 @@
 // 台账：docs/regression_ledger.md
 // ============================================================
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
@@ -80,6 +83,8 @@ void main() {
         progressPort: _FakeProgressPort(),
         reviewSchedulePort: _FakeSchedulePort(),
         choicePort: _RealChoicePort(),
+        todayStore: TodayProgressStore(),
+        prefs: PresentationPrefs(),
       );
       await session.loadBook(Book(id: 1, code: 'T', name: '测试', wordCount: 3), shuffle: false);
 

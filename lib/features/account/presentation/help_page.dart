@@ -2,6 +2,7 @@
 
 // 帮助页：默认加载内置帮助内容，也可通过 url 参数加载外部页面
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:word_app/theme/skin_system.dart';
@@ -13,7 +14,7 @@ class HelpPage extends StatefulWidget {
 
   const HelpPage({super.key, this.url, this.type = 0});
 
-  static const routeName = '/help';
+  static const routeName = RouteNames.help;
 
   @override
   State<HelpPage> createState() => _HelpPageState();

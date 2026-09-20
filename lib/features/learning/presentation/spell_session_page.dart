@@ -2,6 +2,7 @@
 
 // 拼写会话：看释义拼单词。判分/推进/结果页由共享脚手架托管。
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
@@ -11,7 +12,7 @@ import 'package:word_app/features/learning/presentation/spelling_quiz_flow.dart'
 class SpellSessionPage extends StatefulWidget {
   const SpellSessionPage({super.key});
 
-  static const routeName = '/spell_session';
+  static const routeName = RouteNames.spellSession;
 
   @override
   State<SpellSessionPage> createState() => _SpellSessionPageState();

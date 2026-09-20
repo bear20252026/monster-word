@@ -2,6 +2,7 @@
 // 历史上本页单独切换 B 档设计语言，与主题选择形成双轴混乱；
 // 现与其他换肤入口共用 MwStyleGrid，全应用只有一个风格事实来源。
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -10,7 +11,7 @@ import 'package:word_app/widgets/mw_style_grid.dart';
 class DesignLanguageSelectPage extends StatelessWidget {
   const DesignLanguageSelectPage({super.key});
 
-  static const routeName = '/design_language';
+  static const routeName = RouteNames.designLanguage;
 
   @override
   Widget build(BuildContext context) {

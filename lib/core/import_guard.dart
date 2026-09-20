@@ -113,7 +113,11 @@ class ImportGuard {
     // `WordBookDatabase.instance` 调用 forceRebuild/diagnostics/getWord——
     // 查询/管理操作一律经 application 服务 + Provider 通道（如
     // core/application/wordbook_maintenance_service.dart、WordRepository 端口）。
-    const dbSingletonTargets = ['core/infrastructure/wordbook_database.dart', 'core/infrastructure/user_database.dart'];
+    const dbSingletonTargets = [
+      'core/infrastructure/wordbook_database.dart',
+      'core/infrastructure/user_database.dart',
+      'features/learning/data/review_schedule_store.dart',
+    ];
     if (fromFeature.isNotEmpty && fromLayer == 'presentation' && dbSingletonTargets.contains(to)) {
       violations.add('presentation 不得直连数据库单例(R-DB): $from -> $to（改经 application 服务 + Provider）');
     }

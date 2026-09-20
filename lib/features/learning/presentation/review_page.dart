@@ -20,7 +20,7 @@ import 'package:word_app/widgets/session_exit_guard.dart';
 class ReviewPage extends StatefulWidget {
   const ReviewPage({super.key});
 
-  static const routeName = '/review';
+  static const routeName = RouteNames.review;
 
   @override
   State<ReviewPage> createState() => _ReviewPageState();

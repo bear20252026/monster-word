@@ -2,6 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
+
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
@@ -54,6 +57,8 @@ void main() {
       progressPort: _FakeProgressPort(),
       reviewSchedulePort: RepositoryReviewScheduleWriterPort(schedule),
       choicePort: _FakeChoicePort(),
+      todayStore: TodayProgressStore(),
+      prefs: PresentationPrefs(),
     );
     await session.loadBook(_testBook, shuffle: false);
 
@@ -111,6 +116,8 @@ void main() {
       progressPort: _FakeProgressPort(),
       reviewSchedulePort: RepositoryReviewScheduleWriterPort(schedule),
       choicePort: _FakeChoicePort(),
+      todayStore: TodayProgressStore(),
+      prefs: PresentationPrefs(),
     );
     await session.loadBook(_testBook, shuffle: false);
 

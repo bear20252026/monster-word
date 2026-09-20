@@ -20,7 +20,7 @@ import 'package:word_app/widgets/scale_down_on_press.dart';
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, this.reminderServiceOverride});
 
-  static const routeName = '/settings';
+  static const routeName = RouteNames.settings;
 
   /// 测试注入学习提醒服务替身（null 时从 Provider 读取）。
   final StudyReminderService? reminderServiceOverride;

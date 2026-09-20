@@ -74,7 +74,13 @@
 | REG-ARCH-008 | core→app / domain→infra 盲区 | 守卫只扫 features | M2/M3 批 | ImportGuard R-core-app + R5b + import_guard_test |
 | REG-REVIEW-001 | 空复习队列塞入 searchWords 抽样假词 | 回退假队列 | M7 批 | `RepositoryReviewQueueReader` 空态返回 `[]`；`review_queue_reader_test` |
 
+
+| REG-ARCH-009 | LearningSessionState 与 Provider 双实例门面（M1 残债） | providers 创建 session 未注入 TodayProgressStore/PresentationPrefs | N1 批（2026-09-20） | 装配层先建门面再注入 session；widgets `context.read`；架构测试禁非装配文件直建 |
+| REG-OPS-001 | build_full_wordbook 无备份覆盖 assets | H4 只覆盖 expanded 脚本 | N2 批 | 默认 OUT 到 inputs/；`ALLOW_ASSET_OVERWRITE` + `.bak` |
+| REG-NAV-005 | 页面 routeName 字面量与 RouteNames 双源 | 无单源守卫 | N3 批 | presentation `routeName = RouteNames.*`；路由表唯一事实来源 |
+
 ## 修复新 bug 的流程
+
 
 1. 修复前先写失败的回归测试（证明 bug 存在）
 2. 修复代码使测试转绿

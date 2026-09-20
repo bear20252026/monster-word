@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
@@ -16,7 +17,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 class QuickSpellPage extends StatefulWidget {
   const QuickSpellPage({super.key});
 
-  static const routeName = '/quick_spell';
+  static const routeName = RouteNames.quickSpell;
 
   @override
   State<QuickSpellPage> createState() => _QuickSpellPageState();

@@ -10,6 +10,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 class TodayProgressStore extends ChangeNotifier {
   TodayProgressStore();
@@ -90,8 +91,12 @@ class TodayProgressStore extends ChangeNotifier {
     _checkedDate = date;
     final savedDate = AppPreferences().getTodayLearnedDate();
     if (savedDate != date) {
-      // 跨天：清零已学并落当天日期（与 session 口径一致）
-      AppPreferences().setTodayLearned(0, date: date);
+      try {
+        // 跨天：清零已学并落当天日期（与 session 口径一致）
+        AppPreferences().setTodayLearned(0, date: date);
+      } catch (e, s) {
+        reportSwallowedError('TodayProgressStore reset learned', e, s);
+      }
       return 0;
     }
     return AppPreferences().getTodayLearned();

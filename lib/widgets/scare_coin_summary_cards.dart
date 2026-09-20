@@ -93,7 +93,7 @@ class EquipCard extends StatelessWidget {
     // 当前皮肤(恒 1) + 收藏章(已兑换≥1 计 1 件) + 连击徽章(连击>0 计 1 件)；
     // 总数取装备架条目数（单一事实来源 AppPreferences.equipRackCount，与我的装备页同源）。
     final streakFuture = context.read<CheckinStatusReader>().getStreakDays();
-    final redeemedCount = PresentationPrefs().redeemedBadgeCount;
+    final redeemedCount = context.read<PresentationPrefs>().redeemedBadgeCount;
     return MwCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       onTap: () => Navigator.pushNamed(context, RouteNames.myEquip),

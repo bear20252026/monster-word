@@ -2,6 +2,7 @@
 
 // 生词本：显示标记为生词的单词
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/learning/application/new_words_reader.dart';
@@ -12,7 +13,7 @@ import 'package:word_app/features/learning/presentation/list_words_page.dart';
 class NewWordsPage extends ListWordsPage {
   const NewWordsPage({super.key});
 
-  static const routeName = '/new_words';
+  static const routeName = RouteNames.newWords;
 
   @override
   State<NewWordsPage> createState() => _NewWordsPageState();

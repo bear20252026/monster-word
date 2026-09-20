@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -23,7 +24,7 @@ class WordExportPage extends StatefulWidget {
 
   const WordExportPage({super.key, required this.bookId, this.bookName = ''});
 
-  static const routeName = '/word_export';
+  static const routeName = RouteNames.wordExport;
 
   @override
   State<WordExportPage> createState() => _WordExportPageState();

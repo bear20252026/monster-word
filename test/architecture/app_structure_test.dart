@@ -159,7 +159,7 @@ void main() {
     test('设置功能域已垂直化，页面迁入 feature', () {
       final featureSource = File('lib/features/settings/presentation/settings_page.dart').readAsStringSync();
       expect(featureSource, contains('class SettingsPage'));
-      expect(featureSource, contains("routeName = '/settings'"));
+      expect(featureSource, contains('routeName = RouteNames.settings'));
     });
 
     test('遗留复习会话栈已删除，功能域装配不再注册旧状态或服务', () {

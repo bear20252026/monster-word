@@ -2,6 +2,7 @@
 
 // 主题选择：精选风格 6 选 1（与其他换肤入口共用 MwStyleGrid，展示一致）
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -10,7 +11,7 @@ import 'package:word_app/widgets/mw_style_grid.dart';
 class UIThemeSelectPage extends StatelessWidget {
   const UIThemeSelectPage({super.key});
 
-  static const routeName = '/theme_select';
+  static const routeName = RouteNames.themeSelect;
 
   @override
   Widget build(BuildContext context) {

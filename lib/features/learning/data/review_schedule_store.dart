@@ -216,7 +216,7 @@ class ReviewScheduleStore {
       if (cards.isNotEmpty) {
         final result = await txn.rawQuery('SELECT COUNT(*) AS n FROM fsrs_cards');
         final count = (result.single['n'] as int?) ?? 0;
-        if (count < cards.length) {
+        if (count != cards.length) {
           throw StateError('迁移行数校验失败：预期 ${cards.length}，实际 $count');
         }
       }

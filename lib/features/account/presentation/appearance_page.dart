@@ -13,7 +13,7 @@ import 'package:word_app/widgets/mw_style_grid.dart';
 /// 外观 & 沉浸场景页
 class AppearancePage extends StatefulWidget {
   const AppearancePage({super.key});
-  static const routeName = '/appearance';
+  static const routeName = RouteNames.appearance;
 
   @override
   State<AppearancePage> createState() => _AppearancePageState();

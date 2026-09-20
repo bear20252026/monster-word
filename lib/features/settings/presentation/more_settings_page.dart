@@ -28,7 +28,7 @@ class MoreSettingsPage extends StatefulWidget {
 
   final UpdateCheckService? updateServiceOverride;
 
-  static const routeName = '/more_settings';
+  static const routeName = RouteNames.moreSettings;
 
   @override
   State<MoreSettingsPage> createState() => _MoreSettingsPageState();

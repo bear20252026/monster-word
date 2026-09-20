@@ -18,6 +18,10 @@ const _aLevelFiles = [
   'lib/features/learning/presentation/review_word_action_coordinator.dart', // 收藏/掌握持久化
   'lib/features/scare_coin/data/preferences_scare_coin_store.dart', // 金币账本
   'lib/features/account/data/user_service_impl.dart', // 用户信息
+  'lib/features/learning/data/review_schedule_repository.dart', // FSRS 持久化/迁移（N4）
+  'lib/features/learning/presentation/learning_session_state.dart', // 今日已学写入
+  'lib/core/application/today_progress_store.dart', // 目标/已学单源
+  'lib/features/account/application/message_store.dart', // 消息本地仓
 ];
 
 void main() {

@@ -5,6 +5,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/nav_utils.dart';
@@ -16,7 +17,7 @@ import 'package:word_app/features/account/application/avatar_storage.dart';
 class UserInfoManagePage extends StatefulWidget {
   const UserInfoManagePage({super.key});
 
-  static const routeName = '/user_info_manage';
+  static const routeName = RouteNames.userInfoManage;
 
   @override
   State<UserInfoManagePage> createState() => _UserInfoManagePageState();

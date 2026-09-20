@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
 import 'package:provider/provider.dart';
@@ -30,7 +31,7 @@ class DictionaryPage extends StatefulWidget {
   final Word word;
   const DictionaryPage({super.key, required this.word});
 
-  static const routeName = '/dictionary';
+  static const routeName = RouteNames.dictionary;
 
   @override
   State<DictionaryPage> createState() => _DictionaryPageState();

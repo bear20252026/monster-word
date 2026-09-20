@@ -3,6 +3,7 @@
 // 消息中心：显示本地消息（欢迎/打卡提醒/连续打卡里程碑等），
 // 数据源为 MessageStore（单一事实来源），支持全部已读与单条已读。
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/account/application/message_store.dart';
@@ -15,7 +16,7 @@ import 'package:word_app/widgets/common/mw_empty_state.dart';
 class MessagePage extends StatefulWidget {
   const MessagePage({super.key});
 
-  static const routeName = '/messages';
+  static const routeName = RouteNames.messages;
 
   @override
   State<MessagePage> createState() => _MessagePageState();

@@ -1,6 +1,7 @@
 // 网络诊断：真实检测网络连接、DNS 解析与关键服务可达性
 // （数据源为 NetworkDiagnosisService，dart:io 实现，非硬编码结果）。
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/settings/application/network_diagnosis_service.dart';
@@ -13,7 +14,7 @@ class NetDiagnosisPage extends StatefulWidget {
 
   final NetworkDiagnosisService? serviceOverride;
 
-  static const routeName = '/net_diagnosis';
+  static const routeName = RouteNames.netDiagnosis;
 
   @override
   State<NetDiagnosisPage> createState() => _NetDiagnosisPageState();

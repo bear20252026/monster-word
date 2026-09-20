@@ -11,7 +11,7 @@ import 'package:word_app/features/account/application/account_profile_state.dart
 class AccountInfoPage extends StatefulWidget {
   const AccountInfoPage({super.key});
 
-  static const routeName = '/account_info';
+  static const routeName = RouteNames.accountInfo;
 
   @override
   State<AccountInfoPage> createState() => _AccountInfoPageState();
