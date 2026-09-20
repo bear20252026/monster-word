@@ -2,6 +2,7 @@
 // 用户可通过滚动选择每天学习的单词数量（1-200）
 
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 import 'package:provider/provider.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
@@ -56,7 +57,11 @@ class _DailyGoalPickerState extends State<DailyGoalPicker> {
           children: [
             Text(
               '每日学习目标',
-              style: TextStyle(fontSize: 14 * resp.fontScale, fontWeight: FontWeight.w600, color: skin.colors.text1),
+              style: TextStyle(
+                fontSize: AppFontSizes.bodySm * resp.fontScale,
+                fontWeight: FontWeight.w600,
+                color: skin.colors.text1,
+              ),
             ),
             const SizedBox(height: 8),
             SizedBox(
@@ -87,7 +92,7 @@ class _DailyGoalPickerState extends State<DailyGoalPicker> {
             ),
             Text(
               '个单词 / 天',
-              style: TextStyle(fontSize: 12 * resp.fontScale, color: skin.colors.text3),
+              style: TextStyle(fontSize: AppFontSizes.micro * resp.fontScale, color: skin.colors.text3),
             ),
           ],
         ),

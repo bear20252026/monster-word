@@ -513,7 +513,7 @@ class _WordArea extends StatelessWidget {
                   child: Text(
                     word.word,
                     style: TextStyle(
-                      fontSize: 40 * resp.fontScale,
+                      fontSize: AppFontSizes.hero * resp.fontScale,
                       fontWeight: FontWeight.w800,
                       color: colors.text1,
                       height: 1.1,
@@ -543,7 +543,7 @@ class _WordArea extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 '/${word.usPron}/',
-                style: TextStyle(fontSize: 14 * resp.fontScale, color: colors.text3),
+                style: TextStyle(fontSize: AppFontSizes.bodySm * resp.fontScale, color: colors.text3),
               ),
             ],
             const SizedBox(height: 18),
@@ -651,7 +651,11 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
             children: [
               Text(
                 _wrongIndex >= 0 ? '请再选出正确答案' : '请选择正确释义',
-                style: TextStyle(fontSize: 13 * resp.fontScale, fontWeight: FontWeight.w600, color: colors.text2),
+                style: TextStyle(
+                  fontSize: AppFontSizes.caption * resp.fontScale,
+                  fontWeight: FontWeight.w600,
+                  color: colors.text2,
+                ),
               ),
               const SizedBox(height: 12),
               for (int i = 0; i < state.choices.length && i < 4; i++)
@@ -753,7 +757,11 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
             child: Center(
               child: Text(
                 interpret,
-                style: TextStyle(fontSize: 16 * resp.fontScale, color: textColor, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: AppFontSizes.bodyMd * resp.fontScale,
+                  color: textColor,
+                  fontWeight: FontWeight.w500,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

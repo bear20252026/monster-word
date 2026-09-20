@@ -48,7 +48,7 @@ class FormalReviewHeader extends StatelessWidget {
           Text(
             '$done/$total',
             style: TextStyle(
-              fontSize: 15 * responsive.fontScale,
+              fontSize: AppFontSizes.bodyXl * responsive.fontScale,
               fontWeight: FontWeight.w600,
               color: skin.onGlassText1,
               fontFeatures: const [FontFeature.tabularFigures()],

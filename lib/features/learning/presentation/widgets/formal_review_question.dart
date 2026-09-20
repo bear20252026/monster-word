@@ -27,7 +27,7 @@ class FormalReviewWordPrompt extends StatelessWidget {
             word.word,
             style: TextStyle(
               fontFamily: 'Charter',
-              fontSize: 44 * responsive.fontScale,
+              fontSize: AppFontSizes.displayMd * responsive.fontScale,
               fontWeight: FontWeight.w400,
               letterSpacing: -0.8,
               color: skin.onGlassText1,
@@ -48,7 +48,7 @@ class FormalReviewWordPrompt extends StatelessWidget {
                   child: Text(
                     '美',
                     style: TextStyle(
-                      fontSize: 12 * responsive.fontScale,
+                      fontSize: AppFontSizes.micro * responsive.fontScale,
                       color: skin.onGlassText1,
                       fontWeight: FontWeight.w500,
                     ),
@@ -68,7 +68,7 @@ class FormalReviewWordPrompt extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   '/${word.usPron.isNotEmpty ? word.usPron : word.ukPron}/',
-                  style: TextStyle(fontSize: 15 * responsive.fontScale, color: skin.onGlassText2),
+                  style: TextStyle(fontSize: AppFontSizes.bodyXl * responsive.fontScale, color: skin.onGlassText2),
                 ),
               ],
             ),
@@ -77,7 +77,7 @@ class FormalReviewWordPrompt extends StatelessWidget {
           Text(
             '先回想词义再选择，想不起来「看答案」',
             style: TextStyle(
-              fontSize: 13 * responsive.fontScale,
+              fontSize: AppFontSizes.caption * responsive.fontScale,
               fontStyle: FontStyle.italic,
               color: skin.onGlassText2.withValues(alpha: 0.7),
             ),

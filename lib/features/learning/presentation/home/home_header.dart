@@ -36,7 +36,7 @@ class _Header extends StatelessWidget {
                 Text(
                   _greeting(),
                   style: TextStyle(
-                    fontSize: 26 * resp.fontScale,
+                    fontSize: AppFontSizes.title * resp.fontScale,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
                     letterSpacing: -0.5,

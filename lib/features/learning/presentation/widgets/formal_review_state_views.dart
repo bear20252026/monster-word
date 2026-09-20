@@ -124,7 +124,7 @@ class FormalReviewCompleteView extends StatelessWidget {
               '今日复习完成！',
               style: TextStyle(
                 fontFamily: 'Charter',
-                fontSize: 30 * resp.fontScale,
+                fontSize: AppFontSizes.statSm * resp.fontScale,
                 fontWeight: FontWeight.w400,
                 letterSpacing: -0.5,
                 color: skin.text1,
