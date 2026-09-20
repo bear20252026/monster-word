@@ -87,7 +87,7 @@ class FormalReviewChoiceCard extends StatelessWidget {
                 child: Text(
                   pair.interpret,
                   style: TextStyle(
-                    fontSize: 16 * responsive.fontScale,
+                    fontSize: AppFontSizes.bodyMd * responsive.fontScale,
                     color: fgColor,
                     fontWeight: FontWeight.w500,
                     height: 1.4,

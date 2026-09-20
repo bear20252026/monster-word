@@ -17,7 +17,7 @@
 | REG-QUIZ-003 | 选项重复/缺项 | ChoiceGenerator 语义回归 | — | 同上（另见 `learning_choice_rules_test.dart`） |
 | REG-NAV-001~004 | 无法前进/多层级返回 | Flutter 无内建 forward | `4a16217` | `test/app/router/navigation_history_test.dart`（前进/返回/分叉作废/弹层过滤） |
 | REG-SKIN-001~003 | 一键换肤形态变颜色不变 / 品牌值趋同 | brandThemeMap 缺映射、B 档值被改平 | `d320ceb` | `test/regression/regression_skin_test.dart` |
-| REG-DATA-001 | 词库数据缺失/损坏 | 词库精简/回填事故 | `8c9486b` | `test/data_verification_test.dart`（50 本/25k 词校验，CI 前置 `test -s assets/db/wordbook.db.gz`） |
+| REG-DATA-001 | 词库数据缺失/损坏 | 词库精简/回填事故 | `8c9486b` | `test/data_verification_test.dart`（books≥272 基线校验，CI 前置 `test -s assets/db/wordbook.db.gz`） |
 | REG-UI-001 | 文字对比度不达标（无障碍退化） | 主题色随意取值 | `d320ceb` | `test/contrast_guard_test.dart`（WCAG AA 4.5:1 全主题守卫） |
 | REG-ARCH-001 | 模块间依赖越界 | 分层边界失守 | — | `test/architecture/import_guard_test.dart`（全库扫描） |
 | REG-DICT-001 | 词典详情页多区块「页面出错了」（release 真机） | `buildDictionaryDetailScope` 全工程零调用，页面 Consumer 抛 Provider not found（error_boundary.log 实锤） | `305113b` | `test/regression/regression_dictionary_page_test.dart`（裸 push 渲染不崩） |
@@ -80,6 +80,10 @@
 | REG-NAV-005 | 页面 routeName 字面量与 RouteNames 双源 | 无单源守卫 | N3 批 | presentation `routeName = RouteNames.*`；路由表唯一事实来源 |
 
 | REG-ARCH-010 | 守卫断言匹配注释假绿；dictionary 内层第二 PresentationPrefs；E2 备份未自动恢复 | N1 迁移后测试未改；providers 遮蔽；降级只读空 SP | R1–R3 批（2026-09-20） | app_structure 断言 PresentationPrefs.equipRackCount；dictionary 去 create；降级 load 读 emergency_backup |
+
+| REG-NAV-006 | SearchPage 路由双源 | 无全库 RouteNames 守卫 | R4 批 | RouteNames.search + route_name_consistency_test |
+| REG-TYPE-002 | fontSize N*fontScale 盲区 | regex 未覆盖 scale | R6 批 | AppFontSizes.* * fontScale + scale 棘轮 0 |
+| REG-FSRS-005 | 迁移行数校验语义 | 空迁移/双实现 | R7 批 | migrateFromSp 校验 count≥cards.length |
 
 ## 修复新 bug 的流程
 

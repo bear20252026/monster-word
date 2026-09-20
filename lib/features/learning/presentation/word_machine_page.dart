@@ -189,7 +189,10 @@ class _WordMachinePageState extends State<WordMachinePage> {
               // 单词
               Text(
                 word.word,
-                style: AppTypography.heroWord.copyWith(color: skin.colors.text1, fontSize: 48 * resp.fontScale),
+                style: AppTypography.heroWord.copyWith(
+                  color: skin.colors.text1,
+                  fontSize: AppFontSizes.heroLg * resp.fontScale,
+                ),
                 textAlign: TextAlign.center,
               ),
               // 音标
@@ -197,7 +200,10 @@ class _WordMachinePageState extends State<WordMachinePage> {
                 const SizedBox(height: 8),
                 Text(
                   word.usPron.isNotEmpty ? word.usPron : word.ukPron,
-                  style: MwTypography.body.copyWith(color: skin.colors.text3, fontSize: 16 * resp.fontScale),
+                  style: MwTypography.body.copyWith(
+                    color: skin.colors.text3,
+                    fontSize: AppFontSizes.bodyMd * resp.fontScale,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -210,7 +216,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
                     meaningText,
                     style: MwTypography.body.copyWith(
                       color: skin.colors.text2,
-                      fontSize: 18 * resp.fontScale,
+                      fontSize: AppFontSizes.heading5 * resp.fontScale,
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,

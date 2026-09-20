@@ -332,7 +332,10 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
         // 单词
         Text(
           word.word,
-          style: AppTypography.heroWord.copyWith(color: skin.colors.text1, fontSize: 48 * resp.fontScale),
+          style: AppTypography.heroWord.copyWith(
+            color: skin.colors.text1,
+            fontSize: AppFontSizes.heroLg * resp.fontScale,
+          ),
           textAlign: TextAlign.center,
         ),
         // 音标
@@ -340,7 +343,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
           const SizedBox(height: 8),
           Text(
             word.usPron.isNotEmpty ? word.usPron : word.ukPron,
-            style: MwTypography.body.copyWith(color: skin.colors.text3, fontSize: 16 * resp.fontScale),
+            style: MwTypography.body.copyWith(color: skin.colors.text3, fontSize: AppFontSizes.bodyMd * resp.fontScale),
             textAlign: TextAlign.center,
           ),
         ],
@@ -351,7 +354,11 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
             firstChild: const SizedBox.shrink(),
             secondChild: Text(
               meaningText,
-              style: MwTypography.body.copyWith(color: skin.colors.text2, fontSize: 18 * resp.fontScale, height: 1.5),
+              style: MwTypography.body.copyWith(
+                color: skin.colors.text2,
+                fontSize: AppFontSizes.heading5 * resp.fontScale,
+                height: 1.5,
+              ),
               textAlign: TextAlign.center,
             ),
             crossFadeState: _showMeaning ? CrossFadeState.showSecond : CrossFadeState.showFirst,

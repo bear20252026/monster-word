@@ -143,6 +143,14 @@ class AppFontSizes {
   static const double heading4 = 22;
   static const double displaySm = 24;
   static const double stat = 32;
+  // R6：响应式 scale 字号锚点（fontSize: AppFontSizes.x * fontScale）
+  static const double bodyXl = 15;
+  static const double titleSm = 19;
+  static const double title = 26;
+  static const double statSm = 30;
+  static const double hero = 40;
+  static const double displayMd = 44;
+  static const double heroLg = 48;
 }
 
 /// 排版 token：只承载字号/字重/行高/字距，**不烘焙皮肤色**。

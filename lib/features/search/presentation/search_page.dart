@@ -25,9 +25,6 @@ import 'package:word_app/features/search/application/search_history_store.dart';
 import 'package:word_app/features/search/application/word_search_reader.dart';
 import 'package:word_app/features/search/domain/search_example.dart';
 
-/// 搜索页路由名。
-const String searchRouteName = '/search';
-
 /// 搜索功能域的完整页面。
 ///
 /// 通过 Provider 向上层读取 [WordSearchReader] / [SearchHistoryStore] /
@@ -35,7 +32,8 @@ const String searchRouteName = '/search';
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
 
-  static const String routeName = searchRouteName;
+  /// R4：路由唯一事实来源 RouteNames.search
+  static const String routeName = RouteNames.search;
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -184,7 +182,10 @@ class _SearchPageState extends State<SearchPage> {
               haloColor: skin.accent,
               bgColor: skin.cardBgAlt,
               textStyle: MwTypography.bodyMd.copyWith(color: skin.text1),
-              hintStyle: MwTypography.bodyMd.copyWith(color: context.skin.colors.text2, fontSize: 15 * resp.fontScale),
+              hintStyle: MwTypography.bodyMd.copyWith(
+                color: context.skin.colors.text2,
+                fontSize: AppFontSizes.bodyXl * resp.fontScale,
+              ),
               onChanged: _onQueryChanged,
               onSubmitted: _search,
               autoFocus: true,
@@ -204,7 +205,7 @@ class _SearchPageState extends State<SearchPage> {
             onTap: () => Navigator.pop(context),
             child: Text(
               '取消',
-              style: TextStyle(fontSize: 16 * resp.fontScale, color: skin.text1),
+              style: TextStyle(fontSize: AppFontSizes.bodyMd * resp.fontScale, color: skin.text1),
             ),
           ),
         ],

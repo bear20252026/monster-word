@@ -23,6 +23,8 @@ const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app'];
 const _ceiling = 1;
 
 final _pattern = RegExp(r'fontSize:\s*\d+\s*[,)]');
+final _scalePattern = RegExp(r'fontSize:\s*\d+\s*\*');
+const _scaleCeiling = 0;
 
 void main() {
   test('fontSize 数字字面量存量只减不增（当前上限 $_ceiling）', () {
@@ -49,6 +51,30 @@ void main() {
           '18 heading5 / 20 titleLg / 22 heading4 / 24 displaySm / 28 heading3 / 32 stat…）；\n'
           '若你刚清理了存量，请同步把 _ceiling 下调到新的实际值。\n'
           '残留明细（前 20 条）：\n${hits.take(20).join('\n')}',
+    );
+  });
+
+  test('fontSize: N * fontScale 字面量存量只减不增（当前上限 $_scaleCeiling）', () {
+    final hits = <String>[];
+    for (final rootDir in _scanRoots) {
+      final dir = Directory(rootDir);
+      if (!dir.existsSync()) continue;
+      for (final f in dir.listSync(recursive: true).whereType<File>()) {
+        if (!f.path.endsWith('.dart')) continue;
+        final rel = f.path.replaceAll(r'\', '/');
+        if (_whitelist.contains(rel)) continue;
+        final lines = f.readAsLinesSync();
+        for (var i = 0; i < lines.length; i++) {
+          if (_scalePattern.hasMatch(lines[i])) hits.add('$rel:${i + 1}');
+        }
+      }
+    }
+    expect(
+      hits.length,
+      lessThanOrEqualTo(_scaleCeiling),
+      reason:
+          'fontSize: N * scale 存量 ${hits.length} 超上限 $_scaleCeiling。'
+          '请改用 AppFontSizes.* * fontScale。\n${hits.take(20).join('\n')}',
     );
   });
 }

@@ -41,7 +41,7 @@ class _TodayHeroCard extends StatelessWidget {
                     Text(
                       done ? '今日目标已完成' : '还差 ${goal - learned} 个单词',
                       style: TextStyle(
-                        fontSize: 19 * resp.fontScale,
+                        fontSize: AppFontSizes.titleSm * resp.fontScale,
                         fontWeight: FontWeight.w700,
                         height: 1.25,
                         letterSpacing: -0.3,
@@ -51,7 +51,7 @@ class _TodayHeroCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '已学 $learned / $goal · 待复习 $dueCount',
-                      style: TextStyle(fontSize: 13 * resp.fontScale, color: skin.colors.text3),
+                      style: TextStyle(fontSize: AppFontSizes.caption * resp.fontScale, color: skin.colors.text3),
                     ),
                     SizedBox(height: 16 * resp.scale),
                     Row(
@@ -198,7 +198,7 @@ class _ProgressRing extends StatelessWidget {
                 Text(
                   '$learned',
                   style: TextStyle(
-                    fontSize: 24 * resp.fontScale,
+                    fontSize: AppFontSizes.displaySm * resp.fontScale,
                     fontWeight: FontWeight.w700,
                     height: 1.1,
                     color: progressColor,
@@ -206,7 +206,11 @@ class _ProgressRing extends StatelessWidget {
                 ),
                 Text(
                   '/ $goal',
-                  style: TextStyle(fontSize: 12 * resp.fontScale, height: 1.3, color: context.skin.colors.text3),
+                  style: TextStyle(
+                    fontSize: AppFontSizes.micro * resp.fontScale,
+                    height: 1.3,
+                    color: context.skin.colors.text3,
+                  ),
                 ),
               ],
             ),
