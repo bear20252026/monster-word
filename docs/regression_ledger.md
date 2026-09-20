@@ -1,7 +1,8 @@
 # Monster Word 回归测试台账（Regression Ledger）
 
 > 原则：**每个已修复的 bug 必须有对应的永久回归测试**（REG-ID 命名），
-> 由 CI（GitHub Actions `dart.yml`：push/PR to main → `flutter test` 失败即阻断合并）强制执行。
+> 由 CI（GitHub Actions `dart.yml`：push/PR to main → format+analyze+**flutter test** 失败即阻断；
+> `build.yml` 构建前同样跑 analyze+test）强制执行。
 > 任何导致回归测试失败的改动，必须先证明 bug 不会复发，否则禁止合入。
 
 ## 台账索引
@@ -14,7 +15,7 @@
 | REG-QUIZ-001 | 四选一干扰项混入英文释义、无混淆性 | `extractChinese` 只认 JSON 释义，对纯文本释义（词库主流格式）返回空 | `2eabee0` | `test/regression/regression_quiz_test.dart` |
 | REG-QUIZ-002 | GRE 等书四选一残缺、详情页空白 | 词库 55% 空壳词进学习队列（三轮回填后降至 1%，双保险见 REG-DATA） | `2eabee0` | 同上 |
 | REG-QUIZ-003 | 选项重复/缺项 | ChoiceGenerator 语义回归 | — | 同上（另见 `learning_choice_rules_test.dart`） |
-| REG-NAV-001~004 | 无法前进/多层级返回 | Flutter 无内建 forward | `4a16217` | `test/core/router/navigation_history_test.dart`（前进/返回/分叉作废/弹层过滤） |
+| REG-NAV-001~004 | 无法前进/多层级返回 | Flutter 无内建 forward | `4a16217` | `test/app/router/navigation_history_test.dart`（前进/返回/分叉作废/弹层过滤） |
 | REG-SKIN-001~003 | 一键换肤形态变颜色不变 / 品牌值趋同 | brandThemeMap 缺映射、B 档值被改平 | `d320ceb` | `test/regression/regression_skin_test.dart` |
 | REG-DATA-001 | 词库数据缺失/损坏 | 词库精简/回填事故 | `8c9486b` | `test/data_verification_test.dart`（50 本/25k 词校验，CI 前置 `test -s assets/db/wordbook.db.gz`） |
 | REG-UI-001 | 文字对比度不达标（无障碍退化） | 主题色随意取值 | `d320ceb` | `test/contrast_guard_test.dart`（WCAG AA 4.5:1 全主题守卫） |
@@ -52,6 +53,17 @@
 | REG-ARCH-005 | presentation 直连数据库单例 3 处：word_detail_page（getWord 常规读）、book_words_page（forceRebuild + diagnostics）、more_settings_page（forceRebuild），违反 architecture_boundaries.md §2；且 ImportGuard 只拦反向依赖，此类正向直连 CI 拦不住 | 管理操作与查询无 application 入口，页面绕过端口直取单例 | 第四十批（v2.7.55+96） | 新增 `core/application/wordbook_maintenance_service.dart`（诊断/重建唯一入口，类型经 export 转发）+ book/settings providers 注入；word_detail 改走既有 WordRepository Provider 通道（getWordByText 语义等价）；ImportGuard 新增 R-DB 规则 + import_guard_test 用例 |
 
 | REG-LEARN-002 | FSRS 学习记录以 3 个 SP key 全量 blob 存储且每次评分 3 次 jsonEncode 全量重写（词量数千时每次评分重写数 MB）；写入中途被杀 = 整个 blob 损坏丢全部学习记录，且 SP 无事务 | 持久化层选型失误（blob 全量写而非行式存储），写入口高度收敛（load 1 处 + rateWord/forget）具备无损切换条件 | 第四十一批（v2.7.56+97，批次 E1） | 新增 `lib/features/learning/data/review_schedule_store.dart`（独立 review_schedule.db 三表，与词库物理隔离防重建误伤）+ repository 首启事务迁移（损坏行跳过上报、行数校验在事务内、失败降级 SP 下次重试）+ 写路径单事务 O(1)；旧 SP key 保留为只读回滚快照（E2 另批清理）；`test/features/learning/data/review_schedule_store_test.dart`（4 用例）+ `review_schedule_migration_test.dart`（6 用例：迁移/防重复迁移/空数据/损坏降级/往返/SP 模式回写） |
+
+| REG-DOCK-002 | 课程页底部工具栏与悬浮 Dock 几何重叠 | MainShell 悬浮 Dock 覆盖页脚操作区，clearance 预留丢失 | c9b5d2e | `test/regression/regression_dock_clearance_test.dart` |
+| REG-START-001~003 | 首启引导/登录 fail-safe 路径回归 | 启动双时间线竞态、引导标记未持久化 | 启动批 | `test/regression/regression_start_flow_test.dart` |
+| REG-ZONE-001 | Zone mismatch（Zone.current 与 Flutter 绑定不一致） | bootstrap 未整体包 `runZonedGuarded` | 7ac78c6 | `test/regression/regression_zone001_boot_zone_test.dart` |
+| REG-STYLE-001~003 | 精选风格数量/迁移表漂移 | 主题精选集合无守卫 | 风格批 | `test/regression/regression_style_test.dart` |
+| REG-EQUIP-001 | 装备架三入口/收藏陈列数据缺失 | 陈列页假数据或路由断线 | 装备架批 | `test/regression/regression_equip001_rack_test.dart` |
+| REG-STEREO-001 | 随身听词源空态/连播/播放顺序入口回归 | 播放器与词源装配脱节 | 随身听批 | `test/regression/regression_stereo001_sources_test.dart` |
+| REG-LISTEN-001 | 磁带机 UI：旋转/进度/上一首下一首禁用 | 同族化改造后控件契约漂移 | C1 磁带批 | `test/regression/regression_listen001_player_test.dart` |
+| REG-SPELL-001 | 快速拼写反馈/计数/空态/超时结束 | 拼写测验脚手架统一后行为回归 | 拼写脚手架批 | `test/regression/regression_spell001_quiz_flow_test.dart` |
+| REG-DICT-005b | 词根/例句字段契约：非空 word_root 必须是合法 JSON；非空 example 解析后例句非空 | 词库导入字段质量无守卫 | 数据质量批 | `test/regression/regression_dict005_fields_test.dart` |
+| REG-ARCH-006 | presentation 直取 GetIt / 直连同 feature data / 直触 core 仓储与 AppPreferences | 守卫字符串匹配洞 + 端口模型空心化 | PR #44 + 残债④⑤⑥ | `import_guard.dart` R6-DI(package:get_it)/R3(presentation→data)/R-core-repo/R-prefs + `import_guard_test.dart` |
 
 ## 修复新 bug 的流程
 

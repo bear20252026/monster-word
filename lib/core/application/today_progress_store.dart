@@ -46,6 +46,13 @@ class TodayProgressStore extends ChangeNotifier {
   /// 今日已学（唯一源：todayLearned；跨天清零由 sync 集中处理）。
   int get learned => AppPreferences().getTodayLearned();
 
+  /// 今日已学的持久化日期串（presentation 会话状态读取，禁止直触 infrastructure）。
+  String get todayLearnedDate => AppPreferences().getTodayLearnedDate();
+
+  /// 会话侧写入今日已学（含日期戳）。
+  Future<void> setTodayLearned(int value, {required String date}) =>
+      AppPreferences().setTodayLearned(value, date: date);
+
   /// 剩余待学（目标 − 已学，钳到 ≥0）。
   int get remaining => goal > 0 ? (goal - learned).clamp(0, goal).toInt() : 0;
 

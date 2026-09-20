@@ -3,6 +3,7 @@
 // 约定：新代码的用户反馈一律走本文件 helper，不再直接
 // ScaffoldMessenger.of(context).showSnackBar(...)。
 import 'package:flutter/material.dart';
+import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
 /// 轻提示（替代散落各处的 ScaffoldMessenger.showSnackBar）
@@ -16,11 +17,11 @@ void showMwToast(
   final messenger = ScaffoldMessenger.maybeOf(context);
   if (messenger == null) return;
 
-  final scheme = Theme.of(context).colorScheme;
+  final skin = context.skin;
   final Color accent = switch (type) {
-    MwToastType.success => Colors.green.shade600,
-    MwToastType.error => scheme.error,
-    MwToastType.info => scheme.primary,
+    MwToastType.success => skin.colors.success,
+    MwToastType.error => skin.colors.danger,
+    MwToastType.info => skin.colors.accent,
   };
 
   messenger.hideCurrentSnackBar();
@@ -76,7 +77,7 @@ Future<void> showMwResult(
     builder: (ctx) => AlertDialog(
       icon: Icon(
         success ? Icons.check_circle_outline : Icons.error_outline,
-        color: success ? Colors.green : Theme.of(ctx).colorScheme.error,
+        color: success ? context.skin.colors.success : context.skin.colors.danger,
         size: 48,
       ),
       title: Text(title),

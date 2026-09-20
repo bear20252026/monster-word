@@ -295,7 +295,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
           ElevatedButton(
             onPressed: _selectedIndices.isEmpty ? null : _deleteSelected,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: context.skin.colors.danger,
               foregroundColor: AppColors.white100,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
             ),
@@ -327,7 +327,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('删除', style: TextStyle(color: Colors.red)),
+            child: Text('删除', style: TextStyle(color: context.skin.colors.danger)),
           ),
         ],
       ),

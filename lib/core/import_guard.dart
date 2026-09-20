@@ -113,6 +113,18 @@ class ImportGuard {
       violations.add('presentation 不得直连数据库单例(R-DB): $from -> $to（改经 application 服务 + Provider）');
     }
 
+    // R-core-repo（2026-09-19 N10）：presentation 不得 import core 仓储实现类型。
+    // 查词走 core/application/word_lookup_reader.dart；装配边界与 data 适配器可转发。
+    if (fromFeature.isNotEmpty && fromLayer == 'presentation' && !isProviderAssembly) {
+      if (to.startsWith('core/repositories/')) {
+        violations.add('presentation 不得 import core/repositories(R-core-repo): $from -> $to（改经 application 端口）');
+      }
+      // R-prefs：presentation 不得直触 AppPreferences 单例，走 PresentationPrefs / feature 状态。
+      if (to == 'core/infrastructure/app_preferences.dart') {
+        violations.add('presentation 不得直触 AppPreferences(R-prefs): $from -> $to（改经 application PresentationPrefs）');
+      }
+    }
+
     // R-widgets（A2 收口）：共享组件层（widgets/）位于 R4/R6 的 from 域之外，
     // 此前完全脱离守卫。规则：可消费 feature 的 application 端口（端口-适配器
     // 允许的功能间通道），不得进入 feature 的 domain/data/presentation 内部，

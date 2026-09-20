@@ -3,9 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/repositories/word_repository.dart';
+import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/features/dictionary/application/dictionary_extra_reader.dart';
 import 'package:word_app/features/dictionary/domain/dictionary_extra.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
@@ -72,7 +72,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
     final word = _resolveTargetWord(null);
     if (word == null || word.example.isNotEmpty) return; // 已是完整词
     try {
-      final full = await context.read<WordRepository>().getWordByText(word.word);
+      final full = await context.read<WordLookupReader>().getWordByText(word.word);
       if (full != null && mounted) setState(() => _fullWord = full);
     } catch (e) {
       debugPrint('[WordDetail] 完整词重查失败: $e');
@@ -430,18 +430,10 @@ class _WordDetailPageState extends State<WordDetailPage> {
   List<Widget> _buildMnemonicSections(Word word, SkinSystem skin, List<String> confuseList) {
     // 助记展示偏好：AppPreferences 单例直读（settings 与 dictionary 共享 key，
     // 键定义在 core 上提，避免跨功能 import；设置页修改后下次进入详情页生效）。
-    final appPrefs = AppPreferences();
-    final showSimilarWords = appPrefs.getBool(
-      AppPreferences.showSimilarWordsKey,
-      defaultValue: AppPreferences.defaultShowSimilarWords,
-    );
-    final showRoots = appPrefs.getBool(AppPreferences.showRootsKey, defaultValue: AppPreferences.defaultShowRoots);
-    final segments = appPrefs
-        .getString(AppPreferences.mnemonicOrderKey, defaultValue: AppPreferences.defaultMnemonicOrder)
-        .split(',')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
+    final appPrefs = context.read<PresentationPrefs>();
+    final showSimilarWords = appPrefs.showSimilarWords;
+    final showRoots = appPrefs.showRoots;
+    final segments = appPrefs.mnemonicOrder.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
     final gap = SizedBox(height: context.design.spacing.lg);
     final gapSm = SizedBox(height: context.design.spacing.xs);
 

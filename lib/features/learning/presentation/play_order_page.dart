@@ -5,7 +5,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/features/learning/application/play_order.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -25,19 +26,17 @@ class PlayOrderPage extends StatefulWidget {
 }
 
 class _PlayOrderPageState extends State<PlayOrderPage> {
-  final AppPreferences _prefs = AppPreferences();
   PlayOrder _selected = PlayOrder.sequential;
 
   @override
   void initState() {
     super.initState();
-    _restore();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restore());
   }
 
   Future<void> _restore() async {
-    await _prefs.init();
     if (!mounted) return;
-    final saved = _prefs.getString(PlayOrderPage.prefKey);
+    final saved = context.read<PresentationPrefs>().getPlayOrder();
     setState(() {
       _selected = PlayOrder.values.where((order) => order.name == saved).firstOrNull ?? PlayOrder.sequential;
     });
@@ -45,7 +44,7 @@ class _PlayOrderPageState extends State<PlayOrderPage> {
 
   Future<void> _select(PlayOrder order) async {
     setState(() => _selected = order);
-    await _prefs.setString(PlayOrderPage.prefKey, order.name);
+    await context.read<PresentationPrefs>().setPlayOrder(order.name);
   }
 
   @override

@@ -2,6 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/service_locator.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/application/word_lookup_reader.dart';
+import 'package:word_app/core/application/word_lookup_reader_impl.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
@@ -159,7 +162,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
       Provider<ReviewQueueReader>.value(value: sl<ReviewQueueReader>()),
       // core 基础设施转发（页面经 Provider 通道消费，禁止直取 sl<>——A3 收口）
       Provider<AudioService>.value(value: sl<AudioService>()),
-      Provider<WordRepository>.value(value: sl<WordRepository>()),
+      // N10：查词/偏好经 application 端口（R-core-repo / R-prefs）
+      Provider<WordLookupReader>(create: (_) => RepositoryWordLookupReader(sl<WordRepository>())),
+      Provider<PresentationPrefs>(create: (_) => PresentationPrefs()),
       Provider<LearningProgressReader>.value(value: LearningProgressReaderImpl.fromServiceLocator()),
       ChangeNotifierProvider(
         create: (_) =>

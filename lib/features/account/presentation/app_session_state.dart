@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/auth/app_session_controller.dart';
-import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/application/session_security.dart';
 
 /// 应用账号与首次引导的会话状态。
 ///
@@ -48,7 +48,7 @@ class AppSessionState extends ChangeNotifier implements AppSessionController {
     _clearPersist();
     // 安全审计 S2：登出时清除凭证（安全存储中的 token/secret + 用户信息缓存）。
     // 清理失败不阻断登出流程（测试环境/插件异常时静默）。
-    SecureTokenStorage().clearAll().catchError((_) {});
+    clearSessionSecrets();
     SharedPreferences.getInstance().then((prefs) {
       prefs.remove('monster_word_user_info');
       prefs.remove('user_token');

@@ -169,7 +169,7 @@ class _MyFavPageState extends State<MyFavPage> {
             ),
             TextButton(
               onPressed: _batchRemoveFavorites,
-              child: const Text('删除', style: TextStyle(color: Colors.red)),
+              child: Text('删除', style: TextStyle(color: context.skin.colors.danger)),
             ),
             TextButton(
               onPressed: _toggleBatchEdit,

@@ -52,6 +52,35 @@ void main() {
       );
     });
 
+    test('消费处零 Material 语义色 Colors.red/green/orange/blue（特效/白名单除外）', () {
+      final violations = <String>[];
+      final materialSemantic = RegExp(r'Colors\.(red|green|orange|blue)(\.shade\d+)?\b');
+      for (final root in ['lib/features', 'lib/widgets']) {
+        final dir = Directory(root);
+        if (!dir.existsSync()) continue;
+        for (final f in dir.listSync(recursive: true).whereType<File>()) {
+          if (!f.path.endsWith('.dart')) continue;
+          final rel = f.path.replaceAll('\\', '/');
+          // 特效装饰色唯一入口与调色板定义不在本规则范围
+          if (rel.contains('effect_palette') || rel.contains('meteors')) continue;
+          final lines = f.readAsLinesSync();
+          for (var i = 0; i < lines.length; i++) {
+            if (materialSemantic.hasMatch(lines[i])) {
+              violations.add('$rel:${i + 1}: ${lines[i].trim()}');
+            }
+          }
+        }
+      }
+      expect(violations, isEmpty, reason: '语义色请走 skin.colors.success/danger 或 MwColors（N7，2026-09-19）');
+    });
+
+    test('MwTypography 不烘焙皮肤色（N6：颜色必须 copyWith skin）', () {
+      final src = File('lib/tokens/design_tokens.dart').readAsStringSync();
+      final block = src.split('class MwTypography').last.split('class AppColors').first;
+      expect(block.contains('StarbucksCreamColors'), isFalse, reason: 'MwTypography 禁止绑定皮肤色');
+      expect(block.contains('StarbucksDarkColors'), isFalse);
+    });
+
     test('effect_palette.dart 是特效装饰色唯一入口且全部具名', () {
       final source = File('lib/tokens/effect_palette.dart').readAsStringSync();
       // 白名单文件必须存在且承载特效调色板

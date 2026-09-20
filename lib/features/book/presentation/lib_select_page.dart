@@ -19,7 +19,7 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/features/book/domain/book_groups.dart';
@@ -305,13 +305,13 @@ class _LibSelectPageState extends State<LibSelectPage> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已选中《${book.name}》')));
-        final prefs = AppPreferences();
-        final firstTime = !prefs.getBool(AppPreferences.dailyGoalPromptShownKey, defaultValue: false);
+        final prefs = context.read<PresentationPrefs>();
+        final firstTime = !prefs.dailyGoalPromptShown;
         if (!firstTime) {
           if (mounted && Navigator.of(context).canPop()) Navigator.pop(context);
           return;
         }
-        await prefs.setBool(AppPreferences.dailyGoalPromptShownKey, true);
+        await prefs.markDailyGoalPromptShown();
         if (!mounted) return;
         final nav = Navigator.of(context);
         await showModalBottomSheet<void>(

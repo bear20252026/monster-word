@@ -127,6 +127,26 @@ void main() {
       expect(check('features/learning/data/repository_favorites_port.dart', 'app/service_locator.dart'), isEmpty);
     });
 
+    test('R-core-repo / R-prefs: presentation 不得直触 core 仓储与 AppPreferences', () {
+      expect(
+        check('features/dictionary/presentation/word_detail_page.dart', 'core/repositories/word_repository.dart'),
+        anyElement(contains('R-core-repo')),
+      );
+      expect(
+        check('features/book/presentation/lib_select_page.dart', 'core/infrastructure/app_preferences.dart'),
+        anyElement(contains('R-prefs')),
+      );
+      // application 端口与装配边界放行
+      expect(check('features/dictionary/presentation/page.dart', 'core/application/word_lookup_reader.dart'), isEmpty);
+      expect(
+        check(
+          'features/learning/presentation/learning_feature_providers.dart',
+          'core/repositories/word_repository.dart',
+        ),
+        isEmpty,
+      );
+    });
+
     test('R-DB: presentation 不得直连数据库单例（REG-ARCH-005 收口）', () {
       // presentation 页面 import 数据库单例 → 违规（改经 application 服务 + Provider）
       expect(

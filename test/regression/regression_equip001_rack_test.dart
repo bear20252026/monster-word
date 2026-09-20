@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/app/router/route_names.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/account/presentation/my_equip_page.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
@@ -45,7 +46,13 @@ void main() {
         ),
         home: SkinProvider(
           skin: SkinSystem(),
-          child: Provider<CheckinStatusReader>.value(value: _FakeCheckinReader(), child: const MyEquipPage()),
+          child: MultiProvider(
+            providers: [
+              Provider<CheckinStatusReader>.value(value: _FakeCheckinReader()),
+              Provider<PresentationPrefs>.value(value: PresentationPrefs()),
+            ],
+            child: const MyEquipPage(),
+          ),
         ),
       ),
     );

@@ -26,7 +26,8 @@ import 'package:word_app/features/dictionary/domain/dictionary_extra.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail_page.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
 import 'package:word_app/core/repositories/note_repository.dart';
-import 'package:word_app/core/repositories/word_repository.dart';
+import 'package:word_app/core/application/word_lookup_reader.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/theme/skin_system.dart';
 
@@ -37,25 +38,9 @@ class _StubDictionaryExtraReader implements DictionaryExtraReader {
   Future<DictionaryExtra?> forWord(String word) async => null;
 }
 
-class _StubWordRepository implements WordRepository {
+class _StubWordLookup implements WordLookupReader {
   @override
   Future<Word?> getWordByText(String text) async => null;
-  @override
-  Future<Word?> getWordById(int id) async => null;
-  @override
-  Future<List<Word>> getWordsByTexts(Iterable<String> texts) async => [];
-  @override
-  Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset}) async => [];
-  @override
-  Future<List<Word>> getWordsByIds(Iterable<int> ids) async => [];
-  @override
-  Future<List<Word>> getRandomWords(int count, {int? excludeBookId}) async => [];
-  @override
-  Future<Map<String, dynamic>?> getWordDetails(int wordId) async => null;
-  @override
-  Future<List<Word>> searchWords(String query, {int? limit}) async => [];
-  @override
-  Future<int> updateWordStatus(int wordId, Map<String, dynamic> status) async => 0;
 }
 
 class _StubFavRepo implements FavRepository {
@@ -204,7 +189,8 @@ void main() {
         Provider<NoteRepository>.value(value: _StubNoteRepo()),
         Provider<WordNotesStore>.value(value: _StubNotesStore()),
         Provider<DictionaryExtraReader>.value(value: _StubDictionaryExtraReader()),
-        Provider<WordRepository>.value(value: _StubWordRepository()),
+        Provider<WordLookupReader>.value(value: _StubWordLookup()),
+        Provider<PresentationPrefs>.value(value: PresentationPrefs()),
         ChangeNotifierProvider<ReviewScheduleReader>(
           create: (_) => RepositoryReviewScheduleReader(repository: _StubReviewScheduleRepo()),
         ),

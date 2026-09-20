@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -24,7 +24,7 @@ class MyEquipPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin;
     // 装备总数 = hero（当前皮肤）+ 收藏陈列 2 行，与 profile 装备卡片共用该值。
-    assert(AppPreferences.equipRackCount == 3, '装备架条目数与 AppPreferences.equipRackCount 不同步（profile 装备卡片共用该值）');
+    assert(PresentationPrefs.equipRackCount == 3, '装备架条目数与 PresentationPrefs.equipRackCount 不同步');
 
     return Scaffold(
       backgroundColor: skin.colors.pageBg,
@@ -48,7 +48,7 @@ class MyEquipPage extends StatelessWidget {
                         iconColor: FuncColors.purple,
                         title: '收藏章',
                         subtitle: '在兑换中心用尖叫币兑换',
-                        value: '${AppPreferences().redeemedBadgeCount()} 枚',
+                        value: '${context.read<PresentationPrefs>().redeemedBadgeCount} 枚',
                         onTap: () => Navigator.pushNamed(context, RouteNames.redemption),
                       ),
                       MwListRow(
