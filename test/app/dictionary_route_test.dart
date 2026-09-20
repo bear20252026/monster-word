@@ -10,40 +10,16 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_by_name_page.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/core/repositories/word_repository.dart';
+import 'package:word_app/core/application/word_lookup_reader.dart';
 
-/// 仅承接 getWordByText 的轻量 Fake，其余方法返回空/空值（测试不触达）。
-class _FakeWordRepository implements WordRepository {
+/// 仅承接 getWordByText 的轻量 Fake（WordLookupReader 端口，R-core-repo）。
+class _FakeWordLookup implements WordLookupReader {
   final Word? found;
 
-  _FakeWordRepository({this.found});
+  _FakeWordLookup({this.found});
 
   @override
   Future<Word?> getWordByText(String text) async => found;
-
-  @override
-  Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset}) async => [];
-
-  @override
-  Future<Word?> getWordById(int id) async => null;
-
-  @override
-  Future<List<Word>> getWordsByTexts(Iterable<String> texts) async => [];
-
-  @override
-  Future<List<Word>> getWordsByIds(Iterable<int> ids) async => [];
-
-  @override
-  Future<List<Word>> searchWords(String query, {int? limit}) async => [];
-
-  @override
-  Future<Map<String, dynamic>?> getWordDetails(int wordId) async => null;
-
-  @override
-  Future<List<Word>> getRandomWords(int count, {int? excludeBookId}) async => [];
-
-  @override
-  Future<int> updateWordStatus(int wordId, Map<String, dynamic> status) async => 0;
 }
 
 void main() {
@@ -92,11 +68,10 @@ void main() {
 
     group('按名解析页面', () {
       testWidgets('未命中 → 友好错误态，可返回首页', (tester) async {
-        // A3 收口后 DictionaryByNamePage 通过 context.read<WordRepository>() 取依赖，
-        // 测试桩以 Provider 契约方式注入（与 feature_providers 装配一致），不再经 sl。
+        // R-core-repo：DictionaryByNamePage 经 WordLookupReader 端口取词（Provider 注入）。
         await tester.pumpWidget(
-          Provider<WordRepository>.value(
-            value: _FakeWordRepository(found: null),
+          Provider<WordLookupReader>.value(
+            value: _FakeWordLookup(found: null),
             child: const MaterialApp(home: DictionaryByNamePage(wordName: 'zzz_not_exist')),
           ),
         );
