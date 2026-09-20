@@ -91,7 +91,7 @@ class EquipCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // 已拥有装备件数规则（⚠️ 全库唯一持有，勿在他处复制）：
     // 当前皮肤(恒 1) + 收藏章(已兑换≥1 计 1 件) + 连击徽章(连击>0 计 1 件)；
-    // 总数取装备架条目数（单一事实来源 AppPreferences.equipRackCount，与我的装备页同源）。
+    // 总数取装备架条目数（单一事实来源 PresentationPrefs.equipRackCount，与我的装备页同源）。
     final streakFuture = context.read<CheckinStatusReader>().getStreakDays();
     final redeemedCount = context.read<PresentationPrefs>().redeemedBadgeCount;
     return MwCard(

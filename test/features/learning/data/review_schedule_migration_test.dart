@@ -161,6 +161,30 @@ void main() {
     expect(prefs.getString(ReviewScheduleRepository.migratedMarkerKey), isNull);
   });
 
+  test('R3：SQLite 不可用且 SP 活键为空时，从 emergency_backup 自动恢复', () async {
+    // 未注入 store：flutter test 环境 ReviewScheduleStore.open 会抛错 → 降级路径。
+    SharedPreferences.setMockInitialValues({
+      ReviewScheduleRepository.migratedMarkerKey: 'done',
+      ReviewScheduleRepository.emergencyBackupKey: jsonEncode({
+        'savedAt': '2026-09-20T00:00:00.000',
+        ReviewScheduleRepository.cardsPrefKey: legacyCardsBlob(),
+        ReviewScheduleRepository.dailyStatsPrefKey: jsonEncode({
+          '2026-09-03': {'learn': 5, 'review': 2},
+        }),
+        ReviewScheduleRepository.activeDatesPrefKey: ['2026-09-03'],
+      }),
+    });
+
+    final repo = ReviewScheduleRepository();
+    await repo.initialize();
+
+    expect(repo.usesSqlite, isFalse);
+    expect(repo.cardFor('apple'), isNotNull);
+    expect(repo.cardFor('bee'), isNotNull);
+    expect(repo.activeDateCount, 1);
+    expect(repo.todayLearnCount, anyOf(0, 5)); // 日期键依赖“今天”，不断言绝对值
+  });
+
   test('SQLite 模式评分往返：重开仓储后卡片/统计/日期一致，forget 删除生效', () async {
     SharedPreferences.setMockInitialValues({});
     final store = await newStore();

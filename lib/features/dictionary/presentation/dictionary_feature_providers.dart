@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/service_locator.dart';
-import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/core/application/word_lookup_reader_impl.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
@@ -34,7 +33,8 @@ Widget buildDictionaryFeatureScope({required Widget child}) {
       Provider<DictionaryExtraReader>(create: (_) => const RepositoryDictionaryExtraReader()),
       // N10：查词/偏好端口（R-core-repo / R-prefs）——presentation 不 import core 仓储/SP
       Provider<WordLookupReader>(create: (_) => RepositoryWordLookupReader(sl<WordRepository>())),
-      Provider<PresentationPrefs>(create: (_) => PresentationPrefs()),
+      // R2：PresentationPrefs 由外层 learning scope 注入（app.dart 中 learning ⊃ dictionary），
+      // 此处禁止再 create 第二实例；独立测试请在自己树上挂 Provider.value。
     ],
     child: child,
   );

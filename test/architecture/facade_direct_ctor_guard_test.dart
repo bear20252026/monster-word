@@ -7,7 +7,7 @@ const _allowed = <String>[
   'lib/core/application/presentation_prefs.dart',
   'lib/core/application/today_progress_store.dart',
   'lib/features/learning/presentation/learning_feature_providers.dart',
-  'lib/features/dictionary/presentation/dictionary_feature_providers.dart',
+  // R2：dictionary providers 不得再 create PresentationPrefs（应消费外层 learning 实例）
 ];
 
 void main() {
