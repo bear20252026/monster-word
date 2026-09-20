@@ -2,6 +2,7 @@
 // 唯一使用方：lib_select_page（词书分类标签）。原 MorphingTabs/MorphingTabIndicator
 // 因长期零引用已于 v2.7.34 删除，如需不等宽测量版请按需重写而非恢复死代码。
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 /// 简化的变形标签（无测量，等宽 tab）
@@ -143,7 +144,7 @@ class _SimpleMorphingTabsState extends State<SimpleMorphingTabs> with TickerProv
                         child: AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 200),
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: AppFontSizes.caption,
                             fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                             color: isActive ? activeColor : inactiveColor,
                           ),

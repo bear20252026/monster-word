@@ -110,7 +110,7 @@ class FormalReviewCompleteView extends StatelessWidget {
                       '$done',
                       style: TextStyle(
                         fontFamily: 'Charter',
-                        fontSize: 24,
+                        fontSize: AppFontSizes.displaySm,
                         fontStyle: FontStyle.italic,
                         color: skin.success,
                       ),

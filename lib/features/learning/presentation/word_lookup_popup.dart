@@ -165,7 +165,10 @@ class _PopupCard extends StatelessWidget {
             ),
             if (w.usPron.isNotEmpty) ...[
               const SizedBox(width: 8),
-              Text('/${w.usPron}/', style: MwTypography.body.copyWith(color: skin.text3, fontSize: 13)),
+              Text(
+                '/${w.usPron}/',
+                style: MwTypography.body.copyWith(color: skin.text3, fontSize: AppFontSizes.caption),
+              ),
             ],
           ],
         ),
@@ -174,7 +177,7 @@ class _PopupCard extends StatelessWidget {
         if (meaningText.isNotEmpty)
           Text(
             meaningText,
-            style: MwTypography.body.copyWith(color: skin.text2, fontSize: 14, height: 1.5),
+            style: MwTypography.body.copyWith(color: skin.text2, fontSize: AppFontSizes.bodySm, height: 1.5),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
           ),

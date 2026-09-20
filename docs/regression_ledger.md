@@ -65,6 +65,11 @@
 | REG-DICT-005b | 词根/例句字段契约：非空 word_root 必须是合法 JSON；非空 example 解析后例句非空 | 词库导入字段质量无守卫 | 数据质量批 | `test/regression/regression_dict005_fields_test.dart` |
 | REG-ARCH-006 | presentation 直取 GetIt / 直连同 feature data / 直触 core 仓储与 AppPreferences | 守卫字符串匹配洞 + 端口模型空心化 | PR #44 + 残债④⑤⑥ | `import_guard.dart` R6-DI(package:get_it)/R3(presentation→data)/R-core-repo/R-prefs + `import_guard_test.dart` |
 
+
+| REG-LEARN-002b | E1 迁移后旧 SP 回滚快照长期滞留（事实来源双轨） | 观察期后未清理 | batch7（2026-09-20） | SQLite 模式且 marker=done 时删除三 key；降级模式不删；review_schedule_migration_test E2 |
+| REG-ARCH-007 | 9 套皮肤 preset 色值与 token 双写漂移风险 | 仅星巴克 token 化 | batch7 | lib/tokens/skin_tokens.dart + theme_token_consistency_test 9 套锁定 |
+| REG-TYPE-001 | fontSize 字面量棘轮 44 处 | 未收敛字号 token | batch7 | AppFontSizes.*；font_hygiene_test 上限 1 |
+
 ## 修复新 bug 的流程
 
 1. 修复前先写失败的回归测试（证明 bug 存在）

@@ -200,7 +200,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: ChoiceChip(
-                  label: Text(t.label, style: const TextStyle(fontSize: 12)),
+                  label: Text(t.label, style: const TextStyle(fontSize: AppFontSizes.micro)),
                   selected: selected,
                   selectedColor: skin.accent,
                   labelStyle: TextStyle(color: selected ? AppColors.white100 : skin.text1),
@@ -245,7 +245,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
               child: FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: skin.accent),
                 onPressed: () => setState(() => _showAnswer = true),
-                child: const Text('查看答案', style: TextStyle(fontSize: 16)),
+                child: const Text('查看答案', style: TextStyle(fontSize: AppFontSizes.bodyMd)),
               ),
             ),
           ),
@@ -309,7 +309,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
               child: FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: skin.accent),
                 onPressed: _restart,
-                child: const Text('再来一轮', style: TextStyle(fontSize: 16)),
+                child: const Text('再来一轮', style: TextStyle(fontSize: AppFontSizes.bodyMd)),
               ),
             ),
           ],

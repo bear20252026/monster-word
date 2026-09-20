@@ -189,7 +189,7 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
                                         widget.coverTextStyle ??
                                         TextStyle(
                                           color: Colors.white.withValues(alpha: 0.8),
-                                          fontSize: 16,
+                                          fontSize: AppFontSizes.bodyMd,
                                           fontWeight: FontWeight.w600,
                                         ),
                                   )
@@ -267,7 +267,10 @@ class WordScratchCard extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(word, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        Text(
+          word,
+          style: const TextStyle(fontSize: AppFontSizes.displaySm, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 8),
         ScratchToReveal(
           width: width,

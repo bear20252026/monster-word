@@ -162,7 +162,7 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
               item.text,
               // 深色适配：跟随主题明暗，而非硬编码黑色（体验审计 P1）
               style: TextStyle(
-                fontSize: 14,
+                fontSize: AppFontSizes.bodySm,
                 fontWeight: FontWeight.w500,
                 height: 1.5,
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.87),
@@ -176,7 +176,7 @@ class _TestimonialSliderState extends State<TestimonialSlider> {
             Text(
               '— ${item.author}${item.source != null ? ' · ${item.source}' : ''}',
               style: TextStyle(
-                fontSize: MwTypography.micro.fontSize,
+                fontSize: AppFontSizes.micro,
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
               ),
             ),

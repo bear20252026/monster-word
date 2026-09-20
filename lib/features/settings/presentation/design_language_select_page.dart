@@ -31,7 +31,7 @@ class DesignLanguageSelectPage extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '每个风格已配好配色与字体、圆角、间距、阴影的整体气质，选择即全站生效。',
-                    style: TextStyle(fontSize: 12, height: 1.5, color: skin.text3),
+                    style: TextStyle(fontSize: AppFontSizes.micro, height: 1.5, color: skin.text3),
                   ),
                   const SizedBox(height: 16),
                   const MwStyleGrid(),

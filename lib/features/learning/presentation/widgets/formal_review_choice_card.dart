@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/presentation/responsive.dart';
@@ -72,7 +73,7 @@ class FormalReviewChoiceCard extends StatelessWidget {
               child: Text(
                 letter,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: AppFontSizes.micro,
                   fontWeight: FontWeight.w700,
                   color: fgColor.withValues(alpha: dimmed ? 0.5 : 0.85),
                 ),

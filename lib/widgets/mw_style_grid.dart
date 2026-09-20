@@ -101,7 +101,7 @@ class MwStyleGrid extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: AppFontSizes.caption,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                     color: isSelected ? skin.colors.accent : skin.colors.text1,
                   ),
@@ -111,7 +111,7 @@ class MwStyleGrid extends StatelessWidget {
                   style.desc,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: MwTypography.micro.fontSize, height: 1.3, color: skin.colors.text3),
+                  style: TextStyle(fontSize: AppFontSizes.micro, height: 1.3, color: skin.colors.text3),
                 ),
               ],
             ),

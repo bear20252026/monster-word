@@ -113,7 +113,7 @@ class SettingsSheetOptionRow extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontSize: MwTypography.bodySm.fontSize,
+                  fontSize: AppFontSizes.bodySm,
                   color: selected ? skin.accent : skin.text1,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 ),

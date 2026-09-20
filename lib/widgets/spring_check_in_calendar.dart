@@ -153,7 +153,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
       children: [
         Text(
           '${_month.year}年${_month.month}月',
-          style: TextStyle(fontSize: MwTypography.bodyMd.fontSize, fontWeight: FontWeight.w700, color: skin.text1),
+          style: TextStyle(fontSize: AppFontSizes.bodyMd, fontWeight: FontWeight.w700, color: skin.text1),
         ),
         const Spacer(),
         // 连击特效徽章
@@ -275,7 +275,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
                         : Text(
                             '${index + 1}',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: AppFontSizes.caption,
                               fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
                               color: isFuture ? skin.text3.withValues(alpha: 0.45) : skin.text1,
                             ),
@@ -314,7 +314,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
             icon: Icon(_todayChecked ? Icons.check_circle_outline : Icons.redeem, size: 20),
             label: Text(
               _todayChecked ? '今日已签到，明天再来～' : '签到领 ${context.read<ScareCoinStore>().checkInReward} 尖叫币',
-              style: TextStyle(fontSize: MwTypography.bodySm.fontSize, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: AppFontSizes.bodySm, fontWeight: FontWeight.w600),
             ),
           ),
         ),

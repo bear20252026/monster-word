@@ -200,7 +200,10 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                       Navigator.pop(context);
                       Navigator.pushNamed(context, RouteNames.libSelect);
                     },
-                    child: const Text('去选词书', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    child: const Text(
+                      '去选词书',
+                      style: TextStyle(fontSize: AppFontSizes.bodyMd, fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -311,7 +314,10 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                     ),
                     onPressed: () => NavUtils.goHome(context),
-                    child: const Text('返回首页', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    child: const Text(
+                      '返回首页',
+                      style: TextStyle(fontSize: AppFontSizes.bodyMd, fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
               ],

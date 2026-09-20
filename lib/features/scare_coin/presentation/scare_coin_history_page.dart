@@ -188,7 +188,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                               Text(
                                 '${e.delta >= 0 ? '+' : ''}${e.delta}',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: AppFontSizes.bodyMd,
                                   fontWeight: FontWeight.w700,
                                   color: e.delta >= 0 ? skin.success : skin.danger,
                                 ),
@@ -213,7 +213,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                 '设定致敬皮克斯经典动画《怪兽电力公司》（Monsters, Inc., 2001）：'
                 '在怪兽世界里，孩子们的尖叫声被收集起来转化为整座城市的电力——尖叫，就是硬通货。\n\n'
                 '愿每一枚尖叫币都提醒你：背单词时发出的每一声"惊呼"，都在为你的大脑充电。',
-                style: TextStyle(fontSize: 12, height: 1.7, color: skin.text3),
+                style: TextStyle(fontSize: AppFontSizes.micro, height: 1.7, color: skin.text3),
               ),
             ),
           ],

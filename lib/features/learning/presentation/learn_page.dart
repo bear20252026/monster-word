@@ -391,7 +391,10 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                   ),
                   onPressed: () => NavUtils.goHome(context),
-                  child: const Text('返回首页', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    '返回首页',
+                    style: TextStyle(fontSize: AppFontSizes.bodyMd, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ],
@@ -669,7 +672,10 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
                       Navigator.of(context).pushNamed(RouteNames.wordDetail, arguments: {'fromLearn': true});
                     },
                     icon: Icon(Icons.arrow_forward, size: 20, color: AppColors.white100),
-                    label: Text('查看详解', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    label: Text(
+                      '查看详解',
+                      style: const TextStyle(fontSize: AppFontSizes.bodyMd, fontWeight: FontWeight.w600),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.accent,
                       foregroundColor: AppColors.white100,

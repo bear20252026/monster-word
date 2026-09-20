@@ -98,7 +98,10 @@ class LinkedMeMiddlePage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           SizedBox(width: 4),
-          const Text('联想记忆', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          const Text(
+            '联想记忆',
+            style: TextStyle(fontSize: AppFontSizes.bodyMd, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );

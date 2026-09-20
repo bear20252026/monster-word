@@ -191,7 +191,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
               '词典',
               style: MwTypography.heading5.copyWith(
                 color: skin.text1,
-                fontSize: MwTypography.bodyMd.fontSize,
+                fontSize: AppFontSizes.bodyMd,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -448,7 +448,7 @@ class _CollinsList extends StatelessWidget {
                         '${i + 1}',
                         style: TextStyle(
                           fontFamily: 'Charter',
-                          fontSize: MwTypography.bodyMd.fontSize,
+                          fontSize: AppFontSizes.bodyMd,
                           fontStyle: FontStyle.italic,
                           color: skin.accent,
                         ),

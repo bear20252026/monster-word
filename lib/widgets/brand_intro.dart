@@ -67,7 +67,7 @@ class BrandIntro extends StatelessWidget {
                             'Monster Word',
                             style: TextStyle(
                               fontFamily: 'Charter',
-                              fontSize: MwTypography.stat.fontSize,
+                              fontSize: AppFontSizes.stat,
                               fontWeight: FontWeight.w400,
                               letterSpacing: -0.5,
                               color: skin.text1,

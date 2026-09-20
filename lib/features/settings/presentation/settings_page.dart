@@ -315,7 +315,10 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               // 大号当前值展示
               Center(
-                child: Text('$value 词', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700)),
+                child: Text(
+                  '$value 词',
+                  style: const TextStyle(fontSize: AppFontSizes.stat, fontWeight: FontWeight.w700),
+                ),
               ),
               Slider(
                 value: value.clamp(1, 100).toDouble(),

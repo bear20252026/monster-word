@@ -153,7 +153,10 @@ class WordRootTab extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(content, style: TextStyle(fontSize: 14, color: skin.text1, height: 1.5)),
+          child: Text(
+            content,
+            style: TextStyle(fontSize: AppFontSizes.bodySm, color: skin.text1, height: 1.5),
+          ),
         ),
       ],
     );
@@ -194,7 +197,10 @@ class WordRootTab extends StatelessWidget {
                   Icon(Icons.check_circle, size: 16, color: skin.accent),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(tip, style: TextStyle(fontSize: 14, color: skin.text1, height: 1.5)),
+                    child: Text(
+                      tip,
+                      style: TextStyle(fontSize: AppFontSizes.bodySm, color: skin.text1, height: 1.5),
+                    ),
                   ),
                 ],
               ),

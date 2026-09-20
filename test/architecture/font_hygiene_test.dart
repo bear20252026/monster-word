@@ -19,8 +19,8 @@ const _whitelist = <String>[
 
 const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app'];
 
-/// 棘轮上限：当前存量。只允许下降；清理存量后请把数字改小。
-const _ceiling = 44;
+/// 棘轮上限：当前存量（batch7 起仅剩 hero 字号 40 一处）。只允许下降。
+const _ceiling = 1;
 
 final _pattern = RegExp(r'fontSize:\s*\d+\s*[,)]');
 

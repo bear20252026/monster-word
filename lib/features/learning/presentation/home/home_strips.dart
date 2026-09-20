@@ -118,7 +118,7 @@ class _BookStrip extends StatelessWidget {
                   children: [
                     Text(
                       '当前词书',
-                      style: TextStyle(fontSize: MwTypography.micro.fontSize, color: skin.colors.text3),
+                      style: TextStyle(fontSize: AppFontSizes.micro, color: skin.colors.text3),
                     ),
                     const SizedBox(height: 1),
                     Text(
@@ -219,7 +219,7 @@ class _GoalChipsState extends State<_GoalChips> {
         child: Text(
           '$value',
           style: TextStyle(
-            fontSize: 13,
+            fontSize: AppFontSizes.caption,
             fontWeight: FontWeight.w600,
             color: selected ? AppColors.white100 : skin.colors.text2,
           ),

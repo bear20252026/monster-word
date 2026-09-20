@@ -473,7 +473,7 @@ class _SearchPageState extends State<SearchPage> {
           // 示例单词呼吸轮换：同一时刻只显示一个词（原波浪滚动文字已废弃）
           BreathingWord(
             words: const ['abandon', 'ability', 'above', 'accept', 'achieve'],
-            style: TextStyle(fontSize: 12, color: skin.text3.withValues(alpha: 0.5), letterSpacing: 1),
+            style: TextStyle(fontSize: AppFontSizes.micro, color: skin.text3.withValues(alpha: 0.5), letterSpacing: 1),
           ),
         ],
       ),
