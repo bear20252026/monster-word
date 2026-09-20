@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 
 import 'package:word_app/features/account/application/feedback_archive.dart';
 import 'package:word_app/core/presentation/responsive.dart';
@@ -13,7 +14,7 @@ class FeedbackPage extends StatefulWidget {
 
   final FeedbackArchive? archiveOverride;
 
-  static const String routeName = '/feedback';
+  static const String routeName = RouteNames.feedback;
 
   @override
   State<FeedbackPage> createState() => _FeedbackPageState();

@@ -189,6 +189,7 @@ void main() {
         isEmpty,
       );
       // widgets import core/models/theme → 放行
+      // widgets→core/repositories：历史放行（scare_coin 等）；R-widgets 仍禁 feature 内层。
       expect(check('widgets/some_card.dart', 'core/repositories/word_repository.dart'), isEmpty);
     });
 

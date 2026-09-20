@@ -2,6 +2,7 @@
 // 参考 Calendar Interactive UI Kit (Penpot) 设计模式
 // 路由：/check_in_history
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/presentation/responsive.dart';
@@ -15,7 +16,7 @@ import 'package:word_app/tokens/func_colors.dart';
 
 class CheckInHistoryPage extends StatefulWidget {
   const CheckInHistoryPage({super.key});
-  static const routeName = '/check_in_history';
+  static const routeName = RouteNames.checkInHistory;
 
   @override
   State<CheckInHistoryPage> createState() => _CheckInHistoryPageState();

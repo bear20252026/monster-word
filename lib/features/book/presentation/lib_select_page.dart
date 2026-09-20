@@ -34,7 +34,7 @@ import 'package:word_app/widgets/scale_down_on_press.dart';
 class LibSelectPage extends StatefulWidget {
   const LibSelectPage({super.key});
 
-  static const routeName = '/lib_select';
+  static const routeName = RouteNames.libSelect;
 
   @override
   State<LibSelectPage> createState() => _LibSelectPageState();

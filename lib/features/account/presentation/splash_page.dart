@@ -6,6 +6,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/theme/skin_system.dart';
@@ -18,7 +19,7 @@ import 'package:word_app/features/account/presentation/login_page.dart';
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
-  static const routeName = '/splash';
+  static const routeName = RouteNames.splash;
 
   @override
   State<SplashPage> createState() => _SplashPageState();

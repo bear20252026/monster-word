@@ -4,6 +4,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 
 import 'package:provider/provider.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
@@ -16,7 +17,7 @@ export 'package:word_app/features/learning/application/play_order.dart' show Pla
 class PlayOrderPage extends StatefulWidget {
   const PlayOrderPage({super.key});
 
-  static const routeName = '/play_order';
+  static const routeName = RouteNames.playOrder;
 
   /// 播放顺序的持久化键（随身听播放器读取同一 key）。
   static const prefKey = 'stereo.play_order';

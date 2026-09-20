@@ -23,7 +23,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 
 class MyContentPage extends StatelessWidget {
   const MyContentPage({super.key});
-  static const routeName = '/my_content';
+  static const routeName = RouteNames.myContent;
 
   @override
   Widget build(BuildContext context) {

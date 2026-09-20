@@ -4,6 +4,7 @@
 // 词源与发音均走既有端口（单一事实来源）：队列取自 LearningSessionState.queue
 // （与听写会话页同源），发音走 AudioPlaybackState.playWord。
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 
 import 'package:provider/provider.dart';
 
@@ -16,7 +17,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 class ListWordListenPage extends StatefulWidget {
   const ListWordListenPage({super.key});
 
-  static const routeName = '/word_listen';
+  static const routeName = RouteNames.wordListen;
 
   @override
   State<ListWordListenPage> createState() => _ListWordListenPageState();

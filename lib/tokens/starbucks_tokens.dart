@@ -143,61 +143,40 @@ class StarbucksTypography {
     fontSize: 38,
     fontWeight: FontWeight.w700,
     height: 1.20,
-    color: StarbucksCreamColors.greenHouse,
     letterSpacing: -0.38, // 纯西文 -0.01em
   );
 
-  static TextStyle get heading1 => TextStyle(
-    fontSize: 52,
-    fontWeight: FontWeight.w400,
-    height: 1.15,
-    color: StarbucksCreamColors.greenHouse,
-    letterSpacing: -0.52,
-  );
+  static TextStyle get heading1 =>
+      TextStyle(fontSize: 52, fontWeight: FontWeight.w400, height: 1.15, letterSpacing: -0.52);
 
-  static TextStyle get heading2 => TextStyle(
-    fontSize: 36,
-    fontWeight: FontWeight.w500,
-    height: 1.20,
-    color: StarbucksCreamColors.greenHouse,
-    letterSpacing: -0.36,
-  );
+  static TextStyle get heading2 =>
+      TextStyle(fontSize: 36, fontWeight: FontWeight.w500, height: 1.20, letterSpacing: -0.36);
 
-  static TextStyle get heading3 =>
-      TextStyle(fontSize: 28, fontWeight: FontWeight.w500, height: 1.25, color: StarbucksCreamColors.greenHouse);
+  static TextStyle get heading3 => TextStyle(fontSize: 28, fontWeight: FontWeight.w500, height: 1.25);
 
-  static TextStyle get heading4 =>
-      TextStyle(fontSize: 22, fontWeight: FontWeight.w500, height: 1.30, color: StarbucksCreamColors.greenHouse);
+  static TextStyle get heading4 => TextStyle(fontSize: 22, fontWeight: FontWeight.w500, height: 1.30);
 
-  static TextStyle get heading5 =>
-      TextStyle(fontSize: 18, fontWeight: FontWeight.w500, height: 1.40, color: StarbucksCreamColors.greenHouse);
+  static TextStyle get heading5 => TextStyle(fontSize: 18, fontWeight: FontWeight.w500, height: 1.40);
 
   // 正文
-  static TextStyle get bodyMd =>
-      TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.55, color: StarbucksCreamColors.text1);
+  static TextStyle get bodyMd => TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.55);
 
-  static TextStyle get bodySm =>
-      TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.50, color: StarbucksCreamColors.text1);
+  static TextStyle get bodySm => TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.50);
 
-  static TextStyle get caption =>
-      TextStyle(fontSize: 13, fontWeight: FontWeight.w400, height: 1.40, color: StarbucksCreamColors.text2);
+  static TextStyle get caption => TextStyle(fontSize: 13, fontWeight: FontWeight.w400, height: 1.40);
 
-  static TextStyle get captionBold =>
-      TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: 1.40, color: StarbucksCreamColors.text1);
+  static TextStyle get captionBold => TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: 1.40);
 
   static TextStyle get body => bodyMd;
 
-  static TextStyle get bodyBold =>
-      TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.55, color: StarbucksCreamColors.text1);
+  static TextStyle get bodyBold => TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.55);
 
-  static TextStyle get micro =>
-      TextStyle(fontSize: 12, fontWeight: FontWeight.w500, height: 1.40, color: StarbucksCreamColors.text2);
+  static TextStyle get micro => TextStyle(fontSize: 12, fontWeight: FontWeight.w500, height: 1.40);
 
   // 按钮
   static TextStyle get buttonMd => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
-    height: 1.30,
-    color: StarbucksCreamColors.cardBg, // 白字
+    height: 1.30, // 白字
   );
 }

@@ -16,7 +16,7 @@ import 'package:word_app/tokens/func_colors.dart';
 class FootMarkPage extends StatelessWidget {
   const FootMarkPage({super.key});
 
-  static const routeName = '/foot_mark';
+  static const routeName = RouteNames.footMark;
 
   @override
   Widget build(BuildContext context) {

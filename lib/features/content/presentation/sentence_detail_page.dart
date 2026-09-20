@@ -3,6 +3,7 @@
 // 例句详情页：显示单词的完整例句及翻译
 // 发音走既有端口 AudioPlaybackState（例句本身无音频 URL 时播所属单词，有道 TTS 回退）。
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 
 import 'package:provider/provider.dart';
 
@@ -18,7 +19,7 @@ class SentenceDetailPage extends StatelessWidget {
 
   const SentenceDetailPage({super.key, required this.word, required this.sentence, this.translation, this.source});
 
-  static const routeName = '/sentence_detail';
+  static const routeName = RouteNames.sentenceDetail;
 
   @override
   Widget build(BuildContext context) {

@@ -1,7 +1,10 @@
+import 'package:word_app/core/application/today_progress_store.dart';
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,7 +30,6 @@ import 'package:word_app/features/dictionary/presentation/word_detail_page.dart'
 import 'package:word_app/core/repositories/fav_repository.dart';
 import 'package:word_app/core/repositories/note_repository.dart';
 import 'package:word_app/core/application/word_lookup_reader.dart';
-import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/theme/skin_system.dart';
 
@@ -177,6 +179,8 @@ void main() {
             progressPort: _StubProgressPort(),
             reviewSchedulePort: RepositoryReviewScheduleWriterPort(_StubReviewScheduleRepo()),
             choicePort: _StubChoicePort(),
+            todayStore: TodayProgressStore(),
+            prefs: PresentationPrefs(),
           ),
         ),
         ProxyProvider<LearningSessionState, LearningSessionReader>(

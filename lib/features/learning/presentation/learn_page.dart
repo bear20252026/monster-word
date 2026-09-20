@@ -32,7 +32,7 @@ import 'package:word_app/tokens/motion_tokens.dart';
 
 class LearnPage extends StatefulWidget {
   const LearnPage({super.key});
-  static const routeName = '/learn';
+  static const routeName = RouteNames.learn;
 
   @override
   State<LearnPage> createState() => _LearnPageState();

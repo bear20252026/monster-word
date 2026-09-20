@@ -4,6 +4,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/nav_utils.dart';
@@ -18,7 +19,7 @@ import 'package:word_app/features/account/presentation/app_session_state.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
-  static const routeName = '/login';
+  static const routeName = RouteNames.login;
 
   @override
   State<LoginPage> createState() => _LoginPageState();

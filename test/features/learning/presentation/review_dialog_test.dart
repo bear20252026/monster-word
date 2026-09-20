@@ -6,10 +6,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
@@ -124,6 +125,8 @@ class _StubSessionState extends LearningSessionState {
         progressPort: _StubProgressPort(),
         reviewSchedulePort: _StubReviewScheduleWriterPort(),
         choicePort: _StubChoicePort(),
+        todayStore: TodayProgressStore(),
+        prefs: PresentationPrefs(),
       );
 
   @override

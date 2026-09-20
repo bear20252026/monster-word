@@ -2,6 +2,7 @@
 
 // 拼写检查：播放音频 → 用户拼写 → 正确/错误反馈
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
@@ -14,7 +15,7 @@ class SpellCheckPage extends StatefulWidget {
 
   const SpellCheckPage({super.key, required this.word, this.phonetic});
 
-  static const routeName = '/spell_check';
+  static const routeName = RouteNames.spellCheck;
 
   @override
   State<SpellCheckPage> createState() => _SpellCheckPageState();

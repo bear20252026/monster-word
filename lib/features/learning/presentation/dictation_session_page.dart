@@ -2,6 +2,7 @@
 
 // 单词听写会话：只听发音拼单词。判分/推进/结果页由共享脚手架托管。
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
@@ -14,7 +15,7 @@ import 'package:word_app/theme/skin_system.dart';
 class DictationSessionPage extends StatefulWidget {
   const DictationSessionPage({super.key});
 
-  static const routeName = '/dictation_session';
+  static const routeName = RouteNames.dictationSession;
 
   @override
   State<DictationSessionPage> createState() => _DictationSessionPageState();

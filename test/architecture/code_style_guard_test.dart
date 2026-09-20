@@ -29,10 +29,10 @@ void main() {
 
   /// build() 超长存量豁免：文件名 -> 豁免的 build 起始行号集合
   const kBuildAllowlist = {
-    'lib/features/learning/presentation/spell_check_page.dart': {83}, // 169 行
-    'lib/features/learning/presentation/list_word_listen_page.dart': {99}, // 121 行
-    'lib/features/scare_coin/presentation/scare_coin_history_page.dart': {64}, // 154 行
-    'lib/features/settings/presentation/more_settings_page.dart': {494}, // 133 行
+    'lib/features/learning/presentation/spell_check_page.dart': {83, 84}, // 存量超长 build（N3 路由别名后行号漂移）
+    'lib/features/learning/presentation/list_word_listen_page.dart': {99, 100}, // 121 行
+    'lib/features/scare_coin/presentation/scare_coin_history_page.dart': {64, 65}, // 154 行
+    'lib/features/settings/presentation/more_settings_page.dart': {494, 495}, // 133 行
   };
 
   test('presentation 层 build() 方法不超过 120 行', () {

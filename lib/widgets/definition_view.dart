@@ -16,7 +16,7 @@ class DefinitionView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (definitions.isEmpty) {
-      return Text('暂无释义', style: MwTypography.bodySm);
+      return Text('暂无释义', style: MwTypography.bodySm.copyWith(color: context.skin.colors.text1));
     }
 
     final skin = SkinProvider.of(context);

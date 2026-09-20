@@ -2,6 +2,7 @@
 
 // 我的单词：显示所有已学单词
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/learning/presentation/learning_queue_word_lists_state.dart';
@@ -11,7 +12,7 @@ import 'package:word_app/features/learning/presentation/list_words_page.dart';
 class MyWordsPage extends ListWordsPage {
   const MyWordsPage({super.key});
 
-  static const routeName = '/my_words';
+  static const routeName = RouteNames.myWords;
 
   @override
   State<MyWordsPage> createState() => _MyWordsPageState();

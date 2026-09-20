@@ -1,12 +1,13 @@
+import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:flutter/material.dart';
 
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 import 'package:word_app/features/learning/application/learning_session_starter.dart';
@@ -50,6 +51,8 @@ class SpyLearningSessionState extends LearningSessionState {
         progressPort: MockLearningProgressPort(),
         reviewSchedulePort: MockReviewScheduleWriterPort(),
         choicePort: MockChoiceGeneratorPort(),
+        todayStore: TodayProgressStore(),
+        prefs: PresentationPrefs(),
       );
 
   Book? loadedBook;

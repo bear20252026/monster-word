@@ -4,6 +4,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/nav_utils.dart';
@@ -17,7 +18,7 @@ import 'package:word_app/features/learning/presentation/learning_session_state.d
 class SentenceQuizPage extends StatefulWidget {
   const SentenceQuizPage({super.key});
 
-  static const routeName = '/sentence_quiz';
+  static const routeName = RouteNames.sentenceQuiz;
 
   @override
   State<SentenceQuizPage> createState() => _SentenceQuizPageState();

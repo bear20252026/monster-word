@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/app/router/nav_utils.dart';
@@ -34,7 +35,7 @@ class ListeningPlayerPage extends StatefulWidget {
     this.bookName = '',
   });
 
-  static const routeName = '/listening_player';
+  static const routeName = RouteNames.listeningPlayer;
 
   @override
   State<ListeningPlayerPage> createState() => _ListeningPlayerPageState();

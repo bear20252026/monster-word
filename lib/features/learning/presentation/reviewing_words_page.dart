@@ -2,6 +2,7 @@
 
 // 复习中单词：显示正在复习周期中的单词
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/learning/presentation/learning_queue_word_lists_state.dart';
@@ -11,7 +12,7 @@ import 'package:word_app/features/learning/presentation/list_words_page.dart';
 class ReviewingWordsPage extends ListWordsPage {
   const ReviewingWordsPage({super.key});
 
-  static const routeName = '/reviewing_words';
+  static const routeName = RouteNames.reviewingWords;
 
   @override
   State<ReviewingWordsPage> createState() => _ReviewingWordsPageState();

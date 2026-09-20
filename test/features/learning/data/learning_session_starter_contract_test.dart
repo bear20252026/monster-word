@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/features/learning/application/learning_session_starter.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
@@ -54,6 +56,8 @@ class _SpySession extends LearningSessionState {
         progressPort: _MockProgressPort(),
         reviewSchedulePort: _MockReviewScheduleWriterPort(),
         choicePort: _MockChoicePort(),
+        todayStore: TodayProgressStore(),
+        prefs: PresentationPrefs(),
       );
 
   Book? loadedBook;

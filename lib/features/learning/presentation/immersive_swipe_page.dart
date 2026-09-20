@@ -24,7 +24,7 @@ import 'package:word_app/tokens/motion_tokens.dart';
 
 class ImmersiveSwipePage extends StatefulWidget {
   const ImmersiveSwipePage({super.key});
-  static const routeName = '/immersive_swipe';
+  static const routeName = RouteNames.immersiveSwipe;
 
   @override
   State<ImmersiveSwipePage> createState() => _ImmersiveSwipePageState();

@@ -2,6 +2,7 @@
 
 // 未学习单词：显示尚未开始学习的单词
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/learning/presentation/learning_queue_word_lists_state.dart';
@@ -11,7 +12,7 @@ import 'package:word_app/features/learning/presentation/list_words_page.dart';
 class NotLearnedWordsPage extends ListWordsPage {
   const NotLearnedWordsPage({super.key});
 
-  static const routeName = '/not_learned_words';
+  static const routeName = RouteNames.notLearnedWords;
 
   @override
   State<NotLearnedWordsPage> createState() => _NotLearnedWordsPageState();

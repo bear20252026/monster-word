@@ -1,6 +1,7 @@
 // 字典详情页：单词详解（释义+音标+例句+常见用法+词根+形近词+笔记）
 // 从学习页答题后进入，看完后点击"下一词"返回学习
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/application/word_lookup_reader.dart';
@@ -31,7 +32,7 @@ import 'package:word_app/widgets/word_root_tab.dart';
 class WordDetailPage extends StatefulWidget {
   final bool fromLearn;
   const WordDetailPage({super.key, this.fromLearn = false});
-  static const routeName = '/word_detail';
+  static const routeName = RouteNames.wordDetail;
 
   @override
   State<WordDetailPage> createState() => _WordDetailPageState();

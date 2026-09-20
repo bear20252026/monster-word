@@ -29,12 +29,12 @@ class LearningSessionState extends ChangeNotifier {
     required this._progressPort,
     required this._reviewSchedulePort,
     required this._choicePort,
+    required TodayProgressStore todayStore,
+    required PresentationPrefs prefs,
     List<Word> Function(List<Word>)? shuffler,
-    TodayProgressStore? todayStore,
-    PresentationPrefs? prefs,
-  }) : _shuffler = shuffler ?? alphabetSpreadShuffle,
-       _today = todayStore ?? TodayProgressStore(),
-       _prefs = prefs ?? PresentationPrefs() {
+  }) : _today = todayStore,
+       _prefs = prefs,
+       _shuffler = shuffler ?? alphabetSpreadShuffle {
     unawaited(_loadProgress());
   }
 

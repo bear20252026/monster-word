@@ -25,7 +25,7 @@ class BookWordsPage extends StatefulWidget {
 
   final Book book;
 
-  static const String routeName = '/book-words';
+  static const String routeName = RouteNames.bookWords;
 
   /// 启动当前词书的学习会话并进入沉浸刷词页。
   @override

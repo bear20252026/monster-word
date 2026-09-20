@@ -6,6 +6,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_service.dart';
@@ -27,7 +28,7 @@ import 'package:word_app/widgets/mw_section_header.dart';
 class PersonalStereoPage extends StatefulWidget {
   const PersonalStereoPage({super.key});
 
-  static const routeName = '/personal_stereo';
+  static const routeName = RouteNames.personalStereo;
 
   @override
   State<PersonalStereoPage> createState() => _PersonalStereoPageState();

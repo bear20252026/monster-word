@@ -60,8 +60,13 @@ import 'package:word_app/features/learning/presentation/review_word_actions_stat
 /// 评分端口先于正式复习会话创建。应用根仅组合功能域装配，不感知学习功能内部的
 /// Provider 类型或迁移细节。
 Widget buildLearningFeatureScope({required Widget child}) {
+  // N1：门面单实例——PresentationPrefs / TodayProgressStore 先建，注入 LearningSessionState，
+  // 与页面 Provider 消费同一对象，避免 session 内直建第二实例。
+  final presentationPrefs = PresentationPrefs();
+  final todayProgressStore = TodayProgressStore();
   return MultiProvider(
     providers: [
+      Provider<PresentationPrefs>.value(value: presentationPrefs),
       ChangeNotifierProvider<ReviewScheduleRepository>.value(value: sl<ReviewScheduleRepository>()),
       ChangeNotifierProvider<ReviewScheduleReader>(
         create: (_) => RepositoryReviewScheduleReader(repository: sl<ReviewScheduleRepository>()),
@@ -96,6 +101,8 @@ Widget buildLearningFeatureScope({required Widget child}) {
           progressPort: context.read<LearningProgressPort>(),
           reviewSchedulePort: context.read<ReviewScheduleWriterPort>(),
           choicePort: context.read<ChoiceGeneratorPort>(),
+          todayStore: todayProgressStore,
+          prefs: presentationPrefs,
         ),
       ),
       ProxyProvider<LearningSessionState, LearningSessionStarter>(
@@ -113,10 +120,10 @@ Widget buildLearningFeatureScope({required Widget child}) {
         update: (_, queue, schedule, statistics) =>
             (statistics ?? LearningStatisticsState())..synchronize(queue: queue.snapshot, schedule: schedule),
       ),
-      // 今日进度单一事实源：订阅会话(已学/目标) + 复习调度(待复习)，全站同步。
+      // 今日进度单一事实源：create 返回与 session 注入的同一实例（N1）。
       ChangeNotifierProxyProvider2<LearningSessionState, ReviewScheduleReader, TodayProgressStore>(
-        create: (_) => TodayProgressStore(),
-        update: (_, session, schedule, store) => (store ?? TodayProgressStore())..sync(due: schedule.dueCount),
+        create: (_) => todayProgressStore,
+        update: (_, session, schedule, store) => (store ?? todayProgressStore)..sync(due: schedule.dueCount),
       ),
       // 只读统计端口：暴露给其它 feature（如 word_browse 的 foot_mark）读取统计。
       // 装配为具体状态实现 core 只读契约，消费方经类型注入依赖 core，而非 learning/presentation。
@@ -164,7 +171,6 @@ Widget buildLearningFeatureScope({required Widget child}) {
       Provider<AudioService>.value(value: sl<AudioService>()),
       // N10：查词/偏好经 application 端口（R-core-repo / R-prefs）
       Provider<WordLookupReader>(create: (_) => RepositoryWordLookupReader(sl<WordRepository>())),
-      Provider<PresentationPrefs>(create: (_) => PresentationPrefs()),
       Provider<LearningProgressReader>.value(value: LearningProgressReaderImpl.fromServiceLocator()),
       ChangeNotifierProvider(
         create: (_) =>
