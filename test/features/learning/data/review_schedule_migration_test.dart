@@ -75,6 +75,26 @@ void main() {
     expect(await store.loadDailyStats(), {
       '2026-09-03': {'learn': 5, 'review': 2},
     });
+    // E2：SQLite 就绪后旧 SP 回滚快照应清除（事实来源唯一在 review_schedule.db）。
+    expect(prefs.getString(ReviewScheduleRepository.cardsPrefKey), isNull);
+    expect(prefs.getString(ReviewScheduleRepository.dailyStatsPrefKey), isNull);
+    expect(prefs.getStringList(ReviewScheduleRepository.activeDatesPrefKey), isNull);
+  });
+
+  test('E2：SQLite 模式不保留 SP 快照；降级模式仍写 SP', () async {
+    SharedPreferences.setMockInitialValues({
+      ReviewScheduleRepository.cardsPrefKey: legacyCardsBlob(),
+      ReviewScheduleRepository.dailyStatsPrefKey: jsonEncode({
+        '2026-09-03': {'learn': 1, 'review': 0},
+      }),
+      ReviewScheduleRepository.activeDatesPrefKey: ['2026-09-03'],
+    });
+    final sqliteStore = await ReviewScheduleStore.forTest(await openDatabase(inMemoryDatabasePath));
+    final sqliteRepo = ReviewScheduleRepository(store: sqliteStore);
+    await sqliteRepo.initialize();
+    expect(sqliteRepo.usesSqlite, isTrue);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(ReviewScheduleRepository.cardsPrefKey), isNull);
   });
 
   test('已迁移后不再重跑迁移（表非空 / 标记 done 双重守卫，统计不翻倍）', () async {

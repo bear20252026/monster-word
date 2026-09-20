@@ -219,7 +219,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
               backgroundColor: skin.colors.accent,
               foregroundColor: AppColors.white100,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              textStyle: const TextStyle(fontSize: AppFontSizes.bodyMd, fontWeight: FontWeight.w600),
             ),
           ),
         ),

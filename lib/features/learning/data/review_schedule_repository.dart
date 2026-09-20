@@ -20,7 +20,7 @@ import 'package:word_app/features/learning/data/review_schedule_store.dart';
 /// 迁移与降级策略（最保守路径）：
 /// - 首启检测 SQLite 空且旧 SP key 非空 → 事务导入（损坏行跳过并上报）；
 /// - 迁移任何一步失败 → 本机继续 SP 模式 + Sentry 上报，下次启动重试；
-/// - 旧 SP key 保留为只读回滚快照（清理另列 E2 小批）；
+/// - SQLite 模式就绪且迁移标记已写 → **E2：清除旧 SP 回滚快照**（降级模式不删）；
 /// - 不做双写（双写仍是全量重写，等于没解决性能问题）。
 ///
 /// 该仓储不持有当前学习队列，也不推进任何会话引擎；调用方必须显式提供需筛选的
@@ -159,6 +159,8 @@ class ReviewScheduleRepository extends ChangeNotifier {
       _store = store;
       _useSqlite = true;
       sqliteReady = true;
+      // E2：SQLite 模式就绪后清除旧 SP 回滚快照（降级模式保留 SP，供重试/旧版）。
+      await _clearLegacySpSnapshotIfMigrated();
     } catch (error, stack) {
       debugPrint('Review schedule SQLite init error: $error');
       reportSwallowedError('ReviewScheduleSQLite init', error, stack);
@@ -242,6 +244,22 @@ class ReviewScheduleRepository extends ChangeNotifier {
 
     // 全部成功才写标记；失败路径不写标记 → 下次启动重试。
     await prefs.setString(migratedMarkerKey, 'done');
+  }
+
+  /// E2：迁移完成且 SQLite 已就绪时，删除旧 SP blob 快照。
+  ///
+  /// 仅在 `migratedMarkerKey == done` 后执行；降级模式（usesSqlite=false）不调用，
+  /// 保证 SP 仍是故障时的可读源。删除失败不影响主流程。
+  Future<void> _clearLegacySpSnapshotIfMigrated() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getString(migratedMarkerKey) != 'done') return;
+      await prefs.remove(cardsPrefKey);
+      await prefs.remove(dailyStatsPrefKey);
+      await prefs.remove(activeDatesPrefKey);
+    } catch (error, stack) {
+      reportSwallowedError('FSRS E2 clear legacy SP snapshot', error, stack);
+    }
   }
 
   // ============================================================

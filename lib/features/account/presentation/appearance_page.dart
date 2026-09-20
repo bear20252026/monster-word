@@ -235,7 +235,7 @@ class _AppearancePageState extends State<AppearancePage> {
               Text(
                 '全屏滑动式背单词模式：整词卡片左右滑动作答，无界面干扰，'
                 '适合快速过词。\n\n入口：课程页 → 「沉浸背单词」，或点击下方按钮直接体验。',
-                style: TextStyle(fontSize: 14, height: 1.6, color: skin.colors.text2),
+                style: TextStyle(fontSize: AppFontSizes.bodySm, height: 1.6, color: skin.colors.text2),
               ),
               SizedBox(height: 20),
               SizedBox(

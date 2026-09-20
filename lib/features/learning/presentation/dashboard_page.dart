@@ -141,7 +141,7 @@ class DashboardPage extends StatelessWidget {
                           '$learned',
                           style: TextStyle(
                             fontFamily: 'Charter',
-                            fontSize: 20,
+                            fontSize: AppFontSizes.titleLg,
                             fontWeight: FontWeight.w700,
                             color: skin.accent,
                           ),
@@ -156,7 +156,12 @@ class DashboardPage extends StatelessWidget {
               // 进度百分数
               Text(
                 '${(progress * 100).round()}%',
-                style: TextStyle(fontFamily: 'Charter', fontSize: 22, fontStyle: FontStyle.italic, color: skin.text3),
+                style: TextStyle(
+                  fontFamily: 'Charter',
+                  fontSize: AppFontSizes.heading4,
+                  fontStyle: FontStyle.italic,
+                  color: skin.text3,
+                ),
               ),
             ],
           ),

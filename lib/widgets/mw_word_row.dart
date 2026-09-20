@@ -58,7 +58,7 @@ class MwWordRow extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontFamily: 'Charter',
-                                    fontSize: MwTypography.heading5.fontSize,
+                                    fontSize: AppFontSizes.heading5,
                                     fontWeight: FontWeight.w400,
                                     letterSpacing: -0.3,
                                     color: skin.text1,

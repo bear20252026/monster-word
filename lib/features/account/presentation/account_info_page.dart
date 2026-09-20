@@ -259,7 +259,10 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text('绑定平台', style: MwTypography.body.copyWith(color: skin.text2, fontSize: 13)),
+            child: Text(
+              '绑定平台',
+              style: MwTypography.body.copyWith(color: skin.text2, fontSize: AppFontSizes.caption),
+            ),
           ),
           _buildBindRow(
             skin,

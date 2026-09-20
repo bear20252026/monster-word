@@ -322,7 +322,10 @@ class _LibSelectPageState extends State<LibSelectPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('设置每日学习目标', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(
+                    '设置每日学习目标',
+                    style: TextStyle(fontSize: AppFontSizes.bodyMd, fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 8),
                   const DailyGoalPicker(),
                   const SizedBox(height: 8),
@@ -564,7 +567,7 @@ class _CurrentBookHero extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'Charter',
-                        fontSize: 18,
+                        fontSize: AppFontSizes.heading5,
                         fontWeight: FontWeight.w400,
                         color: skin.text1,
                       ),
@@ -746,7 +749,7 @@ class _BottomToolItem extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(fontSize: MwTypography.micro.fontSize, color: colors.text1),
+              style: TextStyle(fontSize: AppFontSizes.micro, color: colors.text1),
             ),
           ],
         ),

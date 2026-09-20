@@ -176,7 +176,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                 icon: const Icon(Icons.redeem, size: 20),
                 label: Text(
                   '去签到',
-                  style: TextStyle(fontSize: MwTypography.bodySm.fontSize, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: AppFontSizes.bodySm, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -272,7 +272,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                       Text(
                         '$_streak',
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: AppFontSizes.stat,
                           fontWeight: FontWeight.w800,
                           color: _streak > 0 ? FuncColors.streakFlame : skin.text3,
                         ),
@@ -496,7 +496,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                   : Text(
                       '${index + 1}',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: AppFontSizes.caption,
                         fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
                         color: isFuture
                             ? skin.text3.withValues(alpha: 0.4)
@@ -606,7 +606,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                                 child: Text(
                                   '今天',
                                   style: TextStyle(
-                                    fontSize: MwTypography.micro.fontSize,
+                                    fontSize: AppFontSizes.micro,
                                     color: skin.accent,
                                     fontWeight: FontWeight.w600,
                                   ),

@@ -410,7 +410,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           'Monster Word',
           style: TextStyle(
             fontFamily: 'Charter',
-            fontSize: MwTypography.stat.fontSize,
+            fontSize: AppFontSizes.stat,
             fontWeight: FontWeight.w400,
             letterSpacing: -0.5,
             color: skin.colors.text1,

@@ -3,6 +3,7 @@
 // 50px 高度，全胶囊圆角，四变体，包装 ScaleDownOnPress 按压反馈
 
 import 'package:flutter/material.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/starbucks_tokens.dart';
@@ -193,7 +194,7 @@ class MwButton extends StatelessWidget {
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: AppFontSizes.bodyMd,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.16, // -0.01em ≈ -0.16px @16px
                 color: resolvedColor,

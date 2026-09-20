@@ -176,7 +176,7 @@ class FormalReviewAnswerAction extends StatelessWidget {
               Text(
                 showAnswer ? '继续' : '看答案',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: AppFontSizes.bodyMd,
                   fontWeight: FontWeight.w600,
                   color: showAnswer ? AppColors.white100 : skin.onGlassText1,
                 ),

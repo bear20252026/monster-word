@@ -131,6 +131,20 @@ class AppleSpacing {
   static const double section = 64;
 }
 
+/// 排版字号常量（与 MwTypography 阶一致；const TextStyle 用，见 font_hygiene）。
+class AppFontSizes {
+  static const double microXs = 10;
+  static const double micro = 12;
+  static const double caption = 13;
+  static const double bodySm = 14;
+  static const double bodyMd = 16;
+  static const double heading5 = 18;
+  static const double titleLg = 20;
+  static const double heading4 = 22;
+  static const double displaySm = 24;
+  static const double stat = 32;
+}
+
 /// 排版 token：只承载字号/字重/行高/字距，**不烘焙皮肤色**。
 /// 颜色一律在调用点 `copyWith(color: context.skin.colors.*)`（N6，2026-09-19）。
 class MwTypography {

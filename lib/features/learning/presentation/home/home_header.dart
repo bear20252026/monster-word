@@ -121,7 +121,7 @@ class _QuoteFooter extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontFamily: 'Charter',
-          fontSize: 13,
+          fontSize: AppFontSizes.caption,
           fontStyle: FontStyle.italic,
           height: 1.6,
           color: skin.colors.text3,

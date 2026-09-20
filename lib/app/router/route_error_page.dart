@@ -31,13 +31,13 @@ class RouteErrorPage extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 '无法打开 $routeName',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: skin.text1),
+                style: TextStyle(fontSize: AppFontSizes.heading5, fontWeight: FontWeight.bold, color: skin.text1),
               ),
               const SizedBox(height: 8),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: skin.text3),
+                style: TextStyle(fontSize: AppFontSizes.caption, color: skin.text3),
               ),
               const SizedBox(height: 24),
               Builder(

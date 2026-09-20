@@ -105,7 +105,7 @@ class MySpacePage extends StatelessWidget {
           profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
           style: TextStyle(
             fontFamily: 'Charter',
-            fontSize: 22,
+            fontSize: AppFontSizes.heading4,
             fontWeight: FontWeight.w400,
             letterSpacing: -0.3,
             color: skin.text1,
