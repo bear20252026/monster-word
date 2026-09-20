@@ -6,7 +6,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/repositories/word_repository.dart';
+import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -100,7 +100,7 @@ class WordLookupPopup extends StatelessWidget {
   /// 查询单词数据
   Future<Word?> _lookupWord(BuildContext context, String word) async {
     try {
-      return await context.read<WordRepository>().getWordByText(word);
+      return await context.read<WordLookupReader>().getWordByText(word);
     } catch (e) {
       debugPrint('Word lookup error: $e');
       return null;

@@ -7,7 +7,8 @@ import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/core/engine/leitner_engine.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
-import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/features/learning/application/alphabet_spread_shuffle.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
@@ -57,19 +58,19 @@ class LearningSessionState extends ChangeNotifier {
   String _todayLearnedDate = '';
   int get todayLearned => _todayLearned;
 
-  /// 每日学习目标（个），来自偏好设置
-  int get dailyGoal => UserPreferences().getDailyGoal();
+  /// 每日学习目标（个），来自偏好设置（经 application 门面，R-prefs）
+  int get dailyGoal => PresentationPrefs().dailyGoal;
 
   /// 今日目标是否已达成（今日已学 >= 目标）——完成页庆祝横幅依据
   bool get dailyGoalAchieved => _todayLearned >= dailyGoal;
 
   Future<void> _loadTodayLearned() async {
     try {
-      final prefs = AppPreferences();
+      final prefs = TodayProgressStore();
       final today = DateTime.now().toIso8601String().substring(0, 10);
       _todayLearnedDate = today;
-      _todayLearned = prefs.getTodayLearned();
-      final savedDate = prefs.getTodayLearnedDate();
+      _todayLearned = prefs.learned;
+      final savedDate = prefs.todayLearnedDate;
       if (savedDate != today) _todayLearned = 0; // 跨天清零
     } catch (e, s) {
       reportSwallowedError('今日学习数恢复失败', e, s);
@@ -79,7 +80,7 @@ class LearningSessionState extends ChangeNotifier {
   Future<void> _incrementTodayLearned() async {
     _todayLearned++;
     try {
-      await AppPreferences().setTodayLearned(_todayLearned, date: _todayLearnedDate);
+      await TodayProgressStore().setTodayLearned(_todayLearned, date: _todayLearnedDate);
     } catch (e, s) {
       reportSwallowedError('今日学习数写入失败', e, s);
     }

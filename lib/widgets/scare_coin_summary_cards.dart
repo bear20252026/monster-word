@@ -13,7 +13,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
@@ -93,7 +93,7 @@ class EquipCard extends StatelessWidget {
     // 当前皮肤(恒 1) + 收藏章(已兑换≥1 计 1 件) + 连击徽章(连击>0 计 1 件)；
     // 总数取装备架条目数（单一事实来源 AppPreferences.equipRackCount，与我的装备页同源）。
     final streakFuture = context.read<CheckinStatusReader>().getStreakDays();
-    final redeemedCount = AppPreferences().redeemedBadgeCount();
+    final redeemedCount = PresentationPrefs().redeemedBadgeCount;
     return MwCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       onTap: () => Navigator.pushNamed(context, RouteNames.myEquip),
@@ -112,7 +112,7 @@ class EquipCard extends StatelessWidget {
                 builder: (context, snap) {
                   final owned = 1 + (redeemedCount > 0 ? 1 : 0) + ((snap.data ?? 0) > 0 ? 1 : 0);
                   return Text(
-                    '$owned/${AppPreferences.equipRackCount}',
+                    '$owned/${PresentationPrefs.equipRackCount}',
                     style: MwTypography.caption.copyWith(color: skin.text3),
                   );
                 },

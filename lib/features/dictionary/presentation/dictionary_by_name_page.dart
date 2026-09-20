@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/core/repositories/word_repository.dart';
+import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -41,7 +41,7 @@ class _DictionaryByNamePageState extends State<DictionaryByNamePage> {
 
   Future<void> _resolve() async {
     try {
-      final word = await context.read<WordRepository>().getWordByText(widget.wordName);
+      final word = await context.read<WordLookupReader>().getWordByText(widget.wordName);
       if (!mounted) return;
       setState(() {
         _word = word;

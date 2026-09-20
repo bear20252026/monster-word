@@ -22,9 +22,11 @@ import sys
 from collections import Counter
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MERGED = os.environ.get("MERGED_DB", "D:/AI2/wordbook_merged.db")
-CURRENT = os.environ.get("CURRENT_DB", "C:/Users/17296/WorkBuddy/current_wordbook.db")
-OUT_DB = os.environ.get("OUT_DB", "C:/Users/17296/WorkBuddy/wordbook_expanded.db")
+# 输入/输出路径一律经环境变量或仓库相对目录配置，禁止写死本机用户路径（N9）。
+INPUTS = os.environ.get("WORDBOOK_INPUTS", os.path.join(REPO, "inputs"))
+MERGED = os.environ.get("MERGED_DB", os.path.join(INPUTS, "wordbook_merged.db"))
+CURRENT = os.environ.get("CURRENT_DB", os.path.join(INPUTS, "current_wordbook.db"))
+OUT_DB = os.environ.get("OUT_DB", os.path.join(INPUTS, "wordbook_expanded.db"))
 OUT_GZ = os.path.join(REPO, "assets", "db", "wordbook.db.gz")
 
 POS_RE = re.compile(r"^\s*((?:n|v|vi|vt|adj|adv|a|ad|prep|conj|pron|art|num|int|interj)\.)\s*")

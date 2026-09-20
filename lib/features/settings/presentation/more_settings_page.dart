@@ -413,7 +413,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           builder: (ctx) => AlertDialog(
             icon: Icon(
               result.success ? Icons.check_circle_outline : Icons.error_outline,
-              color: result.success ? Colors.green : Colors.red,
+              color: result.success ? context.skin.colors.success : context.skin.colors.danger,
               size: 48,
             ),
             title: Text(result.success ? '更新成功' : '更新失败'),

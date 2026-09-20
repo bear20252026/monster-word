@@ -28,10 +28,12 @@ import zipfile
 from collections import Counter
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CURRENT = os.environ.get("CURRENT_DB", "C:/Users/17296/WorkBuddy/current_wordbook.db")
-ECDICT_CSV = os.environ.get("ECDICT_CSV", "C:/Users/17296/WorkBuddy/2026-08-29-23-03-07/data-survey/ECDICT/ecdict.csv")
-KAJWEB_DIR = os.environ.get("KAJWEB_DIR", "C:/Users/17296/WorkBuddy/2026-08-29-23-03-07/data-survey/kajweb-dict/book")
-OUT_DB = os.environ.get("OUT_DB", "C:/Users/17296/WorkBuddy/wordbook_full.db")
+# 输入/输出路径一律经环境变量或仓库相对目录配置，禁止写死本机用户路径（N9）。
+INPUTS = os.environ.get("WORDBOOK_INPUTS", os.path.join(REPO, "inputs"))
+CURRENT = os.environ.get("CURRENT_DB", os.path.join(INPUTS, "current_wordbook.db"))
+ECDICT_CSV = os.environ.get("ECDICT_CSV", os.path.join(INPUTS, "ecdict.csv"))
+KAJWEB_DIR = os.environ.get("KAJWEB_DIR", os.path.join(INPUTS, "kajweb-dict", "book"))
+OUT_DB = os.environ.get("OUT_DB", os.path.join(INPUTS, "wordbook_full.db"))
 OUT_GZ = os.path.join(REPO, "assets", "db", "wordbook.db.gz")
 
 CJK = re.compile(r"[\u4e00-\u9fff]")

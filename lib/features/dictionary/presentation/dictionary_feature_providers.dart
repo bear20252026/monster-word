@@ -2,6 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/service_locator.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/application/word_lookup_reader.dart';
+import 'package:word_app/core/application/word_lookup_reader_impl.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/dictionary/application/dictionary_content_reader.dart';
@@ -29,8 +32,9 @@ Widget buildDictionaryFeatureScope({required Widget child}) {
       Provider<DictionaryNewWordWriter>(create: (_) => ServiceDictionaryNewWordWriter()),
       // 字典补充数据（派生/近义/真题）：presentation 只经端口消费（R3 presentation↛data）
       Provider<DictionaryExtraReader>(create: (_) => const RepositoryDictionaryExtraReader()),
-      // core 仓储转发（深链页经 Provider 通道消费，禁止直取 sl<>——A3 收口）
-      Provider<WordRepository>.value(value: sl<WordRepository>()),
+      // N10：查词/偏好端口（R-core-repo / R-prefs）——presentation 不 import core 仓储/SP
+      Provider<WordLookupReader>(create: (_) => RepositoryWordLookupReader(sl<WordRepository>())),
+      Provider<PresentationPrefs>(create: (_) => PresentationPrefs()),
     ],
     child: child,
   );

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/content/presentation/my_fav_page.dart';
@@ -90,7 +90,7 @@ class _LearningListGroup extends StatelessWidget {
           icon: Icons.check_circle_outline,
           iconColor: FuncColors.warning,
           title: '近日已学',
-          value: '今天 ${AppPreferences().getTodayLearned()} 词',
+          value: '今天 ${context.read<PresentationPrefs>().todayLearned} 词',
           skin: skin,
         ),
         // 订阅学习统计快照，展示当前队列已学卡片数。

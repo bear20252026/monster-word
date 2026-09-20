@@ -131,7 +131,8 @@ class AppleSpacing {
   static const double section = 64;
 }
 
-/// 字体（过渡期：指向 StarbucksTypography 的回退链）
+/// 排版 token：只承载字号/字重/行高/字距，**不烘焙皮肤色**。
+/// 颜色一律在调用点 `copyWith(color: context.skin.colors.*)`（N6，2026-09-19）。
 class MwTypography {
   static const TextStyle heroDisplay = TextStyle(
     fontFamily: 'Charter',
@@ -139,7 +140,6 @@ class MwTypography {
     fontWeight: FontWeight.w400,
     height: 1.10,
     letterSpacing: -1.0,
-    color: StarbucksCreamColors.greenHouse, // 标题绿
   );
   static const TextStyle heading1 = TextStyle(
     fontFamily: 'Charter',
@@ -147,114 +147,37 @@ class MwTypography {
     fontWeight: FontWeight.w400,
     height: 1.15,
     letterSpacing: -0.5,
-    color: StarbucksCreamColors.greenHouse,
   );
   static const TextStyle heading2 = TextStyle(
     fontSize: 36,
     fontWeight: FontWeight.w500,
     height: 1.20,
     letterSpacing: -0.5,
-    color: StarbucksCreamColors.greenHouse,
   );
-  static const TextStyle heading3 = TextStyle(
-    fontSize: 28,
-    fontWeight: FontWeight.w500,
-    height: 1.25,
-    color: StarbucksCreamColors.greenHouse,
-  );
-  static const TextStyle heading4 = TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.w500,
-    height: 1.30,
-    color: StarbucksCreamColors.greenHouse,
-  );
-  static const TextStyle heading5 = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.w500,
-    height: 1.40,
-    color: StarbucksCreamColors.greenHouse,
-  );
+  static const TextStyle heading3 = TextStyle(fontSize: 28, fontWeight: FontWeight.w500, height: 1.25);
+  static const TextStyle heading4 = TextStyle(fontSize: 22, fontWeight: FontWeight.w500, height: 1.30);
+  static const TextStyle heading5 = TextStyle(fontSize: 18, fontWeight: FontWeight.w500, height: 1.40);
 
   /// 屏级标题（20/w600）——填补 18 与 22 之间的字号阶梯。
-  static const TextStyle titleLg = TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.w600,
-    height: 1.35,
-    color: StarbucksCreamColors.text1,
-  );
+  static const TextStyle titleLg = TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.35);
 
   /// 大数字/强调展示（24/w600）——统计卡、完成页主数字。
-  static const TextStyle displaySm = TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.w600,
-    height: 1.30,
-    color: StarbucksCreamColors.text1,
-  );
+  static const TextStyle displaySm = TextStyle(fontSize: 24, fontWeight: FontWeight.w600, height: 1.30);
 
   /// 仪表盘特大数字（32/w700）——设置页词量统计等。
-  static const TextStyle stat = TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.w700,
-    height: 1.20,
-    color: StarbucksCreamColors.text1,
-  );
-  static const TextStyle bodyMd = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    height: 1.55,
-    color: StarbucksCreamColors.text1,
-  );
-  static const TextStyle bodySm = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    height: 1.50,
-    color: StarbucksCreamColors.text1,
-  );
-  static const TextStyle caption = TextStyle(
-    fontSize: 13,
-    fontWeight: FontWeight.w400,
-    height: 1.40,
-    color: StarbucksCreamColors.text2,
-  );
-  static const TextStyle captionBold = TextStyle(
-    fontSize: 13,
-    fontWeight: FontWeight.w600,
-    height: 1.40,
-    color: StarbucksCreamColors.text1,
-  );
-  static const TextStyle body = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    height: 1.55,
-    color: StarbucksCreamColors.text1,
-  );
-  static const TextStyle bodyBold = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    height: 1.55,
-    color: StarbucksCreamColors.text1,
-  );
+  static const TextStyle stat = TextStyle(fontSize: 32, fontWeight: FontWeight.w700, height: 1.20);
+  static const TextStyle bodyMd = TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.55);
+  static const TextStyle bodySm = TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.50);
+  static const TextStyle caption = TextStyle(fontSize: 13, fontWeight: FontWeight.w400, height: 1.40);
+  static const TextStyle captionBold = TextStyle(fontSize: 13, fontWeight: FontWeight.w600, height: 1.40);
+  static const TextStyle body = TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.55);
+  static const TextStyle bodyBold = TextStyle(fontSize: 16, fontWeight: FontWeight.w600, height: 1.55);
 
   /// 徽章最小字（10/w700）——通知角标等极小数字。
-  static const TextStyle microXs = TextStyle(
-    fontSize: 10,
-    fontWeight: FontWeight.w700,
-    height: 1.1,
-    color: StarbucksCreamColors.text1,
-  );
+  static const TextStyle microXs = TextStyle(fontSize: 10, fontWeight: FontWeight.w700, height: 1.1);
 
-  static const TextStyle micro = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
-    height: 1.40,
-    color: StarbucksCreamColors.text2,
-  );
-  static const TextStyle buttonMd = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    height: 1.30,
-    color: StarbucksCreamColors.cardBg, // 白字
-  );
+  static const TextStyle micro = TextStyle(fontSize: 12, fontWeight: FontWeight.w500, height: 1.40);
+  static const TextStyle buttonMd = TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.30);
 }
 
 /// 兼容旧代码别名（过渡期指向星巴克 token）
@@ -270,9 +193,9 @@ class AppColors {
   static const Color mainBgBottom = StarbucksCreamColors.pageBg;
   static const Color cardBg = StarbucksCreamColors.cardBg; // 白卡片
   static const Color dividerGrey = StarbucksCreamColors.divider;
-  static const Color textTertiary = StarbucksDarkColors.text2; // 雾绿
+  static const Color textTertiary = StarbucksCreamColors.text2; // 对齐亮色皮肤三级文字（N6）
   static const Color checkInBg = Color(0x33006B3F); // 品牌绿 20%
-  static const Color checkInAccent = StarbucksDarkColors.accent; // 亮绿
+  static const Color checkInAccent = StarbucksCreamColors.greenBrand; // 对齐亮色品牌绿（N6）
   static const Color primary = StarbucksCreamColors.greenBrand; // 品牌绿
 }
 

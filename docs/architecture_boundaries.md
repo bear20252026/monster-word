@@ -6,21 +6,18 @@
 
 ```text
 lib/
-  app/                 # 应用启动、全局 Provider、路由装配（app/router/）、主题和首页装配
-  core/                # 依赖注册、平台无关基础能力
-  features/            # 后续按业务逐步迁移的垂直功能模块
-  data/                # 本地数据库、DAO、持久化实现（迁移期遗留）
-  repositories/        # 数据访问接口及实现（迁移期遗留）
-  services/            # 用例服务（迁移期遗留）
-  state/               # 页面状态 / Controller（迁移期遗留）
-  pages/, screens/     # 现有展示层，按 feature 逐步迁移
-  widgets/             # 跨功能纯展示组件；不得继续放入业务编排
-  models/              # 跨 feature 共享域模型（定位见下文 §1.1）
-  tokens/              # 设计令牌唯一定义处（色彩/阴影/品牌常量，M5 白名单）
-  theme/               # 皮肤系统与壁纸数据（preset 定义处，M5 白名单）
+  app/                 # 组合根：service_locator + app.dart Provider scope + app/router/
+  core/                # 基础设施 + application 端口门面（WordLookupReader/PresentationPrefs 等）
+  features/            # 11 个业务特性（domain/application/data/presentation）
+  widgets/             # 跨 feature 纯展示组件；只可消费 application 端口（R-widgets）
+  models/              # 跨 feature 共享域模型（§1.1）
+  tokens/              # 设计令牌唯一定义处（色彩/阴影/字号/圆角；排版 token 不烘焙皮肤色）
+  theme/               # 皮肤系统与壁纸数据（preset 定义处）
 ```
 
 `app/` 是应用装配层：`app_bootstrap.dart` 只初始化平台与基础设施，`app.dart` 只装配全局状态、主题、首页和路由。`main.dart` 仅启动这两个边界。
+
+**已删除的迁移期目录（2026-09-19 文档对齐）**：`data/`、`repositories/`、`services/`、`state/`、`pages/`、`screens/`、`core/di/`、`core/router/` 均已并入 features/app，不得复活。
 
 ### 1.1 `models/` 的定位
 
@@ -53,9 +50,11 @@ lib/
 
 迁移期既有跨层引用暂时存在，**本轮不做大范围清理**。新增代码必须遵守该规则；每迁移一个功能，必须删除该功能对应的旧引用，而不是再增加一条兼容路径。
 
-## 3. 服务定位器规则
+## 3. 服务定位器与偏好规则
 
-`GetIt` 仅允许在组合根及 Provider 工厂使用：`app/`、`core/di/` 或测试初始化代码。页面、Widget、domain 代码不得新增 `sl<T>()` 调用。页面应通过 `Provider` 获取明确的 State/Controller，State 通过构造函数接收依赖。
+`GetIt` 仅允许在组合根及 Provider 工厂使用：`app/service_locator.dart`、`*_feature_providers.dart` 或测试初始化代码。页面、Widget、domain 代码不得新增 `sl<T>()` 或 `package:get_it`（R6-DI）。页面应通过 `Provider` 获取明确的 State/Controller。
+
+**偏好与仓储（R-prefs / R-core-repo，2026-09-19）**：presentation 不得 import `core/infrastructure/app_preferences.dart` 或 `core/repositories/**`；统一经 `core/application/presentation_prefs.dart`、`word_lookup_reader.dart` 等端口 + Provider 消费。
 
 ## 4. 迁移顺序与完成定义
 
