@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/account/domain/message_item.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 
@@ -199,8 +200,9 @@ class MessageStore extends ChangeNotifier {
     try {
       final List<dynamic> list = jsonDecode(raw) as List<dynamic>;
       return list.map((dynamic e) => MessageItem.fromJson(e as Map<String, dynamic>)).toList();
-    } catch (_) {
-      // 数据损坏时静默重置，不阻塞消息中心可用性。
+    } catch (e, s) {
+      // M9：损坏消息静默重置，但须上报（用户消息不可见）。
+      reportSwallowedError('message store decode', e, s);
       return <MessageItem>[];
     }
   }

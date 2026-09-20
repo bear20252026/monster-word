@@ -123,9 +123,7 @@ Future<void> setupServiceLocator() async {
 
   // ReviewQueueReader
   if (!sl.isRegistered<ReviewQueueReader>()) {
-    sl.registerLazySingleton<ReviewQueueReader>(
-      () => RepositoryReviewQueueReader(wordRepository: sl<WordRepository>()),
-    );
+    sl.registerLazySingleton<ReviewQueueReader>(() => const RepositoryReviewQueueReader());
   }
 
   // LearningQueueRepository（遗留学习会话队列加载命令边界）

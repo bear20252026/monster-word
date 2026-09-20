@@ -264,13 +264,25 @@ def main():
     out.close()
     mg.close()
 
-    # 6) 压缩为资产
-    if os.path.exists(OUT_GZ):
-        os.remove(OUT_GZ)
-    with open(OUT_DB, "rb") as f, gzip.open(OUT_GZ, "wb", compresslevel=9) as g:
+    # 6) 压缩为资产（H4：覆盖前强制备份，禁止无备份写正式 assets）
+    if os.environ.get("ALLOW_ASSET_OVERWRITE", "").lower() not in ("1", "true", "yes"):
+        dest = os.environ.get("OUT_GZ_TARGET", os.path.join(INPUTS, "wordbook_expanded.db.gz"))
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        if os.path.exists(OUT_GZ) and os.path.abspath(dest) == os.path.abspath(OUT_GZ):
+            backup = OUT_GZ + ".bak"
+            shutil.copy2(OUT_GZ, backup)
+            print("H4 backup:", backup)
+        target = dest
+    else:
+        if os.path.exists(OUT_GZ):
+            backup = OUT_GZ + ".bak"
+            shutil.copy2(OUT_GZ, backup)
+            print("H4 backup:", backup)
+        target = OUT_GZ
+    with open(OUT_DB, "rb") as f, gzip.open(target, "wb", compresslevel=9) as g:
         shutil.copyfileobj(f, g, length=8 * 1024 * 1024)
     print("OUT_DB:", round(os.path.getsize(OUT_DB) / 1048576, 1), "MB")
-    print("OUT_GZ:", round(os.path.getsize(OUT_GZ) / 1048576, 1), "MB ->", OUT_GZ)
+    print("OUT_GZ:", round(os.path.getsize(target) / 1048576, 1), "MB ->", target)
 
 
 if __name__ == "__main__":

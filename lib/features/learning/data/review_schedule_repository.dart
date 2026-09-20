@@ -121,12 +121,21 @@ class ReviewScheduleRepository extends ChangeNotifier {
     _activeDates.add(date);
 
     if (_useSqlite && _store != null) {
-      await _store!.recordRating(card: card, dateKey: date, isLearn: isLearn);
+      // H3：库写失败必须可观测；内存态保留会话推进，避免评分中断卡死 UI。
+      try {
+        await _store!.recordRating(card: card, dateKey: date, isLearn: isLearn);
+      } catch (error, stack) {
+        reportSwallowedError('FSRS rateWord persist (sqlite)', error, stack);
+      }
     } else {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(cardsPrefKey, jsonEncode(_cards.map((word, card) => MapEntry(word, card.toJson()))));
-      await prefs.setString(dailyStatsPrefKey, jsonEncode(_dailyStats));
-      await prefs.setStringList(activeDatesPrefKey, _activeDates.toList());
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(cardsPrefKey, jsonEncode(_cards.map((word, card) => MapEntry(word, card.toJson()))));
+        await prefs.setString(dailyStatsPrefKey, jsonEncode(_dailyStats));
+        await prefs.setStringList(activeDatesPrefKey, _activeDates.toList());
+      } catch (error, stack) {
+        reportSwallowedError('FSRS rateWord persist (sp)', error, stack);
+      }
     }
     notifyListeners();
   }
@@ -136,7 +145,11 @@ class ReviewScheduleRepository extends ChangeNotifier {
     await initialize();
     if (_cards.remove(word) == null) return;
     if (_useSqlite && _store != null) {
-      await _store!.deleteCard(word);
+      try {
+        await _store!.deleteCard(word);
+      } catch (error, stack) {
+        reportSwallowedError('FSRS forget persist', error, stack);
+      }
     } else {
       await _saveCards();
     }
@@ -182,13 +195,12 @@ class ReviewScheduleRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 首启迁移：SQLite 空 且 未写过迁移标记 且 旧 SP 有数据 → 事务导入。
+  /// 首启迁移：marker 未写完时从 SP **单事务** 导入 cards+stats+dates。
   ///
-  /// - 损坏卡片行逐条跳过（debugPrint + 聚合上报），不中断整体迁移；
-  /// - 卡片行数校验在事务提交前完成（不达标整体回滚）；
-  /// - 全部成功才写 SP 迁移标记；任何异常向上抛出（调用方降级 SP 模式）。
+  /// H1：不再以 `cardCount()>0` 提前 return——那会在 cards 成功、stats 失败后
+  /// 永久跳过迁移。仅 `migratedMarkerKey==done` 视为完成；未完成则从 SP 重放
+  /// （E2 清 SP 前置条件是 marker=done，故未完成时 SP 仍在）。
   Future<void> _migrateFromSpIfNeeded(ReviewScheduleStore store) async {
-    if (await store.cardCount() > 0) return;
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getString(migratedMarkerKey) == 'done') return;
 
@@ -229,10 +241,8 @@ class ReviewScheduleRepository extends ChangeNotifier {
 
     final activeDates = (prefs.getStringList(activeDatesPrefKey) ?? const <String>[]).toSet();
 
-    // 提交前校验行数（见 store.insertCardsInTransaction），失败整体回滚。
-    await store.insertCardsInTransaction(cards);
-    await store.mergeDailyStatsInTransaction(dailyStats);
-    await store.insertActiveDatesInTransaction(activeDates);
+    // H1：三表单事务；失败整体回滚且不写标记 → 下次启动从 SP 重试。
+    await store.migrateFromSp(cards: cards, dailyStats: dailyStats, activeDates: activeDates);
 
     if (skipped > 0) {
       reportSwallowedError(
@@ -242,18 +252,31 @@ class ReviewScheduleRepository extends ChangeNotifier {
       );
     }
 
-    // 全部成功才写标记；失败路径不写标记 → 下次启动重试。
     await prefs.setString(migratedMarkerKey, 'done');
   }
 
-  /// E2：迁移完成且 SQLite 已就绪时，删除旧 SP blob 快照。
+  /// H2：E2 清 SP 前把快照挪到应急备份 key（不清除），供库损坏时人工恢复。
   ///
-  /// 仅在 `migratedMarkerKey == done` 后执行；降级模式（usesSqlite=false）不调用，
-  /// 保证 SP 仍是故障时的可读源。删除失败不影响主流程。
+  /// 恢复路径见 docs/fsrs_sqlite_migration_plan.md「E2 恢复」。
+  static const emergencyBackupKey = 'fsrs6_emergency_backup_v1';
+
   Future<void> _clearLegacySpSnapshotIfMigrated() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       if (prefs.getString(migratedMarkerKey) != 'done') return;
+      // H2：若尚无应急备份且 SP 仍有数据，先打包到 emergencyBackupKey。
+      final cardsRaw = prefs.getString(cardsPrefKey);
+      if ((prefs.getString(emergencyBackupKey) ?? '').isEmpty && cardsRaw != null && cardsRaw.isNotEmpty) {
+        await prefs.setString(
+          emergencyBackupKey,
+          jsonEncode({
+            'savedAt': DateTime.now().toIso8601String(),
+            cardsPrefKey: cardsRaw,
+            dailyStatsPrefKey: prefs.getString(dailyStatsPrefKey),
+            activeDatesPrefKey: prefs.getStringList(activeDatesPrefKey),
+          }),
+        );
+      }
       await prefs.remove(cardsPrefKey);
       await prefs.remove(dailyStatsPrefKey);
       await prefs.remove(activeDatesPrefKey);

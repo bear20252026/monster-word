@@ -74,11 +74,14 @@ void main() {
       expect(violations, isEmpty, reason: '语义色请走 skin.colors.success/danger 或 MwColors（N7，2026-09-19）');
     });
 
-    test('MwTypography 不烘焙皮肤色（N6：颜色必须 copyWith skin）', () {
+    test('MwTypography/AppTypography 不烘焙皮肤色（N6/M5）', () {
       final src = File('lib/tokens/design_tokens.dart').readAsStringSync();
-      final block = src.split('class MwTypography').last.split('class AppColors').first;
-      expect(block.contains('StarbucksCreamColors'), isFalse, reason: 'MwTypography 禁止绑定皮肤色');
-      expect(block.contains('StarbucksDarkColors'), isFalse);
+      final mw = src.split('class MwTypography').last.split('class AppColors').first;
+      expect(mw.contains('StarbucksCreamColors'), isFalse, reason: 'MwTypography 禁止绑定皮肤色');
+      expect(mw.contains('StarbucksDarkColors'), isFalse);
+      final appTypo = src.split('class AppTypography').last.split('class AppDimens').first;
+      expect(appTypo.contains('StarbucksCreamColors'), isFalse, reason: 'AppTypography 别名禁止烘焙皮肤色');
+      expect(appTypo.contains('StarbucksDarkColors'), isFalse);
     });
 
     test('effect_palette.dart 是特效装饰色唯一入口且全部具名', () {

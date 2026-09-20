@@ -69,6 +69,10 @@
 | REG-LEARN-002b | E1 迁移后旧 SP 回滚快照长期滞留（事实来源双轨） | 观察期后未清理 | batch7（2026-09-20） | SQLite 模式且 marker=done 时删除三 key；降级模式不删；review_schedule_migration_test E2 |
 | REG-ARCH-007 | 9 套皮肤 preset 色值与 token 双写漂移风险 | 仅星巴克 token 化 | batch7 | lib/tokens/skin_tokens.dart + theme_token_consistency_test 9 套锁定 |
 | REG-TYPE-001 | fontSize 字面量棘轮 44 处 | 未收敛字号 token | batch7 | AppFontSizes.*；font_hygiene_test 上限 1 |
+| REG-FSRS-003 | FSRS 迁移 cards/stats 非原子；rateWord 写失败静默 | 三事务拆分 + 无 catch | H1/H3 批（2026-09-20） | `ReviewScheduleStore.migrateFromSp` 单事务 + marker 完成门闩；rateWord/forget 持久化 `reportSwallowedError` |
+| REG-FSRS-004 | E2 清 SP 后库损坏无恢复源 | 快照直接删除 | H2 批 | E2 前写入 `fsrs6_emergency_backup_v1`；迁移测试覆盖备份 key |
+| REG-ARCH-008 | core→app / domain→infra 盲区 | 守卫只扫 features | M2/M3 批 | ImportGuard R-core-app + R5b + import_guard_test |
+| REG-REVIEW-001 | 空复习队列塞入 searchWords 抽样假词 | 回退假队列 | M7 批 | `RepositoryReviewQueueReader` 空态返回 `[]`；`review_queue_reader_test` |
 
 ## 修复新 bug 的流程
 

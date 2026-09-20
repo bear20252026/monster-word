@@ -30,7 +30,11 @@ class LearningSessionState extends ChangeNotifier {
     required this._reviewSchedulePort,
     required this._choicePort,
     List<Word> Function(List<Word>)? shuffler,
-  }) : _shuffler = shuffler ?? alphabetSpreadShuffle {
+    TodayProgressStore? todayStore,
+    PresentationPrefs? prefs,
+  }) : _shuffler = shuffler ?? alphabetSpreadShuffle,
+       _today = todayStore ?? TodayProgressStore(),
+       _prefs = prefs ?? PresentationPrefs() {
     unawaited(_loadProgress());
   }
 
@@ -39,6 +43,8 @@ class LearningSessionState extends ChangeNotifier {
   final List<Word> Function(List<Word>) _shuffler;
   final ReviewScheduleWriterPort _reviewSchedulePort;
   final ChoiceGeneratorPort _choicePort;
+  final TodayProgressStore _today;
+  final PresentationPrefs _prefs;
   final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
 
   Book? _currentBook;
@@ -59,14 +65,14 @@ class LearningSessionState extends ChangeNotifier {
   int get todayLearned => _todayLearned;
 
   /// 每日学习目标（个），来自偏好设置（经 application 门面，R-prefs）
-  int get dailyGoal => PresentationPrefs().dailyGoal;
+  int get dailyGoal => _prefs.dailyGoal;
 
   /// 今日目标是否已达成（今日已学 >= 目标）——完成页庆祝横幅依据
   bool get dailyGoalAchieved => _todayLearned >= dailyGoal;
 
   Future<void> _loadTodayLearned() async {
     try {
-      final prefs = TodayProgressStore();
+      final prefs = _today;
       final today = DateTime.now().toIso8601String().substring(0, 10);
       _todayLearnedDate = today;
       _todayLearned = prefs.learned;
@@ -80,7 +86,7 @@ class LearningSessionState extends ChangeNotifier {
   Future<void> _incrementTodayLearned() async {
     _todayLearned++;
     try {
-      await TodayProgressStore().setTodayLearned(_todayLearned, date: _todayLearnedDate);
+      await _today.setTodayLearned(_todayLearned, date: _todayLearnedDate);
     } catch (e, s) {
       reportSwallowedError('今日学习数写入失败', e, s);
     }

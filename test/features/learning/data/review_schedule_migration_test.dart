@@ -75,10 +75,13 @@ void main() {
     expect(await store.loadDailyStats(), {
       '2026-09-03': {'learn': 5, 'review': 2},
     });
-    // E2：SQLite 就绪后旧 SP 回滚快照应清除（事实来源唯一在 review_schedule.db）。
+    // E2：SQLite 就绪后旧 SP 回滚快照应清除；应急备份 key 已写入（H2）。
     expect(prefs.getString(ReviewScheduleRepository.cardsPrefKey), isNull);
     expect(prefs.getString(ReviewScheduleRepository.dailyStatsPrefKey), isNull);
     expect(prefs.getStringList(ReviewScheduleRepository.activeDatesPrefKey), isNull);
+    final backup = prefs.getString(ReviewScheduleRepository.emergencyBackupKey);
+    expect(backup, isNotNull);
+    expect(backup, contains('apple'));
   });
 
   test('E2：SQLite 模式不保留 SP 快照；降级模式仍写 SP', () async {
