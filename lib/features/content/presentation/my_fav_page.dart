@@ -1,6 +1,7 @@
 // 单词本：收藏列表 + 学习入口 + 批量操作
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 import 'package:word_app/features/learning/application/learning_session_reader.dart';
@@ -98,7 +99,9 @@ class _MyFavPageState extends State<MyFavPage> {
 
   /// 开始学习收藏单词
   Future<void> _startLearning() async {
-    await context.read<LearningSessionStarter>().startFavoritesSession(limit: 50);
+    await context.read<LearningSessionStarter>().startFavoritesSession(
+      limit: context.read<PresentationPrefs>().dailyGoal,
+    );
     if (mounted) {
       Navigator.pushNamed(context, RouteNames.learnSession);
     }

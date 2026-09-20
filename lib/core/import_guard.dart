@@ -63,14 +63,19 @@ class ImportGuard {
       }
     }
 
-    // core 依赖方向：core 不得反向依赖 features。
-    // 组合根：app/router/ 是路由装配边界，按其设计必须引用各页面（只做组装、不承载
-    // 业务逻辑）。组合根本体已上移 app/service_locator.dart（v2.7.37）、app/router/
-    //（v2.7.44），core/di 不复存在；core 其余部分由 app_structure_test 的
-    // REG-ARCH-002 守卫锁定零 feature 依赖。
+    // core 依赖方向：core 不得反向依赖 features **或 app 壳层**（M2）。
+    // 组合根：app/router、app/service_locator、app/web 页属壳层/装配层。
     final isCompositionRoot = from.startsWith('app/router/');
     if (!isCompositionRoot && from.startsWith('core/') && to.startsWith('features/')) {
       violations.add('core 不得 import features(R-core): $from -> $to');
+    }
+    if (!isCompositionRoot && from.startsWith('core/') && to.startsWith('app/')) {
+      violations.add('core 不得 import app 壳层(R-core-app): $from -> $to');
+    }
+
+    // R5b（M3）：domain 不得依赖 infrastructure（AppPreferences 等）。
+    if (fromLayer == 'domain' && to.startsWith('core/infrastructure/')) {
+      violations.add('R5b: domain 不得依赖 core/infrastructure: $from -> $to');
     }
 
     // R6：feature 不得反向依赖壳层 —— feature 不得 import screens/ 或 app/（组合根）。
@@ -119,7 +124,9 @@ class ImportGuard {
       if (to.startsWith('core/repositories/')) {
         violations.add('presentation 不得 import core/repositories(R-core-repo): $from -> $to（改经 application 端口）');
       }
-      // R-prefs：presentation 不得直触 AppPreferences 单例，走 PresentationPrefs / feature 状态。
+      // R-prefs：presentation 不得直触 AppPreferences 单例。
+      // 语义：application 门面（PresentationPrefs/TodayProgressStore）内部可用 infrastructure；
+      // presentation 应 context.read 门面实例（可构造注入），禁止 import infrastructure。
       if (to == 'core/infrastructure/app_preferences.dart') {
         violations.add('presentation 不得直触 AppPreferences(R-prefs): $from -> $to（改经 application PresentationPrefs）');
       }

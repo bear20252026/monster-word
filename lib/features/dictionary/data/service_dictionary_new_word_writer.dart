@@ -1,4 +1,5 @@
 import 'package:word_app/core/infrastructure/user_database.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/new_word_repository_impl.dart';
 import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
@@ -33,8 +34,9 @@ class ServiceDictionaryNewWordWriter implements DictionaryNewWordWriter {
       _newWordIdCache
         ..clear()
         ..addAll(words.map((r) => r.wordId));
-    } catch (_) {
-      // 缓存加载失败不影响核心功能
+    } catch (e, s) {
+      // M9：缓存加载失败可降级，但必须可观测（生词同步查询可能失真）。
+      reportSwallowedError('dictionary new-word cache load', e, s);
     }
   }
 

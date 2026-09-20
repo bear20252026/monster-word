@@ -192,6 +192,16 @@ void main() {
       expect(check('widgets/some_card.dart', 'core/repositories/word_repository.dart'), isEmpty);
     });
 
+    test('R-core-app / R5b: core 不得依赖 app 壳层；domain 不得依赖 infrastructure', () {
+      expect(check('core/web/base_web_page.dart', 'app/router/nav_utils.dart'), anyElement(contains('R-core-app')));
+      expect(
+        check('features/settings/domain/learning_preferences.dart', 'core/infrastructure/app_preferences.dart'),
+        anyElement(contains('R5b')),
+      );
+      // app 层消费 core 允许
+      expect(check('app/web/uri_scheme_page.dart', 'core/web/base_web_page.dart'), isEmpty);
+    });
+
     test('非 feature、非 core 壳层（遗留薄适配）依赖 feature 允许', () {
       expect(check('pages/book_words_page.dart', 'features/learning/presentation/state.dart'), isEmpty);
     });

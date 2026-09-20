@@ -11,6 +11,7 @@ import 'package:word_app/features/learning/application/learning_session_starter.
 import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/widgets/common/mw_skeleton.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
@@ -56,7 +57,10 @@ class _BookWordsPageState extends State<BookWordsPage> {
   }
 
   Future<void> _startLearning(BuildContext context) async {
-    await context.read<LearningSessionStarter>().startBookSession(widget.book, limit: 50);
+    await context.read<LearningSessionStarter>().startBookSession(
+      widget.book,
+      limit: context.read<PresentationPrefs>().dailyGoal,
+    );
     if (!context.mounted) return;
     Navigator.pushNamed(context, RouteNames.immersiveSwipe);
   }

@@ -5,7 +5,6 @@ import 'package:word_app/features/learning/data/repository_review_queue_reader.d
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
 import 'package:word_app/features/learning/presentation/review_session_state.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/core/repositories/word_repository.dart';
 
 void main() {
   group('ReviewSessionState', () {
@@ -13,7 +12,7 @@ void main() {
       String? persistedWord;
       FsrsRating? persistedRating;
       final state = ReviewSessionState(
-        queueReader: RepositoryReviewQueueReader(wordRepository: _UnusedWordRepository()),
+        queueReader: const RepositoryReviewQueueReader(),
         ratingWriter: ReviewRatingWriter(
           writeRating: ({required word, required rating}) async {
             persistedWord = word;
@@ -56,7 +55,7 @@ void main() {
 
     test('初始化读取失败后保留错误状态而不是把页面当作复习完成', () async {
       final state = ReviewSessionState(
-        queueReader: RepositoryReviewQueueReader(wordRepository: _ThrowingWordRepository()),
+        queueReader: const _ThrowingQueueReader(),
         ratingWriter: ReviewRatingWriter(writeRating: ({required word, required rating}) async {}),
       );
 
@@ -74,38 +73,11 @@ void main() {
   });
 }
 
-class _ThrowingWordRepository extends _UnusedWordRepository {
+class _ThrowingQueueReader implements ReviewQueueReader {
+  const _ThrowingQueueReader();
+
   @override
-  Future<List<Word>> searchWords(String query, {int? limit}) async {
-    throw StateError('word source unavailable');
+  Future<List<Word>> loadWords(ReviewQueueSnapshot snapshot) async {
+    throw StateError('review source unavailable');
   }
-}
-
-class _UnusedWordRepository implements WordRepository {
-  @override
-  Future<List<Word>> getRandomWords(int count, {int? excludeBookId}) => throw UnimplementedError();
-
-  @override
-  Future<Word?> getWordById(int id) => throw UnimplementedError();
-
-  @override
-  Future<Word?> getWordByText(String text) => throw UnimplementedError();
-
-  @override
-  Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset}) => throw UnimplementedError();
-
-  @override
-  Future<List<Word>> getWordsByIds(Iterable<int> ids) => throw UnimplementedError();
-
-  @override
-  Future<List<Word>> getWordsByTexts(Iterable<String> texts) => throw UnimplementedError();
-
-  @override
-  Future<Map<String, dynamic>?> getWordDetails(int wordId) => throw UnimplementedError();
-
-  @override
-  Future<List<Word>> searchWords(String query, {int? limit}) => throw UnimplementedError();
-
-  @override
-  Future<int> updateWordStatus(int wordId, Map<String, dynamic> status) => throw UnimplementedError();
 }

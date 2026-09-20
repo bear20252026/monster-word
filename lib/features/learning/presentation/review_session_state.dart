@@ -115,7 +115,10 @@ class ReviewSessionState extends ChangeNotifier {
   /// 保持“看答案后继续”沿用 good 评分推进正式复习的既有行为。
   void continueWithGoodRating() => rate(RecallRating.good);
 
-  /// 保留原“熟”操作的会话推进语义；该按钮当前不提交 FSRS 持久化评分。
+  /// 「熟」：仅推进会话计数，**有意不提交 FSRS 评分**（产品语义，非遗漏）。
+  ///
+  /// 与 continueWithGoodRating（good→FSRS）区分：用户认为该词已掌握时跳过
+  /// 复习队列即可，不改 stability/due。若未来拍板要记 FSRS，应映射 easy 并补测试。
   bool markAsKnown() {
     if (currentWord == null) return false;
     _answerState.reset();

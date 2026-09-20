@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 import 'package:word_app/features/learning/application/learning_session_starter.dart';
@@ -266,6 +267,7 @@ void main() {
         ChangeNotifierProvider<AudioPlaybackState>(create: (_) => AudioPlaybackState(audioService: MockAudioService())),
         ChangeNotifierProvider<BookState>.value(value: bookState),
         Provider<WordBookMaintenanceService>.value(value: const WordBookMaintenanceService()),
+        Provider<PresentationPrefs>.value(value: PresentationPrefs()),
       ],
       child: MaterialApp(
         home: BookWordsPage(book: testBook),
@@ -296,7 +298,7 @@ void main() {
       expect(find.text('开始学习'), findsOneWidget);
     });
 
-    testWidgets('tapping FAB calls loadBook(book, limit: 50) and navigates to /immersive_swipe', (tester) async {
+    testWidgets('tapping FAB calls loadBook(book, limit: dailyGoal) and navigates to /immersive_swipe', (tester) async {
       final state = BookState(
         catalogReader: MockCatalogReader(),
         selectionWriter: MockSelectionWriter(),
@@ -327,6 +329,7 @@ void main() {
             ),
             ChangeNotifierProvider<BookState>.value(value: state),
             Provider<WordBookMaintenanceService>.value(value: const WordBookMaintenanceService()),
+            Provider<PresentationPrefs>.value(value: PresentationPrefs()),
           ],
           child: MaterialApp(
             home: BookWordsPage(book: testBook),
@@ -349,7 +352,7 @@ void main() {
       // Verify loadBook was called with correct arguments.
       expect(spySession.loadBookCallCount, 1);
       expect(spySession.loadedBook, testBook);
-      expect(spySession.loadedLimit, 50);
+      expect(spySession.loadedLimit, PresentationPrefs().dailyGoal);
 
       // Verify navigation to /immersive_swipe.
       expect(navigatedRoute, '/immersive_swipe');

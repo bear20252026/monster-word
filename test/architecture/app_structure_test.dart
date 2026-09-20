@@ -322,7 +322,9 @@ void main() {
       }
       expect(masteredAdapter, contains('MasteredRepository'));
       expect(newWordsAdapter, contains('NewWordRepository'));
-      expect(reviewQueueAdapter, contains('WordRepository'));
+      // M7：复习队列适配器只消费快照，不再注入 WordRepository（禁止假抽样）。
+      expect(reviewQueueAdapter, isNot(contains('WordRepository')));
+      expect(reviewQueueAdapter, contains('ReviewQueueSnapshot'));
     });
 
     test('词书入口通过 BookCatalogReader 访问目录', () {

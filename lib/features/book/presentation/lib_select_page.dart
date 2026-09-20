@@ -299,7 +299,10 @@ class _LibSelectPageState extends State<LibSelectPage> {
     if (_selecting) return; // 防连点/并发竞态（体验审计 A-3）
     setState(() => _selecting = true);
     try {
-      await context.read<LearningSessionStarter>().startBookSession(book, limit: 50);
+      await context.read<LearningSessionStarter>().startBookSession(
+        book,
+        limit: context.read<PresentationPrefs>().dailyGoal,
+      );
       if (mounted) {
         await context.read<BookState>().selectAndLoad(book);
       }

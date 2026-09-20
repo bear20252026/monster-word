@@ -200,6 +200,42 @@ class ReviewScheduleStore {
     });
   }
 
+  /// H1：SP→SQLite 迁移 **单事务** 落库（cards + dailyStats + activeDates）。
+  ///
+  /// 任一子步失败整体回滚，避免「cards 已入、stats 失败」后下次启动因
+  /// cardCount>0 而跳过迁移导致统计永久孤儿。
+  Future<void> migrateFromSp({
+    required List<FsrsCard> cards,
+    required Map<String, Map<String, int>> dailyStats,
+    required Set<String> activeDates,
+  }) async {
+    await _db.transaction((txn) async {
+      for (final card in cards) {
+        await txn.insert('fsrs_cards', _cardToRow(card), conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      if (cards.isNotEmpty) {
+        final result = await txn.rawQuery('SELECT COUNT(*) AS n FROM fsrs_cards');
+        final count = (result.single['n'] as int?) ?? 0;
+        if (count < cards.length) {
+          throw StateError('迁移行数校验失败：预期 ${cards.length}，实际 $count');
+        }
+      }
+      for (final entry in dailyStats.entries) {
+        final learn = entry.value['learn'] ?? 0;
+        final review = entry.value['review'] ?? 0;
+        await txn.rawInsert(
+          'INSERT INTO fsrs_daily_stats(date, learn, review) VALUES(?, ?, ?) '
+          'ON CONFLICT(date) DO UPDATE SET '
+          'learn = learn + excluded.learn, review = review + excluded.review',
+          [entry.key, learn, review],
+        );
+      }
+      for (final date in activeDates) {
+        await txn.insert('fsrs_active_dates', {'date': date}, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+    });
+  }
+
   Map<String, Object?> _cardToRow(FsrsCard card) => {
     'word': card.word,
     'stability': card.stability,

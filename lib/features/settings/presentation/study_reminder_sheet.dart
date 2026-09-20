@@ -1,4 +1,4 @@
-// 学习提醒弹窗：微信提醒开关（遗留假语义，待用户决策）+ 系统提醒真调度 + 提醒时间选择。
+// 学习提醒弹窗：微信提醒开关（用户明确不动，2026-09 审计 M7：无微信通道，仅本地偏好位）+ 系统提醒真调度 + 提醒时间选择。
 // 系统提醒走 StudyReminderService（flutter_local_notifications），失败诚实提示。
 import 'package:flutter/material.dart';
 

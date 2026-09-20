@@ -80,8 +80,9 @@ class PreferencesScareCoinStore implements ScareCoinStore {
       final prefs = await SharedPreferences.getInstance();
       final dates = (prefs.getStringList(checkinDatesKey) ?? const <String>[]).toSet()..add(iso);
       await prefs.setStringList(checkinDatesKey, dates.toList()..sort());
-    } catch (_) {
-      // 日历集合写入失败不阻断主签到流程。
+    } catch (e, s) {
+      // M9：签到日历集合写失败不阻断主流程，但须上报（连签展示可能缺天）。
+      reportSwallowedError('scare_coin checkin dates persist', e, s);
     }
     return _apply(delta: checkInReward, reason: '每日签到', lastCheckInIso: iso);
   }

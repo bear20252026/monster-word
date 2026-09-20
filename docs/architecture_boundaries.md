@@ -37,18 +37,21 @@ lib/
 
 豁免不等于许可：这些 feature 新增代码仍须遵守 §2 依赖规则；一旦出现可提炼的领域规则或数据访问，应优先补齐对应层而不是继续堆在 presentation。新增 feature 默认按完整三层建立，不再进入豁免名单。
 
-## 2. 依赖规则
+## 2. 依赖规则（现网 + ImportGuard）
 
-| 来源 | 允许依赖 | 禁止依赖 |
-|---|---|---|
-| `app/` | `core/`、全局状态、页面装配 | 具体 DAO 业务调用、学习/复习规则实现 |
-| `pages/`、`screens/` | State/Controller、纯展示组件、路由 | 新增对 DAO、Engine、播放器实现、`sl<T>()` 的直接依赖 |
-| `state/` | Service/Repository 接口、纯领域规则 | `BuildContext`、页面导航、Widget 代码 |
-| `services/` | Repository 接口、纯领域规则 | `BuildContext`、Widget、页面 |
-| `repositories/` | Data 接口与模型 | 页面、State、Widget |
-| `data/` | 平台库、数据库、序列化模型 | Provider、页面、Widget |
+| 来源 | 允许依赖 | 禁止依赖 | 守卫 |
+|---|---|---|---|
+| `app/` | `core/`、`features/` presentation 装配、全局 Provider | 业务算法/DAO 实现 | 组合根豁免 |
+| `features/*/presentation` | 同 feature domain/application、跨 feature **application 端口**、`app/router` 契约 | 同 feature data、`sl<>`/get_it、`core/repositories`、`core/infrastructure/app_preferences`、DB 单例 | R3/R6-DI/R-core-repo/R-prefs/R-DB |
+| `features/*/application` | 同 feature domain、注入的抽象 | data/presentation | R3 |
+| `features/*/domain` | Dart/models | Flutter、`core/infrastructure` | R5/R5b |
+| `features/*/data` | domain、application 契约、platform/DB | presentation | R3 |
+| `core/` | models、Dart | `features/`、`app/` | R-core / R-core-app |
+| `widgets/` | feature **application** 端口、`app/router` 契约、tokens/theme | feature domain/data/presentation、非路由 `app/` | R-widgets |
+| `models/` | Dart/序列化库 | features/data/… | 文档 §1.1 |
+| `tokens/` `theme/` | Flutter Color/Theme | features 业务 | color/theme 守卫 |
 
-迁移期既有跨层引用暂时存在，**本轮不做大范围清理**。新增代码必须遵守该规则；每迁移一个功能，必须删除该功能对应的旧引用，而不是再增加一条兼容路径。
+> **迁移期目录 `pages/ screens/ data/ repositories/ services/ state/ core/di/` 已删除**，表中不再出现；复活即违规。
 
 ## 3. 服务定位器与偏好规则
 

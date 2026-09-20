@@ -1,4 +1,3 @@
-import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/settings/domain/reminder_time.dart';
 
 /// 设置页所展示学习偏好的不可变值对象。
@@ -6,9 +5,10 @@ import 'package:word_app/features/settings/domain/reminder_time.dart';
 /// 该对象只表达用户显式可配置的学习偏好；主题、壁纸、账户和学习进度继续由各自
 /// 功能域拥有，避免重新形成全局偏好聚合状态。
 class LearningPreferences {
-  /// 助记段落默认顺序（单一事实来源：AppPreferences.defaultMnemonicOrder，
-  /// 逗号分隔存储；消费方：设置页助记顺序弹窗 + 单词详情页助记段落排序）。
-  static const String defaultMnemonicOrder = AppPreferences.defaultMnemonicOrder;
+  /// 助记段落默认顺序。
+  /// M3：domain 不依赖 infrastructure——字面量与 AppPreferences.defaultMnemonicOrder
+  /// 保持一致（守卫测试锁定相等），单一语义事实来源仍在 AppPreferences 常量定义处。
+  static const String defaultMnemonicOrder = '派生词,词组搭配,特殊变形,词根词缀';
 
   const LearningPreferences({
     required this.autoPlayAudio,

@@ -213,23 +213,13 @@ class AppColors {
   static const Color primary = StarbucksCreamColors.greenBrand; // 品牌绿
 }
 
+/// 兼容别名：**不烘焙皮肤色**（M5）。颜色一律调用点 copyWith(skin.*)。
 class AppTypography {
-  static TextStyle get heroWord => TextStyle(
-    fontSize: 38,
-    fontWeight: FontWeight.w700,
-    height: 1.20,
-    color: StarbucksCreamColors.greenHouse, // 标题绿
-  );
-  static TextStyle get phonetic =>
-      TextStyle(fontSize: 14, fontWeight: FontWeight.w400, height: 1.40, color: StarbucksCreamColors.text2);
+  static TextStyle get heroWord => const TextStyle(fontSize: 38, fontWeight: FontWeight.w700, height: 1.20);
+  static TextStyle get phonetic => MwTypography.bodySm;
   static TextStyle get body => MwTypography.bodyMd;
-  static TextStyle get tabActive => TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w600,
-    color: StarbucksCreamColors.greenBrand, // 品牌绿
-  );
-  static TextStyle get tabInactive =>
-      TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: StarbucksCreamColors.text2);
+  static TextStyle get tabActive => const TextStyle(fontSize: 14, fontWeight: FontWeight.w600);
+  static TextStyle get tabInactive => MwTypography.bodySm;
   static TextStyle get metricLg => MwTypography.heading2;
   static TextStyle get metric => MwTypography.heading3;
   static TextStyle get titlePage => MwTypography.heading5;
