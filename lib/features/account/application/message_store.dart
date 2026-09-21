@@ -98,6 +98,11 @@ class MessageStore extends ChangeNotifier {
       return;
     }
     _messages = <MessageItem>[item, ..._messages];
+    // MEM：无界增长截断，仅保留最近 N 条。
+    const maxMessages = 200;
+    if (_messages.length > maxMessages) {
+      _messages = _messages.take(maxMessages).toList();
+    }
     final prefs = await _prefs();
     await _persist(prefs);
     notifyListeners();

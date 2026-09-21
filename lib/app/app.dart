@@ -1,4 +1,7 @@
 import 'package:flutter/cupertino.dart';
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -20,6 +23,7 @@ import 'package:word_app/features/scare_coin/presentation/scare_coin_feature_pro
 import 'package:word_app/features/word_browse/presentation/word_browse_feature_providers.dart';
 import 'package:word_app/features/account/presentation/splash_page.dart';
 import 'package:word_app/widgets/common/mw_error_boundary.dart';
+import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/features/book/presentation/lib_select_page.dart';
 import 'package:word_app/features/learning/presentation/home_screen.dart';
 import 'package:word_app/features/settings/presentation/profile_screen.dart';
@@ -102,6 +106,16 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
   @override
   void didChangePlatformBrightness() {
     _syncSystemBrightness();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // MEM：进程 detach 时回收音频/TTS/DI（桌面关窗常见路径）。
+    if (state == AppLifecycleState.detached) {
+      ConfettiPlayer.dispose();
+      unawaited(disposeServiceLocator());
+      disposePlatformSingletons();
+    }
   }
 
   @override

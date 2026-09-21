@@ -257,7 +257,8 @@ class MwAudioPlayer {
     _processingStateSub = null;
     playStateListener = null;
     try {
-      await _player.dispose();
+      // MEM：无平台插件时 just_audio dispose 可能挂起，限时以免卡死退出/测试。
+      await _player.dispose().timeout(const Duration(seconds: 2));
     } catch (e) {
       debugPrint('[MwAudioPlayer] release() dispose error: $e');
     }
@@ -438,6 +439,12 @@ class PhoneticAudioPlayer {
   PlayAudioListener? playStateListener;
   bool _isPronounceUK = false;
 
+  /// MEM：释放内部播放器并清空监听（退出/销毁时由 AudioServiceImpl 调用）。
+  Future<void> release() async {
+    playStateListener = null;
+    await _audioPlayer.release();
+  }
+
   /// 默认允许播放。原默认 false 且全仓库无 setNeedPlay(true) 调用点，
   /// 导致 _playFile 的 if (!_needPlay) return 把所有单词发音静默丢弃
   /// （症状：例句响、单词不响）。
@@ -550,6 +557,14 @@ class SentenceAudioPlayer {
   }
 
   final MwAudioPlayer _audioPlayer = MwAudioPlayer();
+
+  /// MEM：释放内部播放器并清空监听。
+  Future<void> release() async {
+    playStateListener = null;
+    _sentenceListener = null;
+    await _audioPlayer.release();
+  }
+
   PlayAudioListener? playStateListener;
   SentencePlayListener? _sentenceListener;
   String _currentUrl = '';
@@ -683,6 +698,13 @@ class TextAudioPlayer {
   }
 
   final MwAudioPlayer _audioPlayer = MwAudioPlayer();
+
+  /// MEM：释放内部播放器并清空监听。
+  Future<void> release() async {
+    playStateListener = null;
+    await _audioPlayer.release();
+  }
+
   PlayAudioListener? playStateListener;
 
   /// 获取单例

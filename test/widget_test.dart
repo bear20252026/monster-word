@@ -12,7 +12,8 @@ void main() {
     await tester.pumpWidget(const WordApp());
     expect(find.byType(WordApp), findsOneWidget);
 
-    // ✅ 测试后清理
+    // ✅ 测试后清理（异步 dispose 会在后台结束；pump 排空微任务/帧）
     await disposeServiceLocator();
+    await tester.pump(const Duration(milliseconds: 100));
   });
 }

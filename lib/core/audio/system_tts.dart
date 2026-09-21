@@ -228,10 +228,13 @@ class SystemTts {
   /// 释放资源
   Future<void> dispose() async {
     try {
+      onComplete = null;
+      onErrorHandler = null;
       await _tts.stop();
       _initialized = false;
     } catch (e) {
       debugPrint('[SystemTts] dispose error: $e');
+      _initialized = false;
     }
   }
 

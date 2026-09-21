@@ -318,6 +318,12 @@ class ConfettiPlayer {
     getController().play();
   }
 
+  /// MEM：释放静态控制器（应用 detach 时调用）。
+  static void dispose() {
+    _controller?.dispose();
+    _controller = null;
+  }
+
   static void stop() {
     getController().stop();
   }

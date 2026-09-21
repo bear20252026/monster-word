@@ -2,6 +2,8 @@
 // 管理用户收藏、学习记录等数据
 // 与 wordbook_database.dart（只读词库）分离
 
+import 'dart:async';
+
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -16,6 +18,7 @@ class UserDatabase {
 
   Database? _db;
   bool _initialized = false;
+  Completer<void>? _initCompleter;
 
   Database get db {
     if (_db == null) {
@@ -25,9 +28,24 @@ class UserDatabase {
   }
 
   /// 初始化用户数据库
-  Future<void> initialize() async {
-    if (_initialized) return;
+  Future<void> initialize() {
+    if (_initialized) return Future.value();
+    final inflight = _initCompleter;
+    if (inflight != null) return inflight.future;
+    final completer = Completer<void>();
+    _initCompleter = completer;
+    completer.future.ignore();
+    _initializeInner().then(
+      (_) => completer.complete(),
+      onError: (Object e, StackTrace st) {
+        if (identical(_initCompleter, completer)) _initCompleter = null;
+        completer.completeError(e, st);
+      },
+    );
+    return completer.future;
+  }
 
+  Future<void> _initializeInner() async {
     final dir = await getApplicationSupportDirectory();
     final dbPath = p.join(dir.path, 'user_data.db');
 

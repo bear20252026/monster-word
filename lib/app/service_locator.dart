@@ -1,6 +1,8 @@
 // 由 Claude 团队生成 | Monster Word App
 // 依赖注入容器 — 使用 get_it 实现服务定位器模式
 
+import 'dart:async';
+
 import 'package:get_it/get_it.dart';
 
 import 'package:word_app/core/infrastructure/user_database.dart';
@@ -21,6 +23,7 @@ import 'package:word_app/core/repositories/new_word_repository.dart';
 import 'package:word_app/core/repositories/new_word_repository_impl.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/core/audio/audio_service_impl.dart';
+import 'package:word_app/core/audio/system_tts.dart';
 import 'package:word_app/features/account/data/user_service.dart';
 import 'package:word_app/features/account/data/user_service_impl.dart';
 import 'package:word_app/features/learning/data/learning_progress_repository.dart';
@@ -170,11 +173,30 @@ Future<void> setupServiceLocator() async {
 }
 
 /// 释放所有可释放资源（在应用退出时调用）
+///
+/// 测试可 await：只 dispose AudioService + sl.reset，不引入 Timer/平台挂起。
+/// 生产关窗请额外调用 [disposePlatformSingletons]。
 Future<void> disposeServiceLocator() async {
   if (sl.isRegistered<AudioService>()) {
-    sl<AudioService>().dispose();
+    try {
+      sl<AudioService>().dispose();
+    } catch (_) {}
   }
   await sl.reset();
+}
+
+/// 生产 detach 专用：释放平台单例（TTS / FSRS SQLite）。测试环境勿 await。
+void disposePlatformSingletons() {
+  unawaited(() async {
+    try {
+      await SystemTts().dispose();
+    } catch (_) {}
+    try {
+      if (sl.isRegistered<ReviewScheduleRepository>()) {
+        await sl<ReviewScheduleRepository>().close();
+      }
+    } catch (_) {}
+  }());
 }
 
 /// 重置所有注册（用于测试）

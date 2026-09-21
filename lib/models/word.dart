@@ -116,23 +116,38 @@ class Word {
   }
 
   /// 解释按行拆分（每个词性一行，已清理 HTML）
-  List<String> get interpretLines => cleanInterpret.split('\n').where((l) => l.trim().isNotEmpty).toList();
+  List<String>? _cachedInterpretLines;
+
+  /// 解释按行拆分（带实例缓存，MEM：列表滚动勿反复 split/清理）
+  List<String> get interpretLines =>
+      _cachedInterpretLines ??= cleanInterpret.split('\n').where((l) => l.trim().isNotEmpty).toList();
+
+  String? _cachedFirstLine;
 
   /// 第一行释义（用于列表显示，优先结构化释义）
   String get firstInterpretLine {
+    final cached = _cachedFirstLine;
+    if (cached != null) return cached;
+    String result;
     if (hasStructuredDefinitions) {
       final defs = parsedDefinitions;
       if (defs.isNotEmpty) {
         final first = defs.first;
-        return first.cnDef.isNotEmpty ? first.cnDef : first.enDef;
+        result = first.cnDef.isNotEmpty ? first.cnDef : first.enDef;
+      } else {
+        final lines = interpretLines;
+        result = lines.isNotEmpty ? lines.first : '';
       }
+    } else {
+      final lines = interpretLines;
+      result = lines.isNotEmpty ? lines.first : '';
     }
-    final lines = interpretLines;
-    return lines.isNotEmpty ? lines.first : '';
+    return _cachedFirstLine = result;
   }
 
   // === JSON 释义解析 ===
   List<Definition>? _cachedDefinitions;
+  bool? _cachedHasStructured;
 
   /// 解析后的结构化释义列表（带缓存）
   List<Definition> get parsedDefinitions {
@@ -159,17 +174,20 @@ class Word {
     } catch (_) {}
     // B 级豁免：词条/词库数据解析降级，损坏数据不影响主流程（不逐条上报防刷屏，REG-OBS-001）
     _cachedDefinitions = result;
+    _cachedHasStructured = result.isNotEmpty;
     return result;
   }
 
   /// 是否有结构化释义（JSON 格式）
   bool get hasStructuredDefinitions {
+    final cached = _cachedHasStructured;
+    if (cached != null) return cached;
     try {
       final decoded = jsonDecode(interpret);
-      return decoded is List && decoded.isNotEmpty;
+      return _cachedHasStructured = decoded is List && decoded.isNotEmpty;
     } catch (_) {
       // B 级豁免：词条/词库数据解析降级，损坏数据不影响主流程（不逐条上报防刷屏，REG-OBS-001）
-      return false;
+      return _cachedHasStructured = false;
     }
   }
 
