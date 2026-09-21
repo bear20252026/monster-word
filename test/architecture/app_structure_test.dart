@@ -77,7 +77,7 @@ void main() {
         expect(source, contains('LearningSessionState'), reason: '$path 应使用专用学习会话');
         expect(source, isNot(contains('LearnState')), reason: '$path 不应回流旧练习状态');
       }
-      expect(sessionSource, contains('List.unmodifiable(_queue)'));
+      expect(sessionSource, contains('List<Word> get queue => _queue'));
       expect(sessionSource, contains('void exitLearning()'));
     });
 
