@@ -1,5 +1,7 @@
 // AudioServiceImpl — 音频播放服务实现
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/core/audio/audio_players.dart';
@@ -65,11 +67,19 @@ class AudioServiceImpl implements AudioService {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
-    _bbPlayer.release();
-    // MEM：释放静态单例播放器，避免 mpv/AudioPlayer 与订阅常驻。
-    PhoneticAudioPlayer().release();
-    SentenceAudioPlayer().release();
-    TextAudioPlayer().release();
+    // 与历史行为一致：主播放器同步标记释放；单例播放器异步 release（不 await、无 Timer）。
+    try {
+      _bbPlayer.release();
+    } catch (_) {}
+    unawaited(_safeRelease(() => PhoneticAudioPlayer().release()));
+    unawaited(_safeRelease(() => SentenceAudioPlayer().release()));
+    unawaited(_safeRelease(() => TextAudioPlayer().release()));
     debugPrint('[AudioService] Disposed all audio resources');
+  }
+
+  Future<void> _safeRelease(Future<void> Function() op) async {
+    try {
+      await op();
+    } catch (_) {}
   }
 }

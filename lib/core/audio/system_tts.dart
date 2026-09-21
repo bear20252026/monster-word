@@ -234,6 +234,7 @@ class SystemTts {
       _initialized = false;
     } catch (e) {
       debugPrint('[SystemTts] dispose error: $e');
+      _initialized = false;
     }
   }
 

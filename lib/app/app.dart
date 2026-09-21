@@ -114,6 +114,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
     if (state == AppLifecycleState.detached) {
       ConfettiPlayer.dispose();
       unawaited(disposeServiceLocator());
+      disposePlatformSingletons();
     }
   }
 

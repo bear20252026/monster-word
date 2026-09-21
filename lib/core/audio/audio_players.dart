@@ -257,7 +257,8 @@ class MwAudioPlayer {
     _processingStateSub = null;
     playStateListener = null;
     try {
-      await _player.dispose();
+      // MEM：无平台插件时 just_audio dispose 可能挂起，限时以免卡死退出/测试。
+      await _player.dispose().timeout(const Duration(seconds: 2));
     } catch (e) {
       debugPrint('[MwAudioPlayer] release() dispose error: $e');
     }
