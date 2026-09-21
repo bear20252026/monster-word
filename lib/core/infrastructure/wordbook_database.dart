@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:archive/archive_io.dart' show InputFileStream, OutputFileStream;
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:crypto/crypto.dart' show md5;
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -226,8 +227,18 @@ class WordBookDatabase {
   Future<void> _extractTo(String dbPath, Uint8List gzBytes) async {
     for (var attempt = 0; attempt < 2; attempt++) {
       try {
-        final dbBytes = GZipDecoder().decodeBytes(gzBytes);
-        await File(dbPath).writeAsBytes(dbBytes, flush: true);
+        final tmpGz = '$dbPath.extract.gz';
+        await File(tmpGz).writeAsBytes(gzBytes, flush: true);
+        try {
+          final input = InputFileStream(tmpGz);
+          final output = OutputFileStream(dbPath);
+          GZipDecoder().decodeStream(input, output);
+          await output.close();
+        } finally {
+          try {
+            await File(tmpGz).delete();
+          } catch (_) {}
+        }
         return;
       } catch (e) {
         debugPrint('[WordBookDatabase] 解压失败 (attempt ${attempt + 1}): $e');
@@ -306,11 +317,11 @@ class WordBookDatabase {
       final data = await rootBundle.load('assets/db/wordbook.db.gz');
       gzBytes = data.buffer.asUint8List();
     }
-    final dbBytes = GZipDecoder().decodeBytes(gzBytes);
-    await File(dbPath).writeAsBytes(dbBytes, flush: true);
+    final assetHash = base64.encode(md5.convert(gzBytes).bytes);
+    await _extractTo(dbPath, gzBytes);
+    // MEM-01：重建路径同样走流式解压（_extractTo），gz 引用随函数返回释放。
 
     // 4) 记录哈希，避免下次自动更新重复重建
-    final assetHash = base64.encode(md5.convert(gzBytes).bytes);
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kDbHashKey, assetHash);

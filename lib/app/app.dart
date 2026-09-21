@@ -129,6 +129,10 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
           builder: (context, child) {
             ScreenUtils.init(context);
             installMwErrorBoundary(); // release 全局兜底（debug 走下方 ErrorBoundary）
+            // MEM-03：系统「减少动态效果」时跳过全局流体光标覆盖层，降低常驻绘制与内存。
+            if (WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations) {
+              return child ?? const SizedBox.shrink();
+            }
             return FluidCursorOverlay(
               rippleColor: skin.colors.accent.withValues(alpha: 0.4),
               maxRadius: 60,
