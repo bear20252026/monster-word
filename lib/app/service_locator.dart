@@ -21,6 +21,7 @@ import 'package:word_app/core/repositories/new_word_repository.dart';
 import 'package:word_app/core/repositories/new_word_repository_impl.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/core/audio/audio_service_impl.dart';
+import 'package:word_app/core/audio/system_tts.dart';
 import 'package:word_app/features/account/data/user_service.dart';
 import 'package:word_app/features/account/data/user_service_impl.dart';
 import 'package:word_app/features/learning/data/learning_progress_repository.dart';
@@ -173,6 +174,16 @@ Future<void> setupServiceLocator() async {
 Future<void> disposeServiceLocator() async {
   if (sl.isRegistered<AudioService>()) {
     sl<AudioService>().dispose();
+  }
+  // MEM：TTS 静态单例随应用退出释放。
+  try {
+    await SystemTts().dispose();
+  } catch (_) {}
+  // MEM：关闭 FSRS SQLite 句柄。
+  if (sl.isRegistered<ReviewScheduleRepository>()) {
+    try {
+      await sl<ReviewScheduleRepository>().close();
+    } catch (_) {}
   }
   await sl.reset();
 }

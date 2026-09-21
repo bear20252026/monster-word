@@ -44,6 +44,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
   Set<String> _activeDates = {};
   Future<void>? _initialization;
   bool _useSqlite = false;
+  Future<void> _writeGate = Future<void>.value();
 
   ReviewScheduleRepository({Fsrs6Engine? engine, ReviewScheduleStore? store})
     : _engine = engine ?? Fsrs6Engine(),
@@ -52,6 +53,18 @@ class ReviewScheduleRepository extends ChangeNotifier {
   Future<void> initialize() => _initialization ??= _load();
 
   bool get isInitialized => _initialization != null;
+
+  /// MEM：释放 SQLite 应用与句柄（由 DI disposeServiceLocator 调用）。
+  Future<void> close() async {
+    final store = _store;
+    _store = null;
+    _initializedReset();
+    await store?.close();
+  }
+
+  void _initializedReset() {
+    _useSqlite = false;
+  }
 
   /// 当前是否运行在 SQLite 持久化模式（false = SP 降级模式）。
   /// 诊断与测试用。
@@ -125,23 +138,27 @@ class ReviewScheduleRepository extends ChangeNotifier {
     counts[isLearn ? 'learn' : 'review'] = (counts[isLearn ? 'learn' : 'review'] ?? 0) + 1;
     _activeDates.add(date);
 
-    if (_useSqlite && _store != null) {
-      // H3：库写失败必须可观测；内存态保留会话推进，避免评分中断卡死 UI。
-      try {
-        await _store!.recordRating(card: card, dateKey: date, isLearn: isLearn);
-      } catch (error, stack) {
-        reportSwallowedError('FSRS rateWord persist (sqlite)', error, stack);
+    // MEM/C6：持久化写串行化，避免并发 rateWord 对同词/统计交错覆盖。
+    final persist = _writeGate.then((_) async {
+      if (_useSqlite && _store != null) {
+        try {
+          await _store!.recordRating(card: card, dateKey: date, isLearn: isLearn);
+        } catch (error, stack) {
+          reportSwallowedError('FSRS rateWord persist (sqlite)', error, stack);
+        }
+      } else {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(cardsPrefKey, jsonEncode(_cards.map((word, card) => MapEntry(word, card.toJson()))));
+          await prefs.setString(dailyStatsPrefKey, jsonEncode(_dailyStats));
+          await prefs.setStringList(activeDatesPrefKey, _activeDates.toList());
+        } catch (error, stack) {
+          reportSwallowedError('FSRS rateWord persist (sp)', error, stack);
+        }
       }
-    } else {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(cardsPrefKey, jsonEncode(_cards.map((word, card) => MapEntry(word, card.toJson()))));
-        await prefs.setString(dailyStatsPrefKey, jsonEncode(_dailyStats));
-        await prefs.setStringList(activeDatesPrefKey, _activeDates.toList());
-      } catch (error, stack) {
-        reportSwallowedError('FSRS rateWord persist (sp)', error, stack);
-      }
-    }
+    });
+    _writeGate = persist.catchError((_) {});
+    await persist;
     notifyListeners();
   }
 

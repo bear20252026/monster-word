@@ -228,13 +228,23 @@ class WordBookDatabase {
     for (var attempt = 0; attempt < 2; attempt++) {
       try {
         final tmpGz = '$dbPath.extract.gz';
-        await File(tmpGz).writeAsBytes(gzBytes, flush: true);
+        // MEM：启动清理上次中断残留的临时 gz。
         try {
-          final input = InputFileStream(tmpGz);
+          final stale = File(tmpGz);
+          if (stale.existsSync()) await stale.delete();
+        } catch (_) {}
+        await File(tmpGz).writeAsBytes(gzBytes, flush: true);
+        final input = InputFileStream(tmpGz);
+        try {
           final output = OutputFileStream(dbPath);
           GZipDecoder().decodeStream(input, output);
           await output.close();
         } finally {
+          try {
+            // archive 3.x FileBuffer/输入流随文件删除释放；尽力 close。
+            // ignore: avoid_dynamic_calls
+            (input as dynamic).close?.call();
+          } catch (_) {}
           try {
             await File(tmpGz).delete();
           } catch (_) {}
@@ -259,6 +269,13 @@ class WordBookDatabase {
       throw StateError('词库重建正在进行中，请稍候');
     }
     _rebuilding = true;
+    // MEM/C1：等待 in-flight initialize 结束，避免与重建竞写同一 db 文件。
+    final inflight = _initCompleter;
+    if (inflight != null) {
+      try {
+        await inflight.future;
+      } catch (_) {}
+    }
     // A6：重建期间到达的 initialize() 挂到屏障上等待，不再与重建竞写库文件
     final initBarrier = Completer<void>();
     initBarrier.future.ignore();

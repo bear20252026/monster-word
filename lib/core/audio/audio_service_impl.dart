@@ -66,6 +66,10 @@ class AudioServiceImpl implements AudioService {
     if (_disposed) return;
     _disposed = true;
     _bbPlayer.release();
+    // MEM：释放静态单例播放器，避免 mpv/AudioPlayer 与订阅常驻。
+    PhoneticAudioPlayer().release();
+    SentenceAudioPlayer().release();
+    TextAudioPlayer().release();
     debugPrint('[AudioService] Disposed all audio resources');
   }
 }

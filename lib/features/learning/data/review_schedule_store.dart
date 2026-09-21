@@ -27,6 +27,9 @@ class ReviewScheduleStore {
 
   ReviewScheduleStore._(this._db);
 
+  /// MEM：关闭底层 SQLite 句柄（应用退出/资源回收）。
+  Future<void> close() => _db.close();
+
   /// 仅供测试：注入既有 Database（推荐 sqflite_common_ffi 内存库），并确保建表。
   @visibleForTesting
   static Future<ReviewScheduleStore> forTest(Database db) async {

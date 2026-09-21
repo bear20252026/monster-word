@@ -42,7 +42,10 @@ class FeedbackArchive {
 
     final prefs = prefsOverride ?? await SharedPreferences.getInstance();
     final history = _decode(prefs.getString(_storageKey))..add(entry);
-    await prefs.setString(_storageKey, jsonEncode(history.map((e) => e.toJson()).toList()));
+    // MEM：本地反馈存档封顶，避免 SP 与内存无界增长。
+    const maxEntries = 50;
+    final trimmed = history.length > maxEntries ? history.sublist(history.length - maxEntries) : history;
+    await prefs.setString(_storageKey, jsonEncode(trimmed.map((e) => e.toJson()).toList()));
 
     try {
       await upload(entry);

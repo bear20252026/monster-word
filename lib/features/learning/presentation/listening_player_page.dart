@@ -62,6 +62,9 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
   @override
   void dispose() {
     _autoPlayTimer?.cancel();
+    // MEM：清空全局 SystemTts 回调，避免单例钉住本 State。
+    _tts.onComplete = null;
+    _tts.onErrorHandler = null;
     _tts.stop();
     super.dispose();
   }
