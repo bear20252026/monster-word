@@ -99,7 +99,10 @@ class LearningSessionState extends ChangeNotifier {
   int _queueGeneration = 0;
 
   Book? get currentBook => _currentBook;
-  List<Word> get queue => List.unmodifiable(_queue);
+
+  /// MEM-02：直接暴露内部列表只读视图，避免每次 get 复制整表。
+  /// 调用方不得 mutate；会话内部修改仍走 setState/notifyListeners。
+  List<Word> get queue => _queue;
   int get currentIndex => _currentIndex;
   int get total => _queue.length;
   bool get hasMoreWords => _currentIndex < _queue.length - 1;
