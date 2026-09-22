@@ -153,7 +153,11 @@ class FormalReviewWallpaper extends StatelessWidget {
     if (wallpaper.type == WallpaperType.image && wallpaper.assetPath != null) {
       return Container(
         decoration: BoxDecoration(
-          image: DecorationImage(image: AssetImage(wallpaper.assetPath!), fit: BoxFit.cover, onError: (_, _) {}),
+          image: DecorationImage(
+            image: ResizeImage(AssetImage(wallpaper.assetPath!), width: 1920), // MEM：限制解码位图，避免原图像素常驻内存
+            fit: BoxFit.cover,
+            onError: (e, s) {},
+          ),
         ),
       );
     }

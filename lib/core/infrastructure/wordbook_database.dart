@@ -444,16 +444,18 @@ class WordBookDatabase {
     return Word.fromMap(rows.first);
   }
 
-  /// 按单词列表批量查询（用于收藏单词本等场景）
-  Future<List<Word>> getWordsByNames(Set<String> words) async {
+  /// 按单词列表批量查询（收藏/近义等场景）。
+  /// [lightweight]=true 时不查 example/phrase 大字段（列表浏览；详情单查全量）。
+  Future<List<Word>> getWordsByNames(Set<String> words, {bool lightweight = false}) async {
     if (words.isEmpty) return [];
     final result = <Word>[];
+    final columns = lightweight ? 'id, word, main_word, interpret, uk_pron, us_pron, confuse, word_root' : '*';
     // 分批查询，每批最多 500 个（SQLite 参数限制）
     final wordList = words.toList();
     for (var i = 0; i < wordList.length; i += 500) {
       final batch = wordList.sublist(i, (i + 500).clamp(0, wordList.length));
       final placeholders = batch.map((_) => '?').join(',');
-      final rows = await db.rawQuery('SELECT * FROM words WHERE word IN ($placeholders)', batch);
+      final rows = await db.rawQuery('SELECT $columns FROM words WHERE word IN ($placeholders)', batch);
       result.addAll(rows.map(Word.fromMap));
     }
     return result;
