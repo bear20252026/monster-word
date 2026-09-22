@@ -231,6 +231,11 @@ class WallpaperData {
   static Future<void> addCustomWallpaper(WallpaperItem item) async {
     final items = await loadCustomWallpapers();
     items.add(item);
+    // MEM：自定义壁纸数量封顶，避免 SP/内存无界增长。
+    const maxCustom = 20;
+    if (items.length > maxCustom) {
+      items.removeRange(0, items.length - maxCustom);
+    }
     await _saveCustomWallpapers(items);
   }
 

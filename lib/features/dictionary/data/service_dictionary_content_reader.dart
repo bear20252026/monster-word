@@ -36,7 +36,8 @@ class ServiceDictionaryContentReader implements DictionaryContentReader {
     if (synonyms.isEmpty) return [];
 
     // 性能审计 P3：循环内逐词查询（N+1）改单次批量查询
-    return _db.getWordsByNames(synonyms.toSet());
+    // MEM：近义词列表只需词头/释义展示，lightweight 降内存。
+    return _db.getWordsByNames(synonyms.toSet(), lightweight: true);
   }
 
   @override

@@ -107,14 +107,16 @@ class ReviewScheduleStore {
   }
 
   Future<Map<String, Map<String, int>>> loadDailyStats() async {
-    final rows = await _db.query('fsrs_daily_stats');
+    // MEM：只保留近 365 天统计进内存，避免长期学习后 Map 无限增长。
+    final rows = await _db.query('fsrs_daily_stats', orderBy: 'date DESC', limit: 365);
     return {
       for (final row in rows) row['date']! as String: {'learn': row['learn']! as int, 'review': row['review']! as int},
     };
   }
 
   Future<Set<String>> loadActiveDates() async {
-    final rows = await _db.query('fsrs_active_dates');
+    // MEM：活跃日期只保留近 365 天（连签最长有效窗口远小于此）。
+    final rows = await _db.query('fsrs_active_dates', orderBy: 'date DESC', limit: 365);
     return {for (final row in rows) row['date']! as String};
   }
 
