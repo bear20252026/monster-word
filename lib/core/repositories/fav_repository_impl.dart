@@ -1,73 +1,41 @@
 // 收藏仓库实现
-// 基于 SharedPreferences（单词收藏）和 FavSentenceDao（句子收藏）
-import 'package:shared_preferences/shared_preferences.dart';
+// MEM/U6：单词收藏经 FavoriteWordsDao（SQLite 事实来源 + 同步读索引，
+// 测试/开库失败回退 SP）；句子收藏经 FavSentenceDao（MEM/U3 同策略）。
+import 'dart:async';
 
-import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/core/infrastructure/favorite_words_dao.dart';
 
-import 'package:word_app/core/infrastructure/fav_sentence_dao.dart';
 import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
 
+import 'package:word_app/core/infrastructure/fav_sentence_dao.dart';
+
 /// 收藏仓库实现
 class FavRepositoryImpl implements FavRepository {
-  static const _kFavoritesKey = 'favorite_words_v1';
-  // ignore: prefer_final_fields
-  Set<String> _favoriteWords = {};
-
   FavRepositoryImpl() {
-    _loadFavorites();
+    // 预热同步读索引（构造即加载，与迁移前构造加载 SP 语义一致）
+    unawaited(FavoriteWordsDao.instance.ensureLoaded());
   }
 
-  Future<void> _loadFavorites() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getStringList(_kFavoritesKey);
-      if (raw != null) _favoriteWords.addAll(raw);
-    } catch (e, s) {
-      reportSwallowedError('收藏列表加载失败', e, s);
-    }
-  }
-
-  Future<void> _saveFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_kFavoritesKey, _favoriteWords.toList());
-  }
-
-  // ── 单词收藏 ──
+  // ── 单词收藏（MEM/U6：SQLite + 索引） ──
 
   @override
-  Future<Set<String>> getFavoriteWords() async {
-    if (_favoriteWords.isEmpty) await _loadFavorites();
-    return Set.from(_favoriteWords);
-  }
+  Future<Set<String>> getFavoriteWords() async => FavoriteWordsDao.instance.getWords();
 
   @override
-  Future<void> addFavorite(String word) async {
-    _favoriteWords.add(word);
-    await _saveFavorites();
-  }
+  Future<void> addFavorite(String word) => FavoriteWordsDao.instance.add(word);
 
   @override
-  Future<void> removeFavorite(String word) async {
-    _favoriteWords.remove(word);
-    await _saveFavorites();
-  }
+  Future<void> removeFavorite(String word) => FavoriteWordsDao.instance.remove(word);
 
   @override
-  Future<void> toggleFavorite(String word) async {
-    if (_favoriteWords.contains(word)) {
-      _favoriteWords.remove(word);
-    } else {
-      _favoriteWords.add(word);
-    }
-    await _saveFavorites();
-  }
+  Future<void> toggleFavorite(String word) => FavoriteWordsDao.instance.toggle(word);
 
   @override
-  bool isFavorite(String word) => _favoriteWords.contains(word);
+  bool isFavorite(String word) => FavoriteWordsDao.instance.isFavorite(word);
 
   @override
-  int get favoriteCount => _favoriteWords.length;
+  int get favoriteCount => FavoriteWordsDao.instance.favoriteCount;
 
   // ── 句子收藏 ──
 

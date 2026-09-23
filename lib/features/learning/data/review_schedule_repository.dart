@@ -46,6 +46,15 @@ class ReviewScheduleRepository extends ChangeNotifier {
   bool _useSqlite = false;
   Future<void> _writeGate = Future<void>.value();
 
+  // MEM/F3：SQLite 模式下 _cards 不再是全量事实来源——启动只装「到期子集」，
+  // 全表由后台分批补齐；未命中词经读穿填充逐词取库。
+  // 计数（dueCount/memoryStats）始终来自 SQL 聚合并随评分增量维护，
+  // 与 _cards 是否已装满解耦。SP 降级模式 blob 全量载入，计数仍由 map 派生。
+  FsrsCardCounts? _counts;
+  bool _topUpStarted = false;
+  Future<void>? _topUp;
+  final Map<String, Future<void>> _fillingWords = <String, Future<void>>{};
+
   ReviewScheduleRepository({Fsrs6Engine? engine, ReviewScheduleStore? store})
     : _engine = engine ?? Fsrs6Engine(),
       _injectedStore = store;
@@ -64,13 +73,25 @@ class ReviewScheduleRepository extends ChangeNotifier {
 
   void _initializedReset() {
     _useSqlite = false;
+    _counts = null;
+    _topUpStarted = false;
+    _topUp = null;
+    _fillingWords.clear();
   }
 
   /// 当前是否运行在 SQLite 持久化模式（false = SP 降级模式）。
   /// 诊断与测试用。
   bool get usesSqlite => _useSqlite;
 
-  int get dueCount => _engine.getDueCards(_cards.values.toList()).length;
+  /// MEM/F3：后台补齐完成（测试等待用；补齐失败时同样置完成，后续靠读穿填充）。
+  @visibleForTesting
+  Future<void> get debugTopUpDone => _topUp ?? Future<void>.value();
+
+  /// MEM/F3：等待在途读穿填充（测试用）。
+  @visibleForTesting
+  Future<void> debugFlushFills() => Future.wait(_fillingWords.values.toList());
+
+  int get dueCount => _counts?.due ?? _engine.getDueCards(_cards.values.toList()).length;
   int get activeDateCount => _activeDates.length;
 
   /// 从今天向前连续有学习活动的天数。
@@ -87,13 +108,108 @@ class ReviewScheduleRepository extends ChangeNotifier {
   int get todayLearnCount => _dailyStats[_todayKey()]?['learn'] ?? 0;
   int get todayReviewCount => _dailyStats[_todayKey()]?['review'] ?? 0;
 
-  FsrsCard? cardFor(String word) => _cards[word];
+  FsrsCard? cardFor(String word) {
+    final cached = _cards[word];
+    // MEM/F3：SQLite 模式未命中（补齐未完成或词确无卡）→ 异步读穿填充。
+    // 命中后 notifyListeners，同步调用方经监听链在下一帧拿到正确卡片。
+    if (cached == null && _useSqlite && _store != null && !_fillingWords.containsKey(word)) {
+      unawaited(_fillCard(word));
+    }
+    return cached;
+  }
+
+  /// MEM/F3：逐词读穿填充——单行索引查询，命中且 map 仍缺时入图并通知。
+  Future<void> _fillCard(String word) {
+    return _fillingWords.putIfAbsent(word, () => _fillCardInner(word));
+  }
+
+  Future<void> _fillCardInner(String word) async {
+    try {
+      final store = _store;
+      if (store == null || !_useSqlite) return;
+      final card = await store.cardForWord(word);
+      if (card != null && !_cards.containsKey(word)) {
+        _cards[word] = card;
+        notifyListeners();
+      }
+    } catch (error, stack) {
+      reportSwallowedError('FSRS card read-through fill', error, stack);
+    } finally {
+      // remove 返回值即被移除的 Future 本身，非待等待任务
+      unawaited(_fillingWords.remove(word));
+    }
+  }
+
+  /// MEM/F3：后台分批补齐全表（putIfAbsent 不覆盖评分后的最新内存卡）。
+  Future<void> _scheduleTopUp() {
+    if (_topUpStarted) return _topUp ?? Future<void>.value();
+    _topUpStarted = true;
+    return _topUp = _topUpInner();
+  }
+
+  Future<void> _topUpInner() async {
+    const pageSize = 500;
+    try {
+      var offset = 0;
+      while (true) {
+        final store = _store;
+        if (store == null || !_useSqlite) return;
+        final batch = await store.loadCardsBatch(limit: pageSize, offset: offset);
+        if (batch.isEmpty) break;
+        for (final card in batch) {
+          _cards.putIfAbsent(card.word, () => card);
+        }
+        if (batch.length < pageSize) break;
+        offset += pageSize;
+      }
+    } catch (error, stack) {
+      reportSwallowedError('FSRS card top-up', error, stack);
+    } finally {
+      // 补齐/失败收敛后统一刷新，消除子集窗口期的临时展示态
+      notifyListeners();
+    }
+  }
+
+  /// MEM/F3：评分/移除时按「前桶 → 后桶」增量维护 SQL 聚合计数。
+  /// SP 模式（_counts == null）为空操作——getter 从全量 map 现算。
+  void _applyCountsDelta(FsrsCard? before, FsrsCard? after) {
+    final counts = _counts;
+    if (counts == null) return;
+    final from = _bucketOf(before);
+    final to = _bucketOf(after);
+    if (from == to) return;
+    int dec(int v) => v - 1;
+    int inc(int v) => v + 1;
+    _counts = FsrsCardCounts(
+      total: from == 'none' ? inc(counts.total) : (to == 'none' ? dec(counts.total) : counts.total),
+      newCount: _bucketBump(counts.newCount, from, to, 'new'),
+      due: _bucketBump(counts.due, from, to, 'due'),
+      learning: _bucketBump(counts.learning, from, to, 'learning'),
+      mature: _bucketBump(counts.mature, from, to, 'mature'),
+    );
+  }
+
+  int _bucketBump(int value, String from, String to, String bucket) {
+    if (from == bucket) return value - 1;
+    if (to == bucket) return value + 1;
+    return value;
+  }
+
+  String _bucketOf(FsrsCard? card) {
+    if (card == null) return 'none';
+    if (card.isNew) return 'new';
+    if (card.isDue) return 'due';
+    if (card.stability < 7) return 'learning';
+    return 'mature';
+  }
 
   String getStatusText(FsrsCard card) => _engine.getStatusText(card);
 
   String getDifficultyText(FsrsCard card) => _engine.getDifficultyText(card);
 
   Map<String, int> get memoryStats {
+    final counts = _counts;
+    if (counts != null) return counts.toStats();
     var newCount = 0;
     var dueCount = 0;
     var learningCount = 0;
@@ -128,10 +244,16 @@ class ReviewScheduleRepository extends ChangeNotifier {
 
   Future<void> rateWord({required String word, required FsrsRating rating}) async {
     await initialize();
-    final existing = _cards[word];
-    final isLearn = existing == null;
-    final card = isLearn ? _engine.learn(word, rating) : _engine.review(existing, rating);
+    // MEM/F3：子集加载下 map 未命中不代表没学过——必须查库防「已学词被当新学」
+    // 重置调度进度；同时保证计数增量的 before 口径正确。
+    FsrsCard? prior = _cards[word];
+    if (prior == null && _useSqlite && _store != null) {
+      prior = await _store!.cardForWord(word);
+    }
+    final isLearn = prior == null;
+    final card = isLearn ? _engine.learn(word, rating) : _engine.review(prior, rating);
     _cards[word] = card;
+    _applyCountsDelta(prior, card);
 
     final date = _todayKey();
     final counts = _dailyStats.putIfAbsent(date, () => {'learn': 0, 'review': 0});
@@ -165,7 +287,15 @@ class ReviewScheduleRepository extends ChangeNotifier {
   /// 移除一张卡片并持久化，供遗留学习会话的“重学”操作使用。
   Future<void> forget(String word) async {
     await initialize();
-    if (_cards.remove(word) == null) return;
+    // MEM/F3：与 rateWord 同理——map 未命中须查库，防子集加载下漏删。
+    var removed = _cards.remove(word);
+    if (removed == null && _useSqlite && _store != null) {
+      removed = await _store!.cardForWord(word);
+      if (removed == null) return;
+    } else if (removed == null) {
+      return;
+    }
+    _applyCountsDelta(removed, null);
     if (_useSqlite && _store != null) {
       try {
         await _store!.deleteCard(word);
@@ -191,13 +321,18 @@ class ReviewScheduleRepository extends ChangeNotifier {
     try {
       final store = _injectedStore ?? await ReviewScheduleStore.open();
       await _migrateFromSpIfNeeded(store);
-      final cards = await store.loadCards();
-      _cards = {for (final card in cards) card.word: card};
+      // MEM/F3：启动不再全表物化卡片——计数走 SQL 聚合，内存只装到期子集；
+      // 全表由 [_scheduleTopUp] 后台分批补齐，未命中词由 [cardFor] 读穿填充。
+      final now = DateTime.now();
+      _counts = await store.loadCounts(now);
+      final dueCards = await store.loadDueCards(now);
+      _cards = {for (final card in dueCards) card.word: card};
       _dailyStats = await store.loadDailyStats();
       _activeDates = await store.loadActiveDates();
       _store = store;
       _useSqlite = true;
       sqliteReady = true;
+      unawaited(_scheduleTopUp());
       // E2：SQLite 模式就绪后清除旧 SP 回滚快照（降级模式保留 SP，供重试/旧版）。
       await _clearLegacySpSnapshotIfMigrated();
     } catch (error, stack) {
@@ -208,6 +343,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
       // 降级路径：旧 SP blob 模式（迁移失败或无 SQLite 环境）。
       // R3：SP 活键为空时优先从 E2 应急备份恢复（fsrs6_emergency_backup_v1），
       // 避免「SQLite 损坏 + 已清 SP」导致学习记录在 UI 中不可见。
+      _counts = null; // SP 模式全量 blob 进 map，计数由 getter 现算
       try {
         final prefs = await SharedPreferences.getInstance();
         var cardsRaw = prefs.getString(cardsPrefKey);
