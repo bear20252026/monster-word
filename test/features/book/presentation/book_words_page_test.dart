@@ -37,6 +37,15 @@ class MockSelectionWriter implements BookSelectionWriter {
 class MockWordsReader implements BookWordListReader {
   @override
   Future<List<Word>> loadWords(int bookId, {int limit = 50, int offset = 0}) async => [];
+
+  @override
+  Future<int> countWords(int bookId) async => 0;
+
+  @override
+  Future<List<Word>> loadWordPage(int bookId, {required int offset, required int limit}) async => [];
+
+  @override
+  Future<List<String>> loadWordTexts(int bookId) async => [];
 }
 
 void main() {
