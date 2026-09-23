@@ -16,6 +16,11 @@ import 'package:word_app/core/repositories/note_repository.dart';
 class NoteRepositoryImpl implements NoteRepository {
   static const _notesKey = 'notes_v1';
 
+  // MEM/U5：全量计数缓存（键集 → 总数）。笔记写入全部经由本仓储，任意写
+  // 即失效；避免每次计数都扫描并 jsonDecode 全部笔记键。
+  int? _cachedTotal;
+  Set<String>? _cachedKeys;
+
   @override
   Future<List<WordNote>> getNotesByWord(int wordId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -33,10 +38,16 @@ class NoteRepositoryImpl implements NoteRepository {
   @override
   Future<int> countAllNotes() async {
     final prefs = await SharedPreferences.getInstance();
+    final prefix = '${_notesKey}_';
+    final keys = prefs.getKeys().where((key) => key.startsWith(prefix)).toSet();
+    final cachedTotal = _cachedTotal;
+    final cachedKeys = _cachedKeys;
+    if (cachedTotal != null && cachedKeys != null && cachedKeys.length == keys.length && cachedKeys.containsAll(keys)) {
+      return cachedTotal;
+    }
     // 笔记按 wordId 分键存储（notes_v1_<wordId>），全量计数 = 扫描所有笔记键求和。
     var total = 0;
-    for (final key in prefs.getKeys()) {
-      if (!key.startsWith('${_notesKey}_')) continue;
+    for (final key in keys) {
       final jsonStr = prefs.getString(key);
       if (jsonStr == null || jsonStr.isEmpty) continue;
       try {
@@ -45,6 +56,8 @@ class NoteRepositoryImpl implements NoteRepository {
         reportSwallowedError('笔记计数解析失败 key=$key', e, s);
       }
     }
+    _cachedTotal = total;
+    _cachedKeys = keys;
     return total;
   }
 
@@ -108,6 +121,9 @@ class NoteRepositoryImpl implements NoteRepository {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = jsonEncode(notes.map((n) => n.toMap()).toList());
     await prefs.setString('${_notesKey}_$wordId', jsonStr);
+    // MEM/U5：任意写入使全量计数缓存失效
+    _cachedTotal = null;
+    _cachedKeys = null;
   }
 
   @override

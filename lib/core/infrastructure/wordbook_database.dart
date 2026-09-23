@@ -437,6 +437,31 @@ class WordBookDatabase {
     return rows.map(Word.fromMap).toList();
   }
 
+  /// 词书单词总数（SQL COUNT，单值查询，不加载任何词条）。
+  ///
+  /// MEM/F2：分页窗口的总量口径；验收上应与 books.word_count 一致。
+  Future<int> countWordsByBook(int bookId) async {
+    final rows = await db.rawQuery('SELECT COUNT(*) AS c FROM word_books WHERE book_id = ?', [bookId]);
+    return rows.first['c'] as int? ?? 0;
+  }
+
+  /// 词书全部单词文本（单列轻查询，按与列表一致的 A-Z 序）。
+  ///
+  /// MEM/F2：供「已学数按全书口径」等统计瞬时使用——只取单词文本一列
+  /// （每条 ~十几字节，统计完即可 GC），调用方不得长期持有返回值。
+  Future<List<String>> getWordTextsByBook(int bookId) async {
+    final rows = await db.rawQuery(
+      '''
+      SELECT w.word FROM words w
+      JOIN word_books wb ON wb.word_id = w.id
+      WHERE wb.book_id = ?
+      ORDER BY w.word COLLATE NOCASE ASC
+    ''',
+      [bookId],
+    );
+    return [for (final row in rows) row['word']! as String];
+  }
+
   /// 按单词精确查询
   Future<Word?> getWord(String word) async {
     final rows = await db.query('words', where: 'word = ?', whereArgs: [word], limit: 1);

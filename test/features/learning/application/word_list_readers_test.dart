@@ -108,10 +108,14 @@ void main() {
     expect(wordRepository.requestedTexts, isNull);
   });
 
-  test('词书列表端口全量加载，禁止硬编码截断（REG-LEARN-001）', () {
+  test('词书列表端口全量加载无硬编码截断；分页 limit 必须参数化（REG-LEARN-001，MEM/F2 修订）', () {
     final listReader = File('lib/features/book/data/repository_book_word_list_reader.dart').readAsStringSync();
+    // 全量路径保持原样：lightweight、不带任何 limit（验收口径仍由调用方保证）
     expect(listReader, contains('getWordsByBook(bookId, lightweight: true)'));
-    expect(listReader, isNot(contains('limit:')));
+    // MEM/F2：列表浏览改走分页窗口，但 limit 只允许来自方法参数——
+    // 历史 bug 即硬编码 `limit: 1000` 静默缺词，此处禁止任何数字字面量截断回潮
+    expect(listReader, contains('lightweight: true, limit: limit, offset: offset'));
+    expect(RegExp(r'limit: \d').hasMatch(listReader), isFalse);
 
     final queueRepo = File('lib/features/learning/data/learning_queue_repository.dart').readAsStringSync();
     expect(queueRepo, isNot(contains('limit: 1000')));

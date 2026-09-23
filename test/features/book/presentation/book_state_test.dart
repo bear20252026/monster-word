@@ -41,14 +41,27 @@ class FakeBookSelectionWriter implements BookSelectionWriter {
   Future<Book?> getCurrentBook() async => _currentBook;
 }
 
-/// 模拟 BookWordListReader
+/// 模拟 BookWordListReader（MEM/F2：分页语义可观测）
 class FakeBookWordListReader implements BookWordListReader {
   List<Word> _words = [];
+  int loadWordPageCalls = 0;
 
   void setWords(List<Word> words) => _words = words;
 
   @override
   Future<List<Word>> loadWords(int bookId, {int limit = 50, int offset = 0}) async => _words;
+
+  @override
+  Future<int> countWords(int bookId) async => _words.length;
+
+  @override
+  Future<List<Word>> loadWordPage(int bookId, {required int offset, required int limit}) async {
+    loadWordPageCalls++;
+    return _words.skip(offset).take(limit).toList();
+  }
+
+  @override
+  Future<List<String>> loadWordTexts(int bookId) async => [for (final word in _words) word.word];
 }
 
 void main() {
@@ -172,6 +185,45 @@ void main() {
 
       expect(state.currentBook, isNull);
     });
+
+    // MEM/F2: 列表浏览走分页窗口，整书不一次性进内存
+    test('loadWords 只加载首页窗口，totalWords 取 COUNT 口径', () async {
+      final book = Book(id: 1, code: 'big', name: '大词书', wordCount: 250);
+      catalogReader.setBooks([book]);
+      catalogReader.setBookById(book);
+      selectionWriter.setCurrentBookId(1);
+      selectionWriter.setCurrentBook(book);
+      wordsReader.setWords([for (var i = 0; i < 250; i++) Word(id: i, word: 'w${i.toString().padLeft(3, '0')}')]);
+
+      await state.selectAndLoad(book);
+
+      expect(state.words.length, BookState.pageSize, reason: '首屏只加载一个窗口');
+      expect(state.totalWords, 250, reason: '总量为 COUNT 口径而非窗口长度');
+      expect(state.hasMore, isTrue);
+      expect(state.statistics!.totalWords, 250);
+    });
+
+    // MEM/F2: loadMore 续页到底后收敛，重复触发为 no-op
+    test('loadMore 追加剩余页并收敛 hasMore，再触发不请求', () async {
+      final book = Book(id: 1, code: 'big', name: '大词书', wordCount: 250);
+      catalogReader.setBooks([book]);
+      catalogReader.setBookById(book);
+      selectionWriter.setCurrentBookId(1);
+      selectionWriter.setCurrentBook(book);
+      wordsReader.setWords([for (var i = 0; i < 250; i++) Word(id: i, word: 'w${i.toString().padLeft(3, '0')}')]);
+
+      await state.selectAndLoad(book);
+      expect(state.words.length, BookState.pageSize);
+
+      await state.loadMore();
+
+      expect(state.words.length, 250);
+      expect(state.hasMore, isFalse, reason: '尾页不足一窗即到底');
+
+      final callsAfterExhausted = wordsReader.loadWordPageCalls;
+      await state.loadMore();
+      expect(wordsReader.loadWordPageCalls, callsAfterExhausted, reason: '到底后 loadMore 必须为 no-op');
+    });
   });
 }
 
@@ -179,6 +231,21 @@ void main() {
 class _ErrorBookWordListReader implements BookWordListReader {
   @override
   Future<List<Word>> loadWords(int bookId, {int limit = 50, int offset = 0}) async {
+    throw Exception('模拟数据库异常');
+  }
+
+  @override
+  Future<int> countWords(int bookId) async {
+    throw Exception('模拟数据库异常');
+  }
+
+  @override
+  Future<List<Word>> loadWordPage(int bookId, {required int offset, required int limit}) async {
+    throw Exception('模拟数据库异常');
+  }
+
+  @override
+  Future<List<String>> loadWordTexts(int bookId) async {
     throw Exception('模拟数据库异常');
   }
 }

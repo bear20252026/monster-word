@@ -42,8 +42,20 @@ class MockSelectionWriter implements BookSelectionWriter {
 
 /// 模拟 BookWordListReader（book 端口）——全量语义，返回测试词
 class MockBookWordListReader implements BookWordListReader {
+  static final _words = [Word(id: 1, word: 'apple')];
+
   @override
-  Future<List<Word>> loadWords(int bookId) async => [Word(id: 1, word: 'apple')];
+  Future<List<Word>> loadWords(int bookId) async => _words;
+
+  @override
+  Future<int> countWords(int bookId) async => _words.length;
+
+  @override
+  Future<List<Word>> loadWordPage(int bookId, {required int offset, required int limit}) async =>
+      _words.skip(offset).take(limit).toList();
+
+  @override
+  Future<List<String>> loadWordTexts(int bookId) async => [for (final word in _words) word.word];
 }
 
 /// 模拟 FavoritesPort（learning 端口）
