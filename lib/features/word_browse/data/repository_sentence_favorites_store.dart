@@ -43,6 +43,15 @@ class RepositorySentenceFavoritesStore implements SentenceFavoritesStore {
   }
 
   @override
+  Future<List<FavSentenceData>> listPage({required int limit, int offset = 0}) async {
+    final records = await _repository.getFavoriteSentencesPage(limit: limit, offset: offset);
+    return records.map(_toFavoriteSentence).toList(growable: false);
+  }
+
+  @override
+  Future<int> count() => _repository.getFavoriteSentenceCount();
+
+  @override
   Future<bool> remove({required int wordId, required String sentenceId}) {
     return _repository.removeFavoriteSentence(wordId, sentenceId);
   }

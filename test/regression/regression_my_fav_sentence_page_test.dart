@@ -21,6 +21,13 @@ class _FakeStore implements SentenceFavoritesStore {
   Future<List<FavSentenceData>> list() async => sentences;
 
   @override
+  Future<List<FavSentenceData>> listPage({required int limit, int offset = 0}) async =>
+      sentences.skip(offset).take(limit).toList();
+
+  @override
+  Future<int> count() async => sentences.length;
+
+  @override
   Future<bool> remove({required int wordId, required String sentenceId}) async => false;
 
   @override

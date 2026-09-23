@@ -35,6 +35,12 @@ class _MockSentenceFavoritesStore implements SentenceFavoritesStore {
   Future<List<FavSentenceData>> list() async => List.of(_records);
 
   @override
+  Future<List<FavSentenceData>> listPage({required int limit, int offset = 0}) async => const [];
+
+  @override
+  Future<int> count() async => 0;
+
+  @override
   Future<bool> remove({required int wordId, required String sentenceId}) async {
     final key = '$wordId:$sentenceId';
     final existed = _favorites.remove(key);

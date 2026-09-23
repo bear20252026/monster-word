@@ -13,6 +13,12 @@ abstract class FavRepository {
 
   // ── 句子收藏 ──
   Future<List<Map<String, dynamic>>> getFavoriteSentences();
+
+  /// MEM/U3+分页：按更新时间倒序分页读取收藏例句（句库页窗口化）。
+  Future<List<Map<String, dynamic>>> getFavoriteSentencesPage({required int limit, int offset = 0});
+
+  /// 收藏例句总数（SQL COUNT 口径，不加载载荷）。
+  Future<int> getFavoriteSentenceCount();
   Future<bool> addFavoriteSentence({
     required int wordId,
     required String sentenceId,

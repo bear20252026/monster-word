@@ -46,14 +46,17 @@ class ReviewScheduleRepository extends ChangeNotifier {
   bool _useSqlite = false;
   Future<void> _writeGate = Future<void>.value();
 
-  // MEM/F3：SQLite 模式下 _cards 不再是全量事实来源——启动只装「到期子集」，
-  // 全表由后台分批补齐；未命中词经读穿填充逐词取库。
+  // MEM/F3+异步化：SQLite 模式下 _cards 是【有界 LRU 缓存】而非全量事实来源——
+  // 启动只装「到期子集」（复习关键路径 t0 正确），其余词经读穿填充/批量异步
+  // 读取按需入缓存，超上限淘汰最久未用。
   // 计数（dueCount/memoryStats）始终来自 SQL 聚合并随评分增量维护，
-  // 与 _cards 是否已装满解耦。SP 降级模式 blob 全量载入，计数仍由 map 派生。
+  // 与缓存内容解耦。SP 降级模式 blob 全量载入，计数仍由 map 派生。
   FsrsCardCounts? _counts;
-  bool _topUpStarted = false;
-  Future<void>? _topUp;
   final Map<String, Future<void>> _fillingWords = <String, Future<void>>{};
+
+  /// 卡片缓存上限（LRU）：到期积压 + 会话工作集之上留足余量；
+  /// 触顶后淘汰最久未访问项，常驻内存有界。
+  static const int cardsCacheLimit = 4096;
 
   ReviewScheduleRepository({Fsrs6Engine? engine, ReviewScheduleStore? store})
     : _engine = engine ?? Fsrs6Engine(),
@@ -74,18 +77,31 @@ class ReviewScheduleRepository extends ChangeNotifier {
   void _initializedReset() {
     _useSqlite = false;
     _counts = null;
-    _topUpStarted = false;
-    _topUp = null;
     _fillingWords.clear();
   }
+
+  /// LRU 写入：重插到队尾，触顶淘汰最旧项。
+  void _cachePut(String word, FsrsCard card) {
+    _cards.remove(word);
+    _cards[word] = card;
+    while (_cards.length > cardsCacheLimit) {
+      _cards.remove(_cards.keys.first);
+    }
+  }
+
+  /// LRU 访问触碰（命中移到队尾）。
+  void _cacheTouch(String word) {
+    final card = _cards.remove(word);
+    if (card != null) _cards[word] = card;
+  }
+
+  /// 当前缓存卡片数（诊断/测试用）。
+  @visibleForTesting
+  int get debugCacheSize => _cards.length;
 
   /// 当前是否运行在 SQLite 持久化模式（false = SP 降级模式）。
   /// 诊断与测试用。
   bool get usesSqlite => _useSqlite;
-
-  /// MEM/F3：后台补齐完成（测试等待用；补齐失败时同样置完成，后续靠读穿填充）。
-  @visibleForTesting
-  Future<void> get debugTopUpDone => _topUp ?? Future<void>.value();
 
   /// MEM/F3：等待在途读穿填充（测试用）。
   @visibleForTesting
@@ -110,15 +126,59 @@ class ReviewScheduleRepository extends ChangeNotifier {
 
   FsrsCard? cardFor(String word) {
     final cached = _cards[word];
-    // MEM/F3：SQLite 模式未命中（补齐未完成或词确无卡）→ 异步读穿填充。
+    if (cached != null) {
+      _cacheTouch(word);
+      return cached;
+    }
+    // MEM/异步化：LRU 缓存未命中（词确无卡或已被淘汰）→ 异步读穿填充。
     // 命中后 notifyListeners，同步调用方经监听链在下一帧拿到正确卡片。
-    if (cached == null && _useSqlite && _store != null && !_fillingWords.containsKey(word)) {
+    if (_useSqlite && _store != null && !_fillingWords.containsKey(word)) {
       unawaited(_fillCard(word));
     }
     return cached;
   }
 
-  /// MEM/F3：逐词读穿填充——单行索引查询，命中且 map 仍缺时入图并通知。
+  /// MEM/异步化：按词批量取卡（DB 直查 + LRU 预热），
+  /// 供词表分类/详情页等异步读取面使用；不存在的词值为 null。
+  Future<Map<String, FsrsCard?>> cardsForWords(Iterable<String> wordTexts) async {
+    await initialize();
+    final texts = wordTexts.toSet().toList();
+    final result = <String, FsrsCard?>{for (final text in texts) text: _cards[text]};
+    final store = _store;
+    if (!_useSqlite || store == null) return result; // SP 模式：全量 map 即真相
+    final missing = [
+      for (final text in texts)
+        if (!_cards.containsKey(text)) text,
+    ];
+    if (missing.isEmpty) return result;
+    try {
+      final fetched = await store.cardsForWords(missing);
+      for (final entry in fetched.entries) {
+        _cachePut(entry.key, entry.value);
+        result[entry.key] = entry.value;
+      }
+    } catch (error, stack) {
+      reportSwallowedError('FSRS cardsForWords', error, stack);
+    }
+    return result;
+  }
+
+  /// MEM/异步化：到期词过滤的 SQL 真相版（不依赖 LRU 缓存状态），保持入参顺序。
+  Future<List<Word>> dueWordsForAsync(Iterable<Word> words) async {
+    await initialize();
+    final candidates = words.toList(growable: false);
+    final store = _store;
+    if (!_useSqlite || store == null) return dueWordsFor(candidates);
+    try {
+      final due = await store.dueWordTextsFor(candidates.map((w) => w.word).toList(), DateTime.now());
+      return candidates.where((w) => due.contains(w.word)).toList(growable: false);
+    } catch (error, stack) {
+      reportSwallowedError('FSRS dueWordsForAsync', error, stack);
+      return dueWordsFor(candidates);
+    }
+  }
+
+  /// MEM/异步化：逐词读穿填充——单行索引查询，命中且缓存仍缺时入 LRU 并通知。
   Future<void> _fillCard(String word) {
     return _fillingWords.putIfAbsent(word, () => _fillCardInner(word));
   }
@@ -129,7 +189,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
       if (store == null || !_useSqlite) return;
       final card = await store.cardForWord(word);
       if (card != null && !_cards.containsKey(word)) {
-        _cards[word] = card;
+        _cachePut(word, card);
         notifyListeners();
       }
     } catch (error, stack) {
@@ -137,36 +197,6 @@ class ReviewScheduleRepository extends ChangeNotifier {
     } finally {
       // remove 返回值即被移除的 Future 本身，非待等待任务
       unawaited(_fillingWords.remove(word));
-    }
-  }
-
-  /// MEM/F3：后台分批补齐全表（putIfAbsent 不覆盖评分后的最新内存卡）。
-  Future<void> _scheduleTopUp() {
-    if (_topUpStarted) return _topUp ?? Future<void>.value();
-    _topUpStarted = true;
-    return _topUp = _topUpInner();
-  }
-
-  Future<void> _topUpInner() async {
-    const pageSize = 500;
-    try {
-      var offset = 0;
-      while (true) {
-        final store = _store;
-        if (store == null || !_useSqlite) return;
-        final batch = await store.loadCardsBatch(limit: pageSize, offset: offset);
-        if (batch.isEmpty) break;
-        for (final card in batch) {
-          _cards.putIfAbsent(card.word, () => card);
-        }
-        if (batch.length < pageSize) break;
-        offset += pageSize;
-      }
-    } catch (error, stack) {
-      reportSwallowedError('FSRS card top-up', error, stack);
-    } finally {
-      // 补齐/失败收敛后统一刷新，消除子集窗口期的临时展示态
-      notifyListeners();
     }
   }
 
@@ -252,7 +282,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
     }
     final isLearn = prior == null;
     final card = isLearn ? _engine.learn(word, rating) : _engine.review(prior, rating);
-    _cards[word] = card;
+    _cachePut(word, card);
     _applyCountsDelta(prior, card);
 
     final date = _todayKey();
@@ -321,8 +351,9 @@ class ReviewScheduleRepository extends ChangeNotifier {
     try {
       final store = _injectedStore ?? await ReviewScheduleStore.open();
       await _migrateFromSpIfNeeded(store);
-      // MEM/F3：启动不再全表物化卡片——计数走 SQL 聚合，内存只装到期子集；
-      // 全表由 [_scheduleTopUp] 后台分批补齐，未命中词由 [cardFor] 读穿填充。
+      // MEM/F3+异步化：启动不再全表物化卡片——计数走 SQL 聚合，内存只装
+      // 到期子集（LRU 有界）；其余词由 [cardFor] 读穿填充或 [cardsForWords]
+      // 批量按需取库。
       final now = DateTime.now();
       _counts = await store.loadCounts(now);
       final dueCards = await store.loadDueCards(now);
@@ -332,7 +363,6 @@ class ReviewScheduleRepository extends ChangeNotifier {
       _store = store;
       _useSqlite = true;
       sqliteReady = true;
-      unawaited(_scheduleTopUp());
       // E2：SQLite 模式就绪后清除旧 SP 回滚快照（降级模式保留 SP，供重试/旧版）。
       await _clearLegacySpSnapshotIfMigrated();
     } catch (error, stack) {

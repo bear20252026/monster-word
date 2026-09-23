@@ -110,6 +110,40 @@ void main() {
     });
   });
 
+  group('FavSentenceDao（MEM/U3+分页 countAll/loadPage）', () {
+    test('SQLite：COUNT 口径与按更新时间倒序的窗口切片', () async {
+      SharedPreferences.setMockInitialValues({
+        'fav_sentence_list': spPayload([
+          legacyEntry(sentenceId: '10001', english: 's1', updateTime: '20260901010101'),
+          legacyEntry(sentenceId: '20002', english: 's2', updateTime: '20260902020202'),
+          legacyEntry(sentenceId: '30003', english: 's3', updateTime: '20260903030303'),
+        ]),
+      });
+      final dao = FavSentenceDao(openDatabase: () async => db);
+
+      expect(await dao.countAll(), 3);
+      final page0 = await dao.loadPage(limit: 2);
+      expect(page0.map((e) => e.sentenceId).toList(), ['30003', '20002']);
+      final page1 = await dao.loadPage(limit: 2, offset: 2);
+      expect(page1.map((e) => e.sentenceId).toList(), ['10001']);
+      final beyond = await dao.loadPage(limit: 2, offset: 3);
+      expect(beyond, isEmpty);
+    });
+
+    test('SP 回退：分页为缓存切片', () async {
+      SharedPreferences.setMockInitialValues({
+        'fav_sentence_list': spPayload([
+          legacyEntry(sentenceId: '10001', english: 's1', updateTime: '20260901010101'),
+          legacyEntry(sentenceId: '20002', english: 's2', updateTime: '20260902020202'),
+        ]),
+      });
+      final dao = FavSentenceDao();
+      expect(await dao.countAll(), 2);
+      final page = await dao.loadPage(limit: 5, offset: 1);
+      expect(page.single.sentenceId, '10001');
+    });
+  });
+
   group('FavSentenceDao（FLUTTER_TEST 未注入 → SP 回退）', () {
     test('保持迁移前的 SP 行为', () async {
       SharedPreferences.setMockInitialValues({

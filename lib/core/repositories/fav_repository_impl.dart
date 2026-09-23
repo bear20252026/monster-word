@@ -42,19 +42,26 @@ class FavRepositoryImpl implements FavRepository {
   @override
   Future<List<Map<String, dynamic>>> getFavoriteSentences() async {
     final sentences = await FavSentenceDao.instance.loadAll();
-    return sentences
-        .map(
-          (s) => {
-            'wordId': s.wordId,
-            'sentenceId': s.sentenceId,
-            'sentenceData': s.sentenceData,
-            'wordUsage': s.wordUsage,
-            'updateTime': s.updateTime,
-            'type': s.type,
-          },
-        )
-        .toList();
+    return sentences.map(_sentenceRecord).toList(growable: false);
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> getFavoriteSentencesPage({required int limit, int offset = 0}) async {
+    final sentences = await FavSentenceDao.instance.loadPage(limit: limit, offset: offset);
+    return sentences.map(_sentenceRecord).toList(growable: false);
+  }
+
+  @override
+  Future<int> getFavoriteSentenceCount() => FavSentenceDao.instance.countAll();
+
+  Map<String, dynamic> _sentenceRecord(FavSentenceData s) => {
+    'wordId': s.wordId,
+    'sentenceId': s.sentenceId,
+    'sentenceData': s.sentenceData,
+    'wordUsage': s.wordUsage,
+    'updateTime': s.updateTime,
+    'type': s.type,
+  };
 
   @override
   Future<bool> addFavoriteSentence({

@@ -152,6 +152,12 @@ class _FakeFavRepository implements FavRepository {
   Future<List<Map<String, dynamic>>> getFavoriteSentences() async => records;
 
   @override
+  Future<List<Map<String, dynamic>>> getFavoriteSentencesPage({required int limit, int offset = 0}) async => [];
+
+  @override
+  Future<int> getFavoriteSentenceCount() async => 0;
+
+  @override
   bool isFavorite(String word) => false;
 
   @override

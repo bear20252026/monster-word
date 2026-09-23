@@ -23,8 +23,13 @@ class MyFavSentencePage extends StatefulWidget {
 }
 
 class _MyFavSentencePageState extends State<MyFavSentencePage> {
+  static const int _pageSize = 50;
+
   List<FavSentenceData> _sentences = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = false;
+  int _total = 0;
   bool _isEditMode = false;
   Set<int> _selectedIndices = {};
 
@@ -34,13 +39,18 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     _loadData();
   }
 
+  /// MEM/U3+分页：总量走 COUNT 口径，列表只加载首页窗口。
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final sentences = await context.read<SentenceFavoritesStore>().list();
+      final store = context.read<SentenceFavoritesStore>();
+      final total = await store.count();
+      final sentences = await store.listPage(limit: _pageSize);
       if (mounted) {
         setState(() {
+          _total = total;
           _sentences = sentences;
+          _hasMore = sentences.length < total;
           _isLoading = false;
         });
       }
@@ -48,9 +58,30 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
       if (mounted) {
         setState(() {
           _sentences = [];
+          _total = 0;
+          _hasMore = false;
           _isLoading = false;
         });
       }
+    }
+  }
+
+  /// MEM/U3+分页：临近窗口末尾预取下一页（幂等，可安全重复触发）。
+  Future<void> _loadMore() async {
+    if (!_hasMore || _isLoadingMore || _isLoading) return;
+    _isLoadingMore = true;
+    try {
+      final more = await context.read<SentenceFavoritesStore>().listPage(limit: _pageSize, offset: _sentences.length);
+      if (mounted) {
+        setState(() {
+          _sentences = [..._sentences, ...more];
+          _hasMore = more.length >= _pageSize;
+        });
+      }
+    } catch (_) {
+      // 保持当前窗口，下次滚动重试
+    } finally {
+      _isLoadingMore = false;
     }
   }
 
@@ -121,7 +152,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
         children: [
           Icon(Icons.format_quote, size: 18, color: skin.colors.text3),
           const SizedBox(width: 8),
-          Text('共 ${_sentences.length} 个例句', style: MwTypography.bodySm.copyWith(color: skin.colors.text2)),
+          Text('共 $_total 个例句', style: MwTypography.bodySm.copyWith(color: skin.colors.text2)),
           const Spacer(),
           // 学习按钮
           if (_sentences.isNotEmpty && !_isEditMode)
@@ -165,9 +196,22 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
 
   Widget _buildList(SkinSystem skin) {
     return ListView.builder(
-      itemCount: _sentences.length,
+      // MEM/U3+分页：+1 为未到底时的底部加载指示项
+      itemCount: _sentences.length + (_hasMore ? 1 : 0),
       padding: const EdgeInsets.all(16),
       itemBuilder: (context, index) {
+        if (index >= _sentences.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
+        }
+        // 临近窗口末尾预取下一页（_loadMore 自幂等）
+        if (_hasMore && index >= _sentences.length - 10) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _loadMore();
+          });
+        }
         final favSentence = _sentences[index];
         final sentenceData = favSentence.sentenceData;
         if (sentenceData == null) return const SizedBox.shrink();
@@ -306,14 +350,16 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     );
   }
 
-  void _startLearning() {
-    // 只带有效例句进入翻卡学习器
-    final learnable = _sentences.where((s) => (s.sentenceData?.e ?? '').isNotEmpty).toList();
+  Future<void> _startLearning() async {
+    // MEM/U3+分页：学习动作需要全量，点击时一次性拉取（瞬时使用，不常驻内存）
+    final all = await context.read<SentenceFavoritesStore>().list();
+    final learnable = all.where((s) => (s.sentenceData?.e ?? '').isNotEmpty).toList();
+    if (!mounted) return;
     if (learnable.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('暂无可学习的例句')));
       return;
     }
-    startSentenceLearning(context, learnable);
+    await startSentenceLearning(context, learnable);
   }
 
   Future<void> _deleteSelected() async {

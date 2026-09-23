@@ -67,17 +67,19 @@ void main() {
       expect(schedule.memoryStats['due'], 1);
       expect(schedule.memoryStats['mature'], 2);
 
-      // 后台补齐完成后全量进图
-      await schedule.debugTopUpDone;
-      expect(schedule.cardFor('future-word'), isNotNull);
+      // 非到期卡不在缓存(有界 LRU)——异步批量取卡后可见且入缓存
+      expect(schedule.debugCacheSize, 1, reason: '启动只装到期子集');
+      final cards = await schedule.cardsForWords(['future-word', 'future-word-2', 'unknown-word']);
+      expect(cards['future-word'], isNotNull);
+      expect(cards['unknown-word'], isNull);
+      expect(schedule.cardFor('future-word'), isNotNull, reason: '批量取卡预热缓存');
     });
 
     test('幽灵卡防护：map 未命中的已学词评分走 review 而非 learn', () async {
       final schedule = ReviewScheduleRepository(store: store);
-      await schedule.initialize();
-      await schedule.debugTopUpDone; // 空表，map 确定为空
+      await schedule.initialize(); // 空表，缓存确定为空
 
-      // 绕过仓储直接往库里插一张「已学未到期」卡——模拟补齐窗口外的存量卡
+      // 绕过仓储直接往库里插一张「已学未到期」卡——模拟缓存外的存量卡
       await store.insertCardsInTransaction([matureCard('ghost-word')]);
 
       await schedule.rateWord(word: 'ghost-word', rating: FsrsRating.good);
@@ -95,7 +97,6 @@ void main() {
       await store.insertCardsInTransaction([matureCard('ghost-word')]);
       final schedule = ReviewScheduleRepository(store: store);
       await schedule.initialize();
-      await schedule.debugTopUpDone;
 
       await schedule.forget('ghost-word');
 
@@ -106,7 +107,6 @@ void main() {
     test('读穿填充：cardFor 未命中异步查库并通知', () async {
       final schedule = ReviewScheduleRepository(store: store);
       await schedule.initialize();
-      await schedule.debugTopUpDone;
 
       await store.insertCardsInTransaction([matureCard('late-word')]);
 
@@ -115,6 +115,21 @@ void main() {
       await schedule.debugFlushFills();
 
       expect(schedule.cardFor('late-word'), isNotNull);
+    });
+
+    test('LRU 上限：缓存触顶收敛，常驻有界', () async {
+      final schedule = ReviewScheduleRepository(store: store);
+      await schedule.initialize();
+
+      final cards = [
+        for (var i = 0; i < ReviewScheduleRepository.cardsCacheLimit + 10; i++)
+          matureCard('cap-word-${i.toString().padLeft(5, '0')}'),
+      ];
+      await store.insertCardsInTransaction(cards);
+
+      final fetched = await schedule.cardsForWords(cards.map((c) => c.word).toList());
+      expect(fetched, hasLength(ReviewScheduleRepository.cardsCacheLimit + 10));
+      expect(schedule.debugCacheSize, ReviewScheduleRepository.cardsCacheLimit, reason: '缓存必须收敛在上限，不得随取词无限增长');
     });
 
     test('评分后计数与到期集合随写路径增量正确', () async {
