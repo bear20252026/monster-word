@@ -199,6 +199,8 @@ void main() {
     // 全新仓储实例 + 同一底层库：验证持久化而非内存缓存。
     final reader = ReviewScheduleRepository(store: await newStore());
     await reader.initialize();
+    // MEM/F3：启动只装到期子集，等后台补齐完成后再验证全量可见性
+    await reader.debugTopUpDone;
 
     expect(reader.usesSqlite, isTrue);
     expect(reader.cardFor('learned'), isNotNull);

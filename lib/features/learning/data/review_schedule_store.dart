@@ -9,12 +9,32 @@
 // 旧 SP key 本批保留为只读回滚快照，清理另列 E2 小批。
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
+import 'package:flutter/foundation.dart' show immutable, kIsWeb, visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:word_app/core/engine/fsrs6_engine.dart';
+
+/// MEM/F3：卡片全局分类计数（与 memoryStats 口径一一对应）。
+@immutable
+class FsrsCardCounts {
+  final int total;
+  final int newCount;
+  final int due;
+  final int learning;
+  final int mature;
+
+  const FsrsCardCounts({
+    required this.total,
+    required this.newCount,
+    required this.due,
+    required this.learning,
+    required this.mature,
+  });
+
+  Map<String, int> toStats() => {'new': newCount, 'due': due, 'learning': learning, 'mature': mature, 'total': total};
+}
 
 /// 复习调度 SQLite 存储层。
 ///
@@ -103,6 +123,55 @@ class ReviewScheduleStore {
 
   Future<List<FsrsCard>> loadCards() async {
     final rows = await _db.query('fsrs_cards');
+    return rows.map(_cardFromRow).toList(growable: false);
+  }
+
+  /// MEM/F3：启动只读「到期子集」（命中 idx_fsrs_cards_due 索引），
+  /// 全量卡片由仓储后台分批补齐 + 逐词读穿填充，不再启动全表物化。
+  Future<List<FsrsCard>> loadDueCards(DateTime now) async {
+    final rows = await _db.query(
+      'fsrs_cards',
+      where: 'is_new = 0 AND due_date < ?',
+      whereArgs: [now.toIso8601String()],
+    );
+    return rows.map(_cardFromRow).toList(growable: false);
+  }
+
+  /// MEM/F3：全局分类计数（单条件聚合，COUNT 不物化任何卡片行）。
+  /// 口径与 FsrsCard.isNew/isDue + stability<7 完全一致（learning/mature 排除到期卡）。
+  Future<FsrsCardCounts> loadCounts(DateTime now) async {
+    final nowIso = now.toIso8601String();
+    final rows = await _db.rawQuery(
+      '''
+      SELECT
+        COUNT(*) AS total,
+        COALESCE(SUM(CASE WHEN is_new = 1 THEN 1 ELSE 0 END), 0) AS new_count,
+        COALESCE(SUM(CASE WHEN is_new = 0 AND due_date < ? THEN 1 ELSE 0 END), 0) AS due_count,
+        COALESCE(SUM(CASE WHEN is_new = 0 AND due_date >= ? AND stability < 7 THEN 1 ELSE 0 END), 0) AS learning,
+        COALESCE(SUM(CASE WHEN is_new = 0 AND due_date >= ? AND stability >= 7 THEN 1 ELSE 0 END), 0) AS mature
+      FROM fsrs_cards
+    ''',
+      [nowIso, nowIso, nowIso],
+    );
+    final row = rows.single;
+    return FsrsCardCounts(
+      total: (row['total'] as int?) ?? 0,
+      newCount: (row['new_count'] as int?) ?? 0,
+      due: (row['due_count'] as int?) ?? 0,
+      learning: (row['learning'] as int?) ?? 0,
+      mature: (row['mature'] as int?) ?? 0,
+    );
+  }
+
+  /// MEM/F3：按需取单卡（rateWord/forget 读改写与逐词读穿填充）。
+  Future<FsrsCard?> cardForWord(String word) async {
+    final rows = await _db.query('fsrs_cards', where: 'word = ?', whereArgs: [word], limit: 1);
+    return rows.isEmpty ? null : _cardFromRow(rows.first);
+  }
+
+  /// MEM/F3：后台补齐用分批读取（避免一次大 query 独占 UI isolate）。
+  Future<List<FsrsCard>> loadCardsBatch({required int limit, int offset = 0}) async {
+    final rows = await _db.query('fsrs_cards', limit: limit, offset: offset);
     return rows.map(_cardFromRow).toList(growable: false);
   }
 

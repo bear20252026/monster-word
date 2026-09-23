@@ -49,7 +49,7 @@ class UserDatabase {
     final dir = await getApplicationSupportDirectory();
     final dbPath = p.join(dir.path, 'user_data.db');
 
-    _db = await openDatabase(dbPath, version: 2, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    _db = await openDatabase(dbPath, version: 3, onCreate: _onCreate, onUpgrade: _onUpgrade);
     _initialized = true;
   }
 
@@ -69,12 +69,44 @@ class UserDatabase {
     await db.execute('CREATE INDEX idx_favorites_word_id ON favorites(word_id)');
     await db.execute('CREATE INDEX idx_favorites_created_at ON favorites(created_at)');
     await _createNewWordsTable(db);
+    await _createFavoriteTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createNewWordsTable(db);
     }
+    // MEM/U3+U6：收藏迁 SQLite（ FavoriteWordsDao / FavSentenceDao 的事实来源）
+    if (oldVersion < 3) {
+      await _createFavoriteTables(db);
+    }
+  }
+
+  /// MEM/U3+U6：收藏持久化表。
+  ///
+  /// 单词收藏以【单词文本】为主键——与 mastered/mastered_words_v1 一致，
+  /// 文本身份在词库重建/资产更新后仍稳定（自增 word_id 不保证跨版本稳定）。
+  /// 例句收藏以 (word_id, sentence_id) 复合主键，data_json 原样保存
+  /// FavSentenceData.toJson()，保证新增列外的历史字段无损往返。
+  Future<void> _createFavoriteTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS favorite_words (
+        word TEXT PRIMARY KEY,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_favorite_words_created ON favorite_words(created_at)');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS favorite_sentences (
+        word_id INTEGER NOT NULL,
+        sentence_id TEXT NOT NULL,
+        word TEXT NOT NULL DEFAULT '',
+        update_time TEXT NOT NULL,
+        data_json TEXT NOT NULL,
+        PRIMARY KEY(word_id, sentence_id)
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_favorite_sentences_time ON favorite_sentences(update_time DESC)');
   }
 
   Future<void> _createNewWordsTable(Database db) async {

@@ -11,7 +11,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// A 级路径：这些文件的异常曾导致用户数据静默丢失，必须接 reportSwallowedError。
 const _aLevelFiles = [
-  'lib/core/repositories/fav_repository_impl.dart', // 收藏列表
+  // MEM/U3+U6：收藏持久化下沉到 DAO（SQLite 事实来源 + SP 回退），
+  // 上报随之迁移到 DAO 层；impl 仅做端口转发。
+  'lib/core/infrastructure/favorite_words_dao.dart', // 收藏列表（SQLite/SP 持久化）
+  'lib/core/infrastructure/fav_sentence_dao.dart', // 收藏例句（SQLite/SP 持久化）
   'lib/core/repositories/note_repository_impl.dart', // 笔记
   'lib/features/learning/data/mastered_repository_impl.dart', // 已掌握词表
   'lib/features/learning/application/review_session_starter.dart', // 复习会话启动
