@@ -35,7 +35,8 @@ class _CheckInStripState extends State<_CheckInStrip> {
       isScrollControlled: true,
       builder: (sheetCtx) => Padding(
         padding: EdgeInsets.only(left: 20, right: 20, top: 12, bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 24),
-        child: const SpringCheckInCalendar(),
+        // 吞金币庆祝展开后内容增高，小屏滚动兜底防溢出。
+        child: const SingleChildScrollView(child: SpringCheckInCalendar()),
       ),
     );
     unawaited(_reload());

@@ -234,4 +234,127 @@ class ShareImageService {
       text: '我在 Monster Word 已学习 $totalDays 天，掌握 $totalWords 个单词，连续签到 $streakDays 天！一起来背单词吧！',
     );
   }
+
+  /// 生成今日战报海报（结算页分享）：学对／答对率／最高连击／连签。
+  static Future<Uint8List> generateDailyReportImage({
+    required int correct,
+    required int total,
+    required String accuracyText,
+    required int bestCombo,
+    required int streakDays,
+  }) async {
+    const double width = 1080;
+    const double height = 1920;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, width, height));
+
+    // === 背景渐变（与打卡海报同源）===
+    final bgGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [StarbucksCreamColors.greenHouse, StarbucksCreamColors.greenBanner],
+    );
+    final bgPaint = Paint()..shader = bgGradient.createShader(Rect.fromLTWH(0, 0, width, height));
+    canvas.drawRect(Rect.fromLTWH(0, 0, width, height), bgPaint);
+
+    // === 装饰圆 ===
+    final circlePaint = Paint()
+      ..color = AppColors.white100.withValues(alpha: 0.05)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(width * 0.8, height * 0.15), 200, circlePaint);
+    canvas.drawCircle(Offset(width * 0.2, height * 0.7), 300, circlePaint);
+    canvas.drawCircle(Offset(width * 0.9, height * 0.85), 250, circlePaint);
+
+    // === 金色分割线 ===
+    final linePaint = Paint()
+      ..color = StarbucksCreamColors.vipGoldBg
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(width * 0.1, height * 0.25), Offset(width * 0.9, height * 0.25), linePaint);
+
+    // === 标题 ===
+    _drawText(canvas, '今日战报', width / 2, height * 0.12, fontSize: 84, color: AppColors.white100, fontWeight: FontWeight.bold);
+
+    _drawText(canvas, 'Monster Word · 背单词有态度', width / 2, height * 0.18, fontSize: 34, color: StarbucksCreamColors.vipGoldBg);
+
+    // === 战报卡片（4 张 compact）===
+    const cardHeight = 200.0;
+    const cardGap = 24.0;
+    final cardTop = height * 0.30;
+    final stats = [
+      ('学对', '$correct/$total', Icons.check_circle),
+      ('答对率', accuracyText, Icons.percent),
+      ('最高连击', bestCombo > 0 ? '×$bestCombo' : '--', Icons.local_fire_department),
+      ('连续签到', '$streakDays 天', Icons.calendar_today),
+    ];
+    for (var i = 0; i < stats.length; i++) {
+      _drawStatCard(
+        canvas,
+        width * 0.1,
+        cardTop + i * (cardHeight + cardGap),
+        width * 0.8,
+        cardHeight,
+        stats[i].$1,
+        stats[i].$2,
+        stats[i].$3,
+      );
+    }
+
+    // === 底部 ===
+    final bottomY = height * 0.88;
+    _drawText(canvas, '明天，怪兽等你投喂', width / 2, bottomY, fontSize: 32, color: AppColors.white100.withValues(alpha: 0.85));
+
+    _drawText(canvas, '— Monster Word —', width / 2, bottomY + 60, fontSize: 24, color: StarbucksCreamColors.vipGoldBg);
+
+    // === 渲染 ===
+    final picture = recorder.endRecording();
+    final img = await picture.toImage(width.toInt(), height.toInt());
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+    return byteData!.buffer.asUint8List();
+  }
+
+  /// 生成战报并保存到临时目录，返回文件路径
+  static Future<String> generateAndSaveDailyReport({
+    required int correct,
+    required int total,
+    required String accuracyText,
+    required int bestCombo,
+    required int streakDays,
+  }) async {
+    final bytes = await generateDailyReportImage(
+      correct: correct,
+      total: total,
+      accuracyText: accuracyText,
+      bestCombo: bestCombo,
+      streakDays: streakDays,
+    );
+    final dir = await getApplicationDocumentsDirectory();
+    final filePath = '${dir.path}/monster_word_report_${DateTime.now().millisecondsSinceEpoch}.png';
+    final file = File(filePath);
+    await file.writeAsBytes(bytes);
+    return filePath;
+  }
+
+  /// 生成战报并直接分享
+  static Future<void> generateAndShareDailyReport({
+    required int correct,
+    required int total,
+    required String accuracyText,
+    required int bestCombo,
+    required int streakDays,
+  }) async {
+    final filePath = await generateAndSaveDailyReport(
+      correct: correct,
+      total: total,
+      accuracyText: accuracyText,
+      bestCombo: bestCombo,
+      streakDays: streakDays,
+    );
+    await Share.shareXFiles(
+      [XFile(filePath)],
+      subject: 'Monster Word 今日战报',
+      text: '今日在 Monster Word 学对 $correct/$total（最高连击×$bestCombo），连续签到 $streakDays 天！一起来背单词吧！',
+    );
+  }
 }

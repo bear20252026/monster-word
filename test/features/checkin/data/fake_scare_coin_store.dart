@@ -41,6 +41,21 @@ class FakeScareCoinStore implements ScareCoinStore {
   @override
   Future<int> grant({required int delta, required String reason}) async => 0;
 
+  @override
+  int get protectionCap => 3;
+
+  @override
+  Future<int> protectionCount() async => 0;
+
+  @override
+  Future<int> addProtection({required int count, required String reason}) async => 0;
+
+  @override
+  int get answerRewardDailyCap => 20;
+
+  @override
+  Future<int> grantAnswerReward() async => 1;
+
   static String isoOf(DateTime value) =>
       '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 }

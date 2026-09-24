@@ -17,6 +17,7 @@ import 'package:word_app/features/learning/presentation/learning_session_state.d
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/func_colors.dart';
 import 'package:word_app/widgets/app_dock.dart';
 import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/daily_goal_picker.dart';

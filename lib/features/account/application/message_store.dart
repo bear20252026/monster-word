@@ -64,6 +64,11 @@ class MessageStore extends ChangeNotifier {
   Future<void> load() async {
     final prefs = await _prefs();
     _messages = _decode(prefs.getString(_storageKey));
+    // MEM：历史版本无上限，老用户本地可能堆积数千条，加载即截断。
+    const maxMessages = 200;
+    if (_messages.length > maxMessages) {
+      _messages = _messages.take(maxMessages).toList();
+    }
 
     final fresh = await _refreshLearningMessages();
     if (fresh) {

@@ -24,4 +24,19 @@ abstract interface class ScareCoinStore {
   Future<int?> checkIn();
 
   Future<int> grant({required int delta, required String reason});
+
+  /// 断签保护卡持有上限（囤积贬值，连击才有含金量）。
+  int get protectionCap;
+
+  /// 断签保护卡库存（耗材；不占装备架、不计 redeemedBadge）。
+  Future<int> protectionCount();
+
+  /// 发放保护卡（连签奖励／兑换），钳制上限后返回当前库存。
+  Future<int> addProtection({required int count, required String reason});
+
+  /// 答对即时奖励上限（＋1／次，每日封顶，防刷）。
+  int get answerRewardDailyCap;
+
+  /// 答对即时奖励：未达日上限发＋1 并返回 1，否则返回 0（可重入）。
+  Future<int> grantAnswerReward();
 }

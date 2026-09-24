@@ -256,6 +256,22 @@ class MwAudioPlayer {
     await _processingStateSub?.cancel();
     _processingStateSub = null;
     playStateListener = null;
+    // MEM/C7：桌面端 audioplayers 实例持有 mpv/原生句柄，必须同步释放，
+    // 否则任务管理器外堆常驻。先 stop 再 dispose，失败只打日志不抛。
+    final apInstance = _apPlayerInstance;
+    _apPlayerInstance = null;
+    if (apInstance != null) {
+      try {
+        await apInstance.stop().timeout(const Duration(seconds: 2));
+      } catch (e) {
+        debugPrint('[MwAudioPlayer] release() desktop stop error: $e');
+      }
+      try {
+        await apInstance.dispose().timeout(const Duration(seconds: 2));
+      } catch (e) {
+        debugPrint('[MwAudioPlayer] release() desktop dispose error: $e');
+      }
+    }
     try {
       // MEM：无平台插件时 just_audio dispose 可能挂起，限时以免卡死退出/测试。
       await _player.dispose().timeout(const Duration(seconds: 2));

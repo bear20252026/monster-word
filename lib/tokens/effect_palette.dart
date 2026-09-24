@@ -41,6 +41,15 @@ class MonsterPalette {
 
   /// 腮红粉
   static const Color blush = Color(0xFFFF9999);
+
+  /// 张开的嘴内腔（吞金币庆祝：mouthOpen>0 时绘制）
+  static const Color mouthInner = Color(0xFF6B3A2A);
+
+  /// 张开的嘴内小舌头
+  static const Color tongue = Color(0xFFFF8A80);
+
+  /// 进化金（7天尖角金角／30天飞翼描边／100天光环，吉祥物进化专用）
+  static const Color evoGold = Color(0xFFD9A62E);
 }
 
 /// 流星特效色（meteors.dart）

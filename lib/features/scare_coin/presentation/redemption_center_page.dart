@@ -15,6 +15,10 @@ import 'package:word_app/widgets/monster_icon.dart';
 /// - 不设 VIP、不做任何权益墙：全部功能对所有人无条件开放。
 /// - 兑换为纯收集/纪念性质：真实扣币、真实入账，但不附带任何功能权益。
 /// - 商品一经兑换永久持有（按 id 记录在本地，不提供退换）。
+///
+/// 修订（断签保护卡，需求方确认）：保护卡是唯一的耗材型功能商品——
+/// 断签自动续命一张，不占装备架（owned/3 口径不变）、不计收藏章；
+/// 其余徽章仍为纯收集。库存走 ScareCoinStore 账本，可重复兑换。
 class RedemptionCenterPage extends StatefulWidget {
   static const String routeName = RouteNames.redemption;
   const RedemptionCenterPage({super.key});
@@ -30,9 +34,19 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
   int _coins = 0;
   int _todayEarned = 0;
   Set<String> _redeemedIds = <String>{};
+  int _protectionStock = 0;
   bool _redeeming = false;
 
   static const List<_RedeemItem> _items = [
+    _RedeemItem(
+      id: 'protection_card',
+      title: '断签保护卡',
+      description: '断签自动续命一张 · 耗材不占装备架',
+      cost: 200,
+      icon: Icons.shield_rounded,
+      color: 0xFFD9A62E,
+      isConsumable: true,
+    ),
     _RedeemItem(
       id: 'badge_warm',
       title: '暖橙收藏章',
@@ -76,7 +90,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
   Future<void> _reload() async {
     final store = context.read<ScareCoinStore>();
     final prefs = await SharedPreferences.getInstance();
-    final results = await Future.wait([store.balance(), store.history()]);
+    final results = await Future.wait([store.balance(), store.history(), store.protectionCount()]);
     if (!mounted) return;
     final today = DateTime.now().toIso8601String().substring(0, 10);
     final todayEarned = (results[1] as List)
@@ -85,14 +99,46 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
     setState(() {
       _coins = results[0] as int;
       _todayEarned = todayEarned;
+      _protectionStock = results[2] as int;
       _redeemedIds = _items.map((i) => i.id).where((id) => prefs.getBool('$_redeemedPrefix$id') ?? false).toSet();
     });
   }
 
   static String _isoDay(DateTime t) => t.toIso8601String().substring(0, 10);
 
+  /// 耗材兑换：扣币＋账本入账，满额拒收（上限见 ScareCoinStore.protectionCap）。
+  Future<void> _redeemConsumable(_RedeemItem item, ScareCoinStore store) async {
+    if (_coins < item.cost) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('尖叫币不足（还差 ${item.cost - _coins} 枚），继续学习攒币吧！')));
+      return;
+    }
+    if (_protectionStock >= store.protectionCap) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('保护卡已满（${store.protectionCap} 张），用掉再来兑换吧！')));
+      return;
+    }
+    setState(() => _redeeming = true);
+    try {
+      await store.grant(delta: -item.cost, reason: '兑换 · ${item.title}');
+      final stock = await store.addProtection(count: 1, reason: '兑换 · ${item.title}');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！断签保护卡×1（当前库存 $stock 张）')));
+      await _reload();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('兑换失败，请稍后重试')));
+      }
+    } finally {
+      if (mounted) setState(() => _redeeming = false);
+    }
+  }
+
   Future<void> _redeem(_RedeemItem item) async {
-    if (_redeeming || _redeemedIds.contains(item.id)) return;
+    if (_redeeming) return;
+    final store = context.read<ScareCoinStore>();
+    // 耗材分支：可重复兑换，走库存口径（不进 redeemedIds、不占装备架）。
+    if (item.isConsumable) return _redeemConsumable(item, store);
+    if (_redeemedIds.contains(item.id)) return;
     if (_coins < item.cost) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('尖叫币不足（还差 ${item.cost - _coins} 枚），继续学习攒币吧！')));
       return;
@@ -219,7 +265,8 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
 
   Widget _buildItem(_RedeemItem item, SkinSystem skin, AppResponsive resp) {
     final colors = skin.colors;
-    final redeemed = _redeemedIds.contains(item.id);
+    // 耗材永不进“已拥有”态，走库存口径。
+    final redeemed = !item.isConsumable && _redeemedIds.contains(item.id);
     final affordable = _coins >= item.cost;
     return Container(
       margin: EdgeInsets.only(bottom: context.design.spacing.sm),
@@ -244,7 +291,17 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
             Flexible(
               child: Text(item.title, style: MwTypography.bodyBold.copyWith(color: colors.text1)),
             ),
-            if (redeemed) ...[
+            if (item.isConsumable) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Color(item.color).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text('库存 ×$_protectionStock', style: MwTypography.micro.copyWith(color: Color(item.color))),
+              ),
+            ] else if (redeemed) ...[
               const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -292,6 +349,9 @@ class _RedeemItem {
   final IconData icon;
   final int color;
 
+  /// 耗材（如保护卡）：可重复兑换，走库存口径，不进 redeemedIds。
+  final bool isConsumable;
+
   const _RedeemItem({
     required this.id,
     required this.title,
@@ -299,5 +359,6 @@ class _RedeemItem {
     required this.cost,
     required this.icon,
     required this.color,
+    this.isConsumable = false,
   });
 }

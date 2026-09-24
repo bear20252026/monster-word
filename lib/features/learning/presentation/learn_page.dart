@@ -3,6 +3,8 @@
 // 由账号4生成
 // 学习页：明亮简约设计风格
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +19,8 @@ import 'package:word_app/theme/skin_system.dart';
 
 import 'package:word_app/tokens/star_gold.dart';
 import 'package:word_app/widgets/animations.dart';
+import 'package:word_app/widgets/coin_fly_overlay.dart';
+import 'package:word_app/widgets/coin_swallow_celebration.dart' show CoinBadge;
 import 'package:word_app/features/learning/presentation/word_lookup_popup.dart';
 import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/confetti.dart';
@@ -26,6 +30,7 @@ import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/features/learning/presentation/share_image_service.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
@@ -39,6 +44,12 @@ class LearnPage extends StatefulWidget {
 }
 
 class _LearnPageState extends State<LearnPage> {
+  /// 顶栏余额刷新节拍（金币落袋时+1，_CoinPill 按 tick 重查余额）。
+  int _balanceTick = 0;
+
+  /// 顶栏金币 pill 定位（金币飞行终点）。
+  final GlobalKey _pillKey = GlobalKey();
+
   Future<void> _playAudio(String word, {String? audioUrl}) async {
     final player = context.read<AudioPlaybackState>();
     if (player.isLoading) return;
@@ -78,6 +89,7 @@ class _LearnPageState extends State<LearnPage> {
                 goalAchieved: state.dailyGoalAchieved,
                 todayLearned: state.todayLearned,
                 dailyGoal: state.dailyGoal,
+                bestCombo: state.bestCombo,
                 onReviewErrors: state.errorWords.isEmpty
                     ? null
                     : () {
@@ -91,7 +103,7 @@ class _LearnPageState extends State<LearnPage> {
                     child: Column(
                       children: [
                         // 会话进度栏：竖屏/横屏共用（此前横屏分支缺失，无进度/返回/收藏）
-                        _TopBar(skin: skin, state: state),
+                        _TopBar(skin: skin, state: state, pillKey: _pillKey, balanceTick: _balanceTick),
                         Expanded(
                           child: isLandscape
                               ? Row(
@@ -106,7 +118,15 @@ class _LearnPageState extends State<LearnPage> {
                                       ),
                                     ),
                                     Expanded(
-                                      child: _QuizArea(word: word, state: state, skin: skin),
+                                      child: _QuizArea(
+                                        word: word,
+                                        state: state,
+                                        skin: skin,
+                                        pillKey: _pillKey,
+                                        onRewarded: (_) {
+                                          if (mounted) setState(() => _balanceTick++);
+                                        },
+                                      ),
                                     ),
                                   ],
                                 )
@@ -124,7 +144,15 @@ class _LearnPageState extends State<LearnPage> {
                                     ),
                                     Expanded(
                                       flex: 6,
-                                      child: _QuizArea(word: word, state: state, skin: skin),
+                                      child: _QuizArea(
+                                        word: word,
+                                        state: state,
+                                        skin: skin,
+                                        pillKey: _pillKey,
+                                        onRewarded: (_) {
+                                          if (mounted) setState(() => _balanceTick++);
+                                        },
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -142,7 +170,11 @@ class _LearnPageState extends State<LearnPage> {
 class _TopBar extends StatelessWidget {
   final SkinSystem skin;
   final LearningSessionState state;
-  const _TopBar({required this.skin, required this.state});
+
+  /// 金币 pill 定位＋刷新节拍（答对飞行终点，落袋刷新）。
+  final GlobalKey pillKey;
+  final int balanceTick;
+  const _TopBar({required this.skin, required this.state, required this.pillKey, required this.balanceTick});
 
   @override
   Widget build(BuildContext context) {
@@ -183,6 +215,9 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(width: 8),
+          // 金币余额 pill（答对飞行终点；无账本语境如单测时自动隐身）。
+          _CoinPill(key: pillKey, tick: balanceTick),
           const SizedBox(width: 8),
           IconButton(
             icon: Icon(isFav ? Icons.star : Icons.star_border, color: isFav ? StarGold.gold : colors.text2, size: 22),
@@ -230,6 +265,51 @@ class _TopBar extends StatelessWidget {
   }
 }
 
+/// 顶栏金币余额 pill：金币＋余额数字，答对飞行终点。
+/// 无账本语境（如单测最小装配）自动隐身，不抛 ProviderNotFound。
+/// tick 变化即重查余额，数字经 AnimatedSwitcher 缩放 pop（落袋感）。
+class _CoinPill extends StatelessWidget {
+  final int tick;
+  const _CoinPill({super.key, required this.tick});
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.read<ScareCoinStore?>();
+    if (store == null) return const SizedBox.shrink();
+    final colors = context.skin.colors;
+    return FutureBuilder<int>(
+      key: ValueKey(tick),
+      future: store.balance(),
+      builder: (context, snap) {
+        final balance = snap.data ?? 0;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: ShapeDecoration(
+            color: MwColors.sunshine300.withValues(alpha: 0.14),
+            shape: const StadiumBorder(),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CoinBadge(size: 18),
+              const SizedBox(width: 4),
+              AnimatedSwitcher(
+                duration: MotionDurations.base,
+                transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                child: Text(
+                  '$balance',
+                  key: ValueKey('$tick-$balance'),
+                  style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: colors.text1),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _CompletionScreen extends StatefulWidget {
   final SkinSystem skin;
   final int errorCount;
@@ -237,6 +317,9 @@ class _CompletionScreen extends StatefulWidget {
   final int? durationSeconds;
   final double? accuracy;
   final VoidCallback? onReviewErrors;
+
+  /// 本次会话最佳连击（连击条口径）。
+  final int bestCombo;
   const _CompletionScreen({
     required this.skin,
     this.errorCount = 0,
@@ -247,6 +330,7 @@ class _CompletionScreen extends StatefulWidget {
     this.goalAchieved = false,
     this.todayLearned = 0,
     this.dailyGoal = 0,
+    this.bestCombo = 0,
   });
 
   /// 今日目标达成（显示庆祝横幅）
@@ -260,6 +344,7 @@ class _CompletionScreen extends StatefulWidget {
 
 class _CompletionScreenState extends State<_CompletionScreen> {
   int? _grantedCoins;
+  bool _sharing = false;
 
   @override
   void initState() {
@@ -369,8 +454,22 @@ class _CompletionScreenState extends State<_CompletionScreen> {
                       colors: colors,
                     ),
                     _StatItem(label: '答错', value: '$errorCount', colors: colors),
+                    _StatItem(
+                      label: '最高连击',
+                      value: widget.bestCombo > 0 ? '×${widget.bestCombo}' : '--',
+                      colors: colors,
+                    ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 16),
+              // 战报分享：今日战绩海报，自带传播。
+              OutlinedButton.icon(
+                onPressed: _sharing ? null : _shareReport,
+                icon: _sharing
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.ios_share_rounded, size: 18),
+                label: Text(_sharing ? '正在生成海报…' : '分享今日战报'),
               ),
               if (onReviewErrors != null && errorCount > 0) ...[
                 const SizedBox(height: 16),
@@ -404,6 +503,34 @@ class _CompletionScreenState extends State<_CompletionScreen> {
     );
   }
 
+  /// 分享今日战报（无账本语境连签记 0，不抛错）。
+  Future<void> _shareReport() async {
+    if (_sharing) return;
+    setState(() => _sharing = true);
+    try {
+      final store = context.read<ScareCoinStore?>();
+      int streakDays = 0;
+      try {
+        streakDays = await (store?.streak() ?? Future.value(0));
+      } catch (_) {}
+      if (!mounted) return;
+      final correct = (widget.totalAnswered - widget.errorCount).clamp(0, widget.totalAnswered);
+      final accuracyText = widget.accuracy == null ? '--' : '${(widget.accuracy! * 100).round()}%';
+      await ShareImageService.generateAndShareDailyReport(
+        correct: correct,
+        total: widget.totalAnswered,
+        accuracyText: accuracyText,
+        bestCombo: widget.bestCombo,
+        streakDays: streakDays,
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('分享失败，请稍后重试')));
+      }
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
   /// 尖叫币奖励横幅（本次会话结算所得）
   Widget _buildCoinBanner(dynamic colors) {
     return Container(
@@ -567,7 +694,19 @@ class _QuizArea extends StatefulWidget {
   final dynamic word;
   final LearningSessionState state;
   final SkinSystem skin;
-  const _QuizArea({required this.word, required this.state, required this.skin});
+
+  /// 金币飞行终点（顶栏 pill 定位）。
+  final GlobalKey pillKey;
+
+  /// 落袋回调（实发币数；父级刷新余额节拍）。
+  final ValueChanged<int> onRewarded;
+  const _QuizArea({
+    required this.word,
+    required this.state,
+    required this.skin,
+    required this.pillKey,
+    required this.onRewarded,
+  });
 
   @override
   State<_QuizArea> createState() => _QuizAreaState();
@@ -576,6 +715,9 @@ class _QuizArea extends StatefulWidget {
 class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   int _wrongIndex = -1;
   int _correctIndex = -1;
+
+  /// 选项 tile 定位（金币飞行起点）；选项固定 4 席。
+  final List<GlobalKey> _tileKeys = List<GlobalKey>.generate(4, (_) => GlobalKey());
 
   late AnimationController _shakeController;
   late AnimationController _bounceController;
@@ -621,13 +763,52 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
         _correctIndex = i;
         _wrongIndex = -1;
       });
+      // 连击计入会话（错后重选不续杯，见 recordAnswer），完成页＋战报消费 bestCombo。
+      widget.state.recordAnswer(true);
       _bounceController.forward(from: 0);
       _checkController.forward(from: 0);
       _confettiController.play();
+      _rewardFly(i);
     } else {
       setState(() => _wrongIndex = i);
+      widget.state.recordAnswer(false);
       _shakeController.forward(from: 0);
     }
+  }
+
+  static Offset? _centerOf(GlobalKey key) {
+    final ctx = key.currentContext;
+    if (ctx == null) return null;
+    final box = ctx.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    return box.localToGlobal(box.size.center(Offset.zero));
+  }
+
+  /// 答对奖励飞行：先记账（＋1，日封顶，静默失败），再从选项飞向顶栏；
+  /// 无账本语境（单测最小装配）直接跳过，不抛错。
+  Future<void> _rewardFly(int index) async {
+    if (index < 0 || index >= _tileKeys.length) return;
+    final from = _centerOf(_tileKeys[index]);
+    final to = _centerOf(widget.pillKey);
+    if (from == null || to == null) return;
+    final store = context.read<ScareCoinStore?>();
+    if (store == null) return;
+    int granted = 0;
+    try {
+      granted = await store.grantAnswerReward();
+    } catch (_) {
+      return;
+    }
+    if (granted <= 0 || !mounted) return;
+    CoinFlyOverlay.play(
+      context,
+      from: from,
+      to: to,
+      onArrive: () {
+        if (!mounted) return;
+        widget.onRewarded(granted);
+      },
+    );
   }
 
   @override
@@ -649,6 +830,40 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 连击条：≥2 现身，≥3 火苗，≥5 怪兽探头欢呼（形态切换带缩放 pop）。
+              if (widget.state.combo >= 2) ...[
+                Row(
+                  children: [
+                    AnimatedSwitcher(
+                      duration: MotionDurations.base,
+                      transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                      child: widget.state.combo >= 5
+                          ? const MonsterIcon(key: ValueKey('cheer'), size: 24)
+                          : const Icon(
+                              key: ValueKey('fire'),
+                              Icons.local_fire_department_rounded,
+                              size: 20,
+                              color: StarGold.gold,
+                            ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '连击 ×${widget.state.combo}',
+                      style: TextStyle(
+                        fontSize: AppFontSizes.bodySm * resp.fontScale,
+                        fontWeight: FontWeight.w800,
+                        color: colors.text1,
+                      ),
+                    ),
+                    if (widget.state.combo >= 5)
+                      Text(
+                        ' 小怪兽为你欢呼！',
+                        style: TextStyle(fontSize: AppFontSizes.caption * resp.fontScale, color: colors.text2),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
               Text(
                 _wrongIndex >= 0 ? '请再选出正确答案' : '请选择正确释义',
                 style: TextStyle(
@@ -739,6 +954,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
         alignment: Alignment.centerRight,
         children: [
           AnimatedContainer(
+            key: _tileKeys[i],
             duration: MotionDurations.base,
             height: 56 * resp.scale,
             margin: const EdgeInsets.only(bottom: 16),
@@ -793,8 +1009,13 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       tile = AnimatedBuilder(
         animation: _shakeController,
         builder: (context, child) {
-          final offset = computeShakeOffset(_shakeController.value, amplitude: 3.0, cycles: 1);
-          return Transform.translate(offset: Offset(offset, 0), child: child);
+          // 温柔下沉：exit 家族下探 5px 即回＋轻淡，不再左右抖（去惩罚感）。
+          final dip = math.sin(_shakeController.value * math.pi) * 5;
+          final fade = 1 - _shakeController.value * 0.12;
+          return Transform.translate(
+            offset: Offset(0, dip),
+            child: Opacity(opacity: fade, child: child),
+          );
         },
         child: tile,
       );

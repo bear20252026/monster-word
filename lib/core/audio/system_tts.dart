@@ -228,8 +228,11 @@ class SystemTts {
   /// 释放资源
   Future<void> dispose() async {
     try {
+      // MEM/L4：单例持有 State 闭包会钉住页面，全部回调置空再 stop。
+      onStart = null;
       onComplete = null;
       onErrorHandler = null;
+      onProgress = null;
       await _tts.stop();
       _initialized = false;
     } catch (e) {

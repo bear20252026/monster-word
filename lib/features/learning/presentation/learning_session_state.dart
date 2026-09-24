@@ -59,6 +59,24 @@ class LearningSessionState extends ChangeNotifier {
   final List<Word> _errorWords = [];
   int _totalAnswered = 0;
 
+  // 连击：连续首选答对计数（错一次即断；错后重选答对不续杯）。
+  // 最佳连击进完成页总结＋战报海报。
+  int _combo = 0;
+  int _bestCombo = 0;
+  int get combo => _combo;
+  int get bestCombo => _bestCombo;
+
+  /// 记录一次选项作答（首选语义）：对→连击+1，错→清零，并通知。
+  void recordAnswer(bool correct) {
+    if (correct) {
+      _combo++;
+      if (_combo > _bestCombo) _bestCombo = _combo;
+    } else {
+      _combo = 0;
+    }
+    notifyListeners();
+  }
+
   /// 今日已学计数（跨会话持久化，跨天自动清零）——Learning 卡剩余联动
   int _todayLearned = 0;
   String _todayLearnedDate = '';
@@ -148,6 +166,8 @@ class LearningSessionState extends ChangeNotifier {
     // 新会话开始，重置完成页数据
     _errorWords.clear();
     _totalAnswered = 0;
+    _combo = 0;
+    _bestCombo = 0;
     _sessionStartTime = DateTime.now();
     // 尖叫币会话奖励每会话只结算一次；复习错题（relearn）不重置此标记
     _sessionRewardSettled = false;

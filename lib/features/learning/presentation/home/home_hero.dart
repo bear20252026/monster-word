@@ -53,6 +53,38 @@ class _TodayHeroCard extends StatelessWidget {
                       '已学 $learned / $goal · 待复习 $dueCount',
                       style: TextStyle(fontSize: AppFontSizes.caption * resp.fontScale, color: skin.colors.text3),
                     ),
+                    // 遗忘临界预警：due>0 即现身，点之直达复习 dialog（与“复习 N”同入口）。
+                    // 用时口径：单次复习约 14 秒／词，向上取整分钟。
+                    if (dueCount > 0) ...[
+                      SizedBox(height: 8 * resp.scale),
+                      GestureDetector(
+                        onTap: () => showReviewDialog(context),
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              size: 14 * resp.fontScale,
+                              color: FuncColors.warning,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                '今晚有 $dueCount 个词进入遗忘临界，约 ${math.max(1, (dueCount * 14 / 60).ceil())} 分钟能救回来',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: AppFontSizes.caption * resp.fontScale,
+                                  fontWeight: FontWeight.w600,
+                                  color: skin.colors.text2,
+                                ),
+                              ),
+                            ),
+                            Icon(Icons.chevron_right_rounded, size: 16, color: skin.colors.text3),
+                          ],
+                        ),
+                      ),
+                    ],
                     SizedBox(height: 16 * resp.scale),
                     Row(
                       children: [

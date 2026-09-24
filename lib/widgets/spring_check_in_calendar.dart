@@ -12,6 +12,8 @@ import 'package:provider/provider.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/coin_feed_stage.dart';
+import 'package:word_app/widgets/coin_swallow_celebration.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 
 /// 弹性签到日历
@@ -35,6 +37,12 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
   int _streak = 0;
   bool _todayChecked = false;
   bool _justChecked = false; // 本次会话内刚完成签到（触发连击特效）
+  bool _showSwallow = false; // 吞金币庆祝 overlay（播完自清，不常驻）
+  bool _checking = false; // 忙态：checkIn() 在途，按钮 morph 为 spinner 并拦截连点
+  bool _feeding = false; // 亲手投喂态：按钮让位给投喂台，币由用户拖进嘴
+  double _tailStart = 0.0; // 投喂续演起点（0.32 币已到嘴）；点按自动为 0
+  int _lastReward = 0; // 本次签到增量（金库窗滚动起点口径）
+  int _lastBalance = 0; // 签到后最新余额（金库窗滚动终点）
 
   late final AnimationController _entranceCtrl = AnimationController(
     vsync: this,
@@ -80,13 +88,47 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
 
   String _iso(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-  Future<void> _onCheckIn() async {
-    if (_todayChecked) return;
-    final newBalance = await context.read<ScareCoinStore>().checkIn();
-    if (newBalance == null) return; // 已签过（并发保护）
-    widget.onChecked?.call();
+  /// 点按自动签到：币从按钮弹射（celebrationStart 0）。
+  Future<void> _onCheckIn() => _doCheckIn(celebrationStart: 0.0);
+
+  /// 投喂成功：币已到嘴，续演后三幕（celebrationStart 0.32）。
+  Future<void> _onFed() => _doCheckIn(celebrationStart: 0.32);
+
+  /// 投喂台偷懒入口：回落自动签到。
+  Future<void> _feedAuto() => _doCheckIn(celebrationStart: 0.0);
+
+  /// 长按金币进入亲手投喂（今日已签／在途不进）。
+  void _enterFeedMode() {
+    if (_todayChecked || _checking || _feeding || _justChecked) return;
+    setState(() => _feeding = true);
+  }
+
+  Future<void> _doCheckIn({required double celebrationStart}) async {
+    if (_todayChecked || _checking) return;
+    final store = context.read<ScareCoinStore>();
+    setState(() {
+      _checking = true;
+      _feeding = false;
+    });
+    final newBalance = await store.checkIn();
     if (!mounted) return;
-    setState(() => _justChecked = true);
+    if (newBalance == null) {
+      // 并发已签过：落忙态、同步日历状态后收尾。
+      setState(() => _checking = false);
+      await _refresh();
+      return;
+    }
+    widget.onChecked?.call();
+    // 系统「减少动态效果」时跳过粒子庆祝，直接呈现结果（MEM-03 同约）。
+    final reduceMotion = WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
+    setState(() {
+      _justChecked = true;
+      _checking = false;
+      _showSwallow = !reduceMotion;
+      _tailStart = celebrationStart;
+      _lastReward = store.checkInReward;
+      _lastBalance = newBalance;
+    });
     await _refresh();
     _bounceCtrl.forward(from: 0);
     _comboCtrl.forward(from: 0);
@@ -297,32 +339,102 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
     );
   }
 
-  // ── 底部签到按钮 ──
+  // ── 吞金币庆祝自清 ──
+  void _hideSwallow() {
+    if (!mounted) return;
+    setState(() {
+      _showSwallow = false;
+      _tailStart = 0.0;
+    });
+  }
+
+  // ── 底部签到按钮／亲手投喂台 ──
   Widget _buildCheckInButton(BuildContext context, dynamic skin) {
+    // 进化口径：累计签到天数 → 阶段＋生长基线（投喂台／庆祝同源，越养越大）。
+    final totalDays = _checkedDates.length;
+    final evoStage = MonsterIcon.stageFor(totalDays);
+    final growthBase = MonsterIcon.growthFor(totalDays);
     return Column(
       children: [
-        SizedBox(
-          width: double.infinity,
-          height: 46,
-          child: FilledButton.icon(
-            style: FilledButton.styleFrom(
-              backgroundColor: _todayChecked ? skin.divider : skin.accent,
-              foregroundColor: _todayChecked ? skin.text3 : AppColors.white100,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
+        // 亲手投喂态：按钮整体让位给投喂台（怪兽＋可拖金币）。
+        if (_feeding)
+          CoinFeedStage(
+            onFed: _onFed,
+            onAuto: _feedAuto,
+            evoStage: evoStage,
+            growthBase: growthBase,
+          ),
+        if (!_feeding)
+          SizedBox(
+            width: double.infinity,
+            height: 46,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: _todayChecked ? skin.divider : skin.accent,
+                foregroundColor: _todayChecked ? skin.text3 : AppColors.white100,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
+              ),
+              onPressed: (_todayChecked || _checking || _showSwallow) ? null : _onCheckIn,
+              // 长按金币亲手投喂（今日已签／在途不进，见 _enterFeedMode）。
+              onLongPress: _enterFeedMode,
+            // 忙态 morph：金币图标以缩放转场变为 spinner（cojeev busy 态同构），
+            // 在途拦截连点；庆祝时币已“离家”飞入兽嘴，留等大透明占位防布局跳动。
+            icon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+              child: _checking
+                  ? const SizedBox(
+                      key: ValueKey('busy'),
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white100),
+                    )
+                  : _showSwallow
+                      ? const SizedBox(key: ValueKey('launched'), width: 20, height: 20)
+                      : _todayChecked
+                          ? Icon(
+                              Icons.check_circle_outline,
+                              key: const ValueKey('done'),
+                              size: 20,
+                            )
+                          : const CoinBadge(key: ValueKey('coin'), size: 20),
             ),
-            onPressed: _todayChecked ? null : _onCheckIn,
-            icon: Icon(_todayChecked ? Icons.check_circle_outline : Icons.redeem, size: 20),
             label: Text(
-              _todayChecked ? '今日已签到，明天再来～' : '签到领 ${context.read<ScareCoinStore>().checkInReward} 尖叫币',
+              _checking
+                  ? '正在签到…'
+                  : (_todayChecked ? '今日已签到，明天再来～' : '签到领 ${context.read<ScareCoinStore>().checkInReward} 尖叫币'),
               style: TextStyle(fontSize: AppFontSizes.bodySm, fontWeight: FontWeight.w600),
             ),
           ),
         ),
+        // 投喂入口小字：仅 idle 出现，点之亦入投喂台（长按是另一入口）。
+        if (!_feeding && !_todayChecked && !_justChecked && !_checking && !_showSwallow)
+          GestureDetector(
+            onTap: _enterFeedMode,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                '长按金币，亲手投喂更香',
+                style: MwTypography.micro.copyWith(color: skin.text3),
+              ),
+            ),
+          ),
+        // 吞金币庆祝：肚皮储蓄罐，播完自清；期间旧 +N 浮层让位，避免文案重叠。
+        if (_showSwallow)
+          CoinSwallowCelebration(
+            reward: _lastReward,
+            balance: _lastBalance,
+            startAt: _tailStart,
+            evoStage: evoStage,
+            growthBase: growthBase,
+            onDone: _hideSwallow,
+          ),
         // +10 浮层：签到成功后上升淡出
         AnimatedBuilder(
           animation: _comboCtrl,
           builder: (context, _) {
-            if (!_justChecked || !_comboCtrl.isAnimating) {
+            if (!_justChecked || !_comboCtrl.isAnimating || _showSwallow) {
               return const SizedBox(height: 0);
             }
             final t = _comboCtrl.value;

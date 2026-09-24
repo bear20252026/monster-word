@@ -10,9 +10,8 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:archive/archive_io.dart' show InputFileStream, OutputFileStream;
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show visibleForTesting, debugPrint;
 import 'package:crypto/crypto.dart' show md5;
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
@@ -43,6 +42,11 @@ import 'package:word_app/models/book.dart';
 export 'package:word_app/models/definition.dart' show Definition, DefExample;
 export 'package:word_app/models/word.dart' show Word;
 export 'package:word_app/models/book.dart' show Book;
+
+// MEM/F1：77MB 资产哈希纯函数。刻意跑主 isolate 而不用 compute：
+// compute 会把 77MB 再拷贝一份过 isolate，瞬时峰值翻倍；版本指纹命中时
+// 慢路径本就跳过（仅升级/重建走一次），主线程几百 ms 可接受。
+String _md5Base64OfBytes(Uint8List bytes) => base64.encode(md5.convert(bytes).bytes);
 
 /// 词库数据库管理器（单例）
 class WordBookDatabase {
@@ -168,10 +172,12 @@ class WordBookDatabase {
     if (!versionMatches) {
       // 慢路径：真正需要比对/解压时才加载资产
       assetBytes = await loadBytes();
-      final assetHash = base64.encode(md5.convert(assetBytes).bytes);
+      final assetHash = _md5Base64OfBytes(assetBytes);
 
       if (extractedHash != assetHash || !File(dbPath).existsSync()) {
         await _extractTo(dbPath, assetBytes);
+        // MEM：解压完成立即释放 77MB 引用，后续 openDatabase/自检不再持有。
+        assetBytes = null;
         if (canPersist) {
           try {
             final prefs = await SharedPreferences.getInstance();
@@ -179,6 +185,9 @@ class WordBookDatabase {
             if (assetVersion != null) await prefs.setString(_kDbVersionKey, assetVersion);
           } catch (_) {}
         }
+      } else {
+        // MEM：哈希一致无需解压同样释放，后续 openDatabase/COUNT 自检零大对象持有。
+        assetBytes = null;
       }
     }
 
@@ -190,6 +199,7 @@ class WordBookDatabase {
       debugPrint('[WordBookDatabase] 打开失败，删除损坏库并重建: $e');
       assetBytes ??= await loadBytes();
       await _extractTo(dbPath, assetBytes);
+      assetBytes = null;
       _db = await openDatabase(dbPath, readOnly: true);
       reopened = true;
     }
@@ -213,7 +223,10 @@ class WordBookDatabase {
         if (canPersist) {
           try {
             final prefs = await SharedPreferences.getInstance();
-            final hash = base64.encode(md5.convert(assetBytes).bytes);
+            // assetBytes 已在上行释放前快照哈希：先算哈希再置空。
+            final bytesForHash = assetBytes;
+            final hash = bytesForHash == null ? '' : _md5Base64OfBytes(bytesForHash);
+            assetBytes = null;
             await prefs.setString(_kDbHashKey, hash);
             if (assetVersion != null) await prefs.setString(_kDbVersionKey, assetVersion);
           } catch (_) {}
@@ -326,7 +339,7 @@ class WordBookDatabase {
     }
 
     // 3) 从最新资产整体解压覆盖
-    final Uint8List gzBytes;
+    Uint8List? gzBytes;
     final rebuildOverride = gzBytesOverrideForTest;
     if (rebuildOverride != null) {
       gzBytes = rebuildOverride();
@@ -334,9 +347,10 @@ class WordBookDatabase {
       final data = await rootBundle.load('assets/db/wordbook.db.gz');
       gzBytes = data.buffer.asUint8List();
     }
-    final assetHash = base64.encode(md5.convert(gzBytes).bytes);
+    final assetHash = _md5Base64OfBytes(gzBytes);
     await _extractTo(dbPath, gzBytes);
-    // MEM-01：重建路径同样走流式解压（_extractTo），gz 引用随函数返回释放。
+    // MEM：解压后立即释放，openDatabase/计数不再持有 77MB。
+    gzBytes = null;
 
     // 4) 记录哈希，避免下次自动更新重复重建
     try {
