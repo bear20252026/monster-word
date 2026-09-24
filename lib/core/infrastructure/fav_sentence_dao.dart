@@ -59,6 +59,24 @@ class FavSentenceDao {
     return rows.map(_favFromRow).toList(growable: false);
   }
 
+  /// MEM/U3+分页：收藏例句总数（SQL COUNT，不加载载荷）。
+  Future<int> countAll() async {
+    await ensureLoaded();
+    if (!_useSqlite) return _cache.length;
+    final rows = await _db!.rawQuery('SELECT COUNT(*) AS n FROM favorite_sentences');
+    return (rows.single['n'] as int?) ?? 0;
+  }
+
+  /// MEM/U3+分页：按更新时间倒序分页加载（句库页窗口化，载荷不整表进内存）。
+  Future<List<FavSentenceData>> loadPage({required int limit, int offset = 0}) async {
+    await ensureLoaded();
+    if (!_useSqlite) {
+      return _cache.skip(offset).take(limit).toList(growable: false);
+    }
+    final rows = await _db!.query('favorite_sentences', orderBy: 'update_time DESC', limit: limit, offset: offset);
+    return rows.map(_favFromRow).toList(growable: false);
+  }
+
   /// MEM/U3：首次访问建同步判重索引并完成 SP → SQLite 迁移（幂等，单事务）。
   Future<void> ensureLoaded() {
     return _loading ??= _ensureLoadedInner();

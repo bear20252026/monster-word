@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
@@ -10,14 +12,30 @@ import 'package:word_app/features/learning/presentation/learning_queue_state.dar
 /// [LearningQueueSnapshot] 提供。页面与正式复习会话只读取这一专用队列快照。
 class ReviewQueueState extends ChangeNotifier {
   ReviewQueueSnapshot _snapshot = const ReviewQueueSnapshot.empty();
+  int _seq = 0;
 
   ReviewQueueSnapshot get snapshot => _snapshot;
 
   void synchronize({required LearningQueueSnapshot queue, required ReviewScheduleReader schedule}) {
+    final seq = ++_seq;
+    // t0：到期子集启动即入缓存，同步路径立即可用（复习关键路径不空转）。
     _snapshot = ReviewQueueSnapshot(
       dueWords: List.unmodifiable(schedule.dueWordsFor(queue.words)),
       queueWords: queue.words,
     );
     notifyListeners();
+    // MEM/异步化：再用 SQL 真相对账一次，消除 LRU 淘汰窗口的漏词可能。
+    unawaited(_reconcile(seq, queue, schedule));
+  }
+
+  Future<void> _reconcile(int seq, LearningQueueSnapshot queue, ReviewScheduleReader schedule) async {
+    try {
+      final due = await schedule.dueWordsForAsync(queue.words);
+      if (seq != _seq) return; // 队列已切换，丢弃过期对账
+      _snapshot = ReviewQueueSnapshot(dueWords: List.unmodifiable(due), queueWords: queue.words);
+      notifyListeners();
+    } catch (_) {
+      // 对账失败保留 t0 快照
+    }
   }
 }

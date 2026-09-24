@@ -60,6 +60,12 @@ class _StubFavRepo implements FavRepository {
   int get favoriteCount => 0;
   @override
   Future<List<Map<String, dynamic>>> getFavoriteSentences() async => [];
+
+  @override
+  Future<List<Map<String, dynamic>>> getFavoriteSentencesPage({required int limit, int offset = 0}) async => [];
+
+  @override
+  Future<int> getFavoriteSentenceCount() async => 0;
   @override
   Future<bool> addFavoriteSentence({
     required int wordId,

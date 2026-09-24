@@ -169,10 +169,39 @@ class ReviewScheduleStore {
     return rows.isEmpty ? null : _cardFromRow(rows.first);
   }
 
-  /// MEM/F3：后台补齐用分批读取（避免一次大 query 独占 UI isolate）。
-  Future<List<FsrsCard>> loadCardsBatch({required int limit, int offset = 0}) async {
-    final rows = await _db.query('fsrs_cards', limit: limit, offset: offset);
-    return rows.map(_cardFromRow).toList(growable: false);
+  /// MEM/异步化：按词批量取卡（分块 IN 查询，供词表/详情页异步读取面）。
+  /// 存在的词返回卡片，不存在的词不在返回 Map 中。
+  Future<Map<String, FsrsCard>> cardsForWords(List<String> words) async {
+    if (words.isEmpty) return {};
+    final result = <String, FsrsCard>{};
+    for (var i = 0; i < words.length; i += 500) {
+      final batch = words.sublist(i, (i + 500).clamp(0, words.length));
+      final placeholders = batch.map((_) => '?').join(',');
+      final rows = await _db.rawQuery('SELECT * FROM fsrs_cards WHERE word IN ($placeholders)', batch);
+      for (final row in rows) {
+        final card = _cardFromRow(row);
+        result[card.word] = card;
+      }
+    }
+    return result;
+  }
+
+  /// MEM/异步化：给定词中的到期词集合（SQL 真相，不依赖内存缓存状态）。
+  Future<Set<String>> dueWordTextsFor(List<String> words, DateTime now) async {
+    if (words.isEmpty) return {};
+    final due = <String>{};
+    for (var i = 0; i < words.length; i += 500) {
+      final batch = words.sublist(i, (i + 500).clamp(0, words.length));
+      final placeholders = batch.map((_) => '?').join(',');
+      final rows = await _db.rawQuery(
+        'SELECT word FROM fsrs_cards WHERE word IN ($placeholders) AND is_new = 0 AND due_date < ?',
+        [...batch, now.toIso8601String()],
+      );
+      for (final row in rows) {
+        due.add(row['word']! as String);
+      }
+    }
+    return due;
   }
 
   Future<Map<String, Map<String, int>>> loadDailyStats() async {

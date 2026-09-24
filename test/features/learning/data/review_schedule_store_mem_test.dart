@@ -1,6 +1,6 @@
 // MEM/F3：ReviewScheduleStore 按需读取层测试。
 // 覆盖 loadCounts（SQL 聚合口径）、loadDueCards（到期子集）、
-// cardForWord（单行索引查）、loadCardsBatch（后台补齐分批）。
+// cardForWord（单行索引查）、cardsForWords/dueWordTextsFor（异步读取面）。
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
@@ -87,19 +87,19 @@ void main() {
       expect(await store.cardForWord('unknown'), isNull);
     });
 
-    test('loadCardsBatch 按 limit/offset 分批且拼回全量', () async {
+    test('cardsForWords 分块 IN 查询：存在的词返回卡，缺失的词不在 Map', () async {
       final now = DateTime.now();
       final cards = [for (var i = 0; i < 7; i++) card('w$i', isNew: false, dueDate: now)];
       await store.insertCardsInTransaction(cards);
 
-      final page0 = await store.loadCardsBatch(limit: 3, offset: 0);
-      final page1 = await store.loadCardsBatch(limit: 3, offset: 3);
-      final page2 = await store.loadCardsBatch(limit: 3, offset: 6);
+      final fetched = await store.cardsForWords(['w0', 'w3', 'w6', 'missing']);
+      expect(fetched.keys, containsAll(['w0', 'w3', 'w6']));
+      expect(fetched, isNot(contains('missing')));
+      expect(fetched['w3']?.word, 'w3');
 
-      expect(page0.length, 3);
-      expect(page1.length, 3);
-      expect(page2.length, 1);
-      expect({...page0, ...page1, ...page2}.map((c) => c.word), containsAll(['w0', 'w6']));
+      // dueDate == now 不算到期（isBefore 语义），用次日口径查询使种子卡全部到期
+      final due = await store.dueWordTextsFor(['w0', 'w6', 'missing'], now.add(const Duration(days: 1)));
+      expect(due, {'w0', 'w6'});
     });
   });
 }

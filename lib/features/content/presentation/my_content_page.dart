@@ -16,7 +16,6 @@ import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
 import 'package:word_app/features/word_browse/application/word_notes_store.dart';
 import 'package:word_app/models/book.dart';
-import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/func_colors.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -131,13 +130,14 @@ class _CollectionsListGroup extends StatelessWidget {
           ),
         ),
         // 句库：异步统计收藏例句数，点击进入句库页。
-        FutureBuilder<List<FavSentenceData>>(
-          future: context.read<SentenceFavoritesStore>().list(),
+        // MEM/U3+分页：计数走 COUNT 口径，不再整表拉载荷只为显示数字。
+        FutureBuilder<int>(
+          future: context.read<SentenceFavoritesStore>().count(),
           builder: (context, snap) => _ListItem(
             icon: Icons.format_quote,
             iconColor: FuncColors.info,
             title: '句库',
-            value: '${snap.data?.length ?? 0} 句',
+            value: '${snap.data ?? 0} 句',
             skin: skin,
             onTap: () => Navigator.pushNamed(context, RouteNames.myFavSentence),
           ),

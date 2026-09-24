@@ -1,6 +1,7 @@
 // 字典详情页 - FSRS 记忆预测区块（从 word_detail_page.dart 拆出）
 import 'package:flutter/material.dart';
 
+import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -8,16 +9,53 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/mw_card.dart';
 
 /// FSRS 记忆预测卡片（从 word_detail_page.dart 拆出）
-class FsrsPredictionCard extends StatelessWidget {
+///
+/// MEM/异步化：改为经 [ReviewScheduleReader.cardsForWords] 异步取卡——
+/// 详情页词不受同步 LRU 缓存淘汰/读穿窗口影响，答案确定。
+class FsrsPredictionCard extends StatefulWidget {
   final ReviewScheduleReader schedule;
   final Word word;
 
   const FsrsPredictionCard({super.key, required this.schedule, required this.word});
 
   @override
+  State<FsrsPredictionCard> createState() => _FsrsPredictionCardState();
+}
+
+class _FsrsPredictionCardState extends State<FsrsPredictionCard> {
+  Future<Map<String, FsrsCard?>>? _cardFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant FsrsPredictionCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.word.word != widget.word.word || oldWidget.schedule != widget.schedule) {
+      _load();
+    }
+  }
+
+  void _load() {
+    _cardFuture = widget.schedule.cardsForWords([widget.word.word]);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    final card = schedule.cardFor(word.word);
+    return FutureBuilder<Map<String, FsrsCard?>>(
+      future: _cardFuture,
+      builder: (context, snap) {
+        final card = snap.data?[widget.word.word];
+        return _buildBody(context, skin, card);
+      },
+    );
+  }
+
+  Widget _buildBody(BuildContext context, SkinSystem skin, FsrsCard? card) {
     if (card == null || card.isNew) {
       return MwCard(
         padding: EdgeInsets.all(16),
@@ -32,8 +70,7 @@ class FsrsPredictionCard extends StatelessWidget {
         ),
       );
     }
-    final prediction = schedule.cardFor(word.word);
-    if (prediction == null) return const SizedBox.shrink();
+    final prediction = card;
     final r = prediction.stability;
     final statusColor = r < 3
         ? context.skin.colors.danger

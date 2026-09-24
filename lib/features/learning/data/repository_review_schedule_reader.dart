@@ -40,6 +40,12 @@ class RepositoryReviewScheduleReader extends ReviewScheduleReader {
   List<Word> dueWordsFor(Iterable<Word> words) => _repository.dueWordsFor(words);
 
   @override
+  Future<Map<String, FsrsCard?>> cardsForWords(Iterable<String> wordTexts) => _repository.cardsForWords(wordTexts);
+
+  @override
+  Future<List<Word>> dueWordsForAsync(Iterable<Word> words) => _repository.dueWordsForAsync(words);
+
+  @override
   void dispose() {
     _repository.removeListener(notifyListeners);
     super.dispose();
