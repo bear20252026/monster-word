@@ -62,11 +62,7 @@ class _TodayHeroCard extends StatelessWidget {
                         behavior: HitTestBehavior.opaque,
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.warning_amber_rounded,
-                              size: 14 * resp.fontScale,
-                              color: FuncColors.warning,
-                            ),
+                            Icon(Icons.warning_amber_rounded, size: 14 * resp.fontScale, color: FuncColors.warning),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(

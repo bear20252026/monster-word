@@ -219,14 +219,13 @@ class WordBookDatabase {
         _db = null;
         assetBytes ??= await loadBytes();
         await _extractTo(dbPath, assetBytes);
+        // MEM：解压完成立即哈希并释放 77MB 引用，openDatabase/持久化不再持有。
+        final hash = _md5Base64OfBytes(assetBytes);
+        assetBytes = null;
         _db = await openDatabase(dbPath, readOnly: true);
         if (canPersist) {
           try {
             final prefs = await SharedPreferences.getInstance();
-            // assetBytes 已在上行释放前快照哈希：先算哈希再置空。
-            final bytesForHash = assetBytes;
-            final hash = bytesForHash == null ? '' : _md5Base64OfBytes(bytesForHash);
-            assetBytes = null;
             await prefs.setString(_kDbHashKey, hash);
             if (assetVersion != null) await prefs.setString(_kDbVersionKey, assetVersion);
           } catch (_) {}

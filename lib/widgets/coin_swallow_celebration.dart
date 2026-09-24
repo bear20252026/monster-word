@@ -5,7 +5,6 @@
 // ④满足（星芒迸发、欢腾一跃、+N 上浮）。吞＝存一眼闭环。
 // 播完经 onDone 自清，不常驻、不持有静态单例（MEM 无残留）。
 import 'dart:math' as math;
-import 'dart:ui' show FontFeature;
 
 import 'package:flutter/material.dart';
 
@@ -147,104 +146,100 @@ class _CoinSwallowCelebrationState extends State<CoinSwallowCelebration> with Si
               if (_ctrl.status == AnimationStatus.forward) _ctrl.value = 1.0;
             },
             child: Stack(
-            // 币从盒顶上方（按钮中心）射入，需溢出绘制。
-            clipBehavior: Clip.none,
-            alignment: Alignment.topCenter,
-            children: [
-              // 舞台柔光：签到时刻的追光
-              Positioned(
-                top: _kMonsterTop - 46,
-                child: Container(
-                  width: 216,
-                  height: 216,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [accent.withValues(alpha: 0.14), accent.withValues(alpha: 0.0)],
+              // 币从盒顶上方（按钮中心）射入，需溢出绘制。
+              clipBehavior: Clip.none,
+              alignment: Alignment.topCenter,
+              children: [
+                // 舞台柔光：签到时刻的追光
+                Positioned(
+                  top: _kMonsterTop - 46,
+                  child: Container(
+                    width: 216,
+                    height: 216,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(colors: [accent.withValues(alpha: 0.14), accent.withValues(alpha: 0.0)]),
                     ),
                   ),
                 ),
-              ),
-              // 粒子层：尾迹／咕咚波纹／沉底光点／星芒／肚皮辉光
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _VaultFxPainter(
-                    fallEase: fallEase,
-                    fallT: fallT,
-                    gulpT: gulpT,
-                    sinkT: sinkT,
-                    burstT: burstT,
-                    storeGlow: _easeOutCubic(storeT) *
-                        (1 - burstT * 0.4) *
-                        // 心跳：辉光在存款段起伏一次
-                        (0.8 + 0.2 * math.sin(_seg(t, 0.46, 0.70) * math.pi * 2).abs()),
-                    gold: MwColors.sunshine300,
-                    accent: accent,
-                    white: AppColors.white100,
-                  ),
-                ),
-              ),
-              // 怪兽（置底居中，欢腾时上跃；进化形态＋生长基线来自累计签到）
-              Positioned(
-                bottom: hopY,
-                child: Transform.scale(
-                  scaleX: sx,
-                  scaleY: sy,
-                  child: MonsterIcon(
-                    size: _kMonster,
-                    mouthOpen: mouthOpen,
-                    bellyScale: (bellyScale * widget.growthBase).clamp(0.6, 1.8),
-                    evoStage: widget.evoStage,
-                  ),
-                ),
-              ),
-              // 下坠金币（从按钮中心射出）
-              if (coinOpacity > 0)
-                Positioned(
-                  top: coinTop,
-                  child: Opacity(
-                    opacity: coinOpacity,
-                    child: Transform.scale(
-                      scale: coinScale,
-                      child: Transform.rotate(angle: fallEase * 0.5, child: const CoinBadge()),
+                // 粒子层：尾迹／咕咚波纹／沉底光点／星芒／肚皮辉光
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _VaultFxPainter(
+                      fallEase: fallEase,
+                      fallT: fallT,
+                      gulpT: gulpT,
+                      sinkT: sinkT,
+                      burstT: burstT,
+                      storeGlow:
+                          _easeOutCubic(storeT) *
+                          (1 - burstT * 0.4) *
+                          // 心跳：辉光在存款段起伏一次
+                          (0.8 + 0.2 * math.sin(_seg(t, 0.46, 0.70) * math.pi * 2).abs()),
+                      gold: MwColors.sunshine300,
+                      accent: accent,
+                      white: AppColors.white100,
                     ),
                   ),
                 ),
-              // 肚皮金库窗：余额滚动到最新（弹出同时上浮 10px，防贴肚）
-              if (vaultScale > 0.01)
+                // 怪兽（置底居中，欢腾时上跃；进化形态＋生长基线来自累计签到）
                 Positioned(
-                  bottom: 12 + 10 * (1 - vaultScale.clamp(0.0, 1.0)),
+                  bottom: hopY,
                   child: Transform.scale(
-                    scale: vaultScale.clamp(0.0, 1.15),
-                    child: _VaultBadge(amountText: _fmt(shown)),
+                    scaleX: sx,
+                    scaleY: sy,
+                    child: MonsterIcon(
+                      size: _kMonster,
+                      mouthOpen: mouthOpen,
+                      bellyScale: (bellyScale * widget.growthBase).clamp(0.6, 1.8),
+                      evoStage: widget.evoStage,
+                    ),
                   ),
                 ),
-              // +N 上浮（兽头顶，避免与金库窗重叠）
-              if (plusT > 0 && plusT < 1)
-                Positioned(
-                  bottom: 128 - 40 * rise,
-                  child: Opacity(
-                    opacity: 1 - plusT,
-                    child: Transform.scale(
-                      scale: plusScale,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '+${widget.reward}',
-                            style: MwTypography.heading4.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: skin.success,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          MonsterIcon(size: 24, bodyColor: skin.success),
-                        ],
+                // 下坠金币（从按钮中心射出）
+                if (coinOpacity > 0)
+                  Positioned(
+                    top: coinTop,
+                    child: Opacity(
+                      opacity: coinOpacity,
+                      child: Transform.scale(
+                        scale: coinScale,
+                        child: Transform.rotate(angle: fallEase * 0.5, child: const CoinBadge()),
                       ),
                     ),
                   ),
-                ),
-            ],
+                // 肚皮金库窗：余额滚动到最新（弹出同时上浮 10px，防贴肚）
+                if (vaultScale > 0.01)
+                  Positioned(
+                    bottom: 12 + 10 * (1 - vaultScale.clamp(0.0, 1.0)),
+                    child: Transform.scale(
+                      scale: vaultScale.clamp(0.0, 1.15),
+                      child: _VaultBadge(amountText: _fmt(shown)),
+                    ),
+                  ),
+                // +N 上浮（兽头顶，避免与金库窗重叠）
+                if (plusT > 0 && plusT < 1)
+                  Positioned(
+                    bottom: 128 - 40 * rise,
+                    child: Opacity(
+                      opacity: 1 - plusT,
+                      child: Transform.scale(
+                        scale: plusScale,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '+${widget.reward}',
+                              style: MwTypography.heading4.copyWith(fontWeight: FontWeight.w900, color: skin.success),
+                            ),
+                            const SizedBox(width: 4),
+                            MonsterIcon(size: 24, bodyColor: skin.success),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           );
         },
@@ -306,14 +301,10 @@ class _VaultBadge extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: AppColors.white100.withValues(alpha: 0.96),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(context.design.radius.lg),
             border: Border.all(color: MwColors.sunshine300, width: 2),
             boxShadow: [
-              BoxShadow(
-                color: MwColors.sunshine300.withValues(alpha: 0.5),
-                blurRadius: 14,
-                offset: const Offset(0, 4),
-              ),
+              BoxShadow(color: MwColors.sunshine300.withValues(alpha: 0.5), blurRadius: 14, offset: const Offset(0, 4)),
             ],
           ),
           child: Stack(
@@ -328,10 +319,7 @@ class _VaultBadge extends StatelessWidget {
                       const SizedBox(width: 3),
                       Text(
                         '肚皮金库',
-                        style: MwTypography.micro.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: StarGold.bronzeDark,
-                        ),
+                        style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: StarGold.bronzeDark),
                       ),
                     ],
                   ),
@@ -352,16 +340,13 @@ class _VaultBadge extends StatelessWidget {
               // 静态对角 sheen：奶油窗上的贵价反光，零动画成本（禁裸色值，走 token）。
               Positioned.fill(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(context.design.radius.control),
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.center,
-                        colors: [
-                          AppColors.white100.withValues(alpha: 0.35),
-                          AppColors.white100.withValues(alpha: 0.0),
-                        ],
+                        colors: [AppColors.white100.withValues(alpha: 0.35), AppColors.white100.withValues(alpha: 0.0)],
                       ),
                     ),
                   ),
@@ -447,7 +432,10 @@ class _VaultFxPainter extends CustomPainter {
         r,
         Paint()
           ..shader = RadialGradient(
-            colors: [gold.withValues(alpha: 0.30 * storeGlow), gold.withValues(alpha: 0.0)],
+            colors: [
+              gold.withValues(alpha: 0.30 * storeGlow),
+              gold.withValues(alpha: 0.0),
+            ],
           ).createShader(rect),
       );
     }

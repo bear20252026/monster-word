@@ -274,9 +274,24 @@ class ShareImageService {
     canvas.drawLine(Offset(width * 0.1, height * 0.25), Offset(width * 0.9, height * 0.25), linePaint);
 
     // === 标题 ===
-    _drawText(canvas, '今日战报', width / 2, height * 0.12, fontSize: 84, color: AppColors.white100, fontWeight: FontWeight.bold);
+    _drawText(
+      canvas,
+      '今日战报',
+      width / 2,
+      height * 0.12,
+      fontSize: 84,
+      color: AppColors.white100,
+      fontWeight: FontWeight.bold,
+    );
 
-    _drawText(canvas, 'Monster Word · 背单词有态度', width / 2, height * 0.18, fontSize: 34, color: StarbucksCreamColors.vipGoldBg);
+    _drawText(
+      canvas,
+      'Monster Word · 背单词有态度',
+      width / 2,
+      height * 0.18,
+      fontSize: 34,
+      color: StarbucksCreamColors.vipGoldBg,
+    );
 
     // === 战报卡片（4 张 compact）===
     const cardHeight = 200.0;

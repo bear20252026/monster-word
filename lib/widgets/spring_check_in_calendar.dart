@@ -357,13 +357,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
     return Column(
       children: [
         // 亲手投喂态：按钮整体让位给投喂台（怪兽＋可拖金币）。
-        if (_feeding)
-          CoinFeedStage(
-            onFed: _onFed,
-            onAuto: _feedAuto,
-            evoStage: evoStage,
-            growthBase: growthBase,
-          ),
+        if (_feeding) CoinFeedStage(onFed: _onFed, onAuto: _feedAuto, evoStage: evoStage, growthBase: growthBase),
         if (!_feeding)
           SizedBox(
             width: double.infinity,
@@ -377,36 +371,32 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
               onPressed: (_todayChecked || _checking || _showSwallow) ? null : _onCheckIn,
               // 长按金币亲手投喂（今日已签／在途不进，见 _enterFeedMode）。
               onLongPress: _enterFeedMode,
-            // 忙态 morph：金币图标以缩放转场变为 spinner（cojeev busy 态同构），
-            // 在途拦截连点；庆祝时币已“离家”飞入兽嘴，留等大透明占位防布局跳动。
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-              child: _checking
-                  ? const SizedBox(
-                      key: ValueKey('busy'),
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white100),
-                    )
-                  : _showSwallow
-                      ? const SizedBox(key: ValueKey('launched'), width: 20, height: 20)
-                      : _todayChecked
-                          ? Icon(
-                              Icons.check_circle_outline,
-                              key: const ValueKey('done'),
-                              size: 20,
-                            )
-                          : const CoinBadge(key: ValueKey('coin'), size: 20),
-            ),
-            label: Text(
-              _checking
-                  ? '正在签到…'
-                  : (_todayChecked ? '今日已签到，明天再来～' : '签到领 ${context.read<ScareCoinStore>().checkInReward} 尖叫币'),
-              style: TextStyle(fontSize: AppFontSizes.bodySm, fontWeight: FontWeight.w600),
+              // 忙态 morph：金币图标以缩放转场变为 spinner（cojeev busy 态同构），
+              // 在途拦截连点；庆祝时币已“离家”飞入兽嘴，留等大透明占位防布局跳动。
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                child: _checking
+                    ? const SizedBox(
+                        key: ValueKey('busy'),
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white100),
+                      )
+                    : _showSwallow
+                    ? const SizedBox(key: ValueKey('launched'), width: 20, height: 20)
+                    : _todayChecked
+                    ? Icon(Icons.check_circle_outline, key: const ValueKey('done'), size: 20)
+                    : const CoinBadge(key: ValueKey('coin'), size: 20),
+              ),
+              label: Text(
+                _checking
+                    ? '正在签到…'
+                    : (_todayChecked ? '今日已签到，明天再来～' : '签到领 ${context.read<ScareCoinStore>().checkInReward} 尖叫币'),
+                style: TextStyle(fontSize: AppFontSizes.bodySm, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
-        ),
         // 投喂入口小字：仅 idle 出现，点之亦入投喂台（长按是另一入口）。
         if (!_feeding && !_todayChecked && !_justChecked && !_checking && !_showSwallow)
           GestureDetector(
@@ -414,10 +404,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
             behavior: HitTestBehavior.opaque,
             child: Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                '长按金币，亲手投喂更香',
-                style: MwTypography.micro.copyWith(color: skin.text3),
-              ),
+              child: Text('长按金币，亲手投喂更香', style: MwTypography.micro.copyWith(color: skin.text3)),
             ),
           ),
         // 吞金币庆祝：肚皮储蓄罐，播完自清；期间旧 +N 浮层让位，避免文案重叠。
