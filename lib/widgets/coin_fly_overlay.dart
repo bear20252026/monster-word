@@ -10,12 +10,7 @@ import 'package:word_app/widgets/coin_swallow_celebration.dart' show CoinBadge;
 
 class CoinFlyOverlay {
   /// 播放一次飞行（650ms）。from/to 均为全局坐标。
-  static void play(
-    BuildContext context, {
-    required Offset from,
-    required Offset to,
-    required VoidCallback onArrive,
-  }) {
+  static void play(BuildContext context, {required Offset from, required Offset to, required VoidCallback onArrive}) {
     final overlay = Overlay.of(context);
     var done = false;
     late OverlayEntry entry;
@@ -77,10 +72,7 @@ class _FlyCoinState extends State<_FlyCoin> with SingleTickerProviderStateMixin 
 
   static Offset _bezier(Offset p0, Offset p1, Offset p2, double t) {
     final u = 1 - t;
-    return Offset(
-      u * u * p0.dx + 2 * u * t * p1.dx + t * t * p2.dx,
-      u * u * p0.dy + 2 * u * t * p1.dy + t * t * p2.dy,
-    );
+    return Offset(u * u * p0.dx + 2 * u * t * p1.dx + t * t * p2.dx, u * u * p0.dy + 2 * u * t * p1.dy + t * t * p2.dy);
   }
 
   @override

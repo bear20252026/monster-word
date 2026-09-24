@@ -113,8 +113,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       return;
     }
     if (_protectionStock >= store.protectionCap) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('保护卡已满（${store.protectionCap} 张），用掉再来兑换吧！')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('保护卡已满（${store.protectionCap} 张），用掉再来兑换吧！')));
       return;
     }
     setState(() => _redeeming = true);

@@ -24,19 +24,13 @@ class CoinFeedStage extends StatefulWidget {
   final int evoStage;
   final double growthBase;
 
-  const CoinFeedStage({
-    super.key,
-    required this.onFed,
-    required this.onAuto,
-    this.evoStage = 0,
-    this.growthBase = 1.0,
-  });
+  const CoinFeedStage({super.key, required this.onFed, required this.onAuto, this.evoStage = 0, this.growthBase = 1.0});
 
   @override
   State<CoinFeedStage> createState() => _CoinFeedStageState();
 }
 
-class _CoinFeedStageState extends State<CoinFeedStage> with SingleTickerProviderStateMixin {
+class _CoinFeedStageState extends State<CoinFeedStage> with TickerProviderStateMixin {
   static const _boxH = 250.0;
   static const _monster = 110.0;
   static const _coinSize = 36.0;
@@ -91,7 +85,8 @@ class _CoinFeedStageState extends State<CoinFeedStage> with SingleTickerProvider
     if (_fed || !_dragging) return;
     var next = _coin! + d.delta;
     next = Offset(next.dx.clamp(0.0, w - _coinSize), next.dy.clamp(0.0, _boxH - _coinSize));
-    final dist = Offset(next.dx + _coinSize / 2, next.dy + _coinSize / 2).distanceTo(_mouthOf(w));
+    final coinCenter = Offset(next.dx + _coinSize / 2, next.dy + _coinSize / 2);
+    final dist = (coinCenter - _mouthOf(w)).distance;
     setState(() {
       _coin = next;
       _near = dist < _magnetR;
@@ -103,7 +98,7 @@ class _CoinFeedStageState extends State<CoinFeedStage> with SingleTickerProvider
   void _onPanEnd(DragEndDetails _, double w) {
     if (_fed) return;
     setState(() => _dragging = false);
-    if (_coinCenter().distanceTo(_mouthOf(w)) < _dropR) {
+    if ((_coinCenter() - _mouthOf(w)).distance < _dropR) {
       _fireFed();
       return;
     }
@@ -156,10 +151,7 @@ class _CoinFeedStageState extends State<CoinFeedStage> with SingleTickerProvider
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          _fed ? '啊呜，正在品尝…' : '拖住金币，喂进小怪兽嘴里',
-                          style: MwTypography.micro.copyWith(color: skin.text2),
-                        ),
+                        Text(_fed ? '啊呜，正在品尝…' : '拖住金币，喂进小怪兽嘴里', style: MwTypography.micro.copyWith(color: skin.text2)),
                         if (!_fed)
                           TextButton(
                             onPressed: widget.onAuto,
@@ -169,10 +161,7 @@ class _CoinFeedStageState extends State<CoinFeedStage> with SingleTickerProvider
                             ),
                             child: Text(
                               '直接签到',
-                              style: MwTypography.micro.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: skin.accent,
-                              ),
+                              style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: skin.accent),
                             ),
                           ),
                       ],
@@ -188,10 +177,7 @@ class _CoinFeedStageState extends State<CoinFeedStage> with SingleTickerProvider
                         height: ringR * 2,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: MwColors.sunshine300.withValues(alpha: 0.8),
-                            width: 2.5,
-                          ),
+                          border: Border.all(color: MwColors.sunshine300.withValues(alpha: 0.8), width: 2.5),
                         ),
                       ),
                     ),

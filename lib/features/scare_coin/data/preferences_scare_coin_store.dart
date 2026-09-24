@@ -165,10 +165,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     await prefs.setStringList(checkinDatesKey, dates.toList()..sort());
     count -= backfill.length;
     await prefs.setInt(protectionKey, count);
-    await _insertHistory(
-      prefs,
-      ScareCoinEntry(time: now, delta: 0, reason: '断签保护·自动续命×${backfill.length}'),
-    );
+    await _insertHistory(prefs, ScareCoinEntry(time: now, delta: 0, reason: '断签保护·自动续命×${backfill.length}'));
   }
 
   /// 连签 7 倍数发卡（去重标记防重复领，满额只标记不发放）。
@@ -181,10 +178,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     final count = prefs.getInt(protectionKey) ?? 0;
     if (count >= protectionCapValue) return;
     await prefs.setInt(protectionKey, count + 1);
-    await _insertHistory(
-      prefs,
-      ScareCoinEntry(time: DateTime.now(), delta: 0, reason: '连签$newStreak天·保护卡＋1'),
-    );
+    await _insertHistory(prefs, ScareCoinEntry(time: DateTime.now(), delta: 0, reason: '连签$newStreak天·保护卡＋1'));
   }
 
   /// 零币变动也记账（发卡／续命审计），复用 200 条截断口径。
@@ -193,9 +187,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     final raw = prefs.getString(historyKey);
     if (raw != null && raw.isNotEmpty) {
       try {
-        entries = (jsonDecode(raw) as List)
-            .map((e) => ScareCoinEntry.fromJson(e as Map<String, dynamic>))
-            .toList();
+        entries = (jsonDecode(raw) as List).map((e) => ScareCoinEntry.fromJson(e as Map<String, dynamic>)).toList();
       } catch (_) {}
     }
     entries.insert(0, entry);

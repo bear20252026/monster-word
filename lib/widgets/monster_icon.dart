@@ -39,7 +39,13 @@ class MonsterIcon extends StatelessWidget {
   });
 
   /// 累计签到天数 → 进化阶段（0/7/30/100）。
-  static int stageFor(int totalDays) => totalDays >= 100 ? 3 : totalDays >= 30 ? 2 : totalDays >= 7 ? 1 : 0;
+  static int stageFor(int totalDays) => totalDays >= 100
+      ? 3
+      : totalDays >= 30
+      ? 2
+      : totalDays >= 7
+      ? 1
+      : 0;
 
   /// 阶段名（展示＋专利延续案统一口径）。
   static String stageName(int stage) => const ['奶泡', '尖角', '飞翼', '金冠'][stage.clamp(0, 3)];
@@ -233,11 +239,7 @@ class _MonsterPainter extends CustomPainter {
           ..style = PaintingStyle.fill,
       );
       canvas.drawOval(
-        Rect.fromCenter(
-          center: Offset(cx, cy + r * 0.22 + openH * 0.22),
-          width: openW * 0.55,
-          height: openH * 0.45,
-        ),
+        Rect.fromCenter(center: Offset(cx, cy + r * 0.22 + openH * 0.22), width: openW * 0.55, height: openH * 0.45),
         Paint()
           ..color = MonsterPalette.tongue
           ..style = PaintingStyle.fill,
@@ -309,7 +311,9 @@ class MonsterAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(color: bgColor ?? skin.colors.accent.withValues(alpha: 0.12), shape: BoxShape.circle),
-      child: Center(child: MonsterIcon(size: size * 0.72, evoStage: evoStage)),
+      child: Center(
+        child: MonsterIcon(size: size * 0.72, evoStage: evoStage),
+      ),
     );
   }
 }
