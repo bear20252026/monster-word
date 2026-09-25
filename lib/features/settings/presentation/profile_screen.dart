@@ -124,22 +124,34 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
 
   late final AnimationController _hopCtrl = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 600),
+    duration: const Duration(milliseconds: 620),
   );
   late final AnimationController _blinkCtrl = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 180),
+    duration: const Duration(milliseconds: 420),
+  );
+  // 待机呼吸相位（3.2s 一循环，repeat 驱动胸腔起伏）
+  late final AnimationController _idleCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 3200),
   );
   Timer? _blinkTimer;
+  int _blinkRound = 0;
+
+  /// 眨眼序列：快闭 → 缓开并轻微睁大回弹（旧版线性闭合后会停在闭眼 3.2s，观感差）。
+  static final Animatable<double> _blinkSeq = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeIn)), weight: 34),
+    TweenSequenceItem(tween: Tween(begin: 1.0, end: -0.06).chain(CurveTween(curve: Curves.easeOutCubic)), weight: 44),
+    TweenSequenceItem(tween: Tween(begin: -0.06, end: 0.0).chain(CurveTween(curve: Curves.easeOut)), weight: 22),
+  ]);
 
   @override
   void initState() {
     super.initState();
     _loadBalance();
     if (!_reduceMotion) {
-      _blinkTimer = Timer.periodic(const Duration(milliseconds: 3400), (_) {
-        _blinkCtrl.forward(from: 0);
-      });
+      _idleCtrl.repeat();
+      _blinkTimer = Timer.periodic(const Duration(milliseconds: 3400), (_) => _runBlink());
     }
   }
 
@@ -148,7 +160,16 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
     _blinkTimer?.cancel();
     _hopCtrl.dispose();
     _blinkCtrl.dispose();
+    _idleCtrl.dispose();
     super.dispose();
+  }
+
+  void _runBlink() {
+    _blinkRound++;
+    _blinkCtrl.forward(from: 0).whenComplete(() {
+      // 每第 4 轮补一次快速双眨，更像活物。
+      if (mounted && _blinkRound % 4 == 0) _blinkCtrl.forward(from: 0);
+    });
   }
 
   Future<void> _loadBalance() async {
@@ -270,34 +291,27 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     final profile = context.watch<AccountProfileState>();
-    return MouseRegion(
-      onHover: (e) => _onPointerHover(e, const Offset(195, 430)),
-      child: Container(
-        // 暖纸固定底（与小屋家族同源，不随明暗主题切换）
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [TreasurePalette.paperTop, TreasurePalette.paper, TreasurePalette.paperBottom],
-            stops: [0, 0.55, 1],
-          ),
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final w = constraints.maxWidth.clamp(0.0, 460.0);
-            return Center(
-              child: SizedBox(width: w, child: _buildRoom(context, profile)),
-            );
-          },
+    return Container(
+      // 暖纸固定底（与小屋家族同源，不随明暗主题切换）
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [TreasurePalette.paperTop, TreasurePalette.paper, TreasurePalette.paperBottom],
+          stops: [0, 0.55, 1],
         ),
       ),
+      child: _buildRoom(context, profile),
     );
   }
 
   Widget _buildRoom(BuildContext context, AccountProfileState profile) {
     return Column(
       children: [
-        _buildDoorplate(profile),
+        // 门牌在宽屏下限宽居中，与舞台同轴
+        Center(
+          child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 560), child: _buildDoorplate(profile)),
+        ),
         Expanded(child: _buildStage()),
       ],
     );
@@ -405,147 +419,196 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   }
 
   // ── 房间舞台 ──
+  //
+  // 自适应策略：舞台使用固定逻辑尺寸（460×560）设计构图，通过 FittedBox
+  // 等比缩放居中适配任意屏幕——手机窄屏整幅缩放铺满，桌面宽屏呈现为
+  // 居中的「立体小盒子」相框，物件比例与构图在所有设备保持一致，永不溢出。
   Widget _buildStage() {
-    return LayoutBuilder(
-      builder: (context, box) {
-        final w = box.maxWidth, h = box.maxHeight;
-        Widget obj(String key, {double? left, double? top, double? right, double? bottom, required Widget child}) {
-          final active = _activeKey == key;
-          return Positioned(
-            left: left,
-            right: right,
-            top: top,
-            bottom: bottom,
-            child: Semantics(
-              label: _RoomObjects.specs[key]!.label,
-              button: true,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => _openObject(key),
-                child: AnimatedScale(
-                  scale: active ? 1.06 : 1.0,
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutBack,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      child,
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: TreasurePalette.card,
-                          borderRadius: BorderRadius.circular(AppRadius.pill),
-                          border: Border.all(
-                            color: active ? TreasurePalette.green.withValues(alpha: 0.4) : TreasurePalette.line,
-                          ),
-                        ),
-                        child: Text(
-                          _RoomObjects.specs[key]!.label,
-                          style: MwTypography.micro.copyWith(
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.4,
-                            color: active ? TreasurePalette.green : TreasurePalette.dim,
-                          ),
-                        ),
+    const stageW = 460.0, stageH = 560.0;
+    Widget obj(String key, {double? left, double? top, double? right, double? bottom, required Widget child}) {
+      final active = _activeKey == key;
+      return Positioned(
+        left: left,
+        right: right,
+        top: top,
+        bottom: bottom,
+        child: Semantics(
+          label: _RoomObjects.specs[key]!.label,
+          button: true,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _openObject(key),
+            child: AnimatedScale(
+              scale: active ? 1.06 : 1.0,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutBack,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  child,
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: TreasurePalette.card,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(
+                        color: active ? TreasurePalette.green.withValues(alpha: 0.4) : TreasurePalette.line,
                       ),
-                    ],
+                    ),
+                    child: Text(
+                      _RoomObjects.specs[key]!.label,
+                      style: MwTypography.micro.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
+                        color: active ? TreasurePalette.green : TreasurePalette.dim,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final stage = MouseRegion(
+      // 瞳孔跟随：localPosition 已映射到舞台逻辑坐标
+      onHover: (e) => _onPointerHover(e, Offset(stageW / 2, stageH - stageH * 0.035 - 59)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: TreasurePalette.line),
+          boxShadow: const [BoxShadow(color: TreasurePalette.pillShadow, blurRadius: 24, offset: Offset(0, 10))],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // 墙 + 地板（舞台内满铺）
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                height: stageH * 0.66,
+                child: ColoredBox(color: TreasurePalette.paperTop),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: stageH * 0.34,
+                child: ColoredBox(color: TreasurePalette.paperBottom),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: stageH * 0.34,
+                child: Container(height: 2, color: TreasurePalette.line),
+              ),
+              // 家具物件
+              obj(
+                'equip',
+                left: stageW * 0.05,
+                top: stageH * 0.03,
+                child: CustomPaint(size: const Size(128, 64), painter: _ShelfPainter()),
+              ),
+              obj(
+                'scene',
+                right: stageW * 0.05,
+                top: stageH * 0.025,
+                child: CustomPaint(
+                  size: const Size(118, 92),
+                  painter: _WindowPainter(sceneIdx: _sceneIdx),
+                ),
+              ),
+              obj(
+                'learn',
+                left: stageW * 0.06,
+                top: stageH * 0.30,
+                child: CustomPaint(size: const Size(150, 118), painter: _DeskPainter()),
+              ),
+              obj(
+                'stereo',
+                right: stageW * 0.06,
+                top: stageH * 0.32,
+                child: CustomPaint(size: const Size(118, 100), painter: _PlayerPainter()),
+              ),
+              obj(
+                'content',
+                left: stageW * 0.06,
+                bottom: stageH * 0.21,
+                child: CustomPaint(size: const Size(104, 84), painter: _BookshelfPainter()),
+              ),
+              obj(
+                'tracks',
+                left: stageW / 2 - 74,
+                bottom: stageH * 0.05,
+                child: CustomPaint(size: const Size(148, 56), painter: _RugPainter()),
+              ),
+              obj(
+                'more',
+                right: stageW * 0.05,
+                bottom: stageH * 0.075,
+                child: CustomPaint(size: const Size(86, 62), painter: _ToolboxPainter()),
+              ),
+              obj(
+                'coin',
+                right: stageW * 0.09,
+                bottom: stageH * 0.26,
+                child: CustomPaint(size: const Size(76, 46), painter: _RoomPiggyPainter()),
+              ),
+              // 房主（爪印地毯上）：跳跃 + 挤压拉伸 + 待机呼吸
+              Positioned(
+                left: stageW / 2 - 58,
+                bottom: stageH * 0.035,
+                child: AnimatedBuilder(
+                  animation: Listenable.merge([_hopCtrl, _blinkCtrl, _idleCtrl]),
+                  builder: (context, child) {
+                    final air = _reduceMotion ? 0.0 : math.sin(math.pi * _hopCtrl.value);
+                    final breathe = _reduceMotion ? 0.0 : math.sin(2 * math.pi * _idleCtrl.value);
+                    // 跳起拉伸（纵向拉长横向收窄），落地恢复；呼吸叠加微小起伏
+                    final sy = (1 + 0.12 * air) * (1 + 0.015 * breathe);
+                    final sx = (1 - 0.10 * air) * (1 - 0.01 * breathe);
+                    return Transform.translate(
+                      offset: Offset(0, -16 * air),
+                      child: Transform(
+                        transform: Matrix4.diagonal3Values(sx.toDouble(), sy.toDouble(), 1),
+                        alignment: Alignment.bottomCenter,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: CustomPaint(
+                    size: const Size(116, 118),
+                    painter: _RoomMonsterPainter(
+                      pupilOffset: _pupilOffset,
+                      blink: _reduceMotion ? 0 : _blinkSeq.evaluate(_blinkCtrl),
+                      hop: _reduceMotion ? 0.0 : math.sin(math.pi * _hopCtrl.value),
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        }
+            ],
+          ),
+        ),
+      ),
+    );
 
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // 地板
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: h * 0.34,
-              child: ColoredBox(color: TreasurePalette.paperBottom),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: h * 0.34,
-              child: Container(height: 2, color: TreasurePalette.line),
-            ),
-            // 家具物件
-            obj(
-              'equip',
-              left: w * 0.05,
-              top: h * 0.02,
-              child: CustomPaint(size: const Size(128, 64), painter: _ShelfPainter()),
-            ),
-            obj(
-              'scene',
-              right: w * 0.05,
-              top: h * 0.015,
-              child: CustomPaint(
-                size: const Size(118, 92),
-                painter: _WindowPainter(sceneIdx: _sceneIdx),
-              ),
-            ),
-            obj(
-              'learn',
-              left: w * 0.06,
-              top: h * 0.26,
-              child: CustomPaint(size: const Size(150, 118), painter: _DeskPainter()),
-            ),
-            obj(
-              'stereo',
-              right: w * 0.06,
-              top: h * 0.28,
-              child: CustomPaint(size: const Size(118, 100), painter: _PlayerPainter()),
-            ),
-            obj(
-              'content',
-              left: w * 0.06,
-              bottom: h * 0.19,
-              child: CustomPaint(size: const Size(104, 84), painter: _BookshelfPainter()),
-            ),
-            obj(
-              'tracks',
-              left: w / 2 - 74,
-              bottom: h * 0.045,
-              child: CustomPaint(size: const Size(148, 56), painter: _RugPainter()),
-            ),
-            obj(
-              'more',
-              right: w * 0.06,
-              bottom: h * 0.07,
-              child: CustomPaint(size: const Size(86, 62), painter: _ToolboxPainter()),
-            ),
-            obj(
-              'coin',
-              right: w * 0.10,
-              bottom: h * 0.24,
-              child: CustomPaint(size: const Size(76, 46), painter: _RoomPiggyPainter()),
-            ),
-            // 房主（爪印地毯上）
-            Positioned(
-              left: w / 2 - 58,
-              bottom: h * 0.035,
-              child: AnimatedBuilder(
-                animation: Listenable.merge([_hopCtrl, _blinkCtrl]),
-                builder: (context, child) {
-                  final t = _hopCtrl.value;
-                  final hopY = _reduceMotion ? 0.0 : -14 * math.sin(math.pi * t);
-                  return Transform.translate(offset: Offset(0, hopY), child: child);
-                },
-                child: CustomPaint(
-                  size: const Size(116, 118),
-                  painter: _RoomMonsterPainter(pupilOffset: _pupilOffset, blink: _blinkCtrl.value),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+    // 等比缩放居中：上限 1.18 倍防超大屏过度放大，其余按可用空间 contain
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: stageW * 1.18, maxHeight: stageH * 1.18),
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: SizedBox(width: stageW, height: stageH, child: stage),
+          ),
+        ),
+      ),
     );
   }
 }

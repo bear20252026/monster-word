@@ -1,4 +1,7 @@
 // 怪兽小屋（个人中心）冒烟测试：房间呈现 / 抽屉面板 / 路由跳转。
+//
+// 注意：页面含待机呼吸 repeat 动画（_idleCtrl.repeat），pumpAndSettle 永不收敛，
+// 必须用定点 pump 推时钟。
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -71,6 +74,13 @@ Widget _wrap(FakeScareCoinStore store) {
   );
 }
 
+/// 定点推时钟：覆盖 profile/balance 异步载入 + 抽屉/路由过渡动画。
+Future<void> _pumpSeq(WidgetTester tester, {double settleMs = 450}) async {
+  await tester.pump(); // 微任务（profile/balance load）
+  await tester.pump(Duration(milliseconds: (settleMs / 2).round()));
+  await tester.pump(Duration(milliseconds: (settleMs / 2).round()));
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -78,7 +88,7 @@ void main() {
 
   testWidgets('怪兽小屋：门牌与八件家具名牌呈现', (tester) async {
     await tester.pumpWidget(_wrap(FakeScareCoinStore()));
-    await tester.pumpAndSettle();
+    await _pumpSeq(tester);
 
     expect(find.text('未设置昵称'), findsOneWidget);
     expect(find.text('已坚持 3 天 · 掌握 7 词'), findsOneWidget);
@@ -90,28 +100,28 @@ void main() {
 
   testWidgets('怪兽小屋：点台灯出抽屉，行点击跳转学习偏好', (tester) async {
     await tester.pumpWidget(_wrap(FakeScareCoinStore()));
-    await tester.pumpAndSettle();
+    await _pumpSeq(tester);
 
     await tester.tap(find.text('学习偏好').first);
-    await tester.pumpAndSettle();
+    await _pumpSeq(tester);
     expect(find.text('每日目标 / 提醒 / 发音'), findsOneWidget);
 
     await tester.tap(find.text('每日目标 / 提醒 / 发音'));
-    await tester.pumpAndSettle();
+    await _pumpSeq(tester, settleMs: 600);
     expect(find.byKey(const ValueKey('settings')), findsOneWidget);
   });
 
   testWidgets('怪兽小屋：点存钱罐抽屉含真实余额并入兑换页', (tester) async {
     final store = FakeScareCoinStore();
     await tester.pumpWidget(_wrap(store));
-    await tester.pumpAndSettle();
+    await _pumpSeq(tester);
 
     await tester.tap(find.text('尖叫币').first);
-    await tester.pumpAndSettle();
+    await _pumpSeq(tester);
     expect(find.text('当前余额 0 币'), findsOneWidget);
 
     await tester.tap(find.text('兑换中心'));
-    await tester.pumpAndSettle();
+    await _pumpSeq(tester, settleMs: 600);
     expect(find.byKey(const ValueKey('coin')), findsOneWidget);
   });
 }
