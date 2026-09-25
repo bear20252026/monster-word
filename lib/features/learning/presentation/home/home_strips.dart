@@ -28,16 +28,10 @@ class _CheckInStripState extends State<_CheckInStrip> {
     });
   }
 
+  /// 打开「聚宝日历」签到页（GUI 外观设计落地版；旧弹性日历见 widgets/spring_check_in_calendar.dart）。
   Future<void> _openSheet() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (sheetCtx) => Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 12, bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 24),
-        // 吞金币庆祝展开后内容增高，小屏滚动兜底防溢出。
-        child: const SingleChildScrollView(child: SpringCheckInCalendar()),
-      ),
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const TreasureCheckInPage()),
     );
     unawaited(_reload());
   }
