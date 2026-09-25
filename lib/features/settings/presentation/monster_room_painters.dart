@@ -453,17 +453,23 @@ class _RoomPiggyPainter extends CustomPainter {
   bool shouldRepaint(covariant _RoomPiggyPainter old) => false;
 }
 
-/// 房主小怪兽：瞳孔跟随 + 眨眼。
+/// 房主小怪兽：瞳孔跟随 + 眨眼 + 跳跃影子。
 class _RoomMonsterPainter extends CustomPainter {
-  _RoomMonsterPainter({required this.pupilOffset, required this.blink});
+  _RoomMonsterPainter({required this.pupilOffset, required this.blink, required this.hop});
 
   final Offset pupilOffset;
-  final double blink; // 0 睁眼 → 1 闭合
+  final double blink; // 0 睁眼 → 1 闭合（可为轻微负值 = 睁大回弹）
+  final double hop; // 0 落地 → 1 空中最高点（驱动脚下影子）
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width / 116;
     Paint p(Color c) => Paint()..color = c;
+    // 影子：跳起时缩小变淡
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(58 * s, 112 * s), width: (84 - 26 * hop) * s, height: (13 - 5 * hop) * s),
+      p(TreasurePalette.ink.withValues(alpha: 0.10 - 0.05 * hop)),
+    );
     final body = Rect.fromCenter(center: Offset(58 * s, 62 * s), width: 104 * s, height: 92 * s);
     final skinShader = LinearGradient(
       begin: Alignment.topCenter,
@@ -491,16 +497,35 @@ class _RoomMonsterPainter extends CustomPainter {
         p(TreasurePalette.card),
       );
     }
-    // 眼睛（眨眼 scaleY）
-    final eyeOpenY = 1 - 0.88 * blink;
+    // 眼睛（眨眼 scaleY；闭合更彻底，睁大回弹时略超 1）
+    final eyeOpenY = 1 - 0.94 * blink;
     for (final cx in [41.0, 75.0]) {
+      // 白眼球（随眨眼压扁）
       canvas.save();
       canvas.translate(cx * s, 52 * s);
       canvas.scale(1, eyeOpenY);
       canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 23 * s, height: 26 * s), p(TreasurePalette.card));
-      canvas.drawCircle(pupilOffset * s, 5.2 * s, p(TreasurePalette.pigDark));
-      canvas.drawCircle(pupilOffset * s + Offset(2 * s, -2.4 * s), 1.8 * s, p(TreasurePalette.card));
       canvas.restore();
+      if (blink > 0.55) {
+        // 闭眼眼缝线（画在变换外，避免被 scaleY 压没）
+        canvas.drawLine(
+          Offset(cx * s - 9 * s, 52 * s),
+          Offset(cx * s + 9 * s, 52 * s),
+          Paint()
+            ..color = TreasurePalette.pigDark
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.6 * s
+            ..strokeCap = StrokeCap.round,
+        );
+      } else {
+        // 瞳孔 + 高光（跟随指针）
+        canvas.drawCircle(Offset(cx * s, 52 * s) + pupilOffset * s, 5.2 * s, p(TreasurePalette.pigDark));
+        canvas.drawCircle(
+          Offset(cx * s, 52 * s) + pupilOffset * s + Offset(2 * s, -2.4 * s),
+          1.8 * s,
+          p(TreasurePalette.card),
+        );
+      }
     }
     // 微笑 + 腮红 + 胸前 W
     canvas.drawPath(
@@ -534,7 +559,8 @@ class _RoomMonsterPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _RoomMonsterPainter old) => old.pupilOffset != pupilOffset || old.blink != blink;
+  bool shouldRepaint(covariant _RoomMonsterPainter old) =>
+      old.pupilOffset != pupilOffset || old.blink != blink || old.hop != hop;
 }
 
 /// 金币小图标（门牌余额胶囊；与聚宝日历同款）。
