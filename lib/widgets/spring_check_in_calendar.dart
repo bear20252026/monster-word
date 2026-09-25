@@ -40,7 +40,7 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
   bool _showSwallow = false; // 吞金币庆祝 overlay（播完自清，不常驻）
   bool _checking = false; // 忙态：checkIn() 在途，按钮 morph 为 spinner 并拦截连点
   bool _feeding = false; // 亲手投喂态：按钮让位给投喂台，币由用户拖进嘴
-  double _tailStart = 0.0; // 投喂续演起点（0.32 币已到嘴）；点按自动为 0
+  double _tailStart = 0.0; // 投喂续演起点（0.36 币已到嘴）；点按自动为 0
   int _lastReward = 0; // 本次签到增量（金库窗滚动起点口径）
   int _lastBalance = 0; // 签到后最新余额（金库窗滚动终点）
 
@@ -91,8 +91,8 @@ class _SpringCheckInCalendarState extends State<SpringCheckInCalendar> with Tick
   /// 点按自动签到：币从按钮弹射（celebrationStart 0）。
   Future<void> _onCheckIn() => _doCheckIn(celebrationStart: 0.0);
 
-  /// 投喂成功：币已到嘴，续演后三幕（celebrationStart 0.32）。
-  Future<void> _onFed() => _doCheckIn(celebrationStart: 0.32);
+  /// 投喂成功：币已到嘴，续演后四幕（celebrationStart 0.36）。
+  Future<void> _onFed() => _doCheckIn(celebrationStart: 0.36);
 
   /// 投喂台偷懒入口：回落自动签到。
   Future<void> _feedAuto() => _doCheckIn(celebrationStart: 0.0);

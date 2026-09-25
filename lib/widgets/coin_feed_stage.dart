@@ -2,7 +2,7 @@
 //
 // 长按签到币进入：金币悬浮待命（呼吸浮动），怪兽张嘴期待；拖动跟手（钳制盒内），
 // 近嘴吸附张嘴＋金环预告；送达嘴边自动啊呜（onFed），别处松手弹性飞回。
-// 成功后父级走账本 checkIn，再用 CoinSwallowCelebration(startAt: 0.32) 续演后三幕。
+// 成功后父级走账本 checkIn，再用 CoinSwallowCelebration(startAt: 0.36) 续演后四幕。
 // 等账时（_fed）怪兽嚼嚼嘴，别处逻辑不动。
 import 'dart:math' as math;
 

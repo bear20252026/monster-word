@@ -26,6 +26,9 @@ class MonsterIcon extends StatelessWidget {
   /// 养成的稀缺感＋回归动力，第1件专利的延续案口径见 stageName。
   final int evoStage;
 
+  /// 腮帮鼓起 0~1（饱嗝时刻双颊 puff，平时为 0）。
+  final double cheekPuff;
+
   const MonsterIcon({
     super.key,
     this.size = 40,
@@ -36,6 +39,7 @@ class MonsterIcon extends StatelessWidget {
     this.mouthOpen = 0.0,
     this.bellyScale = 1.0,
     this.evoStage = 0,
+    this.cheekPuff = 0.0,
   });
 
   /// 累计签到天数 → 进化阶段（0/7/30/100）。
@@ -69,6 +73,7 @@ class MonsterIcon extends StatelessWidget {
           mouthOpen: mouthOpen.clamp(0.0, 1.0),
           bellyScale: bellyScale.clamp(0.6, 1.8),
           evoStage: evoStage.clamp(0, 3),
+          cheekPuff: cheekPuff.clamp(0.0, 1.0),
         ),
       ),
     );
@@ -92,6 +97,7 @@ class _MonsterPainter extends CustomPainter {
   final double mouthOpen;
   final double bellyScale;
   final int evoStage;
+  final double cheekPuff;
 
   _MonsterPainter({
     required this.bodyColor,
@@ -99,6 +105,7 @@ class _MonsterPainter extends CustomPainter {
     this.mouthOpen = 0.0,
     this.bellyScale = 1.0,
     this.evoStage = 0,
+    this.cheekPuff = 0.0,
   });
 
   @override
@@ -246,12 +253,13 @@ class _MonsterPainter extends CustomPainter {
       );
     }
 
-    // === 6. 腮红（小粉红圆点）===
+    // === 6. 腮红（小粉红圆点；饱嗝时随 cheekPuff 鼓成大气球）===
     final blushPaint = Paint()
-      ..color = MonsterPalette.blush.withValues(alpha: 0.5)
+      ..color = MonsterPalette.blush.withValues(alpha: 0.5 + 0.3 * cheekPuff)
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(cx - r * 0.45, cy + r * 0.05), r * 0.08, blushPaint);
-    canvas.drawCircle(Offset(cx + r * 0.45, cy + r * 0.05), r * 0.08, blushPaint);
+    final blushR = r * 0.08 * (1 + 0.9 * cheekPuff);
+    canvas.drawCircle(Offset(cx - r * 0.45, cy + r * 0.05), blushR, blushPaint);
+    canvas.drawCircle(Offset(cx + r * 0.45, cy + r * 0.05), blushR, blushPaint);
 
     // === 7. 小手（左右各一只）===
     final handPaint = Paint()
@@ -290,7 +298,8 @@ class _MonsterPainter extends CustomPainter {
         oldDelegate.bellyColor != bellyColor ||
         oldDelegate.mouthOpen != mouthOpen ||
         oldDelegate.bellyScale != bellyScale ||
-        oldDelegate.evoStage != evoStage;
+        oldDelegate.evoStage != evoStage ||
+        oldDelegate.cheekPuff != cheekPuff;
   }
 }
 
