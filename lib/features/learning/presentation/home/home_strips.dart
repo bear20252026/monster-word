@@ -30,9 +30,7 @@ class _CheckInStripState extends State<_CheckInStrip> {
 
   /// 打开「聚宝日历」签到页（GUI 外观设计落地版；旧弹性日历见 widgets/spring_check_in_calendar.dart）。
   Future<void> _openSheet() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const TreasureCheckInPage()),
-    );
+    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TreasureCheckInPage()));
     unawaited(_reload());
   }
 

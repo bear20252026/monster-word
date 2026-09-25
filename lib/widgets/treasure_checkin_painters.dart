@@ -21,11 +21,11 @@ class _SealBadge extends StatelessWidget {
   final bool reduceMotion;
 
   static Color numColor(_BadgeKind kind) => switch (kind) {
-        _BadgeKind.checked => TreasurePalette.checkedNum,
-        _BadgeKind.today => TreasurePalette.todayNum,
-        _BadgeKind.future => TreasurePalette.futureNum,
-        _BadgeKind.plain => TreasurePalette.plainNum,
-      };
+    _BadgeKind.checked => TreasurePalette.checkedNum,
+    _BadgeKind.today => TreasurePalette.todayNum,
+    _BadgeKind.future => TreasurePalette.futureNum,
+    _BadgeKind.plain => TreasurePalette.plainNum,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -41,15 +41,10 @@ class _SealBadge extends StatelessWidget {
           ),
           // 今日：品牌绿虚线旋转描边（聚合后持续旋转）。
           if (kind == _BadgeKind.today && !reduceMotion)
-            const Positioned.fill(
-              child: CustomPaint(painter: _DashedRingPainter()),
-            ),
+            const Positioned.fill(child: CustomPaint(painter: _DashedRingPainter())),
           Text(
             '$num',
-            style: MwTypography.bodySm.copyWith(
-              fontWeight: FontWeight.w800,
-              color: numColor(kind),
-            ),
+            style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w800, color: numColor(kind)),
           ),
         ],
       ),
@@ -93,20 +88,19 @@ class _SealPainter extends CustomPainter {
         center,
         40 * unit,
         Paint()
-          ..shader = RadialGradient(colors: [
-            TreasurePalette.gold.withValues(alpha: glowAlpha),
-            TreasurePalette.gold.withValues(alpha: 0),
-          ]).createShader(Rect.fromCircle(center: center, radius: 40 * unit)),
+          ..shader = RadialGradient(
+            colors: [
+              TreasurePalette.gold.withValues(alpha: glowAlpha),
+              TreasurePalette.gold.withValues(alpha: 0),
+            ],
+          ).createShader(Rect.fromCircle(center: center, radius: 40 * unit)),
       );
     }
 
     final flower = flowerPath(size);
     final square = Path()
       ..addRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTRB(2 * unit, 2 * unit, 46 * unit, 46 * unit),
-          Radius.circular(8 * unit),
-        ),
+        RRect.fromRectAndRadius(Rect.fromLTRB(2 * unit, 2 * unit, 46 * unit, 46 * unit), Radius.circular(8 * unit)),
       );
 
     final stroke = Paint()
@@ -160,11 +154,11 @@ class _SealPainter extends CustomPainter {
   }
 
   static Color faceColor(_BadgeKind kind) => switch (kind) {
-        _BadgeKind.checked => TreasurePalette.gold,
-        _BadgeKind.today => TreasurePalette.card,
-        _BadgeKind.future => TreasurePalette.futureFace,
-        _BadgeKind.plain => TreasurePalette.card,
-      };
+    _BadgeKind.checked => TreasurePalette.gold,
+    _BadgeKind.today => TreasurePalette.card,
+    _BadgeKind.future => TreasurePalette.futureFace,
+    _BadgeKind.plain => TreasurePalette.card,
+  };
 
   @override
   bool shouldRepaint(covariant _SealPainter old) =>
@@ -212,8 +206,14 @@ class _PiggyPainter extends CustomPainter {
     Paint paint(Color c) => Paint()..color = c;
 
     // 橙色小脚。
-    canvas.drawOval(Rect.fromCenter(center: Offset(82 * s, 120 * s), width: 32 * s, height: 16 * s), paint(TreasurePalette.pigAccent));
-    canvas.drawOval(Rect.fromCenter(center: Offset(138 * s, 120 * s), width: 32 * s, height: 16 * s), paint(TreasurePalette.pigAccent));
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(82 * s, 120 * s), width: 32 * s, height: 16 * s),
+      paint(TreasurePalette.pigAccent),
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(138 * s, 120 * s), width: 32 * s, height: 16 * s),
+      paint(TreasurePalette.pigAccent),
+    );
 
     // 青绿圆身（上浅下深渐变）。
     final bodyShader = LinearGradient(
@@ -244,12 +244,18 @@ class _PiggyPainter extends CustomPainter {
     canvas.save();
     canvas.translate(40 * s, 92 * s);
     canvas.rotate(0.31);
-    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 20 * s, height: 28 * s), paint(TreasurePalette.pigSkinBottom));
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset.zero, width: 20 * s, height: 28 * s),
+      paint(TreasurePalette.pigSkinBottom),
+    );
     canvas.restore();
     canvas.save();
     canvas.translate(180 * s, 92 * s);
     canvas.rotate(-0.31);
-    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 20 * s, height: 28 * s), paint(TreasurePalette.pigSkinBottom));
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset.zero, width: 20 * s, height: 28 * s),
+      paint(TreasurePalette.pigSkinBottom),
+    );
     canvas.restore();
 
     // 肚皮视窗：底色 + 金位上涨（clip 椭圆）+ 奶白描边。

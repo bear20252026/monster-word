@@ -25,9 +25,9 @@ class _BalanceFake extends FakeScareCoinStore {
 }
 
 Widget _wrap(_BalanceFake store) => Provider<ScareCoinStore>.value(
-      value: store,
-      child: const MaterialApp(home: TreasureCheckInPage()),
-    );
+  value: store,
+  child: const MaterialApp(home: TreasureCheckInPage()),
+);
 
 void main() {
   testWidgets('聚宝日历：月份与 CTA 正常呈现', (tester) async {

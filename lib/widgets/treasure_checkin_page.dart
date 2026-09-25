@@ -31,12 +31,7 @@ part 'treasure_checkin_painters.dart';
 
 /// 单枚日期徽章的弹簧模拟状态。
 class _DaySim {
-  _DaySim({
-    required this.dnum,
-    required this.isToday,
-    required this.isFuture,
-    required this.checked,
-  });
+  _DaySim({required this.dnum, required this.isToday, required this.isFuture, required this.checked});
 
   final int dnum;
   final bool isToday;
@@ -154,8 +149,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
   double _gainAt = -10;
   int _gainValue = 0;
 
-  bool get _reduceMotion =>
-      WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
+  bool get _reduceMotion => WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
 
   @override
   void initState() {
@@ -170,18 +164,13 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     super.dispose();
   }
 
-  String _iso(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  String _iso(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   Set<String> _checkedDates = {};
 
   Future<void> _reload({bool replay = false}) async {
     final store = context.read<ScareCoinStore>();
-    final results = await Future.wait([
-      store.checkinDates(),
-      store.streak(),
-      store.balance(),
-    ]);
+    final results = await Future.wait([store.checkinDates(), store.streak(), store.balance()]);
     if (!mounted) return;
     setState(() {
       _checkedDates = results[0] as Set<String>;
@@ -236,26 +225,30 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     _dust.clear();
     for (var i = 0; i < _days.length; i++) {
       for (var k = 0; k < 4; k++) {
-        _dust.add(_OrbitDust(
-          part: i,
-          ang: (k / 4 + rand.nextDouble() * 0.2) * math.pi * 2,
-          rad: 26 + rand.nextDouble() * 30,
-          sp: (0.5 + rand.nextDouble() * 0.8) * (rand.nextDouble() > 0.5 ? 1 : -1),
-          size: 0.8 + rand.nextDouble() * 1.6,
-          color: rand.nextInt(3),
-          ph: rand.nextDouble() * math.pi * 2,
-        ));
+        _dust.add(
+          _OrbitDust(
+            part: i,
+            ang: (k / 4 + rand.nextDouble() * 0.2) * math.pi * 2,
+            rad: 26 + rand.nextDouble() * 30,
+            sp: (0.5 + rand.nextDouble() * 0.8) * (rand.nextDouble() > 0.5 ? 1 : -1),
+            size: 0.8 + rand.nextDouble() * 1.6,
+            color: rand.nextInt(3),
+            ph: rand.nextDouble() * math.pi * 2,
+          ),
+        );
       }
     }
     _ambient.clear();
     for (var i = 0; i < 26; i++) {
-      _ambient.add(_AmbientDot(
-        x: rand.nextDouble() * math.max(1, _stageW),
-        y: rand.nextDouble() * math.max(1, _stageH),
-        size: 0.6 + rand.nextDouble() * 1.4,
-        tw: rand.nextDouble() * math.pi * 2,
-        sp: 0.4 + rand.nextDouble() * 0.9,
-      ));
+      _ambient.add(
+        _AmbientDot(
+          x: rand.nextDouble() * math.max(1, _stageW),
+          y: rand.nextDouble() * math.max(1, _stageH),
+          size: 0.6 + rand.nextDouble() * 1.4,
+          tw: rand.nextDouble() * math.pi * 2,
+          sp: 0.4 + rand.nextDouble() * 0.9,
+        ),
+      );
     }
     _layoutGrid();
   }
@@ -338,7 +331,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     if (_reduceMotion) {
       setState(() {
         _todayChecked = true;
-_streak += 1;
+        _streak += 1;
         _balance = newBalance;
         _bellyTarget = _pctFor(_streak);
         _busy = false;
@@ -383,16 +376,18 @@ _streak += 1;
     final sx0 = _stageOrigin.dx + d.x;
     final sy0 = _stageOrigin.dy + d.y;
     for (var i = 0; i < 22; i++) {
-      _burst.add(_BurstCoin(
-        sx: sx0 + (_rnd.nextDouble() - 0.5) * 30,
-        sy: sy0 + (_rnd.nextDouble() - 0.5) * 30,
-        cx: sx0 + (_rnd.nextDouble() - 0.5) * 160,
-        cy: math.min(sy0, _bellyPoint.dy) - 20 - _rnd.nextDouble() * 80,
-        t0: _now + i * 0.024,
-        dur: 0.56 + _rnd.nextDouble() * 0.26,
-        size: 2 + _rnd.nextDouble() * 2.6,
-        color: _rnd.nextInt(3),
-      ));
+      _burst.add(
+        _BurstCoin(
+          sx: sx0 + (_rnd.nextDouble() - 0.5) * 30,
+          sy: sy0 + (_rnd.nextDouble() - 0.5) * 30,
+          cx: sx0 + (_rnd.nextDouble() - 0.5) * 160,
+          cy: math.min(sy0, _bellyPoint.dy) - 20 - _rnd.nextDouble() * 80,
+          t0: _now + i * 0.024,
+          dur: 0.56 + _rnd.nextDouble() * 0.26,
+          size: 2 + _rnd.nextDouble() * 2.6,
+          color: _rnd.nextInt(3),
+        ),
+      );
     }
   }
 
@@ -557,7 +552,8 @@ _streak += 1;
     const popDur = 0.5;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-      child: Builder(builder: (context) {
+      child: Builder(
+        builder: (context) {
           final pt = _now - _pillPopAt;
           final pop = pt >= 0 && pt < popDur ? math.sin(math.pi * pt / popDur) : 0.0;
           final flameScale = 1.0 + 0.35 * pop;
@@ -601,21 +597,21 @@ _streak += 1;
   }
 
   TextStyle _pillStyle({Color? color}) => MwTypography.caption.copyWith(
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.02,
-        color: color ?? TreasurePalette.ink,
-      );
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.02,
+    color: color ?? TreasurePalette.ink,
+  );
 
   Widget _pill({required List<Widget> children}) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: TreasurePalette.card,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: TreasurePalette.line),
-          boxShadow: [BoxShadow(color: TreasurePalette.pillShadow, blurRadius: 10, offset: const Offset(0, 3))],
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: children),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+    decoration: BoxDecoration(
+      color: TreasurePalette.card,
+      borderRadius: BorderRadius.circular(AppRadius.pill),
+      border: Border.all(color: TreasurePalette.line),
+      boxShadow: [BoxShadow(color: TreasurePalette.pillShadow, blurRadius: 10, offset: const Offset(0, 3))],
+    ),
+    child: Row(mainAxisSize: MainAxisSize.min, children: children),
+  );
 
   // ── 月份栏 ──
   Widget _buildMonthBar() {
@@ -630,11 +626,19 @@ _streak += 1;
             children: [
               Text(
                 '${_month.year} 年 ${_month.month} 月',
-                style: MwTypography.titleLg.copyWith(fontWeight: FontWeight.w800, letterSpacing: 0.04, color: TreasurePalette.ink),
+                style: MwTypography.titleLg.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.04,
+                  color: TreasurePalette.ink,
+                ),
               ),
               Text(
                 '聚宝日历',
-                style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, letterSpacing: 0.12, color: TreasurePalette.dim),
+                style: MwTypography.micro.copyWith(
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.12,
+                  color: TreasurePalette.dim,
+                ),
               ),
             ],
           ),
@@ -646,18 +650,18 @@ _streak += 1;
   }
 
   Widget _navBtn(IconData icon, VoidCallback onTap) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: TreasurePalette.card,
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: Border.all(color: TreasurePalette.line),
-          ),
-          child: Icon(icon, size: 16, color: TreasurePalette.ink),
-        ),
-      );
+    onTap: onTap,
+    child: Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        color: TreasurePalette.card,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: TreasurePalette.line),
+      ),
+      child: Icon(icon, size: 16, color: TreasurePalette.ink),
+    ),
+  );
 
   // ── 日历舞台 ──
   Widget _buildStage() {
@@ -843,17 +847,12 @@ _streak += 1;
           borderRadius: BorderRadius.circular(AppRadius.pill),
           boxShadow: checked
               ? null
-              : [
-                  BoxShadow(color: TreasurePalette.ctaShadow, blurRadius: 22, offset: const Offset(0, 8)),
-                ],
+              : [BoxShadow(color: TreasurePalette.ctaShadow, blurRadius: 22, offset: const Offset(0, 8))],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (!checked) ...[
-              const _CoinGlyph(size: 18, creamStyle: true),
-              const SizedBox(width: 10),
-            ],
+            if (!checked) ...[const _CoinGlyph(size: 18, creamStyle: true), const SizedBox(width: 10)],
             Text(
               checked ? '今日已签到 · 明天再来' : '立即签到 · +$_reward',
               style: MwTypography.bodyMd.copyWith(
@@ -868,4 +867,3 @@ _streak += 1;
     );
   }
 }
-
