@@ -610,7 +610,7 @@ _streak += 1;
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: TreasurePalette.card,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
           border: Border.all(color: TreasurePalette.line),
           boxShadow: [BoxShadow(color: TreasurePalette.pillShadow, blurRadius: 10, offset: const Offset(0, 3))],
         ),
@@ -652,7 +652,7 @@ _streak += 1;
           height: 34,
           decoration: BoxDecoration(
             color: TreasurePalette.card,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
             border: Border.all(color: TreasurePalette.line),
           ),
           child: Icon(icon, size: 16, color: TreasurePalette.ink),
@@ -840,7 +840,7 @@ _streak += 1;
                   colors: [TreasurePalette.greenLight, TreasurePalette.green, TreasurePalette.greenDark],
                   stops: [0, 0.55, 1],
                 ),
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
           boxShadow: checked
               ? null
               : [
