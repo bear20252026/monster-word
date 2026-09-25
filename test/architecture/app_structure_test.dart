@@ -437,12 +437,13 @@ void main() {
       const ownedRule = '1 + (redeemedCount > 0 ? 1 : 0) + ((snap.data ?? 0) > 0 ? 1 : 0)';
       expect(ownedRule.allMatches(cardsSource).length, 1, reason: '装备数规则只能写一遍');
 
-      // 两页面零双写：不定义私有卡片类、不算装备数、不写死字符串路由
+      // 零双写：不定义私有卡片类、不算装备数、不写死字符串路由。
+      // 2026-09-25 怪兽小屋重构：profile_screen 改为房间场景页（尖叫币=存钱罐物件、
+      // 装备=装备架物件，经抽屉行路由到共享页面），不再直接铺双卡——卡片消费方
+      // 仅剩 my_space_page；profile 侧改锁「房间视图 + 零规则双写」。
       for (final entry in {'my_space_page.dart': mySpaceSource, 'profile_screen.dart': profileSource}.entries) {
         expect(entry.value, isNot(contains('class _CoinCard')), reason: '${entry.key} 不得再私有实现卡片');
         expect(entry.value, isNot(contains('class _EquipCard')), reason: '${entry.key} 不得再私有实现卡片');
-        expect(entry.value, contains('ScareCoinCard('), reason: '${entry.key} 应消费共享组件');
-        expect(entry.value, contains('EquipCard('), reason: '${entry.key} 应消费共享组件');
         expect(
           entry.value.contains('equipRackCount'),
           isFalse,
@@ -450,6 +451,12 @@ void main() {
         );
         expect(entry.value, isNot(contains("'/scare_coin_history'")), reason: '${entry.key} 不得使用字符串路由');
       }
+      expect(mySpaceSource, contains('ScareCoinCard('), reason: 'my_space 应消费共享组件');
+      expect(mySpaceSource, contains('EquipCard('), reason: 'my_space 应消费共享组件');
+      // profile（怪兽小屋）锁新形态：房间视图在位、经 RouteNames 路由到共享页
+      expect(profileSource, contains('MonsterRoomView'));
+      expect(profileSource, contains('RouteNames.scareCoinHistory'));
+      expect(profileSource, contains('RouteNames.myEquip'));
     });
   });
 
