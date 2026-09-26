@@ -75,6 +75,11 @@ class _FloatingTiltCardState extends State<FloatingTiltCard> {
 
   @override
   Widget build(BuildContext context) {
+    // 无障碍：系统开启「减弱动态效果」时撤掉指针动效，仅保留可点光标。
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+      return MouseRegion(cursor: widget.cursor ?? MouseCursor.defer, child: widget.child);
+    }
+
     final br = widget.borderRadius ?? BorderRadius.zero;
 
     return MouseRegion(
