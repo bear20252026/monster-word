@@ -11,6 +11,7 @@ import 'package:word_app/features/learning/application/learning_session_starter.
 import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/widgets/common/mw_skeleton.dart';
+import 'package:word_app/widgets/flow_in.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -123,13 +124,16 @@ class _BookWordsPageState extends State<BookWordsPage> {
             addRepaintBoundaries: true,
             itemBuilder: (context, index) {
               if (index == 0) {
-                return Padding(
-                  padding: EdgeInsets.only(bottom: context.design.spacing.sm),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      '共 ${state.totalWords} 词（按字母排序）',
-                      style: MwTypography.micro.copyWith(color: skin.text3),
+                return FlowIn(
+                  index: 0,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: context.design.spacing.sm),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '共 ${state.totalWords} 词（按字母排序）',
+                        style: MwTypography.micro.copyWith(color: skin.text3),
+                      ),
                     ),
                   ),
                 );
@@ -148,7 +152,16 @@ class _BookWordsPageState extends State<BookWordsPage> {
                 });
               }
               final word = words[wordIndex];
-              return _WordCard(word: word, book: book);
+              // 有序流动入场（与 lib_select_page 同一动效语言）：首屏十行走完整
+              // 波次；懒加载/翻页新行按单列相位 0 入场，近乎立即不排队（同
+              // 网格「index % 列数」式，单列相位恒 0）。key 绑词 id：切换词书
+              // 整列重放波次；收藏/生词标记原位重建不重放。
+              final waveIndex = wordIndex < 10 ? wordIndex : 0;
+              return FlowIn(
+                key: ValueKey('word-flow-${word.id}'),
+                index: waveIndex,
+                child: _WordCard(word: word, book: book),
+              );
             },
           );
         },
