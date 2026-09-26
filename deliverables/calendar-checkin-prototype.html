@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聚宝日历 · 签到页设计原型</title>
+<style>
+  :root {
+    /* 签到页固定暖纸色基调（与 Monster Word 主题同源，不随明暗主题切换） */
+    --paper: #f2f0eb;
+    --paper-2: #edebe9;
+    --card: #fffdf8;
+    --line: rgba(74, 60, 32, 0.10);
+    --gold: #f6bd45;
+    --gold-deep: #c98a1e;
+    --gold-soft: #ffe9b8;
+    --coral: #ff7e69;
+    --green: #006241;
+    --cream: #fff6e4;
+    --ink: #2b241a;
+    --dim: rgba(74, 60, 32, 0.55);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: radial-gradient(1200px 800px at 20% -10%, #1d2a45 0%, #0b1220 55%, #080d18 100%);
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    min-height: 100vh;
+    padding: 24px;
+    flex-wrap: wrap;
+  }
+
+  /* ============ 手机外框 ============ */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: linear-gradient(180deg, #f6f4ef 0%, var(--paper) 55%, var(--paper-2) 100%);
+    border-radius: 52px;
+    border: 10px solid #26211a;
+    outline: 1px solid rgba(0, 0, 0, 0.22);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+    flex: none;
+  }
+  .notch {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 118px; height: 30px; border-radius: 20px; background: #05080f; z-index: 60;
+  }
+
+  /* ============ 顶部 ============ */
+  .topbar {
+    position: absolute; top: 0; left: 0; right: 0; height: 96px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 20px 10px; z-index: 40;
+  }
+  .pill {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 999px; padding: 8px 14px;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.02em;
+    color: var(--ink);
+    box-shadow: 0 3px 10px rgba(80, 66, 40, 0.12);
+  }
+  .pill svg { flex: none; }
+  .pill .flame { transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .pill.pop .flame { transform: scale(1.35) rotate(-8deg); }
+  .num.pop { animation: numPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); display: inline-block; }
+  @keyframes numPop { 0% { transform: scale(1); } 40% { transform: scale(1.45); color: var(--gold); } 100% { transform: scale(1); } }
+
+  .monthbar {
+    position: absolute; top: 108px; left: 0; right: 0; z-index: 40;
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+    padding: 0 20px;
+  }
+  .monthbar h1 {
+    font-size: 21px; font-weight: 800; letter-spacing: 0.04em; min-width: 120px; text-align: center;
+    color: var(--ink);
+  }
+  .monthbar h1 small { font-size: 11px; font-weight: 600; color: var(--dim); margin-left: 8px; letter-spacing: 0.12em; }
+  .navbtn {
+    width: 34px; height: 34px; border-radius: 12px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); cursor: pointer;
+    display: grid; place-items: center; transition: transform 0.15s, background 0.2s;
+  }
+  .navbtn:hover { background: #f3efe2; }
+  .navbtn:active { transform: scale(0.92); }
+
+  /* ============ 日历舞台 ============ */
+  .stage {
+    position: absolute; top: 152px; left: 0; right: 0; bottom: 246px;
+    z-index: 10;
+  }
+  #dust { position: absolute; inset: 0; pointer-events: none; z-index: 30; }
+
+  .weekrow {
+    position: absolute; top: 0; left: 20px; right: 20px;
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;
+    text-align: center; font-size: 11px; font-weight: 700; color: var(--dim);
+    letter-spacing: 0.2em; opacity: 0; transition: opacity 0.5s 0.35s;
+  }
+  .weekrow span:nth-child(7) { color: var(--coral); }
+  .stage[data-mode="grid"] .weekrow, .stage[data-mode="assembling"] .weekrow { opacity: 1; }
+
+  .gridzone { position: absolute; inset: 0; }
+
+  .day {
+    position: absolute; width: 44px; height: 44px;
+    margin: -22px 0 0 -22px; /* 以中心定位 */
+    will-change: transform;
+    cursor: default; user-select: none;
+    filter: drop-shadow(0 3px 8px rgba(80, 66, 40, 0.18));
+    transition: filter 0.4s;
+  }
+  .day svg.seal path, .day svg.seal circle { stroke: rgba(80, 66, 40, 0.10); stroke-width: 1; }
+  .day svg.seal { position: absolute; inset: 0; overflow: visible; }
+  .day .face-flower, .day .face-square { transition: opacity 0.45s; }
+  .stage[data-mode="grid"] .day .face-flower { opacity: 0; }
+  .stage[data-mode="scatter"] .day .face-square { opacity: 0; }
+
+  .day .num {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-size: 14px; font-weight: 800; color: var(--dim);
+    transition: color 0.3s;
+  }
+  .day .stamp {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    opacity: 0; transform: scale(0.3) rotate(-30deg);
+    transition: opacity 0.35s, transform 0.45s cubic-bezier(0.34, 1.8, 0.64, 1);
+  }
+  .day.checked .num { color: var(--ink); }
+  .day.checked .stamp { opacity: 1; transform: scale(1) rotate(0deg); }
+  .day.future .num { color: rgba(255,246,228,0.28); }
+  .day.today { cursor: pointer; }
+  .day.today .num { color: var(--cream); font-size: 15px; }
+  .day.today::after {
+    content: ""; position: absolute; inset: -7px; border-radius: 50%;
+    border: 2px dashed rgba(0, 98, 65, 0.65);
+    animation: spin 14s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .day.justchecked { animation: stampIn 0.55s cubic-bezier(0.34, 1.8, 0.64, 1); }
+  @keyframes stampIn {
+    0% { filter: drop-shadow(0 0 0 rgba(246,189,69,0)); }
+    35% { filter: drop-shadow(0 0 18px rgba(246,189,69,0.9)); }
+    100% { filter: drop-shadow(0 0 0 rgba(246,189,69,0)); }
+  }
+
+  /* ============ 储蓄罐 + CTA ============ */
+  .bottom {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 246px;
+    z-index: 20; display: flex; flex-direction: column; align-items: center;
+  }
+  .piggy-wrap { position: relative; width: 220px; height: 128px; }
+  .piggy-wrap svg { width: 100%; height: 100%; overflow: visible; }
+  #piggyBody { transform-origin: 110px 96px; }
+  #piggyBody.bump { animation: bump 0.55s cubic-bezier(0.34, 1.8, 0.64, 1); }
+  @keyframes bump {
+    0% { transform: scale(1); } 35% { transform: scale(1.14, 0.9); }
+    65% { transform: scale(0.96, 1.1); } 100% { transform: scale(1); }
+  }
+  .float-gain {
+    position: absolute; left: 50%; top: 6px; transform: translateX(-50%);
+    font-size: 16px; font-weight: 900; color: #b5790f;
+    opacity: 0; pointer-events: none; text-shadow: none;
+  }
+  .float-gain.go { animation: floatUp 0.9s ease-out forwards; }
+  @keyframes floatUp {
+    0% { opacity: 0; transform: translate(-50%, 10px) scale(0.7); }
+    25% { opacity: 1; transform: translate(-50%, -6px) scale(1.15); }
+    100% { opacity: 0; transform: translate(-50%, -34px) scale(1); }
+  }
+  .cta {
+    margin-top: 8px;
+    display: flex; align-items: center; gap: 10px;
+    background: linear-gradient(180deg, #0e8a60, var(--green) 55%, #004d34);
+    color: var(--cream); border: none; cursor: pointer;
+    font-size: 16px; font-weight: 900; letter-spacing: 0.08em;
+    padding: 15px 46px; border-radius: 999px;
+    box-shadow: 0 8px 22px rgba(0, 98, 65, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    transition: transform 0.15s, box-shadow 0.2s, filter 0.3s;
+  }
+  .cta:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(0, 98, 65, 0.4), inset 0 1px 0 rgba(255,255,255,0.28); }
+  .cta:active { transform: translateY(1px) scale(0.98); }
+  .cta:disabled {
+    filter: grayscale(0.85) brightness(0.75); cursor: default;
+    box-shadow: none; transform: none;
+  }
+  .cta svg circle { fill: rgba(255, 246, 228, 0.25); }
+  .cta svg path { stroke: var(--cream); }
+  .homebar {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 5px; border-radius: 3px; background: rgba(43, 36, 26, 0.22);
+  }
+
+  /* ============ 演示控制台 ============ */
+  .console {
+    width: 300px; flex: none;
+    background: rgba(19, 30, 51, 0.85); border: 1px solid var(--line);
+    border-radius: 20px; padding: 22px; backdrop-filter: blur(8px);
+  }
+  .console h2 { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+  .console p.sub { font-size: 12px; color: var(--dim); line-height: 1.7; margin-bottom: 16px; }
+  .console button {
+    width: 100%; margin-bottom: 10px; padding: 11px 0;
+    border-radius: 12px; border: 1px solid var(--line);
+    background: #1e2c4a; color: var(--cream);
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: background 0.2s, transform 0.12s;
+  }
+  .console button:hover { background: #28395e; }
+  .console button:active { transform: scale(0.97); }
+  .orderRow { display: flex; align-items: center; gap: 10px; margin: 4px 0 10px; font-size: 13px; }
+  .orderRow select {
+    flex: 1; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line);
+    background: #1e2c4a; color: var(--cream); font-size: 12.5px; font-weight: 700;
+    cursor: pointer; outline: none;
+  }
+  .orderRow select:focus { border-color: var(--mint); }
+  .toggle { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; font-size: 13px; }
+  .toggle .sw {
+    width: 44px; height: 24px; border-radius: 999px; background: #2a3a5e;
+    position: relative; cursor: pointer; transition: background 0.25s;
+  }
+  .toggle .sw::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--cream); transition: transform 0.25s;
+  }
+  .toggle .sw.on { background: var(--mint); }
+  .toggle .sw.on::after { transform: translateX(20px); }
+  .console .foot { margin-top: 16px; font-size: 11px; color: var(--dim); line-height: 1.8; border-top: 1px dashed var(--line); padding-top: 12px; }
+  .console .foot b { color: var(--gold-soft); }
+
+  /* ============ 专利视图模式（?patent=1）：纯 GUI 全幅、无演示控件 ============ */
+  body.patent { padding: 0; display: block; overflow: hidden; background: #fff; }
+  body.patent .console { display: none; }
+  body.patent .phone {
+    border: none; outline: none; border-radius: 0; box-shadow: none;
+    width: 390px; height: 844px; max-height: none;
+  }
+  body.patent .notch, body.patent .homebar { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .day.today::after { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffd97a"/><stop offset="0.55" stop-color="#f6bd45"/><stop offset="1" stop-color="#d99a26"/>
+  </linearGradient>
+</defs></svg>
+
+<div class="phone">
+  <div class="notch"></div>
+
+  <header class="topbar">
+    <div class="pill" id="streakPill">
+      <svg class="flame" width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2c1 4-4 5.5-4 10a4 4 0 0 0 8 0c0-1.6-.7-2.8-1.4-3.8-.4 1-.9 1.6-1.8 2.1.5-2.7-.3-6-0.8-8.3z" fill="#ff7e69"/>
+      </svg>
+      连续 <span class="num" id="streakNum">3</span> 天
+    </div>
+    <div class="pill">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" fill="#f6bd45"/>
+        <circle cx="12" cy="12" r="6.2" fill="none" stroke="#c98a1e" stroke-width="1.6"/>
+        <path d="M12 8.4v7.2M9.6 10h4.8M9.6 14h4.8" stroke="#c98a1e" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <span class="num" id="coinNum">230</span>
+    </div>
+  </header>
+
+  <div class="monthbar">
+    <button class="navbtn" id="prevM" aria-label="上个月">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <h1><span id="monthText">—</span><small id="hintText">聚宝日历</small></h1>
+    <button class="navbtn" id="nextM" aria-label="下个月">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <main class="stage" id="stage" data-mode="scatter">
+    <canvas id="dust"></canvas>
+    <div class="weekrow"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+    <div class="gridzone" id="gridzone"></div>
+  </main>
+
+  <footer class="bottom">
+    <div class="piggy-wrap">
+      <div class="float-gain" id="floatGain">+10</div>
+      <svg viewBox="0 0 220 128" id="piggy">
+        <defs>
+          <linearGradient id="pigSkin" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#7fd4dc"/><stop offset="1" stop-color="#4db3c0"/>
+          </linearGradient>
+          <clipPath id="bellyClip"><ellipse cx="110" cy="90" rx="52" ry="26"/></clipPath>
+        </defs>
+        <g id="piggyBody">
+          <!-- 橙色小脚 -->
+          <ellipse cx="82" cy="120" rx="16" ry="8" fill="#f5923e"/>
+          <ellipse cx="138" cy="120" rx="16" ry="8" fill="#f5923e"/>
+          <!-- 青绿圆身 -->
+          <ellipse cx="110" cy="82" rx="72" ry="46" fill="url(#pigSkin)"/>
+          <!-- 橙色小角 -->
+          <path d="M84 42 q-4 -16 8 -18 q8 -1 8 12" fill="#f5923e"/>
+          <path d="M136 42 q4 -16 -8 -18 q-8 -1 -8 12" fill="#f5923e"/>
+          <!-- 侧鳍小手 -->
+          <ellipse cx="40" cy="92" rx="10" ry="14" fill="#4db3c0" transform="rotate(18 40 92)"/>
+          <ellipse cx="180" cy="92" rx="10" ry="14" fill="#4db3c0" transform="rotate(-18 180 92)"/>
+          <!-- 肚皮窗口（金币充盈度） -->
+          <ellipse cx="110" cy="90" rx="52" ry="26" fill="#2f8494"/>
+          <g clip-path="url(#bellyClip)">
+            <rect id="bellyFill" x="54" y="116" width="112" height="60" fill="#f6bd45"/>
+            <circle cx="88" cy="116" r="6.5" fill="#ffe9b8" opacity="0.9"/>
+            <circle cx="112" cy="118" r="6.5" fill="#ffe9b8" opacity="0.9"/>
+            <circle cx="136" cy="116" r="6.5" fill="#ffe9b8" opacity="0.9"/>
+          </g>
+          <ellipse cx="110" cy="90" rx="52" ry="26" fill="none" stroke="#fff6e4" stroke-width="4"/>
+          <!-- 黑豆眼 + 微笑 + 浅色腮红 -->
+          <circle cx="88" cy="52" r="4.2" fill="#20242b"/>
+          <circle cx="132" cy="52" r="4.2" fill="#20242b"/>
+          <path d="M102 60 q8 7 16 0" fill="none" stroke="#20242b" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="74" cy="62" r="5" fill="#9adfe6"/>
+          <circle cx="146" cy="62" r="5" fill="#9adfe6"/>
+          <!-- 胸前 W（呼应 App 图标） -->
+          <polyline points="80,102 90,124 102,108 110,120 118,108 130,124 140,102" fill="none" stroke="#fff6e4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>
+    </div>
+    <button class="cta" id="cta">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" fill="#8a5a00" opacity="0.25"/>
+        <path d="M12 8.4v7.2M9.6 10h4.8M9.6 14h4.8" stroke="#8a5a00" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span id="ctaText">立即签到 · +10</span>
+    </button>
+    <div class="homebar"></div>
+  </footer>
+</div>
+
+<aside class="console">
+  <h2>聚宝日历 · 签到页原型</h2>
+  <p class="sub">外观设计演示：日期徽章散落 → 螺旋聚合为月历 → 签到时今日徽章碎化为金币吸入储蓄罐。</p>
+  <button id="btnReplay">↻ 重播聚合（散开→重组）</button>
+  <button id="btnReset">⟲ 重置演示数据</button>
+  <div class="orderRow">
+    <label for="orderSel">重组顺序</label>
+    <select id="orderSel">
+      <option value="diagonal" selected>对角波 · 左上扫向右下（推荐）</option>
+      <option value="ripple">涟漪 · 今日为圆心扩散</option>
+      <option value="spiral">螺旋收拢 · 今日压轴</option>
+      <option value="column">列扫描 · 一周一列</option>
+      <option value="index">日期顺序 · 1→31</option>
+    </select>
+  </div>
+  <div class="toggle">
+    <span>减弱动效（无障碍）</span>
+    <div class="sw" id="motionSw" role="switch" aria-checked="false" tabindex="0"></div>
+  </div>
+  <div class="foot">
+    <b>专利设计要点</b>：① 12 瓣花齿「日期印章」徽章；② 散落/聚合双态构图；③ 签到碎化-吸入动效；④ 小怪兽储蓄罐联动充盈。<br>详细说明见 design/ 目录专利文档。
+  </div>
+</aside>
+
+<script>
+(() => {
+  "use strict";
+  /* ================= 工具 ================= */
+  const $ = s => document.querySelector(s);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  /* 12 瓣花齿印章徽章（第一版定稿视觉，专利特征①）：
+     单层平滑余弦花齿 r = R − amp·(0.5 − 0.5·cos(12θ))，amp≈0.125R 细腻含蓄；
+     散落态花齿面，聚合态渐隐为圆角方章（双轮廓交叉渐隐） */
+  function sealPath(cx, cy, R, amp, lobes) {
+    let d = "";
+    const N = 144;
+    for (let i = 0; i <= N; i++) {
+      const a = i / N * Math.PI * 2;
+      const rad = R - amp * (0.5 - 0.5 * Math.cos(lobes * a));
+      const x = cx + Math.cos(a - Math.PI / 2) * rad, y = cy + Math.sin(a - Math.PI / 2) * rad;
+      d += (i ? "L" : "M") + x.toFixed(2) + " " + y.toFixed(2);
+    }
+    return d + "Z";
+  }
+  const FLOWER_D = sealPath(24, 24, 22.4, 2.8, 12);
+  const SQUARE_D = "M10 2 h28 a8 8 0 0 1 8 8 v28 a8 8 0 0 1 -8 8 h-28 a8 8 0 0 1 -8 -8 v-28 a8 8 0 0 1 8 -8 Z";
+
+  /* 徽章配色（暖纸底版）：已签金色渐变、今日白卡+绿描边、未来淡描边 */
+  const FACES = {
+    checked: { face: "url(#gGold)", num: "#6b4a00", stamp: "#8a5a00" },
+    today:   { face: "#fffdf8", num: "#3a3126", stamp: "#ff7e69" },
+    future:  { face: "rgba(0,0,0,0.045)", num: "rgba(74,60,32,0.30)", stamp: "rgba(74,60,32,0.3)" },
+    plain:   { face: "#fffdf8", num: "#5a4f3a", stamp: "rgba(60,48,28,0.5)" },
+  };
+  function applyFace(day, kind) {
+    const P = FACES[kind]; if (!P) return;
+    day.el.dataset.kind = kind;
+    const svg = day.el.querySelector(".seal");
+    svg.querySelector(".face-flower").setAttribute("fill", P.face);
+    svg.querySelector(".face-square").setAttribute("fill", P.face);
+    day.el.querySelector(".num").style.color = P.num;
+    day.el.querySelector(".stamp svg").setAttribute("fill", P.stamp);
+  }
+  function faceKind(d) { return d.checked ? "checked" : d.isToday ? "today" : d.isFuture ? "future" : "plain"; }
+
+  /* ================= 数据 ================= */
+  const today = new Date();
+  let viewY = today.getFullYear(), viewM = today.getMonth();
+  const MISSED = new Set([6, 13, 20]);           // 演示：本月漏签
+  const coinColors = ["#f6bd45", "#e8a13a", "#ff9d8a", "#00a574"];
+  const state = {
+    mode: "scatter",          // scatter | assembling | grid
+    reduced: matchMedia("(prefers-reduced-motion: reduce)").matches,
+    checkedExtra: new Set(),  // 本次会话中新签的日
+    streak: 3, coins: 230,
+    busy: false,
+    order: "diagonal",        // 重组顺序：diagonal | ripple | spiral | column | index
+  };
+
+  const stage = $("#stage"), gridzone = $("#gridzone"), canvas = $("#dust"), ctx = canvas.getContext("2d");
+  let days = [], dust = [], burst = [], ambient = [];
+  let W = 0, H = 0;
+
+  /* ================= 月份构建 ================= */
+  function buildMonth() {
+    $("#monthText").textContent = viewY + " 年 " + (viewM + 1) + " 月";
+    const first = new Date(viewY, viewM, 1);
+    const count = new Date(viewY, viewM + 1, 0).getDate();
+    const offset = (first.getDay() + 6) % 7; // 周一开头
+    gridzone.innerHTML = "";
+    days = [];
+    const rand = mulberry32(viewY * 12 + viewM);
+    for (let i = 0; i < count; i++) {
+      const dnum = i + 1;
+      const date = new Date(viewY, viewM, dnum);
+      const isToday = date.toDateString() === today.toDateString();
+      const isFuture = date > today && !isToday;
+      const checked = (isToday && state.checkedExtra.has(dnum)) || (!isFuture && !isToday && !MISSED.has(dnum) && rand() > 0.12);
+      const el = document.createElement("div");
+      el.className = "day" + (checked ? " checked" : "") + (isFuture ? " future" : "") + (isToday ? " today" : "");
+      el.innerHTML =
+        '<svg class="seal" viewBox="0 0 48 48">' +
+        '<path class="face-flower" d="' + FLOWER_D + '"/>' +
+        '<path class="face-square" d="' + SQUARE_D + '"/></svg>' +
+        '<span class="num">' + dnum + "</span>" +
+        '<span class="stamp"><svg width="22" height="22" viewBox="0 0 24 24">' +
+        '<ellipse cx="12" cy="14.5" rx="5.2" ry="4.4"/><circle cx="7" cy="9.5" r="2.1"/><circle cx="12" cy="7.8" r="2.1"/><circle cx="17" cy="9.5" r="2.1"/></svg></span>';
+      if (isToday) el.addEventListener("click", doCheckin);
+      gridzone.appendChild(el);
+      const rec = { dnum, el, checked, isToday, isFuture,
+        x: 0, y: 0, vx: 0, vy: 0, rot: 0, vrot: 0, scale: 1, vscale: 0, anchor: null, assembleAt: 0 };
+      applyFace(rec, faceKind(rec));
+      days.push(rec);
+    }
+    // 散落锚点：确定性伪随机 + 倾角（呼应参考但分布独立）
+    const r2 = mulberry32(777 + viewM);
+    days.forEach((d, i) => {
+      d.anchor = {
+        x: 0.08 + r2() * 0.84, y: 0.10 + r2() * 0.80,
+        rot: (r2() - 0.5) * 56, scale: 0.9 + r2() * 0.5,
+        wob: r2() * Math.PI * 2, wsp: 0.5 + r2() * 0.7,
+      };
+    });
+    // 尘粒：每徽章 4 颗（专利特征②的氛围层）
+    dust = [];
+    days.forEach((d, i) => {
+      for (let k = 0; k < 4; k++) dust.push({ part: i, ang: (k / 4 + rand() * 0.2) * Math.PI * 2, rad: 26 + rand() * 30, sp: (0.5 + rand() * 0.8) * (rand() > 0.5 ? 1 : -1), size: 0.8 + rand() * 1.6, color: Math.floor(rand() * 3), ph: rand() * Math.PI * 2, alpha: 0 });
+    });
+    ambient = [];
+    for (let i = 0; i < 26; i++) ambient.push({ x: rand() * 390, y: rand() * 460, size: 0.6 + rand() * 1.4, tw: rand() * Math.PI * 2, sp: 0.4 + rand() * 0.9 });
+    layoutGrid();
+  }
+
+  /* ================= 网格布局 ================= */
+  function layoutGrid() {
+    W = stage.clientWidth; H = stage.clientHeight;
+    canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    const cw = (W - 40 - 6 * 8) / 7;
+    days.forEach((d, i) => {
+      const col = i % 7, row = Math.floor(i / 7);
+      d.tx = 20 + col * (cw + 8) + cw / 2;
+      d.ty = 32 + row * (cw + 10) + cw / 2;
+    });
+  }
+
+  /* ================= 模式切换 ================= */
+  function computeDelays(order) {
+    const t = days.find(x => x.isToday);
+    const cx = t ? t.tx : W / 2, cy = t ? t.ty : H / 2;
+    const dists = days.map(d => Math.hypot(d.tx - cx, d.ty - cy));
+    const maxD = Math.max(...dists, 1);
+    switch (order) {
+      case "ripple":   // 涟漪：以今日为圆心由近及远
+        return dists.map(v => Math.round(v / maxD * 420));
+      case "spiral":   // 螺旋收拢：外围先落位，今日徽章压轴登场
+        return dists.map(v => Math.round((1 - v / maxD) * 480));
+      case "column":   // 列扫描：一列（一周）接一列扫过
+        return days.map((_, i) => Math.round((i % 7) * 110 + Math.floor(i / 7) * 14));
+      case "diagonal": // 对角波：左上→右下斜向扫过
+        return days.map((d, i) => Math.round((i % 7 + Math.floor(i / 7)) * 55));
+      default:         // 日期顺序
+        return days.map((_, i) => i * 26);
+    }
+  }
+  function setMode(m, { stagger = true, order = "index" } = {}) {
+    state.mode = m;
+    stage.dataset.mode = m;
+    const now = performance.now();
+    if (m === "grid") {
+      const delays = computeDelays(order);
+      days.forEach((d, i) => { d.assembleAt = now + (stagger && !state.reduced ? delays[i] : 0); });
+      if (state.reduced) days.forEach(d => { d.x = d.tx; d.y = d.ty; d.rot = 0; d.scale = 1; });
+    }
+  }
+  function replay() { setMode("scatter"); setTimeout(() => setMode("grid", { order: state.order }), 700); }
+
+  /* ================= 主循环（弹簧 + 画布） ================= */
+  let prev = performance.now();
+  function loop(now) {
+    const dt = clamp((now - prev) / 1000, 0, 0.034); prev = now;
+    const t = now / 1000;
+    const assembled = state.mode !== "scatter";
+
+    days.forEach(d => {
+      let tx, ty, trot, tscale;
+      if (assembled && now >= d.assembleAt) { tx = d.tx; ty = d.ty; trot = 0; tscale = 1; }
+      else {
+        const a = d.anchor;
+        tx = a.x * W + Math.sin(t * a.wsp + a.wob) * 9;
+        ty = a.y * H + Math.cos(t * a.wsp * 0.8 + a.wob) * 8;
+        trot = a.rot + Math.sin(t * a.wsp + a.wob) * 5;
+        tscale = a.scale;
+      }
+      const k = assembled && now >= d.assembleAt ? 110 : 16, damp = Math.exp(-(assembled ? 11 : 4.5) * dt);
+      if (state.reduced) { d.x = tx; d.y = ty; d.rot = trot; d.scale = tscale; d.vx = d.vy = d.vrot = d.vscale = 0; }
+      else {
+        d.vx = (d.vx + (tx - d.x) * k * dt) * damp;
+        d.vy = (d.vy + (ty - d.y) * k * dt) * damp;
+        d.vrot = (d.vrot + (trot - d.rot) * 90 * dt) * Math.exp(-9 * dt);
+        d.vscale = (d.vscale + (tscale - d.scale) * 110 * dt) * Math.exp(-10 * dt);
+        d.x += d.vx * dt; d.y += d.vy * dt; d.rot += d.vrot * dt; d.scale += d.vscale * dt;
+      }
+      d.el.style.transform = "translate(" + d.x.toFixed(2) + "px," + d.y.toFixed(2) + "px) rotate(" + d.rot.toFixed(2) + "deg) scale(" + d.scale.toFixed(3) + ")";
+    });
+
+    // 散开→聚合 自动推进（兼容旧时序）
+    if (state.mode === "assembling" && days.every(d => now >= d.assembleAt)) setMode("grid", { stagger: false });
+
+    // ---- 画布尘粒 ----
+    ctx.clearRect(0, 0, W, H);
+    if (!state.reduced) {
+      ambient.forEach(s => {
+        s.tw += s.sp * dt;
+        ctx.globalAlpha = 0.10 + 0.10 * (0.5 + 0.5 * Math.sin(s.tw));
+        ctx.fillStyle = "#c9b98f";
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, 7); ctx.fill();
+      });
+      const targetAlpha = state.mode === "scatter" ? 0.8 : assembled ? 0.4 : 0.8;
+      dust.forEach(p => {
+        const d = days[p.part]; if (!d) return;
+        if (assembled) { // 螺旋吸入（专利特征③氛围）
+          p.rad *= 1 - 1.6 * dt; p.ang += (2.6 + (60 - p.rad) * 0.06) * dt;
+          p.alpha += (targetAlpha * clamp(p.rad / 30, 0, 1) - p.alpha) * 3 * dt;
+          if (p.rad < 3) { p.rad = 34 + Math.random() * 26; p.alpha = 0; }
+        } else { // 环绕徽章
+          p.ang += p.sp * dt; p.rad = 26 + Math.sin(t * 0.9 + p.ph) * 6;
+          p.alpha += (targetAlpha - p.alpha) * 3 * dt;
+        }
+        const px = d.x + Math.cos(p.ang) * p.rad, py = d.y + Math.sin(p.ang) * p.rad * 0.82;
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = coinColors[p.color];
+        ctx.beginPath(); ctx.arc(px, py, p.size, 0, 7); ctx.fill();
+      });
+
+      // ---- 签到金币弹道（专利特征③主体） ----
+      const belly = bellyPoint();
+      for (let i = burst.length - 1; i >= 0; i--) {
+        const c = burst[i];
+        const u = clamp((now - c.t0) / c.dur, 0, 1);
+        const e = u * u * (3 - 2 * u); // smoothstep
+        const x = (1 - e) * (1 - e) * c.sx + 2 * (1 - e) * e * c.cx + e * e * belly.x;
+        const y = (1 - e) * (1 - e) * c.sy + 2 * (1 - e) * e * c.cy + e * e * belly.y;
+        ctx.globalAlpha = 1 - u * u * 0.4;
+        ctx.fillStyle = coinColors[c.color];
+        ctx.beginPath(); ctx.arc(x, y, c.size * (1 - u * 0.35), 0, 7); ctx.fill();
+        if (u >= 1) { burst.splice(i, 1); piggyBump(); }
+      }
+      ctx.globalAlpha = 1;
+    }
+    requestAnimationFrame(loop);
+  }
+
+  const piggyRect = () => { const r = $("#piggy").getBoundingClientRect(), s = stage.getBoundingClientRect(); return { x: r.left - s.left + r.width / 2, y: r.top - s.top + 88 }; };
+  let bellyCache = { x: 195, y: 430 };
+  function bellyPoint() { return bellyCache; }
+  new ResizeObserver(() => { layoutGrid(); const p = piggyRect(); bellyCache = { x: p.x, y: p.y }; }).observe(stage);
+  setTimeout(() => { const p = piggyRect(); bellyCache = { x: p.x, y: p.y }; }, 300);
+
+  /* ================= 签到：盖章 + 金币 → 重组为整齐日历 ================= */
+  function doCheckin() {
+    if (state.busy) return;
+    const d = days.find(x => x.isToday); if (!d) return;
+    state.busy = true;
+    const scattered = state.mode === "scatter";
+    if (state.reduced) {
+      finishCheckin(d);
+      if (scattered) setMode("grid", { stagger: false });
+      state.busy = false; return;
+    }
+    // ① 盖章 + 金币吸入储蓄罐
+    d.el.classList.remove("checked", "justchecked");
+    d.checked = false; void d.el.offsetWidth;
+    const rand = mulberry32(Date.now() & 0xffff);
+    for (let i = 0; i < 22; i++) {
+      burst.push({
+        sx: d.x + (rand() - 0.5) * 30, sy: d.y + (rand() - 0.5) * 30,
+        cx: d.x + (rand() - 0.5) * 160, cy: Math.min(d.y, bellyCache.y) - 20 - rand() * 80,
+        t0: performance.now() + i * 24, dur: 560 + rand() * 260,
+        size: 2 + rand() * 2.6, color: Math.floor(rand() * 3),
+      });
+    }
+    d.el.classList.add("justchecked");
+    setTimeout(() => finishCheckin(d), 850);
+    if (scattered) {
+      // ② 当前是散落态：直接按所选顺序重组
+      setTimeout(() => setMode("grid", { order: state.order }), 500);
+      setTimeout(() => { state.busy = false; }, 1800);
+    } else {
+      // ③ 已整齐：散开 → 停顿 → 再按所选顺序重组（可反复体验）
+      setTimeout(() => setMode("scatter"), 600);
+      setTimeout(() => setMode("grid", { order: state.order }), 1900);
+      setTimeout(() => { state.busy = false; }, 2800);
+    }
+  }
+  function finishCheckin(d) {
+    d.checked = true; d.el.classList.add("checked");
+    applyFace(d, "checked");
+    state.streak++; state.coins += 10;
+    popNum($("#streakNum"), state.streak); popNum($("#coinNum"), state.coins);
+    $("#streakPill").classList.add("pop"); setTimeout(() => $("#streakPill").classList.remove("pop"), 500);
+    const fg = $("#floatGain"); fg.classList.remove("go"); void fg.offsetWidth; fg.classList.add("go");
+    const pct = clamp((state.streak + 12) / 30, 0, 1);
+    $("#bellyFill").setAttribute("y", 122 - 60 * pct);
+  }
+  let lastBump = 0;
+  function piggyBump() {
+    const now = performance.now();
+    if (now - lastBump < 160) return;
+    lastBump = now;
+    const b = $("#piggyBody"); b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump");
+  }
+  function popNum(el, v) { el.textContent = v; el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
+
+  /* ================= 演示控制 ================= */
+  $("#cta").addEventListener("click", doCheckin);
+  $("#btnReplay").addEventListener("click", replay);
+  $("#orderSel").addEventListener("change", e => { state.order = e.target.value; });
+  $("#btnReset").addEventListener("click", () => {
+    state.checkedExtra.clear(); state.streak = 3; state.coins = 230;
+    $("#streakNum").textContent = 3; $("#coinNum").textContent = 230;
+    const cta = $("#cta"); cta.disabled = false; $("#ctaText").textContent = "立即签到 · +10";
+    $("#bellyFill").setAttribute("y", 122 - 60 * 0.5);
+    buildMonth(); replay();
+  });
+  const sw = $("#motionSw");
+  function setReduced(v) {
+    state.reduced = v; sw.classList.toggle("on", v); sw.setAttribute("aria-checked", v);
+    if (v) setMode("grid", { stagger: false }); else replay();
+  }
+  sw.addEventListener("click", () => setReduced(!state.reduced));
+  sw.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); setReduced(!state.reduced); } });
+  $("#prevM").addEventListener("click", () => { viewM--; if (viewM < 0) { viewM = 11; viewY--; } buildMonth(); replay(); });
+  $("#nextM").addEventListener("click", () => { viewM++; if (viewM > 11) { viewM = 0; viewY++; } buildMonth(); replay(); });
+
+  /* ================= 启动 ================= */
+  const qs = new URLSearchParams(location.search);
+  const PATENT = qs.get("patent") === "1";
+  buildMonth();
+  if (PATENT) {
+    // 专利申请视图：按 state 参数定格四种关键状态，不运行动画（手动应用 transform）
+    document.body.classList.add("patent");
+    state.reduced = true;
+    const st = qs.get("state") || "grid";
+    const place = () => days.forEach(d => {
+      d.el.style.transform = "translate(" + d.x.toFixed(2) + "px," + d.y.toFixed(2) + "px) rotate(" + d.rot.toFixed(2) + "deg) scale(" + d.scale.toFixed(3) + ")";
+    });
+    if (st === "scatter") {
+      setMode("scatter");
+      days.forEach(d => { d.x = d.anchor.x * W; d.y = d.anchor.y * H; d.rot = d.anchor.rot; d.scale = d.anchor.scale; });
+    } else if (st === "mid") {
+      setMode("grid", { stagger: false });
+      days.forEach(d => {
+        d.x = d.anchor.x * W + (d.tx - d.anchor.x * W) * 0.55;
+        d.y = d.anchor.y * H + (d.ty - d.anchor.y * H) * 0.55;
+        d.rot = d.anchor.rot * 0.3; d.scale = 1;
+        d.el.querySelector(".face-flower").style.opacity = 0.4;
+      });
+    } else {
+      setMode("grid", { stagger: false });
+      days.forEach(d => { d.x = d.tx; d.y = d.ty; d.rot = 0; d.scale = 1; });
+      if (st === "done") {
+        const d = days.find(x => x.isToday);
+        if (d) { d.checked = true; d.el.classList.add("checked"); applyFace(d, "checked"); }
+        $("#streakNum").textContent = 4; $("#coinNum").textContent = 240;
+        $("#bellyFill").setAttribute("y", 122 - 60 * ((4 + 12) / 30));
+      }
+    }
+    place();
+    if (qs.get("debug") === "1") {
+      const r = s => { const e = document.querySelector(s).getBoundingClientRect(); return [s, Math.round(e.left), Math.round(e.right), Math.round(e.width)]; };
+      document.title = JSON.stringify([r(".phone"), r(".topbar"), r(".pill"), r(".topbar .pill:last-child")]);
+    }
+  } else {
+    setMode("scatter");
+    days.forEach(d => { d.x = d.anchor.x * W; d.y = d.anchor.y * H; d.rot = d.anchor.rot; d.scale = d.anchor.scale; });
+    requestAnimationFrame(loop);
+  }
+})();
+</script>
+</body>
+</html>

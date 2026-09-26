@@ -1,0 +1,98 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "organism-assembly",
+  "title": "Organism assembly",
+  "description": "An interactive studio that gathers floating shapes into six reusable compositions.",
+  "dependencies": [],
+  "registryDependencies": [
+    "https://000h.cojeev.com/r/cojeev.json",
+    "https://000h.cojeev.com/r/organism-composition.json",
+    "https://000h.cojeev.com/r/button.json",
+    "https://000h.cojeev.com/r/icon.json"
+  ],
+  "files": [
+    {
+      "path": "registry/cojeev/ui/organism-assembly.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { OrganismComposition, type OrganismCompositionProps, type OrganismKind } from \"@/components/ui/organism-composition\";\nimport { Button } from \"@/components/ui/button\";\nimport { Icon, IconButton } from \"@/components/ui/icon\";\nimport { organismChoices } from \"@/lib/cojeev/assembly-geometry\";\nimport { useChoreography } from \"@/lib/cojeev-motion/choreography\";\nimport { useFlowGroup } from \"@/lib/cojeev-motion/use-flow\";\nimport { cn } from \"@/lib/utils\";\nimport { useMotionVisibility } from \"@/lib/cojeev-motion/use-motion-visibility\";\n\nexport type OrganismAssemblyProps=Omit<React.ComponentProps<\"div\">,\"onChange\">&{\n  value?:OrganismKind;\n  defaultValue?:OrganismKind;\n  onValueChange?:(value:OrganismKind)=>void;\n  defaultAssembled?:boolean;\n  /** Gather once when the measured studio first becomes visible. User choices take priority. */\n  autoAssemble?:boolean;\n  /** An optional curated subset; the default studio still exposes all six compositions. */\n  compositions?:OrganismKind[];\n  compositionProps?:Omit<OrganismCompositionProps,\"kind\"|\"assembled\"|\"onSettledChange\">;\n};\n/** A specimen studio. The moving parts are the native components you can use after arrival. */\nexport function OrganismAssembly({value,defaultValue=\"profile\",onValueChange,defaultAssembled=false,autoAssemble=false,compositions,compositionProps,className,...props}:OrganismAssemblyProps){\n  const [local,setLocal]=React.useState(defaultValue);\n  const host=React.useRef<HTMLDivElement>(null),autoStarted=React.useRef(false);\n  const {inView,enabled}=useMotionVisibility(host);\n  const choices=compositions?.length?organismChoices.filter(choice=>compositions.includes(choice.value)):organismChoices;\n  const kind=value??local,choiceKind=kind===\"dashboard\"?\"side-panel\":kind;\n  const [assembled,setAssembled]=React.useState(defaultAssembled);\n  const [settled,setSettled]=React.useState(defaultAssembled);\n  const {quiet}=useChoreography();\n  const choicesRef=useFlowGroup<HTMLDivElement>(undefined,{itemSelector:\"[data-assembly-choice]\",activeSelector:'[aria-pressed=\"true\"]'});\n  const timer=React.useRef<ReturnType<typeof setTimeout>|null>(null);\n  const id=React.useId();\n  const clear=()=>{if(timer.current){clearTimeout(timer.current);timer.current=null}};\n  React.useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current)},[]);\n  React.useEffect(()=>{if(quiet&&timer.current){clearTimeout(timer.current);timer.current=null;setAssembled(true)}},[quiet]);\n  React.useEffect(()=>{\n    if(!autoAssemble||autoStarted.current||!inView||!enabled||quiet)return;\n    const autoTimer=setTimeout(()=>{autoStarted.current=true;setAssembled(true);if(timer.current===autoTimer)timer.current=null},550);\n    timer.current=autoTimer;\n    // Visibility cleanup only owns this gather, never a later visitor-triggered replay.\n    return()=>{clearTimeout(autoTimer);if(timer.current===autoTimer)timer.current=null};\n  },[autoAssemble,inView,enabled,quiet]);\n  const choose=(next:OrganismKind)=>{autoStarted.current=true;clear();if(value===undefined)setLocal(next);onValueChange?.(next);setAssembled(true)};\n  const title=organismChoices.find(choice=>choice.value===choiceKind)?.label??\"Panel\";\n  function replay(){autoStarted.current=true;clear();setAssembled(false);timer.current=setTimeout(()=>{setAssembled(true);timer.current=null},1550)}\n  function moveChoice(event:React.KeyboardEvent<HTMLDivElement>){\n    const count=choices.length,index=choices.findIndex(choice=>choice.value===choiceKind);\n    const next=event.key===\"ArrowRight\"||event.key===\"ArrowDown\"?(index+1)%count:event.key===\"ArrowLeft\"||event.key===\"ArrowUp\"?(index+count-1)%count:event.key===\"Home\"?0:event.key===\"End\"?count-1:-1;\n    if(next<0)return;event.preventDefault();choose(choices[next].value);event.currentTarget.querySelectorAll<HTMLButtonElement>(\"button\")[next]?.focus();\n  }\n  return <div {...props} ref={host} className={cn(\"v-organism-assembly\",className)} data-slot=\"organism-assembly\" data-phase={quiet||assembled&&settled?\"usable\":assembled?\"assembling\":\"scattered\"}>\n    <div className=\"v-organism-assembly__toolbar\">\n      <div ref={choicesRef} className=\"v-organism-assembly__choices v-seg -pink\" role=\"group\" aria-label=\"Choose a composition\" onKeyDown={moveChoice}>\n        {choices.map(choice=><Button key={choice.value} data-assembly-choice={choice.value} variant={choiceKind===choice.value?\"accent\":\"ghost\"} size=\"sm\" aria-pressed={choiceKind===choice.value} aria-controls={id} onClick={()=>choose(choice.value)}>{choice.label}</Button>)}\n      </div>\n      <IconButton size=\"sm\" variant=\"cream\" aria-label=\"Replay assembly\" disabled={quiet} onClick={replay}><Icon name=\"refresh-cw\"/></IconButton>\n    </div>\n    <OrganismComposition particleCount={144} {...compositionProps} id={id} kind={kind} assembled={assembled} onSettledChange={setSettled}/>\n    <div className=\"v-organism-assembly__transport\">\n      <Button size=\"sm\" variant={assembled?\"ghost\":\"accent\"} disabled={quiet} onClick={()=>{autoStarted.current=true;clear();setAssembled(!assembled)}}><Icon name={assembled?\"layout-grid\":\"arrow-right\"}/>{assembled?\"Scatter\":\"Assemble\"}</Button>\n    </div>\n    <span className=\"sr-only\" role=\"status\">{quiet||assembled&&settled?`${title} ready`:assembled?`Assembling ${title.toLowerCase()}`:\"Ready to assemble\"}</span>\n  </div>;\n}\n",
+      "type": "registry:ui"
+    },
+    {
+      "path": "registry/cojeev/styles/organism-assembly.css",
+      "content": "@layer cojeev-states {\n.v-organism-assembly {width:100%;min-width:0;container-type:inline-size;}\n.v-organism-assembly__toolbar {display:flex;justify-content:center;align-items:center;gap:10px;}\n.v-organism-assembly__choices {display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px;padding:4px;border-radius:var(--r-pill);background:var(--card);min-width:0;}\n.v-organism-assembly__choices.v-glide {--glide-bg:var(--v-pink);--glide-fg:var(--v-on-accent);}\n.v-organism-assembly__choices.v-glide > [data-assembly-choice] {--mfill:transparent;background:transparent;box-shadow:none;}\n.v-organism-assembly__choices.v-glide > [data-assembly-choice] > .v-morph [data-morph-body] {fill:transparent;}\n.v-organism-assembly__transport {display:flex;justify-content:center;}\n@container(max-width:340px){.v-organism-assembly__toolbar{gap:6px}.v-organism-assembly__choices{gap:0;padding:2px}.v-organism-assembly__choices .v-btn{padding-inline:10px}}\n\n@container(max-width:480px){.v-organism-assembly__choices:has(>button:nth-of-type(5)){display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-radius:var(--r-card-sm)}.v-organism-assembly__toolbar{align-items:center}}\n\n}\n",
+      "type": "registry:file",
+      "target": "styles/cojeev/organism-assembly.css"
+    }
+  ],
+  "css": {
+    "@import \"@/styles/cojeev/organism-assembly.css\"": {}
+  },
+  "meta": {
+    "source": {
+      "name": "Organism assembly",
+      "variants": [
+        "default"
+      ],
+      "sizes": [
+        "default"
+      ],
+      "states": [
+        "rest",
+        "interactive",
+        "reduced-motion"
+      ]
+    },
+    "api": [
+      {
+        "name": "OrganismAssemblyProps",
+        "props": [
+          {
+            "name": "defaultValue",
+            "type": "string | number | readonly string[] | undefined",
+            "required": false,
+            "description": ""
+          },
+          {
+            "name": "value",
+            "type": "OrganismKind",
+            "required": false,
+            "description": ""
+          },
+          {
+            "name": "onValueChange",
+            "type": "(value:OrganismKind)=>void",
+            "required": false,
+            "description": ""
+          },
+          {
+            "name": "defaultAssembled",
+            "type": "boolean",
+            "required": false,
+            "description": ""
+          },
+          {
+            "name": "autoAssemble",
+            "type": "boolean",
+            "required": false,
+            "description": "Gather once when the measured studio first becomes visible. User choices take priority."
+          },
+          {
+            "name": "compositions",
+            "type": "OrganismKind[]",
+            "required": false,
+            "description": "An optional curated subset; the default studio still exposes all six compositions."
+          },
+          {
+            "name": "compositionProps",
+            "type": "Omit<OrganismCompositionProps,\"kind\"|\"assembled\"|\"onSettledChange\">",
+            "required": false,
+            "description": ""
+          }
+        ]
+      }
+    ],
+    "category": "Composition",
+    "fidelity": "refined-design-family",
+    "baseComponent": false
+  },
+  "type": "registry:ui"
+}

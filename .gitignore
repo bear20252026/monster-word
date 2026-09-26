@@ -63,3 +63,6 @@ logs/
 # Test coverage
 coverage/
 .workbuddy/
+
+# 发版安装包太大（>100MB GitHub 限制），产物一律走 Release 页下载
+deliverables/*.exe

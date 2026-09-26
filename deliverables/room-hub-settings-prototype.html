@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>怪兽小屋 · 个人中心设计原型</title>
+<style>
+  :root {
+    /* 与聚宝日历同源的暖纸基调（Monster Word 品牌画布） */
+    --paper: #f2f0eb;
+    --paper-2: #edebe9;
+    --floor: #e7e2d6;
+    --card: #fffdf8;
+    --line: rgba(74, 60, 32, 0.10);
+    --gold: #f6bd45;
+    --gold-deep: #c98a1e;
+    --coral: #ff7e69;
+    --green: #006241;
+    --green-light: #0e8a60;
+    --cream: #fff6e4;
+    --ink: #2b241a;
+    --dim: rgba(74, 60, 32, 0.55);
+    --wood: #d9c9a8;
+    --wood-deep: #c4b088;
+    --teal: #6fc9d2;
+    --teal-deep: #4db3c0;
+    --accent: #00a574;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: radial-gradient(1200px 800px at 20% -10%, #1d2a45 0%, #0b1220 55%, #080d18 100%);
+    color: var(--cream);
+    display: flex; align-items: center; justify-content: center;
+    gap: 40px; min-height: 100vh; padding: 24px; flex-wrap: wrap;
+  }
+
+  /* ============ 手机外框 ============ */
+  .phone {
+    width: 390px; height: 844px;
+    background: linear-gradient(180deg, #f6f4ef 0%, var(--paper) 55%, var(--paper-2) 100%);
+    border-radius: 52px; border: 10px solid #26211a;
+    outline: 1px solid rgba(0, 0, 0, 0.22);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+    position: relative; overflow: hidden; flex: none;
+  }
+  .notch { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 118px; height: 30px; border-radius: 20px; background: #05080f; z-index: 60; }
+
+  /* ============ 门牌头部（身份区） ============ */
+  .doorplate {
+    position: absolute; top: 58px; left: 0; right: 0; height: 78px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 20px; z-index: 40;
+  }
+  .avatar-frame {
+    width: 56px; height: 56px; border-radius: 18px;
+    background: var(--card); border: 1px solid var(--line);
+    box-shadow: 0 3px 10px rgba(80, 66, 40, 0.12);
+    display: grid; place-items: center; position: relative; flex: none;
+  }
+  .avatar-frame .edit {
+    position: absolute; right: -6px; bottom: -6px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--gold); border: 2px solid var(--card);
+    display: grid; place-items: center;
+  }
+  .doorplate .who { flex: 1; min-width: 0; }
+  .doorplate .who .name { font-size: 17px; font-weight: 800; color: var(--ink); letter-spacing: 0.02em; }
+  .doorplate .who .sub { font-size: 11.5px; color: var(--dim); margin-top: 3px; font-weight: 600; }
+  .coinchip {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 999px; padding: 8px 13px; flex: none;
+    box-shadow: 0 3px 10px rgba(80, 66, 40, 0.12);
+    cursor: pointer;
+  }
+  .coinchip .amt { font-size: 15px; font-weight: 900; color: var(--ink); }
+  .coinchip .lbl { font-size: 10px; color: var(--dim); font-weight: 600; }
+
+  /* ============ 房间舞台 ============ */
+  .room {
+    position: absolute; top: 150px; left: 0; right: 0; bottom: 0;
+    z-index: 10; overflow: hidden;
+  }
+  .floorline { position: absolute; left: 0; right: 0; top: 66%; height: 2px; background: var(--line); }
+  .floor { position: absolute; left: 0; right: 0; top: 66%; bottom: 0; background: var(--floor); }
+  .floor::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 8px;
+    background: rgba(74, 60, 32, 0.05); }
+
+  /* 物件通用：可点击 + 抬起反馈 */
+  .obj { position: absolute; cursor: pointer; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .obj:hover { transform: translateY(-4px); }
+  .obj.active { transform: translateY(-7px); }
+  .obj .tag {
+    position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
+    background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 9px; font-size: 10px; font-weight: 700; color: var(--dim);
+    white-space: nowrap; letter-spacing: 0.04em;
+    box-shadow: 0 2px 6px rgba(80, 66, 40, 0.10);
+  }
+  .obj.active .tag { color: var(--green); border-color: rgba(0, 98, 65, 0.4); }
+  .obj svg { display: block; overflow: visible; }
+  .obj .hit { position: absolute; inset: -10px; }
+
+  /* 装备架（我的装备） */
+  .shelf { top: 14px; left: 22px; width: 128px; height: 64px; }
+  /* 窗（外观 & 沉浸场景） */
+  .window { top: 10px; right: 22px; width: 118px; height: 92px; }
+  .window .sky { transition: opacity 0.8s; }
+  /* 书桌 + 台灯（学习偏好） */
+  .desk { top: 118px; left: 26px; width: 150px; height: 118px; }
+  .desk .lightcone { opacity: 0; transition: opacity 0.4s; }
+  .desk.active .lightcone, .desk:hover .lightcone { opacity: 1; }
+  /* 唱片机（随身听） */
+  .player { top: 132px; right: 26px; width: 118px; height: 100px; }
+  .player .disc { transform-origin: 59px 40px; }
+  .player:hover .disc, .player.active .disc { animation: spin 3.2s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  /* 书架（我的内容） */
+  .bookshelf { bottom: 96px; left: 24px; width: 104px; height: 84px; }
+  /* 爪印地毯（学习足迹） */
+  .rug { bottom: 30px; left: 50%; margin-left: -74px; width: 148px; height: 56px; }
+  /* 工具箱（更多设置） */
+  .toolbox { bottom: 44px; right: 26px; width: 86px; height: 62px; }
+  /* 存钱罐（尖叫币） */
+  .piggy { bottom: 118px; right: 40px; width: 76px; height: 46px; }
+
+  /* 怪兽（房主） */
+  .monster { position: absolute; bottom: 26px; left: 50%; margin-left: -58px; width: 116px; height: 118px;
+    z-index: 20; pointer-events: none; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .monster.hop { animation: hop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes hop {
+    0% { transform: translateY(0); } 40% { transform: translateY(-14px); } 100% { transform: translateY(0); }
+  }
+  .pupil { transition: transform 0.12s ease-out; }
+
+  /* ============ 抽屉面板 ============ */
+  .veil { position: absolute; inset: 0; background: rgba(242, 240, 235, 0.45);
+    opacity: 0; pointer-events: none; transition: opacity 0.35s; z-index: 30; }
+  .veil.on { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 330px;
+    background: linear-gradient(180deg, #fffdf8 0%, #faf6ec 100%);
+    border-radius: 26px 26px 0 0; border: 1px solid var(--line); border-bottom: none;
+    box-shadow: 0 -14px 34px rgba(80, 66, 40, 0.18);
+    transform: translateY(105%); transition: transform 0.45s cubic-bezier(0.34, 1.2, 0.64, 1);
+    z-index: 50; padding: 14px 22px 20px;
+  }
+  .drawer.on { transform: translateY(0); }
+  .drawer .grip { width: 64px; height: 6px; border-radius: 3px; background: rgba(74, 60, 32, 0.18);
+    margin: 0 auto 12px; cursor: pointer; }
+  .drawer .head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .drawer .head .ico { width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+  .drawer .head .t { font-size: 16px; font-weight: 800; color: var(--ink); }
+  .drawer .head .s { font-size: 11px; color: var(--dim); font-weight: 600; margin-top: 2px; }
+  .drawer .rows { display: flex; flex-direction: column; gap: 8px; }
+  .drawer .row {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(255, 253, 248, 0.9); border: 1px solid var(--line);
+    border-radius: 14px; padding: 11px 14px;
+    font-size: 13px; font-weight: 600; color: var(--ink);
+  }
+  .drawer .row .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .drawer .row .chev { margin-left: auto; color: var(--dim); font-size: 15px; }
+
+  /* 提示条 */
+  .hint { position: absolute; top: 116px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; font-weight: 700; color: var(--dim); letter-spacing: 0.06em;
+    background: rgba(255, 253, 248, 0.7); border-radius: 999px; padding: 4px 12px;
+    z-index: 35; transition: opacity 0.5s; }
+  .hint.off { opacity: 0; }
+
+  .homebar { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 130px; height: 5px; border-radius: 3px; background: rgba(43, 36, 26, 0.22); z-index: 70; }
+
+  /* ============ 侧边说明卡 ============ */
+  .console { width: 300px; flex: none;
+    background: rgba(19, 30, 51, 0.85); border: 1px solid var(--line);
+    border-radius: 20px; padding: 22px; backdrop-filter: blur(8px); }
+  .console h2 { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+  .console p.sub { font-size: 12px; color: var(--dim); line-height: 1.7; margin-bottom: 14px; }
+  .console .kv { font-size: 12px; line-height: 1.9; color: var(--cream); }
+  .console .kv b { color: var(--gold-soft, #ffe9b8); }
+  .console .foot { margin-top: 14px; font-size: 11px; color: var(--dim); line-height: 1.8;
+    border-top: 1px dashed var(--line); padding-top: 12px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .player:hover .disc, .player.active .disc { animation: none; }
+    .monster.hop { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+
+  <!-- 门牌头部：身份区（相框 + 名字 + 余额） -->
+  <header class="doorplate">
+    <div class="avatar-frame">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+        <rect x="4" y="3" width="7" height="18" rx="1.6" fill="#c96f4a"/>
+        <rect x="13" y="3" width="7" height="18" rx="1.6" fill="#a65838"/>
+        <path d="M11 5v15" stroke="#fff6e4" stroke-width="1.6"/>
+      </svg>
+      <div class="edit">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+          <path d="M4 20l1-4L16 5l3 3L8 19l-4 1z" fill="#6b4a00"/>
+        </svg>
+      </div>
+    </div>
+    <div class="who">
+      <div class="name">未设置昵称</div>
+      <div class="sub">开始你的第一天 · 掌握 0 词</div>
+    </div>
+    <div class="coinchip" id="chipCoin">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" fill="#f6bd45"/>
+        <circle cx="12" cy="12" r="6.2" fill="none" stroke="#c98a1e" stroke-width="1.6"/>
+        <path d="M12 8.4v7.2M9.6 10h4.8M9.6 14h4.8" stroke="#c98a1e" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <div><div class="amt">120</div><div class="lbl">学习奖励</div></div>
+    </div>
+  </header>
+
+  <div class="hint" id="hint">点房间里的物件，打开对应设置</div>
+
+  <!-- 房间舞台 -->
+  <main class="room">
+    <div class="floor"></div>
+    <div class="floorline"></div>
+
+    <!-- ① 装备架 = 我的装备 -->
+    <div class="obj shelf" data-key="equip">
+      <svg width="128" height="64" viewBox="0 0 128 64">
+        <rect x="2" y="46" width="124" height="7" rx="3.5" fill="#d9c9a8"/>
+        <rect x="2" y="46" width="124" height="3" rx="1.5" fill="#e5d8bc"/>
+        <rect x="8" y="52" width="6" height="10" rx="2" fill="#c4b088"/>
+        <rect x="114" y="52" width="6" height="10" rx="2" fill="#c4b088"/>
+        <!-- 两件已装备 + 一个空槽 -->
+        <rect x="12" y="16" width="26" height="26" rx="8" fill="#ff9d8a"/>
+        <path d="M20 32c0-6 3-9 5-9s5 3 5 9" stroke="#fff6e4" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        <rect x="51" y="16" width="26" height="26" rx="8" fill="#7fd4dc"/>
+        <circle cx="64" cy="29" r="7" fill="none" stroke="#fff6e4" stroke-width="2.4"/>
+        <path d="M64 22v-4" stroke="#fff6e4" stroke-width="2.4" stroke-linecap="round"/>
+        <rect x="90" y="16" width="26" height="26" rx="8" fill="none" stroke="#c4b088" stroke-width="2" stroke-dasharray="4 4"/>
+      </svg>
+      <span class="tag">我的装备 2/3</span><div class="hit"></div>
+    </div>
+
+    <!-- ② 窗 = 外观 & 沉浸场景（点窗换天色） -->
+    <div class="obj window" data-key="scene">
+      <svg width="118" height="92" viewBox="0 0 118 92">
+        <rect x="4" y="4" width="110" height="80" rx="10" fill="#b98d5f"/>
+        <rect x="9" y="9" width="100" height="70" rx="7" class="sky" id="skyDay" fill="#bfe3ea"/>
+        <g class="sky" id="skyDusk" opacity="0">
+          <rect x="9" y="9" width="100" height="70" rx="7" fill="#f2b28a"/>
+        </g>
+        <g class="sky" id="skyNight" opacity="0">
+          <rect x="9" y="9" width="100" height="70" rx="7" fill="#2c3a5e"/>
+        </g>
+        <ellipse id="cloud1" cx="42" cy="30" rx="13" ry="6" fill="#ffffff" opacity="0.9"/>
+        <ellipse id="cloud2" cx="76" cy="44" rx="10" ry="5" fill="#ffffff" opacity="0.75"/>
+        <circle id="celestial" cx="88" cy="24" r="9" fill="#ffd97a"/>
+        <circle id="stars" cx="0" cy="0" r="0" fill="none"/>
+        <g id="starDots" opacity="0">
+          <circle cx="30" cy="24" r="1.4" fill="#ffe9b8"/><circle cx="55" cy="40" r="1.2" fill="#ffe9b8"/>
+          <circle cx="82" cy="58" r="1.4" fill="#ffe9b8"/><circle cx="98" cy="30" r="1.2" fill="#ffe9b8"/>
+        </g>
+        <rect x="56" y="9" width="5" height="70" fill="#b98d5f"/>
+        <rect x="9" y="41" width="100" height="5" fill="#b98d5f"/>
+        <rect x="0" y="82" width="118" height="10" rx="4" fill="#a67c50"/>
+      </svg>
+      <span class="tag">外观 & 沉浸场景</span><div class="hit"></div>
+    </div>
+
+    <!-- ③ 书桌台灯 = 学习偏好 -->
+    <div class="obj desk" data-key="learn">
+      <svg width="150" height="118" viewBox="0 0 150 118">
+        <!-- 光锥 -->
+        <path class="lightcone" d="M96 40 L64 96 L128 96 Z" fill="#ffe9b8" opacity="0.55"/>
+        <!-- 台灯 -->
+        <path d="M96 88 L96 52" stroke="#8a6f4d" stroke-width="5" stroke-linecap="round"/>
+        <path d="M96 52 L82 34" stroke="#8a6f4d" stroke-width="5" stroke-linecap="round"/>
+        <path d="M70 34 Q82 18 94 34 L88 42 Q82 34 76 42 Z" fill="#f5923e"/>
+        <ellipse cx="82" cy="41" rx="9" ry="3.5" fill="#ffe9b8"/>
+        <ellipse cx="96" cy="90" rx="12" ry="4" fill="#8a6f4d"/>
+        <!-- 桌面 -->
+        <rect x="6" y="94" width="138" height="9" rx="4.5" fill="#d9c9a8"/>
+        <rect x="18" y="103" width="7" height="14" rx="2.5" fill="#c4b088"/>
+        <rect x="124" y="103" width="7" height="14" rx="2.5" fill="#c4b088"/>
+        <!-- 桌上小书 + 旋钮 -->
+        <rect x="28" y="80" width="26" height="7" rx="2" fill="#00a574"/>
+        <rect x="31" y="73" width="22" height="7" rx="2" fill="#0e8a60"/>
+        <circle cx="118" cy="82" r="8" fill="#fffdf8" stroke="#c4b088" stroke-width="2.5"/>
+        <path d="M118 77v4" stroke="#8a6f4d" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <span class="tag">学习偏好</span><div class="hit"></div>
+    </div>
+
+    <!-- ④ 唱片机 = 随身听 -->
+    <div class="obj player" data-key="stereo">
+      <svg width="118" height="100" viewBox="0 0 118 100">
+        <rect x="6" y="12" width="106" height="66" rx="12" fill="#8a6f4d"/>
+        <rect x="12" y="18" width="94" height="54" rx="8" fill="#fffdf8"/>
+        <g class="disc">
+          <circle cx="59" cy="40" r="22" fill="#2b241a"/>
+          <circle cx="59" cy="40" r="15" fill="none" stroke="#4a3c20" stroke-width="1.4" opacity="0.6"/>
+          <circle cx="59" cy="40" r="10" fill="none" stroke="#4a3c20" stroke-width="1.4" opacity="0.6"/>
+          <circle cx="59" cy="40" r="5.5" fill="#ff7e69"/>
+          <circle cx="59" cy="40" r="1.8" fill="#fff6e4"/>
+        </g>
+        <path d="M92 24 L84 46" stroke="#c98a1e" stroke-width="3.4" stroke-linecap="round"/>
+        <circle cx="92" cy="24" r="4" fill="#c98a1e"/>
+        <rect x="6" y="80" width="106" height="8" rx="4" fill="#7a6244"/>
+        <circle cx="26" cy="88" r="2.6" fill="#ffe9b8"/>
+        <circle cx="38" cy="88" r="2.6" fill="#ffe9b8" opacity="0.5"/>
+      </svg>
+      <span class="tag">随身听</span><div class="hit"></div>
+    </div>
+
+    <!-- ⑤ 书架 = 我的内容 -->
+    <div class="obj bookshelf" data-key="content">
+      <svg width="104" height="84" viewBox="0 0 104 84">
+        <rect x="4" y="4" width="96" height="76" rx="8" fill="#c4b088"/>
+        <rect x="10" y="10" width="84" height="64" rx="5" fill="#8a6f4d"/>
+        <rect x="14" y="16" width="10" height="26" rx="2" fill="#ff9d8a"/>
+        <rect x="26" y="20" width="9" height="22" rx="2" fill="#7fd4dc"/>
+        <rect x="37" y="14" width="11" height="28" rx="2" fill="#f6bd45"/>
+        <rect x="52" y="18" width="9" height="24" rx="2" fill="#00a574"/>
+        <path d="M70 18 l8 -3 7 25 -8 3 Z" fill="#fffdf8" opacity="0.9"/>
+        <rect x="14" y="48" width="80" height="5" rx="2.5" fill="#c4b088"/>
+        <rect x="20" y="56" width="12" height="18" rx="2" fill="#f2b28a"/>
+        <circle cx="46" cy="65" r="9" fill="#fffdf8"/>
+        <path d="M46 58 v14 M40 62 h12" stroke="#8a6f4d" stroke-width="2.2" stroke-linecap="round"/>
+        <rect x="64" y="56" width="24" height="18" rx="3" fill="none" stroke="#d9c9a8" stroke-width="2" stroke-dasharray="3.5 3.5"/>
+      </svg>
+      <span class="tag">我的内容</span><div class="hit"></div>
+    </div>
+
+    <!-- ⑥ 爪印地毯 = 学习足迹 -->
+    <div class="obj rug" data-key="tracks">
+      <svg width="148" height="56" viewBox="0 0 148 56">
+        <ellipse cx="74" cy="28" rx="72" ry="26" fill="#e5d8bc"/>
+        <ellipse cx="74" cy="28" rx="72" ry="26" fill="none" stroke="#c4b088" stroke-width="2.5" stroke-dasharray="7 6"/>
+        <g fill="#c98a1e" opacity="0.85">
+          <g transform="translate(40 22)"><ellipse cx="0" cy="2" rx="4.6" ry="3.8"/><circle cx="-4.5" cy="-3.5" r="1.7"/><circle cx="0" cy="-5" r="1.7"/><circle cx="4.5" cy="-3.5" r="1.7"/></g>
+          <g transform="translate(74 34)"><ellipse cx="0" cy="2" rx="4.6" ry="3.8"/><circle cx="-4.5" cy="-3.5" r="1.7"/><circle cx="0" cy="-5" r="1.7"/><circle cx="4.5" cy="-3.5" r="1.7"/></g>
+          <g transform="translate(108 22)"><ellipse cx="0" cy="2" rx="4.6" ry="3.8"/><circle cx="-4.5" cy="-3.5" r="1.7"/><circle cx="0" cy="-5" r="1.7"/><circle cx="4.5" cy="-3.5" r="1.7"/></g>
+        </g>
+      </svg>
+      <span class="tag">学习足迹</span><div class="hit"></div>
+    </div>
+
+    <!-- ⑦ 工具箱 = 更多设置 -->
+    <div class="obj toolbox" data-key="more">
+      <svg width="86" height="62" viewBox="0 0 86 62">
+        <path d="M28 20 v-6 a15 10 0 0 1 30 0 v6" fill="none" stroke="#8a6f4d" stroke-width="5" stroke-linecap="round"/>
+        <rect x="8" y="20" width="70" height="34" rx="9" fill="#f5923e"/>
+        <rect x="8" y="33" width="70" height="8" fill="#e07f2e"/>
+        <rect x="36" y="29" width="14" height="16" rx="3.5" fill="#fffdf8"/>
+        <rect x="41" y="25" width="4" height="6" rx="2" fill="#fffdf8"/>
+      </svg>
+      <span class="tag">更多设置</span><div class="hit"></div>
+    </div>
+
+    <!-- ⑧ 存钱罐 = 尖叫币 -->
+    <div class="obj piggy" data-key="coin">
+      <svg width="76" height="46" viewBox="0 0 76 46">
+        <defs>
+          <linearGradient id="pigSkin2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#7fd4dc"/><stop offset="1" stop-color="#4db3c0"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="24" cy="42" rx="8" ry="4" fill="#f5923e"/>
+        <ellipse cx="52" cy="42" rx="8" ry="4" fill="#f5923e"/>
+        <ellipse cx="38" cy="26" rx="32" ry="19" fill="url(#pigSkin2)"/>
+        <path d="M28 10 q-2 -8 4 -9 q4 -0.5 4 6" fill="#f5923e"/>
+        <path d="M48 10 q2 -8 -4 -9 q-4 -0.5 -4 6" fill="#f5923e"/>
+        <rect x="34" y="6" width="9" height="3" rx="1.5" fill="#2f8494"/>
+        <circle cx="29" cy="22" r="2.2" fill="#20242b"/>
+        <circle cx="47" cy="22" r="2.2" fill="#20242b"/>
+        <path d="M35 27 q3 2.6 6 0" stroke="#20242b" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <ellipse cx="38" cy="33" rx="14" ry="7" fill="#2f8494"/>
+        <rect x="24" y="33" width="28" height="8" fill="#f6bd45"/>
+        <ellipse cx="38" cy="33" rx="14" ry="7" fill="none" stroke="#fff6e4" stroke-width="2"/>
+      </svg>
+      <span class="tag">尖叫币</span><div class="hit"></div>
+    </div>
+
+    <!-- 房主小怪兽：眼睛跟随 + 点击 hop -->
+    <div class="monster" id="monster">
+      <svg width="116" height="118" viewBox="0 0 116 118">
+        <defs>
+          <linearGradient id="monSkin" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#7fd4dc"/><stop offset="1" stop-color="#4db3c0"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="38" cy="108" rx="12" ry="6" fill="#f5923e"/>
+        <ellipse cx="78" cy="108" rx="12" ry="6" fill="#f5923e"/>
+        <ellipse cx="58" cy="62" rx="52" ry="46" fill="url(#monSkin)"/>
+        <path d="M44 22 q-3 -16 9 -17 q9 -1 9 12" fill="#fffdf8"/>
+        <path d="M72 22 q3 -16 -9 -17 q-9 -1 -9 12" fill="#fffdf8"/>
+        <g id="eyeL">
+          <ellipse cx="41" cy="52" rx="11.5" ry="13" fill="#fff"/>
+          <circle class="pupil" cx="41" cy="54" r="5.2" fill="#20242b"/>
+          <circle class="pupil" cx="43" cy="51.6" r="1.8" fill="#fff"/>
+        </g>
+        <g id="eyeR">
+          <ellipse cx="75" cy="52" rx="11.5" ry="13" fill="#fff"/>
+          <circle class="pupil" cx="75" cy="54" r="5.2" fill="#20242b"/>
+          <circle class="pupil" cx="77" cy="51.6" r="1.8" fill="#fff"/>
+        </g>
+        <path d="M50 70 q8 7 16 0" stroke="#20242b" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+        <circle cx="26" cy="64" r="5.5" fill="#9adfe6"/>
+        <circle cx="90" cy="64" r="5.5" fill="#9adfe6"/>
+        <polyline points="42,80 50,94 56,84 58,90 60,84 66,94 74,80" fill="none" stroke="#fff6e4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </main>
+
+  <!-- 抽屉面板 + 幕布 -->
+  <div class="veil" id="veil"></div>
+  <aside class="drawer" id="drawer">
+    <div class="grip" id="grip"></div>
+    <div class="head">
+      <div class="ico" id="dIco"></div>
+      <div><div class="t" id="dTitle"></div><div class="s" id="dSub"></div></div>
+    </div>
+    <div class="rows" id="dRows"></div>
+  </aside>
+
+  <div class="homebar"></div>
+</div>
+
+<!-- 侧边说明 -->
+<aside class="console">
+  <h2>怪兽小屋 · 个人中心</h2>
+  <p class="sub">方案 C-1：设置页不再是一张列了 9 行的表单，而是小怪兽的房间——每个功能入口是一件家具，点物件 = 进设置。</p>
+  <div class="kv">
+    <b>互动提示</b><br>
+    · 点<b>窗</b>：切换沉浸场景（日 / 暮 / 夜）<br>
+    · 点任意物件：怪兽跳一下，抽屉滑出对应设置<br>
+    · 移动鼠标：怪兽眼神跟随<br>
+    · 点<b>唱片机</b>：黑胶会转（随身听）
+  </div>
+  <div class="foot">
+    <b>专利要点</b>：① 场景化物件入口布局（家具=功能）；
+    ② 全景 ⇄ 抽屉展开 双构图；③ 房主角色视线/跳跃联动；
+    ④ 沉浸场景与窗外天色同源联动。<br>详见 design/ 怪兽小屋个人中心-外观专利设计说明.md
+  </div>
+</aside>
+
+<script>
+(() => {
+  "use strict";
+  const $ = s => document.querySelector(s);
+  const phone = document.querySelector(".phone");
+  const monster = $("#monster");
+  const pupils = document.querySelectorAll(".pupil");
+  const veil = $("#veil"), drawer = $("#drawer"), hint = $("#hint");
+
+  /* 面板内容（真实入口映射自现有 App） */
+  const PANELS = {
+    equip:  { t: "我的装备", s: "已装备 2 / 3 · 槽位随成长解锁", c: "#ff9d8a",
+      rows: [["尖叫铃铛", "已装备 · 答对叮一声", "#ff9d8a"], ["青绿披风", "已装备 · 连击 3 天奖励", "#7fd4dc"], ["空槽位 · 累计 30 天解锁", "去签到攒天数", "#c4b088"]] },
+    scene:  { t: "外观 & 沉浸场景", s: "窗外即主题 · 点窗框试切 日/暮/夜", c: "#7fd4dc",
+      rows: [["房间主题", "暖纸 · 跟随窗外天色", "#f6bd45"], ["沉浸场景", "书房 / 森林 / 星夜", "#00a574"], ["字号与动效", "跟随系统减弱动效", "#ff9d8a"]] },
+    learn:  { t: "学习偏好", s: "台灯下的旋钮 · 拧你的节奏", c: "#f5923e",
+      rows: [["每日目标", "当前 10 词 / 天", "#00a574"], ["复习提醒", "每晚 20:30", "#f6bd45"], ["发音口音", "美音", "#7fd4dc"]] },
+    stereo: { t: "随身听", s: "黑胶转起来 · 电台与录音", c: "#2b241a",
+      rows: [["单词电台", "通勤循环播放", "#2b241a"], ["我的录音", "跟读回放 3 条", "#ff9d8a"], ["背景音", "白噪音 · 关", "#7fd4dc"]] },
+    content:{ t: "我的内容", s: "书架上的收藏与笔记", c: "#f6bd45",
+      rows: [["生词本", "12 个词在架上", "#ff9d8a"], ["收藏例句", "5 条", "#f6bd45"], ["笔记", "2 篇", "#00a574"]] },
+    tracks: { t: "学习足迹", s: "地毯上的爪印 = 每一天", c: "#c98a1e",
+      rows: [["本周爪印", "3 / 7 天", "#c98a1e"], ["累计掌握", "0 词", "#00a574"], ["最长连击", "5 天", "#f5923e"]] },
+    more:   { t: "更多设置", s: "工具箱 · 系统与关于", c: "#f5923e",
+      rows: [["账号与同步", "本地模式", "#00a574"], ["提醒与诊断", "网络 / 学习提醒", "#7fd4dc"], ["关于 Monster Word", "v2.10.0", "#f2b28a"]] },
+    coin:   { t: "尖叫币", s: "存钱罐肚皮 = 学习奖励", c: "#4db3c0",
+      rows: [["当前余额", "120 币 · 学习奖励", "#f6bd45"], ["获取途径", "签到 / 答对 / 连击", "#00a574"], ["兑换中心", "断签保护卡等", "#ff9d8a"]] },
+  };
+
+  let opened = null;
+
+  /* 眼神跟随（鼠标 / 触摸） */
+  function lookAt(px, py) {
+    const r = monster.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height * 0.44;
+    const dx = Math.max(-1, Math.min(1, (px - cx) / 240));
+    const dy = Math.max(-1, Math.min(1, (py - cy) / 200));
+    const ox = dx * 4, oy = dy * 3;
+    pupils.forEach(p => p.style.transform = "translate(" + ox + "px," + oy + "px)");
+  }
+  phone.addEventListener("pointermove", e => {
+    const r = phone.getBoundingClientRect();
+    lookAt(e.clientX, e.clientY);
+  });
+
+  /* 眨眼 */
+  const eyeLids = [$("#eyeL"), $("#eyeR")];
+  setInterval(() => {
+    eyeLids.forEach(g => {
+      g.style.transition = "transform 0.09s";
+      g.style.transform = "scaleY(0.12)";
+      setTimeout(() => { g.style.transform = "scaleY(1)"; }, 110);
+    });
+  }, 3400);
+
+  /* 抽屉面板 */
+  function openPanel(key, objEl) {
+    const P = PANELS[key]; if (!P) return;
+    document.querySelectorAll(".obj").forEach(o => o.classList.remove("active"));
+    if (objEl) objEl.classList.add("active");
+    $("#dIco").style.background = P.c + "33";
+    $("#dIco").innerHTML = '<div style="width:12px;height:12px;border-radius:4px;background:' + P.c + '"></div>';
+    $("#dTitle").textContent = P.t;
+    $("#dSub").textContent = P.s;
+    $("#dRows").innerHTML = P.rows.map(r =>
+      '<div class="row"><span class="dot" style="background:' + r[2] + '"></span>' +
+      '<span>' + r[0] + '</span><span style="color:var(--dim);font-weight:600;font-size:11.5px">' + r[1] + '</span>' +
+      '<span class="chev">›</span></div>').join("");
+    veil.classList.add("on");
+    drawer.classList.add("on");
+    monster.classList.remove("hop"); void monster.offsetWidth; monster.classList.add("hop");
+    hint.classList.add("off");
+    opened = key;
+  }
+  function closePanel() {
+    veil.classList.remove("on");
+    drawer.classList.remove("on");
+    document.querySelectorAll(".obj").forEach(o => o.classList.remove("active"));
+    opened = null;
+    setTimeout(() => hint.classList.remove("off"), 600);
+  }
+
+  document.querySelectorAll(".obj").forEach(o => {
+    o.addEventListener("click", e => {
+      e.stopPropagation();
+      const key = o.dataset.key;
+      if (opened === key) { closePanel(); return; }
+      openPanel(key, o);
+    });
+  });
+  veil.addEventListener("click", closePanel);
+  $("#grip").addEventListener("click", closePanel);
+  $("#chipCoin").addEventListener("click", () => openPanel("coin", document.querySelector(".piggy")));
+
+  /* 窗 = 沉浸场景切换（日 → 暮 → 夜 → 日） */
+  let sceneIdx = 0;
+  const windowObj = document.querySelector(".window");
+  function setScene(i) {
+    $("#skyDay").style.opacity = i === 0 ? 1 : 0;
+    $("#skyDusk").style.opacity = i === 1 ? 1 : 0;
+    $("#skyNight").style.opacity = i === 2 ? 1 : 0;
+    $("#starDots").style.opacity = i === 2 ? 1 : 0;
+    const c = $("#celestial");
+    if (i === 0) { c.setAttribute("cx", 88); c.setAttribute("cy", 24); c.setAttribute("fill", "#ffd97a"); }
+    if (i === 1) { c.setAttribute("cx", 30); c.setAttribute("cy", 58); c.setAttribute("fill", "#ff9d8a"); }
+    if (i === 2) { c.setAttribute("cx", 84); c.setAttribute("cy", 22); c.setAttribute("fill", "#fff6e4"); }
+    $("#cloud1").style.opacity = i === 2 ? 0.15 : 0.9;
+    $("#cloud2").style.opacity = i === 2 ? 0.1 : 0.75;
+  }
+  windowObj.addEventListener("click", e => {
+    e.stopPropagation();
+    sceneIdx = (sceneIdx + 1) % 3;
+    setScene(sceneIdx);
+    if (opened !== "scene") openPanel("scene", windowObj);
+  });
+
+  /* 触屏：眼神随机游走（无鼠标时也有生命感） */
+  if (!matchMedia("(pointer: fine)").matches) {
+    setInterval(() => {
+      lookAt(phone.getBoundingClientRect().left + 60 + Math.random() * 270,
+             phone.getBoundingClientRect().top + 150 + Math.random() * 300);
+    }, 2200);
+  }
+})();
+</script>
+</body>
+</html>
