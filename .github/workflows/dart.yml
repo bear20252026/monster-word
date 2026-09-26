@@ -10,7 +10,7 @@ jobs:
   analyze-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -33,14 +33,8 @@ jobs:
             | xargs -0 dart format --output=none --set-exit-if-changed --line-length 120
 
       - name: Analyze project source
-        # Score90：warning 纳入阻断（当前库 warning=0）；info 暂不阻断（历史 lint）。
-        # 规划：info 清零后改为 flutter analyze（默认 fatal-infos/warnings）。
-        run: flutter analyze --no-fatal-infos
-
-      - name: Analyze report (non-blocking infos)
-        if: always()
-        continue-on-error: true
-        run: flutter analyze || true
+        # info 已清零（2026-09-26）：默认 fatal-infos / fatal-warnings，0 issue 才放行。
+        run: flutter analyze
 
       - name: Run tests
         run: flutter test --no-pub
