@@ -77,4 +77,38 @@ void main() {
     expect(rest[13], moreOrLessEquals(0));
     expect(rest[0], moreOrLessEquals(1.0));
   });
+
+  testWidgets('减弱动态效果时无指针动效，仅保留可点光标', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 100,
+                height: 80,
+                child: FloatingTiltCard(
+                  key: _cardKey,
+                  cursor: SystemMouseCursors.click,
+                  child: const ColoredBox(color: Colors.teal, child: SizedBox.expand()),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 卡片子树内无 Transform / Opacity 动效层
+    expect(find.descendant(of: find.byKey(_cardKey), matching: find.byType(Transform)), findsNothing);
+    expect(find.descendant(of: find.byKey(_cardKey), matching: find.byType(Opacity)), findsNothing);
+
+    // MouseRegion 保留且光标仍可点
+    final region = tester.widget<MouseRegion>(
+      find.descendant(of: find.byKey(_cardKey), matching: find.byType(MouseRegion)),
+    );
+    expect(region.cursor, SystemMouseCursors.click);
+  });
 }

@@ -241,7 +241,9 @@ class _LibSelectPageState extends State<LibSelectPage> {
     final resp = context.responsive;
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(child: _CurrentBookHero(onOpen: _openCurrentBookWords)),
+        SliverToBoxAdapter(
+          child: FlowIn(index: 0, child: _CurrentBookHero(onOpen: _openCurrentBookWords)),
+        ),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
@@ -268,10 +270,13 @@ class _LibSelectPageState extends State<LibSelectPage> {
                     final isLearning = cardContext.select<LearningSessionReader, bool>(
                       (s) => s.currentBook?.id == book.id,
                     );
-                    // 有序流动入场：按索引波次淡入上浮；键含 _tabIndex，切分类签整列重放。
+                    // 有序流动入场：首屏三行走完整对角波次；滚动懒加载的行只带
+                    // 本列相位，新入列卡片近乎立即入场，不排队等长延迟。
+                    final firstWave = resp.bookGridColumns * 3;
+                    final waveIndex = index < firstWave ? index : index % resp.bookGridColumns;
                     return FlowIn(
                       key: ValueKey('book-flow-$_tabIndex-$index'),
-                      index: index,
+                      index: waveIndex,
                       child: _BookCard(
                         book: book,
                         isLearning: isLearning,
