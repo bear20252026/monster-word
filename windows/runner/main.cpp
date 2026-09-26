@@ -19,6 +19,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   flutter::DartProject project(L"data");
 
+  // Impeller(OpenGLES) 在部分 GPU 上首帧渲染挂起 → SetNextFrameCallback 永不
+  // 触发 → 窗口永不显示（进程存活但无窗口）。回退 Skia 渲染保证窗口必现。
+  project.set_impeller_switch(flutter::ImpellerSwitch::Disabled);
+
   std::vector<std::string> command_line_arguments =
       GetCommandLineArguments();
 
