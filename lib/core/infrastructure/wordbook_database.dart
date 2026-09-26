@@ -9,7 +9,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
-import 'package:archive/archive_io.dart' show InputFileStream, OutputFileStream;
 import 'package:flutter/foundation.dart' show visibleForTesting, debugPrint;
 import 'package:crypto/crypto.dart' show md5;
 import 'package:flutter/services.dart' show rootBundle;
@@ -236,37 +235,41 @@ class WordBookDatabase {
   }
 
   /// 解压资产词库到目标路径（失败自动清理半成品文件并重试一次）
+  ///
+  /// BUG-STARTUP（v2.11.2）：旧实现走 archive 的 decodeStream（InputFileStream
+  /// → OutputFileStream 文件流路径），实测吞吐仅 ~300-400KB/s（archive 3.6.1
+  /// 该路径存在性能缺陷），245MB 词库需 10 分钟以上 —— 表现为「启动后窗口
+  /// 永不出现」。换用 decodeBytes 内存解压实测 59.5MB/s（AOT 下更快，约 2-4s），
+  /// 代价是解压期间瞬时内存峰值 ~320MB（80MB gz + 242MB 明文），一次性可接受。
+  /// 落盘改为「写临时文件 + rename 原子替换」，中断不再留下半成品目标文件。
   Future<void> _extractTo(String dbPath, Uint8List gzBytes) async {
     for (var attempt = 0; attempt < 2; attempt++) {
       try {
-        final tmpGz = '$dbPath.extract.gz';
-        // MEM：启动清理上次中断残留的临时 gz。
-        try {
-          final stale = File(tmpGz);
-          if (stale.existsSync()) await stale.delete();
-        } catch (_) {}
-        await File(tmpGz).writeAsBytes(gzBytes, flush: true);
-        final input = InputFileStream(tmpGz);
-        try {
-          final output = OutputFileStream(dbPath);
-          GZipDecoder().decodeStream(input, output);
-          await output.close();
-        } finally {
+        final data = GZipDecoder().decodeBytes(gzBytes);
+        final tmpDb = '$dbPath.tmp';
+        await File(tmpDb).writeAsBytes(data, flush: true);
+        // 原子替换：rename 前清掉旧目标（Windows rename 不覆盖已存在文件）
+        final target = File(dbPath);
+        if (target.existsSync()) {
           try {
-            // archive 3.x FileBuffer/输入流随文件删除释放；尽力 close。
-            // ignore: avoid_dynamic_calls
-            (input as dynamic).close?.call();
-          } catch (_) {}
-          try {
-            await File(tmpGz).delete();
+            await target.delete();
           } catch (_) {}
         }
+        await File(tmpDb).rename(dbPath);
         return;
       } catch (e) {
         debugPrint('[WordBookDatabase] 解压失败 (attempt ${attempt + 1}): $e');
         final f = File(dbPath);
         if (f.existsSync()) f.deleteSync();
         if (attempt == 1) rethrow;
+      } finally {
+        // MEM：清理任何残留临时文件（含旧实现中断留下的 .extract.gz）
+        for (final stale in ['$dbPath.tmp', '$dbPath.extract.gz']) {
+          try {
+            final sf = File(stale);
+            if (sf.existsSync()) await sf.delete();
+          } catch (_) {}
+        }
       }
     }
   }
