@@ -10,6 +10,8 @@ import 'package:word_app/models/book.dart';
 import 'package:word_app/widgets/app_dock.dart';
 import 'package:word_app/widgets/common/mw_empty_state.dart';
 import 'package:word_app/widgets/common/mw_skeleton.dart';
+import 'package:word_app/widgets/floating_tilt_card.dart';
+import 'package:word_app/widgets/flow_in.dart';
 import 'package:word_app/widgets/morphing_tabs.dart';
 import 'package:word_app/widgets/mw_section_header.dart';
 import 'package:word_app/features/learning/application/learning_session_reader.dart';
@@ -266,11 +268,16 @@ class _LibSelectPageState extends State<LibSelectPage> {
                     final isLearning = cardContext.select<LearningSessionReader, bool>(
                       (s) => s.currentBook?.id == book.id,
                     );
-                    return _BookCard(
-                      book: book,
-                      isLearning: isLearning,
-                      onSelect: () => _selectBook(book),
-                      onViewWords: () => _openBookWords(context, book),
+                    // 有序流动入场：按索引波次淡入上浮；键含 _tabIndex，切分类签整列重放。
+                    return FlowIn(
+                      key: ValueKey('book-flow-$_tabIndex-$index'),
+                      index: index,
+                      child: _BookCard(
+                        book: book,
+                        isLearning: isLearning,
+                        onSelect: () => _selectBook(book),
+                        onViewWords: () => _openBookWords(context, book),
+                      ),
                     );
                   },
                 );
@@ -626,72 +633,49 @@ class _BookCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 封面
+          // 封面（桌面鼠标悬浮：朝指针微倾 + 抬升 + 眩光，见 FloatingTiltCard）
           Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: coverColor,
-                      borderRadius: BorderRadius.circular(context.design.radius.md),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.menu_book_rounded, color: AppColors.white100, size: 22),
-                        const SizedBox(height: 6),
-                        Text(
-                          friendlyBookName(book.name),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: MwTypography.bodySm.copyWith(
-                            color: AppColors.white100,
-                            fontWeight: FontWeight.w700,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${book.wordCount} 词',
-                          style: MwTypography.micro.copyWith(color: AppColors.white100.withValues(alpha: 0.75)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // 浏览单词入口
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: InkWell(
-                    onTap: onViewWords,
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: Icon(Icons.list_alt_rounded, size: 17, color: AppColors.white100.withValues(alpha: 0.85)),
-                    ),
-                  ),
-                ),
-                if (isLearning)
-                  Positioned(
-                    left: 6,
-                    top: 6,
+            child: FloatingTiltCard(
+              borderRadius: BorderRadius.circular(context.design.radius.md),
+              cursor: SystemMouseCursors.click,
+              child: Stack(
+                children: [
+                  Positioned.fill(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.white100.withValues(alpha: 0.92),
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        color: coverColor,
+                        borderRadius: BorderRadius.circular(context.design.radius.md),
                       ),
-                      child: Text(
-                        '在学',
-                        style: MwTypography.micro.copyWith(color: coverColor, fontWeight: FontWeight.w700),
+                      foregroundDecoration: _coverSheen(context),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.menu_book_rounded, color: AppColors.white100, size: 22),
+                          const SizedBox(height: 6),
+                          Text(
+                            friendlyBookName(book.name),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: MwTypography.bodySm.copyWith(
+                              color: AppColors.white100,
+                              fontWeight: FontWeight.w700,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '${book.wordCount} 词',
+                            style: MwTypography.micro.copyWith(color: AppColors.white100.withValues(alpha: 0.75)),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-              ],
+                  ..._coverOverlays(coverColor),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 6),
@@ -714,6 +698,57 @@ class _BookCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// 静置亦有体积感：左上高光 → 右下暗角的微渐变（卡片廊光感语言）。
+  Decoration _coverSheen(BuildContext context) {
+    return BoxDecoration(
+      borderRadius: BorderRadius.circular(context.design.radius.md),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          AppColors.white100.withValues(alpha: 0.10),
+          AppColors.white100.withValues(alpha: 0),
+          AppColors.black12.withValues(alpha: 0.10),
+        ],
+        stops: const [0, 0.5, 1],
+      ),
+    );
+  }
+
+  /// 封面覆盖层：右上浏览单词入口 + 左上「在学」徽标。
+  List<Widget> _coverOverlays(Color coverColor) {
+    return [
+      Positioned(
+        top: 4,
+        right: 4,
+        child: InkWell(
+          onTap: onViewWords,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Icon(Icons.list_alt_rounded, size: 17, color: AppColors.white100.withValues(alpha: 0.85)),
+          ),
+        ),
+      ),
+      if (isLearning)
+        Positioned(
+          left: 6,
+          top: 6,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.white100.withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+            child: Text(
+              '在学',
+              style: MwTypography.micro.copyWith(color: coverColor, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+    ];
   }
 }
 
