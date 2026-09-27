@@ -39,7 +39,7 @@ flutter run -d <android 设备> # Android 端
 |---|---|
 | Flutter CI（`dart.yml`） | 词库资产基线校验 → `dart format`（120 列）检查 → `flutter analyze`（0 error 基线）→ 全量 `flutter test` |
 | Build Windows Release（`build.yml`） | Windows 构建验证 |
-| Release Packages（`release_packages.yml`） | tag 触发，产出三件套安装包并创建 GitHub Release |
+| Release Packages（`release_packages.yml`） | tag 触发，产出三件套安装包并创建 GitHub Release（Dart 混淆；tag 缺签名 secrets 直接熔断，非 tag 的 debug 签名产物强制带 `-debugsigned` 后缀） |
 
 本地提交前建议必跑：
 

@@ -115,3 +115,31 @@ flutter test                                                       # 全量 904 
 | `docs/motion_spec.md` / `starbucks_tokens_draft.md` / `a11y_*_report.md` | 动效/色板 token 来源与对比度依据（被 lib/ 注释引用） |
 | `docs/audit/` | 重大审计报告存档（2026-09-02、2026-09-27 全面审计等） |
 | `docs/reports/` | **HISTORICAL 归档 ~220 份**（迁移/评审/修复过程快照；旧路径旧规则，勿当现状） |
+
+---
+
+## 附录：本地数据损坏恢复手册（审计 I86）
+
+用户数据三层存储的损坏症状与恢复口径（各写入路径已内置"宁丢新账不清历史"保护，本手册针对极端现场的人工介入）：
+
+### SP 快照类（SharedPreferences / %APPDATA% 明文 JSON）
+
+| key | 内容 | 损坏表现 | 恢复 |
+|---|---|---|---|
+| `scare_coin.history` | 金币账本（≤200 条） | 余额正常但流水为空/不变 | 损坏路径已保护：不覆写、新条目跳账。人工恢复无入口——接受流水缺失，余额为准 |
+| `fav_sentence_list` | 收藏例句 SP 快照 | 迁移中止日志（Sentry 有记录） | **原档保留未动**，可手工修 JSON 后卸载重装触发再迁移 |
+| `mw.feedback.archive` | 反馈存档（≤50 条） | 提交后存档不变 | 已保护：不覆写，新反馈走 Sentry 兜底 |
+| `mastered_words_v1` | 已掌握词表 | 掌握标记丢失 | 无快照备份；toggleMastered 已改等待加载完成，覆盖风险已消除 |
+| `favorite_words_v1` | 单词收藏 SP 快照 | —（已迁 SQLite，仅回滚快照） | SQLite 为事实来源，SP 只读 |
+
+### SQLite 类（user_data.db）
+
+- 打开失败 → 自动删坏库重建一次（收藏由 SP 快照重新迁移；FSRS 卡片与统计**不可恢复**——重建前无导出）。
+- 收藏迁移崩溃现场 → 下次启动自愈（REG-AUDIT-001），无需人工。
+- 手工检查：`scripts/inspect_db.py`。
+
+### 原则
+
+1. 任何"损坏 → 清空重建"路径必须先上报（`reportSwallowedError`）再动作；
+2. 修复写路径时保持"解析失败保留原档"口径（REG-AUDIT-003 有损坏注入回归守护）；
+3. 新增持久化 key 时在本表登记。
