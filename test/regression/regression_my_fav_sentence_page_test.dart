@@ -31,6 +31,15 @@ class _FakeStore implements SentenceFavoritesStore {
   Future<bool> remove({required int wordId, required String sentenceId}) async => false;
 
   @override
+  Future<int> removeBatch({required List<({int wordId, String sentenceId})> items}) async {
+    var removed = 0;
+    for (final item in items) {
+      if (await remove(wordId: item.wordId, sentenceId: item.sentenceId)) removed++;
+    }
+    return removed;
+  }
+
+  @override
   Future<bool> isFavorite({required int wordId, required String sentenceId}) async => false;
 
   @override
@@ -40,6 +49,7 @@ class _FakeStore implements SentenceFavoritesStore {
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   }) async => true;
 }
 

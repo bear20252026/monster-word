@@ -83,6 +83,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
       english: widget.example.en,
       chinese: widget.example.cn,
       source: widget.example.source,
+      word: widget.word, // 审计 I35：单词文本透传入库（此前 favorite_sentences.word 恒空）
     );
 
     if (mounted) {

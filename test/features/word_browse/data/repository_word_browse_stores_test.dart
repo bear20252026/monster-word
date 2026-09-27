@@ -143,6 +143,7 @@ class _FakeFavRepository implements FavRepository {
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   }) async => true;
 
   @override
@@ -173,6 +174,14 @@ class _FakeFavRepository implements FavRepository {
   }
 
   @override
+  Future<int> removeFavoriteSentences(List<({int wordId, String sentenceId})> items) async {
+    for (final item in items) {
+      removed = {'wordId': item.wordId, 'sentenceId': item.sentenceId};
+    }
+    return items.length;
+  }
+
+  @override
   Future<void> toggleFavorite(String word) async {}
 
   @override
@@ -182,6 +191,7 @@ class _FakeFavRepository implements FavRepository {
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   }) async {
     lastToggle = {'wordId': wordId, 'sentenceId': sentenceId, 'english': english, 'chinese': chinese, 'source': source};
     favorite = !favorite;

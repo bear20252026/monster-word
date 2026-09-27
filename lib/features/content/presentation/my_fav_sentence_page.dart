@@ -382,12 +382,11 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
 
     if (confirmed != true) return;
 
-    // 按倒序删除，避免索引问题
-    final sortedIndices = _selectedIndices.toList()..sort((a, b) => b.compareTo(a));
-    for (final index in sortedIndices) {
-      final favSentence = _sentences[index];
-      await favStore.remove(wordId: favSentence.wordId, sentenceId: favSentence.sentenceId);
-    }
+    // 审计 I19：批量删除走单事务（此前 N 次独立事务往返且中途失败留半删状态）
+    final items = _selectedIndices
+        .map((index) => (wordId: _sentences[index].wordId, sentenceId: _sentences[index].sentenceId))
+        .toList();
+    await favStore.removeBatch(items: items);
 
     // 内存审计 P2：批量删除耗时较长，await 后页面可能已出栈
     if (!mounted) return;

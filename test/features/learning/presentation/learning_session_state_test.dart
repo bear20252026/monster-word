@@ -361,6 +361,7 @@ class _FakeFavRepository implements FavRepository {
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   }) async => false;
 
   @override
@@ -379,11 +380,21 @@ class _FakeFavRepository implements FavRepository {
   Future<bool> removeFavoriteSentence(int wordId, String sentenceId) async => false;
 
   @override
+  Future<int> removeFavoriteSentences(List<({int wordId, String sentenceId})> items) async {
+    var removed = 0;
+    for (final item in items) {
+      if (await removeFavoriteSentence(item.wordId, item.sentenceId)) removed++;
+    }
+    return removed;
+  }
+
+  @override
   Future<bool> toggleFavoriteSentence({
     required int wordId,
     required String sentenceId,
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   }) async => false;
 }

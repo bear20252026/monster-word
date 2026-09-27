@@ -300,6 +300,45 @@ class FavSentenceDao {
     return true;
   }
 
+  /// 审计 I19：批量取消收藏——单事务 `IN` 删除，替代调用方 N 次独立事务
+  /// 往返；索引在事务成功后一次性回退（与单条 remove 相同的"DB 事实来源
+  /// 成功才动索引"口径）。返回实际移除条数。
+  Future<int> removeFavSentencesBatch(List<({int wordId, String sentenceId})> items) async {
+    await ensureLoaded();
+    if (items.isEmpty) return 0;
+    if (!_useSqlite) {
+      var removed = 0;
+      for (final item in items) {
+        if (await removeFavSentence(item.wordId, item.sentenceId)) removed++;
+      }
+      return removed;
+    }
+    return await _serialized(() async {
+      final rows = await _db!.transaction((txn) async {
+        // (word_id, sentence_id) 复合主键的 IN 删除需按元组匹配：
+        // 逐对 (word_id=? AND sentence_id=?) OR 连接（批量上限来自句库页选中量，可控）
+        final where = List.filled(items.length, '(word_id = ? AND sentence_id = ?)').join(' OR ');
+        final args = <Object?>[];
+        for (final item in items) {
+          args
+            ..add(item.wordId)
+            ..add(item.sentenceId);
+        }
+        return txn.rawDelete('DELETE FROM favorite_sentences WHERE $where', args);
+      });
+      if (rows > 0) {
+        for (final item in items) {
+          final ids = _indexByWordId[item.wordId];
+          if (ids != null && ids.remove(item.sentenceId)) {
+            if (ids.isEmpty) _indexByWordId.remove(item.wordId);
+            _indexCount--;
+          }
+        }
+      }
+      return rows;
+    });
+  }
+
   /// 切换收藏状态
   Future<bool> toggleFavSentence({
     required String word,

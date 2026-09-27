@@ -24,6 +24,7 @@ class _MockSentenceFavoritesStore implements SentenceFavoritesStore {
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   }) async {
     final key = '$wordId:$sentenceId';
     final current = _favorites[key] ?? false;
@@ -45,6 +46,15 @@ class _MockSentenceFavoritesStore implements SentenceFavoritesStore {
     final key = '$wordId:$sentenceId';
     final existed = _favorites.remove(key);
     return existed != null;
+  }
+
+  @override
+  Future<int> removeBatch({required List<({int wordId, String sentenceId})> items}) async {
+    var removed = 0;
+    for (final item in items) {
+      if (await remove(wordId: item.wordId, sentenceId: item.sentenceId)) removed++;
+    }
+    return removed;
   }
 }
 

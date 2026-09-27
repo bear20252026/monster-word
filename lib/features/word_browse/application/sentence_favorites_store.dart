@@ -14,13 +14,18 @@ abstract interface class SentenceFavoritesStore {
 
   Future<bool> remove({required int wordId, required String sentenceId});
 
+  /// 审计 I19：批量取消收藏（单事务），返回实际移除条数。
+  Future<int> removeBatch({required List<({int wordId, String sentenceId})> items});
+
   Future<bool> isFavorite({required int wordId, required String sentenceId});
 
+  /// 审计 I35：[word] 为例句所属单词文本（列表页展示语义）。
   Future<bool> toggle({
     required int wordId,
     required String sentenceId,
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   });
 }

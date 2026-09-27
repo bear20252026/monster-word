@@ -73,9 +73,20 @@ class _StubFavRepo implements FavRepository {
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   }) async => true;
   @override
   Future<bool> removeFavoriteSentence(int wordId, String sentenceId) async => true;
+
+  @override
+  Future<int> removeFavoriteSentences(List<({int wordId, String sentenceId})> items) async {
+    var removed = 0;
+    for (final item in items) {
+      if (await removeFavoriteSentence(item.wordId, item.sentenceId)) removed++;
+    }
+    return removed;
+  }
+
   @override
   Future<bool> toggleFavoriteSentence({
     required int wordId,
@@ -83,6 +94,7 @@ class _StubFavRepo implements FavRepository {
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   }) async => true;
   @override
   Future<bool> isFavoriteSentence(int wordId, String sentenceId) async => false;

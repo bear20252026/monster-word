@@ -169,6 +169,35 @@ void main() {
     });
   });
 
+  group('REG-AUDIT（I19）批量取消收藏单事务', () {
+    test('removeFavSentencesBatch：一次移除多条、索引同步回退、返回实际条数', () async {
+      final dao = FavSentenceDao(openDatabase: () async => db);
+      await dao.loadAll();
+      for (var i = 0; i < 5; i++) {
+        await dao.addFavSentence(
+          word: 'apple',
+          wordId: 7,
+          sentenceId: '9000$i',
+          sentenceData: SentenceData(sid: '9000$i', e: 'sentence $i', c: ''),
+        );
+      }
+      expect(dao.favCount, 5);
+
+      final removed = await dao.removeFavSentencesBatch([
+        (wordId: 7, sentenceId: '90001'),
+        (wordId: 7, sentenceId: '90003'),
+        (wordId: 7, sentenceId: '99999'), // 不存在：不计入
+      ]);
+
+      expect(removed, 2, reason: '只统计实际删除行');
+      expect(dao.favCount, 3, reason: '同步索引与 DB 保持一致');
+      expect(dao.isFavSentence(7, '90001'), isFalse);
+      expect(dao.isFavSentence(7, '90002'), isTrue);
+      expect(dao.isFavSentence(7, '90003'), isFalse);
+      expect((await db.query('favorite_sentences')).length, 3);
+    });
+  });
+
   group('REG-AUDIT-003 SP 损坏中止迁移与持久化失败回滚', () {
     test('SP 快照损坏：中止迁移走 SP 回退，不写 marker、原档保留', () async {
       const corrupted = '{"not-json';

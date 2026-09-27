@@ -57,6 +57,11 @@ class RepositorySentenceFavoritesStore implements SentenceFavoritesStore {
   }
 
   @override
+  Future<int> removeBatch({required List<({int wordId, String sentenceId})> items}) {
+    return _repository.removeFavoriteSentences(items);
+  }
+
+  @override
   Future<bool> isFavorite({required int wordId, required String sentenceId}) {
     return _repository.isFavoriteSentence(wordId, sentenceId);
   }
@@ -68,6 +73,7 @@ class RepositorySentenceFavoritesStore implements SentenceFavoritesStore {
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   }) {
     return _repository.toggleFavoriteSentence(
       wordId: wordId,
@@ -75,6 +81,7 @@ class RepositorySentenceFavoritesStore implements SentenceFavoritesStore {
       english: english,
       chinese: chinese,
       source: source,
+      word: word,
     );
   }
 }

@@ -74,10 +74,11 @@ class FavRepositoryImpl implements FavRepository {
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   }) async {
     final sentenceData = SentenceData(sid: sentenceId, e: english, c: chinese, b: source);
     return await FavSentenceDao.instance.addFavSentence(
-      word: '',
+      word: word,
       wordId: wordId,
       sentenceId: sentenceId,
       sentenceData: sentenceData,
@@ -90,16 +91,22 @@ class FavRepositoryImpl implements FavRepository {
   }
 
   @override
+  Future<int> removeFavoriteSentences(List<({int wordId, String sentenceId})> items) {
+    return FavSentenceDao.instance.removeFavSentencesBatch(items);
+  }
+
+  @override
   Future<bool> toggleFavoriteSentence({
     required int wordId,
     required String sentenceId,
     required String english,
     required String chinese,
     String source = '',
+    String word = '',
   }) async {
     final sentenceData = SentenceData(sid: sentenceId, e: english, c: chinese, b: source);
     return await FavSentenceDao.instance.toggleFavSentence(
-      word: '',
+      word: word,
       wordId: wordId,
       sentenceId: sentenceId,
       sentenceData: sentenceData,
