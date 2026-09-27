@@ -103,3 +103,9 @@ push/PR → main
   ├─ flutter test (全部 636+ 用例)        (单元/组件/回归/守卫, 失败阻断)
   └─ test -s assets/db/wordbook.db.gz    (词库资产存在性)
 ```
+| REG-AUDIT-001 | 收藏词 SQLite 迁移：事务提交与 marker 写入之间崩溃后，每次启动行数校验失败→永久降级 SP 且循环报错 | 迁移校验只看本次插入数，未考虑 DB 已含全集的自愈场景 | 2026-09-27 审计批次（B6） | `test/core/infrastructure/favorite_words_dao_test.dart`（迁移幂等 + REG-AUDIT-001 崩溃现场自愈注入 + 持久化失败回滚） |
+| REG-AUDIT-002 | FSRS 每日统计在 Android ≤9 全部静默不落盘（`ON CONFLICT DO UPDATE` 需 SQLite≥3.24，系统库 3.22 抛语法错被上层吞） | UPSERT 语法兼容性 | 同上（B13） | `test/features/learning/data/review_schedule_store_test.dart`（统计累加口径）；API≤28 真机验证待补（I91） |
+| REG-AUDIT-003 | 金币账本/反馈存档 JSON 损坏后被"仅含 1 条"的列表覆写清空 | 吞错后继续走覆写路径 | 同上（B1/B2/I56） | `test/features/scare_coin/data/preferences_scare_coin_store_test.dart`（REG-AUDIT-003 损坏不覆写双路径 + 负余额拒绝）、`test/regression/regression_feedback_diagnosis_test.dart`（存档损坏不覆写仍上报）、`test/core/infrastructure/fav_sentence_dao_test.dart`（SP 损坏中止迁移） |
+| REG-AUDIT-004 | 设置页"每日新学"弹层输入即崩（控制器在弹窗关闭前被 dispose）；搜索页 300ms 内退出崩（防抖 Timer 未取消） | 生命周期时序 | 同上（A1/A2） | 页面级 widget 测试待补（I69， dispose 后回调时序难在单测覆盖，先靠 review） |
+| REG-AUDIT-005 | TTS 文本朗读必然 404（完整 URL 再拼基址）；时区回退名反号（UTC+8 → `Etc/GMT--8` 非法） | URL 拼接与 POSIX 反号语义 | 同上（D2/D3） | `local_study_reminder_service_test.dart`（时区名构造可单测）；音频主备 URL 逻辑待补单测 |
+| REG-AUTH-001 | 本机密码哈希为单轮 SHA-256（快速哈希），安全存储被提取后弱口令可秒级爆破 | KDF 缺位 | 同上（J3/I42） | `test/features/account/data/secure_password_auth_store_test.dart`（RFC 2898 参考向量 + 存量透明升级 + 失败不升级） |

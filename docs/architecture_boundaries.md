@@ -82,3 +82,25 @@ lib/
 当前仓库的全量分析存在历史 warning 和 info。CI 在本阶段执行三类检查：改动 Dart 文件必须格式化、全量 `flutter analyze` 中 error 必须阻断、全量测试必须执行。warning 和 info 仍会输出并保留为技术债清单，暂不阻断合并；这样可以避免历史存量完全阻塞第一阶段结构治理，同时禁止新增改动引入格式债或编译错误。
 
 后续每完成一个 feature 迁移，应同步清理该 feature 的 analyzer 告警。当全量 warning 降至可控范围后，再移除 `--no-fatal-warnings`；最后在 info 治理完成后移除 `--no-fatal-infos`。不得用忽略规则掩盖本轮新引入的 error。
+
+## 7. 数据层与安全现行口径（2026-09-27 审计批次固化）
+
+以下口径已随 2026-09-27 全面审计（122 项修复）落地，改动须同步更新本节与对应守卫测试：
+
+- **释义解析单一真相**：interpret JSON → 可读文本的提取与 HTML 清理只存在于
+  `lib/models/definition_text.dart`（`extractReadableInterpretText` / `cleanDefinitionHtml`）。
+  `Word`、`WordChoicePair`、`MwWordProcess` 一律委托；新增释义消费方禁止再复制解析逻辑（§4 双轨禁令）。
+- **四选一干扰项单一真相**：`lib/core/engine/distractor_generator.dart` 的
+  `buildRandomFourChoices` 是唯一构建实现，学习/复习引擎只传数据源。
+- **SQL LIKE 转义**：所有对用户输入做 LIKE 匹配的查询必须转义 `%`、`_`、`\`
+  并声明 `ESCAPE '\'`（见 `word_repository_impl.searchWords`、`wordbook_database.searchWords`）。
+- **SQLite 版本兼容**：`INSERT … ON CONFLICT … DO UPDATE` 需 SQLite ≥3.24，
+  Android ≤9 系统库不支持。user_data.db 的累加写一律用
+  `UPDATE … WHERE` + 影响 0 行再 `INSERT` 两步写法（见 `review_schedule_store._upsertDailyStats`）。
+- **WebView 白名单**：`core/web/base_web_page.dart` 仅放行 https 且域名在
+  `_allowedDomains` 白名单内（当前为空 = 全部拒绝）；深链/外链接入统一经该页。
+- **SP key 单一事实来源**：`user_token` / `user_secret` / `monster_word_user_info`
+  仅在 `core/infrastructure/app_preferences.dart` 定义（`AppPreferences.userToken` 等 +
+  `kUserInfoPrefsKey`）；presentation 与 data 层引用常量，禁止裸字符串。
+- **吞错分级**：持久化路径失败必须 `reportSwallowedError`（REG-OBS-001 分级不变）；
+  user_data.db 打开失败先删坏库重建一次再抛（bootstrap 不允许白屏死应用）。

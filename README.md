@@ -50,7 +50,9 @@ flutter test test/architecture/   # 架构守卫：import 边界、路由名单�
 flutter test                      # 全量测试
 ```
 
-其中 `test/architecture/` 是本仓库的架构护栏：依赖分层、路由命名、主题 token 单真相、fontScale / radius 棘轮、swallowed-error 上报等均有守卫测试，回潮即红。
+其中 `test/architecture/` 是本仓库的架构护栏：依赖分层、路由命名、主题 token 单真相、fontScale / radius 棘轮、swallowed-error 上报、门面注入等均有守卫测试，回潮即红。
+
+> 2026-09-27 完成一轮六维全面审计（内存 / 错误处理 / 性能 / 数据层 / 安全 / 代码质量），五轮修复 144 项并沉淀 9 个损坏注入回归用例，详见 `docs/audit/全面审计报告-2026-09-27.md`。
 
 ## 发版流程
 
@@ -73,6 +75,9 @@ installer.iss Windows 安装器脚本
 
 ## 文档索引
 
-- `docs/architecture_boundaries.md` —— 架构边界现行规范（import 分层、路由、主题 token）
+- `docs/HANDOVER.md` —— **交接报告（新维护者从这里开始）**：项目全貌、关键机制、待办与决策点
+- `docs/architecture_boundaries.md` —— 架构边界现行规范（import 分层、路由、主题 token、数据层口径）
 - `docs/regression_ledger.md` —— 回归台账（REG-ID 体系）
+- `docs/release_checklist.md` / `docs/release_pipeline.md` / `docs/commit_convention.md` —— 发版与协作规范
+- `docs/audit/` —— 重大审计报告存档（最新：2026-09-27 六维全面审计，五轮修复 144 项）
 - `docs/reports/` —— 历史报告归档（整体标记 HISTORICAL，为过程快照而非现状）
