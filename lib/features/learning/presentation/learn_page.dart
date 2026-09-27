@@ -34,6 +34,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/core/application/app_messages.dart';
 
 class LearnPage extends StatefulWidget {
   const LearnPage({super.key});
@@ -58,7 +59,7 @@ class _LearnPageState extends State<LearnPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
+            .showSnackBar(const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)));
       }
     }
   }

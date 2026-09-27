@@ -28,6 +28,7 @@ import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/definition_view.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/widgets/word_root_tab.dart';
+import 'package:word_app/core/application/app_messages.dart';
 
 class WordDetailPage extends StatefulWidget {
   final bool fromLearn;
@@ -576,7 +577,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                       } catch (e) {
                         if (mounted) {
                           messenger.showSnackBar(
-                            const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)),
+                            const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)),
                           );
                         }
                       }

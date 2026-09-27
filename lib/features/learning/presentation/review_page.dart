@@ -16,6 +16,7 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/theme/wallpaper_state.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
+import 'package:word_app/core/application/app_messages.dart';
 
 class ReviewPage extends StatefulWidget {
   const ReviewPage({super.key});
@@ -157,7 +158,7 @@ class _ReviewPageState extends State<ReviewPage> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
+            .showSnackBar(const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)));
       }
     }
   }

@@ -25,6 +25,7 @@ import 'package:word_app/features/search/application/search_history_store.dart';
 import 'package:word_app/features/search/application/word_search_reader.dart';
 import 'package:word_app/features/search/domain/search_example.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/core/application/app_messages.dart';
 
 /// 搜索功能域的完整页面。
 ///
@@ -499,7 +500,7 @@ class _SearchPageState extends State<SearchPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
+            .showSnackBar(const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)));
       }
     }
   }

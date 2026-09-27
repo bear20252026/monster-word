@@ -242,10 +242,15 @@ class LearningSessionState extends ChangeNotifier {
       }
 
       await _reviewSchedulePort.rateWord(word: word.word, rating: rating);
+      final wasLastWord = _currentIndex < _queue.length;
       _currentIndex++;
       // 完成整个队列：让 currentWord 变为 null，触发学习完成界面，而不是永远停在最后一个词。
       if (_currentIndex > _queue.length) {
         _currentIndex = _queue.length;
+        // 审计 I87：会话完成漏斗（过转变守卫，完成后的重复评分不重复记录）
+        if (wasLastWord) {
+          unawaited(Sentry.addBreadcrumb(Breadcrumb(message: '学习会话完成: ${_queue.length} 词', category: 'learning')));
+        }
       }
       _regenerateChoices();
       notifyListeners();

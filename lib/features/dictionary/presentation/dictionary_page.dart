@@ -17,6 +17,7 @@ import 'package:word_app/features/dictionary/presentation/dictionary_detail_stat
 import 'package:word_app/features/dictionary/presentation/dictionary_feature_providers.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_exam_sentence_card.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_example_tile.dart';
+import 'package:word_app/core/application/app_messages.dart';
 
 /// 词典详情页 — 编辑式单页排版。
 ///
@@ -247,7 +248,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('发音加载失败，请检查网络'), duration: Duration(seconds: 2)));
+            .showSnackBar(const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)));
       }
     }
   }
