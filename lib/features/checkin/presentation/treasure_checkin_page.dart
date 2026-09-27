@@ -15,8 +15,8 @@
 // ④ 小怪兽储蓄罐联动：青绿圆身 + 橙角橙脚 + 胸前奶白 W，肚皮视窗充盈度与连击绑定。
 //
 // 无障碍：系统「减少动态效果」时跳过散落与粒子，控件立即可用。
-// 位置说明：widgets 层消费 feature application 端口（R-widgets 放行），
-// 首页经 widgets 层打开本页，规避 R4 跨功能 import 禁令。
+// 位置说明：审计 I11 归位 features/checkin/presentation——业务页面不再
+// 借住 widgets 层（跨 feature 经 scare_coin application 端口，现行规则放行）。
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';

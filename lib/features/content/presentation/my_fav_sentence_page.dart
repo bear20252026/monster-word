@@ -13,6 +13,7 @@ import 'package:word_app/utils/date_format_utils.dart';
 import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 import 'package:word_app/widgets/mw_nav_bar.dart';
+import 'package:word_app/widgets/common/mw_feedback.dart';
 
 class MyFavSentencePage extends StatefulWidget {
   const MyFavSentencePage({super.key});
@@ -354,19 +355,13 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
 
   Future<void> _deleteSelected() async {
     final favStore = context.read<SentenceFavoritesStore>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除选中的 ${_selectedIndices.length} 个例句吗？'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('删除', style: TextStyle(color: context.skin.colors.danger)),
-          ),
-        ],
-      ),
+    // 审计 I4：统一确认弹窗（危险操作 danger 色）
+    final confirmed = await showMwConfirm(
+      context,
+      title: '确认删除',
+      content: '确定要删除选中的 ${_selectedIndices.length} 个例句吗？',
+      confirmLabel: '删除',
+      danger: true,
     );
     if (!mounted) return;
 

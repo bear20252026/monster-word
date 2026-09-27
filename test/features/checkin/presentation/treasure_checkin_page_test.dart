@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/widgets/treasure_checkin_page.dart';
+import 'package:word_app/features/checkin/presentation/treasure_checkin_page.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 
 import '../data/fake_scare_coin_store.dart';

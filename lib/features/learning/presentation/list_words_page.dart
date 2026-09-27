@@ -11,6 +11,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/widgets/common/mw_empty_state.dart';
 import 'package:word_app/widgets/common/mw_skeleton.dart';
+import 'package:word_app/widgets/common/mw_feedback.dart';
 
 /// 单词列表页基类，具体子类通过 [loadWordsForContext] 提供数据
 abstract class ListWordsPage extends StatefulWidget {
@@ -200,16 +201,12 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
             child: const Icon(Icons.delete, color: AppColors.white100),
           ),
           confirmDismiss: (direction) async {
-            final confirmed = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('确认删除'),
-                content: Text('确定要删除 "${word.word}" 吗？'),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-                  TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('删除')),
-                ],
-              ),
+            // 审计 I4：统一确认弹窗
+            final confirmed = await showMwConfirm(
+              context,
+              title: '确认删除',
+              content: '确定要删除 "${word.word}" 吗？',
+              confirmLabel: '删除',
             );
             if (confirmed != true) return false;
             return removeWord(word);

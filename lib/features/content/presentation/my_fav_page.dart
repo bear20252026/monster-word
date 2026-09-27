@@ -10,6 +10,7 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/models/word.dart';
+import 'package:word_app/widgets/common/mw_feedback.dart';
 
 class MyFavPage extends StatefulWidget {
   const MyFavPage({super.key});
@@ -76,17 +77,8 @@ class _MyFavPageState extends State<MyFavPage> {
     final favorites = context.read<LearningFavoritesStore>();
     final toRemove = _selectedIndices.map((i) => _words[i].word).toList();
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要从单词本移除 ${toRemove.length} 个单词吗？'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('确定')),
-        ],
-      ),
-    );
+    // 审计 I4：统一确认弹窗
+    final confirmed = await showMwConfirm(context, title: '确认删除', content: '确定要从单词本移除 ${toRemove.length} 个单词吗？');
 
     if (confirmed == true) {
       for (final word in toRemove) {
@@ -262,16 +254,12 @@ class _MyFavPageState extends State<MyFavPage> {
                   child: const Icon(Icons.delete, color: AppColors.white100),
                 ),
                 confirmDismiss: (direction) async {
-                  return await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('确认移除'),
-                      content: Text('确定要将 "${word.word}" 从单词本移除吗？'),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-                        TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('移除')),
-                      ],
-                    ),
+                  // 审计 I4：统一确认弹窗
+                  return await showMwConfirm(
+                    context,
+                    title: '确认移除',
+                    content: '确定要将 "${word.word}" 从单词本移除吗？',
+                    confirmLabel: '移除',
                   );
                 },
                 onDismissed: (direction) async {

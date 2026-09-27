@@ -23,7 +23,7 @@ import 'package:word_app/features/learning/presentation/spell_session_page.dart'
 import 'package:word_app/features/learning/presentation/learn_page.dart';
 import 'package:word_app/features/learning/presentation/word_machine_page.dart';
 import 'package:word_app/features/quick_review/presentation/exam_quick_review_page.dart';
-import 'package:word_app/widgets/treasure_checkin_page.dart';
+import 'package:word_app/features/checkin/presentation/treasure_checkin_page.dart';
 
 import 'package:word_app/app/router/route_error_page.dart';
 import 'package:word_app/app/router/route_names.dart';
