@@ -218,10 +218,13 @@ def main():
     word_to_id = {r[1]: r[0] for r in out.execute("SELECT id, word FROM words")}
 
     # 4) kajweb 81 本词书：映射 + 中文命名 + 分组
+    # 审计 I54：坏行不再静默——按书计数并随映射日志打印，坏行量可审计
+    kajweb_parse_bad = 0
     for fn in kw_files:
         stem = kajweb_stem(fn)
         zf = zipfile.ZipFile(os.path.join(KAJWEB_DIR, fn))
         heads = set()
+        bad_lines = 0
         for line in zf.read(zf.namelist()[0]).decode("utf-8").splitlines():
             line = line.strip()
             if not line:
@@ -229,17 +232,21 @@ def main():
             try:
                 rec = json.loads(line)
             except Exception:
+                bad_lines += 1
                 continue
             h = (rec.get("headWord") or "").strip()
             if h:
                 heads.add(h.lower())
+        kajweb_parse_bad += bad_lines
         c = out.execute("INSERT INTO books (code, name, word_count) VALUES (?,?,0)",
                         (f"KJW_{stem}", kajweb_book_name(stem)))
         bid = c.lastrowid
         mappings = [(word_to_id[h], bid) for h in heads if h in word_to_id]
         out.executemany("INSERT INTO word_books (word_id, book_id) VALUES (?,?)", mappings)
         out.execute("UPDATE books SET word_count=? WHERE id=?", (len(mappings), bid))
-        print(f"  book {stem}: {len(mappings)} words")
+        print(f"  book {stem}: {len(mappings)} words" + (f" (skipped {bad_lines} bad lines)" if bad_lines else ""))
+    if kajweb_parse_bad:
+        print(f"WARNING: kajweb source files contained {kajweb_parse_bad} unparseable lines")
 
     # 5) 收尾自检
     out.execute("UPDATE books SET word_count=(SELECT COUNT(*) FROM word_books WHERE book_id=books.id)")

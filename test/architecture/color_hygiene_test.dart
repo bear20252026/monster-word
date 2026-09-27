@@ -79,7 +79,11 @@ void main() {
       final mw = src.split('class MwTypography').last.split('class AppColors').first;
       expect(mw.contains('StarbucksCreamColors'), isFalse, reason: 'MwTypography 禁止绑定皮肤色');
       expect(mw.contains('StarbucksDarkColors'), isFalse);
-      final appTypo = src.split('class AppTypography').last.split('class AppDimens').first;
+      final appTypo = src
+          .split('class AppTypography')
+          .last
+          .split('class AppTabBar')
+          .first; // 审计 I95：AppDimens 死类已删，锚点迁至下一类
       expect(appTypo.contains('StarbucksCreamColors'), isFalse, reason: 'AppTypography 别名禁止烘焙皮肤色');
       expect(appTypo.contains('StarbucksDarkColors'), isFalse);
     });

@@ -213,17 +213,6 @@ class AppTypography {
   static TextStyle get footnote => MwTypography.micro;
 }
 
-class AppDimens {
-  static const double learnBtnTextSize = 14;
-  static const double bottomBarBtnMargin = 8;
-  static const double selectItemHeight = 56;
-  static const double selectItemLrMargins = 16;
-  static const double selectItemBottomMargins = 8;
-  static const double bottomBarHeight = 56;
-  static const double pageCommonMargin = 16;
-  static const double radiusNormal = 8;
-}
-
 class AppTabBar {
   static const double height = 56;
   static const double iconSize = 26;

@@ -302,67 +302,11 @@ class _SettingsPageState extends State<SettingsPage> {
   // 弹窗 5：每日新学词数（滑条 1-100 + 数字输入，原为 6 个固定档位）
   // ===========================================================================
   Future<void> _showDailyNewWordsDialog() async {
-    // 安全审计 R2：controller 提到方法级（此前在 StatefulBuilder builder 内
-    // 每次 setState 重建都会新建一个永不释放的 controller）
-    // 内存审计 P1：必须 await 弹窗关闭后再 dispose，否则弹层存活期间
-    // TextField 仍挂在已释放的控制器上（输入/滑条回写必崩）。
-    final textCtrl = TextEditingController(text: '${context.read<TodayProgressStore>().goal}');
-    try {
-      await _showBottomSheet(
-        title: '每日新学',
-        child: StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            final value = context.read<TodayProgressStore>().goal;
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 大号当前值展示
-                Center(
-                  child: Text(
-                    '$value 词',
-                    style: const TextStyle(fontSize: AppFontSizes.stat, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                Slider(
-                  value: value.clamp(1, 100).toDouble(),
-                  min: 1,
-                  max: 100,
-                  divisions: 99,
-                  label: '$value',
-                  onChanged: (v) async {
-                    final n = v.round();
-                    await context.read<TodayProgressStore>().setGoal(n);
-                    textCtrl.text = '$n';
-                    if (ctx.mounted) setSheetState(() {});
-                  },
-                ),
-                // 数字输入（自由输入，1-100）
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: TextField(
-                    controller: textCtrl,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    textAlign: TextAlign.center,
-                    decoration: const InputDecoration(hintText: '1-100', border: OutlineInputBorder(), isDense: true),
-                    onSubmitted: (s) async {
-                      final n = int.tryParse(s) ?? value;
-                      if (n >= 1 && n <= 100) {
-                        await context.read<TodayProgressStore>().setGoal(n);
-                        if (ctx.mounted) setSheetState(() {});
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(height: 8),
-              ],
-            );
-          },
-        ),
-      );
-    } finally {
-      textCtrl.dispose();
-    }
+    // 内存审计 P1（I69 回归测试补刀）：控制器归属弹层内容自身的
+    // StatefulWidget——由框架在路由退场动画结束、widget 树完全移除后释放。
+    // 此前的两版（builder 内新建 / 方法级 await 后手动 dispose）分别有
+    // 永不释放与退场动画期间 use-after-dispose 的缺陷。
+    await _showBottomSheet(title: '每日新学', child: const _DailyNewWordsSheetBody());
   }
 
   // ===========================================================================
@@ -503,6 +447,79 @@ class _SettingsPageState extends State<SettingsPage> {
   // ===========================================================================
   Future<void> _showBottomSheet({required String title, required Widget child}) {
     return showSettingsBottomSheet(context, title: title, child: child);
+  }
+}
+
+/// 「每日新学」弹层内容（内存审计 P1/I69：控制器归本组件所有——
+/// initState 建一次，框架在弹层路由完全移除（含退场动画）后才 dispose，
+/// 彻底规避方法级手动释放的 use-after-dispose 时序窗口）。
+class _DailyNewWordsSheetBody extends StatefulWidget {
+  const _DailyNewWordsSheetBody();
+
+  @override
+  State<_DailyNewWordsSheetBody> createState() => _DailyNewWordsSheetBodyState();
+}
+
+class _DailyNewWordsSheetBodyState extends State<_DailyNewWordsSheetBody> {
+  late final TextEditingController _textCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _textCtrl = TextEditingController(text: '${context.read<TodayProgressStore>().goal}');
+  }
+
+  @override
+  void dispose() {
+    _textCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _setGoal(int n) async {
+    await context.read<TodayProgressStore>().setGoal(n);
+    _textCtrl.text = '$n';
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final value = context.read<TodayProgressStore>().goal;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 大号当前值展示
+        Center(
+          child: Text(
+            '$value 词',
+            style: const TextStyle(fontSize: AppFontSizes.stat, fontWeight: FontWeight.w700),
+          ),
+        ),
+        Slider(
+          value: value.clamp(1, 100).toDouble(),
+          min: 1,
+          max: 100,
+          divisions: 99,
+          label: '$value',
+          onChanged: (v) => _setGoal(v.round()),
+        ),
+        // 数字输入（自由输入，1-100）
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: TextField(
+            controller: _textCtrl,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            textAlign: TextAlign.center,
+            decoration: const InputDecoration(hintText: '1-100', border: OutlineInputBorder(), isDense: true),
+            onSubmitted: (s) {
+              final n = int.tryParse(s) ?? value;
+              if (n >= 1 && n <= 100) _setGoal(n);
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
   }
 }
 
