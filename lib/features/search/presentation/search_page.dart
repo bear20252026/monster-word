@@ -24,6 +24,7 @@ import 'package:word_app/features/search/application/favorites_accessor.dart';
 import 'package:word_app/features/search/application/search_history_store.dart';
 import 'package:word_app/features/search/application/word_search_reader.dart';
 import 'package:word_app/features/search/domain/search_example.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 /// 搜索功能域的完整页面。
 ///
@@ -120,7 +121,9 @@ class _SearchPageState extends State<SearchPage> {
         _lastQuery = query.trim();
         _isLoading = false;
       });
-    } catch (e) {
+    } catch (e, s) {
+      // 审计 I90：搜索失败聚合观测的源头打点（此前静默复位，失败率不可见）
+      reportSwallowedError('单词搜索失败: ${query.trim()}', e, s);
       if (!mounted || seq != _searchSeq) return;
       setState(() {
         _results = [];

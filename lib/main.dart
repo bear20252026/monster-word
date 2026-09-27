@@ -22,14 +22,22 @@ Future<void> main() async {
 }
 
 Future<void> _bootstrapAndRun() async {
+  // 审计 I89：启动耗时打点——Sentry 在 bootstrap 之后才初始化，
+  // 此处只采集，待 runAppWithSentry 完成后补记 breadcrumb（先加会被丢弃）。
+  final sw = Stopwatch()..start();
+  final stepTimings = <String>[];
   try {
-    await bootstrapApp();
+    await bootstrapApp(
+      onProgress: (step, total, label) {
+        stepTimings.add('$label:${sw.elapsedMilliseconds}ms');
+      },
+    );
   } catch (error, stack) {
     // 审计 I104：bootstrap 阶段失败（数据库/路径/偏好初始化等）此前会让
     // runApp 永不执行——用户面对无窗口/白屏死应用。改为渲染最小兜底页提供
     // 「重试」入口。Sentry 未初始化时 captureException 为 no-op；此场景下
     // 兜底页的可见性与可恢复性是第一目标，遥测为尽力而为。
-    debugPrint('[Bootstrap] 启动失败: $error');
+    debugPrint('[Bootstrap] 启动失败(${sw.elapsedMilliseconds}ms): $error');
     await Sentry.captureException(error, stackTrace: stack);
     runApp(_BootstrapRecoveryApp(error: error));
     return;
@@ -38,6 +46,16 @@ Future<void> _bootstrapAndRun() async {
   await runAppWithSentry(() {
     runApp(const WordApp()); // 字面必须含这一行，app_structure_test 靠它
   });
+  final totalMs = sw.elapsedMilliseconds;
+  unawaited(
+    Sentry.addBreadcrumb(
+      Breadcrumb(
+        message: '冷启动 bootstrap 完成：${totalMs}ms',
+        category: 'boot',
+        data: {'totalMs': totalMs, 'steps': stepTimings.join(' | ')},
+      ),
+    ),
+  );
 }
 
 /// bootstrap 失败的兜底根：重试成功后原地切换为正式应用
