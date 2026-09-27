@@ -12,6 +12,7 @@ import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/book/application/book_word_list_reader.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class ExtensiveModelSelectPage extends StatefulWidget {
   final String bookId;
@@ -143,21 +144,8 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
   }
 
   Widget _buildNavBar(SkinSystem skin) {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            onPressed: () => NavUtils.safePop(context),
-          ),
-          const SizedBox(width: 4),
-          Text('泛听模式', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-        ],
-      ),
-    );
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(title: '泛听模式', onBack: () => NavUtils.safePop(context), height: 56);
   }
 }
 

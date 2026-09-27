@@ -13,6 +13,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 import 'package:word_app/features/account/application/avatar_storage.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class UserInfoManagePage extends StatefulWidget {
   const UserInfoManagePage({super.key});
@@ -103,21 +104,8 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
   }
 
   Widget _buildNavBar(SkinSystem skin) {
-    return Container(
-      height: 48,
-      padding: EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            onPressed: () => NavUtils.safePop(context),
-          ),
-          SizedBox(width: 4),
-          Text('个人信息', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-        ],
-      ),
-    );
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(title: '个人信息', onBack: () => Navigator.pop(context));
   }
 
   Widget _buildInfoTile(SkinSystem skin, String label, String value, VoidCallback? onTap, {bool isReadOnly = false}) {

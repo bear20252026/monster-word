@@ -24,6 +24,7 @@ import 'package:word_app/tokens/func_colors.dart';
 import 'package:word_app/widgets/cassette_tape.dart';
 import 'package:word_app/widgets/mw_list_row.dart';
 import 'package:word_app/widgets/mw_section_header.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class PersonalStereoPage extends StatefulWidget {
   const PersonalStereoPage({super.key});
@@ -107,21 +108,8 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
   }
 
   Widget _buildNavBar(SkinSystem skin, BuildContext context) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 4),
-          Text('随身听', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-        ],
-      ),
-    );
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(title: '随身听', onBack: () => Navigator.pop(context));
   }
 
   List<Widget> _buildSourceRows() {

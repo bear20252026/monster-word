@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class SentenceDetailPage extends StatelessWidget {
   final String word;
@@ -93,29 +94,18 @@ class SentenceDetailPage extends StatelessWidget {
   }
 
   Widget _buildNavBar(SkinSystem skin, BuildContext context) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 4),
-          Text('例句详情', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-          const Spacer(),
-          IconButton(
-            icon: Icon(Icons.volume_up_outlined, color: skin.colors.text1, size: 22),
-            onPressed: () {
-              // 例句本身无音频 URL，播所属单词发音（有道 TTS 回退）
-              if (word.isNotEmpty) {
-                context.read<AudioPlaybackState>().playWord(word);
-              }
-            },
-          ),
-        ],
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(
+      title: '例句详情',
+      onBack: () => Navigator.pop(context),
+      trailing: IconButton(
+        icon: Icon(Icons.volume_up_outlined, color: skin.colors.text1, size: 22),
+        onPressed: () {
+          // 例句本身无音频 URL，播所属单词发音（有道 TTS 回退）
+          if (word.isNotEmpty) {
+            context.read<AudioPlaybackState>().playWord(word);
+          }
+        },
       ),
     );
   }

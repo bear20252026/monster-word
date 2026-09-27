@@ -13,6 +13,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/mw_button.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 /// 拼写测验状态机：词表装载、判分、推进、重开。
 ///
@@ -287,20 +288,13 @@ class _SpellingQuizScaffoldState extends State<SpellingQuizScaffold> {
   }
 
   Widget _buildNavBar(SkinSystem skin) {
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
     final controller = widget.controller;
-    return Container(
+    return MwNavBar(
+      title: widget.title,
+      onBack: _exit,
       height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(icon: Icon(Icons.arrow_back_ios_new, size: 20), color: skin.colors.text1, onPressed: _exit),
-          const SizedBox(width: 4),
-          Text(widget.title, style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-          const Spacer(),
-          widget.navTrailing ?? _buildProgressPill(skin, controller),
-          const SizedBox(width: 12),
-        ],
-      ),
+      trailing: widget.navTrailing ?? _buildProgressPill(skin, controller),
     );
   }
 

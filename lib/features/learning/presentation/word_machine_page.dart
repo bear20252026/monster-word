@@ -14,6 +14,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class WordMachinePage extends StatefulWidget {
   const WordMachinePage({super.key});
@@ -137,32 +138,24 @@ class _WordMachinePageState extends State<WordMachinePage> {
   }
 
   Widget _buildNavBar(SkinSystem skin, AppResponsive resp) {
-    return Container(
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(
+      title: '单词机',
+      onBack: () => NavUtils.safePop(context),
       height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            onPressed: () => NavUtils.safePop(context),
+      trailing: Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: context.skin.colors.accent.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(context.design.radius.pill),
           ),
-          const SizedBox(width: 4),
-          Text('单词机', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: context.skin.colors.accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(context.design.radius.pill),
-            ),
-            child: Text(
-              '${_currentIndex + 1} / ${_words.length}',
-              style: MwTypography.bodyBold.copyWith(color: context.skin.colors.accent),
-            ),
+          child: Text(
+            '${_currentIndex + 1} / ${_words.length}',
+            style: MwTypography.bodyBold.copyWith(color: context.skin.colors.accent),
           ),
-          const SizedBox(width: 12),
-        ],
+        ),
       ),
     );
   }

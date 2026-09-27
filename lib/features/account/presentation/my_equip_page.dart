@@ -14,6 +14,7 @@ import 'package:word_app/tokens/func_colors.dart';
 import 'package:word_app/widgets/mw_list_row.dart';
 import 'package:word_app/widgets/mw_section_header.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class MyEquipPage extends StatelessWidget {
   const MyEquipPage({super.key});
@@ -71,22 +72,8 @@ class MyEquipPage extends StatelessWidget {
   }
 
   Widget _buildNavBar(SkinSystem skin, BuildContext context) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            tooltip: '返回',
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 4),
-          Text('我的装备', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-        ],
-      ),
-    );
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(title: '我的装备', onBack: () => Navigator.pop(context), backTooltip: '返回');
   }
 }
 

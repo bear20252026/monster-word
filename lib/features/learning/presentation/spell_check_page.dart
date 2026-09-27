@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class SpellCheckPage extends StatefulWidget {
   final String word;
@@ -264,20 +265,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
   }
 
   Widget _buildNavBar(SkinSystem skin) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 4),
-          Text('拼写检查', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-        ],
-      ),
-    );
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(title: '拼写检查', onBack: () => Navigator.pop(context));
   }
 }

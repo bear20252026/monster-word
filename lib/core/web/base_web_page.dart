@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class BaseWebPage extends StatefulWidget {
   final String url;
@@ -153,30 +154,13 @@ class _BaseWebPageState extends State<BaseWebPage> {
   }
 
   Widget _buildNavBar(SkinSystem skin) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              _pageTitle,
-              style: MwTypography.heading5.copyWith(color: skin.colors.text1),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.refresh, color: skin.colors.text1, size: 22),
-            onPressed: _controller == null ? null : () => _controller?.reload(),
-          ),
-        ],
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(
+      title: _pageTitle,
+      onBack: () => Navigator.pop(context),
+      trailing: IconButton(
+        icon: Icon(Icons.refresh, color: skin.colors.text1, size: 22),
+        onPressed: _controller == null ? null : () => _controller?.reload(),
       ),
     );
   }

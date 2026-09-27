@@ -15,6 +15,7 @@ import 'package:word_app/models/word.dart';
 import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 enum ExportFormat { txt, csv, markdown }
 
@@ -89,21 +90,8 @@ class _WordExportPageState extends State<WordExportPage> {
   }
 
   Widget _buildNavBar(SkinSystem skin) {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 4),
-          Text('导出词表', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-        ],
-      ),
-    );
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(title: '导出词表', onBack: () => Navigator.pop(context), height: 56);
   }
 
   Widget _buildSectionTitle(String title, SkinSystem skin) {

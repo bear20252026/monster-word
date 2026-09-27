@@ -7,6 +7,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class HelpPage extends StatefulWidget {
   final String? url;
@@ -137,26 +138,15 @@ class _HelpPageState extends State<HelpPage> {
   }
 
   Widget _buildNavBar(SkinSystem skin) {
-    return Container(
-      height: 48,
-      padding: EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            tooltip: '返回',
-            onPressed: () => Navigator.pop(context),
-          ),
-          SizedBox(width: 4),
-          Text('帮助', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-          const Spacer(),
-          IconButton(
-            icon: Icon(Icons.refresh, color: skin.colors.text1, size: 22),
-            tooltip: '刷新',
-            onPressed: () => _controller.reload(),
-          ),
-        ],
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(
+      title: '帮助',
+      onBack: () => Navigator.pop(context),
+      backTooltip: '返回',
+      trailing: IconButton(
+        icon: Icon(Icons.refresh, color: skin.colors.text1, size: 22),
+        tooltip: '刷新',
+        onPressed: () => _controller.reload(),
       ),
     );
   }

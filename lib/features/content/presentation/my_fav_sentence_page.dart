@@ -12,6 +12,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/utils/date_format_utils.dart';
 import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class MyFavSentencePage extends StatefulWidget {
   const MyFavSentencePage({super.key});
@@ -113,22 +114,12 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
   }
 
   Widget _buildNavBar(SkinSystem skin) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 4),
-          Text('句库', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-          const Spacer(),
-          // 编辑按钮
-          if (_sentences.isNotEmpty)
-            TextButton(
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(
+      title: '句库',
+      onBack: () => Navigator.pop(context),
+      trailing: _sentences.isNotEmpty
+          ? TextButton(
               onPressed: () {
                 setState(() {
                   _isEditMode = !_isEditMode;
@@ -139,9 +130,8 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
                 _isEditMode ? '完成' : '编辑',
                 style: MwTypography.bodySm.copyWith(color: context.skin.colors.accent),
               ),
-            ),
-        ],
-      ),
+            )
+          : null,
     );
   }
 

@@ -12,6 +12,7 @@ import 'package:word_app/features/checkin/application/checkin_status_reader.dart
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/common/mw_empty_state.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class MessagePage extends StatefulWidget {
   const MessagePage({super.key});
@@ -71,27 +72,17 @@ class _MessagePageState extends State<MessagePage> {
   }
 
   Widget _buildNavBar(SkinSystem skin, MessageStore store) {
-    return Container(
-      height: 48,
-      padding: EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            tooltip: '返回',
-            onPressed: () => Navigator.pop(context),
-          ),
-          SizedBox(width: 4),
-          Text('消息中心', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-          const Spacer(),
-          if (store.unreadCount > 0)
-            TextButton(
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(
+      title: '消息中心',
+      onBack: () => Navigator.pop(context),
+      backTooltip: '返回',
+      trailing: store.unreadCount > 0
+          ? TextButton(
               onPressed: () => store.markAllRead(),
               child: Text('全部已读(${store.unreadCount})', style: TextStyle(color: context.skin.colors.accent)),
-            ),
-        ],
-      ),
+            )
+          : null,
     );
   }
 

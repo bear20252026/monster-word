@@ -8,6 +8,7 @@ import 'package:word_app/features/settings/application/network_diagnosis_service
 import 'package:word_app/features/settings/domain/diagnosis_result.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/mw_nav_bar.dart';
 
 class NetDiagnosisPage extends StatefulWidget {
   const NetDiagnosisPage({super.key, this.serviceOverride});
@@ -98,22 +99,8 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
   }
 
   Widget _buildNavBar(SkinSystem skin) {
-    return Container(
-      height: 48,
-      padding: EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            color: skin.colors.text1,
-            tooltip: '返回',
-            onPressed: () => Navigator.pop(context),
-          ),
-          SizedBox(width: 4),
-          Text('网络诊断', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-        ],
-      ),
-    );
+    // 审计 I1：实现收敛至 MwNavBar 单一真相
+    return MwNavBar(title: '网络诊断', onBack: () => Navigator.pop(context), backTooltip: '返回');
   }
 
   Widget _buildResultItem(SkinSystem skin, DiagnosisResult r) {
