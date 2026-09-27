@@ -7,6 +7,7 @@ import 'package:word_app/features/account/presentation/app_session_state.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 import 'package:word_app/features/account/application/account_profile_store.dart';
 import 'package:word_app/features/account/domain/account_profile.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 
 // ──── Minimal fakes ────
 
@@ -33,7 +34,7 @@ void main() {
 
   group('AppSessionState 登录持久化', () {
     testWidgets('login 后 restore 可恢复登录态', (tester) async {
-      final state = AppSessionState();
+      final state = AppSessionState(prefs: PresentationPrefs());
 
       // 初始未登录
       expect(state.isLoggedIn, isFalse);
@@ -43,14 +44,14 @@ void main() {
       expect(state.isLoggedIn, isTrue);
 
       // 新建实例模拟冷启动 → restore
-      final restored = AppSessionState();
+      final restored = AppSessionState(prefs: PresentationPrefs());
       expect(restored.isLoggedIn, isFalse); // 还未 restore
       await restored.restore();
       expect(restored.isLoggedIn, isTrue);
     });
 
     testWidgets('logout 后 restore 保持未登录', (tester) async {
-      final state = AppSessionState();
+      final state = AppSessionState(prefs: PresentationPrefs());
       await state.login('user', 'pass');
       expect(state.isLoggedIn, isTrue);
 
@@ -58,7 +59,7 @@ void main() {
       expect(state.isLoggedIn, isFalse);
 
       // 新实例 restore 应为 false
-      final restored = AppSessionState();
+      final restored = AppSessionState(prefs: PresentationPrefs());
       await restored.restore();
       expect(restored.isLoggedIn, isFalse);
     });
@@ -110,7 +111,7 @@ void main() {
     });
 
     testWidgets('logout 调用后 isLoggedIn 变为 false', (tester) async {
-      final state = AppSessionState();
+      final state = AppSessionState(prefs: PresentationPrefs());
       await state.login('user', 'pass');
       expect(state.isLoggedIn, isTrue);
 

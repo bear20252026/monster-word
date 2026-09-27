@@ -277,6 +277,8 @@ class _MyFavPageState extends State<MyFavPage> {
                 onDismissed: (direction) async {
                   final favorites = context.read<LearningFavoritesStore>();
                   await favorites.toggle(word.word);
+                  // 内存审计 P2：await 后页面可能已出栈，setState 需存活检查
+                  if (!mounted) return;
                   setState(() => _words.removeAt(index));
                 },
                 child: ListTile(

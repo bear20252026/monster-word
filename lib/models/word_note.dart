@@ -20,11 +20,10 @@ class WordNote {
   }) : createdAt = createdAt ?? _now(),
        updatedAt = updatedAt ?? _now();
 
-  static String _now() {
-    final d = DateTime.now();
-    return '${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}'
-        '${d.hour.toString().padLeft(2, '0')}${d.minute.toString().padLeft(2, '0')}${d.second.toString().padLeft(2, '0')}';
-  }
+  /// 数据层审计 P3：统一 ISO8601——note_repository_impl.addNote 写入的是
+  /// ISO8601，此前默认构造生成 yyyyMMddHHmmss，同一 created_at 字段两种
+  /// 格式并存导致字符串排序/展示错乱。
+  static String _now() => DateTime.now().toIso8601String();
 
   WordNote copyWith({int? id, int? wordId, String? word, String? content, String? createdAt, String? updatedAt}) {
     return WordNote(

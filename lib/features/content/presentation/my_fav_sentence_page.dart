@@ -389,6 +389,8 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
       await favStore.remove(wordId: favSentence.wordId, sentenceId: favSentence.sentenceId);
     }
 
+    // 内存审计 P2：批量删除耗时较长，await 后页面可能已出栈
+    if (!mounted) return;
     setState(() {
       _selectedIndices.clear();
       _isEditMode = false;

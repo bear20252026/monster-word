@@ -131,21 +131,27 @@ class SystemTts {
       }
       await _tts.speak(word);
 
-      // 等完成后读释义
+      // 内存审计 P2：此前每次调用把 onComplete 包一层且从不还原，链长随
+      // 调用次数线性增长（单例存活全程 = 永久累积，旧页面回调被钉住）。
+      // 改为 try/finally 完成后恢复原回调。
       final completer = Completer<void>();
-      VoidCallback? oldComplete;
-      oldComplete = onComplete;
+      final oldComplete = onComplete;
       onComplete = () {
         oldComplete?.call();
         if (!completer.isCompleted) completer.complete();
       };
 
       // 设置超时（防止 TTS 不触发 completion）
-      Future.delayed(const Duration(seconds: 3), () {
+      final timeout = Timer(const Duration(seconds: 3), () {
         if (!completer.isCompleted) completer.complete();
       });
 
-      await completer.future;
+      try {
+        await completer.future;
+      } finally {
+        timeout.cancel();
+        onComplete = oldComplete;
+      }
 
       // 短暂停顿后读中文
       await Future.delayed(const Duration(milliseconds: 300));

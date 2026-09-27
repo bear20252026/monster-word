@@ -21,23 +21,14 @@ import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/presentation/learn_page.dart';
 import 'package:word_app/widgets/scratch_to_reveal.dart';
-import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/theme/skin_system.dart';
 
+import '../../../helpers/fakes.dart';
+
 /// 假音频服务。
-class _FakeAudioService implements AudioService {
-  @override
-  Future<void> playWordAudio(String word, {String accent = 'us', String? audioUrl}) async {}
-  @override
-  Future<void> playFromUrl(String url) async {}
-  @override
-  Future<void> stop() async {}
-  @override
-  bool get isPlaying => false;
-  @override
-  void dispose() {}
-}
+// 审计 I64：原文件内 no-op 假件收敛到 test/helpers/fakes.dart（保留原名引用）
+typedef _FakeAudioService = NoopAudioService;
 
 void main() {
   setUp(() {

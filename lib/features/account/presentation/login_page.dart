@@ -72,6 +72,12 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   static final List<DateTime> _loginAttempts = [];
   static const int _maxAttemptsPerMinute = 5;
 
+  /// 安全审计 P3-1：完整手机号明文回显有肩窥/截屏泄漏风险，统一脱敏为 138****1234。
+  static String _maskPhone(String phone) {
+    if (phone.length != 11) return phone;
+    return '${phone.substring(0, 3)}****${phone.substring(7)}';
+  }
+
   bool _checkRateLimit() {
     final now = DateTime.now();
     // 清除 1 分钟前的记录
@@ -108,7 +114,15 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     // 本机账号闭环：首次登录即创建（用户确认后），此后真校验密码。
     // 密码校验走 PasswordAuthStore（盐值+哈希存平台安全存储），会话仍走本地语义。
     final auth = context.read<PasswordAuthStore>();
-    final hasAccount = await auth.hasPassword(username);
+    // 错误处理审计 P2：hasPassword 同样走 flutter_secure_storage，无兜底时
+    // 平台异常会让整个 _loginWithCoolID 的 Future 未处理。
+    bool hasAccount;
+    try {
+      hasAccount = await auth.hasPassword(username);
+    } catch (e) {
+      if (mounted) _showToast('本机凭证读取失败，请重试');
+      return;
+    }
     if (!hasAccount) {
       final confirmed = await _confirmCreateLocalAccount(username);
       if (!confirmed || !mounted) return;
@@ -121,13 +135,23 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         return;
       }
     } else {
-      final verified = await auth.verify(username, password);
+      // 错误处理审计 P2：flutter_secure_storage 平台调用（系统还原/
+      // Keystore 故障）可能抛 PlatformException，此前无兜底会让登录按钮
+      // “点了没反应”。
+      bool verified;
+      try {
+        verified = await auth.verify(username, password);
+      } catch (e) {
+        if (mounted) _showToast('本机凭证读取失败，请重试');
+        return;
+      }
       if (!verified) {
-        _showToast('账号或密码不正确');
+        if (mounted) _showToast('账号或密码不正确');
         return;
       }
     }
 
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       if (!mounted) return;
@@ -192,10 +216,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       return;
     }
     if (!mounted) return;
-    _showToast('验证码已发送至 $phone');
+    _showToast('验证码已发送至 ${_maskPhone(phone)}');
 
     // 步骤 3：输入验证码 + 新密码
-    final code = await _promptText(title: '找回密码 · 第 2 步', label: '请输入短信验证码（发往 $phone）');
+    final code = await _promptText(title: '找回密码 · 第 2 步', label: '请输入短信验证码（发往 ${_maskPhone(phone)}）');
     if (code == null || code.isEmpty || !mounted) return;
     final verifyError = sms.verifyCode(phone, code);
     if (verifyError != null) {

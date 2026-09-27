@@ -79,26 +79,32 @@ class WordRepositoryImpl implements WordRepository {
     return words;
   }
 
+  /// 数据层审计 P3：LIKE 通配符转义——用户输入 %/_/\ 会改变匹配语义
+  /// （如输入 % 匹配全部行），声明 ESCAPE '\' 后按字面匹配。
+  static String _escapeLike(String input) =>
+      input.replaceAll(r'\', r'\\').replaceAll('%', r'\%').replaceAll('_', r'\_');
+
   @override
   Future<List<Word>> searchWords(String query, {int? limit}) async {
     final db = _database.db;
     // 搜索范围（2026-09-01）：英文单词 + 中文释义（搜索框提示"英文或中文"，
     // 此前只匹配 word 列导致中文查询恒为空）。英文命中优先于中文命中。
-    final like = '%$query%';
+    final escaped = _escapeLike(query);
+    final like = '%$escaped%';
     final maps = await db.rawQuery(
       '''
       SELECT * FROM words
-      WHERE word LIKE ? OR interpret LIKE ?
+      WHERE (word LIKE ? ESCAPE '\\' OR interpret LIKE ? ESCAPE '\\')
       ORDER BY
         CASE
           WHEN word = ? THEN 0
-          WHEN word LIKE ? THEN 1
+          WHEN word LIKE ? ESCAPE '\\' THEN 1
           ELSE 2
         END,
         word COLLATE NOCASE
       LIMIT ?
     ''',
-      [like, like, query, '$query%', limit ?? 50],
+      [like, like, query, '$escaped%', limit ?? 50],
     );
     return maps.map((m) => Word.fromMap(m)).toList();
   }
@@ -125,8 +131,12 @@ class WordRepositoryImpl implements WordRepository {
   @override
   Future<List<Word>> getRandomWords(int count, {int? excludeBookId}) async {
     final db = _database.db;
-    // 安全审计 R4：words 表无 book_id 列（关联在 word_books），用子查询排除
-    final where = excludeBookId != null ? 'id NOT IN (SELECT word_id FROM word_books WHERE book_id = ?)' : null;
+    // 安全审计 R4：words 表无 book_id 列（关联在 word_books），用子查询排除。
+    // 审计 I21：NOT IN 子查询对大表是 O(N×M) 物化比对，NOT EXISTS 走关联
+    // 索引逐行短路，随机取样不再随词书规模劣化。
+    final where = excludeBookId != null
+        ? 'NOT EXISTS (SELECT 1 FROM word_books wb WHERE wb.word_id = words.id AND wb.book_id = ?)'
+        : null;
     final whereArgs = excludeBookId != null ? [excludeBookId] : null;
     final maps = await db.query('words', where: where, whereArgs: whereArgs, orderBy: 'RANDOM()', limit: count);
     return maps.map((m) => Word.fromMap(m)).toList();

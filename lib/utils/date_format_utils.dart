@@ -17,8 +17,21 @@ String formatMonthDay(String compact) {
   }
 }
 
-/// 笔记区用：yyyyMMddHHmmss → yyyy-MM-dd HH:mm（长度不足时返回原文）
+/// 笔记区用：yyyyMMddHHmmss → yyyy-MM-dd HH:mm（长度不足时返回原文）。
+///
+/// 审计 I31：笔记 createdAt/updatedAt 存在双格式——存量行是紧凑串
+/// （yyyyMMddHHmmss），2026-09 审计批次起新写入统一为 ISO8601
+/// （WordNote._now / NoteRepositoryImpl.addNote）。按特征判别后分别解析，
+/// 避免 ISO 串被按 14 位 substring 切成乱码。
 String formatCompactDateTime(String compact) {
+  if (compact.contains('-') || compact.contains('T')) {
+    final parsed = DateTime.tryParse(compact);
+    if (parsed != null) {
+      return '${parsed.year.toString().padLeft(4, '0')}-${parsed.month.toString().padLeft(2, '0')}-'
+          '${parsed.day.toString().padLeft(2, '0')} '
+          '${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
+    }
+  }
   if (compact.length < 14) return compact;
   return '${compact.substring(0, 4)}-${compact.substring(4, 6)}-${compact.substring(6, 8)} '
       '${compact.substring(8, 10)}:${compact.substring(10, 12)}';

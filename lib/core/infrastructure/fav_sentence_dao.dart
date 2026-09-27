@@ -135,27 +135,36 @@ class FavSentenceDao {
       List<dynamic> jsonList;
       try {
         jsonList = jsonDecode(raw) as List<dynamic>;
-      } catch (_) {
-        jsonList = const <dynamic>[];
+      } catch (e, s) {
+        // 数据层审计 P2：SP 快照 JSON 损坏时按 0 行迁移并写 done 标记，
+        // 会把 UI 收藏永久清空且无恢复入口。改为上报并中止（抛出走 SP
+        // 回退），不写 marker、不动 SP 快照，留待人工恢复。
+        reportSwallowedError('收藏例句 SP 快照解析失败，中止 SQLite 迁移', e, s);
+        throw StateError('fav_sentence SP snapshot corrupted');
       }
-      var inserted = 0;
+      final expected = <String>{};
+      for (final entry in jsonList) {
+        if (entry is! Map<String, dynamic>) continue;
+        expected.add('${entry['word_id']}:${entry['sentence_id']}');
+      }
       await db.transaction((txn) async {
         for (final entry in jsonList) {
           if (entry is! Map<String, dynamic>) continue;
           final fav = FavSentenceData.fromJson(entry);
-          final rowId = await txn.insert('favorite_sentences', {
+          await txn.insert('favorite_sentences', {
             'word_id': fav.wordId,
             'sentence_id': fav.sentenceId,
             'word': fav.word,
             'update_time': fav.updateTime,
             'data_json': jsonEncode(entry),
           }, conflictAlgorithm: ConflictAlgorithm.replace);
-          if (rowId != 0) inserted++;
         }
+        // 校验口径修正：此前 total < inserted 恒假（插入后 total 必 ≥ inserted），
+        // 校验形同虚设。改为对去重后的 (wordId, sentenceId) 数校验。
         final counted = await txn.rawQuery('SELECT COUNT(*) AS n FROM favorite_sentences');
         final total = (counted.single['n'] as int?) ?? 0;
-        if (total < inserted) {
-          throw StateError('收藏例句迁移行数校验失败：预期 ≥$inserted，实际 $total');
+        if (total < expected.length) {
+          throw StateError('收藏例句迁移行数校验失败：预期 ≥${expected.length}，实际 $total');
         }
       });
     }
@@ -190,6 +199,16 @@ class FavSentenceDao {
 
   // ── 写路径（索引先行 + 单行持久化） ─────────────────────────────────────
 
+  /// 审计 I33：同 FavoriteWordsDao——持久化写串行闸门，防快速双击 toggle
+  /// 时 insert/delete 交错导致索引与 DB 分叉。
+  Future<void> _writeGate = Future.value();
+
+  Future<T> _serialized<T>(Future<T> Function() action) {
+    final result = _writeGate.then((_) => action());
+    _writeGate = result.then((_) {}, onError: (Object _) {});
+    return result;
+  }
+
   /// 添加收藏例句
   Future<bool> addFavSentence({
     required String word,
@@ -218,20 +237,29 @@ class FavSentenceDao {
     );
 
     if (_useSqlite) {
-      _indexByWordId.putIfAbsent(wordId, () => <String>{}).add(sentenceId);
-      _indexCount++;
-      try {
-        await _db!.insert('favorite_sentences', {
-          'word_id': wordId,
-          'sentence_id': sentenceId,
-          'word': word,
-          'update_time': updateTime,
-          'data_json': jsonEncode(favData.toJson()),
-        }, conflictAlgorithm: ConflictAlgorithm.replace);
-      } catch (e, s) {
-        reportSwallowedError('FavSentenceDao add persist', e, s);
-      }
-      return true;
+      // 审计 I33：索引变更与持久化整体进串行闸门（单独包 persist 仍有交错窗口）
+      return await _serialized(() async {
+        _indexByWordId.putIfAbsent(wordId, () => <String>{}).add(sentenceId);
+        _indexCount++;
+        try {
+          await _db!.insert('favorite_sentences', {
+            'word_id': wordId,
+            'sentence_id': sentenceId,
+            'word': word,
+            'update_time': updateTime,
+            'data_json': jsonEncode(favData.toJson()),
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+        } catch (e, s) {
+          reportSwallowedError('FavSentenceDao add persist', e, s);
+          // 数据层审计 P2-4：持久化失败回滚索引，避免内存/磁盘分叉
+          // （否则收藏成功重启后消失）。
+          final ids = _indexByWordId[wordId];
+          ids?.remove(sentenceId);
+          if (ids != null && ids.isEmpty) _indexByWordId.remove(wordId);
+          _indexCount--;
+        }
+        return true;
+      });
     }
 
     _cache.insert(0, favData);
@@ -244,20 +272,25 @@ class FavSentenceDao {
     await ensureLoaded();
 
     if (_useSqlite) {
-      final ids = _indexByWordId[wordId];
-      if (ids == null || !ids.remove(sentenceId)) return false;
-      if (ids.isEmpty) _indexByWordId.remove(wordId);
-      _indexCount--;
-      try {
-        await _db!.delete(
-          'favorite_sentences',
-          where: 'word_id = ? AND sentence_id = ?',
-          whereArgs: [wordId, sentenceId],
-        );
-      } catch (e, s) {
-        reportSwallowedError('FavSentenceDao remove persist', e, s);
-      }
-      return true;
+      return await _serialized(() async {
+        final ids = _indexByWordId[wordId];
+        if (ids == null || !ids.remove(sentenceId)) return false;
+        if (ids.isEmpty) _indexByWordId.remove(wordId);
+        _indexCount--;
+        try {
+          await _db!.delete(
+            'favorite_sentences',
+            where: 'word_id = ? AND sentence_id = ?',
+            whereArgs: [wordId, sentenceId],
+          );
+        } catch (e, s) {
+          reportSwallowedError('FavSentenceDao remove persist', e, s);
+          // 同 P2-4：持久化失败回滚索引（否则取消收藏重启后复活）。
+          _indexByWordId.putIfAbsent(wordId, () => <String>{}).add(sentenceId);
+          _indexCount++;
+        }
+        return true;
+      });
     }
 
     final index = _cache.indexWhere((e) => e.wordId == wordId && e.sentenceId == sentenceId);

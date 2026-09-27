@@ -188,7 +188,13 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     if (raw != null && raw.isNotEmpty) {
       try {
         entries = (jsonDecode(raw) as List).map((e) => ScareCoinEntry.fromJson(e as Map<String, dynamic>)).toList();
-      } catch (_) {}
+      } catch (e, s) {
+        // 数据完整性审计 P2：A 级文件（金币账本）吞错后继续以仅含
+        // 新记录的列表覆写，会把原有最多 200 条账本静默清空。
+        // 改为上报并保留 raw 原样，宁可丢一条新账也不清账本。
+        reportSwallowedError('金币账本追加写入时解析失败，保留原账本', e, s);
+        return;
+      }
     }
     entries.insert(0, entry);
     await prefs.setString(historyKey, jsonEncode(entries.take(200).map((e) => e.toJson()).toList()));
@@ -199,10 +205,27 @@ class PreferencesScareCoinStore implements ScareCoinStore {
 
   Future<int> _apply({required int delta, required String reason, String? lastCheckInIso}) async {
     final prefs = await SharedPreferences.getInstance();
-    final newBalance = (prefs.getInt(balanceKey) ?? 0) + delta;
+    final current = prefs.getInt(balanceKey) ?? 0;
+    final newBalance = current + delta;
+    // 数据完整性审计 P2：负向变动不允许把余额写穿为负（兑换页的余额检查
+    // 存在 TOCTOU 窗口，双击/并发下曾可产生负余额账本）。
+    if (newBalance < 0) {
+      throw StateError('余额不足：current=$current, delta=$delta');
+    }
     await prefs.setInt(balanceKey, newBalance);
     if (lastCheckInIso != null) await prefs.setString(lastCheckInKey, lastCheckInIso);
-    final entries = await history();
+    // 与 _insertHistory 同口径：解析失败保留原账本并上报，本次新条目不落账
+    // （宁可丢一条新账也不清账本；余额与签到日已正确写入）。
+    List<ScareCoinEntry> entries = [];
+    final raw = prefs.getString(historyKey);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        entries = (jsonDecode(raw) as List).map((e) => ScareCoinEntry.fromJson(e as Map<String, dynamic>)).toList();
+      } catch (e, s) {
+        reportSwallowedError('金币账本写入时解析失败，保留原账本不覆写', e, s);
+        return newBalance;
+      }
+    }
     entries.insert(0, ScareCoinEntry(time: DateTime.now(), delta: delta, reason: reason));
     await prefs.setString(historyKey, jsonEncode(entries.take(200).map((entry) => entry.toJson()).toList()));
     return newBalance;

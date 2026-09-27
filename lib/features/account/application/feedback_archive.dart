@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 /// 上报回调：隔离 Sentry 依赖以便测试注入。
 typedef FeedbackUploader = Future<void> Function(FeedbackEntry entry);
@@ -41,11 +42,15 @@ class FeedbackArchive {
     final entry = FeedbackEntry(content: content.trim(), contact: contact?.trim(), submittedAt: DateTime.now());
 
     final prefs = prefsOverride ?? await SharedPreferences.getInstance();
-    final history = _decode(prefs.getString(_storageKey))..add(entry);
-    // MEM：本地反馈存档封顶，避免 SP 与内存无界增长。
-    const maxEntries = 50;
-    final trimmed = history.length > maxEntries ? history.sublist(history.length - maxEntries) : history;
-    await prefs.setString(_storageKey, jsonEncode(trimmed.map((e) => e.toJson()).toList()));
+    final decoded = _decode(prefs.getString(_storageKey));
+    final history = (decoded ?? <FeedbackEntry>[])..add(entry);
+    if (decoded != null) {
+      // MEM：本地反馈存档封顶，避免 SP 与内存无界增长。
+      const maxEntries = 50;
+      final trimmed = history.length > maxEntries ? history.sublist(history.length - maxEntries) : history;
+      await prefs.setString(_storageKey, jsonEncode(trimmed.map((e) => e.toJson()).toList()));
+    }
+    // decoded == null（存档损坏）：不覆写原档，本条仍上报 Sentry 兜底
 
     try {
       await upload(entry);
@@ -58,10 +63,11 @@ class FeedbackArchive {
   /// 读取本地反馈历史（供设置页后续展示/导出扩展）。
   Future<List<FeedbackEntry>> history() async {
     final prefs = prefsOverride ?? await SharedPreferences.getInstance();
-    return _decode(prefs.getString(_storageKey));
+    return _decode(prefs.getString(_storageKey)) ?? <FeedbackEntry>[];
   }
 
-  static List<FeedbackEntry> _decode(String? raw) {
+  /// 解码本地反馈存档；raw 损坏时返回 null（区别于"无历史"的空列表）。
+  static List<FeedbackEntry>? _decode(String? raw) {
     if (raw == null || raw.isEmpty) return <FeedbackEntry>[];
     try {
       final List<dynamic> list = jsonDecode(raw) as List<dynamic>;
@@ -74,8 +80,11 @@ class FeedbackArchive {
             ),
           )
           .toList();
-    } catch (_) {
-      return <FeedbackEntry>[];
+    } catch (e, s) {
+      // 审计 I56：损坏被当作空列表会让后续 submit 以仅 1 条覆写存档
+      // （同金币账本修复口径）。上报并交由调用方决定不覆写。
+      reportSwallowedError('反馈存档解析失败，保留原档不清空', e, s);
+      return null;
     }
   }
 

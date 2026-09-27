@@ -18,6 +18,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+
 // === 释义 JSON 解析器 ===
 // interpret 字段存储的是复杂 JSON，结构如下：
 // [
@@ -152,7 +154,9 @@ class WordBookDatabase {
       try {
         final info = await PackageInfo.fromPlatform();
         assetVersion = '${info.version}+${info.buildNumber}';
-      } catch (_) {}
+      } catch (_) {
+        // C 级豁免：版本号取不到仅退化为哈希比对路径，无用户可见影响
+      }
     }
     final versionMatches =
         override == null &&
@@ -182,7 +186,11 @@ class WordBookDatabase {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString(_kDbHashKey, assetHash);
             if (assetVersion != null) await prefs.setString(_kDbVersionKey, assetVersion);
-          } catch (_) {}
+          } catch (e, s) {
+            // 错误处理审计 P3：指纹持久化失败会让每次冷启动都重走
+            // 35MB gz 加载 + MD5 慢路径，性能劣化应远程可见
+            reportSwallowedError('词库指纹持久化失败（冷启动将走慢路径）', e, s);
+          }
         }
       } else {
         // MEM：哈希一致无需解压同样释放，后续 openDatabase/COUNT 自检零大对象持有。
@@ -194,8 +202,9 @@ class WordBookDatabase {
     var reopened = false;
     try {
       _db = await openDatabase(dbPath, readOnly: true);
-    } catch (e) {
-      debugPrint('[WordBookDatabase] 打开失败，删除损坏库并重建: $e');
+    } catch (e, s) {
+      // 词库损坏是应远程可见的事件（此前仅 debugPrint，release 不可见）
+      reportSwallowedError('词库打开失败，删除损坏库并重建', e, s);
       assetBytes ??= await loadBytes();
       await _extractTo(dbPath, assetBytes);
       assetBytes = null;
@@ -203,15 +212,19 @@ class WordBookDatabase {
       reopened = true;
     }
 
-    // 完整性自检：三表任一为 0 = 坏库（哈希相等但内容损坏的死锁场景），
+    // 完整性自检：三表任一为空 = 坏库（哈希相等但内容损坏的死锁场景），
     // 强制全量重建并自检，保证离线状态下词库必然可用。
+    // 审计 I22：用 LIMIT 1 存在性检查替代 COUNT(*)——语义等价（只判空），
+    // words 表 20 万+ 行时 COUNT 每次冷启动全表扫，EXISTS 查询 O(1)。
     if (!reopened) {
       var c = 0, w = 0, l = 0;
       try {
-        c = (await db.rawQuery('SELECT COUNT(*) AS c FROM books')).first['c'] as int? ?? 0;
-        w = (await db.rawQuery('SELECT COUNT(*) AS c FROM words')).first['c'] as int? ?? 0;
-        l = (await db.rawQuery('SELECT COUNT(*) AS c FROM word_books')).first['c'] as int? ?? 0;
-      } catch (_) {}
+        c = (await db.rawQuery('SELECT 1 AS c FROM books LIMIT 1')).isEmpty ? 0 : 1;
+        w = (await db.rawQuery('SELECT 1 AS c FROM words LIMIT 1')).isEmpty ? 0 : 1;
+        l = (await db.rawQuery('SELECT 1 AS c FROM word_books LIMIT 1')).isEmpty ? 0 : 1;
+      } catch (_) {
+        // C 级豁免：自检查询失败按 0 处理走强制重建兜底
+      }
       if (c == 0 || w == 0 || l == 0) {
         debugPrint('[WordBookDatabase] 检测到空库/坏库(books=$c words=$w links=$l)，强制重建');
         await _db!.close();
@@ -227,7 +240,9 @@ class WordBookDatabase {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString(_kDbHashKey, hash);
             if (assetVersion != null) await prefs.setString(_kDbVersionKey, assetVersion);
-          } catch (_) {}
+          } catch (e, s) {
+            reportSwallowedError('词库重建后指纹持久化失败（冷启动将走慢路径）', e, s);
+          }
         }
       }
     }
@@ -439,7 +454,10 @@ class WordBookDatabase {
     bool lightweight = false,
     bool randomOrder = false,
   }) async {
-    final columns = lightweight ? 'w.id, w.word, w.interpret, w.uk_pron, w.us_pron, w.confuse, w.word_root' : 'w.*';
+    // 数据层审计 P3：轻列补 main_word，与 getWordsByNames 的轻列口径一致（缺列会让 Word.mainWord 静默为空）
+    final columns = lightweight
+        ? 'w.id, w.word, w.main_word, w.interpret, w.uk_pron, w.us_pron, w.confuse, w.word_root'
+        : 'w.*';
     // 用户反馈修复（2026-08-31）：学习取样必须随机——字母序取前 N 会得到
     // 一整批同首字母（如全部 A 开头），事后 shuffle 无法弥补。
     final orderBy = randomOrder ? 'RANDOM()' : 'w.word COLLATE NOCASE ASC';
@@ -504,7 +522,15 @@ class WordBookDatabase {
 
   /// 模糊搜索（前缀匹配）
   Future<List<Word>> searchWords(String prefix, {int limit = 20}) async {
-    final rows = await db.query('words', where: 'word LIKE ?', whereArgs: ['$prefix%'], orderBy: 'word', limit: limit);
+    // 数据层审计 P3：LIKE 通配符转义（用户输入 %/_ 改变匹配语义）
+    final escaped = prefix.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_');
+    final rows = await db.query(
+      'words',
+      where: "word LIKE ? ESCAPE '\\'",
+      whereArgs: ['$escaped%'],
+      orderBy: 'word',
+      limit: limit,
+    );
     return rows.map(Word.fromMap).toList();
   }
 

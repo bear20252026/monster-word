@@ -47,6 +47,8 @@ class _BreathingWordState extends State<BreathingWord> with SingleTickerProvider
   void _onStatus(AnimationStatus status) {
     if (status != AnimationStatus.completed) return;
     if (!mounted) return;
+    // 公共组件契约：空列表取模会抛 IntegerDivisionByZeroException
+    if (widget.words.isEmpty) return;
     setState(() => _index = (_index + 1) % widget.words.length);
     _controller.forward(from: 0);
   }

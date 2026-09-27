@@ -61,12 +61,26 @@ class NoteRepositoryImpl implements NoteRepository {
     return total;
   }
 
+  /// 数据层审计 P3：主键 = 毫秒时间戳，同毫秒两条会冲突（update/delete
+  /// 只命中第一条），时钟回拨产生重复键。用单调递增哨兵兜底。
+  int _lastNoteId = 0;
+
+  int _nextNoteId() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now > _lastNoteId) {
+      _lastNoteId = now;
+    } else {
+      _lastNoteId++;
+    }
+    return _lastNoteId;
+  }
+
   @override
   Future<int> addNote(int wordId, String content, {String word = ''}) async {
     final notes = await getNotesByWord(wordId);
     final now = DateTime.now();
     final note = WordNote(
-      id: now.millisecondsSinceEpoch,
+      id: _nextNoteId(),
       wordId: wordId,
       word: word,
       content: content,

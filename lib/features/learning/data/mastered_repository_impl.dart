@@ -12,8 +12,12 @@ class MasteredRepositoryImpl implements MasteredRepository {
 
   final Set<String> _masteredWords = {};
 
+  /// 审计 I30：持有加载 Future——此前 toggle 不等待加载完成即全量覆写 SP，
+  /// 启动早期触发会用残缺集合覆盖全部已掌握标记（不可逆）。
+  Future<void>? _loadFuture;
+
   MasteredRepositoryImpl() {
-    _loadMasteredWords();
+    _loadFuture = _loadMasteredWords();
   }
 
   Future<void> _loadMasteredWords() async {
@@ -36,9 +40,7 @@ class MasteredRepositoryImpl implements MasteredRepository {
 
   @override
   Future<Set<String>> getMasteredWords() async {
-    if (_masteredWords.isEmpty) {
-      await _loadMasteredWords();
-    }
+    await _loadFuture;
     return Set<String>.from(_masteredWords);
   }
 
@@ -50,6 +52,7 @@ class MasteredRepositoryImpl implements MasteredRepository {
 
   @override
   Future<void> toggleMastered(String word) async {
+    await _loadFuture;
     if (_masteredWords.contains(word)) {
       _masteredWords.remove(word);
     } else {

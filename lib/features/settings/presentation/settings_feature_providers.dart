@@ -11,6 +11,7 @@ import 'package:word_app/features/settings/data/local_study_reminder_service.dar
 import 'package:word_app/features/settings/data/learning_preferences_repository.dart';
 import 'package:word_app/features/settings/domain/reminder_time.dart';
 import 'package:word_app/features/settings/presentation/learning_preferences_state.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 /// 为设置功能创建一个 MultiProvider 作用域。
 ///
@@ -53,7 +54,9 @@ class _SettingsFeatureInitializerState extends State<_SettingsFeatureInitializer
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final state = context.read<LearningPreferencesState>();
-      state.initialize().then((_) => _rescheduleIfEnabled(state));
+      state.initialize().then((_) => _rescheduleIfEnabled(state)).catchError((Object e, StackTrace s) {
+        reportSwallowedError('学习偏好初始化失败', e, s);
+      });
     });
   }
 

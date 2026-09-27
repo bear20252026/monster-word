@@ -68,8 +68,17 @@ class _MainShellState extends State<MainShell> {
         body: Stack(
           children: [
             // Z2 内容：使用 IndexedStack 避免切换时白屏
+            // 性能审计 M-4：IndexedStack 不给非激活子树停 ticker，切走后
+            // 怪兽呼吸等 repeat 动画仍每帧 setState + 重建（不可见也耗电），
+            // 用 TickerMode 显式停掉非激活 tab 的动画。
             Positioned.fill(
-              child: IndexedStack(index: _active, children: widget.tabs.map((t) => t.builder(context)).toList()),
+              child: IndexedStack(
+                index: _active,
+                children: [
+                  for (var i = 0; i < widget.tabs.length; i++)
+                    TickerMode(enabled: i == _active, child: widget.tabs[i].builder(context)),
+                ],
+              ),
             ),
             // Z3 底部 Dock 导航（macOS 风格浮动栏）
             Positioned(

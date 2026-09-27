@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:word_app/core/engine/fsrs6_engine.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 /// MEM/F3：卡片全局分类计数（与 memoryStats 口径一一对应）。
 @immutable
@@ -123,7 +124,7 @@ class ReviewScheduleStore {
 
   Future<List<FsrsCard>> loadCards() async {
     final rows = await _db.query('fsrs_cards');
-    return rows.map(_cardFromRow).toList(growable: false);
+    return _cardsFromRows(rows);
   }
 
   /// MEM/F3：启动只读「到期子集」（命中 idx_fsrs_cards_due 索引），
@@ -134,7 +135,7 @@ class ReviewScheduleStore {
       where: 'is_new = 0 AND due_date < ?',
       whereArgs: [now.toIso8601String()],
     );
-    return rows.map(_cardFromRow).toList(growable: false);
+    return _cardsFromRows(rows);
   }
 
   /// MEM/F3：全局分类计数（单条件聚合，COUNT 不物化任何卡片行）。
@@ -166,7 +167,8 @@ class ReviewScheduleStore {
   /// MEM/F3：按需取单卡（rateWord/forget 读改写与逐词读穿填充）。
   Future<FsrsCard?> cardForWord(String word) async {
     final rows = await _db.query('fsrs_cards', where: 'word = ?', whereArgs: [word], limit: 1);
-    return rows.isEmpty ? null : _cardFromRow(rows.first);
+    if (rows.isEmpty) return null;
+    return _cardFromRowOrNull(rows.first);
   }
 
   /// MEM/异步化：按词批量取卡（分块 IN 查询，供词表/详情页异步读取面）。
@@ -179,7 +181,8 @@ class ReviewScheduleStore {
       final placeholders = batch.map((_) => '?').join(',');
       final rows = await _db.rawQuery('SELECT * FROM fsrs_cards WHERE word IN ($placeholders)', batch);
       for (final row in rows) {
-        final card = _cardFromRow(row);
+        final card = _cardFromRowOrNull(row);
+        if (card == null) continue;
         result[card.word] = card;
       }
     }
@@ -224,19 +227,32 @@ class ReviewScheduleStore {
     return (result.single['n'] as int?) ?? 0;
   }
 
-  FsrsCard _cardFromRow(Map<String, Object?> row) => FsrsCard(
-    word: row['word']! as String,
-    stability: (row['stability']! as num).toDouble(),
-    difficulty: (row['difficulty']! as num).toDouble(),
-    elapsedDays: row['elapsed_days']! as int,
-    scheduledDays: row['scheduled_days']! as int,
-    lastReview: DateTime.parse(row['last_review']! as String),
-    dueDate: DateTime.parse(row['due_date']! as String),
-    repetitions: row['repetitions']! as int,
-    reviewCount: row['review_count']! as int,
-    isNew: (row['is_new']! as int) != 0,
-    shortTermStability: (row['short_term_stability']! as num).toDouble(),
-  );
+  /// 审计 I52：逐行容错解析——单行损坏（列缺失/时间串非法）此前会让整个
+  /// loadAll/loadDueCards 抛错，上层降级 SP 造成"数据回退"假象。
+  /// 改为"能救一行是一行"：坏行上报并跳过，可救数据保留。
+  FsrsCard? _cardFromRowOrNull(Map<String, Object?> row) {
+    try {
+      return FsrsCard(
+        word: row['word']! as String,
+        stability: (row['stability']! as num).toDouble(),
+        difficulty: (row['difficulty']! as num).toDouble(),
+        elapsedDays: row['elapsed_days']! as int,
+        scheduledDays: row['scheduled_days']! as int,
+        lastReview: DateTime.parse(row['last_review']! as String),
+        dueDate: DateTime.parse(row['due_date']! as String),
+        repetitions: row['repetitions']! as int,
+        reviewCount: row['review_count']! as int,
+        isNew: (row['is_new']! as int) != 0,
+        shortTermStability: (row['short_term_stability']! as num).toDouble(),
+      );
+    } catch (e, s) {
+      reportSwallowedError('FSRS 卡片行解析失败，跳过坏行(word=${row['word']})', e, s);
+      return null;
+    }
+  }
+
+  List<FsrsCard> _cardsFromRows(List<Map<String, Object?>> rows) =>
+      rows.map(_cardFromRowOrNull).whereType<FsrsCard>().toList(growable: false);
 
   // ============================================================
   // 写路径（评分 O(1) 单事务：1 卡片行 + 1 统计行 + 1 活跃日期）
@@ -246,14 +262,27 @@ class ReviewScheduleStore {
   Future<void> recordRating({required FsrsCard card, required String dateKey, required bool isLearn}) async {
     await _db.transaction((txn) async {
       await txn.insert('fsrs_cards', _cardToRow(card), conflictAlgorithm: ConflictAlgorithm.replace);
-      await txn.rawInsert(
-        'INSERT INTO fsrs_daily_stats(date, learn, review) VALUES(?, ?, ?) '
-        'ON CONFLICT(date) DO UPDATE SET '
-        'learn = learn + excluded.learn, review = review + excluded.review',
-        [dateKey, isLearn ? 1 : 0, isLearn ? 0 : 1],
-      );
+      await _upsertDailyStats(txn, dateKey, isLearn ? 1 : 0, isLearn ? 0 : 1);
       await txn.insert('fsrs_active_dates', {'date': dateKey}, conflictAlgorithm: ConflictAlgorithm.ignore);
     });
+  }
+
+  /// 数据层审计 P2-7：INSERT … ON CONFLICT … DO UPDATE 需 SQLite ≥3.24，
+  /// Android ≤9（API 28-）系统 SQLite 为 3.22-，该语法会抛错且被上层
+  /// 吞掉——旧 Android 上每次评分的学习记录静默不落盘，重启全部回退。
+  /// 改为 UPDATE + 条件 INSERT 两步等价写法，兼容全部支持版本。
+  Future<void> _upsertDailyStats(DatabaseExecutor txn, String date, int learnDelta, int reviewDelta) async {
+    final changed = await txn.rawUpdate(
+      'UPDATE fsrs_daily_stats SET learn = learn + ?, review = review + ? WHERE date = ?',
+      [learnDelta, reviewDelta, date],
+    );
+    if (changed == 0) {
+      await txn.rawInsert('INSERT INTO fsrs_daily_stats(date, learn, review) VALUES(?, ?, ?)', [
+        date,
+        learnDelta,
+        reviewDelta,
+      ]);
+    }
   }
 
   /// 遗留会话"重学"：删除单张卡片。
@@ -284,12 +313,7 @@ class ReviewScheduleStore {
       for (final entry in stats.entries) {
         final learn = entry.value['learn'] ?? 0;
         final review = entry.value['review'] ?? 0;
-        await txn.rawInsert(
-          'INSERT INTO fsrs_daily_stats(date, learn, review) VALUES(?, ?, ?) '
-          'ON CONFLICT(date) DO UPDATE SET '
-          'learn = learn + excluded.learn, review = review + excluded.review',
-          [entry.key, learn, review],
-        );
+        await _upsertDailyStats(txn, entry.key, learn, review);
       }
     });
   }
@@ -326,12 +350,7 @@ class ReviewScheduleStore {
       for (final entry in dailyStats.entries) {
         final learn = entry.value['learn'] ?? 0;
         final review = entry.value['review'] ?? 0;
-        await txn.rawInsert(
-          'INSERT INTO fsrs_daily_stats(date, learn, review) VALUES(?, ?, ?) '
-          'ON CONFLICT(date) DO UPDATE SET '
-          'learn = learn + excluded.learn, review = review + excluded.review',
-          [entry.key, learn, review],
-        );
+        await _upsertDailyStats(txn, entry.key, learn, review);
       }
       for (final date in activeDates) {
         await txn.insert('fsrs_active_dates', {'date': date}, conflictAlgorithm: ConflictAlgorithm.ignore);
@@ -339,14 +358,19 @@ class ReviewScheduleStore {
     });
   }
 
+  /// 审计 I32：`due_date < ?` 靠"全链路本地 ISO 串字典序"这一脆弱不变量——
+  /// 任何写入方传入 UTC DateTime 会产生带 Z/+offset 的串，静默破坏排序。
+  /// 写入前强制归一化为本地时间，消灭该失败模式（不改存储格式、不动存量）。
+  String _toLocalIso(DateTime value) => (value.isUtc ? value.toLocal() : value).toIso8601String();
+
   Map<String, Object?> _cardToRow(FsrsCard card) => {
     'word': card.word,
     'stability': card.stability,
     'difficulty': card.difficulty,
     'elapsed_days': card.elapsedDays,
     'scheduled_days': card.scheduledDays,
-    'last_review': card.lastReview.toIso8601String(),
-    'due_date': card.dueDate.toIso8601String(),
+    'last_review': _toLocalIso(card.lastReview),
+    'due_date': _toLocalIso(card.dueDate),
     'repetitions': card.repetitions,
     'review_count': card.reviewCount,
     'is_new': card.isNew ? 1 : 0,

@@ -66,11 +66,18 @@ class LocalStudyReminderService implements StudyReminderService {
       final name = timezoneNameOverride ?? (await FlutterTimezone.getLocalTimezone()).identifier;
       tz.setLocalLocation(tz.getLocation(name));
     } catch (_) {
+      // 错误处理审计 P2：POSIX Etc/GMT 区域名为反号（UTC+8 → Etc/GMT-8），
+      // 此前 hours>0 分支会生成 "Etc/GMT--8" 这类非法名，
+      // 让 getLocation 在 catch 块内再抛 LocationException 逃逸到调用方。
       final offset = (nowOverride ?? DateTime.now()).timeZoneOffset;
       final hours = offset.inHours;
-      final name = hours == 0 ? 'UTC' : 'Etc/GMT-${hours > 0 ? -hours : '+${-hours}'}';
-      final location = tz.getLocation(name);
-      tz.setLocalLocation(location);
+      final name = hours == 0 ? 'UTC' : (hours > 0 ? 'Etc/GMT-$hours' : 'Etc/GMT+${-hours}');
+      try {
+        tz.setLocalLocation(tz.getLocation(name));
+      } catch (_) {
+        // 半小时时区等被 inHours 截断后理论上仍可能产生未知名，最终兜底 UTC
+        tz.setLocalLocation(tz.UTC);
+      }
     }
   }
 

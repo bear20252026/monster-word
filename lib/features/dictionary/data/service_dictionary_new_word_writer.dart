@@ -1,7 +1,7 @@
 import 'package:word_app/core/infrastructure/user_database.dart';
-import 'package:word_app/core/utils/swallowed_error_report.dart';
-import 'package:word_app/models/word.dart';
+import 'package:word_app/core/repositories/new_word_id_cache.dart';
 import 'package:word_app/core/repositories/new_word_repository_impl.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
 
 /// 基于 NewWordRepository 的生词本操作适配器。
@@ -9,8 +9,9 @@ import 'package:word_app/features/dictionary/application/dictionary_new_word_wri
 /// 实现 [DictionaryNewWordWriter] 端口，封装生词添加/移除逻辑。
 /// 依赖共享仓储 [NewWordRepositoryImpl]，不引入其他 feature 内部依赖。
 ///
-/// 为支持同步的 [isNewWord] 查询，内部维护一个 ID 缓存，
-/// 在 [toggleNewWord] 操作后自动更新。
+/// 审计 I34：同步 [isNewWord] 的 ID 缓存收敛到共享单例
+/// [NewWordIdCache]（学习域写入路径同源维护），不再自持私有缓存——
+/// 此前学习域移除生词后本域星标陈旧到重启。
 class ServiceDictionaryNewWordWriter implements DictionaryNewWordWriter {
   ServiceDictionaryNewWordWriter({this._userDatabase});
 
@@ -18,43 +19,18 @@ class ServiceDictionaryNewWordWriter implements DictionaryNewWordWriter {
 
   UserDatabase get _db => _userDatabase ?? UserDatabase.instance;
 
-  /// 生词 ID 缓存，用于同步查询。
-  final Set<int> _newWordIdCache = {};
-
-  /// 是否已完成首次加载。
-  bool _initialized = false;
-
-  /// 确保缓存已加载（幂等）。
-  Future<void> _ensureLoaded() async {
-    if (_initialized) return;
-    _initialized = true;
-    try {
-      final repo = NewWordRepositoryImpl(_db);
-      final words = await repo.getNewWords();
-      _newWordIdCache
-        ..clear()
-        ..addAll(words.map((r) => r.wordId));
-    } catch (e, s) {
-      // M9：缓存加载失败可降级，但必须可观测（生词同步查询可能失真）。
-      reportSwallowedError('dictionary new-word cache load', e, s);
-    }
-  }
+  NewWordRepositoryImpl get _repo => NewWordRepositoryImpl(_db);
 
   @override
   Future<bool> toggleNewWord(Word word, {String source = 'dictionary'}) async {
-    await _ensureLoaded();
-    final repo = NewWordRepositoryImpl(_db);
-    final result = await repo.toggleNewWord(word, source: source);
-    if (result) {
-      _newWordIdCache.add(word.id);
-    } else {
-      _newWordIdCache.remove(word.id);
-    }
+    await NewWordIdCache.instance.ensureLoaded(_repo);
+    final result = await _repo.toggleNewWord(word, source: source);
+    NewWordIdCache.instance.mark(word.id, added: result);
     return result;
   }
 
   @override
   bool isNewWord(int wordId) {
-    return _newWordIdCache.contains(wordId);
+    return NewWordIdCache.instance.contains(wordId);
   }
 }

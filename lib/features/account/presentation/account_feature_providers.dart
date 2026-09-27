@@ -16,12 +16,13 @@ import 'package:word_app/features/checkin/application/checkin_status_reader.dart
 import 'package:word_app/features/account/data/account_profile_repository.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 
 /// 账号功能域的根状态装配入口。
 Widget buildAccountFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
-      ChangeNotifierProvider(create: (_) => AppSessionState()),
+      ChangeNotifierProvider(create: (_) => AppSessionState(prefs: PresentationPrefs())),
       // 以同实例暴露核心契约，供其它 feature（如 settings）只依赖 AppSessionController，
       // 不再直接 import account 内部（ARCH-FIX-1，去除跨 feature 展示层耦合）。
       ProxyProvider<AppSessionState, AppSessionController>(update: (_, session, _) => session),

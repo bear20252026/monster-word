@@ -47,13 +47,26 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
     // 延迟到首帧后执行，避免 initState 中直接读 provider 的副作用
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<QuickReviewWordReader>().loadWords().then((words) {
-        if (!mounted) return;
-        setState(() {
-          _words = words;
-          _isLoading = false;
-        });
-      });
+      context
+          .read<QuickReviewWordReader>()
+          .loadWords()
+          .then((words) {
+            if (!mounted) return;
+            setState(() {
+              _words = words;
+              _isLoading = false;
+            });
+          })
+          .catchError((Object e) {
+            // 错误处理审计 P2：此前无 catchError，词库异常时 _isLoading
+            // 永远为 true，页面卡死在转圈。
+            if (mounted) {
+              setState(() {
+                _words = [];
+                _isLoading = false;
+              });
+            }
+          });
     });
   }
 
@@ -138,14 +151,26 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
       stats = QuickReviewStats();
       _isLoading = true;
     });
-    context.read<QuickReviewWordReader>().loadWords(limit: type.timeLimit).then((words) {
-      if (!mounted) return;
-      setState(() {
-        _words = words;
-        _isLoading = false;
-        _startTimer();
-      });
-    });
+    context
+        .read<QuickReviewWordReader>()
+        .loadWords(limit: type.timeLimit)
+        .then((words) {
+          if (!mounted) return;
+          setState(() {
+            _words = words;
+            _isLoading = false;
+            _startTimer();
+          });
+        })
+        .catchError((Object e) {
+          // 同 initState：失败必须复位 loading，否则永久转圈
+          if (mounted) {
+            setState(() {
+              _words = [];
+              _isLoading = false;
+            });
+          }
+        });
   }
 
   @override

@@ -12,6 +12,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/text_generate_effect.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 /// 例句条目（带收藏按钮）
 class ExampleTile extends StatefulWidget {
@@ -57,9 +58,14 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
     // 使用句子的唯一标识（英文内容的hash）作为sentenceId
     final sentenceId = widget.example.en.hashCode.toString();
     final favStore = context.read<SentenceFavoritesStore>();
-    favStore.isFavorite(wordId: widget.wordId, sentenceId: sentenceId).then((v) {
-      if (mounted) setState(() => _isFav = v);
-    });
+    favStore
+        .isFavorite(wordId: widget.wordId, sentenceId: sentenceId)
+        .then((v) {
+          if (mounted) setState(() => _isFav = v);
+        })
+        .catchError((Object e, StackTrace s) {
+          reportSwallowedError('例句收藏状态读取失败', e, s);
+        });
   }
 
   Future<void> _toggleFav() async {

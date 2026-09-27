@@ -387,7 +387,6 @@ void main() {
           .readAsStringSync();
       final appSource = File('lib/app/app.dart').readAsStringSync();
       final pageSource = File('lib/features/scare_coin/presentation/scare_coin_history_page.dart').readAsStringSync();
-      final calendarSource = File('lib/widgets/spring_check_in_calendar.dart').readAsStringSync();
       // A5 收口后 profile/my_space 的卡片消费已上收至共享组件（唯一持有 ScareCoinStore 消费）。
       final cardsSource = File('lib/widgets/scare_coin_summary_cards.dart').readAsStringSync();
       final dashboardSource = File('lib/features/learning/presentation/dashboard_page.dart').readAsStringSync();
@@ -405,7 +404,7 @@ void main() {
       expect(scareCoinScopeIdx, greaterThan(-1));
       expect(checkInScopeIdx, greaterThan(-1));
       expect(scareCoinScopeIdx, lessThan(checkInScopeIdx));
-      for (final source in [pageSource, calendarSource, cardsSource, dashboardSource]) {
+      for (final source in [pageSource, cardsSource, dashboardSource]) {
         expect(source, contains('ScareCoinStore'));
         expect(source, isNot(contains('ScareCoinLedger')));
         expect(source, isNot(contains('SharedPreferences')));

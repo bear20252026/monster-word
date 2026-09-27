@@ -71,12 +71,21 @@ else
   MSG="chore(auto): 自动同步 ${FILE_COUNT} 个文件 — ${SUMMARY}"
 fi
 
+# 审计 I99：android/app/ 内含签名密钥（*.jks）与 key.properties，安全完全
+# 依赖 .gitignore 不被改动——这里在脚本层再加一道显式排除，即使 ignore
+# 规则被误改也不会把签名身份放进暂存区。
 git add lib/ test/ pubspec.yaml pubspec.lock analysis_options.yaml \
-  docs/ scripts/ assets/db/ windows/ android/app/ 2>/dev/null
+  docs/ scripts/ assets/db/ windows/ android/app/ \
+  -- ':!android/app/*.jks' ':!android/app/*.keystore' ':!android/app/key.properties' 2>/dev/null
 
 # 防呆：staged 里若混入 dist/build/releases/work/logs 路径，立即中止
 if git diff --cached --name-only | grep -qE "^(dist/|build/|releases/|work/|logs/)"; then
   echo "[auto_sync] 错误：staged 中出现构建产物路径，已中止"; exit 1
+fi
+
+# 防呆（审计 I99）：staged 中若出现签名密钥/凭证文件，立即中止
+if git diff --cached --name-only | grep -qE '\.(jks|keystore)$|android/key\.properties$'; then
+  echo "[auto_sync] 错误：staged 中出现签名密钥/凭证文件，已中止"; exit 1
 fi
 
 git commit -m "$MSG" || { echo "[auto_sync] 提交失败（可能无实质变更）"; exit 1; }

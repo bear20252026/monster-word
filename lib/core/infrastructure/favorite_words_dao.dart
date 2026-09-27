@@ -77,6 +77,22 @@ class FavoriteWordsDao {
 
     final legacy = prefs.getStringList(_spKey) ?? const <String>[];
     if (legacy.isNotEmpty) {
+      final legacySet = legacy.toSet();
+      // 数据层审计 P2-2：迁移事务提交与 marker 写入之间崩溃的自愈——
+      // 下次启动 DB 已有全部行而 marker 仍在，INSERT OR IGNORE 会让
+      // inserted=0 ≠ 预期而抛错 → 整库降级 SP 且每次启动重复失败。
+      // 先查 DB 已含的 legacy 词数，已含全集即直接补写 marker。
+      final placeholders = List.filled(legacySet.length, '?').join(',');
+      final existing = await db.query(
+        'favorite_words',
+        columns: ['word'],
+        where: 'word IN ($placeholders)',
+        whereArgs: legacySet.toList(),
+      );
+      if (existing.length >= legacySet.length) {
+        await prefs.setString(_migratedMarker, 'done');
+        return;
+      }
       final now = DateTime.now().millisecondsSinceEpoch;
       var inserted = 0;
       await db.transaction((txn) async {
@@ -88,8 +104,9 @@ class FavoriteWordsDao {
           }, conflictAlgorithm: ConflictAlgorithm.ignore);
           if (rowId != 0) inserted++;
         }
-        if (inserted != legacy.toSet().length) {
-          throw StateError('收藏词迁移行数校验失败：预期 ${legacy.toSet().length}，实际 $inserted');
+        // 校验口径：本次新插 + 迁移前已存在 ≥ SP 去重数（崩溃自愈后重放）。
+        if (inserted + existing.length < legacySet.length) {
+          throw StateError('收藏词迁移行数校验失败：预期 ${legacySet.length}，实际 ${inserted + existing.length}');
         }
       });
     }
@@ -106,16 +123,33 @@ class FavoriteWordsDao {
 
   // ── 写路径（索引先行 + 单行持久化，O(1)） ─────────────────────────────
 
+  /// 审计 I33：持久化写串行闸门——快速双击 toggle 时，前一次 add 的 insert
+  /// 还在途、后一次 remove 的 delete 先执行，最终 DB 留下已"取消"的行而
+  /// 内存索引已移除（重启后复活）。同 isolate 内 async 交错用 Future 链
+  /// 串行化消灭；写是 O(1) 单行操作，排队开销可忽略。
+  Future<void> _writeGate = Future.value();
+
+  Future<T> _serialized<T>(Future<T> Function() action) {
+    final result = _writeGate.then((_) => action());
+    _writeGate = result.then((_) {}, onError: (Object _) {});
+    return result;
+  }
+
   Future<void> add(String word) async {
     await ensureLoaded();
-    if (!_index.add(word)) return;
-    await _persistAdd(word);
+    // 审计 I33：索引变更与持久化整体进串行闸门（单独包 persist 仍有交错窗口）
+    await _serialized(() async {
+      if (!_index.add(word)) return;
+      await _persistAdd(word);
+    });
   }
 
   Future<void> remove(String word) async {
     await ensureLoaded();
-    if (!_index.remove(word)) return;
-    await _persistRemove(word);
+    await _serialized(() async {
+      if (!_index.remove(word)) return;
+      await _persistRemove(word);
+    });
   }
 
   /// 返回 true 表示收藏、false 表示取消收藏。
@@ -139,6 +173,9 @@ class FavoriteWordsDao {
         }, conflictAlgorithm: ConflictAlgorithm.ignore);
       } catch (e, s) {
         reportSwallowedError('FavoriteWordsDao add persist', e, s);
+        // 数据层审计 P2-3：持久化失败回滚内存索引，避免内存/磁盘分叉
+        // （否则 UI 显示收藏成功，重启后收藏消失）。
+        _index.remove(word);
       }
       return;
     }
@@ -152,6 +189,8 @@ class FavoriteWordsDao {
         await db.delete('favorite_words', where: 'word = ?', whereArgs: [word]);
       } catch (e, s) {
         reportSwallowedError('FavoriteWordsDao remove persist', e, s);
+        // 同 P2-3：持久化失败回滚内存索引（否则取消收藏重启后复活）。
+        _index.add(word);
       }
       return;
     }

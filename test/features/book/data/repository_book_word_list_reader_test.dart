@@ -42,7 +42,8 @@ void main() {
     final src = await databaseFactory.openDatabase(p.join(tmp.path, 'src.db'));
     await src.execute('CREATE TABLE books (id INTEGER PRIMARY KEY, name TEXT, word_count INTEGER)');
     await src.execute(
-      'CREATE TABLE words (id INTEGER PRIMARY KEY, word TEXT, interpret TEXT, uk_pron TEXT, '
+      // main_word 与生产词库 schema 对齐（getWordsByBook 轻列口径含该列）
+      'CREATE TABLE words (id INTEGER PRIMARY KEY, word TEXT, main_word TEXT, interpret TEXT, uk_pron TEXT, '
       'us_pron TEXT, confuse TEXT, word_root TEXT, example TEXT, audio_urls TEXT, image_urls TEXT, phrase TEXT)',
     );
     await src.execute('CREATE TABLE word_books (word_id INTEGER, book_id INTEGER)');

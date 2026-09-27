@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:word_app/models/definition.dart';
+import 'package:word_app/models/definition_text.dart';
 
 /// 单词数据模型
 ///
@@ -65,55 +66,21 @@ class Word {
     'word_root': wordRoot,
   };
 
-  /// 清理 HTML 标签和格式代码（如 `<font color=...>`、`<b>` 等）
-  static String cleanHtml(String text) {
-    if (text.isEmpty) return '';
-    var result = text.replaceAll(RegExp(r'<[^>]*>'), '');
-    result = result.replaceAll(RegExp(r'\s+'), ' ').trim();
-    result = result
-        .replaceAll('&nbsp;', ' ')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&#39;', "'");
-    return result;
-  }
+  /// 清理 HTML 标签和格式代码（如 `<font color=...>`、`<b>` 等）。
+  /// 审计 I2：实现收敛到 definition_text.dart 单一真相，此处保留静态门面
+  /// （工程内多处 `cleanHtml(...)` 调用点的稳定入口）。
+  static String cleanHtml(String text) => cleanDefinitionHtml(text);
 
   /// 原始释义（清理 HTML 标签后）
   /// 如果 interpret 是 JSON 格式但解析后无有效释义，则提取所有文本值拼接
-  String get cleanInterpret {
-    final raw = cleanHtml(interpret);
-    // 尝试从 JSON 中提取可读文本（处理 def 为 ID 引用的情况）
-    try {
-      final decoded = jsonDecode(interpret);
-      if (decoded is List && decoded.isNotEmpty) {
-        final texts = <String>[];
-        for (final item in decoded) {
-          if (item is! Map) continue;
-          final pos = (item['t'] ?? item['pos'] ?? '') as String;
-          if (pos.isNotEmpty) texts.add(pos);
-          final defList = item['def'];
-          if (defList is List) {
-            for (final d in defList) {
-              if (d is Map) {
-                final en = (d['en'] ?? d['endef'] ?? '') as String;
-                final cn = (d['cn'] ?? d['cndef'] ?? '') as String;
-                if (cn.isNotEmpty) texts.add(cn);
-                if (en.isNotEmpty) texts.add(en);
-              }
-              // 跳过整数 ID 引用（如 22285），不显示
-            }
-          }
-        }
-        if (texts.isNotEmpty) {
-          return texts.join('；');
-        }
-      }
-    } catch (_) {}
-    // C 级豁免：解析失败回退原文/原始文本，属内容降级非数据丢失（REG-OBS-001）
-    return raw;
-  }
+  ///
+  /// 性能审计 P0-2：加实例缓存——刷词卡片拖拽期间每帧 rebuild、
+  /// 学习页 hint 构建、听写页朗读前都会读本 getter，3KB JSON
+  /// 每次重新解析 + 正则在低端机上可感知掉帧。
+  String? _cachedCleanInterpret;
+
+  String get cleanInterpret =>
+      _cachedCleanInterpret ??= extractReadableInterpretText(interpret) ?? cleanHtml(interpret);
 
   /// 解释按行拆分（每个词性一行，已清理 HTML）
   List<String>? _cachedInterpretLines;

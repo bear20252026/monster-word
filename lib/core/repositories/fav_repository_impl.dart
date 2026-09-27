@@ -20,7 +20,11 @@ class FavRepositoryImpl implements FavRepository {
   // ── 单词收藏（MEM/U6：SQLite + 索引） ──
 
   @override
-  Future<Set<String>> getFavoriteWords() async => FavoriteWordsDao.instance.getWords();
+  Future<Set<String>> getFavoriteWords() async {
+    // 审计 I29：等待索引加载完成再读（此前构造预热存在窗口期，首查假阴性）
+    await FavoriteWordsDao.instance.ensureLoaded();
+    return FavoriteWordsDao.instance.getWords();
+  }
 
   @override
   Future<void> addFavorite(String word) => FavoriteWordsDao.instance.add(word);
@@ -104,6 +108,8 @@ class FavRepositoryImpl implements FavRepository {
 
   @override
   Future<bool> isFavoriteSentence(int wordId, String sentenceId) async {
+    // 同 I29：句子收藏索引未预热完成时同步读为假阴性
+    await FavSentenceDao.instance.ensureLoaded();
     return FavSentenceDao.instance.isFavSentence(wordId, sentenceId);
   }
 

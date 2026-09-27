@@ -18,19 +18,26 @@ class ExampleSentence {
 
   ExampleSentence({required this.en, required this.cn, this.source = '', this.audioUrl});
 
+  // 性能审计：例句 tile 每次重建（收藏切换/动画）都会重复解析，
+  // <b> 正则与字符串替换结果做实例级缓存。
+  String? _cachedCleanEn;
+  List<HighlightPart>? _cachedParts;
+
   /// 去掉 <b> 高亮标签
-  String get cleanEn => en.replaceAll('<b>', '').replaceAll('</b>', '');
+  String get cleanEn => _cachedCleanEn ??= en.replaceAll('<b>', '').replaceAll('</b>', '');
 
   /// 高亮单词（把 <b> 转成带色文本段）
   List<HighlightPart> get highlightedParts {
-    return parseHighlights(en);
+    return _cachedParts ??= parseHighlights(en);
   }
 }
 
 /// 把含 <b> 标记的原文拆成高亮片段（单一实现，UI 层负责渲染样式）。
+final RegExp _bTagRe = RegExp(r'<b>(.*?)</b>');
+
 List<HighlightPart> parseHighlights(String en) {
   final parts = <HighlightPart>[];
-  final regex = RegExp(r'<b>(.*?)</b>');
+  final regex = _bTagRe;
   var last = 0;
   for (final m in regex.allMatches(en)) {
     if (m.start > last) {

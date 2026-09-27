@@ -368,6 +368,13 @@ class _WordExportPageState extends State<WordExportPage> {
       await file.writeAsString(content);
 
       await Share.shareXFiles([XFile(file.path)], subject: '${widget.bookName.isNotEmpty ? widget.bookName : "词表"}导出');
+      // 安全审计 P3-2：临时文件含用户学习数据，分享完成后立即删除
+      // （系统 Temp 目录不会主动清理子文件，多账户机器可被枚举）。
+      try {
+        if (file.existsSync()) await file.delete();
+      } catch (_) {
+        // C 级豁免：清理失败仅残留临时文件，无功能影响
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('分享失败: $e')));

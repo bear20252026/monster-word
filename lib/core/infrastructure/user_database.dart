@@ -3,10 +3,13 @@
 // 与 wordbook_database.dart（只读词库）分离
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 /// 用户数据库管理器（单例）
 ///
@@ -49,8 +52,53 @@ class UserDatabase {
     final dir = await getApplicationSupportDirectory();
     final dbPath = p.join(dir.path, 'user_data.db');
 
-    _db = await openDatabase(dbPath, version: 3, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    try {
+      _db = await openDatabase(
+        dbPath,
+        version: 3,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+        // 审计 I37：sqflite 默认静默降版本号且不回滚 schema。这里不抛错
+        //（抛错会落入下方删库重建路径毁掉用户数据），仅让降版本事件可观测。
+        onDowngrade: (db, oldVersion, newVersion) async {
+          reportSwallowedError(
+            '用户数据库版本回退（old=$oldVersion new=$newVersion），schema 未回滚',
+            StateError('database downgrade observed'),
+            StackTrace.current,
+          );
+        },
+      );
+    } catch (e) {
+      // 错误处理审计 P2：user_data.db 损坏（onUpgrade 抛错/磁盘错误）会让
+      // bootstrap 整体失败，runApp 永不执行（白屏死应用）。参照
+      // WordBookDatabase 的口径：删坏库重建一次；收藏/生词等可由
+      // SP 快照与 DAO 迁移路径回迁，优于完全起不来。
+      _db = await _deleteAndRebuild(dir, dbPath, e);
+    }
     _initialized = true;
+  }
+
+  Future<Database> _deleteAndRebuild(Directory dir, String dbPath, Object firstError) async {
+    await _safeClose();
+    try {
+      final file = File(p.join(dir.path, 'user_data.db'));
+      if (file.existsSync()) {
+        file.deleteSync();
+      }
+    } catch (_) {
+      // 删除失败则再开一次原库，仍失败让异常上抛（与重建前口径一致）
+    }
+    return openDatabase(dbPath, version: 3, onCreate: _onCreate, onUpgrade: _onUpgrade);
+  }
+
+  Future<void> _safeClose() async {
+    final db = _db;
+    _db = null;
+    try {
+      await db?.close();
+    } catch (_) {
+      // 关闭坏库失败可忽略：句柄即将被丢弃
+    }
   }
 
   /// 创建数据库表
@@ -65,8 +113,7 @@ class UserDatabase {
       )
     ''');
 
-    // 创建索引
-    await db.execute('CREATE INDEX idx_favorites_word_id ON favorites(word_id)');
+    // 创建索引（idx_favorites_word_id 与 UNIQUE(word_id) 隐式索引重复，纯写放大，已删）
     await db.execute('CREATE INDEX idx_favorites_created_at ON favorites(created_at)');
     await _createNewWordsTable(db);
     await _createFavoriteTables(db);
@@ -126,90 +173,19 @@ class UserDatabase {
 
   // ============================================================
   // 收藏管理
+  // ─────────────────────────────────────────────────────────────
+  // 数据层审计：旧版 favorites(word_id) 整块 API 经全库 grep 零调用方
+  // （收藏已迁 favorite_words 文本主键，见 FavoriteWordsDao/FavSentenceDao），
+  // 属死代码误导维护，已删除。表 DDL 保留以兼容存量安装的 schema 校验。
   // ============================================================
-
-  /// 添加收藏
-  /// [wordId] 单词ID（来自 wordbook.db 的 words 表）
-  Future<void> addFavorite(int wordId) async {
-    await db.insert('favorites', {
-      'word_id': wordId,
-      'created_at': DateTime.now().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.ignore);
-  }
-
-  /// 删除收藏
-  /// [wordId] 单词ID
-  Future<void> removeFavorite(int wordId) async {
-    await db.delete('favorites', where: 'word_id = ?', whereArgs: [wordId]);
-  }
-
-  /// 检查是否已收藏
-  /// [wordId] 单词ID
-  Future<bool> isFavorite(int wordId) async {
-    final result = await db.query('favorites', where: 'word_id = ?', whereArgs: [wordId], limit: 1);
-    return result.isNotEmpty;
-  }
-
-  /// 获取所有收藏的单词ID
-  /// [limit] 返回数量限制
-  /// [offset] 偏移量
-  Future<List<int>> getFavoriteWordIds({int limit = 50, int offset = 0}) async {
-    final rows = await db.query(
-      'favorites',
-      columns: ['word_id'],
-      orderBy: 'created_at DESC',
-      limit: limit,
-      offset: offset,
-    );
-    return rows.map((row) => (row['word_id'] as int?) ?? 0).toList();
-  }
-
-  /// 获取收藏数量
-  Future<int> getFavoriteCount() async {
-    final result = await db.rawQuery('SELECT COUNT(*) as count FROM favorites');
-    return (result.isNotEmpty ? (result.first['count'] as int?) ?? 0 : 0);
-  }
-
-  /// 切换收藏状态
-  /// [wordId] 单词ID
-  /// 返回 true 表示已收藏，false 表示取消收藏
-  Future<bool> toggleFavorite(int wordId) async {
-    final isFav = await isFavorite(wordId);
-    if (isFav) {
-      await removeFavorite(wordId);
-      return false;
-    } else {
-      await addFavorite(wordId);
-      return true;
-    }
-  }
-
-  /// 批量检查收藏状态
-  /// [wordIds] 单词ID列表
-  Future<Map<int, bool>> checkFavoritesBatch(List<int> wordIds) async {
-    if (wordIds.isEmpty) return {};
-
-    final placeholders = wordIds.map((_) => '?').join(',');
-    final rows = await db.query(
-      'favorites',
-      columns: ['word_id'],
-      where: 'word_id IN ($placeholders)',
-      whereArgs: wordIds,
-    );
-
-    final favoriteIds = rows.map((row) => (row['word_id'] as int?) ?? 0).toSet();
-    return Map.fromEntries(wordIds.map((id) => MapEntry(id, favoriteIds.contains(id))));
-  }
-
-  /// 清空所有收藏
-  Future<void> clearAllFavorites() async {
-    await db.delete('favorites');
-  }
 
   /// 关闭数据库
   Future<void> close() async {
     await _db?.close();
     _db = null;
     _initialized = false;
+    // 数据层审计 P3：close 后再 initialize() 会复用旧 completed future
+    // 而直接返回（_db==null，后续 db getter 抛 StateError）。
+    _initCompleter = null;
   }
 }

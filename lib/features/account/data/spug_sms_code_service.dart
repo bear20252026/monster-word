@@ -12,6 +12,7 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 
 import 'package:word_app/features/account/application/sms_code_service.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 class SpugSmsCodeService implements SmsCodeService {
   SpugSmsCodeService({http.Client? client, DateTime Function()? now})
@@ -48,7 +49,10 @@ class SpugSmsCodeService implements SmsCodeService {
         return (ok: true, message: '验证码已发送，请查收短信');
       }
       return (ok: false, message: body['msg']?.toString() ?? '发送失败，请稍后再试');
-    } catch (e) {
+    } catch (e, s) {
+      // 审计 I50：此前 e 被丢弃，网络故障与响应解析异常不可区分、排障全靠猜
+      final kind = e is FormatException ? '响应解析失败' : '网络异常';
+      reportSwallowedError('短信验证码发送失败（$kind）', e, s);
       return (ok: false, message: '网络异常，请检查网络后重试');
     }
   }

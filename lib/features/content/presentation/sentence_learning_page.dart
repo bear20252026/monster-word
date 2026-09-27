@@ -82,13 +82,18 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
     }
   }
 
+  // 性能审计：句子卡每帧重建会反复 new RegExp(escape(word))，
+  // 按单词缓存已编译的挖空/高亮正则。
+  final Map<String, RegExp> _wordPatternCache = {};
+
+  RegExp _wordPattern(String word) => _wordPatternCache[word] ??= RegExp(RegExp.escape(word), caseSensitive: false);
+
   /// 把目标单词从例句中挖空为 ____（大小写不敏感）。
   String _maskedSentence(FavSentenceData fav) {
     final text = fav.sentenceData?.e ?? '';
     final word = fav.word.trim();
     if (word.isEmpty) return text;
-    final pattern = RegExp(RegExp.escape(word), caseSensitive: false);
-    return text.replaceAllMapped(pattern, (_) => '____');
+    return text.replaceAllMapped(_wordPattern(word), (_) => '____');
   }
 
   /// 高亮答案句中的目标单词。
@@ -96,7 +101,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
     final text = fav.sentenceData?.e ?? '';
     final word = fav.word.trim();
     if (word.isEmpty) return [TextSpan(text: text)];
-    final pattern = RegExp(RegExp.escape(word), caseSensitive: false);
+    final pattern = _wordPattern(word);
     return text
         .splitMapJoin(pattern, onMatch: (m) => '\u0000${m[0]}\u0000', onNonMatch: (t) => t)
         .split('\u0000')

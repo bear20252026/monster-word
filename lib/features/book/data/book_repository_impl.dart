@@ -1,10 +1,9 @@
 // 由 Claude 团队生成 | Monster Word App
 // BookRepositoryImpl — 词书数据仓库实现
 
-import 'package:flutter/foundation.dart';
-
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:word_app/features/book/data/book_repository.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 /// 词书数据仓库的具体实现
 ///
@@ -23,9 +22,9 @@ class BookRepositoryImpl implements BookRepository {
       final db = _database.db;
       final maps = await db.query('books');
       return maps.map((m) => Book.fromMap(m)).toList();
-    } catch (e) {
-      // SQL 异常不穿透到 UI；返回空列表由上层兜底
-      debugPrint('BookRepositoryImpl.getBooks failed: $e');
+    } catch (e, s) {
+      // SQL 异常不穿透到 UI；返回空列表由上层兜底（词书整页为空应远程可见）
+      reportSwallowedError('BookRepositoryImpl.getBooks failed', e, s);
       return [];
     }
   }
@@ -46,8 +45,8 @@ class BookRepositoryImpl implements BookRepository {
       // 安全审计 R4：关联在 word_books 表（words 无 book_id 列）
       final result = await db.rawQuery('SELECT COUNT(*) as cnt FROM word_books WHERE book_id = ?', [bookId]);
       return (result.first['cnt'] as int?) ?? 0;
-    } catch (e) {
-      debugPrint('BookRepositoryImpl.getWordCount failed: $e');
+    } catch (e, s) {
+      reportSwallowedError('BookRepositoryImpl.getWordCount failed', e, s);
       return 0;
     }
   }

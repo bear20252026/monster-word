@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -10,14 +11,14 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
     test('初始未登录且未展示引导', () {
-      final state = AppSessionState();
+      final state = AppSessionState(prefs: PresentationPrefs());
 
       expect(state.isLoggedIn, isFalse);
       expect(state.hasShownInitGuide, isFalse);
     });
 
     test('账号登录、引导标记和退出遵循应用会话语义', () async {
-      final state = AppSessionState();
+      final state = AppSessionState(prefs: PresentationPrefs());
 
       expect(await state.login('tester', 'password'), isTrue);
       expect(state.isLoggedIn, isTrue);
@@ -31,7 +32,7 @@ void main() {
     });
 
     test('手机号登录同样建立已登录会话', () async {
-      final state = AppSessionState();
+      final state = AppSessionState(prefs: PresentationPrefs());
 
       expect(await state.phoneLogin('13800138000', '123456'), isTrue);
       expect(state.isLoggedIn, isTrue);

@@ -35,7 +35,15 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
 
   Future<void> _loadWords() async {
     try {
-      final words = await context.read<BookWordListReader>().loadWords(int.parse(widget.bookId));
+      // 错误处理审计 P3：畸形路由参数（非数字 bookId）解析失败此前被静默
+      // 吞掉，页面只显示"暂无单词可播放"，无任何错误提示。
+      final bookId = int.tryParse(widget.bookId);
+      if (bookId == null) {
+        if (!mounted) return;
+        setState(() => _loading = false);
+        return;
+      }
+      final words = await context.read<BookWordListReader>().loadWords(bookId);
       if (!mounted) return;
       setState(() {
         _words = words;

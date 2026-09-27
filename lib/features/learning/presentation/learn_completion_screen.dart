@@ -188,7 +188,9 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
       int streakDays = 0;
       try {
         streakDays = await (store?.streak() ?? Future.value(0));
-      } catch (_) {}
+      } catch (_) {
+        // C 级豁免：连签天数读不到仅影响分享文案展示为 0 天
+      }
       if (!mounted) return;
       final correct = (widget.totalAnswered - widget.errorCount).clamp(0, widget.totalAnswered);
       final accuracyText = widget.accuracy == null ? '--' : '${(widget.accuracy! * 100).round()}%';

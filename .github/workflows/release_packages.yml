@@ -71,25 +71,33 @@ jobs:
           KEYSTORE_KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
           KEYSTORE_KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
         run: |
+          IS_TAG="${GITHUB_REF#refs/tags/}"
+          if [ "$IS_TAG" != "$GITHUB_REF" ]; then
+            # 安全审计 P2-2/P3-7：tag 即正式发版，产物必须真签名——
+            # 缺 secrets 直接熔断，绝不产出 debug 签名的"正式"安装包。
+            if [ -z "$KEYSTORE_STORE_PASSWORD" ]; then
+              echo "::error::tag 构建缺少 KEYSTORE_* secrets，拒绝以 debug 签名发版。"
+              exit 1
+            fi
+          fi
           if [ -n "$KEYSTORE_STORE_PASSWORD" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > android/app/monster_word_release.jks
             printf 'storeFile=monster_word_release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
               "$KEYSTORE_STORE_PASSWORD" "$KEYSTORE_KEY_ALIAS" "$KEYSTORE_KEY_PASSWORD" \
               > android/key.properties
+            echo "signed=release" >> "$GITHUB_ENV"
             echo "::notice::Using real release keystore from KEYSTORE_* secrets."
           else
-            # No secrets -> generate a throwaway DEBUG keystore matching the
-            # build.gradle.kts fallback conv (storepass/keypass=android,
-            # alias=androiddebugkey) so assembleRelease succeeds. The resulting
-            # APK is debug-signed: fine for internal installs, NOT for Play
-            # Store. Set the KEYSTORE_* secrets to produce a real signature.
+            # 非 tag（main push / dispatch）且无 secrets -> 生成一次性 debug
+            # keystore 仅供内部验证；产物文件名会带 -debugsigned 后缀标明。
             mkdir -p android/app
             "${JAVA_HOME}/bin/keytool" -genkeypair -v \
               -keystore android/app/debug.keystore \
               -alias androiddebugkey -storepass android -keypass android \
               -keyalg RSA -keysize 2048 -validity 10000 \
               -dname "CN=Android Debug,O=Android,C=US"
-            echo "::warning::No KEYSTORE_* secrets set -> generated a DEBUG-signed APK."
+            echo "signed=debug" >> "$GITHUB_ENV"
+            echo "::warning::No KEYSTORE_* secrets set -> generated a DEBUG-signed APK (artifact only)."
           fi
 
       - name: Install dependencies
@@ -98,20 +106,27 @@ jobs:
       - name: Build Release APK
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: flutter build apk --release --dart-define=SENTRY_DSN=$SENTRY_DSN
+        # 安全审计 P2-6：--obfuscate 提高逆向成本（含随包常量的提取门槛）
+        run: >-
+          flutter build apk --release --dart-define=SENTRY_DSN=$SENTRY_DSN
+          --obfuscate --split-debug-info=build/symbols/apk
 
       - name: Build Release AAB
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: flutter build appbundle --release --dart-define=SENTRY_DSN=$SENTRY_DSN
+        run: >-
+          flutter build appbundle --release --dart-define=SENTRY_DSN=$SENTRY_DSN
+          --obfuscate --split-debug-info=build/symbols/aab
 
       - name: Rename packages to brand convention
         shell: bash
         run: |
           ver=$(sed -n 's/^version: *\([^ ]*\)/\1/p' pubspec.yaml | head -n1)
           ver=${ver%+*}
-          cp build/app/outputs/flutter-apk/app-release.apk "MonsterWord_v${ver}.apk"
-          cp build/app/outputs/bundle/release/app-release.aab "MonsterWord_v${ver}.aab"
+          # 安全审计 P2-2：debug 签名产物必须显式标记，防止被当作官方包分发
+          if [ "$signed" = "debug" ]; then suffix="-debugsigned"; else suffix=""; fi
+          cp build/app/outputs/flutter-apk/app-release.apk "MonsterWord_v${ver}${suffix}.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "MonsterWord_v${ver}${suffix}.aab"
           echo "android_version=$ver" >> "$GITHUB_ENV"
 
       - name: Upload Android packages
@@ -144,7 +159,10 @@ jobs:
       - name: Build Windows Release
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: flutter build windows --release --dart-define=SENTRY_DSN=$env:SENTRY_DSN
+        # 安全审计 P2-6：与 Android 一致开启混淆
+        run: >-
+          flutter build windows --release --dart-define=SENTRY_DSN=$env:SENTRY_DSN
+          --obfuscate --split-debug-info=build/symbols/windows
 
       - name: Bundle VC++ Redistributable
         shell: pwsh
@@ -152,6 +170,14 @@ jobs:
           $dst = "build/windows/x64/runner/Release/vc_redist.x64.exe"
           Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile $dst
           if (-not (Test-Path $dst)) { throw "vc_redist download failed" }
+          # 安全审计 P3-6：校验 Authenticode 签名（必须为 Microsoft 签发且有效），
+          # 防止 CDN/重定向被劫持的运行库以安装器权限静默执行。
+          # 用签名校验而非固定 SHA256：aka.ms 短链恒指向最新版，硬编码哈希
+          # 会在微软例行更新后过期熔断。
+          $sig = Get-AuthenticodeSignature -FilePath $dst
+          Write-Host "vc_redist signed by: $($sig.SignerCertificate.Subject)"
+          if ($sig.Status -ne 'Valid') { throw "vc_redist Authenticode signature invalid: $($sig.Status)" }
+          if ($sig.SignerCertificate.Subject -notmatch 'Microsoft') { throw "vc_redist not signed by Microsoft" }
 
       - name: Install Inno Setup
         shell: pwsh

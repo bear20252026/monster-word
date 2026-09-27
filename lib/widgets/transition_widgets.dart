@@ -8,69 +8,6 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/widgets/animations.dart';
 
-/// 启动页转场动画
-/// 向上滑动 + 渐隐
-class SplashExitTransition extends StatefulWidget {
-  final Widget child;
-  final Duration duration;
-  final double slideDistance;
-  final VoidCallback? onComplete;
-
-  const SplashExitTransition({
-    super.key,
-    required this.child,
-    this.duration = const Duration(milliseconds: 100),
-    this.slideDistance = 130.0,
-    this.onComplete,
-  });
-
-  @override
-  State<SplashExitTransition> createState() => _SplashExitTransitionState();
-}
-
-class _SplashExitTransitionState extends State<SplashExitTransition> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<Offset> _slideAnim;
-  late Animation<double> _fadeAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: widget.duration);
-    _slideAnim = Tween<Offset>(
-      begin: Offset.zero,
-      end: Offset(0, -widget.slideDistance),
-    ).animate(CurvedAnimation(parent: _controller, curve: splashExitCurve));
-    _fadeAnim = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: splashExitCurve));
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        widget.onComplete?.call();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void startExit() {
-    _controller.forward();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SlideTransition(
-      position: _slideAnim,
-      child: FadeTransition(opacity: _fadeAnim, child: widget.child),
-    );
-  }
-}
-
 /// 页面转场路由
 /// 通用的页面转场效果
 class SlideUpRoute<T> extends PageRouteBuilder<T> {
@@ -124,22 +61,4 @@ class ScaleRoute<T> extends PageRouteBuilder<T> {
           );
         },
       );
-}
-
-/// 转场工具类
-class TransitionUtils {
-  /// 推入渐隐页面
-  static Future<T?> pushFade<T>(BuildContext context, Widget page) {
-    return Navigator.push<T>(context, FadeRoute(page: page));
-  }
-
-  /// 推入上滑页面
-  static Future<T?> pushSlideUp<T>(BuildContext context, Widget page) {
-    return Navigator.push<T>(context, SlideUpRoute(page: page));
-  }
-
-  /// 推入缩放页面
-  static Future<T?> pushScale<T>(BuildContext context, Widget page) {
-    return Navigator.push<T>(context, ScaleRoute(page: page));
-  }
 }

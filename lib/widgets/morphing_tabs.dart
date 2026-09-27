@@ -90,6 +90,8 @@ class _SimpleMorphingTabsState extends State<SimpleMorphingTabs> with TickerProv
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        // 公共组件契约：空标签取模/除零守卫
+        if (widget.labels.isEmpty) return const SizedBox.shrink();
         final tabWidth = (constraints.maxWidth - widget.padding.horizontal) / widget.labels.length;
 
         return Container(

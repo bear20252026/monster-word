@@ -301,63 +301,68 @@ class _SettingsPageState extends State<SettingsPage> {
   // ===========================================================================
   // 弹窗 5：每日新学词数（滑条 1-100 + 数字输入，原为 6 个固定档位）
   // ===========================================================================
-  void _showDailyNewWordsDialog() {
+  Future<void> _showDailyNewWordsDialog() async {
     // 安全审计 R2：controller 提到方法级（此前在 StatefulBuilder builder 内
     // 每次 setState 重建都会新建一个永不释放的 controller）
+    // 内存审计 P1：必须 await 弹窗关闭后再 dispose，否则弹层存活期间
+    // TextField 仍挂在已释放的控制器上（输入/滑条回写必崩）。
     final textCtrl = TextEditingController(text: '${context.read<TodayProgressStore>().goal}');
-    _showBottomSheet(
-      title: '每日新学',
-      child: StatefulBuilder(
-        builder: (ctx, setSheetState) {
-          final value = context.read<TodayProgressStore>().goal;
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 大号当前值展示
-              Center(
-                child: Text(
-                  '$value 词',
-                  style: const TextStyle(fontSize: AppFontSizes.stat, fontWeight: FontWeight.w700),
+    try {
+      await _showBottomSheet(
+        title: '每日新学',
+        child: StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final value = context.read<TodayProgressStore>().goal;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 大号当前值展示
+                Center(
+                  child: Text(
+                    '$value 词',
+                    style: const TextStyle(fontSize: AppFontSizes.stat, fontWeight: FontWeight.w700),
+                  ),
                 ),
-              ),
-              Slider(
-                value: value.clamp(1, 100).toDouble(),
-                min: 1,
-                max: 100,
-                divisions: 99,
-                label: '$value',
-                onChanged: (v) async {
-                  final n = v.round();
-                  await context.read<TodayProgressStore>().setGoal(n);
-                  textCtrl.text = '$n';
-                  if (ctx.mounted) setSheetState(() {});
-                },
-              ),
-              // 数字输入（自由输入，1-100）
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: TextField(
-                  controller: textCtrl,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  textAlign: TextAlign.center,
-                  decoration: const InputDecoration(hintText: '1-100', border: OutlineInputBorder(), isDense: true),
-                  onSubmitted: (s) async {
-                    final n = int.tryParse(s) ?? value;
-                    if (n >= 1 && n <= 100) {
-                      await context.read<TodayProgressStore>().setGoal(n);
-                      if (ctx.mounted) setSheetState(() {});
-                    }
+                Slider(
+                  value: value.clamp(1, 100).toDouble(),
+                  min: 1,
+                  max: 100,
+                  divisions: 99,
+                  label: '$value',
+                  onChanged: (v) async {
+                    final n = v.round();
+                    await context.read<TodayProgressStore>().setGoal(n);
+                    textCtrl.text = '$n';
+                    if (ctx.mounted) setSheetState(() {});
                   },
                 ),
-              ),
-              const SizedBox(height: 8),
-            ],
-          );
-        },
-      ),
-    );
-    textCtrl.dispose();
+                // 数字输入（自由输入，1-100）
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: TextField(
+                    controller: textCtrl,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(hintText: '1-100', border: OutlineInputBorder(), isDense: true),
+                    onSubmitted: (s) async {
+                      final n = int.tryParse(s) ?? value;
+                      if (n >= 1 && n <= 100) {
+                        await context.read<TodayProgressStore>().setGoal(n);
+                        if (ctx.mounted) setSheetState(() {});
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            );
+          },
+        ),
+      );
+    } finally {
+      textCtrl.dispose();
+    }
   }
 
   // ===========================================================================
@@ -496,8 +501,8 @@ class _SettingsPageState extends State<SettingsPage> {
   // ===========================================================================
   // 通用底部弹窗（骨架拆至 settings_bottom_sheet.dart）
   // ===========================================================================
-  void _showBottomSheet({required String title, required Widget child}) {
-    showSettingsBottomSheet(context, title: title, child: child);
+  Future<void> _showBottomSheet({required String title, required Widget child}) {
+    return showSettingsBottomSheet(context, title: title, child: child);
   }
 }
 

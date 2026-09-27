@@ -84,4 +84,43 @@ void main() {
       expect(await db.query('favorite_words'), isEmpty, reason: '回退模式不触碰 SQLite');
     });
   });
+
+  group('REG-AUDIT-001 迁移自愈与持久化失败回滚（2026-09-27 审计批次）', () {
+    test('崩溃自愈：事务已提交、marker 未写（DB 已含 SP 全集）→ 不抛错并补写 marker', () async {
+      // 模拟"迁移事务提交后、marker 写入前崩溃"的现场：
+      // DB 已有全部 legacy 行，但 marker 缺失、SP 快照仍在。
+      SharedPreferences.setMockInitialValues({
+        'favorite_words_v1': ['banana', 'apple'],
+      });
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await db.insert('favorite_words', {'word': 'banana', 'created_at': now});
+      await db.insert('favorite_words', {'word': 'apple', 'created_at': now + 1});
+
+      final dao = FavoriteWordsDao(openDatabase: () async => db);
+      await dao.ensureLoaded(); // 修复前：行数校验 inserted(0)≠2 抛错 → 永久降级 SP 循环失败
+
+      expect(dao.usesSqlite, isTrue, reason: '不应因崩溃现场降级 SP');
+      expect(dao.favoriteCount, 2);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('favorite_words_sqlite_migrated_v1'), 'done', reason: '自愈后补写 marker');
+      expect(await db.query('favorite_words'), hasLength(2), reason: '不产生重复行');
+    });
+
+    test('持久化失败回滚：add 失败索引不含、remove 失败索引仍含', () async {
+      final dao = FavoriteWordsDao(openDatabase: () async => db);
+      await dao.ensureLoaded();
+      await dao.add('apple');
+      expect(dao.isFavorite('apple'), isTrue);
+
+      // 关闭底层库模拟持久化故障（磁盘错误/连接丢失）
+      await db.close();
+      db = await openDatabase(inMemoryDatabasePath); // tearDown 关闭的是新库
+
+      await dao.add('banana');
+      expect(dao.isFavorite('banana'), isFalse, reason: 'add 持久化失败必须回滚索引（否则重启后收藏消失）');
+
+      await dao.remove('apple');
+      expect(dao.isFavorite('apple'), isTrue, reason: 'remove 持久化失败必须回滚索引（否则取消收藏复活）');
+    });
+  });
 }

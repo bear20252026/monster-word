@@ -91,4 +91,28 @@ void main() {
       '2026-09-03': {'learn': 1, 'review': 0},
     });
   });
+
+  test('REG-AUDIT（I32）: UTC 时间卡片落库归一化为本地 ISO（字典序不变量保护）', () async {
+    final utcCard = FsrsCard(
+      word: 'kiwi',
+      stability: 3,
+      difficulty: 5,
+      lastReview: DateTime.parse('2026-09-01T08:00:00.000Z'),
+      dueDate: DateTime.parse('2026-09-04T08:00:00.000Z'),
+      repetitions: 2,
+      reviewCount: 5,
+      isNew: false,
+      shortTermStability: 3,
+    );
+    await store.recordRating(card: utcCard, dateKey: '2026-09-04', isLearn: false);
+
+    final rows = await db.query('fsrs_cards', where: 'word = ?', whereArgs: ['kiwi']);
+    expect(rows, hasLength(1));
+    final due = rows.single['due_date']! as String;
+    expect(due.endsWith('Z'), isFalse, reason: 'UTC 输入必须归一化，否则 due_date 字典序比较静默错序');
+    expect(due.contains('+'), isFalse);
+    final parsed = DateTime.parse(due);
+    expect(parsed.isUtc, isFalse);
+    expect(parsed.toUtc(), utcCard.dueDate, reason: '归一化只转时区不改时刻');
+  });
 }

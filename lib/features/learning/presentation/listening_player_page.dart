@@ -136,6 +136,8 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
   Future<void> _togglePlayPause() async {
     if (_isPlaying && !_isPaused) {
       await _tts.pause();
+      // 内存审计 P2：平台通道异步返回后页面可能已出栈
+      if (!mounted) return;
       setState(() => _isPaused = true);
     } else if (_isPaused) {
       // flutter_tts 不支持 resume，重新播放
@@ -148,6 +150,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
   Future<void> _next() async {
     if (_currentIndex < widget.words.length - 1) {
       await _tts.stop();
+      if (!mounted) return;
       setState(() {
         _currentIndex++;
         _showMeaning = false;
@@ -161,6 +164,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
   Future<void> _previous() async {
     if (_currentIndex > 0) {
       await _tts.stop();
+      if (!mounted) return;
       setState(() {
         _currentIndex--;
         _showMeaning = false;

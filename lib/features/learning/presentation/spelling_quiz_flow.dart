@@ -39,6 +39,9 @@ class SpellingQuizController extends ChangeNotifier {
   int _correct = 0;
   int _wrong = 0;
   bool _loading = true;
+  // 内存审计 P2：页面退出先 dispose 控制器，loader 完成后对已 dispose 的
+  // ChangeNotifier 调 notifyListeners 会触发 debug 断言崩溃。
+  bool _disposed = false;
   bool _showAnswer = false;
   bool _wasCorrect = false;
   bool _finished = false;
@@ -79,6 +82,7 @@ class SpellingQuizController extends ChangeNotifier {
     } catch (_) {
       words = const [];
     }
+    if (_disposed) return;
     _seed(words);
   }
 
@@ -138,6 +142,12 @@ class SpellingQuizController extends ChangeNotifier {
     } else {
       _seed(_source);
     }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }
 

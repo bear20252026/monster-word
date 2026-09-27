@@ -61,4 +61,7 @@ class RouteNames {
   static const String quickSpell = '/quick_spell';
   static const String wordExport = '/word_export';
   static const String examQuickReview = '/exam_quick_review';
+
+  /// 聚宝日历签到页（审计 I10：此前经裸 MaterialPageRoute 直推，绕过路由契约）
+  static const String treasureCheckIn = '/treasure_check_in';
 }

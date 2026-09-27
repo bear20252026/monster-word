@@ -19,7 +19,7 @@ class BaseWebPage extends StatefulWidget {
 }
 
 class _BaseWebPageState extends State<BaseWebPage> {
-  late final WebViewController _controller;
+  WebViewController? _controller;
   bool _isLoading = true;
   bool _hasError = false;
   String _pageTitle = '';
@@ -38,8 +38,8 @@ class _BaseWebPageState extends State<BaseWebPage> {
         return false;
       }
 
-      // 只允许 http/https
-      if (uri.scheme != 'http' && uri.scheme != 'https') {
+      // 只允许 https（安全审计 P3-5：白名单逻辑不应接受明文 http）
+      if (uri.scheme != 'https') {
         return false;
       }
 
@@ -71,12 +71,15 @@ class _BaseWebPageState extends State<BaseWebPage> {
             }
             return NavigationDecision.navigate;
           },
-          onPageStarted: (_) => setState(() {
-            _isLoading = true;
-            _hasError = false;
-          }),
+          onPageStarted: (_) {
+            if (!mounted) return;
+            setState(() {
+              _isLoading = true;
+              _hasError = false;
+            });
+          },
           onPageFinished: (url) async {
-            final title = await _controller.getTitle();
+            final title = await _controller?.getTitle();
             if (mounted) {
               setState(() {
                 _isLoading = false;
@@ -84,13 +87,21 @@ class _BaseWebPageState extends State<BaseWebPage> {
               });
             }
           },
-          onWebResourceError: (_) => setState(() {
-            _hasError = true;
-            _isLoading = false;
-          }),
+          onWebResourceError: (_) {
+            if (!mounted) return;
+            setState(() {
+              _hasError = true;
+              _isLoading = false;
+            });
+          },
         ),
       );
-    _controller.loadRequest(Uri.parse(widget.url));
+    _controller!.loadRequest(Uri.parse(widget.url)).catchError((Object e) {
+      // 平台通道加载失败：置错误态而不是让异常逃逸到 zone
+      if (mounted) {
+        setState(() => _hasError = true);
+      }
+    });
   }
 
   @override
@@ -106,7 +117,7 @@ class _BaseWebPageState extends State<BaseWebPage> {
             Expanded(
               child: Stack(
                 children: [
-                  if (_hasError)
+                  if (_hasError || _controller == null)
                     Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -115,19 +126,22 @@ class _BaseWebPageState extends State<BaseWebPage> {
                           const SizedBox(height: 16),
                           Text('页面加载失败', style: MwTypography.body.copyWith(color: skin.colors.text3)),
                           const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () => _controller.reload(),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: MwColors.primary,
-                              foregroundColor: Colors.white,
+                          // 控制器未初始化（白名单未放行）时没有可重载的页面，
+                          // 此前直接调 _controller.reload() 会抛 LateInitializationError
+                          if (_controller != null)
+                            ElevatedButton(
+                              onPressed: () => _controller?.reload(),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: MwColors.primary,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('重试'),
                             ),
-                            child: const Text('重试'),
-                          ),
                         ],
                       ),
                     )
                   else
-                    WebViewWidget(controller: _controller),
+                    WebViewWidget(controller: _controller!),
                   if (_isLoading) Center(child: CircularProgressIndicator(color: MwColors.primary)),
                 ],
               ),
@@ -160,21 +174,10 @@ class _BaseWebPageState extends State<BaseWebPage> {
           ),
           IconButton(
             icon: Icon(Icons.refresh, color: skin.colors.text1, size: 22),
-            onPressed: () => _controller.reload(),
+            onPressed: _controller == null ? null : () => _controller?.reload(),
           ),
         ],
       ),
     );
-  }
-}
-
-/// 广告 WebView 页面（历史广告位）
-class AdWebPage extends StatelessWidget {
-  final String url;
-  const AdWebPage({super.key, required this.url});
-
-  @override
-  Widget build(BuildContext context) {
-    return BaseWebPage(url: url, showAppBar: true);
   }
 }

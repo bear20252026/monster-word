@@ -757,19 +757,6 @@ class _BookCard extends StatelessWidget {
   }
 }
 
-/// 卡片按压容器（缩放反馈 + 圆角裁切），供网格卡复用。
-class ScaleTapCard extends StatelessWidget {
-  const ScaleTapCard({super.key, required this.onTap, required this.child});
-
-  final VoidCallback onTap;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: child);
-  }
-}
-
 /// 底部工具栏项（图标 + 文字）
 class _BottomToolItem extends StatelessWidget {
   final IconData icon;
@@ -798,5 +785,18 @@ class _BottomToolItem extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// 卡片按压容器（缩放反馈 + 圆角裁切），供网格卡复用。
+class ScaleTapCard extends StatelessWidget {
+  const ScaleTapCard({super.key, required this.onTap, required this.child});
+
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: child);
   }
 }

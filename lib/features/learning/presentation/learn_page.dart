@@ -33,6 +33,7 @@ import 'package:word_app/features/learning/presentation/learn_completion_screen.
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 class LearnPage extends StatefulWidget {
   const LearnPage({super.key});
@@ -267,18 +268,41 @@ class _TopBar extends StatelessWidget {
 /// 顶栏金币余额 pill：金币＋余额数字，答对飞行终点。
 /// 无账本语境（如单测最小装配）自动隐身，不抛 ProviderNotFound。
 /// tick 变化即重查余额，数字经 AnimatedSwitcher 缩放 pop（落袋感）。
-class _CoinPill extends StatelessWidget {
+/// 性能审计 M-8：改 StatefulWidget 缓存 Future——此前每次 build 都新建
+/// future 触发重复 SP 读取与 loading 闪烁。
+class _CoinPill extends StatefulWidget {
   final int tick;
   const _CoinPill({super.key, required this.tick});
 
   @override
+  State<_CoinPill> createState() => _CoinPillState();
+}
+
+class _CoinPillState extends State<_CoinPill> {
+  Future<int>? _balanceFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _balanceFuture = context.read<ScareCoinStore?>()?.balance();
+  }
+
+  @override
+  void didUpdateWidget(covariant _CoinPill oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.tick != widget.tick) {
+      _balanceFuture = context.read<ScareCoinStore?>()?.balance();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final store = context.read<ScareCoinStore?>();
-    if (store == null) return const SizedBox.shrink();
+    final future = _balanceFuture;
+    if (future == null) return const SizedBox.shrink();
     final colors = context.skin.colors;
     return FutureBuilder<int>(
-      key: ValueKey(tick),
-      future: store.balance(),
+      key: ValueKey(widget.tick),
+      future: future,
       builder: (context, snap) {
         final balance = snap.data ?? 0;
         return Container(
@@ -297,7 +321,7 @@ class _CoinPill extends StatelessWidget {
                 transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
                 child: Text(
                   '$balance',
-                  key: ValueKey('$tick-$balance'),
+                  key: ValueKey('${widget.tick}-$balance'),
                   style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: colors.text1),
                 ),
               ),
@@ -514,7 +538,9 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     int granted = 0;
     try {
       granted = await store.grantAnswerReward();
-    } catch (_) {
+    } catch (e, s) {
+      // 错误处理审计 P3：答对奖励静默丢失且不可观测，须上报
+      reportSwallowedError('答对奖励发放失败', e, s);
       return;
     }
     if (granted <= 0 || !mounted) return;

@@ -66,6 +66,7 @@ class _HaloSearchFieldState extends State<HaloSearchField> with TickerProviderSt
     ).animate(CurvedAnimation(parent: _breathController, curve: Curves.easeInOut));
 
     _focusNode.addListener(() {
+      if (!mounted) return;
       setState(() {
         _hasFocus = _focusNode.hasFocus;
         if (_hasFocus) {

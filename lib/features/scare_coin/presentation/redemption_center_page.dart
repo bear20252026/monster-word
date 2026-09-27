@@ -3,6 +3,7 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -119,10 +120,17 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
     setState(() => _redeeming = true);
     try {
       await store.grant(delta: -item.cost, reason: '兑换 · ${item.title}');
-      final stock = await store.addProtection(count: 1, reason: '兑换 · ${item.title}');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！断签保护卡×1（当前库存 $stock 张）')));
-      await _reload();
+      try {
+        final stock = await store.addProtection(count: 1, reason: '兑换 · ${item.title}');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！断签保护卡×1（当前库存 $stock 张）')));
+        await _reload();
+      } catch (e, s) {
+        // 数据完整性审计 P2：扣币后落账失败需补偿退款，否则币丢奖励没到手。
+        reportSwallowedError('兑换耗材落账失败，补偿回滚', e, s);
+        await store.grant(delta: item.cost, reason: '兑换失败退款 · ${item.title}');
+        rethrow;
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('兑换失败，请稍后重试')));
@@ -146,8 +154,15 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
     try {
       final store = context.read<ScareCoinStore>();
       await store.grant(delta: -item.cost, reason: '兑换 · ${item.title}');
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('$_redeemedPrefix${item.id}', true);
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('$_redeemedPrefix${item.id}', true);
+      } catch (e, s) {
+        // 数据完整性审计 P2：扣币后标记失败需补偿退款，否则币丢奖励没落账。
+        reportSwallowedError('兑换标记写入失败，补偿回滚', e, s);
+        await store.grant(delta: item.cost, reason: '兑换失败退款 · ${item.title}');
+        rethrow;
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！「${item.title}」已收入囊中')));
       await _reload();

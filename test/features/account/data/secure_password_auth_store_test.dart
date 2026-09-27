@@ -52,13 +52,59 @@ void main() {
       expect(await store.boundPhone('bob'), '13987654321', reason: '重置时可保持手机号绑定');
     });
 
-    test('hashPassword：同盐同密码结果一致，不同盐结果不同（防彩虹表）', () {
+    test('hashPassword：PBKDF2 新格式，同盐同密码一致、不同盐不同', () {
       final h1 = SecurePasswordAuthStore.hashPassword('saltA', 'password123');
       final h2 = SecurePasswordAuthStore.hashPassword('saltA', 'password123');
       final h3 = SecurePasswordAuthStore.hashPassword('saltB', 'password123');
       expect(h1, h2);
       expect(h1, isNot(h3));
-      expect(h1.length, 64, reason: 'SHA-256 十六进制长度');
+      expect(h1, startsWith('pbkdf2-sha256\$'), reason: '存储格式必须带算法+迭代数前缀');
+      expect(h1.split(r'$').length, 3);
+      expect(h1.split(r'$').last.length, 64, reason: '32 字节派生键的十六进制长度');
+      // 与 RFC 2898 参考实现的抽查一致性由 pbkdf2Sha256 纯函数单测覆盖
+    });
+
+    test('pbkdf2Sha256：RFC 6070 风格参考向量（HMAC-SHA256 已知值）', () {
+      // PBKDF2-HMAC-SHA256("password", "salt", 1, 32) 的公开参考值
+      final v1 = SecurePasswordAuthStore.pbkdf2Sha256('password'.codeUnits, 'salt'.codeUnits, 1, 32);
+      expect(
+        v1.map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+        '120fb6cffcf8b32c43e7225256c4f837a86548c92ccc35480805987cb70be17b',
+      );
+      // 2 轮参考值
+      final v2 = SecurePasswordAuthStore.pbkdf2Sha256('password'.codeUnits, 'salt'.codeUnits, 2, 32);
+      expect(
+        v2.map((b) => b.toRadixString(16).padLeft(2, '0')).join(),
+        'ae4d0c95af6b46d32d0adff928f06dd02a303f8ef3c251dfd6e2d85a95474c43',
+      );
+    });
+
+    test('存量单轮 SHA-256 哈希：验证通过并透明升级为 PBKDF2', () async {
+      // 预置旧版格式（salt + 单轮 SHA-256）
+      const username = 'carol';
+      const salt = '0123456789abcdef0123456789abcdef';
+      final legacyHash = SecurePasswordAuthStore.legacyHashPassword(salt, 'password123');
+      FlutterSecureStorage.setMockInitialValues(<String, String>{
+        'pwauth.$username.salt': salt,
+        'pwauth.$username.hash': legacyHash,
+      });
+      final store = SecurePasswordAuthStore();
+      // 旧口令验证通过（走 legacy 分支）
+      expect(await store.verify(username, 'password123'), isTrue);
+      // 透明升级：存储中的哈希已换成 PBKDF2 新格式
+      final upgraded = await const FlutterSecureStorage().read(key: 'pwauth.$username.hash');
+      expect(upgraded, startsWith('pbkdf2-sha256\$'));
+      // 升级后新格式仍可验证，错密码仍拒绝
+      expect(await store.verify(username, 'password123'), isTrue);
+      expect(await store.verify(username, 'password124'), isFalse);
+      // 存量错密码：拒绝且不触发升级
+      FlutterSecureStorage.setMockInitialValues(<String, String>{
+        'pwauth.$username.salt': salt,
+        'pwauth.$username.hash': legacyHash,
+      });
+      expect(await store.verify(username, 'wrongpass'), isFalse);
+      final notUpgraded = await const FlutterSecureStorage().read(key: 'pwauth.$username.hash');
+      expect(notUpgraded, legacyHash, reason: '验证失败不得升级');
     });
   });
 }

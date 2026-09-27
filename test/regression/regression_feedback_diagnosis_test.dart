@@ -83,4 +83,18 @@ void main() {
     expect(find.byIcon(Icons.error), findsOneWidget);
     expect(find.byIcon(Icons.check_circle), findsOneWidget);
   });
+
+  test('REG-AUDIT（反馈存档损坏保护）: 存档损坏时提交不覆写原档，仍走上报兜底', () async {
+    const corrupted = '{"not":"a-list"';
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('mw.feedback.archive', corrupted);
+    final uploads = <FeedbackEntry>[];
+    final archive = FeedbackArchive(prefsOverride: prefs, upload: (entry) async => uploads.add(entry));
+
+    final result = await archive.submit(content: '损坏后仍能提交');
+
+    expect(uploads, hasLength(1), reason: '内容永不静默丢弃：本条仍走 Sentry 兜底');
+    expect(prefs.getString('mw.feedback.archive'), corrupted, reason: '损坏原档不被覆写清空');
+    expect(result.map((e) => e.content), contains('损坏后仍能提交'), reason: '提交语义返回本次历史');
+  });
 }

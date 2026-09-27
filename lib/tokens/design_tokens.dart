@@ -108,29 +108,6 @@ class ErrorBoundaryColors {
   static const Color text = Color(0xFFB0B4BA); // 正文灰
 }
 
-/// 圆角（圆润温润版）
-class AppleRadius {
-  static const double xs = 6;
-  static const double sm = 10;
-  static const double md = 14;
-  static const double lg = 20;
-  static const double xl = 24;
-  static const double xxl = 32;
-  static const double pill = 9999;
-}
-
-/// 间距
-class AppleSpacing {
-  static const double xxs = 4;
-  static const double xs = 8;
-  static const double sm = 12;
-  static const double md = 16;
-  static const double lg = 20;
-  static const double xl = 24;
-  static const double xxl = 32;
-  static const double section = 64;
-}
-
 /// 排版字号常量（与 MwTypography 阶一致；const TextStyle 用，见 font_hygiene）。
 class AppFontSizes {
   static const double microXs = 10;
@@ -238,8 +215,6 @@ class AppTypography {
 
 class AppDimens {
   static const double learnBtnTextSize = 14;
-  static const double learnMainWord = 40;
-  static const double learnMainWordNew = 40;
   static const double bottomBarBtnMargin = 8;
   static const double selectItemHeight = 56;
   static const double selectItemLrMargins = 16;
@@ -283,25 +258,4 @@ class AppRadius {
   static const double sheet = 28;
   static const double pill = 9999;
   static const double radiusNormal = 16;
-}
-
-class AppGlass {
-  static const double blur = 20;
-  static const double blurStrong = 40;
-}
-
-class AppUnderline {
-  static const double thickness = 2;
-}
-
-enum ZIndex {
-  wallpaper(0),
-  scrim(1),
-  content(2),
-  tabBar(3),
-  modal(4),
-  guide(5);
-
-  const ZIndex(this.value);
-  final int value;
 }

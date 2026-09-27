@@ -12,8 +12,21 @@ import 'package:word_app/features/settings/domain/diagnosis_result.dart';
 /// 短信验证码服务域名（与 SpugSmsCodeService 保持同一事实来源）。
 const String kSmsServiceHost = 'push.spug.cc';
 
-/// 崩溃上报服务主机（Sentry DE 区域 ingest，见 main.dart Sentry DSN）。
-const String kSentryIngestHost = 'o4511997928341504.ingest.de.sentry.io';
+/// 崩溃上报服务主机：从编译期注入的 SENTRY_DSN 派生（审计 I47——消除与
+/// DSN 的双事实来源，DSN 换区/换项目后诊断目标自动跟随）。
+/// DSN 未注入（本地开发/测试）时回退到已知 ingest 主机。
+final String kSentryIngestHost = _sentryHostFromDsn(
+  const String.fromEnvironment('SENTRY_DSN'),
+  fallback: 'o4511997928341504.ingest.de.sentry.io',
+);
+
+/// 从 Sentry DSN（`https://<key>@<host>/<projectId>`）提取 ingest 主机。
+String _sentryHostFromDsn(String dsn, {required String fallback}) {
+  final at = dsn.indexOf('@');
+  final slash = dsn.indexOf('/', at);
+  if (at <= 0 || slash <= at + 1) return fallback;
+  return dsn.substring(at + 1, slash);
+}
 
 class IoNetworkDiagnosisService implements NetworkDiagnosisService {
   IoNetworkDiagnosisService({this.stepTimeout = const Duration(seconds: 6)});

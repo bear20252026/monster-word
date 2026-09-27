@@ -168,4 +168,47 @@ void main() {
       expect(await db.query('favorite_sentences'), isEmpty, reason: '回退模式不触碰 SQLite');
     });
   });
+
+  group('REG-AUDIT-003 SP 损坏中止迁移与持久化失败回滚', () {
+    test('SP 快照损坏：中止迁移走 SP 回退，不写 marker、原档保留', () async {
+      const corrupted = '{"not-json';
+      SharedPreferences.setMockInitialValues({'fav_sentence_list': corrupted});
+
+      final dao = FavSentenceDao(openDatabase: () async => db);
+      await dao.loadAll(); // 修复前：按 0 行迁移并写 done → 收藏永久清空且无恢复入口
+
+      expect(dao.usesSqlite, isFalse, reason: '损坏时中止迁移回退 SP 模式');
+      expect(dao.favCount, 0);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('fav_sentence_sqlite_migrated_v1'), isNull, reason: '不写迁移完成标记');
+      expect(prefs.getString('fav_sentence_list'), corrupted, reason: 'SP 原档保留供人工恢复');
+    });
+
+    test('持久化失败回滚：add 失败索引回退、remove 失败索引保持', () async {
+      final dao = FavSentenceDao(openDatabase: () async => db);
+      await dao.loadAll();
+      await dao.addFavSentence(
+        word: 'apple',
+        wordId: 7,
+        sentenceId: '40004',
+        sentenceData: SentenceData(sid: '40004', e: 'Keep me.', c: '留下'),
+      );
+      expect(dao.isFavSentence(7, '40004'), isTrue);
+
+      await db.close();
+      db = await openDatabase(inMemoryDatabasePath); // tearDown 关闭的是新库
+
+      final added = await dao.addFavSentence(
+        word: 'apple',
+        wordId: 7,
+        sentenceId: '50005',
+        sentenceData: SentenceData(sid: '50005', e: 'Fail.', c: ''),
+      );
+      expect(added, isTrue, reason: 'add 返回值语义保持（persist 失败不改变返回契约）');
+      expect(dao.isFavSentence(7, '50005'), isFalse, reason: 'add 持久化失败回滚索引');
+
+      expect(await dao.removeFavSentence(7, '40004'), isTrue);
+      expect(dao.isFavSentence(7, '40004'), isTrue, reason: 'remove 持久化失败回滚索引');
+    });
+  });
 }

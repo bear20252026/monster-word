@@ -9,6 +9,23 @@ import 'package:word_app/features/learning/application/mastered_writer_port.dart
 /// 收藏与手动掌握均保留各自独立的字符串集合语义。本状态只缓存展示所需
 /// 快照、转发操作并通知页面，避免 `ReviewPage` 自行维护未持久化的副本。
 class ReviewWordActionsState extends ChangeNotifier {
+  // 审计 I28：app 根 scope 状态仅应用销毁时 dispose，异步写路径在 await 后
+  // 可能对已 dispose 的 notifier 调 notifyListeners（debug 断言崩溃）。
+  // 统一在 notifyListeners 入口拦截，覆盖全部异步路径。
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (_disposed) return;
+    super.notifyListeners();
+  }
+
   ReviewWordActionsState({required this._favoritesPort, required this._masteredReader, required this._masteredWriter});
 
   final FavoritesPort _favoritesPort;

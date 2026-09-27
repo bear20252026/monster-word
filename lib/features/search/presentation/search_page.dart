@@ -56,6 +56,9 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void dispose() {
+    // 内存审计 P1：未取消防抖 Timer，输入后 300ms 内退出页面会在 State
+    // 已 dispose 后触发 _search（setState after dispose 必崩）。
+    _debounce?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -68,11 +71,13 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<void> _saveToHistory(String word) async {
     await context.read<SearchHistoryStore>().add(word);
+    if (!mounted) return;
     _loadHistory();
   }
 
   Future<void> _clearHistory() async {
     await context.read<SearchHistoryStore>().clear();
+    if (!mounted) return;
     setState(() => _searchHistory = []);
   }
 
@@ -91,6 +96,8 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<void> _search(String query) async {
+    // Timer 回调入口：State 可能已随页面退出被 dispose，先做存活检查。
+    if (!mounted) return;
     if (query.trim().isEmpty) {
       setState(() {
         _results = [];

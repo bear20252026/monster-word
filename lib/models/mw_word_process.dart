@@ -7,6 +7,7 @@
 import 'dart:convert';
 
 import 'package:word_app/models/lexis_dict.dart';
+import 'package:word_app/models/definition_text.dart';
 
 /// 单词学习进度
 class MwWordProcess {
@@ -90,9 +91,9 @@ class MwWordProcess {
     return MwWordProcess(
       word: word,
       wordId: (json['word_id'] as num?)?.toInt() ?? 0,
-      interpret: json['interpret'] ?? '',
-      usPron: json['us_pron'] ?? '',
-      ukPron: json['uk_pron'] ?? '',
+      interpret: (json['interpret'] as String?) ?? '',
+      usPron: (json['us_pron'] as String?) ?? '',
+      ukPron: (json['uk_pron'] as String?) ?? '',
       example: json['example'] != null ? json['example'].toString() : '',
       zpk: zpk ?? '',
       confusedWordList: (json['confuse'] as List?)?.map((e) => e.toString()).toList() ?? [],
@@ -104,23 +105,11 @@ class MwWordProcess {
   /// 是否有释义数据
   bool isBaseInfoOK() => interpret.isNotEmpty || usPron.isNotEmpty;
 
-  /// 清理 HTML 标签和格式代码
-  static String cleanHtml(String text) {
-    if (text.isEmpty) return '';
-    var result = text.replaceAll(RegExp(r'<[^>]*>'), '');
-    result = result.replaceAll(RegExp(r'\s+'), ' ').trim();
-    result = result
-        .replaceAll('&nbsp;', ' ')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&#39;', "'");
-    return result;
-  }
+  /// 清理 HTML 标签和格式代码（审计 I2：实现单一真相见 definition_text.dart）
+  static String cleanHtml(String text) => cleanDefinitionHtml(text);
 
-  /// 原始释义（清理 HTML 标签后）
-  String get cleanInterpret => cleanHtml(interpret);
+  /// 原始释义（优先 JSON 提取可读文本，回退 HTML 清理——与 Word 口径一致）
+  String get cleanInterpret => extractReadableInterpretText(interpret) ?? cleanHtml(interpret);
 
   /// 结构化释义缓存
   List<Map<String, String>>? _structuredDefs;
@@ -182,13 +171,13 @@ class MwWordProcess {
 
   factory MwWordProcess.fromMap(Map<String, dynamic> map) => MwWordProcess(
     id: (map['id'] as num?)?.toInt() ?? 0,
-    word: map['word'] ?? '',
+    word: (map['word'] as String?) ?? '',
     wordId: (map['word_id'] as num?)?.toInt() ?? 0,
     freq: (map['freq'] as num?)?.toInt() ?? 0,
     state: (map['state'] as num?)?.toInt() ?? 0,
     level: (map['level'] as num?)?.toInt() ?? 0,
     position: (map['position'] as num?)?.toInt() ?? 0,
-    reviewDate: map['reviewdate'] ?? '',
+    reviewDate: (map['reviewdate'] as String?) ?? '',
     process: (map['process'] as num?)?.toInt() ?? 0,
     success: (map['success'] as num?)?.toInt() ?? 0,
     fail: (map['fail'] as num?)?.toInt() ?? 0,
@@ -197,13 +186,13 @@ class MwWordProcess {
     reFail: (map['reFail'] as num?)?.toInt() ?? 0,
     reSuccess: (map['reSuccess'] as num?)?.toInt() ?? 0,
     comeFrom: (map['comeFrom'] as num?)?.toInt() ?? 0,
-    interpret: map['interpret'] ?? '',
-    usPron: map['us_pron'] ?? '',
-    ukPron: map['uk_pron'] ?? '',
-    example: map['example'] ?? '',
-    updateTime: map['updatetime'] ?? '',
-    syncTime: map['synTime'] ?? '',
-    zpk: map['zpk'] ?? '',
-    oldZpk: map['old_zpk'] ?? '',
+    interpret: (map['interpret'] as String?) ?? '',
+    usPron: (map['us_pron'] as String?) ?? '',
+    ukPron: (map['uk_pron'] as String?) ?? '',
+    example: (map['example'] as String?) ?? '',
+    updateTime: (map['updatetime'] as String?) ?? '',
+    syncTime: (map['synTime'] as String?) ?? '',
+    zpk: (map['zpk'] as String?) ?? '',
+    oldZpk: (map['old_zpk'] as String?) ?? '',
   );
 }

@@ -21,7 +21,11 @@ abstract class BaseSharedPreferences {
   }
 
   Future<void> init() async {
-    _prefs ??= await SharedPreferences.getInstance();
+    // 审计 I8：getInstance 本身是进程级缓存；这里每次重新赋值而非 ??= 缓存
+    // ——测试中 setMockInitialValues 会替换底层实例，??= 会让单例持有上一个
+    // 测试的陈旧 SP（REG-START-003 踩中：读到残留登录态）。生产环境
+    // getInstance 恒返回同一实例，重新赋值行为不变。
+    _prefs = await SharedPreferences.getInstance();
   }
 
   // ── 读操作：未初始化（如测试环境 / 首帧前）时返回默认值，避免 UI 构建期抛 StateError ──
@@ -63,12 +67,20 @@ class SecureTokenStorage {
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
-  static const _keyToken = 'user_token';
-  static const _keySecret = 'user_secret';
+  // 审计 I62：key 与 AppPreferences 常量同源（安全存储与 SP 回退共用同一 key 名）
+  static const _keyToken = AppPreferences.userToken;
+  static const _keySecret = AppPreferences.userSecret;
 
   /// 读取 token（安全存储 → 回退 SharedPreferences → 空字符串）
   Future<String> getToken() async {
-    var value = await _storage.read(key: _keyToken);
+    String? value;
+    try {
+      value = await _storage.read(key: _keyToken);
+    } catch (e, s) {
+      // 审计 I55：平台通道异常（Keystore 故障/系统还原）不中断登录链路
+      reportSwallowedError('安全存储读取 token 失败，回退 SP', e, s);
+      value = null;
+    }
     if (value != null && value.isNotEmpty) return value;
     // 回退：从 SharedPreferences 读取旧值并迁移
     final prefs = AppPreferences();
@@ -82,12 +94,24 @@ class SecureTokenStorage {
 
   /// 写入 token（安全存储）
   Future<void> setToken(String value) async {
-    await _storage.write(key: _keyToken, value: value);
+    try {
+      await _storage.write(key: _keyToken, value: value);
+    } catch (e, s) {
+      // 审计 I55：写入失败降级为"本次会话有效"，下次冷启动需重新登录
+      //（上报可观测；不向上抛——此前异常会打断整个资料保存流程）
+      reportSwallowedError('安全存储写入 token 失败', e, s);
+    }
   }
 
   /// 读取 secret（安全存储 → 回退 SharedPreferences → 空字符串）
   Future<String> getSecret() async {
-    var value = await _storage.read(key: _keySecret);
+    String? value;
+    try {
+      value = await _storage.read(key: _keySecret);
+    } catch (e, s) {
+      reportSwallowedError('安全存储读取 secret 失败，回退 SP', e, s);
+      value = null;
+    }
     if (value != null && value.isNotEmpty) return value;
     // 回退：从 SharedPreferences 读取旧值并迁移
     final prefs = AppPreferences();
@@ -101,13 +125,26 @@ class SecureTokenStorage {
 
   /// 写入 secret（安全存储）
   Future<void> setSecret(String value) async {
-    await _storage.write(key: _keySecret, value: value);
+    try {
+      await _storage.write(key: _keySecret, value: value);
+    } catch (e, s) {
+      reportSwallowedError('安全存储写入 secret 失败', e, s);
+    }
   }
 
   /// 清除所有安全存储的凭证
   Future<void> clearAll() async {
-    await _storage.delete(key: _keyToken);
-    await _storage.delete(key: _keySecret);
+    // 审计 I55：登出清理路径，删除失败不阻断登出（与残留风险权衡后上报即可）
+    try {
+      await _storage.delete(key: _keyToken);
+    } catch (e, s) {
+      reportSwallowedError('安全存储删除 token 失败', e, s);
+    }
+    try {
+      await _storage.delete(key: _keySecret);
+    } catch (e, s) {
+      reportSwallowedError('安全存储删除 secret 失败', e, s);
+    }
   }
 }
 
@@ -415,7 +452,7 @@ class UserInfoBean {
 extension UserInfoPrefs on AppPreferences {
   /// 同步获取用户信息（返回缓存，可能为空）
   UserInfoBean getUserInfoSync() {
-    final jsonStr = getString(_userInfoKey);
+    final jsonStr = getString(kUserInfoPrefsKey);
     if (jsonStr.isEmpty) return UserInfoBean();
     try {
       return UserInfoBean.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
@@ -427,7 +464,7 @@ extension UserInfoPrefs on AppPreferences {
 
   /// 获取用户信息
   Future<UserInfoBean> getUserInfo() async {
-    final jsonStr = getString(_userInfoKey);
+    final jsonStr = getString(kUserInfoPrefsKey);
     if (jsonStr.isEmpty) return UserInfoBean();
     try {
       return UserInfoBean.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
@@ -438,7 +475,9 @@ extension UserInfoPrefs on AppPreferences {
   }
 
   /// 保存用户信息
-  Future<bool> setUserInfo(UserInfoBean bean) => setString(_userInfoKey, jsonEncode(bean.toJson()));
+  Future<bool> setUserInfo(UserInfoBean bean) => setString(kUserInfoPrefsKey, jsonEncode(bean.toJson()));
 }
 
-const String _userInfoKey = 'monster_word_user_info';
+/// 用户信息 SP key 单一事实来源（审计 I62：此前在本文件、user_service_impl、
+/// app_session_state 三处平行定义，改 key 必须同步多处）。
+const String kUserInfoPrefsKey = 'monster_word_user_info';

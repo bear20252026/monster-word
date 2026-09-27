@@ -185,36 +185,3 @@ class FluidRipplePainter extends CustomPainter {
 }
 
 /// 流体触摸反馈按钮（按钮按下时产生涟漪）
-FluidCursorController? _globalFluidController;
-
-void setGlobalFluidController(FluidCursorController c) {
-  _globalFluidController = c;
-}
-
-class FluidTouchable extends StatefulWidget {
-  final Widget child;
-  final VoidCallback? onTap;
-  final BorderRadius? borderRadius;
-  final Color? rippleColor;
-
-  const FluidTouchable({super.key, required this.child, this.onTap, this.borderRadius, this.rippleColor});
-
-  @override
-  State<FluidTouchable> createState() => _FluidTouchableState();
-}
-
-class _FluidTouchableState extends State<FluidTouchable> {
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (details) {
-        _globalFluidController?.updatePosition(details.globalPosition);
-        _globalFluidController?.setPressed(true);
-      },
-      onTapUp: (_) => _globalFluidController?.setPressed(false),
-      onTapCancel: () => _globalFluidController?.setPressed(false),
-      onTap: widget.onTap,
-      child: ClipRRect(borderRadius: widget.borderRadius ?? BorderRadius.zero, child: widget.child),
-    );
-  }
-}

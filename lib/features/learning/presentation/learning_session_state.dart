@@ -24,6 +24,23 @@ import 'package:word_app/models/word.dart';
 /// 收藏词加载、FSRS 排程和进度持久化均经专用端口完成。它不处理账号、收藏切换、
 /// 手动掌握或正式复习会话。
 class LearningSessionState extends ChangeNotifier {
+  // 审计 I28：app 根 scope 状态仅应用销毁时 dispose，异步写路径在 await 后
+  // 可能对已 dispose 的 notifier 调 notifyListeners（debug 断言崩溃）。
+  // 统一在 notifyListeners 入口拦截，覆盖全部异步路径。
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (_disposed) return;
+    super.notifyListeners();
+  }
+
   LearningSessionState({
     required this._queuePort,
     required this._progressPort,
@@ -296,8 +313,10 @@ class LearningSessionState extends ChangeNotifier {
       if (saved != null && _queue.isNotEmpty && generation == _queueGeneration) {
         _currentIndex = saved.currentIndex.clamp(0, _queue.length - 1);
       }
-    } catch (error) {
-      debugPrint('Load progress error: $error');
+    } catch (error, stack) {
+      // 错误处理审计 P3：进度属 A 级持久化路径，debugPrint 在 release 不可见
+      // 且 Sentry 无感知，改走统一吞错上报通道。
+      reportSwallowedError('学习进度读取失败', error, stack);
     }
   }
 
@@ -305,8 +324,9 @@ class LearningSessionState extends ChangeNotifier {
     try {
       if (_currentBook == null) return;
       await _progressPort.save(currentBook: _currentBook!, currentIndex: _currentIndex, queue: _queue);
-    } catch (error) {
-      debugPrint('Save progress error: $error');
+    } catch (error, stack) {
+      // A 级持久化路径（进度丢失用户可感知），须上报
+      reportSwallowedError('学习进度写入失败', error, stack);
     }
   }
 

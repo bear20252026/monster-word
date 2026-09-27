@@ -18,7 +18,8 @@ class UserServiceImpl implements UserService {
   final UserRepository _userRepo;
   final NoteRepository _noteRepo;
 
-  static const _userInfoKey = 'monster_word_user_info';
+  // 审计 I62：key 单一事实来源（app_preferences.dart）
+  static const _userInfoKey = kUserInfoPrefsKey;
 
   UserServiceImpl({required this._userRepo, required this._noteRepo});
 

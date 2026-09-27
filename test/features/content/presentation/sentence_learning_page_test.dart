@@ -8,22 +8,10 @@ import 'package:word_app/features/content/presentation/sentence_learning_page.da
 import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
-class _StubAudioService implements AudioService {
-  @override
-  Future<void> playWordAudio(String word, {String accent = 'us', String? audioUrl}) async {}
+import '../../../helpers/fakes.dart';
 
-  @override
-  Future<void> playFromUrl(String url) async {}
-
-  @override
-  Future<void> stop() async {}
-
-  @override
-  bool get isPlaying => false;
-
-  @override
-  void dispose() {}
-}
+// 审计 I64：原文件内 no-op 假件收敛到 test/helpers/fakes.dart（保留原名引用）
+typedef _StubAudioService = NoopAudioService;
 
 FavSentenceData _fav(String word, String english, String chinese) => FavSentenceData(
   word: word,

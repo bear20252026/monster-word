@@ -1,6 +1,8 @@
 // 由 Claude 团队生成 | Monster Word App
 // UserRepositoryImpl — 用户数据仓库实现（使用 SharedPreferences）
 
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/repositories/user_repository.dart';
@@ -16,13 +18,22 @@ class UserRepositoryImpl implements UserRepository {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_userInfoKey);
     if (raw == null) return null;
+    // 数据层审计 P3：写入侧此前持久化的是 Map.toString()（Dart 调试字符串，
+    // 非 JSON），任何 jsonDecode 消费方都会失败；读取侧尝试按 JSON 解析，
+    // 失败则原样返回供回显。
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) return decoded;
+    } catch (_) {
+      // C 级豁免：遗留 toString 数据无法解析，按原样回显
+    }
     return {'info': raw};
   }
 
   @override
   Future<int> updateUserInfo(Map<String, dynamic> info) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userInfoKey, info.toString());
+    await prefs.setString(_userInfoKey, jsonEncode(info));
     return 1;
   }
 

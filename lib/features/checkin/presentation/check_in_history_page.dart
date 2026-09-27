@@ -557,10 +557,15 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
         delegate: SliverChildBuilderDelegate((context, index) {
           final iso = monthDates[index];
           final parts = iso.split('-');
-          final month = int.parse(parts[1]);
-          final day = int.parse(parts[2]);
+          // 错误处理审计 P3：build 内解析日期串，格式异常会直接红屏，
+          // 解析失败跳过该行（渲染空占位）保住整页。
+          if (parts.length < 3) return const SizedBox.shrink();
+          final year = int.tryParse(parts[0]) ?? 0;
+          final month = int.tryParse(parts[1]) ?? 0;
+          final day = int.tryParse(parts[2]) ?? 0;
+          if (year <= 0 || month <= 0 || day <= 0) return const SizedBox.shrink();
           final weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-          final date = DateTime(int.parse(parts[0]), month, day);
+          final date = DateTime(year, month, day);
           final weekday = weekdays[(date.weekday - 1) % 7];
           final isToday = iso == _iso(DateTime.now());
 

@@ -17,6 +17,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:word_app/core/audio/system_tts.dart';
 import 'package:path/path.dart' as p;
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 /// 移动端音频会话初始化（确保手机能正常发音）
 Future<void> initMobileAudioSession() async {
@@ -344,7 +345,9 @@ class _AudioDownloader {
         return _DownloadResult(file: file, success: true, statusCode: 200);
       }
       return _DownloadResult(statusCode: response.statusCode);
-    } catch (e) {
+    } catch (e, s) {
+      // 错误处理审计 P3：此前连 debugPrint 都没有，网络层故障完全不可观测
+      reportSwallowedError('音频下载失败（主备 URL 均失败）', e, s);
       return _DownloadResult(statusCode: -1);
     }
   }
@@ -358,11 +361,14 @@ class _AudioDownloader {
 class _AudioCacheDir {
   static String? _cachePath;
 
-  /// 获取音频缓存根目录
+  /// 获取音频缓存根目录。
+  /// 审计 I25：改用系统缓存目录（Android cache/、Windows %LOCALAPPDATA% 缓存位）——
+  /// 此前放 Documents 会随 iOS 备份、且永不回收。缓存内容均可重下，
+  /// 旧 Documents/audio_cache 残留不做迁移（一次性空间残留，可接受）。
   static Future<String> getCachePath() async {
     if (_cachePath != null) return _cachePath!;
-    final appDir = await getApplicationDocumentsDirectory();
-    _cachePath = p.join(appDir.path, 'audio_cache');
+    final cacheBase = await getApplicationCacheDirectory();
+    _cachePath = p.join(cacheBase.path, 'audio_cache');
     final dir = Directory(_cachePath!);
     if (!dir.existsSync()) {
       dir.createSync(recursive: true);
@@ -774,10 +780,20 @@ class TextAudioPlayer {
 
   /// 下载并播放（downLoadTextAudioPlay_internal）
   Future<void> _downloadAndPlay(String audioUrl, String localPath, double speed) async {
-    // 主 URL：audio.beingfine.cn
-    final primaryUrl = '$_baseAudioUrl$audioUrl';
-    // 备用 URL：七牛
-    final fallbackUrl = '$_qiniuResourceUrl$audioUrl';
+    // 错误处理审计 P2：_requestTtsAudioUrl 已返回完整 URL（有道 TTS），
+    // 再拼 _baseAudioUrl 会得到 "https://…/https://…" 的畸形地址，
+    // 下载永远失败。绝对地址直接用，相对路径才拼主备前缀。
+    late final String primaryUrl;
+    late final String? fallbackUrl;
+    if (audioUrl.startsWith('http://') || audioUrl.startsWith('https://')) {
+      primaryUrl = audioUrl;
+      fallbackUrl = null;
+    } else {
+      // 主 URL：audio.beingfine.cn
+      primaryUrl = '$_baseAudioUrl$audioUrl';
+      // 备用 URL：七牛
+      fallbackUrl = '$_qiniuResourceUrl$audioUrl';
+    }
 
     final result = await _AudioDownloader.downloadFile(localPath, primaryUrl, fallbackUrl: fallbackUrl);
 

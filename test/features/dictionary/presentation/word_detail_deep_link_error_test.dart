@@ -30,8 +30,9 @@ import 'package:word_app/features/dictionary/presentation/word_detail_page.dart'
 import 'package:word_app/core/repositories/fav_repository.dart';
 import 'package:word_app/core/repositories/note_repository.dart';
 import 'package:word_app/core/application/word_lookup_reader.dart';
-import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/theme/skin_system.dart';
+
+import '../../../helpers/fakes.dart';
 
 // ── Stub implementations ──
 
@@ -128,18 +129,8 @@ class _StubNotesStore implements WordNotesStore {
   Future<int> countAll() async => 0;
 }
 
-class _StubAudioService implements AudioService {
-  @override
-  Future<void> playWordAudio(String word, {String accent = 'us', String? audioUrl}) async {}
-  @override
-  Future<void> playFromUrl(String url) async {}
-  @override
-  Future<void> stop() async {}
-  @override
-  bool get isPlaying => false;
-  @override
-  void dispose() {}
-}
+// 审计 I64：原文件内 no-op 假件收敛到 test/helpers/fakes.dart（保留原名引用）
+typedef _StubAudioService = NoopAudioService;
 
 class _StubQueuePort implements LearningQueuePort {
   @override

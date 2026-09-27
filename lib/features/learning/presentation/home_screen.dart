@@ -11,7 +11,6 @@ import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
-import 'package:word_app/widgets/treasure_checkin_page.dart';
 import 'package:word_app/features/learning/presentation/learn_page.dart';
 import 'package:word_app/features/learning/presentation/word_machine_page.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';

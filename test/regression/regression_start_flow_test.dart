@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 import 'package:word_app/features/account/presentation/splash_page.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 
 Widget _host(AppSessionState session) {
   return MultiProvider(
@@ -41,7 +42,7 @@ void main() {
   });
 
   testWidgets('REG-START-001: 已登录首启 → Splash 2秒 → 引导页 → 下一步×2 → 开始使用 → 主页', (tester) async {
-    final session = AppSessionState();
+    final session = AppSessionState(prefs: PresentationPrefs());
     await session.restore();
     await session.login('user', 'pass'); // 已登录、未看引导
     expect(session.hasShownInitGuide, isFalse);
@@ -85,20 +86,20 @@ void main() {
 
   testWidgets('REG-START-002: hasShownInitGuide 持久化——重启后不再重看引导', (tester) async {
     // 第一次启动看完引导
-    final session = AppSessionState();
+    final session = AppSessionState(prefs: PresentationPrefs());
     await session.restore();
     await session.login('user', 'pass');
     await session.setHasShownInitGuide(true);
 
     // 模拟重启：新实例从 SharedPreferences 恢复
-    final session2 = AppSessionState();
+    final session2 = AppSessionState(prefs: PresentationPrefs());
     await session2.restore();
     expect(session2.isLoggedIn, isTrue);
     expect(session2.hasShownInitGuide, isTrue, reason: '引导标记未持久化会导致每次重启都强制重看引导页');
   });
 
   testWidgets('REG-START-003: 未登录 → Splash 2秒 → 登录页（fail-safe 路径）', (tester) async {
-    final session = AppSessionState();
+    final session = AppSessionState(prefs: PresentationPrefs());
     await session.restore(); // 未登录
 
     await tester.pumpWidget(_host(session));

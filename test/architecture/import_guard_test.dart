@@ -184,10 +184,7 @@ void main() {
         anyElement(contains('widgets 不得 import 壳层 app/(R-widgets)')),
       );
       // widgets import feature application 端口 → 放行
-      expect(
-        check('widgets/spring_check_in_calendar.dart', 'features/checkin/application/checkin_status_reader.dart'),
-        isEmpty,
-      );
+      expect(check('widgets/some_calendar.dart', 'features/checkin/application/checkin_status_reader.dart'), isEmpty);
       // widgets import core/models/theme → 放行
       // widgets→core/repositories：历史放行（scare_coin 等）；R-widgets 仍禁 feature 内层。
       expect(check('widgets/some_card.dart', 'core/repositories/word_repository.dart'), isEmpty);
