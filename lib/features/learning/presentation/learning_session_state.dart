@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'package:word_app/core/engine/core_engine.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
@@ -166,6 +167,8 @@ class LearningSessionState extends ChangeNotifier {
   Word? get currentWord => (_queue.isEmpty || _currentIndex >= _queue.length) ? null : _queue[_currentIndex];
 
   Future<void> loadFavorites({int limit = 50}) async {
+    // 审计 I87：收藏复习会话漏斗
+    unawaited(Sentry.addBreadcrumb(Breadcrumb(message: '学习会话加载收藏复习', category: 'learning')));
     final favorites = await _queuePort.loadFavoriteWords(currentQueue: _queue);
     if (favorites.isEmpty) return;
 
@@ -174,6 +177,8 @@ class LearningSessionState extends ChangeNotifier {
   }
 
   Future<void> loadBook(Book book, {int? limit, bool shuffle = true}) async {
+    // 审计 I87：Sentry breadcrumb——词书切换漏斗（未启用 DSN 时为 no-op）
+    unawaited(Sentry.addBreadcrumb(Breadcrumb(message: '学习会话切换词书: ${book.name}', category: 'learning')));
     _currentBook = book;
     // 使用每日学习目标作为默认限制
     final queue = await _queuePort.loadBook(book, limit: limit, shuffle: shuffle);

@@ -133,7 +133,7 @@ class _BaseWebPageState extends State<BaseWebPage> {
                               onPressed: () => _controller?.reload(),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: MwColors.primary,
-                                foregroundColor: Colors.white,
+                                foregroundColor: AppColors.white100,
                               ),
                               child: const Text('重试'),
                             ),

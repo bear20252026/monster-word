@@ -156,11 +156,11 @@ class MwButton extends StatelessWidget {
   Color _resolveTextColor(ThemeVars colors) {
     switch (variant) {
       case MwButtonVariant.primary:
-        return Colors.white;
+        return AppColors.white100;
       case MwButtonVariant.outlined:
         return colors.accent; // 品牌绿适配主题
       case MwButtonVariant.dark:
-        return Colors.white;
+        return AppColors.white100;
       case MwButtonVariant.inverse:
         return colors.accent;
     }

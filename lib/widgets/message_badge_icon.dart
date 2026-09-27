@@ -72,7 +72,7 @@ class _MessageBadgeIconState extends State<MessageBadgeIcon> {
               child: Text(
                 unread > 99 ? '99+' : '$unread',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.white100,
                   fontSize: MwTypography.microXs.fontSize,
                   fontWeight: FontWeight.w700,
                   height: 1,

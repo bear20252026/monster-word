@@ -33,6 +33,7 @@ import 'package:word_app/theme/wallpaper_state.dart';
 import 'package:word_app/utils/screen_utils.dart';
 import 'package:word_app/widgets/adaptive_scale.dart';
 import 'package:word_app/widgets/fluid_cursor.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 应用根组件。
 ///
@@ -250,7 +251,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: c.accent,
-          foregroundColor: isDark ? c.pageBg : Colors.white,
+          foregroundColor: isDark ? c.pageBg : AppColors.white100,
           elevation: 0,
           shadowColor: Colors.transparent,
           minimumSize: const Size(64, 44),
@@ -260,7 +261,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
             fontSize: 14,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.1,
-            color: isDark ? c.pageBg : Colors.white,
+            color: isDark ? c.pageBg : AppColors.white100,
           ),
         ),
       ),
@@ -317,7 +318,8 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
       dividerTheme: DividerThemeData(color: c.divider, thickness: 1, space: 1),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected) ? (isDark ? c.pageBg : Colors.white) : Colors.white,
+          (states) =>
+              states.contains(WidgetState.selected) ? (isDark ? c.pageBg : AppColors.white100) : AppColors.white100,
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected) ? c.accent : c.divider,

@@ -47,7 +47,7 @@ class RouteErrorPage extends StatelessWidget {
                   label: const Text('返回首页'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: StarbucksCreamColors.greenHouse,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white100,
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                   ),

@@ -83,7 +83,7 @@ class _SimpleMorphingTabsState extends State<SimpleMorphingTabs> with TickerProv
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = widget.activeColor ?? Colors.white;
+    final activeColor = widget.activeColor ?? AppColors.white100;
     final inactiveColor = widget.inactiveColor ?? Colors.grey;
     final indicatorColor = widget.indicatorColor ?? context.skin.colors.accent;
     final bgColor = widget.backgroundColor ?? Colors.grey.withValues(alpha: 0.12);

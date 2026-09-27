@@ -78,7 +78,11 @@ class _MwErrorPage extends StatelessWidget {
                 const SizedBox(height: 20),
                 Text(
                   '页面出错了',
-                  style: TextStyle(fontSize: AppFontSizes.bodyMd, fontWeight: FontWeight.w600, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: AppFontSizes.bodyMd,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.white100,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -94,7 +98,7 @@ class _MwErrorPage extends StatelessWidget {
                     if (navigator != null && navigator.canPop()) navigator.pop();
                   },
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white100,
                     side: const BorderSide(color: ErrorBoundaryColors.border),
                   ),
                   icon: const Icon(Icons.arrow_back_rounded, size: 18),

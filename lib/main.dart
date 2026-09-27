@@ -6,6 +6,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:word_app/app/app.dart';
 import 'package:word_app/app/app_bootstrap.dart';
 import 'package:word_app/core/infrastructure/sentry_bootstrap.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 Future<void> main() async {
   // Zone 契约：runZonedGuarded 必须包住 bootstrapApp + runApp 的全部流程。
@@ -108,7 +109,7 @@ class _BootstrapRecoveryAppState extends State<_BootstrapRecoveryApp> {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white100),
                         )
                       : const Icon(Icons.refresh, size: 18),
                   label: Text(_retrying ? '正在重试…' : '重试启动'),

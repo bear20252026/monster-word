@@ -131,5 +131,24 @@ void main() {
       expect(func, contains('streakFlame'));
       expect(func, contains('ratingStar'));
     });
+
+    test('审计 I63：presentation/widgets/app 层禁用 Colors.white 字面量（统一 AppColors.white100）', () {
+      final violations = <String>[];
+      final pattern = RegExp(r'Colors\.white\b');
+      final targets = <File>[
+        for (final dirName in ['lib/features', 'lib/widgets', 'lib/app', 'lib/core'])
+          ...Directory(dirName).listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart')),
+        File('lib/main.dart'),
+      ];
+      for (final f in targets) {
+        final rel = f.path.replaceAll('\\', '/');
+        final src = f.readAsStringSync();
+        for (final m in pattern.allMatches(src)) {
+          final line = src.substring(0, m.start).split('\n').length;
+          violations.add('$rel:$line');
+        }
+      }
+      expect(violations, isEmpty, reason: '按钮前景白等语义白统一走 AppColors.white100（tokens 单真相）：\n${violations.join('\n')}');
+    });
   });
 }

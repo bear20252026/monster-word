@@ -6,6 +6,7 @@ import 'dart:math' as math;
 
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/effect_palette.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 
 /// 怪兽尖叫币图标组件
 /// 使用 CustomPainter 绘制可爱的独角怪兽头像
@@ -172,7 +173,7 @@ class _MonsterPainter extends CustomPainter {
     // 进化角半径：30 天形态角长 1/4，更威风。
     final hr = r * (evoStage >= 2 ? 1.25 : 1.0);
     final hornPaint = Paint()
-      ..color = evoStage >= 1 ? MonsterPalette.evoGold : Colors.white
+      ..color = evoStage >= 1 ? MonsterPalette.evoGold : AppColors.white100
       ..style = PaintingStyle.fill;
 
     final hornPath = Path();
@@ -193,7 +194,7 @@ class _MonsterPainter extends CustomPainter {
     // === 4. 眼睛（大眼睛，左眼略大）===
     // 左眼白
     final eyeWhitePaint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.white100
       ..style = PaintingStyle.fill;
     canvas.drawOval(
       Rect.fromCenter(center: Offset(cx - r * 0.28, cy - r * 0.15), width: r * 0.42, height: r * 0.48),
@@ -218,7 +219,7 @@ class _MonsterPainter extends CustomPainter {
 
     // 高光
     final highlightPaint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.white100
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(cx - r * 0.18, cy - r * 0.2), r * 0.05, highlightPaint);
     canvas.drawCircle(Offset(cx + r * 0.36, cy - r * 0.2), r * 0.045, highlightPaint);

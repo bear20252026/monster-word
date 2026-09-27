@@ -127,13 +127,13 @@ class _SealPainter extends CustomPainter {
     // 花齿面（散落态）与方章面（聚合态）交叉渐隐。
     final flowerAlpha = 1 - squareness;
     if (flowerAlpha > 0) {
-      canvas.saveLayer(flower.getBounds(), Paint()..color = Colors.white.withValues(alpha: flowerAlpha));
+      canvas.saveLayer(flower.getBounds(), Paint()..color = AppColors.white100.withValues(alpha: flowerAlpha));
       canvas.drawPath(flower, facePaint);
       canvas.drawPath(flower, stroke);
       canvas.restore();
     }
     if (squareness > 0) {
-      canvas.saveLayer(square.getBounds(), Paint()..color = Colors.white.withValues(alpha: squareness));
+      canvas.saveLayer(square.getBounds(), Paint()..color = AppColors.white100.withValues(alpha: squareness));
       canvas.drawPath(square, facePaint);
       canvas.drawPath(square, stroke);
       canvas.restore();

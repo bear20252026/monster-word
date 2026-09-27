@@ -89,7 +89,7 @@ class MwStyleGrid extends StatelessWidget {
                               shape: BoxShape.circle,
                               border: Border.all(color: skin.colors.cardBg, width: 1.5),
                             ),
-                            child: const Icon(Icons.check_rounded, size: 14, color: Colors.white),
+                            child: const Icon(Icons.check_rounded, size: 14, color: AppColors.white100),
                           ),
                         ),
                     ],

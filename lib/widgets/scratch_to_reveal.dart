@@ -188,12 +188,12 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
                                     style:
                                         widget.coverTextStyle ??
                                         TextStyle(
-                                          color: Colors.white.withValues(alpha: 0.8),
+                                          color: AppColors.white100.withValues(alpha: 0.8),
                                           fontSize: AppFontSizes.bodyMd,
                                           fontWeight: FontWeight.w600,
                                         ),
                                   )
-                                : Icon(Icons.touch_app, color: Colors.white.withValues(alpha: 0.7), size: 32),
+                                : Icon(Icons.touch_app, color: AppColors.white100.withValues(alpha: 0.7), size: 32),
                           ),
                         ),
                       ),
