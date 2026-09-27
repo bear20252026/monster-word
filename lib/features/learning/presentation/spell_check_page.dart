@@ -97,153 +97,15 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    // 单词提示（隐藏部分字母）
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: context.skin.colors.cardBgAlt,
-                        borderRadius: BorderRadius.circular(context.design.radius.xl),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            _buildHint(),
-                            style: MwTypography.heading2.copyWith(color: context.skin.colors.text1, letterSpacing: 4),
-                          ),
-                          if (widget.phonetic != null) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              '/${widget.phonetic}/',
-                              style: MwTypography.body.copyWith(color: context.skin.colors.text2),
-                            ),
-                          ],
-                          const SizedBox(height: 12),
-                          // 播放音频按钮
-                          GestureDetector(
-                            onTap: _playAudio,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: context.skin.colors.accent.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(context.design.radius.lg),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.volume_up, color: context.skin.colors.accent, size: 20),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '播放发音',
-                                    style: MwTypography.caption.copyWith(
-                                      color: context.skin.colors.accent,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildHintCard(skin),
                     const SizedBox(height: 8),
                     Text('尝试次数: $_attemptCount', style: MwTypography.micro.copyWith(color: skin.colors.text3)),
                     const SizedBox(height: 32),
-                    // 输入框
-                    TextField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      textAlign: TextAlign.center,
-                      style: MwTypography.heading3.copyWith(color: skin.colors.text1),
-                      textCapitalization: TextCapitalization.none,
-                      decoration: InputDecoration(
-                        hintText: '请输入完整单词',
-                        hintStyle: MwTypography.body.copyWith(color: skin.colors.text3),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(context.design.radius.lg),
-                          borderSide: BorderSide(color: skin.colors.divider),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(context.design.radius.lg),
-                          borderSide: BorderSide(color: context.skin.colors.accent, width: 2),
-                        ),
-                      ),
-                      onSubmitted: (_) => _check(),
-                    ),
+                    _buildInputField(skin),
                     const SizedBox(height: 16),
-                    // 反馈
-                    if (_hasChecked) ...[
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: _isCorrect
-                              ? context.skin.colors.success.withValues(alpha: 0.1)
-                              : context.skin.colors.danger.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(context.design.radius.md),
-                          border: Border.all(
-                            color: _isCorrect ? context.skin.colors.success : context.skin.colors.danger,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              _isCorrect ? Icons.check_circle : Icons.error,
-                              color: _isCorrect ? context.skin.colors.success : context.skin.colors.danger,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _result,
-                                style: MwTypography.bodyBold.copyWith(
-                                  color: _isCorrect ? context.skin.colors.success : context.skin.colors.danger,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    if (_hasChecked) _buildResultBanner(skin),
                     const Spacer(),
-                    // 按钮组
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              setState(() {
-                                _hasChecked = true;
-                                _result = '答案：${widget.word}';
-                              });
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: skin.colors.divider),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(context.design.radius.md),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: const Text('查看答案'),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _hasChecked ? _reset : _check,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: context.skin.colors.accent,
-                              foregroundColor: AppColors.white100,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(context.design.radius.md),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            child: Text(_hasChecked ? '再试一次' : '检查'),
-                          ),
-                        ),
-                      ],
-                    ),
+                    _buildActionButtons(skin),
                   ],
                 ),
               ),
@@ -251,6 +113,148 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHintCard(SkinSystem skin) {
+    return
+    // 单词提示（隐藏部分字母）
+    Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: context.skin.colors.cardBgAlt,
+        borderRadius: BorderRadius.circular(context.design.radius.xl),
+      ),
+      child: Column(
+        children: [
+          Text(_buildHint(), style: MwTypography.heading2.copyWith(color: context.skin.colors.text1, letterSpacing: 4)),
+          if (widget.phonetic != null) ...[
+            const SizedBox(height: 8),
+            Text('/${widget.phonetic}/', style: MwTypography.body.copyWith(color: context.skin.colors.text2)),
+          ],
+          const SizedBox(height: 12),
+          // 播放音频按钮
+          GestureDetector(
+            onTap: _playAudio,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: context.skin.colors.accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(context.design.radius.lg),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.volume_up, color: context.skin.colors.accent, size: 20),
+                  const SizedBox(width: 6),
+                  Text(
+                    '播放发音',
+                    style: MwTypography.caption.copyWith(
+                      color: context.skin.colors.accent,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputField(SkinSystem skin) {
+    return
+    // 输入框
+    TextField(
+      controller: _controller,
+      focusNode: _focusNode,
+      textAlign: TextAlign.center,
+      style: MwTypography.heading3.copyWith(color: skin.colors.text1),
+      textCapitalization: TextCapitalization.none,
+      decoration: InputDecoration(
+        hintText: '请输入完整单词',
+        hintStyle: MwTypography.body.copyWith(color: skin.colors.text3),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(context.design.radius.lg),
+          borderSide: BorderSide(color: skin.colors.divider),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(context.design.radius.lg),
+          borderSide: BorderSide(color: context.skin.colors.accent, width: 2),
+        ),
+      ),
+      onSubmitted: (_) => _check(),
+    );
+  }
+
+  Widget _buildResultBanner(SkinSystem skin) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _isCorrect
+            ? context.skin.colors.success.withValues(alpha: 0.1)
+            : context.skin.colors.danger.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(context.design.radius.md),
+        border: Border.all(color: _isCorrect ? context.skin.colors.success : context.skin.colors.danger),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _isCorrect ? Icons.check_circle : Icons.error,
+            color: _isCorrect ? context.skin.colors.success : context.skin.colors.danger,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              _result,
+              style: MwTypography.bodyBold.copyWith(
+                color: _isCorrect ? context.skin.colors.success : context.skin.colors.danger,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(SkinSystem skin) {
+    return
+    // 按钮组
+    Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () {
+              setState(() {
+                _hasChecked = true;
+                _result = '答案：${widget.word}';
+              });
+            },
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: skin.colors.divider),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            child: const Text('查看答案'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _hasChecked ? _reset : _check,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.skin.colors.accent,
+              foregroundColor: AppColors.white100,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.md)),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            child: Text(_hasChecked ? '再试一次' : '检查'),
+          ),
+        ),
+      ],
     );
   }
 
