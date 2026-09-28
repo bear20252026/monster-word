@@ -47,7 +47,7 @@ class MySpacePage extends StatelessWidget {
                 children: [
                   // 顶部导航栏
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
                     child: SizedBox(
                       height: 48,
                       child: Row(
@@ -74,7 +74,7 @@ class MySpacePage extends StatelessWidget {
                   SizedBox(height: 16),
                   // 尖叫币 + 装备卡片
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                     child: Row(
                       children: [
                         Expanded(child: ScareCoinCard(skin: skin)),
@@ -129,7 +129,7 @@ class MySpacePage extends StatelessWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xs, AppSpacing.lg, AppSpacing.xxs),
       child: resp.isDesktop
           ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [avatar, const SizedBox(width: 18), identity])
           : Column(children: [avatar, const SizedBox(height: 12), identity]),

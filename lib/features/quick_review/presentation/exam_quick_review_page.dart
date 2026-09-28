@@ -203,7 +203,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Row(
             children: [
               _StatBadge(label: '已答', value: '${stats.total}', color: skin.text1),
@@ -218,12 +218,12 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
         ),
         const SizedBox(height: 16),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Row(
             children: ExamType.values.map((t) {
               final selected = t == _examType;
               return Padding(
-                padding: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.only(right: AppSpacing.xs),
                 child: ChoiceChip(
                   label: Text(t.label, style: const TextStyle(fontSize: AppFontSizes.micro)),
                   selected: selected,
@@ -238,12 +238,12 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
         const SizedBox(height: 24),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: _SimpleWordCard(word: word, showPhonetic: _showAnswer, showMeaning: _showAnswer),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Column(
             children: [
               Text('${_currentIndex + 1} / ${_words.length}', style: MwTypography.caption.copyWith(color: skin.text3)),
@@ -263,7 +263,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
         const SizedBox(height: 16),
         if (!_showAnswer)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: SizedBox(
               width: double.infinity,
               height: 52,
@@ -276,7 +276,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
           ),
         if (_showAnswer)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Row(
               children: [
                 Expanded(
@@ -313,7 +313,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
   Widget _buildResultPage(dynamic skin) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -379,7 +379,7 @@ class _ResultRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -406,7 +406,7 @@ class _SimpleWordCard extends StatelessWidget {
     final skin = context.skin.colors;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(context.design.radius.xl),

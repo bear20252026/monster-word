@@ -170,7 +170,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppSpacing.xxl),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -237,7 +237,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
         colors: GradientEffects.celebration,
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppSpacing.xxl),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -280,7 +280,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                 ),
                 const SizedBox(height: 24),
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     color: skin.colors.cardBg,
                     borderRadius: BorderRadius.circular(context.design.radius.control),
@@ -406,7 +406,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
 
   Widget _buildTopBar(SkinSystem skin, LearningSessionState state) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       child: Row(
         children: [
           IconButton(
@@ -462,7 +462,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppSpacing.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -486,7 +486,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
               // 释义（始终显示，不再需要点击揭示 — 避免破坏"认识/不认识"体验）
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   color: skin.colors.cardBgAlt,
                   borderRadius: BorderRadius.circular(AppRadius.md),
@@ -506,7 +506,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
 
   Widget _buildBottomHint(SkinSystem skin) {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

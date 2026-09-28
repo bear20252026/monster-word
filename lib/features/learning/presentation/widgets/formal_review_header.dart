@@ -36,7 +36,7 @@ class FormalReviewHeader extends StatelessWidget {
     final progress = total == 0 ? 0.0 : (done / total).clamp(0.0, 1.0);
     return Container(
       height: context.design.spacing.navH,
-      margin: const EdgeInsets.only(top: 4),
+      margin: const EdgeInsets.only(top: AppSpacing.xxs),
       padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding * 0.5),
       child: Row(
         children: [

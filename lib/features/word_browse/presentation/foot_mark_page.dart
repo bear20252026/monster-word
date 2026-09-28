@@ -36,7 +36,7 @@ class FootMarkPage extends StatelessWidget {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
                   children: [
                     _buildStatCard(context, skin, statistics),
@@ -108,7 +108,7 @@ class FootMarkPage extends StatelessWidget {
   Widget _buildStatCard(BuildContext context, SkinSystem skin, LearningStatisticsReader statistics) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: [skin.colors.cardBg, skin.colors.cardBgAlt]),
         borderRadius: BorderRadius.circular(context.design.radius.xl),
@@ -137,7 +137,7 @@ class FootMarkPage extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: skin.colors.cardBg,
           borderRadius: BorderRadius.circular(context.design.radius.lg),

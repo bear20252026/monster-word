@@ -60,7 +60,7 @@ class _MessagePageState extends State<MessagePage> {
                       onRefresh: () => store.load(),
                       child: ListView.builder(
                         itemCount: store.messages.length,
-                        padding: EdgeInsets.symmetric(vertical: 8),
+                        padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
                         itemBuilder: (context, index) => _buildMessageItem(skin, store, store.messages[index]),
                       ),
                     ),
@@ -92,7 +92,7 @@ class _MessagePageState extends State<MessagePage> {
 
   Widget _buildMessageItem(SkinSystem skin, MessageStore store, MessageItem msg) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xxs),
       decoration: BoxDecoration(
         color: msg.isRead ? skin.colors.cardBgAlt : skin.colors.cardBg,
         borderRadius: BorderRadius.circular(context.design.radius.lg),
@@ -103,7 +103,7 @@ class _MessagePageState extends State<MessagePage> {
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          contentPadding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
           onTap: () => store.markRead(msg.id),
           leading: Container(

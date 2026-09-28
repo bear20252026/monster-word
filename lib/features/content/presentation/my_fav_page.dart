@@ -129,7 +129,7 @@ class _MyFavPageState extends State<MyFavPage> {
   Widget _buildNavBar(SkinSystem skin, LearningFavoritesStore favorites) {
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Row(
         children: [
           IconButton(
@@ -218,7 +218,7 @@ class _MyFavPageState extends State<MyFavPage> {
         // 学习入口按钮
         if (!_isBatchEditMode && _words.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xxs),
             child: SizedBox(
               width: double.infinity,
               height: 48,
@@ -239,7 +239,7 @@ class _MyFavPageState extends State<MyFavPage> {
         Expanded(
           child: ListView.builder(
             itemCount: _words.length,
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
             itemBuilder: (context, index) {
               final word = _words[index];
               final isSelected = _selectedIndices.contains(index);
@@ -249,7 +249,7 @@ class _MyFavPageState extends State<MyFavPage> {
                 direction: _isBatchEditMode ? DismissDirection.none : DismissDirection.endToStart,
                 background: Container(
                   alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 20),
+                  padding: const EdgeInsets.only(right: AppSpacing.lg),
                   color: context.skin.colors.danger,
                   child: const Icon(Icons.delete, color: AppColors.white100),
                 ),

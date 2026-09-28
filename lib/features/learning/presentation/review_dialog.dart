@@ -74,7 +74,7 @@ class _ReviewDialog extends StatelessWidget {
   /// A-5: dueCount==0 时的友好空态 — 「今天没有需要复习的单词」+ CTA。
   Widget _buildEmptyState(BuildContext context, dynamic skin) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.xl),
       child: Column(
         children: [
           Icon(Icons.check_circle_outline, size: 56, color: skin.success),
@@ -96,7 +96,7 @@ class _ReviewDialog extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: skin.accent,
                 foregroundColor: AppColors.white100,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.sm)),
                 elevation: 0,
               ),
@@ -119,7 +119,7 @@ class _ReviewDialog extends StatelessWidget {
       children: [
         // 统计卡片区域
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Row(
             children: [
               Expanded(
@@ -149,7 +149,7 @@ class _ReviewDialog extends StatelessWidget {
         const SizedBox(height: 20),
         // 进度条
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -194,7 +194,7 @@ class _ReviewDialog extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: skin.accent,
                     side: BorderSide(color: skin.accent),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.sm)),
                   ),
                 ),
@@ -212,7 +212,7 @@ class _ReviewDialog extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: skin.accent,
                     foregroundColor: AppColors.white100,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.sm)),
                     elevation: 0,
                   ),
@@ -247,7 +247,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: skin.cardBgAlt,
         borderRadius: BorderRadius.circular(context.design.radius.md),
@@ -273,7 +273,7 @@ class _StatCard extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Padding(
-                padding: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
                 child: Text(unit, style: MwTypography.caption.copyWith(color: skin.text3)),
               ),
             ],

@@ -144,7 +144,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
       onBack: () => NavUtils.safePop(context),
       height: 56,
       trailing: Padding(
-        padding: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.only(right: AppSpacing.sm),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
@@ -229,7 +229,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
               if (_showMeaning && sentences.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: skin.colors.cardBgAlt,
                     borderRadius: BorderRadius.circular(context.design.radius.md),

@@ -143,7 +143,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
           return _Section(
             title: '释义',
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
               child: Center(
                 child: Column(
                   children: [
@@ -175,7 +175,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
   Widget _buildTopBar(BuildContext context, ThemeVars skin, Word word) {
     return Container(
       height: context.design.spacing.navH,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       decoration: BoxDecoration(
         color: skin.pageBg,
         border: Border(bottom: BorderSide(color: skin.divider, width: 0.5)),
@@ -400,7 +400,7 @@ class _DefinitionList extends StatelessWidget {
                   children: [
                     for (final d in defs[i].definitions)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
                         child: Text(d, style: MwTypography.bodyMd.copyWith(color: skin.text1, height: 1.6)),
                       ),
                   ],
@@ -431,7 +431,7 @@ class _CollinsList extends StatelessWidget {
           if (i > 0) const SizedBox(height: 10),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: skin.cardBg,
               borderRadius: BorderRadius.circular(context.design.radius.control),

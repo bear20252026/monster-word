@@ -183,7 +183,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                   return GestureDetector(
                     onTap: () => setDialogState(() => rating = i + 1),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
                       child: Icon(i < rating ? Icons.star : Icons.star_border, color: FuncColors.ratingStar, size: 36),
                     ),
                   );
@@ -690,7 +690,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   Widget _buildNav(SkinSystem skin) {
     return Container(
       height: context.design.spacing.navH,
-      padding: EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       decoration: BoxDecoration(
         color: skin.colors.cardBg,
         border: Border(bottom: BorderSide(color: skin.colors.divider, width: 0.5)),

@@ -149,7 +149,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
           Text('句库学习', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
           const Spacer(),
           Padding(
-            padding: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: AppSpacing.md),
             child: Text('$_masteredCount/$_total', style: MwTypography.bodySm.copyWith(color: skin.colors.text2)),
           ),
         ],
@@ -159,7 +159,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
 
   Widget _buildProgressBar(SkinSystem skin) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(context.design.radius.pill),
         child: LinearProgressIndicator(
@@ -176,7 +176,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
     final fav = _all[_queue.first].fav;
     final data = fav.sentenceData!;
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         children: [
           Expanded(
@@ -187,7 +187,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
               },
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   color: skin.colors.cardBgAlt,
                   borderRadius: BorderRadius.circular(context.design.radius.lg),
@@ -238,7 +238,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
         children: [
           Center(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
               decoration: BoxDecoration(
                 color: context.skin.colors.accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(context.design.radius.pill),

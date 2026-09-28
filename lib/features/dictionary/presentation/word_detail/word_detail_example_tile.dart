@@ -107,7 +107,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(bottom: AppSpacing.xs),
       padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: widget.skin.colors.pageBg,
@@ -150,7 +150,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
               GestureDetector(
                 onTap: _toggleFav,
                 child: Padding(
-                  padding: EdgeInsets.only(left: 8),
+                  padding: EdgeInsets.only(left: AppSpacing.xs),
                   child: AnimatedBuilder(
                     animation: _favScaleAnim,
                     builder: (context, child) => Transform.scale(scale: _favScaleAnim.value, child: child),
@@ -178,7 +178,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
           ],
           if (widget.example.source.isNotEmpty)
             Padding(
-              padding: EdgeInsets.only(top: 4),
+              padding: EdgeInsets.only(top: AppSpacing.xxs),
               child: Text(widget.example.source, style: MwTypography.micro.copyWith(color: widget.skin.colors.text3)),
             ),
         ],

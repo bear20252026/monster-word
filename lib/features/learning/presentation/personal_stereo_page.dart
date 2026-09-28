@@ -88,7 +88,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -159,7 +159,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
         final word = _player.currentWord;
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: [context.skin.colors.cardBgAlt, context.skin.colors.cardBg]),
             borderRadius: BorderRadius.circular(skin.design.radius.xl),

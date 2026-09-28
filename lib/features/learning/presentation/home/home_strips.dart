@@ -44,7 +44,7 @@ class _CheckInStripState extends State<_CheckInStrip> {
     return ScaleDownOnPress(
       onTap: _openSheet,
       child: MwCard(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         child: Row(
           children: [
             Container(
@@ -94,7 +94,7 @@ class _BookStrip extends StatelessWidget {
       builder: (context, bookName, _) => ScaleDownOnPress(
         onTap: () => Navigator.pushNamed(context, RouteNames.libSelect),
         child: MwCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             children: [
               Container(

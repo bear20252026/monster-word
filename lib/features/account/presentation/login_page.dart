@@ -447,13 +447,13 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         // 上次登录信息
         if (_lastLoginAccountInfo != null && _lastLoginAccountInfo!.isNotEmpty)
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
             child: Text('上次登录：$_lastLoginAccountInfo', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
           ),
         SizedBox(height: 24),
         // 登录方式按钮组
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 32),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
           child: Column(
             children: [
               // 手机号登录（主胶囊）
@@ -488,7 +488,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         SizedBox(height: 16),
         // 用户协议
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 32),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
           child: Text.rich(
             TextSpan(
               text: '登录即同意 ',
@@ -522,7 +522,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         // 顶部导航
         Container(
           height: 48,
-          padding: EdgeInsets.symmetric(horizontal: 4),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
           child: Row(
             children: [
               IconButton(
@@ -540,7 +540,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         Container(height: 1, color: skin.colors.divider),
         Expanded(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(24),
+            padding: EdgeInsets.all(AppSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

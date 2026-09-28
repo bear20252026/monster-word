@@ -34,7 +34,7 @@ class MwListRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             children: [
               Container(
@@ -64,7 +64,7 @@ class MwListRow extends StatelessWidget {
               ),
               if (value != null)
                 Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.only(right: AppSpacing.xs),
                   child: Text(value!, style: MwTypography.bodySm.copyWith(color: skin.text2)),
                 ),
               if (trailing != null)

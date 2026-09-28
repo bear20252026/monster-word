@@ -58,7 +58,7 @@ class _FsrsPredictionCardState extends State<FsrsPredictionCard> {
   Widget _buildBody(BuildContext context, SkinSystem skin, FsrsCard? card) {
     if (card == null || card.isNew) {
       return MwCard(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
             Icon(Icons.psychology_outlined, color: skin.colors.accent, size: 20),
@@ -80,7 +80,7 @@ class _FsrsPredictionCardState extends State<FsrsPredictionCard> {
         ? MwColors.info
         : context.skin.colors.success;
     return MwCard(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

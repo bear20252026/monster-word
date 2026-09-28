@@ -112,7 +112,7 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
     return GestureDetector(
       onTap: isReadOnly ? null : onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
         decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: skin.colors.divider)),
         ),

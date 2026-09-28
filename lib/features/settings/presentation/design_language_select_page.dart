@@ -26,7 +26,7 @@ class DesignLanguageSelectPage extends StatelessWidget {
             Container(height: 1, color: skin.divider),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 children: [
                   Text('风格', style: MwTypography.caption.copyWith(color: skin.text3)),
                   const SizedBox(height: 4),
@@ -49,7 +49,7 @@ class DesignLanguageSelectPage extends StatelessWidget {
   Widget _buildNavBar(BuildContext context, dynamic skin) {
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Row(
         children: [
           IconButton(

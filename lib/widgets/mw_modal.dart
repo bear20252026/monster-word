@@ -144,7 +144,14 @@ class MwModal extends StatelessWidget {
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: actions!.map((a) => Padding(padding: const EdgeInsets.only(left: 12), child: a)).toList(),
+                  children: actions!
+                      .map(
+                        (a) => Padding(
+                          padding: const EdgeInsets.only(left: AppSpacing.sm),
+                          child: a,
+                        ),
+                      )
+                      .toList(),
                 ),
               ],
             ],

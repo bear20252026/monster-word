@@ -236,7 +236,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
     return Padding(
       padding: EdgeInsets.fromLTRB(resp.pageMargin, 8, resp.pageMargin, 16),
       child: Container(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: skin.cardBg,
           borderRadius: BorderRadius.circular(context.design.radius.xl),
@@ -406,7 +406,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
     final todayIso = _iso(now);
 
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(context.design.radius.lg),
@@ -538,7 +538,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
         child: Padding(
           padding: EdgeInsets.all(resp.pageMargin),
           child: Container(
-            padding: EdgeInsets.all(24),
+            padding: EdgeInsets.all(AppSpacing.xl),
             decoration: BoxDecoration(
               color: skin.cardBgAlt,
               borderRadius: BorderRadius.circular(context.design.radius.lg),
@@ -570,9 +570,9 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
           final isToday = iso == _iso(DateTime.now());
 
           return Padding(
-            padding: EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.only(bottom: AppSpacing.xs),
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
               decoration: BoxDecoration(
                 color: skin.cardBg,
                 borderRadius: BorderRadius.circular(context.design.radius.md),

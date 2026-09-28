@@ -186,7 +186,7 @@ class _TopBar extends StatelessWidget {
 
     return Container(
       height: context.design.spacing.navH,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: Row(
         children: [
           IconButton(
@@ -307,7 +307,7 @@ class _CoinPillState extends State<_CoinPill> {
       builder: (context, snap) {
         final balance = snap.data ?? 0;
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
           decoration: ShapeDecoration(
             color: MwColors.sunshine300.withValues(alpha: 0.14),
             shape: const StadiumBorder(),
@@ -702,7 +702,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
             key: _tileKeys[i],
             duration: MotionDurations.base,
             height: 56 * resp.scale,
-            margin: const EdgeInsets.only(bottom: 16),
+            margin: const EdgeInsets.only(bottom: AppSpacing.md),
             padding: EdgeInsets.symmetric(horizontal: 14 * resp.scale),
             decoration: BoxDecoration(
               color: bgColor,

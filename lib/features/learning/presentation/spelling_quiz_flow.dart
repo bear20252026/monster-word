@@ -411,7 +411,7 @@ class _SpellingQuizScaffoldState extends State<SpellingQuizScaffold> {
         const SizedBox(height: 24),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           decoration: BoxDecoration(
             color: skin.colors.cardBg,
             borderRadius: BorderRadius.circular(context.design.radius.lg),
@@ -435,7 +435,11 @@ class _SpellingQuizScaffoldState extends State<SpellingQuizScaffold> {
         Row(
           children: [
             Expanded(
-              child: MwButton.outlined(label: '返回', onTap: _exit, padding: const EdgeInsets.symmetric(vertical: 12)),
+              child: MwButton.outlined(
+                label: '返回',
+                onTap: _exit,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -445,7 +449,7 @@ class _SpellingQuizScaffoldState extends State<SpellingQuizScaffold> {
                   _inputController.clear();
                   widget.controller.restart();
                 },
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               ),
             ),
           ],
@@ -476,7 +480,7 @@ class QuizPromptCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: skin.colors.cardBgAlt,
         borderRadius: BorderRadius.circular(context.design.radius.lg),
@@ -494,7 +498,7 @@ class QuizPromptCard extends StatelessWidget {
             GestureDetector(
               onTap: onListen,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: context.skin.colors.cardBgAlt,
                   borderRadius: BorderRadius.circular(context.design.radius.pill),

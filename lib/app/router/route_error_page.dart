@@ -23,7 +23,7 @@ class RouteErrorPage extends StatelessWidget {
       color: skin.pageBg,
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppSpacing.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -48,7 +48,7 @@ class RouteErrorPage extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: StarbucksCreamColors.greenHouse,
                     foregroundColor: AppColors.white100,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                   ),
                 ),

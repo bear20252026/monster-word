@@ -119,7 +119,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
   Widget _buildNavBar(SkinSystem skin) {
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Row(
         children: [
           IconButton(
@@ -184,7 +184,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
   Widget _buildWordList(SkinSystem skin) {
     return ListView.builder(
       itemCount: _words.length,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       addAutomaticKeepAlives: false,
       addRepaintBoundaries: true,
       itemBuilder: (context, index) {
@@ -196,7 +196,7 @@ abstract class ListWordsPageState<T extends ListWordsPage> extends State<T> {
           direction: _isBatchEditMode ? DismissDirection.none : DismissDirection.endToStart,
           background: Container(
             alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
+            padding: const EdgeInsets.only(right: AppSpacing.lg),
             color: context.skin.colors.danger,
             child: const Icon(Icons.delete, color: AppColors.white100),
           ),

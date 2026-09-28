@@ -57,7 +57,7 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: ListView(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.md),
                 children: [
                   ..._results.map((r) => _buildResultItem(skin, r)),
                   if (_results.isEmpty && !_isRunning)
@@ -71,7 +71,7 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.all(AppSpacing.md),
               child: SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -105,8 +105,8 @@ class _NetDiagnosisPageState extends State<NetDiagnosisPage> {
 
   Widget _buildResultItem(SkinSystem skin, DiagnosisResult r) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
+      margin: EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: skin.colors.cardBgAlt,
         borderRadius: BorderRadius.circular(context.design.radius.lg),

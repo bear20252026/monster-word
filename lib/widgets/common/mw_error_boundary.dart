@@ -61,7 +61,7 @@ class _MwErrorPage extends StatelessWidget {
         color: ErrorBoundaryColors.bg,
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppSpacing.xxl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

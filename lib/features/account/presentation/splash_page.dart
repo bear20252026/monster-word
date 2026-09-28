@@ -184,7 +184,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding: EdgeInsets.all(32),
+                    padding: EdgeInsets.all(AppSpacing.xxl),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -213,7 +213,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
             ),
             // 圆点指示器 + 前进按钮（每页都有，桌面端无滑动手势也能走完引导）
             Padding(
-              padding: EdgeInsets.all(24),
+              padding: EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 children: [
                   // 跳过：右上角，非最后页显示
@@ -233,7 +233,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                       return Container(
                         width: 8,
                         height: 8,
-                        margin: EdgeInsets.symmetric(horizontal: 4),
+                        margin: EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: i == _currentPage ? skin.colors.accent : skin.colors.divider,

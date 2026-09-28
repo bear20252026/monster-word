@@ -88,7 +88,7 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(AppSpacing.xxl),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -218,7 +218,7 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
     required int errorCount,
   }) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: colors.cardBg,
         borderRadius: BorderRadius.circular(context.design.radius.control),

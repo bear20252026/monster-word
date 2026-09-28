@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:word_app/app/router/navigation_history.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 class GlobalNavHistoryBar extends StatefulWidget {
@@ -118,7 +119,7 @@ class _GlobalNavHistoryBarState extends State<GlobalNavHistoryBar> {
                   BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 16, offset: const Offset(0, 6)),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs, vertical: AppSpacing.xxs),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

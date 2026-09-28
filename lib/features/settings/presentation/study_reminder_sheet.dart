@@ -139,7 +139,7 @@ class _SheetTimeRow extends StatelessWidget {
                 child: Text(title, style: MwTypography.bodySm.copyWith(color: enabled ? skin.text1 : skin.text3)),
               ),
               Padding(
-                padding: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.only(right: AppSpacing.xs),
                 child: Text(value, style: MwTypography.bodySm.copyWith(color: skin.accent)),
               ),
               Icon(Icons.chevron_right, size: 20, color: skin.text3),

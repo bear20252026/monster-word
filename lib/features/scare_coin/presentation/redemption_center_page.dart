@@ -205,7 +205,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
             // 公平声明：无权益墙，兑换纯收集
             Container(
               margin: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, resp.pageMargin),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: colors.cardBgAlt,
                 borderRadius: BorderRadius.circular(context.design.radius.md),
@@ -241,7 +241,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
     final colors = skin.colors;
     return Container(
       margin: EdgeInsets.all(resp.pageMargin),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [colors.accent, colors.accent.withValues(alpha: 0.8)],
@@ -329,7 +329,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
           ],
         ),
         subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
+          padding: const EdgeInsets.only(top: AppSpacing.xxs),
           child: Text(
             '${item.description} · ${item.cost} 币',
             style: MwTypography.caption.copyWith(color: colors.text2),
@@ -342,7 +342,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
                   backgroundColor: affordable ? colors.accent : colors.text3.withValues(alpha: 0.3),
                   foregroundColor: affordable ? colors.onGlassAccent : colors.text2,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
                   elevation: 0,
                 ),
                 onPressed: _redeeming ? null : () => _redeem(item),

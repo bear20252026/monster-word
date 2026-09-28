@@ -140,7 +140,7 @@ class _PopupCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(context.design.radius.xl),
                 border: Border.all(color: skin.divider.withValues(alpha: 0.5), width: 0.5),
               ),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: wordData != null ? _buildContent(skin) : _buildNotFound(skin),
             ),
           ),
