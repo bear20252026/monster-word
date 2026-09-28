@@ -103,7 +103,7 @@ class _BootstrapRecoveryAppState extends State<_BootstrapRecoveryApp> {
         backgroundColor: const Color(0xFFFBF7F0),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(AppSpacing.xxl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

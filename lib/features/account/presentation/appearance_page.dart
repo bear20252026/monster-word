@@ -78,7 +78,7 @@ class _AppearancePageState extends State<AppearancePage> {
   Widget _buildNav(SkinSystem skin) {
     return Container(
       height: context.design.spacing.navH,
-      padding: EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: Row(
         children: [
           IconButton(
@@ -222,7 +222,7 @@ class _AppearancePageState extends State<AppearancePage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (ctx) => SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: EdgeInsets.all(AppSpacing.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

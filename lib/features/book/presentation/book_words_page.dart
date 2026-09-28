@@ -309,7 +309,7 @@ class _WordListEmptyDiagnostics extends StatelessWidget {
                 SizedBox(height: context.design.spacing.md),
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(12),
+                  padding: EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: skin.colors.cardBgAlt,
                     borderRadius: BorderRadius.circular(skin.design.radius.md),

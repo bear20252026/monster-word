@@ -138,7 +138,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
 
   Widget _buildStatsBar(SkinSystem skin) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       child: Row(
         children: [
           Icon(Icons.format_quote, size: 18, color: skin.colors.text3),
@@ -189,11 +189,11 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     return ListView.builder(
       // MEM/U3+分页：+1 为未到底时的底部加载指示项
       itemCount: _sentences.length + (_hasMore ? 1 : 0),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       itemBuilder: (context, index) {
         if (index >= _sentences.length) {
           return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           );
         }
@@ -236,10 +236,10 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
               );
             }
           },
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
           color: isSelected ? context.skin.colors.accent.withValues(alpha: 0.06) : skin.colors.cardBgAlt,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -302,7 +302,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
 
   Widget _buildEditModeBar(SkinSystem skin) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: skin.colors.cardBg,
         border: Border(top: BorderSide(color: skin.colors.divider)),

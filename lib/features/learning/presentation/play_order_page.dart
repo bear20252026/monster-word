@@ -62,14 +62,14 @@ class _PlayOrderPageState extends State<PlayOrderPage> {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 children: PlayOrder.values.map((order) {
                   final isSelected = _selected == order;
                   return GestureDetector(
                     onTap: () => unawaited(_select(order)),
                     child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: skin.colors.cardBgAlt,
                         borderRadius: BorderRadius.circular(context.design.radius.lg),

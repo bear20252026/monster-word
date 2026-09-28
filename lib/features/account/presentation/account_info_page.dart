@@ -158,7 +158,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
   Widget _buildNavBar(BuildContext context, ThemeVars skin) {
     return Container(
       height: context.design.spacing.navH,
-      padding: EdgeInsets.symmetric(horizontal: 4),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Row(
         children: [
           IconButton(
@@ -258,7 +258,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
             child: Text(
               '绑定平台',
               style: MwTypography.body.copyWith(color: skin.text2, fontSize: AppFontSizes.caption),
@@ -312,7 +312,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       borderRadius: BorderRadius.circular(context.design.radius.xl),
       child: Container(
         height: context.design.spacing.rowH,
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Row(
           children: [
             Text(label, style: MwTypography.body.copyWith(color: skin.text1)),
@@ -340,7 +340,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
       borderRadius: BorderRadius.circular(context.design.radius.xl),
       child: Container(
         height: context.design.spacing.rowH,
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Row(
           children: [
             Container(

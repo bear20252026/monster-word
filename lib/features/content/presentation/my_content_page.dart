@@ -167,7 +167,7 @@ class _NavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Row(
         children: [
           IconButton(
@@ -402,7 +402,7 @@ class _ListGroup extends StatelessWidget {
             children[i],
             if (i < children.length - 1)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Divider(height: 0.5, color: skin.divider),
               ),
           ],

@@ -94,7 +94,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   children: [
                     _buildHintCard(skin),
@@ -121,7 +121,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
     // 单词提示（隐藏部分字母）
     Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: context.skin.colors.cardBgAlt,
         borderRadius: BorderRadius.circular(context.design.radius.xl),
@@ -138,7 +138,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
           GestureDetector(
             onTap: _playAudio,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
               decoration: BoxDecoration(
                 color: context.skin.colors.accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(context.design.radius.lg),
@@ -192,7 +192,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
   Widget _buildResultBanner(SkinSystem skin) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: _isCorrect
             ? context.skin.colors.success.withValues(alpha: 0.1)

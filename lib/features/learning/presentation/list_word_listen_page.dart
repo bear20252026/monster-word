@@ -130,7 +130,7 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
       );
     }
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         children: [
           // 进度：答题统计 + 队列位置

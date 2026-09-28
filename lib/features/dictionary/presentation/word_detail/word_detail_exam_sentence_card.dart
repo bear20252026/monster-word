@@ -18,7 +18,7 @@ class ExamSentenceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: AppSpacing.xs),
       padding: EdgeInsets.all(context.design.spacing.md),
       decoration: BoxDecoration(
         color: skin.cardBg,

@@ -302,7 +302,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                     Text('常见用法', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
                     SizedBox(height: context.design.spacing.xs),
                     Container(
-                      padding: EdgeInsets.all(12),
+                      padding: EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: skin.colors.pageBg,
                         borderRadius: BorderRadius.circular(context.design.radius.md),
@@ -397,7 +397,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
           Text('常见用法', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
           SizedBox(height: context.design.spacing.xs),
           Container(
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               color: skin.colors.pageBg,
               borderRadius: BorderRadius.circular(context.design.radius.md),
@@ -469,7 +469,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
           gapSm,
           ..._extra!.derivatives.map(
             (d) => Padding(
-              padding: EdgeInsets.only(bottom: 4),
+              padding: EdgeInsets.only(bottom: AppSpacing.xxs),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -544,7 +544,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
 
   Widget _buildWordHeader(dynamic word, SkinSystem skin) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: skin.colors.pageBg,
         borderRadius: BorderRadius.circular(context.design.radius.lg),

@@ -240,7 +240,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
       onBack: () => NavUtils.safePop(context),
       height: 56,
       trailing: Padding(
-        padding: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.only(right: AppSpacing.sm),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
@@ -266,7 +266,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: skin.colors.cardBgAlt,
             borderRadius: BorderRadius.circular(context.design.radius.lg),
@@ -318,7 +318,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
       onTap: () => _onSelect(index),
       child: Container(
         width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: bgColor,

@@ -41,8 +41,8 @@ class FloatingDock extends StatelessWidget {
     final active = activeColor ?? context.skin.colors.accent;
 
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
       decoration: BoxDecoration(
         color: AppColors.white100.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(context.design.radius.xl),

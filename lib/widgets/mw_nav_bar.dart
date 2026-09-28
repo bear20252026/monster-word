@@ -44,7 +44,7 @@ class MwNavBar extends StatelessWidget {
     final text1 = context.skin.colors.text1;
     return Container(
       height: height,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Row(
         children: [
           if (showBack)

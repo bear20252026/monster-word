@@ -26,14 +26,14 @@ class LinkedMeMiddlePage extends StatelessWidget {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(24),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 单词
                     Container(
                       width: double.infinity,
-                      padding: EdgeInsets.all(20),
+                      padding: EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: context.skin.colors.cardBgAlt,
                         borderRadius: BorderRadius.circular(context.design.radius.xl),
@@ -53,7 +53,7 @@ class LinkedMeMiddlePage extends StatelessWidget {
                       SizedBox(height: 12),
                       Container(
                         width: double.infinity,
-                        padding: EdgeInsets.all(16),
+                        padding: EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: skin.colors.cardBgAlt,
                           borderRadius: BorderRadius.circular(context.design.radius.lg),
@@ -89,7 +89,7 @@ class LinkedMeMiddlePage extends StatelessWidget {
   Widget _buildNavBar(SkinSystem skin, BuildContext context) {
     return Container(
       height: 48,
-      padding: EdgeInsets.symmetric(horizontal: 4),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Row(
         children: [
           IconButton(

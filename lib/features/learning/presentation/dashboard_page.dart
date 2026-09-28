@@ -68,7 +68,7 @@ class DashboardPage extends StatelessWidget {
   Widget _buildTopNav(BuildContext context, ThemeVars skin) {
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Row(
         children: [
           const SizedBox(width: 4),
@@ -89,7 +89,7 @@ class DashboardPage extends StatelessWidget {
   Widget _buildCurrentBookCard(BuildContext context, Book? book, int learned, ThemeVars skin) {
     final progress = book == null || book.wordCount == 0 ? 0.0 : (learned / book.wordCount).clamp(0.0, 1.0);
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(context.design.radius.lg),

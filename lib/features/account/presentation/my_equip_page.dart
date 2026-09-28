@@ -36,7 +36,7 @@ class MyEquipPage extends StatelessWidget {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 children: [
                   _SkinHeroCard(skin: skin),
                   const SizedBox(height: 24),
@@ -89,7 +89,7 @@ class _SkinHeroCard extends StatelessWidget {
     return ScaleDownOnPress(
       onTap: () => Navigator.pushNamed(context, RouteNames.appearance),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: vars.cardBg,
           borderRadius: BorderRadius.circular(context.design.radius.xl),

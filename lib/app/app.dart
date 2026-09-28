@@ -255,7 +255,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
           elevation: 0,
           shadowColor: Colors.transparent,
           minimumSize: const Size(64, 44),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(d.radius.control)),
           textStyle: TextStyle(
             fontSize: 14,

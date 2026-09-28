@@ -94,7 +94,7 @@ class ProfileScreen extends StatelessWidget {
             // 顶部导航栏（仅消息图标，未读角标由 MessageStore 驱动）
             Container(
               height: AppSpacing.navH,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
               child: Row(children: [const Spacer(), const MessageBadgeIcon()]),
             ),
             const Expanded(child: MonsterRoomView()),
@@ -233,7 +233,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
               child: Container(
                 width: 64,
                 height: 6,
-                margin: const EdgeInsets.only(bottom: 12),
+                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: TreasurePalette.ink.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -273,7 +273,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
             const SizedBox(height: 12),
             for (final row in spec.rows)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                 child: _DrawerRow(row: row, onTap: () => _navigate(sheetCtx, row.route)),
               ),
           ],

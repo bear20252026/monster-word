@@ -34,7 +34,7 @@ class WordRootTab extends StatelessWidget {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -56,7 +56,7 @@ class WordRootTab extends StatelessWidget {
   /// 构建词根结构图
   Widget _buildRootStructure(WordRootData wordRoot, ThemeVars skin) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -75,7 +75,7 @@ class WordRootTab extends StatelessWidget {
             runSpacing: 8,
             children: wordRoot.components.map((component) {
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: Color(component.colorValue).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -102,7 +102,7 @@ class WordRootTab extends StatelessWidget {
   /// 构建词根详细解释
   Widget _buildRootDetails(WordRootData wordRoot, ThemeVars skin) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -126,7 +126,7 @@ class WordRootTab extends StatelessWidget {
           // 词根
           ...wordRoot.roots.map((root) {
             return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
               child: _buildDetailItem('词根', root, skin.teal, skin),
             );
           }),
@@ -144,7 +144,7 @@ class WordRootTab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppRadius.xs),
@@ -168,7 +168,7 @@ class WordRootTab extends StatelessWidget {
     final tips = _generateMemoryTips(wordRoot);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -190,7 +190,7 @@ class WordRootTab extends StatelessWidget {
           const SizedBox(height: 12),
           ...tips.map((tip) {
             return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

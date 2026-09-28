@@ -117,7 +117,7 @@ class _WordNotesSectionState extends State<WordNotesSection> {
             Text('笔记', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
             if (_notes.isNotEmpty)
               Padding(
-                padding: EdgeInsets.only(left: 8),
+                padding: EdgeInsets.only(left: AppSpacing.xs),
                 child: Text('${_notes.length}', style: MwTypography.micro.copyWith(color: skin.colors.text3)),
               ),
             const Spacer(),
@@ -144,12 +144,12 @@ class _WordNotesSectionState extends State<WordNotesSection> {
         SizedBox(height: 8),
         if (!_notesLoaded)
           const Center(
-            child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(strokeWidth: 2)),
+            child: Padding(padding: EdgeInsets.all(AppSpacing.md), child: CircularProgressIndicator(strokeWidth: 2)),
           )
         else if (_notes.isEmpty)
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: skin.colors.cardBgAlt,
               borderRadius: BorderRadius.circular(context.design.radius.md),
@@ -190,8 +190,8 @@ class _NoteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 8),
-      padding: EdgeInsets.all(12),
+      margin: EdgeInsets.only(bottom: AppSpacing.xs),
+      padding: EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: skin.colors.cardBg,
         borderRadius: BorderRadius.circular(context.design.radius.md),
@@ -210,7 +210,7 @@ class _NoteCard extends StatelessWidget {
                 onPressed: onEdit,
                 icon: Icon(Icons.edit_outlined, size: 20, color: skin.colors.text3),
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                padding: EdgeInsets.all(12),
+                padding: EdgeInsets.all(AppSpacing.sm),
                 splashRadius: 24,
                 tooltip: '编辑',
               ),
@@ -218,7 +218,7 @@ class _NoteCard extends StatelessWidget {
                 onPressed: onDelete,
                 icon: Icon(Icons.delete_outline, size: 20, color: skin.colors.danger),
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                padding: EdgeInsets.all(12),
+                padding: EdgeInsets.all(AppSpacing.sm),
                 splashRadius: 24,
                 tooltip: '删除',
               ),

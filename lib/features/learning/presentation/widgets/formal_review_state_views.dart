@@ -42,7 +42,7 @@ class FormalReviewLoadErrorView extends StatelessWidget {
       backgroundColor: skin.pageBg,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

@@ -35,7 +35,7 @@ class SentenceDetailPage extends StatelessWidget {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -45,7 +45,7 @@ class SentenceDetailPage extends StatelessWidget {
                     // 例句
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: skin.colors.cardBgAlt,
                         borderRadius: BorderRadius.circular(context.design.radius.lg),

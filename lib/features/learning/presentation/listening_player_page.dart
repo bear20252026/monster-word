@@ -244,7 +244,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
   Widget _buildNavBar(SkinSystem skin) {
     return Container(
       height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       child: Row(
         children: [
           IconButton(
@@ -395,7 +395,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
       return [
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(
             color: skin.colors.cardBgAlt,
             borderRadius: BorderRadius.circular(context.design.radius.md),
@@ -411,7 +411,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
     return [
       Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.sm),
         decoration: BoxDecoration(
           color: skin.colors.cardBgAlt,
           borderRadius: BorderRadius.circular(context.design.radius.md),
@@ -486,7 +486,7 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
 
   Widget _buildRateControl(SkinSystem skin, AppResponsive resp) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
       decoration: BoxDecoration(
         color: skin.colors.cardBgAlt,
         borderRadius: BorderRadius.circular(context.design.radius.lg),

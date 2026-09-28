@@ -27,7 +27,7 @@ class UIThemeSelectPage extends StatelessWidget {
             Container(height: 1, color: skin.colors.divider),
             Expanded(
               child: ListView(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.md),
                 children: [
                   // 跟随系统开关
                   _buildFollowSystemToggle(context, skin),
@@ -52,7 +52,7 @@ class UIThemeSelectPage extends StatelessWidget {
   /// 跟随系统开关
   Widget _buildFollowSystemToggle(BuildContext context, SkinSystem skin) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       decoration: BoxDecoration(
         color: skin.colors.cardBgAlt,
         borderRadius: BorderRadius.circular(context.design.radius.control),

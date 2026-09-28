@@ -60,7 +60,7 @@ class _MessageBadgeIconState extends State<MessageBadgeIcon> {
             right: 5,
             top: 5,
             child: Container(
-              padding: unread > 9 ? const EdgeInsets.symmetric(horizontal: 4) : null,
+              padding: unread > 9 ? const EdgeInsets.symmetric(horizontal: AppSpacing.xxs) : null,
               constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
               alignment: Alignment.center,
               decoration: BoxDecoration(

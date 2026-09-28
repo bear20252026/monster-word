@@ -170,7 +170,7 @@ class _ModeCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           color: skin.colors.cardBg,
           borderRadius: BorderRadius.circular(context.design.radius.lg),

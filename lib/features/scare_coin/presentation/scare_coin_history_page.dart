@@ -84,7 +84,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: context.responsive.pageMargin),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: skin.cardBg,
                   borderRadius: BorderRadius.circular(context.design.radius.xl),
@@ -155,7 +155,7 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
                       itemBuilder: (context, i) {
                         final e = _entries[i];
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                           decoration: BoxDecoration(
                             color: skin.cardBg,
                             borderRadius: BorderRadius.circular(context.design.radius.md),

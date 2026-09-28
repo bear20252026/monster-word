@@ -47,7 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 // 顶部导航栏
                 Container(
                   height: 48,
-                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
                   child: Row(
                     children: [
                       IconButton(
@@ -371,8 +371,8 @@ class _SettingsPageState extends State<SettingsPage> {
               SizedBox(height: 12),
               for (var i = 0; i < segments.length; i++)
                 Container(
-                  margin: EdgeInsets.only(bottom: 8),
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: EdgeInsets.only(bottom: AppSpacing.xs),
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
                   decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(AppRadius.md)),
                   child: Row(
                     children: [
@@ -523,7 +523,7 @@ class _DailyNewWordsSheetBodyState extends State<_DailyNewWordsSheetBody> {
         ),
         // 数字输入（自由输入，1-100）
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
           child: TextField(
             controller: _textCtrl,
             keyboardType: TextInputType.number,
@@ -587,7 +587,7 @@ class _Cell extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: Container(
           height: 60,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Row(
             children: [
               _SettingIcon(icon: icon),
@@ -597,7 +597,7 @@ class _Cell extends StatelessWidget {
               if (value != null)
                 Flexible(
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 8, left: 8),
+                    padding: const EdgeInsets.only(right: AppSpacing.xs, left: AppSpacing.xs),
                     child: Text(
                       value!,
                       maxLines: 1,
@@ -655,7 +655,7 @@ class _CellWithDesc extends StatelessWidget {
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             children: [
               _SettingIcon(icon: icon),
@@ -694,7 +694,7 @@ class _SwitchCell extends StatelessWidget {
     final skin = context.skin.colors;
     return Container(
       height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: Row(
         children: [
           _SettingIcon(icon: icon),
@@ -728,7 +728,7 @@ class _SwitchCellWithDesc extends StatelessWidget {
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       child: Row(
         children: [
           _SettingIcon(icon: icon),

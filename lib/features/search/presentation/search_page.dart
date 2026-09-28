@@ -230,7 +230,7 @@ class _SearchPageState extends State<SearchPage> {
     // 骨架屏：用结果列表的形状预判加载后的样子，替代转圈
     return ListView.builder(
       itemCount: 6,
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       itemBuilder: (_, _) => const MwSkeletonListItem(),
     );
   }
@@ -340,7 +340,7 @@ class _SearchPageState extends State<SearchPage> {
                   : word.interpretLines)
               .map(
                 (line) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                   child: Text(line, style: MwTypography.bodyMd.copyWith(color: skin.text1, height: 1.5)),
                 ),
               ),
@@ -363,7 +363,7 @@ class _SearchPageState extends State<SearchPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: skin.accent,
                 foregroundColor: AppColors.white100,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
               ),
               child: Text(
@@ -380,7 +380,7 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildExampleCard(SearchExample ex, ThemeVars skin) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(color: skin.cardBgAlt, borderRadius: BorderRadius.circular(context.design.radius.md)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,7 +404,7 @@ class _SearchPageState extends State<SearchPage> {
           ],
           if (ex.audioUrl != null && ex.audioUrl!.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
               child: IconButton(
                 icon: Icon(Icons.volume_up_outlined, color: skin.accent, size: 20),
                 onPressed: () => context.read<AudioPlaybackState>().playSentence(ex.audioUrl!),

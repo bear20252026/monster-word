@@ -102,7 +102,7 @@ class _NotFoundScaffold extends StatelessWidget {
       ),
       body: Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
+          padding: EdgeInsets.all(AppSpacing.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -123,7 +123,7 @@ class _NotFoundScaffold extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.skin.colors.accent,
                     foregroundColor: AppColors.white100,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                   ),
                 ),

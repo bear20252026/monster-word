@@ -134,7 +134,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
     final title = canPop ? '选择词书' : '课程';
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
       color: colors.cardBg,
       child: Row(
         children: [
@@ -333,7 +333,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
           context: context,
           builder: (sheetCtx) => SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -518,10 +518,10 @@ class _CurrentBookHero extends StatelessWidget {
     // 尚未在学：引导卡
     if (book == null) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xxs),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: skin.accent.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(context.design.radius.control),
@@ -542,12 +542,12 @@ class _CurrentBookHero extends StatelessWidget {
 
     final progress = total > 0 ? (learned / total).clamp(0.0, 1.0) : 0.0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xxs),
       child: ScaleTapCard(
         onTap: onOpen,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: skin.cardBg,
             borderRadius: BorderRadius.circular(context.design.radius.control),
@@ -732,7 +732,7 @@ class _BookCard extends StatelessWidget {
           onTap: onViewWords,
           borderRadius: BorderRadius.circular(AppRadius.sm),
           child: Padding(
-            padding: const EdgeInsets.all(4),
+            padding: const EdgeInsets.all(AppSpacing.xxs),
             child: Icon(Icons.list_alt_rounded, size: 17, color: AppColors.white100.withValues(alpha: 0.85)),
           ),
         ),
@@ -771,7 +771,7 @@ class _BottomToolItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs, horizontal: AppSpacing.sm),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

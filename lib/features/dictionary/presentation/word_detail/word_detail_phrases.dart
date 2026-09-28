@@ -35,7 +35,7 @@ class _PhraseGroupCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(bottom: 10),
-      padding: EdgeInsets.all(12),
+      padding: EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: skin.colors.pageBg,
         borderRadius: BorderRadius.circular(context.design.radius.md),
@@ -98,7 +98,7 @@ class _PhraseGroupCard extends StatelessWidget {
                     ),
                   if (item.exams.isNotEmpty)
                     Padding(
-                      padding: EdgeInsets.only(top: 4),
+                      padding: EdgeInsets.only(top: AppSpacing.xxs),
                       child: Wrap(
                         spacing: 6,
                         runSpacing: 4,

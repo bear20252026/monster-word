@@ -18,7 +18,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 /// MwCard(
 ///   onTap: () => print('tapped'),
 ///   child: Padding(
-///     padding: EdgeInsets.all(16),
+///     padding: EdgeInsets.all(AppSpacing.md),
 ///     child: Text('Hello'),
 ///   ),
 /// )
