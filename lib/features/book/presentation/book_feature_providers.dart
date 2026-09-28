@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
+import 'package:word_app/features/book/data/book_repository.dart';
 import 'package:word_app/features/learning/application/learning_progress_reader.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_selection_writer.dart';
@@ -21,7 +23,7 @@ import 'package:word_app/features/book/presentation/book_state.dart';
 Widget buildBookFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
-      Provider<BookCatalogReader>(create: (_) => RepositoryBookCatalogReader.fromServiceLocator()),
+      Provider<BookCatalogReader>(create: (_) => RepositoryBookCatalogReader(sl<BookRepository>())),
       Provider<BookSelectionWriter>(create: (_) => RepositoryBookSelectionWriter()),
       Provider<BookWordListReader>(create: (_) => RepositoryBookWordListReader()),
       // 词库维护（诊断/重建）：presentation 不直连数据库单例（REG-ARCH-005）

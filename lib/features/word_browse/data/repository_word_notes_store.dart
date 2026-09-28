@@ -1,4 +1,3 @@
-import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/models/word_note.dart';
 import 'package:word_app/core/repositories/note_repository.dart';
 import 'package:word_app/features/word_browse/application/word_notes_store.dart';
@@ -7,11 +6,6 @@ import 'package:word_app/features/word_browse/application/word_notes_store.dart'
 ///
 /// 适配器不缓存或复制笔记数据，确保 [NoteRepository] 继续是唯一持久化事实来源。
 class RepositoryWordNotesStore implements WordNotesStore {
-  /// 从 service_locator 自动解析依赖。
-  factory RepositoryWordNotesStore.fromServiceLocator() => RepositoryWordNotesStore._(sl<NoteRepository>());
-
-  RepositoryWordNotesStore._(this._repository);
-
   /// 显式注入（供测试覆盖）。
   RepositoryWordNotesStore(NoteRepository repository) : _repository = repository;
 

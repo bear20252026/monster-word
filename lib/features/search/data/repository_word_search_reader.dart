@@ -1,15 +1,9 @@
-import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/features/search/application/word_search_reader.dart';
 
 /// 基于既有词库仓储的搜索适配器。
 class RepositoryWordSearchReader implements WordSearchReader {
-  /// 从 service_locator 自动解析依赖。
-  factory RepositoryWordSearchReader.fromServiceLocator() => RepositoryWordSearchReader._(sl<WordRepository>());
-
-  RepositoryWordSearchReader._(this._repository);
-
   /// 显式注入（供测试覆盖）。
   RepositoryWordSearchReader(WordRepository repository) : _repository = repository;
 
