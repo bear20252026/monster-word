@@ -79,7 +79,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildPreferences(BuildContext context) {
     final resp = context.responsive;
-    final settings = context.watch<LearningPreferencesState>();
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: resp.isWide ? 24 : 16, vertical: 16),
       children: [
@@ -89,23 +88,27 @@ class _SettingsPageState extends State<SettingsPage> {
         ]),
         SizedBox(height: 16),
 
-        // --- 第二组：发音设置 ---
-        _SettingGroup([
-          _Cell(
-            title: '单词发音类型',
-            icon: Icons.volume_up_outlined,
-            value: settings.pronunciationType,
-            onTap: () => _showPronTypeDialog(),
-          ),
-          _CellWithDesc(
-            title: '自动发音',
-            icon: Icons.graphic_eq_outlined,
-            desc: settings.autoPlayAudio
-                ? (settings.autoPlayExampleAudio ? '单词、词义页面例句' : '单词')
-                : (settings.autoPlayExampleAudio ? '词义页面例句' : '已关闭'),
-            onTap: () => _showAutoPronDialog(),
-          ),
-        ]),
+        // --- 第二组：发音设置（仅订阅发音三字段） ---
+        Selector<LearningPreferencesState, (String, bool, bool)>(
+          selector: (_, s) => (s.pronunciationType, s.autoPlayAudio, s.autoPlayExampleAudio),
+          builder: (context, v, _) {
+            final (pronType, autoPlay, autoPlayExample) = v;
+            return _SettingGroup([
+              _Cell(
+                title: '单词发音类型',
+                icon: Icons.volume_up_outlined,
+                value: pronType,
+                onTap: () => _showPronTypeDialog(),
+              ),
+              _CellWithDesc(
+                title: '自动发音',
+                icon: Icons.graphic_eq_outlined,
+                desc: autoPlay ? (autoPlayExample ? '单词、词义页面例句' : '单词') : (autoPlayExample ? '词义页面例句' : '已关闭'),
+                onTap: () => _showAutoPronDialog(),
+              ),
+            ]);
+          },
+        ),
         SizedBox(height: 16),
 
         // --- 风格（颜色主题 + 设计语言已收敛为 6 精选风格） ---
@@ -119,63 +122,79 @@ class _SettingsPageState extends State<SettingsPage> {
         ]),
         SizedBox(height: 16),
 
-        // --- 第三组：拼写设置 ---
+        // --- 第三组：拼写设置（仅订阅拼写两开关） ---
+        Selector<LearningPreferencesState, (bool, bool)>(
+          selector: (_, s) => (s.spellRightSwipe, s.spellReviewTip),
+          builder: (context, v, _) => _SettingGroup([
+            _CellWithDesc(
+              title: '拼写',
+              icon: Icons.edit_outlined,
+              desc: _spellDesc(v.$1, v.$2),
+              onTap: () => _showSpellDialog(),
+            ),
+          ]),
+        ),
+        SizedBox(height: 16),
+
+        // --- 第四组：学习节奏（每日新学与节奏分别订阅，互不影响） ---
         _SettingGroup([
-          _CellWithDesc(
-            title: '拼写',
-            icon: Icons.edit_outlined,
-            desc: _spellDesc(settings),
-            onTap: () => _showSpellDialog(),
+          Selector<TodayProgressStore, int>(
+            selector: (_, s) => s.goal,
+            builder: (context, goal, _) => _Cell(
+              title: '每日新学',
+              icon: Icons.flag_outlined,
+              value: '$goal 词',
+              onTap: () => _showDailyNewWordsDialog(),
+            ),
+          ),
+          Selector<LearningPreferencesState, int>(
+            selector: (_, s) => s.learnPace,
+            builder: (context, pace, _) => _Cell(
+              title: '学习节奏',
+              icon: Icons.speed_outlined,
+              value: '$pace 词/小结',
+              onTap: () => _showLearnPaceDialog(),
+            ),
           ),
         ]),
         SizedBox(height: 16),
 
-        // --- 第四组：学习节奏 ---
-        _SettingGroup([
-          _Cell(
-            title: '每日新学',
-            icon: Icons.flag_outlined,
-            value: '${context.watch<TodayProgressStore>().goal} 词',
-            onTap: () => _showDailyNewWordsDialog(),
-          ),
-          _Cell(
-            title: '学习节奏',
-            icon: Icons.speed_outlined,
-            value: '${settings.learnPace} 词/小结',
-            onTap: () => _showLearnPaceDialog(),
-          ),
-        ]),
-        SizedBox(height: 16),
-
-        // --- 第五组：题型/助记 ---
-        _SettingGroup([
-          _SwitchCell(
-            '听音选义题型',
-            icon: Icons.headphones_outlined,
-            value: settings.audioMeaningQuestion,
-            onChanged: settings.setAudioMeaningQuestion,
-          ),
-          _Cell(
-            title: '助记顺序',
-            icon: Icons.low_priority_outlined,
-            value: settings.mnemonicSegments.join(' - '),
-            onTap: () => _showMnemonicOrderDialog(),
-          ),
-          _SwitchCellWithDesc(
-            title: '拆分助记',
-            icon: Icons.extension_outlined,
-            desc: '学习时自动拆分单词',
-            value: settings.splitMnemonic,
-            onChanged: settings.setSplitMnemonic,
-          ),
-          _SwitchCellWithDesc(
-            title: '混淆项辨析',
-            icon: Icons.compare_arrows_outlined,
-            desc: '显示选择题错误选项词义',
-            value: settings.showConfusableMeanings,
-            onChanged: settings.setShowConfusableMeanings,
-          ),
-        ]),
+        // --- 第五组：题型/助记（setter 走 read，避免订阅整个 state） ---
+        Selector<LearningPreferencesState, (bool, String, bool, bool)>(
+          selector: (_, s) =>
+              (s.audioMeaningQuestion, s.mnemonicSegments.join(' - '), s.splitMnemonic, s.showConfusableMeanings),
+          builder: (context, v, _) {
+            final settings = context.read<LearningPreferencesState>();
+            return _SettingGroup([
+              _SwitchCell(
+                '听音选义题型',
+                icon: Icons.headphones_outlined,
+                value: v.$1,
+                onChanged: settings.setAudioMeaningQuestion,
+              ),
+              _Cell(
+                title: '助记顺序',
+                icon: Icons.low_priority_outlined,
+                value: v.$2,
+                onTap: () => _showMnemonicOrderDialog(),
+              ),
+              _SwitchCellWithDesc(
+                title: '拆分助记',
+                icon: Icons.extension_outlined,
+                desc: '学习时自动拆分单词',
+                value: v.$3,
+                onChanged: settings.setSplitMnemonic,
+              ),
+              _SwitchCellWithDesc(
+                title: '混淆项辨析',
+                icon: Icons.compare_arrows_outlined,
+                desc: '显示选择题错误选项词义',
+                value: v.$4,
+                onChanged: settings.setShowConfusableMeanings,
+              ),
+            ]);
+          },
+        ),
         SizedBox(height: 16),
 
         // --- 第六组：更多设置 ---
@@ -184,10 +203,10 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  String _spellDesc(LearningPreferencesState settings) {
+  String _spellDesc(bool spellRightSwipe, bool spellReviewTip) {
     final parts = <String>[];
-    if (settings.spellRightSwipe) parts.add('右滑随手拼');
-    if (settings.spellReviewTip) parts.add('复习拼写提示');
+    if (spellRightSwipe) parts.add('右滑随手拼');
+    if (spellReviewTip) parts.add('复习拼写提示');
     return parts.isEmpty ? '已关闭' : parts.join('、');
   }
 
