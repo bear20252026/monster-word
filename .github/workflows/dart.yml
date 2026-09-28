@@ -29,7 +29,7 @@ jobs:
       - name: Verify Dart formatting
         shell: bash
         run: |
-          find lib test -type f -name '*.dart' -print0 \
+          find lib test integration_test test_driver -type f -name '*.dart' -print0 \
             | xargs -0 dart format --output=none --set-exit-if-changed --line-length 120
 
       - name: Analyze project source
