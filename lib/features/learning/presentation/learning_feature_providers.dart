@@ -6,6 +6,8 @@ import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/core/application/word_lookup_reader_impl.dart';
 import 'package:word_app/core/audio/audio_service.dart';
+import 'package:word_app/core/repositories/fav_repository.dart';
+import 'package:word_app/core/repositories/new_word_repository.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 import 'package:word_app/features/learning/application/learning_progress_reader.dart';
@@ -30,6 +32,7 @@ import 'package:word_app/features/learning/application/new_words_writer_port.dar
 import 'package:word_app/features/learning/data/learning_progress_reader_impl.dart';
 import 'package:word_app/features/learning/data/learning_progress_repository.dart';
 import 'package:word_app/features/learning/data/learning_queue_repository.dart';
+import 'package:word_app/features/learning/data/mastered_repository.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_reader.dart';
 import 'package:word_app/features/learning/data/repository_learning_queue_port.dart';
@@ -78,9 +81,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
         value: RepositoryReviewScheduleWriterPort(sl<ReviewScheduleRepository>()),
       ),
       Provider<ChoiceGeneratorPort>.value(value: const RepositoryChoiceGeneratorPort()),
-      Provider<FavoritesPort>.value(value: RepositoryFavoritesPort.fromServiceLocator()),
-      Provider<MasteredWriterPort>.value(value: RepositoryMasteredWriterPort.fromServiceLocator()),
-      Provider<NewWordsWriterPort>.value(value: RepositoryNewWordsWriterPort.fromServiceLocator()),
+      Provider<FavoritesPort>.value(value: RepositoryFavoritesPort(sl<FavRepository>())),
+      Provider<MasteredWriterPort>.value(value: RepositoryMasteredWriterPort(sl<MasteredRepository>())),
+      Provider<NewWordsWriterPort>.value(value: RepositoryNewWordsWriterPort(sl<NewWordRepository>())),
       ChangeNotifierProvider(
         create: (context) => LearningFavoritesState(
           favoritesPort: context.read<FavoritesPort>(),
@@ -172,7 +175,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
       Provider<AudioService>.value(value: sl<AudioService>()),
       // N10：查词/偏好经 application 端口（R-core-repo / R-prefs）
       Provider<WordLookupReader>(create: (_) => RepositoryWordLookupReader(sl<WordRepository>())),
-      Provider<LearningProgressReader>.value(value: LearningProgressReaderImpl.fromServiceLocator()),
+      Provider<LearningProgressReader>.value(
+        value: LearningProgressReaderImpl(masteredRepository: sl<MasteredRepository>()),
+      ),
       ChangeNotifierProvider(
         create: (_) =>
             NewWordsState(newWordsReader: sl<NewWordsReader>(), writerPort: sl<NewWordsWriterPort>())..initialize(),
