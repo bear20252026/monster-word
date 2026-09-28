@@ -10,6 +10,7 @@ import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/utils/date_format_utils.dart';
+import 'package:word_app/widgets/flow_in.dart';
 import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 import 'package:word_app/widgets/mw_nav_bar.dart';
@@ -212,87 +213,95 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
         // MwCard（v2.7.48）：24px 圆角 + 双层阴影 + ScaleDownOnPress 按压反馈，
         // 与词典详情页卡片风格统一。编辑态选中视觉改为 primary 淡底色 +
         // 行首 check_circle 图标（原 2px 描边废弃，图标本身已明确传达选中态）。
-        return MwCard(
-          onTap: () {
-            if (_isEditMode) {
-              setState(() {
-                if (isSelected) {
-                  _selectedIndices.remove(index);
-                } else {
-                  _selectedIndices.add(index);
-                }
-              });
-            } else {
-              // 非编辑态：进入例句详情页（batch5 接通孤儿页）。
-              Navigator.pushNamed(
-                context,
-                RouteNames.sentenceDetail,
-                arguments: <String, dynamic>{
-                  'word': favSentence.word,
-                  'sentence': sentenceData.e,
-                  'translation': sentenceData.c,
-                  'source': sentenceData.b,
-                },
-              );
-            }
-          },
-          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-          color: isSelected ? context.skin.colors.accent.withValues(alpha: 0.06) : skin.colors.cardBgAlt,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 单词标签
-                Row(
-                  children: [
-                    if (_isEditMode) ...[
-                      Icon(
-                        isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                        size: 20,
-                        color: isSelected ? context.skin.colors.accent : skin.colors.text3,
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: context.skin.colors.accent.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(context.design.radius.sm),
-                      ),
-                      child: Text(
-                        favSentence.word,
-                        style: MwTypography.bodySm.copyWith(
-                          color: context.skin.colors.accent,
-                          fontWeight: FontWeight.w600,
+        // 有序流动入场（与词书网格/单词浏览页同一动效语言）：首屏十张走完整
+        // 波次；翻页新卡单列相位 0 入场，近乎立即不排队。key 绑词+例句 id，
+        // 编辑态选中原位重建不重放。
+        final waveIndex = index < 10 ? index : 0;
+        return FlowIn(
+          key: ValueKey('fav-sentence-flow-${favSentence.wordId}-${favSentence.sentenceId}'),
+          index: waveIndex,
+          child: MwCard(
+            onTap: () {
+              if (_isEditMode) {
+                setState(() {
+                  if (isSelected) {
+                    _selectedIndices.remove(index);
+                  } else {
+                    _selectedIndices.add(index);
+                  }
+                });
+              } else {
+                // 非编辑态：进入例句详情页（batch5 接通孤儿页）。
+                Navigator.pushNamed(
+                  context,
+                  RouteNames.sentenceDetail,
+                  arguments: <String, dynamic>{
+                    'word': favSentence.word,
+                    'sentence': sentenceData.e,
+                    'translation': sentenceData.c,
+                    'source': sentenceData.b,
+                  },
+                );
+              }
+            },
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+            color: isSelected ? context.skin.colors.accent.withValues(alpha: 0.06) : skin.colors.cardBgAlt,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 单词标签
+                  Row(
+                    children: [
+                      if (_isEditMode) ...[
+                        Icon(
+                          isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                          size: 20,
+                          color: isSelected ? context.skin.colors.accent : skin.colors.text3,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: context.skin.colors.accent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(context.design.radius.sm),
+                        ),
+                        child: Text(
+                          favSentence.word,
+                          style: MwTypography.bodySm.copyWith(
+                            color: context.skin.colors.accent,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                    const Spacer(),
+                      const Spacer(),
+                      Text(
+                        // L2 收口：共享 formatMonthDay（v2.7.51），不再手写 substring 解析
+                        formatMonthDay(favSentence.updateTime),
+                        style: MwTypography.micro.copyWith(color: skin.colors.text3),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // 英文例句
+                  Text(sentenceData.e, style: MwTypography.body.copyWith(color: skin.colors.text1, height: 1.5)),
+                  // 中文翻译
+                  if (sentenceData.c.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(sentenceData.c, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
+                  ],
+                  // 来源
+                  if (sentenceData.b.isNotEmpty) ...[
+                    const SizedBox(height: 8),
                     Text(
-                      // L2 收口：共享 formatMonthDay（v2.7.51），不再手写 substring 解析
-                      formatMonthDay(favSentence.updateTime),
-                      style: MwTypography.micro.copyWith(color: skin.colors.text3),
+                      '— ${sentenceData.b}',
+                      style: MwTypography.micro.copyWith(color: skin.colors.text3, fontStyle: FontStyle.italic),
                     ),
                   ],
-                ),
-                const SizedBox(height: 12),
-                // 英文例句
-                Text(sentenceData.e, style: MwTypography.body.copyWith(color: skin.colors.text1, height: 1.5)),
-                // 中文翻译
-                if (sentenceData.c.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(sentenceData.c, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                 ],
-                // 来源
-                if (sentenceData.b.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    '— ${sentenceData.b}',
-                    style: MwTypography.micro.copyWith(color: skin.colors.text3, fontStyle: FontStyle.italic),
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         );
