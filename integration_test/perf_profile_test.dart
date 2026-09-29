@@ -128,19 +128,36 @@ void main() {
     await tester.pump();
     await _recordStage(tester, '进入单词浏览页', beforeCount: before);
 
+    // ---- 场景 5：单词列表滚动 ----
+    // 词表加载期间是骨架屏（无 Scrollable）：就绪轮询最多 ~6s，未就绪则
+    // 跳过滚动场景但仍写报告（harness 是测量工具，不因数据慢而崩）。
     before = _frames.length;
-    final list = find.byType(Scrollable).first;
-    for (var i = 0; i < 4; i++) {
-      await tester.drag(list, const Offset(0, -600));
+    var listReady = false;
+    for (var i = 0; i < 20; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
       await tester.pump();
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      if (find.byType(Scrollable).evaluate().isNotEmpty) {
+        listReady = true;
+        break;
+      }
     }
-    for (var i = 0; i < 2; i++) {
-      await tester.drag(list, const Offset(0, 600));
-      await tester.pump();
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+    if (listReady) {
+      final list = find.byType(Scrollable).first;
+      for (var i = 0; i < 4; i++) {
+        await tester.drag(list, const Offset(0, -600));
+        await tester.pump();
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+      }
+      for (var i = 0; i < 2; i++) {
+        await tester.drag(list, const Offset(0, 600));
+        await tester.pump();
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+      }
+      await _recordStage(tester, '单词列表滚动', beforeCount: before);
+    } else {
+      debugPrint('[perf] 单词列表未就绪（骨架屏超时），跳过滚动场景');
+      _memory.add({'stage': '单词列表(未就绪跳过)', 'rssMB': _r2(ProcessInfo.currentRss / 1048576)});
     }
-    await _recordStage(tester, '单词列表滚动', beforeCount: before);
 
     // ---- 汇总输出 ----
     final report = <String, Object>{
