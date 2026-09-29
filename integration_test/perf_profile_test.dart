@@ -29,6 +29,7 @@ const _wait = Duration(milliseconds: 1200);
 final _frames = <FrameTiming>[];
 final _memory = <Map<String, Object>>[];
 final _stages = <Map<String, Object>>[];
+final _attribution = <Map<String, Object>>[];
 
 Map<String, Object> _summarize(String name, Iterable<FrameTiming> timings) {
   final total = timings.map((t) => t.totalSpan.inMicroseconds / 1000).toList()..sort();
@@ -93,11 +94,45 @@ void main() {
     final startupBefore = 0;
     await _recordStage(tester, '启动首屏', beforeCount: startupBefore);
 
-    // ---- 场景 2：一级 Tab 切换 → 课程（词书网格）----
+    // ---- 场景 2：一级 Tab 切换 → 课程（词书网格）+ 内存跳变归因 ----
+    // P2 归因（perf 2026-09-28）：此前该步 RSS 一次性 +203MB，此处加
+    // 250ms 细粒度采样 + imageCache 统计 + 清缓存/二次进入对比，定位跳变
+    // 落点（首帧光栅分配 vs 图像解码 vs 数据流渐增）。
     var before = _frames.length;
+    final cache = PaintingBinding.instance.imageCache;
+    Map<String, Object> cacheStats() => {
+      'imageCacheCount': cache.currentSize,
+      'imageCacheMB': _r2(cache.currentSizeBytes / 1048576),
+      'liveImageCount': cache.liveImageCount,
+    };
+    _attribution.add({'step': '切换前(学习Tab)', 'rssMB': _r2(ProcessInfo.currentRss / 1048576), ...cacheStats()});
     await tester.tap(find.byIcon(Icons.school_outlined));
-    await tester.pump();
+    final samples = <Map<String, Object>>[];
+    for (var i = 0; i < 12; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      await tester.pump();
+      samples.add({'tMs': (i + 1) * 250, 'rssMB': _r2(ProcessInfo.currentRss / 1048576)});
+    }
+    _attribution.add({'step': '切换后3s采样', 'samples': samples, ...cacheStats()});
     await _recordStage(tester, 'Tab切换→课程', beforeCount: before);
+
+    cache.clear();
+    cache.clearLiveImages();
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    await tester.pump();
+    _attribution.add({'step': '清图像缓存后', 'rssMB': _r2(ProcessInfo.currentRss / 1048576), ...cacheStats()});
+
+    // 切回学习 Tab（离开课程页）：若 RSS 回落 → 光栅/缓存性；不回落 → 被保留。
+    await tester.tap(find.byIcon(Icons.auto_stories_outlined));
+    await Future<void>.delayed(const Duration(seconds: 1));
+    await tester.pump();
+    _attribution.add({'step': '切回学习Tab(1s)', 'rssMB': _r2(ProcessInfo.currentRss / 1048576), ...cacheStats()});
+
+    // 二次进入课程 Tab：首帧光栅已做过一次，若不再跳变 → 首次绘制分配。
+    await tester.tap(find.byIcon(Icons.school_outlined));
+    await Future<void>.delayed(const Duration(seconds: 1));
+    await tester.pump();
+    _attribution.add({'step': '二次进入课程Tab(1s)', 'rssMB': _r2(ProcessInfo.currentRss / 1048576), ...cacheStats()});
 
     // ---- 场景 3：词书网格滚动（流动入场 + 懒加载行）----
     before = _frames.length;
@@ -167,6 +202,7 @@ void main() {
       'bootstrapMs': bootstrapMs,
       'stages': _stages,
       'memory': _memory,
+      'attribution': _attribution,
     };
     final encoded = const JsonEncoder.withIndent('  ').convert(report);
     final out = File('build/perf_report.json');
