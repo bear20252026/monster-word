@@ -10,12 +10,14 @@
 //   3. 只报告数据、不设性能阈值断言（本机性能噪声大，阈值留给 CI 之外的
 //      人工评审），结果落 build/perf_report.json + 控制台摘要。
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:integration_test/integration_test.dart';
 import 'package:provider/provider.dart';
 
@@ -56,13 +58,40 @@ Map<String, Object> _summarize(String name, Iterable<FrameTiming> timings) {
 
 double _r2(double v) => (v * 100).round() / 100;
 
+/// 内存检查点：RSS + VM Service 拆分（P3：Dart 堆 vs native）。
+/// profile 模式下 VM Service 随 flutter drive 运行，经 Service.getInfo()
+/// 自取地址后调 getMemoryUsage 拿 isolate 堆用量；RSS − heap − external
+/// ≈ native/驱动侧。无 VM Service 时字段缺省不阻断。
+Future<Map<String, Object>> _memSample(String stage) async {
+  final entry = <String, Object>{'stage': stage, 'rssMB': _r2(ProcessInfo.currentRss / 1048576)};
+  try {
+    final server = (await developer.Service.getInfo()).serverUri;
+    if (server != null) {
+      final vm = jsonDecode(await http.read(server.replace(path: '${server.path}getVM')));
+      final isolateId = vm['result']['isolates'][0]['id'] as String;
+      final mem = jsonDecode(
+        await http.read(
+          server.replace(path: '${server.path}getMemoryUsage', queryParameters: {'isolateId': isolateId}),
+        ),
+      );
+      final r = mem['result'] as Map<String, Object?>;
+      entry['heapMB'] = _r2((r['heapUsage'] as num).toDouble() / 1048576);
+      entry['heapCapacityMB'] = _r2((r['heapCapacity'] as num).toDouble() / 1048576);
+      entry['externalMB'] = _r2((r['externalUsage'] as num).toDouble() / 1048576);
+    }
+  } catch (e) {
+    entry['vmError'] = '$e';
+  }
+  return entry;
+}
+
 Future<void> _recordStage(WidgetTester tester, String name, {required int beforeCount}) async {
   await Future<void>.delayed(_wait);
   await tester.pump();
   final slice = _frames.sublist(beforeCount.clamp(0, _frames.length));
   final stage = _summarize(name, slice);
   _stages.add(stage);
-  _memory.add({'stage': name, 'rssMB': _r2(ProcessInfo.currentRss / 1048576)});
+  _memory.add(await _memSample(name));
   debugPrint('[perf] $stage');
 }
 
@@ -90,7 +119,7 @@ void main() {
     await tester.pump();
 
     // ---- 场景 1：启动首帧（含首屏波次入场）----
-    _memory.add({'stage': '启动完成', 'rssMB': _r2(ProcessInfo.currentRss / 1048576)});
+    _memory.add(await _memSample('启动完成'));
     final startupBefore = 0;
     await _recordStage(tester, '启动首屏', beforeCount: startupBefore);
 
@@ -191,7 +220,7 @@ void main() {
       await _recordStage(tester, '单词列表滚动', beforeCount: before);
     } else {
       debugPrint('[perf] 单词列表未就绪（骨架屏超时），跳过滚动场景');
-      _memory.add({'stage': '单词列表(未就绪跳过)', 'rssMB': _r2(ProcessInfo.currentRss / 1048576)});
+      _memory.add(await _memSample('单词列表(未就绪跳过)'));
     }
 
     // ---- 汇总输出 ----

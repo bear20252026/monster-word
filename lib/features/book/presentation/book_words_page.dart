@@ -34,6 +34,11 @@ class BookWordsPage extends StatefulWidget {
 }
 
 class _BookWordsPageState extends State<BookWordsPage> {
+  /// 页面会话内已入场过的词 id：滚动往返/收藏标记等重建不重放入场波次
+  /// （perf 2026-09-29：重放是滚动期 Opacity 层来源之一，且往返闪动
+  /// 违反 motion 克制原则——动效只服务首次理解）。
+  final Set<int> _enteredWordIds = {};
+
   @override
   void initState() {
     super.initState();
@@ -154,14 +159,14 @@ class _BookWordsPageState extends State<BookWordsPage> {
               final word = words[wordIndex];
               // 有序流动入场（与 lib_select_page 同一动效语言）：首屏十行走完整
               // 波次；懒加载/翻页新行按单列相位 0 入场，近乎立即不排队（同
-              // 网格「index % 列数」式，单列相位恒 0）。key 绑词 id：切换词书
-              // 整列重放波次；收藏/生词标记原位重建不重放。
+              // 网格「index % 列数」式，单列相位恒 0）。key 绑词 id；入场一
+              // 次后（_enteredWordIds）同 id 重建走静终态，不再重放。
+              final firstTime = _enteredWordIds.add(word.id);
               final waveIndex = wordIndex < 10 ? wordIndex : 0;
-              return FlowIn(
-                key: ValueKey('word-flow-${word.id}'),
-                index: waveIndex,
-                child: _WordCard(word: word, book: book),
-              );
+              final card = _WordCard(word: word, book: book);
+              return firstTime
+                  ? FlowIn(key: ValueKey('word-flow-${word.id}'), index: waveIndex, child: card)
+                  : KeyedSubtree(key: ValueKey('word-flow-${word.id}'), child: card);
             },
           );
         },
