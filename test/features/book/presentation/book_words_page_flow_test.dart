@@ -126,6 +126,43 @@ Finder _rowOpacity(int wordId) =>
 Book _book(int id, int wordCount) => Book(id: id, code: 'b$id', name: '词书 $id', wordCount: wordCount);
 
 void main() {
+  testWidgets('滚动往返不重放入场：同词在页面会话内只入场一次', (tester) async {
+    final bookState = BookState(
+      catalogReader: MockCatalogReader(),
+      selectionWriter: MockSelectionWriter(),
+      wordsReader: MockWordsReader({
+        1: [for (var i = 1; i <= 16; i++) Word(id: i, word: 'w${i.toString().padLeft(2, '0')}')],
+      }),
+      progressReader: FakeLearningProgressReader(),
+    );
+    await bookState.load();
+
+    await tester.pumpWidget(_host(_book(1, 16), bookState));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+    await tester.pumpAndSettle();
+    // 首次入场：FlowIn 的 Opacity 包裹存在（已收敛至终态）
+    expect(
+      find.descendant(of: find.byKey(const ValueKey('word-flow-1')), matching: find.byType(Opacity)),
+      findsOneWidget,
+    );
+
+    // 下滚再回滚：row1 已出场/重进 viewport，元素被销毁重建
+    final list = find.byType(Scrollable).first;
+    await tester.drag(list, const Offset(0, -600));
+    await tester.pumpAndSettle();
+    await tester.drag(list, const Offset(0, 600));
+    await tester.pumpAndSettle();
+
+    // 已入场过的词重建后走静终态：无 FlowIn 的 Opacity 包裹，内容完整
+    expect(
+      find.descendant(of: find.byKey(const ValueKey('word-flow-1')), matching: find.byType(Opacity)),
+      findsNothing,
+    );
+    expect(find.text('w01'), findsOneWidget);
+  });
+
   testWidgets('词行按索引波次入场：靠后的行起跑更晚，最终完全呈现', (tester) async {
     final bookState = BookState(
       catalogReader: MockCatalogReader(),

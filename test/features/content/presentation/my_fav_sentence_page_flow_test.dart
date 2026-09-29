@@ -92,6 +92,48 @@ void main() {
     expect(find.text('Cherries are red.'), findsOneWidget);
   });
 
+  testWidgets('滚动往返不重放入场：同卡在页面会话内只入场一次', (tester) async {
+    await tester.pumpWidget(
+      _host([
+        _fav(1, 'apple', 'An apple a day.', '一天一苹果。'),
+        _fav(2, 'banana', 'I like bananas.', '我喜欢香蕉。'),
+        _fav(3, 'cherry', 'Cherries are red.', '樱桃是红的。'),
+        _fav(4, 'date', 'Dates are sweet.', '椰枣很甜。'),
+        _fav(5, 'fig', 'Figs are soft.', '无花果很软。'),
+        _fav(6, 'grape', 'Grapes grow in bunches.', '葡萄成串生长。'),
+      ]),
+    );
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+    await tester.pumpAndSettle();
+    // 首次入场：FlowIn 的 Opacity 包裹存在（已收敛至终态）
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('fav-sentence-flow-1-sid-An apple a day.')),
+        matching: find.byType(Opacity),
+      ),
+      findsOneWidget,
+    );
+
+    // 下滚再回滚：卡 1 已出场/重进 viewport，元素被销毁重建
+    final list = find.byType(Scrollable).first;
+    await tester.drag(list, const Offset(0, -600));
+    await tester.pumpAndSettle();
+    await tester.drag(list, const Offset(0, 600));
+    await tester.pumpAndSettle();
+
+    // 已入场过的卡重建后走静终态：无 FlowIn 的 Opacity 包裹，内容完整
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('fav-sentence-flow-1-sid-An apple a day.')),
+        matching: find.byType(Opacity),
+      ),
+      findsNothing,
+    );
+    expect(find.text('An apple a day.'), findsOneWidget);
+  });
+
   testWidgets('减弱动态效果时例句卡直接呈现最终态（无 Opacity 包裹）', (tester) async {
     await tester.pumpWidget(_host([_fav(1, 'apple', 'An apple a day.', '一天一苹果。')], disableAnimations: true));
     await tester.pump();

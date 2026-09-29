@@ -36,6 +36,10 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
   bool _isEditMode = false;
   Set<int> _selectedIndices = {};
 
+  /// 页面会话内已入场过的例句 key（wordId-sentenceId）：滚动往返/勾选等
+  /// 重建不重放入场波次（同 book_words_page，perf 2026-09-29）。
+  final Set<String> _enteredSentenceKeys = {};
+
   @override
   void initState() {
     super.initState();
@@ -214,97 +218,98 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
         // 与词典详情页卡片风格统一。编辑态选中视觉改为 primary 淡底色 +
         // 行首 check_circle 图标（原 2px 描边废弃，图标本身已明确传达选中态）。
         // 有序流动入场（与词书网格/单词浏览页同一动效语言）：首屏十张走完整
-        // 波次；翻页新卡单列相位 0 入场，近乎立即不排队。key 绑词+例句 id，
-        // 编辑态选中原位重建不重放。
+        // 波次；翻页新卡单列相位 0 入场，近乎立即不排队。key 绑词+例句 id；
+        // 入场一次后（_enteredSentenceKeys）同卡重建走静终态，不再重放。
+        final favKey = '${favSentence.wordId}-${favSentence.sentenceId}';
+        final firstTime = _enteredSentenceKeys.add(favKey);
         final waveIndex = index < 10 ? index : 0;
-        return FlowIn(
-          key: ValueKey('fav-sentence-flow-${favSentence.wordId}-${favSentence.sentenceId}'),
-          index: waveIndex,
-          child: MwCard(
-            onTap: () {
-              if (_isEditMode) {
-                setState(() {
-                  if (isSelected) {
-                    _selectedIndices.remove(index);
-                  } else {
-                    _selectedIndices.add(index);
-                  }
-                });
-              } else {
-                // 非编辑态：进入例句详情页（batch5 接通孤儿页）。
-                Navigator.pushNamed(
-                  context,
-                  RouteNames.sentenceDetail,
-                  arguments: <String, dynamic>{
-                    'word': favSentence.word,
-                    'sentence': sentenceData.e,
-                    'translation': sentenceData.c,
-                    'source': sentenceData.b,
-                  },
-                );
-              }
-            },
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            color: isSelected ? context.skin.colors.accent.withValues(alpha: 0.06) : skin.colors.cardBgAlt,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 单词标签
-                  Row(
-                    children: [
-                      if (_isEditMode) ...[
-                        Icon(
-                          isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                          size: 20,
-                          color: isSelected ? context.skin.colors.accent : skin.colors.text3,
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: context.skin.colors.accent.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(context.design.radius.sm),
-                        ),
-                        child: Text(
-                          favSentence.word,
-                          style: MwTypography.bodySm.copyWith(
-                            color: context.skin.colors.accent,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+        final card = MwCard(
+          onTap: () {
+            if (_isEditMode) {
+              setState(() {
+                if (isSelected) {
+                  _selectedIndices.remove(index);
+                } else {
+                  _selectedIndices.add(index);
+                }
+              });
+            } else {
+              // 非编辑态：进入例句详情页（batch5 接通孤儿页）。
+              Navigator.pushNamed(
+                context,
+                RouteNames.sentenceDetail,
+                arguments: <String, dynamic>{
+                  'word': favSentence.word,
+                  'sentence': sentenceData.e,
+                  'translation': sentenceData.c,
+                  'source': sentenceData.b,
+                },
+              );
+            }
+          },
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          color: isSelected ? context.skin.colors.accent.withValues(alpha: 0.06) : skin.colors.cardBgAlt,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 单词标签
+                Row(
+                  children: [
+                    if (_isEditMode) ...[
+                      Icon(
+                        isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                        size: 20,
+                        color: isSelected ? context.skin.colors.accent : skin.colors.text3,
                       ),
-                      const Spacer(),
-                      Text(
-                        // L2 收口：共享 formatMonthDay（v2.7.51），不再手写 substring 解析
-                        formatMonthDay(favSentence.updateTime),
-                        style: MwTypography.micro.copyWith(color: skin.colors.text3),
-                      ),
+                      const SizedBox(width: 8),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  // 英文例句
-                  Text(sentenceData.e, style: MwTypography.body.copyWith(color: skin.colors.text1, height: 1.5)),
-                  // 中文翻译
-                  if (sentenceData.c.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(sentenceData.c, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
-                  ],
-                  // 来源
-                  if (sentenceData.b.isNotEmpty) ...[
-                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: context.skin.colors.accent.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(context.design.radius.sm),
+                      ),
+                      child: Text(
+                        favSentence.word,
+                        style: MwTypography.bodySm.copyWith(
+                          color: context.skin.colors.accent,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
                     Text(
-                      '— ${sentenceData.b}',
-                      style: MwTypography.micro.copyWith(color: skin.colors.text3, fontStyle: FontStyle.italic),
+                      // L2 收口：共享 formatMonthDay（v2.7.51），不再手写 substring 解析
+                      formatMonthDay(favSentence.updateTime),
+                      style: MwTypography.micro.copyWith(color: skin.colors.text3),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                // 英文例句
+                Text(sentenceData.e, style: MwTypography.body.copyWith(color: skin.colors.text1, height: 1.5)),
+                // 中文翻译
+                if (sentenceData.c.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(sentenceData.c, style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
                 ],
-              ),
+                // 来源
+                if (sentenceData.b.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '— ${sentenceData.b}',
+                    style: MwTypography.micro.copyWith(color: skin.colors.text3, fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ],
             ),
           ),
         );
+        return firstTime
+            ? FlowIn(key: ValueKey('fav-sentence-flow-$favKey'), index: waveIndex, child: card)
+            : KeyedSubtree(key: ValueKey('fav-sentence-flow-$favKey'), child: card);
       },
     );
   }
