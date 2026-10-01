@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/debug_log.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/core/audio/audio_service.dart';
@@ -38,7 +39,7 @@ class AudioPlaybackState extends ChangeNotifier {
         _isPlaying = true;
       }
     } catch (error) {
-      debugPrint('Audio playback error: $error');
+      debugLog('Audio playback error: $error');
       if (request == _requestSequence) {
         _isPlaying = false;
       }
@@ -66,7 +67,7 @@ class AudioPlaybackState extends ChangeNotifier {
         _isPlaying = true;
       }
     } catch (error) {
-      debugPrint('Sentence audio playback error: $error');
+      debugLog('Sentence audio playback error: $error');
       if (request == _requestSequence) {
         _isPlaying = false;
       }

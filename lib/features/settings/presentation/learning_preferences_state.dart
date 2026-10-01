@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/debug_log.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/features/settings/application/settings_reader.dart';
@@ -52,7 +53,7 @@ class LearningPreferencesState extends ChangeNotifier {
       _preferences = await _reader.load();
     } catch (error) {
       _loadError = error;
-      debugPrint('Learning preferences loading error: $error');
+      debugLog('Learning preferences loading error: $error');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -85,7 +86,7 @@ class LearningPreferencesState extends ChangeNotifier {
     try {
       await _writer.save(next);
     } catch (error) {
-      debugPrint('Learning preferences saving error: $error');
+      debugLog('Learning preferences saving error: $error');
     }
   }
 }

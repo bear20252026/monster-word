@@ -2,6 +2,7 @@
 // 参考 Calendar Interactive UI Kit (Penpot) 设计模式
 // 路由：/check_in_history
 import 'package:word_app/widgets/common/mw_feedback.dart';
+import 'package:word_app/core/utils/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
@@ -80,7 +81,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
       // 月份切换动画
       _monthAnimCtrl.forward(from: 0);
     } catch (e) {
-      debugPrint('[CheckInHistory] refresh error: $e');
+      debugLog('[CheckInHistory] refresh error: $e');
       if (mounted) {
         setState(() => _isLoading = false);
         showMwSnackBar(

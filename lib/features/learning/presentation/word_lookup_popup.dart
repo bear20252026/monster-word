@@ -1,6 +1,7 @@
 // 内置字典弹窗：长按单词弹出释义小框（learning feature 内部组件，仅被 learn_page 消费）
 // 样式：圆角 + 阴影 + 半透明背景
 // 点击可进入字典详情页
+import 'package:word_app/core/utils/debug_log.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
 
 import 'dart:ui';
@@ -104,7 +105,7 @@ class WordLookupPopup extends StatelessWidget {
     try {
       return await context.read<WordLookupReader>().getWordByText(word);
     } catch (e) {
-      debugPrint('Word lookup error: $e');
+      debugLog('Word lookup error: $e');
       return null;
     }
   }

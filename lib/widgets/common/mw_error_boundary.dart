@@ -3,6 +3,8 @@
 // Flutter 默认的 widget 异常界面是红底黄字（debug）/灰字（release），
 // 商业产品必须兜住：任何页面组件崩溃只降级该页面，不吓用户。
 // 通过覆盖 ErrorWidget.builder 全局生效（在 MaterialApp.builder 里调用一次）。
+import 'package:word_app/core/utils/debug_log.dart';
+
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -23,7 +25,7 @@ void installMwErrorBoundary() {
 
 /// 友好错误页 builder（公开以便测试直接注入）。
 Widget mwErrorBuilder(FlutterErrorDetails details) {
-  debugPrint('[ErrorBoundary] ${details.exception}');
+  debugLog('[ErrorBoundary] ${details.exception}');
   _logToFile(details);
   return const _MwErrorPage();
 }

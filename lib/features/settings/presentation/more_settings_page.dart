@@ -2,6 +2,7 @@
 
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
 import 'package:word_app/widgets/common/mw_feedback.dart';
+import 'package:word_app/core/utils/debug_log.dart';
 
 import 'dart:async';
 
@@ -51,7 +52,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         .then((info) {
           if (mounted) setState(() => _appVersion = info.version);
         })
-        .catchError((e) => debugPrint('读取应用版本失败: $e'));
+        .catchError((e) => debugLog('读取应用版本失败: $e'));
   }
 
   /// 违法不良信息举报：展示官方举报渠道（中央网信办 12377 / 公安 110 / 应用内反馈）。
