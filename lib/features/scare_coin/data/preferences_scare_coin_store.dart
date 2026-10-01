@@ -2,12 +2,22 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/infrastructure/scare_coin_ledger_dao.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/models/scare_coin_entry.dart';
 
-/// 基于 SharedPreferences 的尖叫币账本适配器。
+/// 尖叫币账本适配器。
+///
+/// P0-4（I18）：余额与流水下沉 SQLite（ScareCoinLedgerDao，答对记账从
+/// 全量 200 条 JSON 读改写降为单事务两行写）；签到日期/保护卡/答对日计数
+/// 仍是低频小标量，留在 SharedPreferences。FLUTTER_TEST 未注入数据库、
+/// 或开库失败时账本自动回退本类原有的 SP 路径（行为与迁移前一致）。
 class PreferencesScareCoinStore implements ScareCoinStore {
+  PreferencesScareCoinStore({ScareCoinLedgerDao? ledgerDao}) : _ledgerDao = ledgerDao ?? ScareCoinLedgerDao.instance;
+
+  final ScareCoinLedgerDao _ledgerDao;
+
   static const String balanceKey = 'scare_coin.balance';
   static const String historyKey = 'scare_coin.history';
   static const String lastCheckInKey = 'scare_coin.last_checkin';
@@ -23,11 +33,25 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   static const String answerRewardCountKey = 'scare_coin.answer_reward.count';
   static const int reward = 10;
 
+  /// SQLite 模式返回就绪的账本 DAO；测试环境未注入 / 开库失败 → null 走 SP。
+  Future<ScareCoinLedgerDao?> _sqliteLedger() async {
+    final dao = _ledgerDao;
+    try {
+      await dao.ensureLoaded();
+    } catch (e, s) {
+      reportSwallowedError('尖叫币账本初始化失败，回退 SP 快照', e, s);
+      return null;
+    }
+    return dao.usesSqlite ? dao : null;
+  }
+
   @override
   int get checkInReward => reward;
 
   @override
   Future<int> balance() async {
+    final ledger = await _sqliteLedger();
+    if (ledger != null) return ledger.balance();
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(balanceKey) ?? 0;
   }
@@ -55,6 +79,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
 
   @override
   Future<List<ScareCoinEntry>> history() async {
+    final ledger = await _sqliteLedger();
+    if (ledger != null) return ledger.history();
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(historyKey);
     if (raw == null || raw.isEmpty) return [];
@@ -181,8 +207,19 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     await _insertHistory(prefs, ScareCoinEntry(time: DateTime.now(), delta: 0, reason: '连签$newStreak天·保护卡＋1'));
   }
 
-  /// 零币变动也记账（发卡／续命审计），复用 200 条截断口径。
+  /// 零币变动也记账（发卡／续命审计）。SQLite 模式为追加单行写；
+  /// SP 回退路径复用 200 条截断口径，解析失败保留原账本。
   Future<void> _insertHistory(SharedPreferences prefs, ScareCoinEntry entry) async {
+    final ledger = await _sqliteLedger();
+    if (ledger != null) {
+      try {
+        await ledger.appendEntry(entry);
+      } catch (e, s) {
+        // 与 SP 路径同口径：宁丢一条新账，不抛断发卡/续命主流程。
+        reportSwallowedError('尖叫币流水追加失败（SQLite）', e, s);
+      }
+      return;
+    }
     List<ScareCoinEntry> entries = [];
     final raw = prefs.getString(historyKey);
     if (raw != null && raw.isNotEmpty) {
@@ -205,6 +242,17 @@ class PreferencesScareCoinStore implements ScareCoinStore {
 
   Future<int> _apply({required int delta, required String reason, String? lastCheckInIso}) async {
     final prefs = await SharedPreferences.getInstance();
+    final ledger = await _sqliteLedger();
+    if (ledger != null) {
+      // 余额变动与流水追加同事务：负余额拒绝时两者都不落库，
+      // 语义与 SP 路径的 TOCTOU 守卫一致。
+      final newBalance = await ledger.applyDelta(
+        delta: delta,
+        entry: ScareCoinEntry(time: DateTime.now(), delta: delta, reason: reason),
+      );
+      if (lastCheckInIso != null) await prefs.setString(lastCheckInKey, lastCheckInIso);
+      return newBalance;
+    }
     final current = prefs.getInt(balanceKey) ?? 0;
     final newBalance = current + delta;
     // 数据完整性审计 P2：负向变动不允许把余额写穿为负（兑换页的余额检查

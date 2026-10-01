@@ -19,7 +19,8 @@ const _aLevelFiles = [
   'lib/features/learning/data/mastered_repository_impl.dart', // 已掌握词表
   'lib/features/learning/application/review_session_starter.dart', // 复习会话启动
   'lib/features/learning/presentation/review_word_action_coordinator.dart', // 收藏/掌握持久化
-  'lib/features/scare_coin/data/preferences_scare_coin_store.dart', // 金币账本
+  'lib/features/scare_coin/data/preferences_scare_coin_store.dart', // 金币账本（签到/保护卡 SP 路径 + SP 回退）
+  'lib/core/infrastructure/scare_coin_ledger_dao.dart', // 金币账本 SQLite 事实来源（P0-4 / I18）
   'lib/features/account/data/user_service_impl.dart', // 用户信息
   'lib/features/learning/data/review_schedule_repository.dart', // FSRS 持久化/迁移（N4）
   'lib/features/learning/presentation/learning_session_state.dart', // 今日已学写入

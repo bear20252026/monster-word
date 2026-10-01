@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:word_app/features/scare_coin/data/preferences_scare_coin_store.dart';
+import 'package:word_app/core/infrastructure/scare_coin_ledger_dao.dart';
 
 void main() {
   setUp(() {
@@ -63,6 +65,52 @@ void main() {
 
       await expectLater(store.grant(delta: -5, reason: '超额兑换'), throwsStateError);
       expect(await store.balance(), 2, reason: '失败变动不得把余额写穿为负（TOCTOU 窗口兜底）');
+    });
+  });
+
+  group('P0-4 SQLite 模式（注入内存库 Ledger DAO）', () {
+    late Database db;
+
+    setUp(() async {
+      databaseFactory = databaseFactoryFfi;
+      db = await openDatabase(inMemoryDatabasePath);
+      await db.execute(
+        'CREATE TABLE IF NOT EXISTS scare_coin_entries ('
+        'id INTEGER PRIMARY KEY AUTOINCREMENT, time_ms INTEGER NOT NULL, delta INTEGER NOT NULL, reason TEXT NOT NULL)',
+      );
+      await db.execute('CREATE TABLE IF NOT EXISTS scare_coin_meta (key TEXT PRIMARY KEY, value INTEGER NOT NULL)');
+    });
+
+    tearDown(() async {
+      await db.close();
+    });
+
+    PreferencesScareCoinStore sqliteStore({Map<String, Object> spSeed = const {}}) {
+      SharedPreferences.setMockInitialValues(spSeed);
+      return PreferencesScareCoinStore(ledgerDao: ScareCoinLedgerDao(openDatabase: () async => db));
+    }
+
+    test('签到/答对记账走 SQLite：余额与流水入表，签到日期仍写 SP', () async {
+      final store = sqliteStore();
+
+      final firstBalance = await store.checkIn();
+      expect(firstBalance, store.checkInReward);
+      expect(await store.balance(), store.checkInReward);
+      expect((await store.history()).single.reason, '每日签到');
+      expect(await db.query('scare_coin_entries'), hasLength(1), reason: '流水入 SQLite 表');
+      expect(await store.checkinDates(), hasLength(1), reason: '签到日期保持 SP');
+
+      expect(await store.grantAnswerReward(), 1);
+      expect(await store.balance(), store.checkInReward + 1);
+      expect((await store.history()).first.reason, '答对＋1');
+    });
+
+    test('负余额拒绝与损坏迁移口径在 SQLite 模式下不变', () async {
+      final store = sqliteStore(spSeed: {'scare_coin.balance': 2, 'scare_coin.history': 'not-a-json'});
+
+      await expectLater(store.grant(delta: -5, reason: '超额兑换'), throwsStateError);
+      expect(await store.balance(), 2, reason: 'SP 损坏余额经迁移后同样受负余额守卫');
+      expect((await store.history()), isEmpty, reason: '损坏流水不上表、不阻断启用（宁丢存量不清快照）');
     });
   });
 }
