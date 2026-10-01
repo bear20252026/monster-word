@@ -12,6 +12,8 @@
 // 注：BaseMediaPlayer / SystemMediaPlayer / ExoMediaPlayer 在 Flutter 中不需要，
 //     audioplayers 包统一处理底层播放。
 
+import 'package:word_app/core/utils/debug_log.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -37,31 +39,31 @@ part 'audio_player_text.dart';
 Future<void> initMobileAudioSession() async {
   if (Platform.isIOS || Platform.isAndroid) {
     try {
-      debugPrint('[AudioInit] Initializing mobile audio session for ${Platform.isIOS ? "iOS" : "Android"}');
+      debugLog('[AudioInit] Initializing mobile audio session for ${Platform.isIOS ? "iOS" : "Android"}');
       final player = AudioPlayer();
 
       // 确保音频不被系统静音，设置最大音量
       await player.setVolume(1.0);
-      debugPrint('[AudioInit] Set volume to 1.0');
+      debugLog('[AudioInit] Set volume to 1.0');
 
       // 禁用跳过静音，确保音频完整播放
       await player.setSkipSilenceEnabled(false);
-      debugPrint('[AudioInit] Disabled skip silence');
+      debugLog('[AudioInit] Disabled skip silence');
 
       // 设置处理状态监听，便于调试
       final stateSub = player.processingStateStream.listen((state) {
-        debugPrint('[AudioInit] Processing state: $state');
+        debugLog('[AudioInit] Processing state: $state');
       });
 
       // 立即释放临时播放器，避免资源占用（先取消订阅再释放）
       await stateSub.cancel();
       await player.dispose();
-      debugPrint('[AudioInit] Mobile audio session initialized successfully');
+      debugLog('[AudioInit] Mobile audio session initialized successfully');
     } catch (e) {
-      debugPrint('[AudioInit] ERROR initializing mobile audio session: $e');
-      debugPrint('[AudioInit] Stack trace: ${StackTrace.current}');
+      debugLog('[AudioInit] ERROR initializing mobile audio session: $e');
+      debugLog('[AudioInit] Stack trace: ${StackTrace.current}');
     }
   } else {
-    debugPrint('[AudioInit] Skipping mobile audio init on desktop platform');
+    debugLog('[AudioInit] Skipping mobile audio init on desktop platform');
   }
 }

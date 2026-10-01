@@ -3,6 +3,8 @@
 // 启动页：品牌开场动画「记忆生长」→ 检查登录状态 → 跳转首页或登录页。
 // 动画分镜见 lib/widgets/brand_intro.dart；全程点按可跳过（最短展示 800ms
 // 的会话安全下限保留，避免会话未恢复时误判登录态）。
+import 'package:word_app/core/utils/debug_log.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -106,7 +108,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
       isLoggedIn = session.isLoggedIn;
       hasShownGuide = session.hasShownInitGuide;
     } catch (e) {
-      debugPrint('[Splash] 读取会话状态失败（fail-safe → 登录页）: $e');
+      debugLog('[Splash] 读取会话状态失败（fail-safe → 登录页）: $e');
       _goToLogin();
       return;
     }
@@ -127,7 +129,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
         _goToLogin();
       }
     } catch (e) {
-      debugPrint('[Splash] 启动导航失败（fail-safe → 登录页）: $e');
+      debugLog('[Splash] 启动导航失败（fail-safe → 登录页）: $e');
       if (mounted) _goToLogin();
     }
   }

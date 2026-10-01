@@ -1,8 +1,8 @@
 // AudioServiceImpl — 音频播放服务实现
 
-import 'dart:async';
+import 'package:word_app/core/utils/debug_log.dart';
 
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 
 import 'package:word_app/core/audio/audio_players.dart';
 import 'package:word_app/core/audio/audio_service.dart';
@@ -36,7 +36,7 @@ class AudioServiceImpl implements AudioService {
         await _phoneticPlayer.playAudio(word, isUK: accent == 'uk');
       }
     } catch (e) {
-      debugPrint('[AudioService] Failed to play word audio: $e');
+      debugLog('[AudioService] Failed to play word audio: $e');
       // 最终兜底：任何网络链路异常都落到系统 TTS，保证用户能听到发音
       if (!_disposed) await SystemTts().speakEnglish(word);
     }
@@ -49,7 +49,7 @@ class AudioServiceImpl implements AudioService {
       // 使用 SentenceAudioPlayer 播放网络音频
       await _sentencePlayer.playAudio(url);
     } catch (e) {
-      debugPrint('[AudioService] Failed to play from URL: $e');
+      debugLog('[AudioService] Failed to play from URL: $e');
     }
   }
 
@@ -74,7 +74,7 @@ class AudioServiceImpl implements AudioService {
     unawaited(_safeRelease(() => PhoneticAudioPlayer().release()));
     unawaited(_safeRelease(() => SentenceAudioPlayer().release()));
     unawaited(_safeRelease(() => TextAudioPlayer().release()));
-    debugPrint('[AudioService] Disposed all audio resources');
+    debugLog('[AudioService] Disposed all audio resources');
   }
 
   Future<void> _safeRelease(Future<void> Function() op) async {

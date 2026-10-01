@@ -26,11 +26,11 @@ class MwAudioPlayer {
   ap.AudioPlayer get _apPlayer => _apPlayerInstance ??= ap.AudioPlayer();
 
   MwAudioPlayer() {
-    debugPrint('[MwAudioPlayer] Created new player instance');
+    debugLog('[MwAudioPlayer] Created new player instance');
     // 监听播放状态变化
     _playerStateSub = _player.playerStateStream.listen((playerState) {
       if (_currentFileName.isEmpty) return;
-      debugPrint('[MwAudioPlayer] Player state: playing=${playerState.playing}, fileName=$_currentFileName');
+      debugLog('[MwAudioPlayer] Player state: playing=${playerState.playing}, fileName=$_currentFileName');
       if (playerState.playing) {
         playStateListener?.onPlayStart(_currentFileName);
       } else {
@@ -39,7 +39,7 @@ class MwAudioPlayer {
     });
     // 监听播放完成
     _processingStateSub = _player.processingStateStream.listen((state) {
-      debugPrint('[MwAudioPlayer] Processing state: $state for $_currentFileName');
+      debugLog('[MwAudioPlayer] Processing state: $state for $_currentFileName');
       if (state == ProcessingState.completed) {
         playStateListener?.onPlayComplete(_currentFileName);
       }
@@ -49,19 +49,19 @@ class MwAudioPlayer {
   /// 播放 URL（play）- 带移动端错误处理
   Future<void> play(String url) async {
     if (_lock) {
-      debugPrint('[MwAudioPlayer] play() skipped - player locked');
+      debugLog('[MwAudioPlayer] play() skipped - player locked');
       return;
     }
     _currentFileName = url;
-    debugPrint('[MwAudioPlayer] play() URL: $url');
+    debugLog('[MwAudioPlayer] play() URL: $url');
     playStateListener?.onPlayStart(url);
     if (_useAudioPlayersDesktop) {
       try {
         await _apPlayer.stop();
         await _apPlayer.play(ap.UrlSource(url));
-        debugPrint('[MwAudioPlayer] desktop play() started successfully');
+        debugLog('[MwAudioPlayer] desktop play() started successfully');
       } catch (e) {
-        debugPrint('[MwAudioPlayer] ERROR in desktop play(): $e');
+        debugLog('[MwAudioPlayer] ERROR in desktop play(): $e');
         playStateListener?.onPlayError(url);
       }
       return;
@@ -70,11 +70,11 @@ class MwAudioPlayer {
       await _player.stop(); // 先停止当前播放
       await _player.setUrl(url);
       await _player.play();
-      debugPrint('[MwAudioPlayer] play() started successfully');
+      debugLog('[MwAudioPlayer] play() started successfully');
     } catch (e) {
-      debugPrint('[MwAudioPlayer] ERROR in play(): $e');
-      debugPrint('[MwAudioPlayer] URL: $url');
-      debugPrint('[MwAudioPlayer] Stack trace: ${StackTrace.current}');
+      debugLog('[MwAudioPlayer] ERROR in play(): $e');
+      debugLog('[MwAudioPlayer] URL: $url');
+      debugLog('[MwAudioPlayer] Stack trace: ${StackTrace.current}');
       playStateListener?.onPlayError(url);
     }
   }
@@ -82,20 +82,20 @@ class MwAudioPlayer {
   /// 播放本地文件（play(File, float)）- 带移动端错误处理
   Future<void> playFile(File file, {double speed = 1.0}) async {
     if (_lock) {
-      debugPrint('[MwAudioPlayer] playFile() skipped - player locked');
+      debugLog('[MwAudioPlayer] playFile() skipped - player locked');
       return;
     }
     _currentFileName = p.basename(file.path);
-    debugPrint('[MwAudioPlayer] playFile() path: ${file.path}, speed: $speed');
+    debugLog('[MwAudioPlayer] playFile() path: ${file.path}, speed: $speed');
     playStateListener?.onPlayStart(_currentFileName);
     if (_useAudioPlayersDesktop) {
       try {
         await _apPlayer.stop();
         if (speed != 1.0) await _apPlayer.setPlaybackRate(speed);
         await _apPlayer.play(ap.DeviceFileSource(file.path));
-        debugPrint('[MwAudioPlayer] desktop playFile() started successfully');
+        debugLog('[MwAudioPlayer] desktop playFile() started successfully');
       } catch (e) {
-        debugPrint('[MwAudioPlayer] ERROR in desktop playFile(): $e');
+        debugLog('[MwAudioPlayer] ERROR in desktop playFile(): $e');
         playStateListener?.onPlayError(_currentFileName);
       }
       return;
@@ -105,11 +105,11 @@ class MwAudioPlayer {
       await _player.setSpeed(speed);
       await _player.setFilePath(file.path);
       await _player.play();
-      debugPrint('[MwAudioPlayer] playFile() started successfully');
+      debugLog('[MwAudioPlayer] playFile() started successfully');
     } catch (e) {
-      debugPrint('[MwAudioPlayer] ERROR in playFile(): $e');
-      debugPrint('[MwAudioPlayer] File path: ${file.path}');
-      debugPrint('[MwAudioPlayer] Stack trace: ${StackTrace.current}');
+      debugLog('[MwAudioPlayer] ERROR in playFile(): $e');
+      debugLog('[MwAudioPlayer] File path: ${file.path}');
+      debugLog('[MwAudioPlayer] Stack trace: ${StackTrace.current}');
       playStateListener?.onPlayError(_currentFileName);
     }
   }
@@ -124,7 +124,7 @@ class MwAudioPlayer {
     try {
       await _player.stop();
     } catch (e) {
-      debugPrint('[MwAudioPlayer] stop() error (player may be disposed): $e');
+      debugLog('[MwAudioPlayer] stop() error (player may be disposed): $e');
     }
   }
 
@@ -133,7 +133,7 @@ class MwAudioPlayer {
     try {
       await _player.pause();
     } catch (e) {
-      debugPrint('[MwAudioPlayer] pause() error (player may be disposed): $e');
+      debugLog('[MwAudioPlayer] pause() error (player may be disposed): $e');
     }
     if (_currentFileName.isNotEmpty) {
       playStateListener?.onPlayPause(_currentFileName);
@@ -155,19 +155,19 @@ class MwAudioPlayer {
       try {
         await apInstance.stop().timeout(const Duration(seconds: 2));
       } catch (e) {
-        debugPrint('[MwAudioPlayer] release() desktop stop error: $e');
+        debugLog('[MwAudioPlayer] release() desktop stop error: $e');
       }
       try {
         await apInstance.dispose().timeout(const Duration(seconds: 2));
       } catch (e) {
-        debugPrint('[MwAudioPlayer] release() desktop dispose error: $e');
+        debugLog('[MwAudioPlayer] release() desktop dispose error: $e');
       }
     }
     try {
       // MEM：无平台插件时 just_audio dispose 可能挂起，限时以免卡死退出/测试。
       await _player.dispose().timeout(const Duration(seconds: 2));
     } catch (e) {
-      debugPrint('[MwAudioPlayer] release() dispose error: $e');
+      debugLog('[MwAudioPlayer] release() dispose error: $e');
     }
   }
 

@@ -1,6 +1,8 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 随身听播放器状态：按所选词源构建播放列表，按播放顺序连播单词发音。
+import 'package:word_app/core/utils/debug_log.dart';
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -148,7 +150,7 @@ class StereoPlayerState extends ChangeNotifier {
     try {
       await audioService.playWordAudio(word.word);
     } catch (error) {
-      debugPrint('[StereoPlayer] playWordAudio failed: $error');
+      debugLog('[StereoPlayer] playWordAudio failed: $error');
     }
     if (_disposed || session != this.session || !_isPlaying) return;
     _timer = Timer(interval, () => _advance(session));
@@ -176,7 +178,7 @@ class StereoPlayerState extends ChangeNotifier {
     try {
       await audioService.stop();
     } catch (error) {
-      debugPrint('[StereoPlayer] stop audio failed: $error');
+      debugLog('[StereoPlayer] stop audio failed: $error');
     }
   }
 

@@ -3,6 +3,8 @@
 // 由账号4生成
 // 数据层：词库数据库初始化与查询
 // 跨平台支持：Windows (sqflite_common_ffi) / Android / iOS (sqflite)
+import 'package:word_app/core/utils/debug_log.dart';
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
@@ -10,7 +12,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting, debugPrint;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:crypto/crypto.dart' show md5;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:package_info_plus/package_info_plus.dart';
@@ -87,7 +89,7 @@ Future<void> _extractBytesInBackground(Uint8List gzBytes, String dbPath) async {
           await File(tmpDb).rename(dbPath);
           return;
         } catch (e) {
-          debugPrint('[WordBookDatabase] 解压失败 (attempt ${attempt + 1}): $e');
+          debugLog('[WordBookDatabase] 解压失败 (attempt ${attempt + 1}): $e');
           final f = File(dbPath);
           if (f.existsSync()) f.deleteSync();
           if (attempt == 1) rethrow;
@@ -293,7 +295,7 @@ class WordBookDatabase {
         // C 级豁免：自检查询失败按 0 处理走强制重建兜底
       }
       if (c == 0 || w == 0 || l == 0) {
-        debugPrint('[WordBookDatabase] 检测到空库/坏库(books=$c words=$w links=$l)，强制重建');
+        debugLog('[WordBookDatabase] 检测到空库/坏库(books=$c words=$w links=$l)，强制重建');
         await _db!.close();
         _db = null;
         assetBytes ??= await loadBytes();
@@ -360,7 +362,7 @@ class WordBookDatabase {
         f.deleteSync();
         return;
       } catch (e) {
-        debugPrint('[WordBookDatabase] 删除失败(${i + 1}/5): $path — $e');
+        debugLog('[WordBookDatabase] 删除失败(${i + 1}/5): $path — $e');
         await Future.delayed(Duration(milliseconds: 150 * (i + 1)));
       }
     }
