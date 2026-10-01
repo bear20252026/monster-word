@@ -235,7 +235,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
                 height: 6,
                 margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: TreasurePalette.ink.withValues(alpha: 0.18),
+                  color: TreasurePalette.ink.withValues(alpha: AppAlphas.o18),
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
               ),
@@ -246,7 +246,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: TreasurePalette.gold.withValues(alpha: 0.2),
+                    color: TreasurePalette.gold.withValues(alpha: AppAlphas.o20),
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Icon(Icons.place_rounded, size: 18, color: TreasurePalette.goldDeep),
@@ -455,7 +455,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
                       color: TreasurePalette.card,
                       borderRadius: BorderRadius.circular(AppRadius.pill),
                       border: Border.all(
-                        color: active ? TreasurePalette.green.withValues(alpha: 0.4) : TreasurePalette.line,
+                        color: active ? TreasurePalette.green.withValues(alpha: AppAlphas.o40) : TreasurePalette.line,
                       ),
                     ),
                     child: Text(
@@ -648,7 +648,7 @@ class _DrawerRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         decoration: BoxDecoration(
-          color: TreasurePalette.card.withValues(alpha: 0.9),
+          color: TreasurePalette.card.withValues(alpha: AppAlphas.o90),
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(color: TreasurePalette.line),
         ),

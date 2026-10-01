@@ -212,7 +212,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
         height: 4,
         child: LinearProgressIndicator(
           value: _player.progressPosition / total,
-          backgroundColor: AppColors.white100.withValues(alpha: 0.6),
+          backgroundColor: AppColors.white100.withValues(alpha: AppAlphas.o60),
           valueColor: AlwaysStoppedAnimation(context.skin.colors.accent),
           minHeight: 4,
         ),

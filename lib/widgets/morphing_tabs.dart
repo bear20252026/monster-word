@@ -86,7 +86,7 @@ class _SimpleMorphingTabsState extends State<SimpleMorphingTabs> with TickerProv
     final activeColor = widget.activeColor ?? AppColors.white100;
     final inactiveColor = widget.inactiveColor ?? Colors.grey;
     final indicatorColor = widget.indicatorColor ?? context.skin.colors.accent;
-    final bgColor = widget.backgroundColor ?? Colors.grey.withValues(alpha: 0.12);
+    final bgColor = widget.backgroundColor ?? Colors.grey.withValues(alpha: AppAlphas.o12);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -121,7 +121,7 @@ class _SimpleMorphingTabsState extends State<SimpleMorphingTabs> with TickerProv
                           borderRadius: BorderRadius.circular(widget.borderRadius - widget.padding.top),
                           boxShadow: [
                             BoxShadow(
-                              color: indicatorColor.withValues(alpha: 0.3),
+                              color: indicatorColor.withValues(alpha: AppAlphas.o30),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),

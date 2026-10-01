@@ -421,8 +421,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 height: 96,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: skin.colors.accent.withValues(alpha: 0.06),
-                  border: Border.all(color: skin.colors.accent.withValues(alpha: 0.18), width: 1),
+                  color: skin.colors.accent.withValues(alpha: AppAlphas.o06),
+                  border: Border.all(color: skin.colors.accent.withValues(alpha: AppAlphas.o18), width: 1),
                 ),
               ),
               const MonsterAvatar(size: 72),
@@ -712,7 +712,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 style: TextStyle(color: skin.colors.text1, fontWeight: FontWeight.w600, letterSpacing: 0.3),
               ),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: skin.colors.text1.withValues(alpha: 0.35)),
+                side: BorderSide(color: skin.colors.text1.withValues(alpha: AppAlphas.o35)),
                 shape: const StadiumBorder(),
               ),
             )

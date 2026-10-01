@@ -60,7 +60,13 @@ class WordRootTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: AppAlphas.o05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,9 +83,9 @@ class WordRootTab extends StatelessWidget {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
                 decoration: BoxDecoration(
-                  color: Color(component.colorValue).withValues(alpha: 0.1),
+                  color: Color(component.colorValue).withValues(alpha: AppAlphas.o10),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
-                  border: Border.all(color: Color(component.colorValue).withValues(alpha: 0.3)),
+                  border: Border.all(color: Color(component.colorValue).withValues(alpha: AppAlphas.o30)),
                 ),
                 child: Column(
                   children: [
@@ -106,7 +112,13 @@ class WordRootTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: AppAlphas.o05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,7 +158,7 @@ class WordRootTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withValues(alpha: AppAlphas.o10),
             borderRadius: BorderRadius.circular(AppRadius.xs),
           ),
           child: Text(type, style: MwTypography.micro.copyWith(color: color)),
@@ -172,7 +184,13 @@ class WordRootTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: skin.cardBg,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: AppAlphas.o05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

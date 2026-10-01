@@ -118,8 +118,13 @@ class WordBookDatabase {
   WordBookDatabase._();
 
   Database? _db;
+  String? _dbPath;
   bool _initialized = false;
   bool _rebuilding = false;
+
+  /// 词库 db 文件路径（initialize/forceRebuild 成功后可用；测试注入内存库时
+  /// 为 null）——供派生缓存（如中文搜索索引）定位同目录文件。
+  String? get databasePathOrNull => _dbPath;
 
   /// A6（v2.7.42）：initialize/forceRebuild 的并发互斥屏障。
   /// 非 null 表示有一次初始化或重建正在进行，后续 initialize() 复用同一 Future，
@@ -194,6 +199,7 @@ class WordBookDatabase {
 
     final dir = await getApplicationSupportDirectory();
     final dbPath = p.join(dir.path, 'wordbook.db');
+    _dbPath = dbPath;
     final gzAsset = 'assets/db/wordbook.db.gz';
     final override = gzBytesOverrideForTest;
 
@@ -374,6 +380,7 @@ class WordBookDatabase {
     // 2) 删除旧库与 journal 残留——零旧数据残留（占用时重试）
     final dir = await getApplicationSupportDirectory();
     final dbPath = p.join(dir.path, 'wordbook.db');
+    _dbPath = dbPath;
     await _deleteWithRetry(dbPath);
     for (final suffix in ['-wal', '-shm', '-journal']) {
       await _deleteWithRetry('$dbPath$suffix');

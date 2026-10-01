@@ -134,7 +134,7 @@ class _DeskPainter extends CustomPainter {
         ..lineTo(64 * s, 96 * s)
         ..lineTo(128 * s, 96 * s)
         ..close(),
-      p(RoomPalette.lampGlow.withValues(alpha: 0.55)),
+      p(RoomPalette.lampGlow.withValues(alpha: AppAlphas.o55)),
     );
     // 灯臂 + 灯罩
     canvas.drawLine(Offset(96 * s, 88 * s), Offset(96 * s, 52 * s), stroke);
@@ -211,7 +211,7 @@ class _PlayerPainter extends CustomPainter {
     final disc = p(TreasurePalette.ink);
     canvas.drawCircle(Offset(59 * s, 40 * s), 22 * s, disc);
     final groove = Paint()
-      ..color = RoomPalette.groove.withValues(alpha: 0.6)
+      ..color = RoomPalette.groove.withValues(alpha: AppAlphas.o60)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.4 * s;
     canvas.drawCircle(Offset(59 * s, 40 * s), 15 * s, groove);
@@ -231,7 +231,7 @@ class _PlayerPainter extends CustomPainter {
       p(RoomPalette.woodBase),
     );
     canvas.drawCircle(Offset(26 * s, 88 * s), 2.6 * s, p(RoomPalette.lampGlow));
-    canvas.drawCircle(Offset(38 * s, 88 * s), 2.6 * s, p(RoomPalette.lampGlow.withValues(alpha: 0.5)));
+    canvas.drawCircle(Offset(38 * s, 88 * s), 2.6 * s, p(RoomPalette.lampGlow.withValues(alpha: AppAlphas.o50)));
   }
 
   @override
@@ -274,7 +274,7 @@ class _BookshelfPainter extends CustomPainter {
     canvas.rotate(-0.18);
     canvas.drawRRect(
       RRect.fromRectAndRadius(Rect.fromLTRB(-6 * s, -12 * s, 6 * s, 12 * s), Radius.circular(2 * s)),
-      p(TreasurePalette.card.withValues(alpha: 0.9)),
+      p(TreasurePalette.card.withValues(alpha: AppAlphas.o90)),
     );
     canvas.restore();
     // 隔板
@@ -325,7 +325,7 @@ class _RugPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.5 * s,
     );
-    final paw = p(TreasurePalette.goldDeep.withValues(alpha: 0.85));
+    final paw = p(TreasurePalette.goldDeep.withValues(alpha: AppAlphas.o85));
     for (final c in [const Offset(40, 22), Offset(74, 34), Offset(108, 22)]) {
       final cx = c.dx * s, cy = c.dy * s;
       canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy + 2 * s), width: 9.2 * s, height: 7.6 * s), paw);

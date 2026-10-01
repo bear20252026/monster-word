@@ -244,7 +244,7 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: context.skin.colors.accent.withValues(alpha: 0.1),
+            color: context.skin.colors.accent.withValues(alpha: AppAlphas.o10),
             borderRadius: BorderRadius.circular(context.design.radius.pill),
           ),
           child: Text(
@@ -304,14 +304,14 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
     if (_showAnswer) {
       if (option.isCorrect) {
         borderColor = context.skin.colors.success;
-        bgColor = context.skin.colors.success.withValues(alpha: 0.1);
+        bgColor = context.skin.colors.success.withValues(alpha: AppAlphas.o10);
       } else if (isSelected) {
         borderColor = context.skin.colors.danger;
-        bgColor = context.skin.colors.danger.withValues(alpha: 0.1);
+        bgColor = context.skin.colors.danger.withValues(alpha: AppAlphas.o10);
       }
     } else if (isSelected) {
       borderColor = context.skin.colors.accent;
-      bgColor = context.skin.colors.accent.withValues(alpha: 0.1);
+      bgColor = context.skin.colors.accent.withValues(alpha: AppAlphas.o10);
     }
 
     return GestureDetector(
@@ -332,7 +332,9 @@ class _SentenceQuizPageState extends State<SentenceQuizPage> {
               height: 28,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: borderColor == skin.colors.divider ? skin.colors.cardBgAlt : borderColor.withValues(alpha: 0.2),
+                color: borderColor == skin.colors.divider
+                    ? skin.colors.cardBgAlt
+                    : borderColor.withValues(alpha: AppAlphas.o20),
               ),
               child: Center(
                 child: Text(

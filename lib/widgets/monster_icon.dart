@@ -83,7 +83,10 @@ class MonsterIcon extends StatelessWidget {
       return Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(color: circleColor ?? body.withValues(alpha: 0.15), shape: BoxShape.circle),
+        decoration: BoxDecoration(
+          color: circleColor ?? body.withValues(alpha: AppAlphas.o15),
+          shape: BoxShape.circle,
+        ),
         child: Center(child: painter),
       );
     }
@@ -131,7 +134,7 @@ class _MonsterPainter extends CustomPainter {
     if (evoStage >= 2) {
       // 飞翼：30 天形态，左右各一叶（旋转椭圆打底＋羽线）
       final wingPaint = Paint()
-        ..color = bodyColor.withValues(alpha: 0.9)
+        ..color = bodyColor.withValues(alpha: AppAlphas.o90)
         ..style = PaintingStyle.fill;
       final wingLine = Paint()
         ..color = MonsterPalette.evoGold
@@ -185,7 +188,7 @@ class _MonsterPainter extends CustomPainter {
 
     // 角上的小纹路
     final hornLinePaint = Paint()
-      ..color = bodyColor.withValues(alpha: 0.3)
+      ..color = bodyColor.withValues(alpha: AppAlphas.o30)
       ..style = PaintingStyle.stroke
       ..strokeWidth = r * 0.04
       ..strokeCap = StrokeCap.round;
@@ -320,7 +323,10 @@ class MonsterAvatar extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: bgColor ?? skin.colors.accent.withValues(alpha: 0.12), shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: bgColor ?? skin.colors.accent.withValues(alpha: AppAlphas.o12),
+        shape: BoxShape.circle,
+      ),
       child: Center(
         child: MonsterIcon(size: size * 0.72, evoStage: evoStage),
       ),

@@ -127,7 +127,7 @@ class _WordNotesSectionState extends State<WordNotesSection> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: skin.colors.accent.withValues(alpha: 0.1),
+                  color: skin.colors.accent.withValues(alpha: AppAlphas.o10),
                   borderRadius: BorderRadius.circular(context.design.radius.pill),
                 ),
                 child: Row(
