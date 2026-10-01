@@ -98,7 +98,7 @@ class _TodayHeroCard extends StatelessWidget {
                           child: _HeroCta(
                             label: '复习 $dueCount',
                             icon: Icons.history_rounded,
-                            backgroundColor: skin.colors.accent.withValues(alpha: 0.10),
+                            backgroundColor: skin.colors.accent.withValues(alpha: AppAlphas.o10),
                             foregroundColor: skin.colors.accent,
                             onTap: () => showReviewDialog(context),
                           ),

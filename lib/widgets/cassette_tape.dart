@@ -54,10 +54,10 @@ class _CassetteTapeState extends State<CassetteTape> with SingleTickerProviderSt
       decoration: BoxDecoration(
         color: AppColors.white100,
         borderRadius: BorderRadius.circular(context.design.radius.md),
-        border: Border.all(color: context.skin.colors.text2.withValues(alpha: 0.35)),
+        border: Border.all(color: context.skin.colors.text2.withValues(alpha: AppAlphas.o35)),
         boxShadow: [
           BoxShadow(
-            color: context.skin.colors.text1.withValues(alpha: 0.06),
+            color: context.skin.colors.text1.withValues(alpha: AppAlphas.o06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -72,7 +72,7 @@ class _CassetteTapeState extends State<CassetteTape> with SingleTickerProviderSt
             height: reelSize * 0.6,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(context.design.radius.xs),
-              border: Border.all(color: context.skin.colors.text2.withValues(alpha: 0.5), width: 2),
+              border: Border.all(color: context.skin.colors.text2.withValues(alpha: AppAlphas.o50), width: 2),
             ),
           ),
           _spinningReel(reelSize),

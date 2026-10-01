@@ -255,9 +255,9 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      color: skin.colors.accent.withValues(alpha: 0.12),
+                      color: skin.colors.accent.withValues(alpha: AppAlphas.o12),
                       borderRadius: BorderRadius.circular(AppRadius.pill),
-                      border: Border.all(color: skin.colors.accent.withValues(alpha: 0.4)),
+                      border: Border.all(color: skin.colors.accent.withValues(alpha: AppAlphas.o40)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -333,9 +333,9 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: skin.colors.accent.withValues(alpha: 0.12),
+        color: skin.colors.accent.withValues(alpha: AppAlphas.o12),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: skin.colors.accent.withValues(alpha: 0.4)),
+        border: Border.all(color: skin.colors.accent.withValues(alpha: AppAlphas.o40)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -446,9 +446,9 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
     Color borderColor = skin.colors.divider;
     if (_isDragging) {
       if (_dragOffset < -50) {
-        borderColor = skin.colors.success.withValues(alpha: 0.6);
+        borderColor = skin.colors.success.withValues(alpha: AppAlphas.o60);
       } else if (_dragOffset > 50) {
-        borderColor = skin.colors.danger.withValues(alpha: 0.6);
+        borderColor = skin.colors.danger.withValues(alpha: AppAlphas.o60);
       }
     }
 
@@ -510,11 +510,11 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.arrow_upward, color: skin.colors.success.withValues(alpha: 0.6), size: 18),
+          Icon(Icons.arrow_upward, color: skin.colors.success.withValues(alpha: AppAlphas.o60), size: 18),
           const SizedBox(width: 4),
           Text('认识', style: MwTypography.caption.copyWith(color: skin.colors.text3)),
           const SizedBox(width: 24),
-          Icon(Icons.arrow_downward, color: skin.colors.danger.withValues(alpha: 0.6), size: 18),
+          Icon(Icons.arrow_downward, color: skin.colors.danger.withValues(alpha: AppAlphas.o60), size: 18),
           const SizedBox(width: 4),
           Text('不认识', style: MwTypography.caption.copyWith(color: skin.colors.text3)),
         ],

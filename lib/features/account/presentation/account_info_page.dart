@@ -348,7 +348,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
+                color: iconColor.withValues(alpha: AppAlphas.o10),
                 borderRadius: BorderRadius.circular(context.design.radius.sm),
               ),
               child: Icon(icon, size: 16, color: iconColor),

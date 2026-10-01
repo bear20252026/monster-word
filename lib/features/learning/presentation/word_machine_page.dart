@@ -148,7 +148,7 @@ class _WordMachinePageState extends State<WordMachinePage> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: context.skin.colors.accent.withValues(alpha: 0.1),
+            color: context.skin.colors.accent.withValues(alpha: AppAlphas.o10),
             borderRadius: BorderRadius.circular(context.design.radius.pill),
           ),
           child: Text(
@@ -324,7 +324,7 @@ class _ControlButton extends StatelessWidget {
             size: size * 0.5,
             color: isPrimary
                 ? AppColors.white100
-                : (onPressed != null ? skin.colors.text1 : skin.colors.text3.withValues(alpha: 0.3)),
+                : (onPressed != null ? skin.colors.text1 : skin.colors.text3.withValues(alpha: AppAlphas.o30)),
           ),
         ),
       ),

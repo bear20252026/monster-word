@@ -110,9 +110,9 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: colors.accent.withValues(alpha: 0.12),
+                    color: colors.accent.withValues(alpha: AppAlphas.o12),
                     borderRadius: BorderRadius.circular(AppRadius.pill),
-                    border: Border.all(color: colors.accent.withValues(alpha: 0.4)),
+                    border: Border.all(color: colors.accent.withValues(alpha: AppAlphas.o40)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -246,9 +246,9 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: colors.accent.withValues(alpha: 0.12),
+        color: colors.accent.withValues(alpha: AppAlphas.o12),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: colors.accent.withValues(alpha: 0.4)),
+        border: Border.all(color: colors.accent.withValues(alpha: AppAlphas.o40)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

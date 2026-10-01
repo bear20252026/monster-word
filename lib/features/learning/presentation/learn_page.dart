@@ -307,7 +307,7 @@ class _CoinPillState extends State<_CoinPill> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
           decoration: ShapeDecoration(
-            color: MwColors.sunshine300.withValues(alpha: 0.14),
+            color: MwColors.sunshine300.withValues(alpha: AppAlphas.o14),
             shape: const StadiumBorder(),
           ),
           child: Row(

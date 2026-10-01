@@ -524,9 +524,9 @@ class _CurrentBookHero extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: skin.accent.withValues(alpha: 0.06),
+            color: skin.accent.withValues(alpha: AppAlphas.o06),
             borderRadius: BorderRadius.circular(context.design.radius.control),
-            border: Border.all(color: skin.accent.withValues(alpha: 0.18)),
+            border: Border.all(color: skin.accent.withValues(alpha: AppAlphas.o18)),
           ),
           child: Row(
             children: [
@@ -673,7 +673,9 @@ class _BookCard extends StatelessWidget {
                           const SizedBox(height: 3),
                           Text(
                             '${book.wordCount} 词',
-                            style: MwTypography.micro.copyWith(color: AppColors.white100.withValues(alpha: 0.75)),
+                            style: MwTypography.micro.copyWith(
+                              color: AppColors.white100.withValues(alpha: AppAlphas.o75),
+                            ),
                           ),
                         ],
                       ),
@@ -714,9 +716,9 @@ class _BookCard extends StatelessWidget {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          AppColors.white100.withValues(alpha: 0.10),
-          AppColors.white100.withValues(alpha: 0),
-          AppColors.black12.withValues(alpha: 0.10),
+          AppColors.white100.withValues(alpha: AppAlphas.o10),
+          AppColors.white100.withValues(alpha: AppAlphas.o0),
+          AppColors.black12.withValues(alpha: AppAlphas.o10),
         ],
         stops: const [0, 0.5, 1],
       ),
@@ -734,7 +736,7 @@ class _BookCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.sm),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xxs),
-            child: Icon(Icons.list_alt_rounded, size: 17, color: AppColors.white100.withValues(alpha: 0.85)),
+            child: Icon(Icons.list_alt_rounded, size: 17, color: AppColors.white100.withValues(alpha: AppAlphas.o85)),
           ),
         ),
       ),
@@ -745,7 +747,7 @@ class _BookCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
-              color: AppColors.white100.withValues(alpha: 0.92),
+              color: AppColors.white100.withValues(alpha: AppAlphas.o92),
               borderRadius: BorderRadius.circular(AppRadius.pill),
             ),
             child: Text(

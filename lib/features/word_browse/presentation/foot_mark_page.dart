@@ -149,7 +149,7 @@ class FootMarkPage extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.10),
+                color: color.withValues(alpha: AppAlphas.o10),
                 borderRadius: BorderRadius.circular(context.design.radius.md),
               ),
               child: Icon(icon, color: color, size: 24),

@@ -182,7 +182,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
             Container(
               width: 80,
               height: 80,
-              decoration: BoxDecoration(color: colors.success.withValues(alpha: 0.1), shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: colors.success.withValues(alpha: AppAlphas.o10),
+                shape: BoxShape.circle,
+              ),
               child: Icon(Icons.check_circle, size: 48, color: colors.success),
             ),
             SizedBox(height: 24),

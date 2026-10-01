@@ -444,7 +444,10 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
               height: 280,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [context.skin.colors.accent, context.skin.colors.accent.withValues(alpha: 0.7)],
+                  colors: [
+                    context.skin.colors.accent,
+                    context.skin.colors.accent.withValues(alpha: AppAlphas.o70),
+                  ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
@@ -460,7 +463,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                   Text(
                     '背单词，so easy！',
                     style: MwTypography.bodySm.copyWith(
-                      color: context.skin.colors.onGlassAccent.withValues(alpha: 0.9),
+                      color: context.skin.colors.onGlassAccent.withValues(alpha: AppAlphas.o90),
                     ),
                   ),
                   SizedBox(height: 16),

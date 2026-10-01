@@ -41,7 +41,7 @@ class MwListRow extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.10),
+                  color: iconColor.withValues(alpha: AppAlphas.o10),
                   borderRadius: BorderRadius.circular(context.design.radius.sm),
                 ),
                 child: Icon(icon, color: iconColor, size: 20),
