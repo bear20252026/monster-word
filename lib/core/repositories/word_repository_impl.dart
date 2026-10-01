@@ -1,14 +1,21 @@
 // 由 Claude 团队生成 | Monster Word App
 // WordRepositoryImpl — 单词数据仓库实现
 
+import 'dart:async';
+
+import 'package:path/path.dart' as p;
+
+import 'package:word_app/core/infrastructure/cn_search_index.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 
 /// 单词数据仓库的具体实现
 class WordRepositoryImpl implements WordRepository {
-  final WordBookDatabase _database;
+  WordRepositoryImpl(this._database, {CnSearchIndex? cnSearchIndex})
+    : _cnIndex = cnSearchIndex ?? CnSearchIndex.instance;
 
-  WordRepositoryImpl(this._database);
+  final WordBookDatabase _database;
+  final CnSearchIndex _cnIndex;
 
   @override
   Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset}) async {
@@ -166,8 +173,34 @@ class WordRepositoryImpl implements WordRepository {
     }
 
     // 第 3 层：保底全表 LIKE（word 中缀 + interpret 中文），排除已见词；
-    // CASE 0/1/2 完整保留以兜住第 2 层未覆盖的前缀命中的排序位次
+    // CASE 0/1/2 完整保留以兜住第 2 层未覆盖的前缀命中的排序位次。
+    // P0-1（I12 收尾）：纯 CJK 查询优先走二元组预筛索引——候选集上跑与
+    // 本层逐字等价的验证 SQL（超集性质保证结果序列一致），索引未就绪
+    // （首启构建中/构建失败/词库刚重建）自动回落本层全表扫描，双轨。
     if (results.length < cap) {
+      if (seen.isEmpty) {
+        final wordsPath = _database.databasePathOrNull;
+        if (wordsPath != null) {
+          // 幂等单飞：就绪即 no-op；构建中不阻塞本次搜索（本次仍走全表）
+          unawaited(
+            _cnIndex.ensureBuilt(
+              wordsDb: db,
+              wordsPath: wordsPath,
+              indexPath: p.join(p.dirname(wordsPath), CnSearchIndex.indexFileName),
+            ),
+          );
+        }
+        final maps = await _cnIndex.searchByInterpret(
+          wordsDb: db,
+          query: query,
+          escapedQuery: escaped,
+          limit: cap - results.length,
+        );
+        if (maps != null) {
+          await collect(maps);
+          return results;
+        }
+      }
       final like = '%$escaped%';
       final prefix = '$escaped%';
       final exclude = seen.toList();
