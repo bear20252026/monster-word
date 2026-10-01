@@ -172,7 +172,7 @@ class _GlobalNavHistoryBarState extends State<GlobalNavHistoryBar> {
     );
     return AnimatedOpacity(
       opacity: (canBack || canForward) ? 1 : 0.25,
-      duration: const Duration(milliseconds: 200),
+      duration: MotionDurations.base,
       child: Material(
         type: MaterialType.transparency,
         child: _scrolling

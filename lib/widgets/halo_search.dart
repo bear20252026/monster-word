@@ -7,6 +7,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 
 class HaloSearchField extends StatefulWidget {
   final TextEditingController? controller;
@@ -55,7 +56,7 @@ class _HaloSearchFieldState extends State<HaloSearchField> with TickerProviderSt
   @override
   void initState() {
     super.initState();
-    _focusController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _focusController = AnimationController(vsync: this, duration: MotionDurations.slow);
     _breathController = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000));
 
     _focusAnim = Tween<double>(

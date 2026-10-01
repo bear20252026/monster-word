@@ -1,6 +1,7 @@
 // SimpleMorphingTabs：变形标签栏（等宽 tab 版），切换时指示器像液体一样拉伸变形
 // 唯一使用方：lib_select_page（词书分类标签）。原 MorphingTabs/MorphingTabIndicator
 // 因长期零引用已于 v2.7.34 删除，如需不等宽测量版请按需重写而非恢复死代码。
+import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -49,7 +50,7 @@ class _SimpleMorphingTabsState extends State<SimpleMorphingTabs> with TickerProv
     super.initState();
     _currentIndex = widget.initialIndex;
 
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 450));
+    _controller = AnimationController(vsync: this, duration: MotionDurations.expressive);
     _bounceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
 
     _slideAnim = CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic);
@@ -144,7 +145,7 @@ class _SimpleMorphingTabsState extends State<SimpleMorphingTabs> with TickerProv
                         height: widget.height - widget.padding.vertical,
                         alignment: Alignment.center,
                         child: AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 200),
+                          duration: MotionDurations.base,
                           style: TextStyle(
                             fontSize: AppFontSizes.caption,
                             fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,

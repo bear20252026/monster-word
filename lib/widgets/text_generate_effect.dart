@@ -1,3 +1,4 @@
+import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// 文字逐字浮现效果（打字机动画）
@@ -14,7 +15,7 @@ class TextGenerateEffect extends StatefulWidget {
     required this.text,
     this.style,
     this.duration = const Duration(milliseconds: 800),
-    this.delay = const Duration(milliseconds: 200),
+    this.delay = MotionDurations.base,
     this.animateOnVisible = false,
   });
 

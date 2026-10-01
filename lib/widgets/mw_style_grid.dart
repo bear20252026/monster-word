@@ -1,5 +1,6 @@
 // Monster Word — 精选风格网格（6 选 1 的唯一换肤界面）
 // 外观页 / 主题选择页 / 设计语言页共用此组件，杜绝多处入口展示不一致。
+import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:flutter/material.dart';
 
 import 'package:word_app/theme/skin_system.dart';
@@ -33,7 +34,7 @@ class MwStyleGrid extends StatelessWidget {
         return ScaleDownOnPress(
           onTap: () => skin.setStyle(style.id),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: MotionDurations.base,
             curve: Curves.easeOut,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
