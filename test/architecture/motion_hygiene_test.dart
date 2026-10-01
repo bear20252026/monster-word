@@ -45,11 +45,7 @@ void main() {
   test('MotionDurations 档位值与守卫口径一致', () {
     final src = File('lib/tokens/motion_tokens.dart').readAsStringSync();
     for (final tier in _tiers) {
-      expect(
-        src.contains('Duration(milliseconds: $tier)'),
-        isTrue,
-        reason: '守卫口径档位 $tier 应存在于 MotionDurations',
-      );
+      expect(src.contains('Duration(milliseconds: $tier)'), isTrue, reason: '守卫口径档位 $tier 应存在于 MotionDurations');
     }
   });
 }
