@@ -55,7 +55,7 @@ class UserDatabase {
     try {
       _db = await openDatabase(
         dbPath,
-        version: 3,
+        version: 4,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
         // 审计 I37：sqflite 默认静默降版本号且不回滚 schema。这里不抛错
@@ -88,7 +88,7 @@ class UserDatabase {
     } catch (_) {
       // 删除失败则再开一次原库，仍失败让异常上抛（与重建前口径一致）
     }
-    return openDatabase(dbPath, version: 3, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    return openDatabase(dbPath, version: 4, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future<void> _safeClose() async {
@@ -117,6 +117,7 @@ class UserDatabase {
     await db.execute('CREATE INDEX idx_favorites_created_at ON favorites(created_at)');
     await _createNewWordsTable(db);
     await _createFavoriteTables(db);
+    await _createScareCoinTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -127,6 +128,35 @@ class UserDatabase {
     if (oldVersion < 3) {
       await _createFavoriteTables(db);
     }
+    // P0-4（I18）：尖叫币账本迁 SQLite（ScareCoinLedgerDao 的事实来源）
+    if (oldVersion < 4) {
+      await _createScareCoinTables(db);
+    }
+  }
+
+  /// P0-4（I18）：尖叫币账本表。
+  ///
+  /// entries 为追加式流水（写侧不再整表截断，展示仍取最新 200 条）；
+  /// meta 为标量 KV（balance / migrated_from_sp），余额变动与流水追加
+  /// 同事务提交，杜绝旧 SP 双写（余额 int + 全量 JSON）的中间态。
+  Future<void> _createScareCoinTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS scare_coin_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        time_ms INTEGER NOT NULL,
+        delta INTEGER NOT NULL,
+        reason TEXT NOT NULL
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_scare_coin_entries_time ON scare_coin_entries(time_ms DESC, id DESC)',
+    );
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS scare_coin_meta (
+        key TEXT PRIMARY KEY,
+        value INTEGER NOT NULL
+      )
+    ''');
   }
 
   /// MEM/U3+U6：收藏持久化表。
