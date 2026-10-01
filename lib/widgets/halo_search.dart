@@ -1,6 +1,8 @@
 // Halo 搜索：带光晕背景的搜索框，聚焦时产生柔和光晕扩散效果
 // 颜色可自定义，支持主题色适配
 // 适用于：搜索页顶部搜索框、全局搜索入口
+import 'package:word_app/tokens/design_tokens.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -119,7 +121,7 @@ class _HaloSearchFieldState extends State<HaloSearchField> with TickerProviderSt
           decoration: InputDecoration(
             hintText: widget.hintText,
             hintStyle: widget.hintStyle,
-            prefixIcon: widget.prefixIcon ?? Icon(Icons.search, color: haloColor.withValues(alpha: 0.6)),
+            prefixIcon: widget.prefixIcon ?? Icon(Icons.search, color: haloColor.withValues(alpha: AppAlphas.o60)),
             suffixIcon: widget.suffixIcon,
             border: InputBorder.none,
             contentPadding: widget.padding,
@@ -157,7 +159,7 @@ class _HaloPainter extends CustomPainter {
         ..shader = RadialGradient(
           colors: [
             haloColor.withValues(alpha: opacity),
-            haloColor.withValues(alpha: 0),
+            haloColor.withValues(alpha: AppAlphas.o0),
           ],
           stops: const [0.0, 1.0],
         ).createShader(Rect.fromCircle(center: center, radius: radius));
@@ -244,8 +246,12 @@ class _HaloBgPainter extends CustomPainter {
       final radius = size.width * (0.25 + 0.05 * math.sin(phase * 2));
 
       final paint = Paint()
-        ..shader = RadialGradient(colors: [color.withValues(alpha: 0.06), color.withValues(alpha: 0)])
-            .createShader(Rect.fromCircle(center: Offset(x, y), radius: radius));
+        ..shader = RadialGradient(
+          colors: [
+            color.withValues(alpha: AppAlphas.o06),
+            color.withValues(alpha: AppAlphas.o0),
+          ],
+        ).createShader(Rect.fromCircle(center: Offset(x, y), radius: radius));
 
       canvas.drawCircle(Offset(x, y), radius, paint);
     }

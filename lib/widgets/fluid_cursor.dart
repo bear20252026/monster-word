@@ -1,6 +1,8 @@
 // 流体光标：触摸/悬停时产生流体涟漪扩散效果
 // 颜色可自定义，支持单点触摸扩散
 // 适用于：全局触摸反馈、按钮按下效果、页面交互增强
+import 'package:word_app/tokens/design_tokens.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -168,7 +170,7 @@ class FluidRipplePainter extends CustomPainter {
         ..shader = RadialGradient(
           colors: [
             color.withValues(alpha: opacity),
-            color.withValues(alpha: 0),
+            color.withValues(alpha: AppAlphas.o0),
           ],
         ).createShader(Rect.fromCircle(center: ripple.position, radius: radius * 0.6));
       canvas.drawCircle(ripple.position, radius * 0.6, innerPaint);

@@ -1,3 +1,4 @@
+import 'package:word_app/tokens/design_tokens.dart';
 import 'package:flutter/material.dart';
 
 import 'package:word_app/theme/wallpaper_data.dart' show WallpaperType;
@@ -63,7 +64,9 @@ class FormalReviewSessionLayout extends StatelessWidget {
         Positioned.fill(
           child: FormalReviewWallpaper(wallpaper: wallpaper, skin: skin),
         ),
-        Positioned.fill(child: Container(color: skin.wallpaperScrim.withValues(alpha: 0.15))),
+        Positioned.fill(
+          child: Container(color: skin.wallpaperScrim.withValues(alpha: AppAlphas.o15)),
+        ),
         SafeArea(
           child: Center(
             child: ConstrainedBox(

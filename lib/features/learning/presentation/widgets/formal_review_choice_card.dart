@@ -39,9 +39,13 @@ class FormalReviewChoiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bgColor, borderColor, fgColor) = switch ((isSelectedWrong, isCorrect && showAnswer)) {
-      (true, _) => (skin.quizWrongBg.withValues(alpha: 0.55), skin.quizWrongText, skin.quizWrongText),
-      (_, true) => (skin.quizCorrectBg.withValues(alpha: 0.55), skin.quizCorrectText, skin.quizCorrectText),
-      _ => (skin.glassBg.withValues(alpha: 0.25), skin.glassBorder.withValues(alpha: 0.3), skin.onGlassText1),
+      (true, _) => (skin.quizWrongBg.withValues(alpha: AppAlphas.o55), skin.quizWrongText, skin.quizWrongText),
+      (_, true) => (skin.quizCorrectBg.withValues(alpha: AppAlphas.o55), skin.quizCorrectText, skin.quizCorrectText),
+      _ => (
+        skin.glassBg.withValues(alpha: AppAlphas.o25),
+        skin.glassBorder.withValues(alpha: AppAlphas.o30),
+        skin.onGlassText1,
+      ),
     };
     final dimmed = showAnswer && !isCorrect && !isSelectedWrong;
     final showMark = (isCorrect && showAnswer) || isSelectedWrong;

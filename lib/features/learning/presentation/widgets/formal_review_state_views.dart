@@ -49,7 +49,10 @@ class FormalReviewLoadErrorView extends StatelessWidget {
               Container(
                 width: 64,
                 height: 64,
-                decoration: BoxDecoration(color: skin.danger.withValues(alpha: 0.10), shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: skin.danger.withValues(alpha: AppAlphas.o10),
+                  shape: BoxShape.circle,
+                ),
                 child: Icon(Icons.refresh_rounded, color: skin.danger, size: 30),
               ),
               const SizedBox(height: 20),
@@ -99,8 +102,8 @@ class FormalReviewCompleteView extends StatelessWidget {
                     height: 116,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: skin.success.withValues(alpha: 0.08),
-                      border: Border.all(color: skin.success.withValues(alpha: 0.35), width: 1),
+                      color: skin.success.withValues(alpha: AppAlphas.o08),
+                      border: Border.all(color: skin.success.withValues(alpha: AppAlphas.o35), width: 1),
                     ),
                   ),
                   Icon(Icons.check_rounded, color: skin.success, size: 40),

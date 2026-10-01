@@ -111,8 +111,8 @@ class _MessagePageState extends State<MessagePage> {
             height: 40,
             decoration: BoxDecoration(
               color: msg.isRead
-                  ? skin.colors.divider.withValues(alpha: 0.5)
-                  : skin.colors.accent.withValues(alpha: 0.10),
+                  ? skin.colors.divider.withValues(alpha: AppAlphas.o50)
+                  : skin.colors.accent.withValues(alpha: AppAlphas.o10),
               shape: BoxShape.circle,
             ),
             child: Icon(

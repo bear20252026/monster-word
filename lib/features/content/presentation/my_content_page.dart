@@ -229,7 +229,10 @@ class _HorizontalCards extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [FuncColors.warningLight, FuncColors.warningLight.withValues(alpha: 0.8)],
+                colors: [
+                  FuncColors.warningLight,
+                  FuncColors.warningLight.withValues(alpha: AppAlphas.o80),
+                ],
               ),
               icon: Icons.headphones,
               iconBg: skin.accent,
@@ -258,7 +261,10 @@ class _HorizontalCards extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [FuncColors.infoLight, FuncColors.infoLight.withValues(alpha: 0.8)],
+                colors: [
+                  FuncColors.infoLight,
+                  FuncColors.infoLight.withValues(alpha: AppAlphas.o80),
+                ],
               ),
               icon: Icons.edit,
               iconBg: FuncColors.info,
@@ -303,7 +309,13 @@ class _FeatureCard extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: gradient,
           borderRadius: BorderRadius.circular(context.design.radius.xl),
-          boxShadow: [BoxShadow(color: iconBg.withValues(alpha: 0.2), blurRadius: 16, offset: const Offset(0, 6))],
+          boxShadow: [
+            BoxShadow(
+              color: iconBg.withValues(alpha: AppAlphas.o20),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -352,7 +364,7 @@ class _MiniCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.white100.withValues(alpha: 0.65),
+          color: AppColors.white100.withValues(alpha: AppAlphas.o65),
           borderRadius: BorderRadius.circular(context.design.radius.control),
         ),
         child: Column(
@@ -375,7 +387,10 @@ class _MiniCard extends StatelessWidget {
               child: Container(
                 width: 28,
                 height: 28,
-                decoration: BoxDecoration(color: accent.withValues(alpha: 0.15), shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: AppAlphas.o15),
+                  shape: BoxShape.circle,
+                ),
                 child: Icon(Icons.play_arrow, color: accent, size: 18),
               ),
             ),
@@ -443,7 +458,7 @@ class _ListItem extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
+                color: iconColor.withValues(alpha: AppAlphas.o10),
                 borderRadius: BorderRadius.circular(context.design.radius.sm),
               ),
               child: Icon(icon, color: iconColor, size: 20),

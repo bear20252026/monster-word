@@ -493,7 +493,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                   // v2.7.49：0.85 实色+白字 → 全 App 统一的 accent 0.12 淡底胶囊
                   (s) => Chip(
                     label: Text(s, style: MwTypography.bodySm.copyWith(color: skin.colors.accent)),
-                    backgroundColor: skin.colors.accent.withValues(alpha: 0.12),
+                    backgroundColor: skin.colors.accent.withValues(alpha: AppAlphas.o12),
                     side: BorderSide.none,
                   ),
                 )

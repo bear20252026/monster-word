@@ -147,7 +147,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.menu_book_outlined, size: 36, color: skin.text3.withValues(alpha: 0.6)),
+                    Icon(Icons.menu_book_outlined, size: 36, color: skin.text3.withValues(alpha: AppAlphas.o60)),
                     const SizedBox(height: 12),
                     Text('这个词的扩展释义还没有收录', style: MwTypography.bodySm.copyWith(color: skin.text3)),
                   ],
@@ -386,7 +386,7 @@ class _DefinitionList extends StatelessWidget {
                   margin: const EdgeInsets.only(top: 2, right: 10),
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: skin.accent.withValues(alpha: 0.10),
+                    color: skin.accent.withValues(alpha: AppAlphas.o10),
                     borderRadius: BorderRadius.circular(context.design.radius.xs),
                   ),
                   child: Text(
@@ -519,7 +519,7 @@ class _RelatedWordCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
-                    color: skin.accent.withValues(alpha: 0.12),
+                    color: skin.accent.withValues(alpha: AppAlphas.o12),
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Icon(Icons.volume_up, color: skin.accent, size: 16),

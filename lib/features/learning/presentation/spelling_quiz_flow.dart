@@ -302,7 +302,7 @@ class _SpellingQuizScaffoldState extends State<SpellingQuizScaffold> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: context.skin.colors.accent.withValues(alpha: 0.1),
+        color: context.skin.colors.accent.withValues(alpha: AppAlphas.o10),
         borderRadius: BorderRadius.circular(context.design.radius.pill),
       ),
       child: Text(

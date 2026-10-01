@@ -42,7 +42,7 @@ class FormalReviewWordPrompt extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: skin.glassBg.withValues(alpha: 0.25),
+                    color: skin.glassBg.withValues(alpha: AppAlphas.o25),
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   child: Text(
@@ -79,7 +79,7 @@ class FormalReviewWordPrompt extends StatelessWidget {
             style: TextStyle(
               fontSize: AppFontSizes.caption * responsive.fontScale,
               fontStyle: FontStyle.italic,
-              color: skin.onGlassText2.withValues(alpha: 0.7),
+              color: skin.onGlassText2.withValues(alpha: AppAlphas.o70),
             ),
           ),
         ],
@@ -160,7 +160,7 @@ class FormalReviewAnswerAction extends StatelessWidget {
           decoration: ShapeDecoration(
             color: showAnswer ? skin.accent : Colors.transparent,
             shape: StadiumBorder(
-              side: BorderSide(color: showAnswer ? skin.accent : skin.onGlassText2.withValues(alpha: 0.5)),
+              side: BorderSide(color: showAnswer ? skin.accent : skin.onGlassText2.withValues(alpha: AppAlphas.o50)),
             ),
           ),
           child: Row(

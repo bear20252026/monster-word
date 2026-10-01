@@ -149,7 +149,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
               return child ?? const SizedBox.shrink();
             }
             return FluidCursorOverlay(
-              rippleColor: skin.colors.accent.withValues(alpha: 0.4),
+              rippleColor: skin.colors.accent.withValues(alpha: AppAlphas.o40),
               maxRadius: 60,
               enabled: false,
               child: SkinProvider(
@@ -307,7 +307,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(d.radius.card),
-          side: BorderSide(color: c.divider.withValues(alpha: 0.6)),
+          side: BorderSide(color: c.divider.withValues(alpha: AppAlphas.o60)),
         ),
       ),
       dialogTheme: DialogThemeData(

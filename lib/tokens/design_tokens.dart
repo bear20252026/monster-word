@@ -248,3 +248,38 @@ class AppRadius {
   static const double pill = 9999;
   static const double radiusNormal = 16;
 }
+
+/// 透明度档位（P1-A，审计 I61）。
+///
+/// 档位即现存高频 alpha 值本身（间距棘轮同口径：值命中档位才收敛，不做
+/// 视觉近似合并——那属于设计决策，须逐档视觉审计后另行推进）。alpha 命名
+/// 取数值后缀（o05 = 0.05），检索直读。新代码一律用 token，字面量由
+/// alpha_hygiene_test 棘轮冻结。
+class AppAlphas {
+  static const double o0 = 0;
+  static const double o05 = 0.05;
+  static const double o06 = 0.06;
+  static const double o08 = 0.08;
+  static const double o10 = 0.10;
+  static const double o12 = 0.12;
+  static const double o14 = 0.14;
+  static const double o15 = 0.15;
+  static const double o18 = 0.18;
+  static const double o20 = 0.20;
+  static const double o22 = 0.22;
+  static const double o25 = 0.25;
+  static const double o30 = 0.30;
+  static const double o35 = 0.35;
+  static const double o40 = 0.40;
+  static const double o50 = 0.50;
+  static const double o55 = 0.55;
+  static const double o60 = 0.60;
+  static const double o65 = 0.65;
+  static const double o70 = 0.70;
+  static const double o75 = 0.75;
+  static const double o80 = 0.80;
+  static const double o85 = 0.85;
+  static const double o90 = 0.90;
+  static const double o92 = 0.92;
+  static const double o96 = 0.96;
+}

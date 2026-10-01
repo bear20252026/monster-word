@@ -34,7 +34,7 @@ class ExamSentenceCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: skin.accent.withValues(alpha: 0.12),
+                color: skin.accent.withValues(alpha: AppAlphas.o12),
                 borderRadius: BorderRadius.circular(context.design.radius.sm),
               ),
               child: Text(
