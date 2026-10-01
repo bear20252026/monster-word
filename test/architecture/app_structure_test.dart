@@ -237,7 +237,14 @@ void main() {
 
       expect(appSource, contains('buildDictionaryFeatureScope('));
       expect(File('lib/features/dictionary/application/dictionary_content_reader.dart').existsSync(), isTrue);
-      expect(providersSource, contains('ServiceDictionaryContentReader'));
+      // 审计 I6：impl 构造上移组合根（service_locator），装配文件经端口取用；
+      // 断言端口 Provider 装配存在 + 端口实现仍由 sl 显式注入数据库
+      expect(
+        providersSource,
+        contains("Provider<DictionaryContentReader>(create: (_) => sl<DictionaryContentReader>())"),
+      );
+      final slSource = File('lib/app/service_locator.dart').readAsStringSync();
+      expect(slSource, contains('ServiceDictionaryContentReader(database: sl<WordBookDatabase>())'));
       expect(featurePageSource, contains('DictionaryDetailState'));
       expect(featurePageSource, isNot(contains('DictionaryService')));
       // 四层齐全

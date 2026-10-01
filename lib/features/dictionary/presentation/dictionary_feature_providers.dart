@@ -12,10 +12,7 @@ import 'package:word_app/features/dictionary/application/dictionary_favorite_wri
 import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
 import 'package:word_app/features/dictionary/data/dictionary_extra.dart';
-import 'package:word_app/features/dictionary/data/service_dictionary_content_reader.dart';
 import 'package:word_app/features/dictionary/data/service_dictionary_favorite_writer.dart';
-import 'package:word_app/features/dictionary/data/service_dictionary_new_word_writer.dart';
-import 'package:word_app/features/dictionary/data/service_dictionary_search_reader.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_detail_state.dart';
 
 /// 装配字典功能域的全部依赖。
@@ -25,10 +22,11 @@ import 'package:word_app/features/dictionary/presentation/dictionary_detail_stat
 Widget buildDictionaryFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
-      Provider<DictionaryContentReader>(create: (_) => ServiceDictionaryContentReader()),
-      Provider<DictionarySearchReader>(create: (_) => ServiceDictionarySearchReader()),
+      // 审计 I6：从组合根取端口（构造内已显式注入数据库，presentation 不直连 infrastructure）
+      Provider<DictionaryContentReader>(create: (_) => sl<DictionaryContentReader>()),
+      Provider<DictionarySearchReader>(create: (_) => sl<DictionarySearchReader>()),
       Provider<DictionaryFavoriteWriter>(create: (_) => ServiceDictionaryFavoriteWriter()),
-      Provider<DictionaryNewWordWriter>(create: (_) => ServiceDictionaryNewWordWriter()),
+      Provider<DictionaryNewWordWriter>(create: (_) => sl<DictionaryNewWordWriter>()),
       // 字典补充数据（派生/近义/真题）：presentation 只经端口消费（R3 presentation↛data）
       Provider<DictionaryExtraReader>(create: (_) => const RepositoryDictionaryExtraReader()),
       // N10：查词/偏好端口（R-core-repo / R-prefs）——presentation 不 import core 仓储/SP

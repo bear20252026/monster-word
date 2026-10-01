@@ -10,7 +10,6 @@ import 'package:word_app/features/book/application/book_selection_writer.dart';
 import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/features/book/data/repository_book_catalog_reader.dart';
 import 'package:word_app/features/book/data/repository_book_selection_writer.dart';
-import 'package:word_app/features/book/data/repository_book_word_list_reader.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
 
 /// 装配词书功能域的全部依赖。
@@ -25,7 +24,8 @@ Widget buildBookFeatureScope({required Widget child}) {
     providers: [
       Provider<BookCatalogReader>(create: (_) => RepositoryBookCatalogReader(sl<BookRepository>())),
       Provider<BookSelectionWriter>(create: (_) => RepositoryBookSelectionWriter()),
-      Provider<BookWordListReader>(create: (_) => RepositoryBookWordListReader()),
+      // 审计 I6：从组合根取端口（构造内已显式注入数据库，presentation 不直连 infrastructure）
+      Provider<BookWordListReader>(create: (_) => sl<BookWordListReader>()),
       // 词库维护（诊断/重建）：presentation 不直连数据库单例（REG-ARCH-005）
       Provider<WordBookMaintenanceService>(create: (_) => const WordBookMaintenanceService()),
     ],

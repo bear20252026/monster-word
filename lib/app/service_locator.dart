@@ -38,6 +38,14 @@ import 'package:word_app/features/learning/application/new_words_writer_port.dar
 import 'package:word_app/features/learning/application/review_audio_player.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/data/repository_new_words_writer_port.dart';
+import 'package:word_app/features/book/application/book_word_list_reader.dart';
+import 'package:word_app/features/book/data/repository_book_word_list_reader.dart';
+import 'package:word_app/features/dictionary/application/dictionary_content_reader.dart';
+import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
+import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
+import 'package:word_app/features/dictionary/data/service_dictionary_content_reader.dart';
+import 'package:word_app/features/dictionary/data/service_dictionary_new_word_writer.dart';
+import 'package:word_app/features/dictionary/data/service_dictionary_search_reader.dart';
 
 /// 全局服务定位器实例
 final GetIt sl = GetIt.instance;
@@ -122,6 +130,13 @@ Future<void> setupServiceLocator() async {
 
   // ReviewScheduleRepository（正式复习 FSRS 调度与评分事实来源）
   _reg<ReviewScheduleRepository>(() => ReviewScheduleRepository());
+
+  // 审计 I6：字典/词书列表端口在此显式注入——组合根（presentation）受 R-DB
+  // 约束不得 import infrastructure，改为从本处取端口接口（同 BookRepository 家法）
+  _reg<BookWordListReader>(() => RepositoryBookWordListReader(database: sl<WordBookDatabase>()));
+  _reg<DictionaryContentReader>(() => ServiceDictionaryContentReader(database: sl<WordBookDatabase>()));
+  _reg<DictionarySearchReader>(() => ServiceDictionarySearchReader(database: sl<WordBookDatabase>()));
+  _reg<DictionaryNewWordWriter>(() => ServiceDictionaryNewWordWriter(userDatabase: sl<UserDatabase>()));
 
   // ========== Service Layer（服务层）==========
   // AudioService（音频播放）
