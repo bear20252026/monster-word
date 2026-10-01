@@ -1,0 +1,26 @@
+# Monster Word 远端分支 SHA 备份（2026-10-01 清理前）
+# 以下 16 条全部已合并进 main（git branch -r --merged origin/main 核验），恢复：git push origin <sha>:refs/heads/<branch>
+# 另有 5 条未合并分支保留不动：perf/2026-09-28-settings-selector 等（见 .kept 注释行）
+
+BRANCH                                       SHA
+docs/quality-records                         96b7ead68e8e4855f744872723556ba0cb97a8d3
+feat/fav-sentence-flow                       9b6fc68663577792dae900d2f4f14da2ac77f3c6
+feat/word-list-flow                          f8c42320aa40cc35c35cd1f0c952256a4571781d
+perf/2026-10-01-alpha-tokens                 b32d84e87177fe548559076b75d7fa17954cceda
+perf/2026-10-01-profile-learn-selectors      635ec725d08e4e72444745af85e610c49293217c
+perf/2026-10-01-scare-coin-sqlite            54bcd9c327245c205803ecbd4ef18527c1da69e0
+perf/2026-10-01-search-cn-index              1a4c63d35d0bbbabb339d49029fbb3e6cc6a47f2
+perf/2026-10-01-wordbook-md5-isolate         46c7c83bcf3e0b5d81b859f35187e3803429925a
+perf/memory-attribution                      ac1efe3d413e0f34ec46580225155b7dc19f3f97
+perf/p3-closeout                             fb83db711e12b2168758730b2b5ea1ebda3a6acd
+perf/profile-harness                         f3232794d5dd8b49e7bc3387e88bdd2f0abb10b6
+perf/scroll-blur-degrade                     8f29e5c2c0b29c1ccb37d92078abd88bcdb6794f
+refactor/2026-10-01-debug-gate               ce0f3f3bae52aab4ea8c442be201c2b979f4d406
+refactor/2026-10-01-duration-tokens          72ee0a9597734d8280eb4e79286f54104074abfd
+refactor/2026-10-01-snackbar-exit            466ee9e60af0f8fc59fda20cce5e4bf3ceda0b01
+release/2.11.4                               e624250b8451cf1dbf1f0eeb72251cef81345f76
+# [保留·未合并] perf/2026-09-28-settings-selector            43a1551356e6401de93e73f9f16efc34763ca357
+# [保留·未合并] refactor/2026-09-28-audio-players-split      9e89c20ae92c585f82edbbc54ad8474e5bfab3d6
+# [保留·未合并] refactor/2026-09-28-inline-sl-factories      a66826b29da703e5eb5a75832c34f0277ac28cdc
+# [保留·未合并] refactor/2026-09-28-spacing-token-batch1     35be5656302d6625970c581cde53be62fe2f5f8d
+# [保留·未合并] test/2026-09-28-settings-widget-coverage     1fd7c68ad9707d6b1e3475a6947e82aa695d7ad6
