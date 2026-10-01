@@ -2,6 +2,7 @@
 // 样式：圆角 + 阴影 + 半透明背景
 // 点击可进入字典详情页
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 
 import 'dart:ui';
 
@@ -62,7 +63,7 @@ class WordLookupPopup extends StatelessWidget {
       barrierDismissible: true,
       barrierLabel: 'lookup_popup',
       barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 200),
+      transitionDuration: MotionDurations.base,
       pageBuilder: (_, _, _) => const SizedBox.shrink(),
       transitionBuilder: (ctx, anim, _, _) {
         final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
