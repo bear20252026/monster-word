@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -34,7 +35,7 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
   try {
     JustAudioMediaKit.ensureInitialized();
   } catch (e) {
-    debugPrint('[Bootstrap] 桌面音频后端初始化失败（降级为无声）: $e');
+    debugLog('[Bootstrap] 桌面音频后端初始化失败（降级为无声）: $e');
   }
 
   // 初始化步骤清单 — 每步完成后回调进度。
@@ -66,21 +67,21 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
 
 void _configureGlobalErrorHandling() {
   ErrorWidget.builder = (details) {
-    debugPrint('[GlobalError] Widget build error: ${details.exception}');
+    debugLog('[GlobalError] Widget build error: ${details.exception}');
     return AppBuildErrorPage(exception: details.exception);
   };
 
   FlutterError.onError = (details) {
-    debugPrint('[GlobalError] FlutterError: ${details.exception}');
+    debugLog('[GlobalError] FlutterError: ${details.exception}');
     if (details.stack != null) {
-      debugPrint('[GlobalError] Stack:\n${details.stack}');
+      debugLog('[GlobalError] Stack:\n${details.stack}');
     }
     FlutterError.presentError(details);
   };
 
   WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
-    debugPrint('[GlobalError] Uncaught: $error');
-    debugPrint('[GlobalError] Stack:\n$stack');
+    debugLog('[GlobalError] Uncaught: $error');
+    debugLog('[GlobalError] Stack:\n$stack');
     return true;
   };
 }

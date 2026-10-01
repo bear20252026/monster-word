@@ -1,6 +1,8 @@
 // 系统 TTS 引擎封装
 // 使用设备内置语音合成，无需网络，支持中英双语
 // 仅在移动端使用，桌面端回退到网络音频
+import 'package:word_app/core/utils/debug_log.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -49,31 +51,31 @@ class SystemTts {
 
       // 事件监听
       _tts.setStartHandler(() {
-        debugPrint('[SystemTts] Speech started');
+        debugLog('[SystemTts] Speech started');
         onStart?.call();
       });
 
       _tts.setCompletionHandler(() {
-        debugPrint('[SystemTts] Speech completed');
+        debugLog('[SystemTts] Speech completed');
         onComplete?.call();
       });
 
       _tts.setErrorHandler((msg) {
-        debugPrint('[SystemTts] Error: $msg');
+        debugLog('[SystemTts] Error: $msg');
         onErrorHandler?.call();
       });
 
       if (!kIsWeb) {
         _tts.setCancelHandler(() {
-          debugPrint('[SystemTts] Speech cancelled');
+          debugLog('[SystemTts] Speech cancelled');
         });
 
         _tts.setPauseHandler(() {
-          debugPrint('[SystemTts] Speech paused');
+          debugLog('[SystemTts] Speech paused');
         });
 
         _tts.setContinueHandler(() {
-          debugPrint('[SystemTts] Speech continued');
+          debugLog('[SystemTts] Speech continued');
         });
 
         // Android/iOS 支持进度回调
@@ -83,9 +85,9 @@ class SystemTts {
       }
 
       _initialized = true;
-      debugPrint('[SystemTts] Initialized successfully');
+      debugLog('[SystemTts] Initialized successfully');
     } catch (e) {
-      debugPrint('[SystemTts] Init error: $e');
+      debugLog('[SystemTts] Init error: $e');
       _initialized = false;
     }
   }
@@ -100,7 +102,7 @@ class SystemTts {
       }
       await _tts.speak(text);
     } catch (e) {
-      debugPrint('[SystemTts] speakEnglish error: $e');
+      debugLog('[SystemTts] speakEnglish error: $e');
       onErrorHandler?.call();
     }
   }
@@ -115,7 +117,7 @@ class SystemTts {
       }
       await _tts.speak(text);
     } catch (e) {
-      debugPrint('[SystemTts] speakChinese error: $e');
+      debugLog('[SystemTts] speakChinese error: $e');
       onErrorHandler?.call();
     }
   }
@@ -161,7 +163,7 @@ class SystemTts {
       }
       await _tts.speak(meaning);
     } catch (e) {
-      debugPrint('[SystemTts] speakWordWithMeaning error: $e');
+      debugLog('[SystemTts] speakWordWithMeaning error: $e');
     }
   }
 
@@ -170,7 +172,7 @@ class SystemTts {
     try {
       await _tts.stop();
     } catch (e) {
-      debugPrint('[SystemTts] stop error: $e');
+      debugLog('[SystemTts] stop error: $e');
     }
   }
 
@@ -179,7 +181,7 @@ class SystemTts {
     try {
       await _tts.pause();
     } catch (e) {
-      debugPrint('[SystemTts] pause error: $e');
+      debugLog('[SystemTts] pause error: $e');
     }
   }
 
@@ -189,7 +191,7 @@ class SystemTts {
     try {
       await _tts.setSpeechRate(_speechRate);
     } catch (e) {
-      debugPrint('[SystemTts] setRate error: $e');
+      debugLog('[SystemTts] setRate error: $e');
     }
   }
 
@@ -199,7 +201,7 @@ class SystemTts {
     try {
       await _tts.setVolume(_volume);
     } catch (e) {
-      debugPrint('[SystemTts] setVolume error: $e');
+      debugLog('[SystemTts] setVolume error: $e');
     }
   }
 
@@ -209,7 +211,7 @@ class SystemTts {
     try {
       await _tts.setPitch(_pitch);
     } catch (e) {
-      debugPrint('[SystemTts] setPitch error: $e');
+      debugLog('[SystemTts] setPitch error: $e');
     }
   }
 
@@ -242,7 +244,7 @@ class SystemTts {
       await _tts.stop();
       _initialized = false;
     } catch (e) {
-      debugPrint('[SystemTts] dispose error: $e');
+      debugLog('[SystemTts] dispose error: $e');
       _initialized = false;
     }
   }

@@ -1,5 +1,6 @@
 // 字典详情页：单词详解（释义+音标+例句+常见用法+词根+形近词+笔记）
 // 从学习页答题后进入，看完后点击"下一词"返回学习
+import 'package:word_app/core/utils/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
@@ -77,7 +78,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       final full = await context.read<WordLookupReader>().getWordByText(word.word);
       if (full != null && mounted) setState(() => _fullWord = full);
     } catch (e) {
-      debugPrint('[WordDetail] 完整词重查失败: $e');
+      debugLog('[WordDetail] 完整词重查失败: $e');
     }
   }
 
@@ -90,7 +91,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       setState(() => _extra = extra);
     } catch (e) {
       // 装配缺失（裸 push / 测试未挂 dictionary scope）时降级：详情主内容仍可渲染
-      debugPrint('[WordDetail] 字典补充数据加载失败: $e');
+      debugLog('[WordDetail] 字典补充数据加载失败: $e');
     }
   }
 

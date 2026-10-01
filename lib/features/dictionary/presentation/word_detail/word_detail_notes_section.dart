@@ -1,4 +1,5 @@
 // 字典详情页 - 笔记区块（从 word_detail_page.dart 拆出）
+import 'package:word_app/core/utils/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -50,7 +51,7 @@ class _WordNotesSectionState extends State<WordNotesSection> {
         });
       }
     } catch (e) {
-      debugPrint('Notes loading error: $e');
+      debugLog('Notes loading error: $e');
       if (mounted) setState(() => _notesLoaded = true);
     }
   }

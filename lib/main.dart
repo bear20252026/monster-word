@@ -1,3 +1,5 @@
+import 'package:word_app/core/utils/debug_log.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -14,8 +16,8 @@ Future<void> main() async {
   // 落在不同 zone，Flutter 每次冷启动都会打 Zone mismatch 告警。
   // 守卫：test/regression/regression_zone001_boot_zone_test.dart。
   runZonedGuarded(() => unawaited(_bootstrapAndRun()), (error, stack) {
-    debugPrint('[runZonedGuarded] 未捕获异常: $error');
-    debugPrint('$stack');
+    debugLog('[runZonedGuarded] 未捕获异常: $error');
+    debugLog('$stack');
     // 转发到 Sentry（未启用时为 no-op）
     Sentry.captureException(error, stackTrace: stack);
   });
@@ -37,7 +39,7 @@ Future<void> _bootstrapAndRun() async {
     // runApp 永不执行——用户面对无窗口/白屏死应用。改为渲染最小兜底页提供
     // 「重试」入口。Sentry 未初始化时 captureException 为 no-op；此场景下
     // 兜底页的可见性与可恢复性是第一目标，遥测为尽力而为。
-    debugPrint('[Bootstrap] 启动失败(${sw.elapsedMilliseconds}ms): $error');
+    debugLog('[Bootstrap] 启动失败(${sw.elapsedMilliseconds}ms): $error');
     await Sentry.captureException(error, stackTrace: stack);
     runApp(_BootstrapRecoveryApp(error: error));
     return;

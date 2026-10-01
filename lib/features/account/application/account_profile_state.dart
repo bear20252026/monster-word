@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/debug_log.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/features/account/application/account_profile_store.dart';
@@ -45,7 +46,7 @@ class AccountProfileState extends ChangeNotifier {
       _profile = await _profileStore.load();
     } catch (error) {
       _loadError = error;
-      debugPrint('Account profile loading error: $error');
+      debugLog('Account profile loading error: $error');
     } finally {
       _isLoading = false;
       _safeNotify();
@@ -65,7 +66,7 @@ class AccountProfileState extends ChangeNotifier {
     try {
       await _profileStore.save(next);
     } catch (error) {
-      debugPrint('Account profile saving error: $error');
+      debugLog('Account profile saving error: $error');
     }
   }
 }

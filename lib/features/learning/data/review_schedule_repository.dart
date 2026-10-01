@@ -1,3 +1,5 @@
+import 'package:word_app/core/utils/debug_log.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -366,7 +368,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
       // E2：SQLite 模式就绪后清除旧 SP 回滚快照（降级模式保留 SP，供重试/旧版）。
       await _clearLegacySpSnapshotIfMigrated();
     } catch (error, stack) {
-      debugPrint('Review schedule SQLite init error: $error');
+      debugLog('Review schedule SQLite init error: $error');
       reportSwallowedError('ReviewScheduleSQLite init', error, stack);
     }
     if (!sqliteReady) {
@@ -387,14 +389,14 @@ class ReviewScheduleRepository extends ChangeNotifier {
             statsRaw = (map[dailyStatsPrefKey] as String?) ?? statsRaw;
             final dates = map[activeDatesPrefKey];
             if (dates is List) datesList = dates.cast<String>();
-            debugPrint('[FSRS] degraded load restored from $emergencyBackupKey');
+            debugLog('[FSRS] degraded load restored from $emergencyBackupKey');
           }
         }
         _cards = _readCards(cardsRaw);
         _dailyStats = _readDailyStats(statsRaw);
         _activeDates = (datesList ?? const <String>[]).toSet();
       } catch (error, stack) {
-        debugPrint('Review schedule loading error: $error');
+        debugLog('Review schedule loading error: $error');
         reportSwallowedError('ReviewScheduleSP degraded load', error, stack);
         _cards = {};
         _dailyStats = {};
@@ -429,7 +431,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
         cards.add(FsrsCard.fromJson(entry.value as Map<String, dynamic>));
       } catch (_) {
         skipped++;
-        debugPrint('FSRS migration: skip corrupt card "${entry.key}"');
+        debugLog('FSRS migration: skip corrupt card "${entry.key}"');
       }
     }
 
@@ -443,7 +445,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
           dailyStats[entry.key] = {'learn': map['learn'] as int? ?? 0, 'review': map['review'] as int? ?? 0};
         } catch (_) {
           skipped++;
-          debugPrint('FSRS migration: skip corrupt daily stat "${entry.key}"');
+          debugLog('FSRS migration: skip corrupt daily stat "${entry.key}"');
         }
       }
     }

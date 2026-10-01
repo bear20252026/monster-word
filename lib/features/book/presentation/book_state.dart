@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/debug_log.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/features/learning/application/learning_progress_reader.dart';
@@ -116,7 +117,7 @@ class BookState extends ChangeNotifier {
       // 验收守护：词书标注词数必须与实际总数一致，不一致立即暴露
       final expected = _currentBook?.wordCount ?? 0;
       if (expected > 0 && _totalWords != expected) {
-        debugPrint('[BookState] 词数不一致! book=$_currentBookId 标注=$expected 实载=$_totalWords');
+        debugLog('[BookState] 词数不一致! book=$_currentBookId 标注=$expected 实载=$_totalWords');
       }
       _words = await _wordsReader.loadWordPage(_currentBookId, offset: 0, limit: BookState.pageSize);
       _hasMore = _words.length < _totalWords;

@@ -1,6 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 拼写检查：播放音频 → 用户拼写 → 正确/错误反馈
+import 'package:word_app/core/utils/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
@@ -50,7 +51,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
     try {
       await context.read<AudioPlaybackState>().playWord(widget.word);
     } catch (e) {
-      debugPrint('Audio playback error: $e');
+      debugLog('Audio playback error: $e');
     }
   }
 
