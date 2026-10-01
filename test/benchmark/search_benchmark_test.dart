@@ -1,8 +1,10 @@
-// 真库搜索基准（审计 I12 / I70）：旧单条全表 LIKE vs 新三层查询。
+// 真库搜索基准（审计 I12 / I70）：旧单条全表 LIKE vs 新三层查询，
+// 以及 P0-1 中文二元组索引 vs 全表（第 3 层）。
 //
 // 职责：
 //   1. 一致性断言——新旧实现对同一查询集返回完全相同的 word 序列
-//      （三层拆分依赖旧 ORDER BY CASE 的排序语义保证等价，见 word_repository_impl 注释）。
+//      （三层拆分依赖旧 ORDER BY CASE 的排序语义保证等价，见 word_repository_impl 注释；
+//      索引路径依赖「子串命中 ⊇ 全部相邻二元组」的超集性质保证等价，见 cn_search_index 注释）。
 //   2. P95 性能对比打印——不设性能阈值断言（CI 机性能噪声大），只报告数据。
 //
 // 真库：assets/db/wordbook.db.gz（241.8MB / words 32,154 词），
@@ -11,6 +13,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:word_app/core/infrastructure/cn_search_index.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:word_app/core/repositories/word_repository_impl.dart';
 
@@ -133,4 +136,53 @@ void main() {
     stdout.writeln('new 占优查询数：$newWins / ${_queries.length}');
     await db.close();
   }, timeout: const Timeout(Duration(minutes: 5)));
+
+  test('P0-1 中文二元组索引：与全表一致 + 构建耗时 + P95 对比', () async {
+    final dbFile = await _prepareDb();
+    final db = await databaseFactory.openDatabase(dbFile.path);
+    final database = WordBookDatabase.instance;
+    database.debugInjectDbForTest(db);
+    final index = CnSearchIndex();
+    final indexPath = '${Directory.systemTemp.path}/wordbook_cn_idx_bench.db';
+
+    final t0 = DateTime.now();
+    await index.ensureBuilt(wordsDb: db, wordsPath: dbFile.path, indexPath: indexPath);
+    final buildMs = DateTime.now().difference(t0).inMilliseconds;
+    expect(index.isReady, isTrue, reason: '真库索引构建应成功');
+
+    final indexSize = File(indexPath).lengthSync() ~/ 1048576;
+    final repo = WordRepositoryImpl(database, cnSearchIndex: index);
+    const cap = 50;
+    const cnQueries = ['苹果', '考试', '电脑', '水果', '学习', '时间', '国家', '历史', '音乐', '经济'];
+
+    final report = <String>[];
+    final fullScanAll = <int>[];
+    final indexedAll = <int>[];
+    for (final q in cnQueries) {
+      // 一致性：索引路径与第 3 层全表扫描不允许改变返回序列
+      final legacyWords = await _legacySearch(db, q, cap);
+      final indexedWords = (await repo.searchWords(q, limit: cap)).map((w) => w.word).toList();
+      expect(indexedWords, equals(legacyWords), reason: '查询 "$q"：索引路径与全表扫描结果不一致');
+
+      final fullScanMs = await _bench(() => _legacySearch(db, q, cap));
+      final indexedMs = await _bench(() => repo.searchWords(q, limit: cap));
+      fullScanAll.addAll(fullScanMs);
+      indexedAll.addAll(indexedMs);
+      report.add(
+        '$q — 全表 ${fullScanMs.join('/')}ms（均 ${fullScanMs.reduce((a, b) => a + b) ~/ _rounds}ms） | '
+        '索引 ${indexedMs.join('/')}ms（均 ${indexedMs.reduce((a, b) => a + b) ~/ _rounds}ms）',
+      );
+    }
+
+    int p95(List<int> all) {
+      final s = [...all]..sort();
+      return s[(s.length * 0.95).floor().clamp(0, s.length - 1)];
+    }
+
+    stdout.writeln('\n===== 中文搜索索引基准（words 真库，limit=$cap，$_rounds 轮）=====');
+    stdout.writeln('索引构建：${buildMs}ms（一次性，懒加载后台构建）；索引库 ${indexSize}MB');
+    stdout.writeln(report.join('\n'));
+    stdout.writeln('P95：全表 ${p95(fullScanAll)}ms / 索引 ${p95(indexedAll)}ms');
+    await db.close();
+  }, timeout: const Timeout(Duration(minutes: 10)));
 }
