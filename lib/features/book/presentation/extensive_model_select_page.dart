@@ -1,6 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 泛听模式选择页面：选择随身听播放模式（单词/释义+单词/单词+释义/单词+例句）
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -58,7 +59,7 @@ class _ExtensiveModelSelectPageState extends State<ExtensiveModelSelectPage> {
 
   void _startListening(ListeningMode mode) {
     if (_words.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('暂无单词可播放')));
+      showMwSnackBar(context, const SnackBar(content: Text('暂无单词可播放')));
       return;
     }
     Navigator.pushNamed(

@@ -127,7 +127,8 @@ class _TodayHeroCard extends StatelessWidget {
     final books = await context.read<BookCatalogReader>().listBooks();
     if (books.isEmpty) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        showMwSnackBar(
+          context,
           SnackBar(
             content: const Text('还没有词书，先去选一本吧'),
             action: SnackBarAction(

@@ -7,6 +7,7 @@
 // - 写：通过 ScareCoinStore.checkIn() 端口
 // - 不直接接触偏好存储或任何基础设施
 
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -53,10 +54,10 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
     final newBalance = await store.checkIn();
     if (!mounted) return;
     if (newBalance == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('今天已经签到过啦，明天再来～')));
+      showMwSnackBar(context, const SnackBar(content: Text('今天已经签到过啦，明天再来～')));
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('签到成功！尖叫币 +${store.checkInReward}')));
+    showMwSnackBar(context, SnackBar(content: Text('签到成功！尖叫币 +${store.checkInReward}')));
     await _refresh();
   }
 

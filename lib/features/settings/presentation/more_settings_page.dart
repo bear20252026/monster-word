@@ -1,6 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:word_app/core/utils/debug_log.dart';
 
 import 'dart:async';
@@ -210,7 +211,8 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                       Navigator.pop(ctx);
                       // 评分走真实动作：好评跳仓库页（可 Star），低分引导到应用内反馈。
                       if (rating >= 4) {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        showMwSnackBar(
+                          context,
                           SnackBar(
                             content: Text('感谢您的 $rating 星好评！欢迎去 GitHub 给我们点一个 Star'),
                             backgroundColor: context.skin.colors.success,
@@ -218,7 +220,8 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                         );
                         await launchUrl(Uri.parse(appGitHubRepoUrl), mode: LaunchMode.externalApplication);
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        showMwSnackBar(
+                          context,
                           SnackBar(
                             content: Text('感谢反馈！已为您打开意见反馈页，帮我们做得更好'),
                             backgroundColor: context.skin.colors.success,
@@ -239,8 +242,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   Future<void> _checkForUpdate() async {
     if (_isCheckingUpdate) return;
     setState(() => _isCheckingUpdate = true);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('正在检查更新…'), duration: Duration(seconds: 2)));
+    showMwSnackBar(context, const SnackBar(content: Text('正在检查更新…'), duration: Duration(seconds: 2)));
 
     final result = await _updateService.check(currentVersion: _appVersion);
     if (!mounted) return;
@@ -403,7 +405,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     } catch (e) {
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('词库重建失败: $e')));
+        showMwSnackBar(context, SnackBar(content: Text('词库重建失败: $e')));
       }
       return;
     }

@@ -1,5 +1,7 @@
 // 词表导出页面
 // 支持导出为 TXT / CSV / 分享文本
+import 'package:word_app/widgets/common/mw_feedback.dart';
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -305,7 +307,7 @@ class _WordExportPageState extends State<WordExportPage> {
       final words = await _loadWords();
       if (words.isEmpty) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词可导出')));
+          showMwSnackBar(context, const SnackBar(content: Text('该词书暂无单词可导出')));
         }
         return;
       }
@@ -320,7 +322,8 @@ class _WordExportPageState extends State<WordExportPage> {
       await file.writeAsString(content);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        showMwSnackBar(
+          context,
           SnackBar(
             content: Text('已导出 ${words.length} 个单词到文档目录'),
             action: SnackBarAction(label: '分享', onPressed: () => Share.shareXFiles([XFile(filePath)])),
@@ -329,7 +332,7 @@ class _WordExportPageState extends State<WordExportPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导出失败: $e')));
+        showMwSnackBar(context, SnackBar(content: Text('导出失败: $e')));
       }
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -342,7 +345,7 @@ class _WordExportPageState extends State<WordExportPage> {
       final words = await _loadWords();
       if (words.isEmpty) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词可导出')));
+          showMwSnackBar(context, const SnackBar(content: Text('该词书暂无单词可导出')));
         }
         return;
       }
@@ -365,7 +368,7 @@ class _WordExportPageState extends State<WordExportPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('分享失败: $e')));
+        showMwSnackBar(context, SnackBar(content: Text('分享失败: $e')));
       }
     } finally {
       if (mounted) setState(() => _exporting = false);

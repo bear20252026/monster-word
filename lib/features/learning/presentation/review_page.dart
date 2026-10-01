@@ -1,4 +1,5 @@
 // 正式复习路由协调层：会话、词条操作和视觉布局各自独立。
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -126,7 +127,7 @@ class _ReviewPageState extends State<ReviewPage> {
     final message = result.feedbackMessage;
     if (!mounted || message == null) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), duration: result.feedbackDuration));
+    showMwSnackBar(context, SnackBar(content: Text(message), duration: result.feedbackDuration));
   }
 
   void _showMoreOptions(BuildContext context) {
@@ -157,8 +158,10 @@ class _ReviewPageState extends State<ReviewPage> {
       await context.read<ReviewAudioState>().playWord(word.word);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)));
+        showMwSnackBar(
+          context,
+          const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)),
+        );
       }
     }
   }

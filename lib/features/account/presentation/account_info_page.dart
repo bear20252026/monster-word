@@ -1,5 +1,6 @@
 // 账号信息页：账号信息页布局
 // 包含：头像 + 相机图标、ID账号、账号、昵称、手机号、绑定平台
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -22,7 +23,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
 
   /// 暂无第三方账号绑定能力：诚实提示而非静默无响应。
   void _showBindNotSupported(BuildContext context, String platform) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('暂不支持绑定$platform，如有需要欢迎通过「帮助与反馈」告诉我们')));
+    showMwSnackBar(context, SnackBar(content: Text('暂不支持绑定$platform，如有需要欢迎通过「帮助与反馈」告诉我们')));
   }
 
   Future<void> _editNickname() async {
@@ -93,7 +94,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
     if (trimmed.isEmpty) return;
     if (!RegExp(r'^1\d{10}$').hasMatch(trimmed)) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请输入正确的 11 位手机号')));
+        showMwSnackBar(context, const SnackBar(content: Text('请输入正确的 11 位手机号')));
       }
       return;
     }

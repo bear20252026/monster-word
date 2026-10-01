@@ -6,6 +6,15 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/theme/skin_system.dart';
 
+/// 统一 SnackBar 出口（P1-D，审计 I4 收尾）。
+///
+/// 所有反馈提示经此展示：样式/去重/埋点的全局调整只需改这一处。
+/// 本批只统一「出口」，不改任何调用点的 SnackBar 构造（样式统一属
+/// 视觉设计任务，须逐页走查后另行推进）。
+void showMwSnackBar(BuildContext context, SnackBar snackBar) {
+  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+}
+
 Future<bool> showMwConfirm(
   BuildContext context, {
   required String title,

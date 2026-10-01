@@ -361,7 +361,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     final learnable = all.where((s) => (s.sentenceData?.e ?? '').isNotEmpty).toList();
     if (!mounted) return;
     if (learnable.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('暂无可学习的例句')));
+      showMwSnackBar(context, const SnackBar(content: Text('暂无可学习的例句')));
       return;
     }
     await startSentenceLearning(context, learnable);
@@ -397,7 +397,7 @@ class _MyFavSentencePageState extends State<MyFavSentencePage> {
     await _loadData();
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已删除选中的例句')));
+      showMwSnackBar(context, const SnackBar(content: Text('已删除选中的例句')));
     }
   }
 }

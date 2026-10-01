@@ -2,6 +2,8 @@
 
 // 用户信息管理：修改头像、昵称、签名等个人信息
 // 头像选图与落盘走 AvatarStorage 端口（application 层），页面不接触文件系统。
+import 'package:word_app/widgets/common/mw_feedback.dart';
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -145,11 +147,11 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
       // 持久化成功后清理旧头像文件（仅清理应用私有目录内的）
       await storage.delete(oldPath);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('头像已更新')));
+        showMwSnackBar(context, const SnackBar(content: Text('头像已更新')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('更换头像失败: $e')));
+        showMwSnackBar(context, SnackBar(content: Text('更换头像失败: $e')));
       }
     }
   }

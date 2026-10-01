@@ -1,3 +1,4 @@
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 
@@ -35,7 +36,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
   Future<void> _submit() async {
     if (_controller.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请填写反馈内容')));
+      showMwSnackBar(context, const SnackBar(content: Text('请填写反馈内容')));
       return;
     }
     setState(() => _isSubmitting = true);

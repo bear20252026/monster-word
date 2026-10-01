@@ -3,6 +3,8 @@
 // 随身听：磁带机隐喻的碎片时间听记（词源四选 + 顺序连播 + 播放控制）。
 // hero 是一台「正在转卷轴的盒式磁带」——播放中双卷轴持续旋转，
 // 暂停即停转，把播放状态变成看得见的机械隐喻。
+import 'package:word_app/widgets/common/mw_feedback.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -54,8 +56,7 @@ class _PersonalStereoPageState extends State<PersonalStereoPage> {
     final words = await _loadWords(source);
     if (!mounted) return;
     if (words.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('该词源暂无可播放的单词'), duration: Duration(seconds: 1)));
+      showMwSnackBar(context, const SnackBar(content: Text('该词源暂无可播放的单词'), duration: Duration(seconds: 1)));
       return;
     }
     _player.start(source: source, words: words);

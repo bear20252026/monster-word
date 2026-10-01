@@ -1,3 +1,4 @@
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
@@ -216,8 +217,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
                             final wasNew = state.isNewWord;
                             await state.toggleNewWord();
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(SnackBar(content: Text(wasNew ? '已移出生词本' : '已加入生词本')));
+                              showMwSnackBar(context, SnackBar(content: Text(wasNew ? '已移出生词本' : '已加入生词本')));
                             }
                           },
                   ),
@@ -247,8 +247,10 @@ class _DictionaryPageState extends State<DictionaryPage> {
       await context.read<AudioPlaybackState>().playWord(word);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)));
+        showMwSnackBar(
+          context,
+          const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)),
+        );
       }
     }
   }
