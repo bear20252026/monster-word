@@ -6,6 +6,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
@@ -44,10 +45,70 @@ export 'package:word_app/models/definition.dart' show Definition, DefExample;
 export 'package:word_app/models/word.dart' show Word;
 export 'package:word_app/models/book.dart' show Book;
 
-// MEM/F1：77MB 资产哈希纯函数。刻意跑主 isolate 而不用 compute：
-// compute 会把 77MB 再拷贝一份过 isolate，瞬时峰值翻倍；版本指纹命中时
-// 慢路径本就跳过（仅升级/重建走一次），主线程几百 ms 可接受。
-String _md5Base64OfBytes(Uint8List bytes) => base64.encode(md5.convert(bytes).bytes);
+// === 词库资产大对象处理（性能审计 I20 / MEM 口径更新 2026-10） ===
+//
+// 旧口径：MD5 与解压都在主 isolate 同步执行（实测 ~0.3-0.6s + 2-4s UI 冻结）；
+// 当时不用 compute 是怕 77MB 过 isolate 拷贝令瞬时峰值翻倍。
+//
+// 新口径（主 isolate 全程零大对象同步运算，forceRebuild 不再冻结 UI）：
+// · 哈希：Isolate.run 直接捕获 bytes——消息拷贝 +77MB 只发生在哈希慢路径
+//   （仅升级/重建走一次，版本指纹命中即整体跳过），且远小于解压路径既有
+//   的 ~320MB 峰值口径；
+// · 解压：主 isolate 先把 gz 落成 staging 文件（dart:io 异步写在 IO 服务
+//   线程执行，不冻结 UI），后台 isolate 读 staging → decodeBytes（~320MB
+//   峰值全部发生在后台）→ 原子落盘，主 isolate 随即释放 77MB 引用。
+Future<String> _hashBytesInBackground(Uint8List bytes) {
+  return Isolate.run(() => base64.encode(md5.convert(bytes).bytes));
+}
+
+/// gz → 目标 db 原子落盘，解码/写盘/换名全部在后台 isolate 执行。
+/// 保留旧 _extractTo 的语义：解码失败清理半成品后重试一次，最后仍失败则抛出。
+Future<void> _extractBytesInBackground(Uint8List gzBytes, String dbPath) async {
+  final staging = '$dbPath.extract.gz';
+  try {
+    await File(staging).writeAsBytes(gzBytes, flush: true);
+    await Isolate.run(() async {
+      // BUG-STARTUP（v2.11.2）：archive 3.6.1 的文件流解码路径（decodeStream）
+      // 吞吐仅 ~300-400KB/s，245MB 词库需 10 分钟以上；decodeBytes 内存解压
+      // 实测 59.5MB/s（AOT 下更快，约 2-4s），代价是解压期间瞬时内存峰值
+      // ~320MB（80MB gz + 242MB 明文）——现在由后台 isolate 承担，一次性可接受。
+      for (var attempt = 0; attempt < 2; attempt++) {
+        try {
+          final data = GZipDecoder().decodeBytes(File(staging).readAsBytesSync());
+          final tmpDb = '$dbPath.tmp';
+          await File(tmpDb).writeAsBytes(data, flush: true);
+          // 原子替换：rename 前清掉旧目标（Windows rename 不覆盖已存在文件）
+          final target = File(dbPath);
+          if (target.existsSync()) {
+            try {
+              await target.delete();
+            } catch (_) {}
+          }
+          await File(tmpDb).rename(dbPath);
+          return;
+        } catch (e) {
+          debugPrint('[WordBookDatabase] 解压失败 (attempt ${attempt + 1}): $e');
+          final f = File(dbPath);
+          if (f.existsSync()) f.deleteSync();
+          if (attempt == 1) rethrow;
+        } finally {
+          // 清理本目录内的半成品 db（staging gz 由主 isolate 统一清理）
+          try {
+            final sf = File('$dbPath.tmp');
+            if (sf.existsSync()) await sf.delete();
+          } catch (_) {}
+        }
+      }
+    });
+  } finally {
+    for (final stale in [staging, '$dbPath.tmp']) {
+      try {
+        final sf = File(stale);
+        if (sf.existsSync()) await sf.delete();
+      } catch (_) {}
+    }
+  }
+}
 
 /// 词库数据库管理器（单例）
 class WordBookDatabase {
@@ -175,10 +236,10 @@ class WordBookDatabase {
     if (!versionMatches) {
       // 慢路径：真正需要比对/解压时才加载资产
       assetBytes = await loadBytes();
-      final assetHash = _md5Base64OfBytes(assetBytes);
+      final assetHash = await _hashBytesInBackground(assetBytes);
 
       if (extractedHash != assetHash || !File(dbPath).existsSync()) {
-        await _extractTo(dbPath, assetBytes);
+        await _extractBytesInBackground(assetBytes, dbPath);
         // MEM：解压完成立即释放 77MB 引用，后续 openDatabase/自检不再持有。
         assetBytes = null;
         if (canPersist) {
@@ -206,7 +267,7 @@ class WordBookDatabase {
       // 词库损坏是应远程可见的事件（此前仅 debugPrint，release 不可见）
       reportSwallowedError('词库打开失败，删除损坏库并重建', e, s);
       assetBytes ??= await loadBytes();
-      await _extractTo(dbPath, assetBytes);
+      await _extractBytesInBackground(assetBytes, dbPath);
       assetBytes = null;
       _db = await openDatabase(dbPath, readOnly: true);
       reopened = true;
@@ -230,9 +291,10 @@ class WordBookDatabase {
         await _db!.close();
         _db = null;
         assetBytes ??= await loadBytes();
-        await _extractTo(dbPath, assetBytes);
-        // MEM：解压完成立即哈希并释放 77MB 引用，openDatabase/持久化不再持有。
-        final hash = _md5Base64OfBytes(assetBytes);
+        // MEM：哈希先行（后台 isolate），解压后即释放 77MB 引用，
+        // openDatabase/持久化不再持有大对象。
+        final hash = await _hashBytesInBackground(assetBytes);
+        await _extractBytesInBackground(assetBytes, dbPath);
         assetBytes = null;
         _db = await openDatabase(dbPath, readOnly: true);
         if (canPersist) {
@@ -247,46 +309,6 @@ class WordBookDatabase {
       }
     }
     _initialized = true;
-  }
-
-  /// 解压资产词库到目标路径（失败自动清理半成品文件并重试一次）
-  ///
-  /// BUG-STARTUP（v2.11.2）：旧实现走 archive 的 decodeStream（InputFileStream
-  /// → OutputFileStream 文件流路径），实测吞吐仅 ~300-400KB/s（archive 3.6.1
-  /// 该路径存在性能缺陷），245MB 词库需 10 分钟以上 —— 表现为「启动后窗口
-  /// 永不出现」。换用 decodeBytes 内存解压实测 59.5MB/s（AOT 下更快，约 2-4s），
-  /// 代价是解压期间瞬时内存峰值 ~320MB（80MB gz + 242MB 明文），一次性可接受。
-  /// 落盘改为「写临时文件 + rename 原子替换」，中断不再留下半成品目标文件。
-  Future<void> _extractTo(String dbPath, Uint8List gzBytes) async {
-    for (var attempt = 0; attempt < 2; attempt++) {
-      try {
-        final data = GZipDecoder().decodeBytes(gzBytes);
-        final tmpDb = '$dbPath.tmp';
-        await File(tmpDb).writeAsBytes(data, flush: true);
-        // 原子替换：rename 前清掉旧目标（Windows rename 不覆盖已存在文件）
-        final target = File(dbPath);
-        if (target.existsSync()) {
-          try {
-            await target.delete();
-          } catch (_) {}
-        }
-        await File(tmpDb).rename(dbPath);
-        return;
-      } catch (e) {
-        debugPrint('[WordBookDatabase] 解压失败 (attempt ${attempt + 1}): $e');
-        final f = File(dbPath);
-        if (f.existsSync()) f.deleteSync();
-        if (attempt == 1) rethrow;
-      } finally {
-        // MEM：清理任何残留临时文件（含旧实现中断留下的 .extract.gz）
-        for (final stale in ['$dbPath.tmp', '$dbPath.extract.gz']) {
-          try {
-            final sf = File(stale);
-            if (sf.existsSync()) await sf.delete();
-          } catch (_) {}
-        }
-      }
-    }
   }
 
   /// 全量覆盖重建词库（用户手动触发）。
@@ -364,8 +386,8 @@ class WordBookDatabase {
       final data = await rootBundle.load('assets/db/wordbook.db.gz');
       gzBytes = data.buffer.asUint8List();
     }
-    final assetHash = _md5Base64OfBytes(gzBytes);
-    await _extractTo(dbPath, gzBytes);
+    final assetHash = await _hashBytesInBackground(gzBytes);
+    await _extractBytesInBackground(gzBytes, dbPath);
     // MEM：解压后立即释放，openDatabase/计数不再持有 77MB。
     gzBytes = null;
 
