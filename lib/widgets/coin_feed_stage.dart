@@ -177,7 +177,7 @@ class _CoinFeedStageState extends State<CoinFeedStage> with TickerProviderStateM
                         height: ringR * 2,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: MwColors.sunshine300.withValues(alpha: 0.8), width: 2.5),
+                          border: Border.all(color: MwColors.sunshine300.withValues(alpha: AppAlphas.o80), width: 2.5),
                         ),
                       ),
                     ),

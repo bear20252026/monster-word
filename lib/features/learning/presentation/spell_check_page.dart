@@ -140,7 +140,7 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
               decoration: BoxDecoration(
-                color: context.skin.colors.accent.withValues(alpha: 0.1),
+                color: context.skin.colors.accent.withValues(alpha: AppAlphas.o10),
                 borderRadius: BorderRadius.circular(context.design.radius.lg),
               ),
               child: Row(
@@ -195,8 +195,8 @@ class _SpellCheckPageState extends State<SpellCheckPage> {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: _isCorrect
-            ? context.skin.colors.success.withValues(alpha: 0.1)
-            : context.skin.colors.danger.withValues(alpha: 0.1),
+            ? context.skin.colors.success.withValues(alpha: AppAlphas.o10)
+            : context.skin.colors.danger.withValues(alpha: AppAlphas.o10),
         borderRadius: BorderRadius.circular(context.design.radius.md),
         border: Border.all(color: _isCorrect ? context.skin.colors.success : context.skin.colors.danger),
       ),

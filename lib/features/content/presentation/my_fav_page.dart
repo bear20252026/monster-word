@@ -145,7 +145,7 @@ class _MyFavPageState extends State<MyFavPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: context.skin.colors.accent.withValues(alpha: 0.1),
+              color: context.skin.colors.accent.withValues(alpha: AppAlphas.o10),
               borderRadius: BorderRadius.circular(context.design.radius.sm),
             ),
             child: Text(

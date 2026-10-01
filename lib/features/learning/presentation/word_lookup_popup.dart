@@ -127,7 +127,11 @@ class _PopupCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(context.design.radius.xl),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 16, offset: const Offset(0, 4)),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: AppAlphas.o20),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
         child: ClipRRect(
@@ -136,9 +140,9 @@ class _PopupCard extends StatelessWidget {
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
               decoration: BoxDecoration(
-                color: skin.cardBg.withValues(alpha: 0.92),
+                color: skin.cardBg.withValues(alpha: AppAlphas.o92),
                 borderRadius: BorderRadius.circular(context.design.radius.xl),
-                border: Border.all(color: skin.divider.withValues(alpha: 0.5), width: 0.5),
+                border: Border.all(color: skin.divider.withValues(alpha: AppAlphas.o50), width: 0.5),
               ),
               padding: const EdgeInsets.all(AppSpacing.md),
               child: wordData != null ? _buildContent(skin) : _buildNotFound(skin),

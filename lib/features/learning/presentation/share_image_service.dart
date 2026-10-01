@@ -35,7 +35,7 @@ class ShareImageService {
 
     // === 装饰圆 ===
     final circlePaint = Paint()
-      ..color = AppColors.white100.withValues(alpha: 0.05)
+      ..color = AppColors.white100.withValues(alpha: AppAlphas.o05)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(width * 0.8, height * 0.15), 200, circlePaint);
     canvas.drawCircle(Offset(width * 0.2, height * 0.7), 300, circlePaint);
@@ -88,7 +88,14 @@ class ShareImageService {
 
     // === 底部装饰 ===
     final bottomY = height * 0.88;
-    _drawText(canvas, '每一天，都在进步', width / 2, bottomY, fontSize: 32, color: AppColors.white100.withValues(alpha: 0.7));
+    _drawText(
+      canvas,
+      '每一天，都在进步',
+      width / 2,
+      bottomY,
+      fontSize: 32,
+      color: AppColors.white100.withValues(alpha: AppAlphas.o70),
+    );
 
     _drawText(canvas, '— Monster Word —', width / 2, bottomY + 60, fontSize: 24, color: StarbucksCreamColors.vipGoldBg);
 
@@ -122,7 +129,7 @@ class ShareImageService {
       width / 2,
       qrTop + qrSize + 30,
       fontSize: 20,
-      color: AppColors.white100.withValues(alpha: 0.6),
+      color: AppColors.white100.withValues(alpha: AppAlphas.o60),
     );
 
     // === 渲染 ===
@@ -164,13 +171,13 @@ class ShareImageService {
   ) {
     // 卡片背景
     final cardPaint = Paint()
-      ..color = AppColors.white100.withValues(alpha: 0.1)
+      ..color = AppColors.white100.withValues(alpha: AppAlphas.o10)
       ..style = PaintingStyle.fill;
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(left, top, w, h), const Radius.circular(20)), cardPaint);
 
     // 卡片边框
     final borderPaint = Paint()
-      ..color = AppColors.white100.withValues(alpha: 0.2)
+      ..color = AppColors.white100.withValues(alpha: AppAlphas.o20)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(left, top, w, h), const Radius.circular(20)), borderPaint);
@@ -192,7 +199,7 @@ class ShareImageService {
       left + 130,
       top + h / 2 - 30,
       fontSize: 28,
-      color: AppColors.white100.withValues(alpha: 0.7),
+      color: AppColors.white100.withValues(alpha: AppAlphas.o70),
     );
 
     // 数值
@@ -260,7 +267,7 @@ class ShareImageService {
 
     // === 装饰圆 ===
     final circlePaint = Paint()
-      ..color = AppColors.white100.withValues(alpha: 0.05)
+      ..color = AppColors.white100.withValues(alpha: AppAlphas.o05)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(width * 0.8, height * 0.15), 200, circlePaint);
     canvas.drawCircle(Offset(width * 0.2, height * 0.7), 300, circlePaint);
@@ -318,7 +325,14 @@ class ShareImageService {
 
     // === 底部 ===
     final bottomY = height * 0.88;
-    _drawText(canvas, '明天，怪兽等你投喂', width / 2, bottomY, fontSize: 32, color: AppColors.white100.withValues(alpha: 0.85));
+    _drawText(
+      canvas,
+      '明天，怪兽等你投喂',
+      width / 2,
+      bottomY,
+      fontSize: 32,
+      color: AppColors.white100.withValues(alpha: AppAlphas.o85),
+    );
 
     _drawText(canvas, '— Monster Word —', width / 2, bottomY + 60, fontSize: 24, color: StarbucksCreamColors.vipGoldBg);
 

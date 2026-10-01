@@ -50,7 +50,10 @@ class _CheckInStripState extends State<_CheckInStrip> {
             Container(
               width: 32,
               height: 32,
-              decoration: BoxDecoration(color: skin.colors.accent.withValues(alpha: 0.10), shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: skin.colors.accent.withValues(alpha: AppAlphas.o10),
+                shape: BoxShape.circle,
+              ),
               child: Icon(
                 Icons.local_fire_department_rounded,
                 size: 18,
@@ -100,7 +103,10 @@ class _BookStrip extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(color: skin.colors.accent.withValues(alpha: 0.10), shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: skin.colors.accent.withValues(alpha: AppAlphas.o10),
+                  shape: BoxShape.circle,
+                ),
                 child: Icon(Icons.collections_bookmark_outlined, size: 18, color: skin.colors.accent),
               ),
               const SizedBox(width: 12),
@@ -126,7 +132,9 @@ class _BookStrip extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: ShapeDecoration(
-                  shape: StadiumBorder(side: BorderSide(color: skin.colors.accent.withValues(alpha: 0.4))),
+                  shape: StadiumBorder(
+                    side: BorderSide(color: skin.colors.accent.withValues(alpha: AppAlphas.o40)),
+                  ),
                 ),
                 child: Text(
                   '切换',

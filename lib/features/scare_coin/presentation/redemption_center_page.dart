@@ -244,7 +244,10 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [colors.accent, colors.accent.withValues(alpha: 0.8)],
+          colors: [
+            colors.accent,
+            colors.accent.withValues(alpha: AppAlphas.o80),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -258,7 +261,10 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('我的尖叫币', style: MwTypography.bodySm.copyWith(color: colors.onGlassAccent.withValues(alpha: 0.8))),
+                Text(
+                  '我的尖叫币',
+                  style: MwTypography.bodySm.copyWith(color: colors.onGlassAccent.withValues(alpha: AppAlphas.o80)),
+                ),
                 const SizedBox(height: 4),
                 Text('$_coins', style: MwTypography.heading3.copyWith(color: colors.onGlassAccent)),
               ],
@@ -267,7 +273,10 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('今日已获得', style: MwTypography.bodySm.copyWith(color: colors.onGlassAccent.withValues(alpha: 0.8))),
+              Text(
+                '今日已获得',
+                style: MwTypography.bodySm.copyWith(color: colors.onGlassAccent.withValues(alpha: AppAlphas.o80)),
+              ),
               const SizedBox(height: 4),
               Text('+$_todayEarned', style: MwTypography.heading4.copyWith(color: colors.onGlassAccent)),
             ],
@@ -287,7 +296,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       decoration: BoxDecoration(
         color: colors.cardBg,
         borderRadius: BorderRadius.circular(context.design.radius.md),
-        border: Border.all(color: redeemed ? colors.accent.withValues(alpha: 0.5) : colors.divider),
+        border: Border.all(color: redeemed ? colors.accent.withValues(alpha: AppAlphas.o50) : colors.divider),
       ),
       child: ListTile(
         contentPadding: EdgeInsets.all(context.design.spacing.md),
@@ -295,7 +304,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: Color(item.color).withValues(alpha: 0.1),
+            color: Color(item.color).withValues(alpha: AppAlphas.o10),
             borderRadius: BorderRadius.circular(context.design.radius.sm),
           ),
           child: Icon(item.icon, color: Color(item.color)),
@@ -310,7 +319,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Color(item.color).withValues(alpha: 0.12),
+                  color: Color(item.color).withValues(alpha: AppAlphas.o12),
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text('库存 ×$_protectionStock', style: MwTypography.micro.copyWith(color: Color(item.color))),
@@ -320,7 +329,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: colors.accent.withValues(alpha: 0.12),
+                  color: colors.accent.withValues(alpha: AppAlphas.o12),
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text('已拥有', style: MwTypography.micro.copyWith(color: colors.accent)),
@@ -339,7 +348,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
             ? Icon(Icons.verified, color: colors.accent, semanticLabel: '已拥有')
             : ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: affordable ? colors.accent : colors.text3.withValues(alpha: 0.3),
+                  backgroundColor: affordable ? colors.accent : colors.text3.withValues(alpha: AppAlphas.o30),
                   foregroundColor: affordable ? colors.onGlassAccent : colors.text2,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
