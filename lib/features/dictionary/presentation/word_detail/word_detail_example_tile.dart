@@ -173,7 +173,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
               text: widget.example.cn,
               style: MwTypography.micro.copyWith(color: widget.skin.colors.text3),
               duration: const Duration(milliseconds: 600),
-              delay: const Duration(milliseconds: 300),
+              delay: MotionDurations.slow,
             ),
           ],
           if (widget.example.source.isNotEmpty)

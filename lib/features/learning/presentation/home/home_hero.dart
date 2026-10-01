@@ -213,7 +213,7 @@ class _ProgressRing extends StatelessWidget {
     final resp = context.responsive;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: progress),
-      duration: const Duration(milliseconds: 700),
+      duration: MotionDurations.count,
       curve: Curves.easeOutCubic,
       builder: (context, animated, _) => SizedBox(
         width: size,

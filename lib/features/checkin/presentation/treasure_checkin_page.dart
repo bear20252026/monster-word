@@ -17,6 +17,8 @@
 // 无障碍：系统「减少动态效果」时跳过散落与粒子，控件立即可用。
 // 位置说明：审计 I11 归位 features/checkin/presentation——业务页面不再
 // 借住 widgets 层（跨 feature 经 scare_coin application 端口，现行规则放行）。
+import 'package:word_app/tokens/motion_tokens.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -835,7 +837,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     return GestureDetector(
       onTap: (checked || busy) ? null : _doCheckIn,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+        duration: MotionDurations.slow,
         padding: const EdgeInsets.symmetric(horizontal: 46, vertical: 15),
         decoration: BoxDecoration(
           gradient: checked

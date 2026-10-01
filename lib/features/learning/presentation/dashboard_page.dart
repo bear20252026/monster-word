@@ -4,6 +4,7 @@
 // v2.7.61 重构：以「总词汇量」大数字为视觉锚点，FSRS 记忆状态收敛为
 // 单条堆叠比例条 + 图例（一眼读出记忆构成）；正学习词书卡保留进度条。
 import 'package:word_app/widgets/common/mw_feedback.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
@@ -173,7 +174,7 @@ class DashboardPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.xs),
             child: TweenAnimationBuilder<double>(
               tween: Tween(end: progress),
-              duration: const Duration(milliseconds: 700),
+              duration: MotionDurations.count,
               curve: Curves.easeOutCubic,
               builder: (context, value, _) => LinearProgressIndicator(
                 value: value,
