@@ -1,5 +1,6 @@
 // 字典详情页：单词详解（释义+音标+例句+常见用法+词根+形近词+笔记）
 // 从学习页答题后进入，看完后点击"下一词"返回学习
+import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
@@ -285,7 +286,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
                       BoxReveal(
                         direction: BoxRevealDirection.right,
                         duration: const Duration(milliseconds: 350),
-                        delay: const Duration(milliseconds: 200),
+                        delay: MotionDurations.base,
                         reveal: true,
                         child: Text('例句', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
                       ),
@@ -380,7 +381,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
             BoxReveal(
               direction: BoxRevealDirection.right,
               duration: const Duration(milliseconds: 350),
-              delay: const Duration(milliseconds: 200),
+              delay: MotionDurations.base,
               reveal: true,
               child: Text('例句', style: MwTypography.heading5.copyWith(color: skin.colors.text2)),
             ),

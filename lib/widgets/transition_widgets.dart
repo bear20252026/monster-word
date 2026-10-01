@@ -4,6 +4,7 @@
 // 转场动画控件
 // 文件：SplashTransition, MySpaceTransition, UserInfoManageReturnFadeTransition
 
+import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:flutter/material.dart';
 
 import 'package:word_app/widgets/animations.dart';
@@ -14,7 +15,7 @@ class SlideUpRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
   final Duration duration;
 
-  SlideUpRoute({required this.page, this.duration = const Duration(milliseconds: 300)})
+  SlideUpRoute({required this.page, this.duration = MotionDurations.slow})
     : super(
         transitionDuration: duration,
         pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -33,7 +34,7 @@ class FadeRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
   final Duration duration;
 
-  FadeRoute({required this.page, this.duration = const Duration(milliseconds: 300)})
+  FadeRoute({required this.page, this.duration = MotionDurations.slow})
     : super(
         transitionDuration: duration,
         pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -48,7 +49,7 @@ class ScaleRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
   final Duration duration;
 
-  ScaleRoute({required this.page, this.duration = const Duration(milliseconds: 300)})
+  ScaleRoute({required this.page, this.duration = MotionDurations.slow})
     : super(
         transitionDuration: duration,
         pageBuilder: (context, animation, secondaryAnimation) => page,

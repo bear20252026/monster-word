@@ -1,6 +1,8 @@
 // 内置字典弹窗：长按单词弹出释义小框（learning feature 内部组件，仅被 learn_page 消费）
 // 样式：圆角 + 阴影 + 半透明背景
 // 点击可进入字典详情页
+import 'package:word_app/tokens/motion_tokens.dart';
+
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -60,7 +62,7 @@ class WordLookupPopup extends StatelessWidget {
       barrierDismissible: true,
       barrierLabel: 'lookup_popup',
       barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 200),
+      transitionDuration: MotionDurations.base,
       pageBuilder: (_, _, _) => const SizedBox.shrink(),
       transitionBuilder: (ctx, anim, _, _) {
         final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);

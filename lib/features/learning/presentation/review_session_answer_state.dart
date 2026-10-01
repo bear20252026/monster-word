@@ -1,3 +1,5 @@
+import 'package:word_app/tokens/motion_tokens.dart';
+
 import 'dart:async';
 
 /// 正式复习选择候选项的结果。
@@ -9,7 +11,7 @@ enum ReviewChoiceSelection { correct, wrong }
 /// FSRS 评分仍由 [ReviewSessionState] 编排。反馈发生变化或计时器结束时，
 /// [onChanged] 通知宿主状态刷新展示快照。
 class ReviewSessionAnswerState {
-  ReviewSessionAnswerState({required this._onChanged, this._wrongChoiceFeedback = const Duration(milliseconds: 300)});
+  ReviewSessionAnswerState({required this._onChanged, this._wrongChoiceFeedback = MotionDurations.slow});
 
   final void Function() _onChanged;
   final Duration _wrongChoiceFeedback;

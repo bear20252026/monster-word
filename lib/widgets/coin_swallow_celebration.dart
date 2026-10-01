@@ -101,7 +101,7 @@ class _CoinSwallowCelebrationState extends State<CoinSwallowCelebration> with Ti
       // 亲手投喂续演：从币到嘴处开始，forward() 从当前值播到终点。
       ..value = widget.startAt.clamp(0.0, 0.9)
       ..forward();
-    _leash = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _leash = AnimationController(vsync: this, duration: MotionDurations.slow);
     _leash.addListener(() {
       final tw = _leashTween;
       if (tw == null || !mounted) return;
