@@ -42,6 +42,14 @@ import 'package:word_app/features/learning/data/repository_new_words_writer_port
 /// 全局服务定位器实例
 final GetIt sl = GetIt.instance;
 
+/// 幂等注册（审计 I9）：已注册则跳过，消灭 20 组 if-register 样板。
+/// setupServiceLocator 在测试中被重复调用时不会重复注册。
+void _reg<T extends Object>(T Function() factory) {
+  if (!sl.isRegistered<T>()) {
+    sl.registerLazySingleton<T>(factory);
+  }
+}
+
 /// 注册所有依赖
 ///
 /// 在 main() 中调用，必须在 runApp() 之前完成。
@@ -59,117 +67,71 @@ final GetIt sl = GetIt.instance;
 Future<void> setupServiceLocator() async {
   // ========== Data Layer（数据层）==========
   // 数据库单例（只注册一次）
-  if (!sl.isRegistered<WordBookDatabase>()) {
-    sl.registerLazySingleton<WordBookDatabase>(() => WordBookDatabase.instance);
-  }
-  if (!sl.isRegistered<UserDatabase>()) {
-    sl.registerLazySingleton<UserDatabase>(() => UserDatabase.instance);
-  }
+  _reg<WordBookDatabase>(() => WordBookDatabase.instance);
+  _reg<UserDatabase>(() => UserDatabase.instance);
 
   // ========== Repository Layer（仓库层）==========
   // BookRepository
-  if (!sl.isRegistered<BookRepository>()) {
-    sl.registerLazySingleton<BookRepository>(() => BookRepositoryImpl(sl<WordBookDatabase>()));
-  }
+  _reg<BookRepository>(() => BookRepositoryImpl(sl<WordBookDatabase>()));
 
   // WordRepository
-  if (!sl.isRegistered<WordRepository>()) {
-    sl.registerLazySingleton<WordRepository>(() => WordRepositoryImpl(sl<WordBookDatabase>()));
-  }
+  _reg<WordRepository>(() => WordRepositoryImpl(sl<WordBookDatabase>()));
 
   // UserRepository
-  if (!sl.isRegistered<UserRepository>()) {
-    sl.registerLazySingleton<UserRepository>(() => UserRepositoryImpl());
-  }
+  _reg<UserRepository>(() => UserRepositoryImpl());
 
   // NoteRepository
-  if (!sl.isRegistered<NoteRepository>()) {
-    sl.registerLazySingleton<NoteRepository>(() => NoteRepositoryImpl());
-  }
+  _reg<NoteRepository>(() => NoteRepositoryImpl());
 
   // FavRepository
-  if (!sl.isRegistered<FavRepository>()) {
-    sl.registerLazySingleton<FavRepository>(() => FavRepositoryImpl());
-  }
+  _reg<FavRepository>(() => FavRepositoryImpl());
 
   // MasteredRepository
-  if (!sl.isRegistered<MasteredRepository>()) {
-    sl.registerLazySingleton<MasteredRepository>(() => MasteredRepositoryImpl());
-  }
+  _reg<MasteredRepository>(() => MasteredRepositoryImpl());
 
   // NewWordRepository
-  if (!sl.isRegistered<NewWordRepository>()) {
-    sl.registerLazySingleton<NewWordRepository>(() => NewWordRepositoryImpl(sl<UserDatabase>()));
-  }
+  _reg<NewWordRepository>(() => NewWordRepositoryImpl(sl<UserDatabase>()));
 
   // MasteredWordsReader
-  if (!sl.isRegistered<MasteredWordsReader>()) {
-    sl.registerLazySingleton<MasteredWordsReader>(
-      () => RepositoryMasteredWordsReader(
-        masteredRepository: sl<MasteredRepository>(),
-        wordRepository: sl<WordRepository>(),
-      ),
-    );
-  }
+  _reg<MasteredWordsReader>(
+    () => RepositoryMasteredWordsReader(
+      masteredRepository: sl<MasteredRepository>(),
+      wordRepository: sl<WordRepository>(),
+    ),
+  );
 
   // NewWordsReader
-  if (!sl.isRegistered<NewWordsReader>()) {
-    sl.registerLazySingleton<NewWordsReader>(
-      () => RepositoryNewWordsReader(newWordRepository: sl<NewWordRepository>(), wordRepository: sl<WordRepository>()),
-    );
-  }
+  _reg<NewWordsReader>(
+    () => RepositoryNewWordsReader(newWordRepository: sl<NewWordRepository>(), wordRepository: sl<WordRepository>()),
+  );
 
   // NewWordsWriterPort
-  if (!sl.isRegistered<NewWordsWriterPort>()) {
-    sl.registerLazySingleton<NewWordsWriterPort>(() => RepositoryNewWordsWriterPort(sl<NewWordRepository>()));
-  }
+  _reg<NewWordsWriterPort>(() => RepositoryNewWordsWriterPort(sl<NewWordRepository>()));
 
   // ReviewQueueReader
-  if (!sl.isRegistered<ReviewQueueReader>()) {
-    sl.registerLazySingleton<ReviewQueueReader>(() => const RepositoryReviewQueueReader());
-  }
+  _reg<ReviewQueueReader>(() => const RepositoryReviewQueueReader());
 
   // LearningQueueRepository（遗留学习会话队列加载命令边界）
-  if (!sl.isRegistered<LearningQueueWordSource>()) {
-    sl.registerLazySingleton<LearningQueueWordSource>(
-      () => WordBookLearningQueueWordSource(database: sl<WordBookDatabase>()),
-    );
-  }
-  if (!sl.isRegistered<LearningQueueRepository>()) {
-    sl.registerLazySingleton<LearningQueueRepository>(
-      () => LearningQueueRepository(wordSource: sl<LearningQueueWordSource>(), favRepository: sl<FavRepository>()),
-    );
-  }
+  _reg<LearningQueueWordSource>(() => WordBookLearningQueueWordSource(database: sl<WordBookDatabase>()));
+  _reg<LearningQueueRepository>(
+    () => LearningQueueRepository(wordSource: sl<LearningQueueWordSource>(), favRepository: sl<FavRepository>()),
+  );
 
   // LearningProgressRepository（遗留学习会话进度持久化边界）
-  if (!sl.isRegistered<LearningProgressRepository>()) {
-    sl.registerLazySingleton<LearningProgressRepository>(() => LearningProgressRepository());
-  }
+  _reg<LearningProgressRepository>(() => LearningProgressRepository());
 
   // ReviewScheduleRepository（正式复习 FSRS 调度与评分事实来源）
-  if (!sl.isRegistered<ReviewScheduleRepository>()) {
-    sl.registerLazySingleton<ReviewScheduleRepository>(() => ReviewScheduleRepository());
-  }
+  _reg<ReviewScheduleRepository>(() => ReviewScheduleRepository());
 
   // ========== Service Layer（服务层）==========
   // AudioService（音频播放）
-  if (!sl.isRegistered<AudioService>()) {
-    sl.registerLazySingleton<AudioService>(() => AudioServiceImpl());
-  }
+  _reg<AudioService>(() => AudioServiceImpl());
 
   // ReviewAudioPlayer / ReviewAudioState（正式复习发音边界）
-  if (!sl.isRegistered<ReviewAudioPlayer>()) {
-    sl.registerLazySingleton<ReviewAudioPlayer>(
-      () => ReviewAudioPlayer(playAudio: (word) => sl<AudioService>().playWordAudio(word)),
-    );
-  }
+  _reg<ReviewAudioPlayer>(() => ReviewAudioPlayer(playAudio: (word) => sl<AudioService>().playWordAudio(word)));
 
   // UserService（用户）
-  if (!sl.isRegistered<UserService>()) {
-    sl.registerLazySingleton<UserService>(
-      () => UserServiceImpl(userRepo: sl<UserRepository>(), noteRepo: sl<NoteRepository>()),
-    );
-  }
+  _reg<UserService>(() => UserServiceImpl(userRepo: sl<UserRepository>(), noteRepo: sl<NoteRepository>()));
 }
 
 /// 释放所有可释放资源（在应用退出时调用）
