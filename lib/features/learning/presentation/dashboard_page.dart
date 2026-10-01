@@ -3,6 +3,7 @@
 // 仪表盘页 — 编辑式记忆图谱版面。
 // v2.7.61 重构：以「总词汇量」大数字为视觉锚点，FSRS 记忆状态收敛为
 // 单条堆叠比例条 + 图例（一眼读出记忆构成）；正学习词书卡保留进度条。
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
@@ -277,8 +278,7 @@ class DashboardPage extends StatelessWidget {
   Future<void> _sharePoster(BuildContext context) async {
     try {
       // 显示 loading
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('正在生成分享图...'), duration: Duration(seconds: 1)));
+      showMwSnackBar(context, const SnackBar(content: Text('正在生成分享图...'), duration: Duration(seconds: 1)));
 
       // 获取尖叫币功能域提供的签到数据
       final scareCoinStore = context.read<ScareCoinStore>();
@@ -291,7 +291,7 @@ class DashboardPage extends StatelessWidget {
       await ShareImageService.generateAndShare(totalWords: totalWords, streakDays: streakDays, totalDays: totalDays);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('分享失败: $e')));
+        showMwSnackBar(context, SnackBar(content: Text('分享失败: $e')));
       }
     }
   }

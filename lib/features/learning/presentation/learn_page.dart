@@ -3,6 +3,8 @@
 // 由账号4生成
 // 学习页：明亮简约设计风格
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
+import 'package:word_app/widgets/common/mw_feedback.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -59,8 +61,10 @@ class _LearnPageState extends State<LearnPage> {
       await player.playWord(word, audioUrl: audioUrl);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)));
+        showMwSnackBar(
+          context,
+          const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)),
+        );
       }
     }
   }

@@ -1,3 +1,4 @@
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
@@ -110,11 +111,11 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
   /// 耗材兑换：扣币＋账本入账，满额拒收（上限见 ScareCoinStore.protectionCap）。
   Future<void> _redeemConsumable(_RedeemItem item, ScareCoinStore store) async {
     if (_coins < item.cost) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('尖叫币不足（还差 ${item.cost - _coins} 枚），继续学习攒币吧！')));
+      showMwSnackBar(context, SnackBar(content: Text('尖叫币不足（还差 ${item.cost - _coins} 枚），继续学习攒币吧！')));
       return;
     }
     if (_protectionStock >= store.protectionCap) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('保护卡已满（${store.protectionCap} 张），用掉再来兑换吧！')));
+      showMwSnackBar(context, SnackBar(content: Text('保护卡已满（${store.protectionCap} 张），用掉再来兑换吧！')));
       return;
     }
     setState(() => _redeeming = true);
@@ -123,7 +124,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       try {
         final stock = await store.addProtection(count: 1, reason: '兑换 · ${item.title}');
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！断签保护卡×1（当前库存 $stock 张）')));
+        showMwSnackBar(context, SnackBar(content: Text('兑换成功！断签保护卡×1（当前库存 $stock 张）')));
         await _reload();
       } catch (e, s) {
         // 数据完整性审计 P2：扣币后落账失败需补偿退款，否则币丢奖励没到手。
@@ -133,7 +134,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('兑换失败，请稍后重试')));
+        showMwSnackBar(context, const SnackBar(content: Text('兑换失败，请稍后重试')));
       }
     } finally {
       if (mounted) setState(() => _redeeming = false);
@@ -147,7 +148,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
     if (item.isConsumable) return _redeemConsumable(item, store);
     if (_redeemedIds.contains(item.id)) return;
     if (_coins < item.cost) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('尖叫币不足（还差 ${item.cost - _coins} 枚），继续学习攒币吧！')));
+      showMwSnackBar(context, SnackBar(content: Text('尖叫币不足（还差 ${item.cost - _coins} 枚），继续学习攒币吧！')));
       return;
     }
     setState(() => _redeeming = true);
@@ -164,11 +165,11 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
         rethrow;
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('兑换成功！「${item.title}」已收入囊中')));
+      showMwSnackBar(context, SnackBar(content: Text('兑换成功！「${item.title}」已收入囊中')));
       await _reload();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('兑换失败，请稍后重试')));
+        showMwSnackBar(context, const SnackBar(content: Text('兑换失败，请稍后重试')));
       }
     } finally {
       if (mounted) setState(() => _redeeming = false);

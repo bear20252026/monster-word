@@ -3,6 +3,8 @@
 // 本文件是搜索功能的完整 UI，从 lib/pages/search_page.dart 迁入。
 // 依赖全部通过 application 端口注入，不直连旧 data 层或跨 feature presentation。
 
+import 'package:word_app/widgets/common/mw_feedback.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -499,8 +501,10 @@ class _SearchPageState extends State<SearchPage> {
       await context.read<AudioPlaybackState>().playWord(word);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)));
+        showMwSnackBar(
+          context,
+          const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)),
+        );
       }
     }
   }

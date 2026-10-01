@@ -3,6 +3,7 @@
 // 单词听写：播放单词语音，用户拼写练习
 // 词源与发音均走既有端口（单一事实来源）：队列取自 LearningSessionState.queue
 // （与听写会话页同源），发音走 AudioPlaybackState.playWord。
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 
@@ -247,8 +248,7 @@ class _ListWordListenPageState extends State<ListWordListenPage> {
                       ? _checkSpelling
                       : (_hasNext
                             ? _loadNextWord
-                            : () =>
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已是最后一个词')))),
+                            : () => showMwSnackBar(context, const SnackBar(content: Text('已是最后一个词')))),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.skin.colors.accent,
                     foregroundColor: AppColors.white100,

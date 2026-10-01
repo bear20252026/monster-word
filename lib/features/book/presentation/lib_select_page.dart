@@ -3,6 +3,7 @@
 // 课程 tab / 词书选择页（双语境）：
 // 结构：顶部导航（tab「课程」/ push「选择词书」）+ 分类签 + 在学词书卡 + 词书网格 + 底部工具栏
 // v2.8.3 重设计：废除星球横幅/弯曲画廊/重复命名，收敛为「在学卡 + 统一网格」单滚动区
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -319,7 +320,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
         await context.read<BookState>().selectAndLoad(book);
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已选中《${book.name}》')));
+        showMwSnackBar(context, SnackBar(content: Text('已选中《${book.name}》')));
         final prefs = context.read<PresentationPrefs>();
         final firstTime = !prefs.dailyGoalPromptShown;
         if (!firstTime) {
@@ -354,7 +355,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('加载词书失败: $e')));
+        showMwSnackBar(context, SnackBar(content: Text('加载词书失败: $e')));
       }
     } finally {
       if (mounted) setState(() => _selecting = false);
@@ -406,7 +407,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
     final book = context.read<LearningSessionReader>().currentBook;
 
     if (book == null && tool != 'immersive' && tool != 'quickReview') {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先选择一本词书')));
+      showMwSnackBar(context, const SnackBar(content: Text('请先选择一本词书')));
       return;
     }
 
@@ -440,7 +441,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
         );
         break;
       default:
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$tool 功能开发中...')));
+        showMwSnackBar(context, SnackBar(content: Text('$tool 功能开发中...')));
     }
   }
 
@@ -448,7 +449,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
     final words = await context.read<BookWordListReader>().loadWords(book.id);
     if (!context.mounted) return;
     if (words.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));
+      showMwSnackBar(context, const SnackBar(content: Text('该词书暂无单词')));
       return;
     }
     await context.read<LearningSessionStarter>().startWordSession(words, book: book);
@@ -460,7 +461,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
     final words = await context.read<BookWordListReader>().loadWords(book.id);
     if (!context.mounted) return;
     if (words.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('该词书暂无单词')));
+      showMwSnackBar(context, const SnackBar(content: Text('该词书暂无单词')));
       return;
     }
     await context.read<LearningSessionStarter>().startWordSession(words, book: book);

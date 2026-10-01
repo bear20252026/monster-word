@@ -1,6 +1,7 @@
 // 主壳：三个一级 Tab（首页/词库/我的），透明悬浮底栏
 // 渲染自 Figma MainShell.js
 // 手机/平板同构，差异仅在图标尺寸和栏高（由 responsive 生成）
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 
 import 'package:word_app/tokens/starbucks_tokens.dart';
@@ -47,8 +48,7 @@ class _MainShellState extends State<MainShell> {
     final now = DateTime.now();
     if (_lastBackPress == null || now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
       _lastBackPress = now;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('再按一次退出应用'), duration: Duration(milliseconds: 1500)));
+      showMwSnackBar(context, const SnackBar(content: Text('再按一次退出应用'), duration: Duration(milliseconds: 1500)));
       return false;
     }
     return true;

@@ -1,5 +1,7 @@
 // Monster Word — 首页（"今日"版式）
 // 层级：问候头部 → 今日进度主卡（学习/复习 CTA）→ 签到条 → 词书条 → 目标档位 → 引言脚注
+import 'package:word_app/widgets/common/mw_feedback.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 

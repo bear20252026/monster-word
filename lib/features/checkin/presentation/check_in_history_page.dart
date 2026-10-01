@@ -1,6 +1,7 @@
 // 签到历史页面：双月日历视图 + 概览卡片 + 签到详情列表
 // 参考 Calendar Interactive UI Kit (Penpot) 设计模式
 // 路由：/check_in_history
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
@@ -82,7 +83,8 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
       debugPrint('[CheckInHistory] refresh error: $e');
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        showMwSnackBar(
+          context,
           SnackBar(
             content: const Text('加载签到数据失败，请重试'),
             action: SnackBarAction(label: '重试', onPressed: _refresh),

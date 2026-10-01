@@ -1,6 +1,8 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 登录页：支持手机号登录、账号密码登录
+import 'package:word_app/widgets/common/mw_feedback.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -352,7 +354,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   void _showToast(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), duration: const Duration(seconds: 2)));
+    showMwSnackBar(context, SnackBar(content: Text(msg), duration: const Duration(seconds: 2)));
   }
 
   @override
