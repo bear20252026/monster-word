@@ -479,12 +479,18 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
             color: isChecked
                 ? skin.success
                 : isToday
-                ? skin.accent.withValues(alpha: 0.12)
+                ? skin.accent.withValues(alpha: AppAlphas.o12)
                 : Colors.transparent,
             shape: BoxShape.circle,
             border: isToday ? Border.all(color: skin.vipGoldBg, width: 2) : null,
             boxShadow: isChecked
-                ? [BoxShadow(color: skin.success.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 1))]
+                ? [
+                    BoxShadow(
+                      color: skin.success.withValues(alpha: AppAlphas.o30),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
                 : null,
           ),
           child: Stack(
@@ -500,7 +506,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                         fontSize: AppFontSizes.caption,
                         fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
                         color: isFuture
-                            ? skin.text3.withValues(alpha: 0.4)
+                            ? skin.text3.withValues(alpha: AppAlphas.o40)
                             : isPrevious
                             ? skin.text3
                             : skin.text1,
@@ -576,7 +582,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
               decoration: BoxDecoration(
                 color: skin.cardBg,
                 borderRadius: BorderRadius.circular(context.design.radius.md),
-                border: Border.all(color: isToday ? skin.accent.withValues(alpha: 0.3) : skin.divider),
+                border: Border.all(color: isToday ? skin.accent.withValues(alpha: AppAlphas.o30) : skin.divider),
               ),
               child: Row(
                 children: [
@@ -584,7 +590,10 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                   Container(
                     width: 36,
                     height: 36,
-                    decoration: BoxDecoration(color: skin.success.withValues(alpha: 0.12), shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: skin.success.withValues(alpha: AppAlphas.o12),
+                      shape: BoxShape.circle,
+                    ),
                     child: Icon(Icons.check_circle, size: 20, color: skin.success),
                   ),
                   SizedBox(width: 12),
@@ -606,7 +615,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                               Container(
                                 padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: skin.accent.withValues(alpha: 0.12),
+                                  color: skin.accent.withValues(alpha: AppAlphas.o12),
                                   borderRadius: BorderRadius.circular(context.design.radius.sm),
                                 ),
                                 child: Text(
@@ -632,7 +641,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
                     ),
                   ),
                   // 尖叫币图标
-                  MonsterIcon(size: 20, showCircle: true, circleColor: skin.vipGoldBg.withValues(alpha: 0.15)),
+                  MonsterIcon(size: 20, showCircle: true, circleColor: skin.vipGoldBg.withValues(alpha: AppAlphas.o15)),
                 ],
               ),
             ),
@@ -660,7 +669,7 @@ class _MonthSwitchArrow extends StatelessWidget {
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: onTap != null ? skin.cardBgAlt : skin.divider.withValues(alpha: 0.3),
+          color: onTap != null ? skin.cardBgAlt : skin.divider.withValues(alpha: AppAlphas.o30),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, size: 18, color: onTap != null ? skin.text1 : skin.text3),

@@ -91,7 +91,7 @@ class _SealPainter extends CustomPainter {
           ..shader = RadialGradient(
             colors: [
               TreasurePalette.gold.withValues(alpha: glowAlpha),
-              TreasurePalette.gold.withValues(alpha: 0),
+              TreasurePalette.gold.withValues(alpha: AppAlphas.o0),
             ],
           ).createShader(Rect.fromCircle(center: center, radius: 40 * unit)),
       );
@@ -141,7 +141,7 @@ class _SealPainter extends CustomPainter {
 
     // 爪印盖章（仅已签态，压章色 #8a5a00）。
     if (kind == _BadgeKind.checked) {
-      final paw = Paint()..color = TreasurePalette.stampGold.withValues(alpha: 0.9);
+      final paw = Paint()..color = TreasurePalette.stampGold.withValues(alpha: AppAlphas.o90);
       final s = unit;
       canvas.save();
       canvas.translate(24 * s, 24 * s);
@@ -178,7 +178,7 @@ class _DashedRingPainter extends CustomPainter {
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
     final paint = Paint()
-      ..color = TreasurePalette.green.withValues(alpha: 0.65)
+      ..color = TreasurePalette.green.withValues(alpha: AppAlphas.o65)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     const dashes = 22;
@@ -266,7 +266,7 @@ class _PiggyPainter extends CustomPainter {
     final fillY = (122 - 60 * bellyPct) * s;
     canvas.drawRect(Rect.fromLTRB(54 * s, fillY, 166 * s, 176 * s), paint(TreasurePalette.gold));
     // 金面上的高光泡。
-    final bubble = paint(TreasurePalette.goldSoft.withValues(alpha: 0.9));
+    final bubble = paint(TreasurePalette.goldSoft.withValues(alpha: AppAlphas.o90));
     canvas.drawCircle(Offset(88 * s, 116 * s), 6.5 * s, bubble);
     canvas.drawCircle(Offset(112 * s, 118 * s), 6.5 * s, bubble);
     canvas.drawCircle(Offset(136 * s, 116 * s), 6.5 * s, bubble);
@@ -400,8 +400,8 @@ class _CoinGlyphPainter extends CustomPainter {
     final center = Offset(12 * s, 12 * s);
     if (creamStyle) {
       // CTA 上的奶白半透明币。
-      canvas.drawCircle(center, 9 * s, Paint()..color = TreasurePalette.cream.withValues(alpha: 0.25));
-      _paintSymbol(canvas, s, TreasurePalette.cream.withValues(alpha: 0.9));
+      canvas.drawCircle(center, 9 * s, Paint()..color = TreasurePalette.cream.withValues(alpha: AppAlphas.o25));
+      _paintSymbol(canvas, s, TreasurePalette.cream.withValues(alpha: AppAlphas.o90));
     } else {
       // 余额胶囊上的金底币。
       canvas.drawCircle(center, 9 * s, Paint()..color = TreasurePalette.gold);

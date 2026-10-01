@@ -34,8 +34,8 @@ class MySpacePage extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  MwColors.sunshine300.withValues(alpha: 0.35),
-                  MwColors.sunshine500.withValues(alpha: 0.08),
+                  MwColors.sunshine300.withValues(alpha: AppAlphas.o35),
+                  MwColors.sunshine500.withValues(alpha: AppAlphas.o08),
                   skin.pageBg,
                 ],
                 stops: const [0.0, 0.6, 1.0],
@@ -122,8 +122,8 @@ class MySpacePage extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: skin.accent.withValues(alpha: 0.10),
-        border: Border.all(color: skin.accent.withValues(alpha: 0.22), width: 1),
+        color: skin.accent.withValues(alpha: AppAlphas.o10),
+        border: Border.all(color: skin.accent.withValues(alpha: AppAlphas.o22), width: 1),
       ),
       child: const MonsterAvatar(size: 62),
     );

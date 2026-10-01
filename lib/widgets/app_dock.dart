@@ -44,7 +44,7 @@ class FloatingDock extends StatelessWidget {
       margin: const EdgeInsets.all(AppSpacing.md),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
       decoration: BoxDecoration(
-        color: AppColors.white100.withValues(alpha: 0.85),
+        color: AppColors.white100.withValues(alpha: AppAlphas.o85),
         borderRadius: BorderRadius.circular(context.design.radius.xl),
         boxShadow: [BoxShadow(color: AppColors.black12, blurRadius: 24, offset: const Offset(0, 8))],
       ),
@@ -63,7 +63,7 @@ class FloatingDock extends StatelessWidget {
               curve: Curves.easeOutCubic,
               padding: EdgeInsets.symmetric(horizontal: isActive ? 16 : 12, vertical: 10),
               decoration: BoxDecoration(
-                color: isActive ? active.withValues(alpha: 0.1) : Colors.transparent,
+                color: isActive ? active.withValues(alpha: AppAlphas.o10) : Colors.transparent,
                 borderRadius: BorderRadius.circular(context.design.radius.control),
               ),
               child: Row(

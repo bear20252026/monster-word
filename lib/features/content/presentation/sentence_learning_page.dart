@@ -240,7 +240,7 @@ class _SentenceLearningPageState extends State<SentenceLearningPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xxs),
               decoration: BoxDecoration(
-                color: context.skin.colors.accent.withValues(alpha: 0.1),
+                color: context.skin.colors.accent.withValues(alpha: AppAlphas.o10),
                 borderRadius: BorderRadius.circular(context.design.radius.pill),
               ),
               child: Text(

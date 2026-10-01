@@ -188,12 +188,16 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
                                     style:
                                         widget.coverTextStyle ??
                                         TextStyle(
-                                          color: AppColors.white100.withValues(alpha: 0.8),
+                                          color: AppColors.white100.withValues(alpha: AppAlphas.o80),
                                           fontSize: AppFontSizes.bodyMd,
                                           fontWeight: FontWeight.w600,
                                         ),
                                   )
-                                : Icon(Icons.touch_app, color: AppColors.white100.withValues(alpha: 0.7), size: 32),
+                                : Icon(
+                                    Icons.touch_app,
+                                    color: AppColors.white100.withValues(alpha: AppAlphas.o70),
+                                    size: 32,
+                                  ),
                           ),
                         ),
                       ),
@@ -280,7 +284,7 @@ class WordScratchCard extends StatelessWidget {
           // 默认提示用 touch 图标（比 emoji 更符合品牌质感）
           child: Container(
             decoration: BoxDecoration(
-              color: c.withValues(alpha: 0.1),
+              color: c.withValues(alpha: AppAlphas.o10),
               borderRadius: BorderRadius.circular(context.design.radius.control),
             ),
             alignment: Alignment.center,

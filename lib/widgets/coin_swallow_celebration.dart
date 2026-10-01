@@ -253,7 +253,12 @@ class _CoinSwallowCelebrationState extends State<CoinSwallowCelebration> with Ti
                     height: 216,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: RadialGradient(colors: [accent.withValues(alpha: 0.14), accent.withValues(alpha: 0.0)]),
+                      gradient: RadialGradient(
+                        colors: [
+                          accent.withValues(alpha: AppAlphas.o14),
+                          accent.withValues(alpha: AppAlphas.o0),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -374,7 +379,7 @@ class _CoinSwallowCelebrationState extends State<CoinSwallowCelebration> with Ti
                               border: Border.all(color: MwColors.sunshine300, width: 1.5),
                               boxShadow: [
                                 BoxShadow(
-                                  color: MwColors.sunshine300.withValues(alpha: 0.4),
+                                  color: MwColors.sunshine300.withValues(alpha: AppAlphas.o40),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -451,7 +456,7 @@ class CoinBadge extends StatelessWidget {
         border: Border.all(color: MwColors.mutedGold, width: size >= 28 ? 2 : 1.5),
         boxShadow: [
           BoxShadow(
-            color: MwColors.sunshine300.withValues(alpha: 0.55),
+            color: MwColors.sunshine300.withValues(alpha: AppAlphas.o55),
             blurRadius: 12 * size / 36,
             offset: Offset(0, 3 * size / 36),
           ),
@@ -481,11 +486,15 @@ class _VaultBadge extends StatelessWidget {
           width: 122,
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.white100.withValues(alpha: 0.96),
+            color: AppColors.white100.withValues(alpha: AppAlphas.o96),
             borderRadius: BorderRadius.circular(context.design.radius.lg),
             border: Border.all(color: MwColors.sunshine300, width: 2),
             boxShadow: [
-              BoxShadow(color: MwColors.sunshine300.withValues(alpha: 0.5), blurRadius: 14, offset: const Offset(0, 4)),
+              BoxShadow(
+                color: MwColors.sunshine300.withValues(alpha: AppAlphas.o50),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
             ],
           ),
           child: Stack(
@@ -527,7 +536,10 @@ class _VaultBadge extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.center,
-                        colors: [AppColors.white100.withValues(alpha: 0.35), AppColors.white100.withValues(alpha: 0.0)],
+                        colors: [
+                          AppColors.white100.withValues(alpha: AppAlphas.o35),
+                          AppColors.white100.withValues(alpha: AppAlphas.o0),
+                        ],
                       ),
                     ),
                   ),
@@ -607,7 +619,7 @@ class _VaultFxPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(cx + math.cos(spinA) * coinSize * 0.22, coinCy + math.sin(spinA) * coinSize * 0.16),
         (coinSize * 0.055).clamp(2.0, 9.0),
-        Paint()..color = white.withValues(alpha: 0.7),
+        Paint()..color = white.withValues(alpha: AppAlphas.o70),
       );
     }
     // 肚皮辉光：存款时的金色暖意
@@ -621,7 +633,7 @@ class _VaultFxPainter extends CustomPainter {
           ..shader = RadialGradient(
             colors: [
               gold.withValues(alpha: 0.30 * storeGlow),
-              gold.withValues(alpha: 0.0),
+              gold.withValues(alpha: AppAlphas.o0),
             ],
           ).createShader(rect),
       );

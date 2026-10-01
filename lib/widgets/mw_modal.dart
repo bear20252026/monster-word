@@ -91,7 +91,7 @@ class MwModal extends StatelessWidget {
     return showDialog<T>(
       context: context,
       barrierDismissible: barrierDismissible,
-      barrierColor: Colors.black.withValues(alpha: 0.55),
+      barrierColor: Colors.black.withValues(alpha: AppAlphas.o55),
       builder: (_) => Dialog(
         backgroundColor: colors.cardBg,
         elevation: 0,
@@ -111,7 +111,7 @@ class MwModal extends StatelessWidget {
       context: context,
       backgroundColor: colors.cardBg,
       isScrollControlled: true,
-      barrierColor: Colors.black.withValues(alpha: 0.55),
+      barrierColor: Colors.black.withValues(alpha: AppAlphas.o55),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (_) => SafeArea(child: modal),
     );

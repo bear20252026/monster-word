@@ -630,7 +630,7 @@ class _SettingIcon extends StatelessWidget {
       height: 32,
       margin: const EdgeInsets.only(right: 14),
       decoration: BoxDecoration(
-        color: skin.accent.withValues(alpha: 0.10),
+        color: skin.accent.withValues(alpha: AppAlphas.o10),
         borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: Icon(icon, size: 18, color: skin.accent),

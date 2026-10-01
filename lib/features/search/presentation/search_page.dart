@@ -250,7 +250,7 @@ class _SearchPageState extends State<SearchPage> {
             Navigator.pushNamed(context, RouteNames.dictionary, arguments: w);
           },
           child: Material(
-            color: _selectedWord?.word == w.word ? skin.accent.withValues(alpha: 0.08) : Colors.transparent,
+            color: _selectedWord?.word == w.word ? skin.accent.withValues(alpha: AppAlphas.o08) : Colors.transparent,
             child: Container(
               decoration: _selectedWord?.word == w.word
                   ? BoxDecoration(
@@ -485,7 +485,11 @@ class _SearchPageState extends State<SearchPage> {
           // 示例单词呼吸轮换：同一时刻只显示一个词（原波浪滚动文字已废弃）
           BreathingWord(
             words: const ['abandon', 'ability', 'above', 'accept', 'achieve'],
-            style: TextStyle(fontSize: AppFontSizes.micro, color: skin.text3.withValues(alpha: 0.5), letterSpacing: 1),
+            style: TextStyle(
+              fontSize: AppFontSizes.micro,
+              color: skin.text3.withValues(alpha: AppAlphas.o50),
+              letterSpacing: 1,
+            ),
           ),
         ],
       ),
