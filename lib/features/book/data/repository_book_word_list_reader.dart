@@ -9,25 +9,23 @@ import 'package:word_app/features/book/application/book_word_list_reader.dart';
 /// MEM/F2：列表浏览走 [loadWordPage] LIMIT/OFFSET 真分页（lightweight 列），
 /// 总量走 [countWords] 单值 COUNT；[loadWords] 全量加载保留给导出等场景。
 class RepositoryBookWordListReader implements BookWordListReader {
-  RepositoryBookWordListReader({this._database});
+  RepositoryBookWordListReader({required this.database});
 
-  final WordBookDatabase? _database;
-
-  WordBookDatabase get _db => _database ?? WordBookDatabase.instance;
+  final WordBookDatabase database;
 
   @override
   Future<List<Word>> loadWords(int bookId) {
-    return _db.getWordsByBook(bookId, lightweight: true);
+    return database.getWordsByBook(bookId, lightweight: true);
   }
 
   @override
-  Future<int> countWords(int bookId) => _db.countWordsByBook(bookId);
+  Future<int> countWords(int bookId) => database.countWordsByBook(bookId);
 
   @override
   Future<List<Word>> loadWordPage(int bookId, {required int offset, required int limit}) {
-    return _db.getWordsByBook(bookId, lightweight: true, limit: limit, offset: offset);
+    return database.getWordsByBook(bookId, lightweight: true, limit: limit, offset: offset);
   }
 
   @override
-  Future<List<String>> loadWordTexts(int bookId) => _db.getWordTextsByBook(bookId);
+  Future<List<String>> loadWordTexts(int bookId) => database.getWordTextsByBook(bookId);
 }

@@ -8,16 +8,14 @@ import 'package:word_app/features/dictionary/data/dictionary_extra.dart';
 /// 实现 [DictionaryContentReader] 端口，封装派生词、近义词、例句与真题例句查询。
 /// 直接访问数据库，不经过 [DictionaryService] 中间层。
 class ServiceDictionaryContentReader implements DictionaryContentReader {
-  ServiceDictionaryContentReader({this._database});
+  ServiceDictionaryContentReader({required this.database});
 
-  final WordBookDatabase? _database;
-
-  WordBookDatabase get _db => _database ?? WordBookDatabase.instance;
+  final WordBookDatabase database;
 
   @override
   Future<List<Word>> getDerivedWords(String word) async {
     if (word.trim().isEmpty) return [];
-    final rows = await _db.db.query(
+    final rows = await database.db.query(
       'words',
       where: 'main_word = ? AND word != ?',
       whereArgs: [word, word],
@@ -29,7 +27,7 @@ class ServiceDictionaryContentReader implements DictionaryContentReader {
   @override
   Future<List<Word>> getSynonyms(String word) async {
     if (word.trim().isEmpty) return [];
-    final wordData = await _db.getWord(word);
+    final wordData = await database.getWord(word);
     if (wordData == null || wordData.confuse.isEmpty) return [];
 
     final synonyms = wordData.confuse.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
@@ -37,13 +35,13 @@ class ServiceDictionaryContentReader implements DictionaryContentReader {
 
     // 性能审计 P3：循环内逐词查询（N+1）改单次批量查询
     // MEM：近义词列表只需词头/释义展示，lightweight 降内存。
-    return _db.getWordsByNames(synonyms.toSet(), lightweight: true);
+    return database.getWordsByNames(synonyms.toSet(), lightweight: true);
   }
 
   @override
   Future<List<ExampleSentence>> getExamExamples(String word) async {
     if (word.trim().isEmpty) return [];
-    final wordData = await _db.getWord(word);
+    final wordData = await database.getWord(word);
     if (wordData == null || wordData.example.isEmpty) return [];
 
     // 根因修复（v2.7.45）：word.example 是结构化 JSON（{"v":1,"data":[...] }），
@@ -64,7 +62,7 @@ class ServiceDictionaryContentReader implements DictionaryContentReader {
   @override
   Future<List<CollinsSense>> getCollinsSenses(String word) async {
     if (word.trim().isEmpty) return [];
-    final wordData = await _db.getWord(word);
+    final wordData = await database.getWord(word);
     if (wordData == null || wordData.example.isEmpty) return [];
     return ExampleParser.parseCollins(wordData.example);
   }

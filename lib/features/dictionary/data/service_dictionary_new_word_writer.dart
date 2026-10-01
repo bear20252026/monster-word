@@ -13,13 +13,11 @@ import 'package:word_app/features/dictionary/application/dictionary_new_word_wri
 /// [NewWordIdCache]（学习域写入路径同源维护），不再自持私有缓存——
 /// 此前学习域移除生词后本域星标陈旧到重启。
 class ServiceDictionaryNewWordWriter implements DictionaryNewWordWriter {
-  ServiceDictionaryNewWordWriter({this._userDatabase});
+  ServiceDictionaryNewWordWriter({required this.userDatabase});
 
-  final UserDatabase? _userDatabase;
+  final UserDatabase userDatabase;
 
-  UserDatabase get _db => _userDatabase ?? UserDatabase.instance;
-
-  NewWordRepositoryImpl get _repo => NewWordRepositoryImpl(_db);
+  NewWordRepositoryImpl get _repo => NewWordRepositoryImpl(userDatabase);
 
   @override
   Future<bool> toggleNewWord(Word word, {String source = 'dictionary'}) async {

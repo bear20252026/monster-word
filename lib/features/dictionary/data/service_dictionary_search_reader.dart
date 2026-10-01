@@ -7,23 +7,21 @@ import 'package:word_app/features/dictionary/application/dictionary_search_reade
 /// 使用 [WordBookDatabase.searchWords] 做前缀匹配，
 /// 名称子串匹配通过 SQL LIKE 实现模糊搜索。
 class ServiceDictionarySearchReader implements DictionarySearchReader {
-  ServiceDictionarySearchReader({this._database});
+  ServiceDictionarySearchReader({required this.database});
 
-  final WordBookDatabase? _database;
-
-  WordBookDatabase get _db => _database ?? WordBookDatabase.instance;
+  final WordBookDatabase database;
 
   @override
   Future<List<Word>> searchByPrefix(String prefix) async {
     if (prefix.trim().isEmpty) return [];
-    return _db.searchWords(prefix.trim(), limit: 20);
+    return database.searchWords(prefix.trim(), limit: 20);
   }
 
   @override
   Future<List<Word>> searchFuzzy(String query) async {
     if (query.trim().isEmpty) return [];
     // 子串匹配：%query%
-    final rows = await _db.db.query(
+    final rows = await database.db.query(
       'words',
       where: 'word LIKE ?',
       whereArgs: ['%${query.trim()}%'],
