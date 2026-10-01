@@ -290,7 +290,6 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    final profile = context.watch<AccountProfileState>();
     return Container(
       // 暖纸固定底（与小屋家族同源，不随明暗主题切换）
       decoration: const BoxDecoration(
@@ -301,16 +300,23 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
           stops: [0, 0.55, 1],
         ),
       ),
-      child: _buildRoom(context, profile),
+      // 门牌只依赖头像与昵称两个字段：资料编辑/刷新的 notify 不再整页重建
+      child: Selector<AccountProfileState, (String, String)>(
+        selector: (_, profile) => (profile.avatar, profile.nickname),
+        builder: (context, data, _) => _buildRoom(context, data.$1, data.$2),
+      ),
     );
   }
 
-  Widget _buildRoom(BuildContext context, AccountProfileState profile) {
+  Widget _buildRoom(BuildContext context, String avatar, String nickname) {
     return Column(
       children: [
         // 门牌在宽屏下限宽居中，与舞台同轴
         Center(
-          child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 560), child: _buildDoorplate(profile)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: _buildDoorplate(avatar, nickname),
+          ),
         ),
         Expanded(child: _buildStage()),
       ],
@@ -318,7 +324,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   }
 
   // ── 门牌身份区 ──
-  Widget _buildDoorplate(AccountProfileState profile) {
+  Widget _buildDoorplate(String avatar, String nickname) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
       child: Row(
@@ -338,13 +344,9 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
                     boxShadow: const [
                       BoxShadow(color: TreasurePalette.pillShadow, blurRadius: 10, offset: Offset(0, 3)),
                     ],
-                    image: profile.avatar.isEmpty
-                        ? null
-                        : DecorationImage(image: FileImage(File(profile.avatar)), fit: BoxFit.cover),
+                    image: avatar.isEmpty ? null : DecorationImage(image: FileImage(File(avatar)), fit: BoxFit.cover),
                   ),
-                  child: profile.avatar.isEmpty
-                      ? Icon(Icons.menu_book_rounded, color: RoomPalette.woodDark, size: 28)
-                      : null,
+                  child: avatar.isEmpty ? Icon(Icons.menu_book_rounded, color: RoomPalette.woodDark, size: 28) : null,
                 ),
                 Positioned(
                   right: -6,
@@ -369,7 +371,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  profile.nickname.isEmpty ? '未设置昵称' : profile.nickname,
+                  nickname.isEmpty ? '未设置昵称' : nickname,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: MwTypography.bodyMd.copyWith(fontWeight: FontWeight.w800, color: TreasurePalette.ink),

@@ -30,6 +30,7 @@ import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/features/learning/presentation/learn_completion_screen.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
@@ -68,101 +69,94 @@ class _LearnPageState extends State<LearnPage> {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final resp = context.responsive;
-    final state = context.watch<LearningSessionState>();
-    final player = context.watch<AudioPlaybackState>();
-    final word = state.currentWord;
+    final state = context.read<LearningSessionState>();
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
     // 体验审计 P1：有学习进度时拦截返回，与「暂停并保存」承诺一致
     // （此前系统返回直接清空队列，无确认）
     return SessionExitGuard(
       subject: '本次学习',
-      shouldIntercept: () => state.hasProgress,
+      shouldIntercept: () => context.read<LearningSessionState>().hasProgress,
       child: Scaffold(
         backgroundColor: skin.colors.pageBg,
-        body: word == null
-            ? LearnCompletionScreen(
-                skin: skin,
-                errorCount: state.errorWords.length,
-                totalAnswered: state.totalAnswered,
-                durationSeconds: state.sessionDurationSeconds,
-                accuracy: state.accuracy,
-                goalAchieved: state.dailyGoalAchieved,
-                todayLearned: state.todayLearned,
-                dailyGoal: state.dailyGoal,
-                bestCombo: state.bestCombo,
-                onReviewErrors: state.errorWords.isEmpty
-                    ? null
-                    : () {
-                        state.loadFromWords(state.errorWords, book: state.currentBook);
-                      },
-              )
-            : SafeArea(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
-                    child: Column(
-                      children: [
-                        // 会话进度栏：竖屏/横屏共用（此前横屏分支缺失，无进度/返回/收藏）
-                        _TopBar(skin: skin, state: state, pillKey: _pillKey, balanceTick: _balanceTick),
-                        Expanded(
-                          child: isLandscape
-                              ? Row(
-                                  children: [
-                                    Expanded(
-                                      child: _WordArea(
-                                        word: word,
-                                        skin: skin,
-                                        resp: resp,
-                                        audioLoading: player.isLoading && player.currentWord == word.word,
-                                        onPlayAudio: _playAudio,
+        // 整页只订阅 currentWord：答题记录/连击/音频加载等高频 notify
+        // 由 _QuizArea 与 _AudioButton 局部重建，不再牵动全页
+        body: Selector<LearningSessionState, Word?>(
+          selector: (_, session) => session.currentWord,
+          builder: (context, word, _) => word == null
+              ? Consumer<LearningSessionState>(
+                  builder: (context, session, _) => LearnCompletionScreen(
+                    skin: skin,
+                    errorCount: session.errorWords.length,
+                    totalAnswered: session.totalAnswered,
+                    durationSeconds: session.sessionDurationSeconds,
+                    accuracy: session.accuracy,
+                    goalAchieved: session.dailyGoalAchieved,
+                    todayLearned: session.todayLearned,
+                    dailyGoal: session.dailyGoal,
+                    bestCombo: session.bestCombo,
+                    onReviewErrors: session.errorWords.isEmpty
+                        ? null
+                        : () {
+                            session.loadFromWords(session.errorWords, book: session.currentBook);
+                          },
+                  ),
+                )
+              : SafeArea(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
+                      child: Column(
+                        children: [
+                          // 会话进度栏：竖屏/横屏共用（此前横屏分支缺失，无进度/返回/收藏）
+                          _TopBar(skin: skin, state: state, pillKey: _pillKey, balanceTick: _balanceTick),
+                          Expanded(
+                            child: isLandscape
+                                ? Row(
+                                    children: [
+                                      Expanded(
+                                        child: _WordArea(word: word, skin: skin, resp: resp, onPlayAudio: _playAudio),
                                       ),
-                                    ),
-                                    Expanded(
-                                      child: _QuizArea(
-                                        word: word,
-                                        state: state,
-                                        skin: skin,
-                                        pillKey: _pillKey,
-                                        onRewarded: (_) {
-                                          if (mounted) setState(() => _balanceTick++);
-                                        },
+                                      Expanded(
+                                        child: _QuizArea(
+                                          word: word,
+                                          state: state,
+                                          skin: skin,
+                                          pillKey: _pillKey,
+                                          onRewarded: (_) {
+                                            if (mounted) setState(() => _balanceTick++);
+                                          },
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                )
-                              : Column(
-                                  children: [
-                                    Expanded(
-                                      flex: 4,
-                                      child: _WordArea(
-                                        word: word,
-                                        skin: skin,
-                                        resp: resp,
-                                        audioLoading: player.isLoading && player.currentWord == word.word,
-                                        onPlayAudio: _playAudio,
+                                    ],
+                                  )
+                                : Column(
+                                    children: [
+                                      Expanded(
+                                        flex: 4,
+                                        child: _WordArea(word: word, skin: skin, resp: resp, onPlayAudio: _playAudio),
                                       ),
-                                    ),
-                                    Expanded(
-                                      flex: 6,
-                                      child: _QuizArea(
-                                        word: word,
-                                        state: state,
-                                        skin: skin,
-                                        pillKey: _pillKey,
-                                        onRewarded: (_) {
-                                          if (mounted) setState(() => _balanceTick++);
-                                        },
+                                      Expanded(
+                                        flex: 6,
+                                        child: _QuizArea(
+                                          word: word,
+                                          state: state,
+                                          skin: skin,
+                                          pillKey: _pillKey,
+                                          onRewarded: (_) {
+                                            if (mounted) setState(() => _balanceTick++);
+                                          },
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                        ),
-                      ],
+                                    ],
+                                  ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+        ),
       ),
     );
   }
@@ -338,15 +332,8 @@ class _WordArea extends StatelessWidget {
   final dynamic word;
   final SkinSystem skin;
   final AppResponsive resp;
-  final bool audioLoading;
   final Future<void> Function(String, {String? audioUrl}) onPlayAudio;
-  const _WordArea({
-    required this.word,
-    required this.skin,
-    required this.resp,
-    required this.audioLoading,
-    required this.onPlayAudio,
-  });
+  const _WordArea({required this.word, required this.skin, required this.resp, required this.onPlayAudio});
 
   String _hintText(dynamic word) {
     if (word.hasStructuredDefinitions == true) {
@@ -391,22 +378,7 @@ class _WordArea extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () => onPlayAudio(word.word),
-                  child: SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Center(
-                      child: audioLoading
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: colors.text2),
-                            )
-                          : Icon(Icons.volume_up_outlined, color: colors.text2, size: 28),
-                    ),
-                  ),
-                ),
+                _AudioButton(word: word.word, onPlayAudio: onPlayAudio, color: colors.text2),
               ],
             ),
             if (word.usPron.isNotEmpty) ...[
@@ -427,6 +399,34 @@ class _WordArea extends StatelessWidget {
               resetToken: word.word,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 发音按钮：只订阅「本词是否在加载」这一位——音频状态高频翻转时
+/// 仅重建按钮本身，不再牵动整页（音频 loading 原先挂页面级 watch）。
+class _AudioButton extends StatelessWidget {
+  final String word;
+  final Future<void> Function(String, {String? audioUrl}) onPlayAudio;
+  final Color color;
+  const _AudioButton({required this.word, required this.onPlayAudio, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onPlayAudio(word),
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Center(
+          child: Selector<AudioPlaybackState, bool>(
+            selector: (_, player) => player.isLoading && player.currentWord == word,
+            builder: (context, isLoading, _) => isLoading
+                ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: color))
+                : Icon(Icons.volume_up_outlined, color: color, size: 28),
+          ),
         ),
       ),
     );
@@ -558,6 +558,8 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    // 答题高频 notify（recordAnswer 记录/连击/错词簿）只重建本测验区
+    context.watch<LearningSessionState>();
     final state = widget.state;
     final colors = widget.skin.colors;
     final resp = context.responsive;
