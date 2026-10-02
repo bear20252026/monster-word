@@ -431,3 +431,70 @@ class _CoinGlyphPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _CoinGlyphPainter old) => old.creamStyle != creamStyle;
 }
+
+/// 单枚日期徽章的弹簧模拟状态。
+class _DaySim {
+  _DaySim({required this.dnum, required this.isToday, required this.isFuture, required this.checked});
+
+  final int dnum;
+  final bool isToday;
+  final bool isFuture;
+  bool checked;
+
+  // 散落锚点（舞台相对 0~1 + 漂浮参数）。
+  double ax = 0.5, ay = 0.5, arot = 0, ascale = 1, wob = 0, wsp = 1;
+  // 网格落位目标（舞台坐标，中心定位）。
+  double tx = 0, ty = 0;
+  // 当前状态。
+  double x = 0, y = 0, rot = 0, scale = 1, vx = 0, vy = 0, vrot = 0, vscale = 0;
+  // 聚合开始时刻（秒）；散落态无意义。
+  double assembleAt = 0;
+  // 花齿 ⇄ 方章交叉渐隐进度 0~1。
+  double square = 0;
+}
+
+/// 金币弹道（二次贝塞尔 + smoothstep，同原型 burst）。
+class _BurstCoin {
+  _BurstCoin({
+    required this.sx,
+    required this.sy,
+    required this.cx,
+    required this.cy,
+    required this.t0,
+    required this.dur,
+    required this.size,
+    required this.color,
+  });
+
+  final double sx, sy, cx, cy, t0, dur, size;
+  final int color;
+}
+
+/// 环绕徽章的尘粒。
+class _OrbitDust {
+  _OrbitDust({
+    required this.part,
+    required this.ang,
+    required this.rad,
+    required this.sp,
+    required this.size,
+    required this.color,
+    required this.ph,
+  });
+
+  final int part;
+  double ang;
+  double rad;
+  final double sp, size, ph;
+  final int color;
+  double alpha = 0;
+}
+
+/// 氛围微尘。
+class _AmbientDot {
+  _AmbientDot({required this.x, required this.y, required this.size, required this.tw, required this.sp});
+
+  double x, y;
+  final double size, sp;
+  double tw;
+}
