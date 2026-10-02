@@ -45,8 +45,24 @@ class ScareCoinLedgerDao {
 
   bool get usesSqlite => _useSqlite;
 
+  /// P2-2：UserDatabase.close() 只复位自身、不通知本 DAO——close 后若不清
+  /// 缓存，DAO 永久卡「假 SQLite 模式」（_db 句柄已关闭但 _useSqlite 仍为
+  /// true，操作抛 database_closed，且 ensureLoaded 命中缓存的 completed
+  /// future 永不重载）。失败操作路径经 [_runGuarded] 自动失效；外部
+  /// 主动关闭库（测试/未来生命周期管理）也可显式调用。
+  void invalidate() {
+    _db = null;
+    _loading = null;
+    _useSqlite = false;
+  }
+
   /// 首次访问时完成 SP → SQLite 迁移（幂等，单事务）。
-  Future<void> ensureLoaded() => _loading ??= _ensureLoadedInner();
+  /// 失效（[invalidate]）后重新走 [_ensureLoadedInner]，重取新库句柄。
+  Future<void> ensureLoaded() {
+    final current = _loading;
+    if (current != null) return current;
+    return _loading = _ensureLoadedInner();
+  }
 
   Future<void> _ensureLoadedInner() async {
     final override = _openOverride;
@@ -119,45 +135,50 @@ class ScareCoinLedgerDao {
     });
   }
 
-  Future<int> balance() async {
-    final rows = await _requireDb().query(_metaTable, where: 'key = ?', whereArgs: [_kBalance]);
-    return rows.isEmpty ? 0 : rows.first['value']! as int;
+  Future<int> balance() {
+    return _runGuarded<int>((db) async {
+      final rows = await db.query(_metaTable, where: 'key = ?', whereArgs: [_kBalance]);
+      return rows.isEmpty ? 0 : rows.first['value']! as int;
+    });
   }
 
   /// 余额变动 + 流水追加，同一事务；负余额抛 StateError 且整体回滚
   /// （余额与流水都不落库，与旧 SP 路径的负余额守卫语义一致）。
-  Future<int> applyDelta({required int delta, required ScareCoinEntry entry}) async {
-    final db = _requireDb();
-    return db.transaction<int>((txn) async {
-      final rows = await txn.query(_metaTable, where: 'key = ?', whereArgs: [_kBalance]);
-      final current = rows.isEmpty ? 0 : rows.first['value']! as int;
-      final next = current + delta;
-      if (next < 0) {
-        throw StateError('余额不足：current=$current, delta=$delta');
-      }
-      await txn.insert(_metaTable, {'key': _kBalance, 'value': next}, conflictAlgorithm: ConflictAlgorithm.replace);
-      await txn.insert(_entriesTable, _entryRow(entry));
-      return next;
+  Future<int> applyDelta({required int delta, required ScareCoinEntry entry}) {
+    return _runGuarded<int>((db) {
+      return db.transaction<int>((txn) async {
+        final rows = await txn.query(_metaTable, where: 'key = ?', whereArgs: [_kBalance]);
+        final current = rows.isEmpty ? 0 : rows.first['value']! as int;
+        final next = current + delta;
+        if (next < 0) {
+          throw StateError('余额不足：current=$current, delta=$delta');
+        }
+        await txn.insert(_metaTable, {'key': _kBalance, 'value': next}, conflictAlgorithm: ConflictAlgorithm.replace);
+        await txn.insert(_entriesTable, _entryRow(entry));
+        return next;
+      });
     });
   }
 
   /// 零变动流水（发卡/续命审计），追加不截断。
-  Future<void> appendEntry(ScareCoinEntry entry) async {
-    await _requireDb().insert(_entriesTable, _entryRow(entry));
+  Future<void> appendEntry(ScareCoinEntry entry) {
+    return _runGuarded<void>((db) => db.insert(_entriesTable, _entryRow(entry)));
   }
 
   /// 最新 [limit] 条流水，时间倒序（同毫秒按插入序倒序），与旧排序口径一致。
-  Future<List<ScareCoinEntry>> history({int limit = historyLimit}) async {
-    final rows = await _requireDb().query(_entriesTable, orderBy: 'time_ms DESC, id DESC', limit: limit);
-    return rows
-        .map(
-          (row) => ScareCoinEntry(
-            time: DateTime.fromMillisecondsSinceEpoch(row['time_ms']! as int),
-            delta: row['delta']! as int,
-            reason: row['reason']! as String,
-          ),
-        )
-        .toList();
+  Future<List<ScareCoinEntry>> history({int limit = historyLimit}) {
+    return _runGuarded<List<ScareCoinEntry>>((db) async {
+      final rows = await db.query(_entriesTable, orderBy: 'time_ms DESC, id DESC', limit: limit);
+      return rows
+          .map(
+            (row) => ScareCoinEntry(
+              time: DateTime.fromMillisecondsSinceEpoch(row['time_ms']! as int),
+              delta: row['delta']! as int,
+              reason: row['reason']! as String,
+            ),
+          )
+          .toList();
+    });
   }
 
   Database _requireDb() {
@@ -168,9 +189,37 @@ class ScareCoinLedgerDao {
     return db;
   }
 
+  /// P2-2：统一操作包装。底层库被 UserDatabase.close() 等外部 close 后，
+  /// sqflite（sqflite_common_ffi 同源）在已关闭句柄上的操作抛
+  /// DatabaseException('error database_closed')，包内公开判定为
+  /// [DatabaseException.isDatabaseClosedError]。命中即自动失效并原样
+  /// rethrow——不回退 SP 语义：唯一生产调用方 PreferencesScareCoinStore
+  /// 的 balance/history 本就直接透传 DAO 异常（_apply 的负余额也照抛），
+  /// 而 SP 快照只反映迁移前状态、close 前的新账不在其中，假装成功会静默
+  /// 丢单条账目。失效后下次 ensureLoaded()（store._sqliteLedger 每次操作
+  /// 都会先调）重走 _ensureLoadedInner 拿新句柄，恢复 SQLite 模式。
+  Future<T> _runGuarded<T>(Future<T> Function(Database db) action) async {
+    final db = _requireDb();
+    try {
+      return await action(db);
+    } on DatabaseException catch (e) {
+      if (e.isDatabaseClosedError()) {
+        reportSwallowedError('金币账本数据库连接已失效，重置为可重载状态', e, StackTrace.current);
+        invalidate();
+      }
+      rethrow;
+    }
+  }
+
   Map<String, Object> _entryRow(ScareCoinEntry entry) => {
     'time_ms': entry.time.millisecondsSinceEpoch,
     'delta': entry.delta,
     'reason': entry.reason,
   };
 }
+
+// 数据层审计 P2-2：UserDatabase.close()（user_database.dart）复位自身但不
+// 通知本 DAO。失效机制两条路：① 外部关闭后显式 invalidate()；② 已关闭
+// 句柄上的操作抛 database_closed 类异常时 _runGuarded 自动失效并上报。
+// 失效后 ensureLoaded() 重新加载，不会永久卡死在假 SQLite 模式。
+// 注意：不给 UserDatabase 加 DAO 通知（避免 infrastructure 内反向依赖环）。

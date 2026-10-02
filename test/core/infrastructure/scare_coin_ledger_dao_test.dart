@@ -23,7 +23,9 @@ void main() {
   });
 
   tearDown(() async {
-    await db.close();
+    if (db.isOpen) {
+      await db.close();
+    }
   });
 
   ScareCoinEntry entry(int delta, String reason, {DateTime? at}) =>
@@ -101,6 +103,39 @@ void main() {
 
       expect(dao.usesSqlite, isFalse);
       expect(() => dao.balance(), throwsStateError, reason: 'SP 回退模式由 Store 层兜底，DAO 不读 SP');
+    });
+    test('P2-2：底层库被外部 close 后自动失效，重新加载即恢复 SQLite 模式', () async {
+      var useFreshDb = false;
+      final dao = ScareCoinLedgerDao(
+        openDatabase: () async {
+          if (!useFreshDb) return db;
+          final fresh = await openDatabase(inMemoryDatabasePath);
+          await fresh.execute(
+            'CREATE TABLE IF NOT EXISTS scare_coin_entries ('
+            'id INTEGER PRIMARY KEY AUTOINCREMENT, time_ms INTEGER NOT NULL, delta INTEGER NOT NULL, reason TEXT NOT NULL)',
+          );
+          await fresh.execute(
+            'CREATE TABLE IF NOT EXISTS scare_coin_meta (key TEXT PRIMARY KEY, value INTEGER NOT NULL)',
+          );
+          return fresh;
+        },
+      );
+      await dao.ensureLoaded();
+      expect(dao.usesSqlite, isTrue);
+      expect(await dao.applyDelta(delta: 5, entry: entry(5, '答对＋1')), 5);
+
+      // 模拟 UserDatabase.close()：直接关闭 DAO 持有的句柄（不经 invalidate）
+      await db.close();
+      useFreshDb = true;
+
+      // 关闭后操作抛 database_closed，且 DAO 自动失效退出「假 SQLite 模式」
+      await expectLater(dao.balance(), throwsA(isA<DatabaseException>()));
+      expect(dao.usesSqlite, isFalse, reason: 'closed 异常命中后自动失效，不得永久卡在假 SQLite 模式');
+
+      // 失效后重新 ensureLoaded：重走 openDatabase 拿新句柄，SQLite 模式恢复
+      await dao.ensureLoaded();
+      expect(dao.usesSqlite, isTrue);
+      expect(await dao.balance(), 0, reason: '新库无迁移标记，SP 快照为空 → 空账本（重放语义）');
     });
   });
 }
