@@ -11,6 +11,7 @@ import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/core/presentation/responsive.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/widgets/confetti.dart';
@@ -46,7 +47,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
   bool _emptyAtEntry = false;
   int? _grantedCoins;
 
-  /// 会话结算发币（每会话一次）；失败静默不打断完成页。
+  /// 会话结算发币（每会话一次）；失败不打断完成页，异常经 reportSwallowedError 上报。
   Future<void> _settleRewards(BuildContext context, LearningSessionState state, int total) async {
     try {
       // 队列未重载再次进入（如皮肤页「立即体验」）会重挂载本页；
@@ -58,8 +59,9 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       final result = await service.settleSession(wordsLearned: total, dailyGoalAchieved: state.dailyGoalAchieved);
       if (!mounted || result.totalGranted <= 0) return;
       setState(() => _grantedCoins = result.totalGranted);
-    } catch (_) {
-      // 奖励结算失败不打断完成页
+    } catch (e, s) {
+      // 奖励结算失败不打断完成页（异常已上报，便于远程排查发币缺失）
+      reportSwallowedError('会话结算发币失败', e, s);
     }
   }
 

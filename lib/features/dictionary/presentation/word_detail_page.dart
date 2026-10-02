@@ -28,6 +28,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/definition_view.dart';
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/widgets/word_root_tab.dart';
 import 'package:word_app/core/application/app_messages.dart';
@@ -571,14 +572,14 @@ class _WordDetailPageState extends State<WordDetailPage> {
                   return GestureDetector(
                     onTap: () async {
                       if (player.isLoading) return;
-                      final messenger = ScaffoldMessenger.of(context);
                       try {
                         // 单词发音走有道 TTS；word.audioUrls 实为"例句音频 JSON 数组串"而非单词发音 URL，
                         // 传入会污染分支导致无声，故不传 audioUrl（回退到有道发音）。
                         await player.playWord(word.word);
                       } catch (e) {
-                        if (mounted) {
-                          messenger.showSnackBar(
+                        if (context.mounted) {
+                          showMwSnackBar(
+                            context,
                             const SnackBar(content: Text(AppMessages.audioLoadFailed), duration: Duration(seconds: 2)),
                           );
                         }

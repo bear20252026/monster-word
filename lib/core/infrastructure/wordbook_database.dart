@@ -404,7 +404,11 @@ class WordBookDatabase {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kDbHashKey, assetHash);
-    } catch (_) {}
+    } catch (e, s) {
+      // 错误处理审计 P2-6：与 :258/:313 指纹持久化同口径——指纹丢失会导致下次
+      // 冷启动重走 35MB gz 加载 + 哈希慢路径，性能劣化应远程可见
+      reportSwallowedError('词库重建后指纹持久化失败', e, s);
+    }
 
     // 5) 重开并做完整性验证
     _db = await openDatabase(dbPath, readOnly: true);

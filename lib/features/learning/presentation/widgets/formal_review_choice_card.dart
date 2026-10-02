@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
@@ -7,6 +5,7 @@ import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
+import 'package:word_app/widgets/quiz_feedback_fx.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 
 /// 候选卡片：字母徽标 + 释义，按压缩放反馈。
@@ -112,12 +111,7 @@ class _FormalReviewChoiceCardState extends State<FormalReviewChoiceCard> with Ti
         borderRadius: BorderRadius.circular(context.design.radius.md),
         border: Border.all(color: borderColor, width: correctShown || w.isSelectedWrong ? 1.2 : 0.5),
         // 双层浮起阴影对齐学习页选项卡；状态卡（绿/红）以色块表达，不带影
-        boxShadow: correctShown || w.isSelectedWrong
-            ? null
-            : const [
-                BoxShadow(color: MwShadows.softShadow, blurRadius: 0.5, offset: Offset(0, 0)),
-                BoxShadow(color: MwShadows.liftShadow, blurRadius: 1, offset: Offset(0, 1)),
-              ],
+        boxShadow: correctShown || w.isSelectedWrong ? null : MwQuizElevation.shadows,
       ),
       child: Row(
         children: [
@@ -160,16 +154,7 @@ class _FormalReviewChoiceCardState extends State<FormalReviewChoiceCard> with Ti
             const SizedBox(width: 8),
             if (correctShown)
               // 对勾弹入：springPop 过冲（学习页同款曲线家族）
-              ScaleTransition(
-                scale: Tween<double>(
-                  begin: 0.6,
-                  end: 1.0,
-                ).animate(CurvedAnimation(parent: _mark, curve: MotionCurves.springPop)),
-                child: FadeTransition(
-                  opacity: _mark,
-                  child: Icon(Icons.check_circle_rounded, size: 20, color: fgColor),
-                ),
-              )
+              MwCheckIconPop(controller: _mark, icon: Icons.check_circle_rounded, color: fgColor, size: 20)
             else
               Icon(Icons.cancel_rounded, size: 20, color: fgColor),
           ],
@@ -179,18 +164,7 @@ class _FormalReviewChoiceCardState extends State<FormalReviewChoiceCard> with Ti
 
     if (w.isSelectedWrong) {
       // 温柔下沉：dip 5px 即回 + 轻淡（学习页同款，去惩罚感）
-      card = AnimatedBuilder(
-        animation: _dip,
-        builder: (context, child) {
-          final dip = math.sin(_dip.value * math.pi) * 5;
-          final fade = 1 - _dip.value * 0.12;
-          return Transform.translate(
-            offset: Offset(0, dip),
-            child: Opacity(opacity: fade, child: child),
-          );
-        },
-        child: card,
-      );
+      card = MwDipFeedback(progress: _dip, child: card);
     }
 
     return ScaleDownOnPress(onTap: widget.onTap, child: card);

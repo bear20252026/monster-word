@@ -1,8 +1,9 @@
-// SnackBar 出口卫生守卫——lib 下禁止临时搭 ScaffoldMessenger.of 链直接弹 SnackBar
-// （P1-D，审计 I4 收尾：统一走 showMwSnackBar 出口）。
+// SnackBar 出口卫生守卫——lib 下禁止绕过 showMwSnackBar 出口直接弹 SnackBar
+// （P1-D，审计 I4 收尾；P2-11 补口：ScaffoldMessenger.of / maybeOf?. 链式与局部持有
+// messenger 变量后直弹，三种形态全部收进口径；出口实现自身豁免）。
 //
-// 已局部化持有 messenger 变量的调用（`final messenger = ScaffoldMessenger.of(context)`
-// 后多次使用）不在口径内；出口实现自身豁免。
+// 防误伤口径：word_app 代码里 showSnackBar 只存在于 ScaffoldMessenger 上，第二分支
+// 仅匹配「非空白字符紧邻 .showSnackBar(」的成员调用；白名单仅出口实现 mw_feedback.dart。
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -11,10 +12,10 @@ const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app', 'lib/core'
 
 const _whitelist = <String>{'lib/widgets/common/mw_feedback.dart'};
 
-final _callRe = RegExp(r'ScaffoldMessenger\.of\([^)]*\)\s*\.\s*showSnackBar\(');
+final _callRe = RegExp(r'ScaffoldMessenger\.(?:of|maybeOf)\([^)]*\)\s*\??\.\s*showSnackBar\s*\(|(\S)\.showSnackBar\(');
 
 void main() {
-  test('ScaffoldMessenger.of 链式直接弹 SnackBar 存量为 0（统一走 showMwSnackBar）', () {
+  test('ScaffoldMessenger 链式与局部持有直弹 SnackBar 存量为 0（统一走 showMwSnackBar）', () {
     final hits = <String>[];
     for (final root in _scanRoots) {
       final dir = Directory(root);

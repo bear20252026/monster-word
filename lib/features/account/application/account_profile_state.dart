@@ -1,4 +1,5 @@
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/features/account/application/account_profile_store.dart';
@@ -65,8 +66,8 @@ class AccountProfileState extends ChangeNotifier {
     _safeNotify();
     try {
       await _profileStore.save(next);
-    } catch (error) {
-      debugLog('Account profile saving error: $error');
+    } catch (error, stack) {
+      reportSwallowedError('账号资料保存失败', error, stack);
     }
   }
 }

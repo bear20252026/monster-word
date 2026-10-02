@@ -152,7 +152,9 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
   }
 
   void _initParticles() {
-    for (int i = 0; i < widget.particleCount; i++) {
+    // 粒子数钳制 ≤100（P3 顺带项）：painter 每帧遍历全部粒子，超量配置会放大每帧绘制开销。
+    final int count = widget.particleCount > 100 ? 100 : widget.particleCount;
+    for (int i = 0; i < count; i++) {
       _particles.add(_createParticle());
     }
   }
@@ -201,38 +203,42 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
     );
   }
 
+  // 逐帧粒子推进：只原地修改粒子字段，不再 setState / 不再整组件 rebuild。
+  // 重绘由传给 painter 的 AnimationController（repaint listenable）在每个 tick 直接驱动。
   void _updateParticles() {
     if (!_isPlaying) return;
 
     final dt = 1 / 60; // 假设 60fps
-    setState(() {
-      for (final p in _particles) {
-        // 更新位置
-        p.position = Offset(p.position.dx + p.velocity.dx * dt, p.position.dy + p.velocity.dy * dt);
+    for (final p in _particles) {
+      // 更新位置
+      p.position = Offset(p.position.dx + p.velocity.dx * dt, p.position.dy + p.velocity.dy * dt);
 
-        // 应用重力
-        p.velocity = Offset(p.velocity.dx, p.velocity.dy + widget.gravity * dt);
+      // 应用重力
+      p.velocity = Offset(p.velocity.dx, p.velocity.dy + widget.gravity * dt);
 
-        // 更新旋转
-        p.rotation += p.rotationSpeed * dt;
+      // 更新旋转
+      p.rotation += p.rotationSpeed * dt;
 
-        // 更新透明度（逐渐消失）
-        if (_controller.value > 0.7) {
-          p.opacity = math.max(0, p.opacity - dt * 3);
-        }
+      // 更新透明度（逐渐消失）
+      if (_controller.value > 0.7) {
+        p.opacity = math.max(0, p.opacity - dt * 3);
       }
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // 逐帧位移的重绘不经过 setState：由 painter 的 repaint listenable（AnimationController）
+    // 每个 tick 直接驱动 RenderCustomPaint；setState 只保留给开始/停止这类结构性时机。
     return Stack(
       children: [
         widget.child,
         if (_isPlaying)
           Positioned.fill(
             child: IgnorePointer(
-              child: CustomPaint(painter: _ConfettiPainter(particles: _particles)),
+              child: CustomPaint(
+                painter: _ConfettiPainter(particles: _particles, repaint: _controller),
+              ),
             ),
           ),
       ],
@@ -243,16 +249,18 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
 class _ConfettiPainter extends CustomPainter {
   final List<ConfettiParticle> particles;
 
-  _ConfettiPainter({required this.particles});
+  // repaint 挂 AnimationController：每个 tick 由 RenderCustomPaint 监听并触发重绘，
+  // 不再依赖每帧 setState / 重建 painter。
+  _ConfettiPainter({required this.particles, required Listenable repaint}) : super(repaint: repaint);
 
   @override
   void paint(Canvas canvas, Size size) {
+    // 复用单个 Paint（fill 样式固定，循环内只改 color），避免每粒子每帧新建。
+    final paint = Paint()..style = PaintingStyle.fill;
     for (final p in particles) {
       if (p.opacity <= 0) continue;
 
-      final paint = Paint()
-        ..color = p.color.withValues(alpha: p.opacity)
-        ..style = PaintingStyle.fill;
+      paint.color = p.color.withValues(alpha: p.opacity);
 
       canvas.save();
       canvas.translate(p.position.dx, p.position.dy);
@@ -301,8 +309,10 @@ class _ConfettiPainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
+  // repaint listenable（AnimationController tick）已驱动重绘；非 tick 时机（play 重置粒子 /
+  // 停止清空）统一经 setState 换新 painter，RenderCustomPaint 的 set painter 自身会 markNeedsPaint。
   @override
-  bool shouldRepaint(covariant _ConfettiPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _ConfettiPainter oldDelegate) => false;
 }
 
 /// 简化的彩带触发器（只需一行代码即可触发）

@@ -68,25 +68,39 @@ class UserDatabase {
           );
         },
       );
-    } catch (e) {
+    } catch (e, s) {
       // 错误处理审计 P2：user_data.db 损坏（onUpgrade 抛错/磁盘错误）会让
       // bootstrap 整体失败，runApp 永不执行（白屏死应用）。参照
       // WordBookDatabase 的口径：删坏库重建一次；收藏/生词等可由
       // SP 快照与 DAO 迁移路径回迁，优于完全起不来。
-      _db = await _deleteAndRebuild(dir, dbPath, e);
+      // 审计 P1-2：删库重建此前静默吞掉首错，重建失败时用户收藏/生词静默清空，
+      // 首错与删除失败都必须上报（与 wordbook_database.dart 打开失败重建同口径）。
+      reportSwallowedError('用户数据库打开失败，删除重建', e, s);
+      _db = await _deleteAndRebuild(dir, dbPath);
     }
     _initialized = true;
   }
 
-  Future<Database> _deleteAndRebuild(Directory dir, String dbPath, Object firstError) async {
+  Future<Database> _deleteAndRebuild(Directory dir, String dbPath) async {
     await _safeClose();
     try {
       final file = File(p.join(dir.path, 'user_data.db'));
       if (file.existsSync()) {
         file.deleteSync();
       }
-    } catch (_) {
-      // 删除失败则再开一次原库，仍失败让异常上抛（与重建前口径一致）
+    } catch (e, s) {
+      // 删除失败也上报；仍再开一次原库，仍失败让异常上抛（与重建前口径一致）
+      reportSwallowedError('用户数据库损坏文件删除失败，尝试直接重开', e, s);
+    }
+    // 审计 P3-2：journal/wal/shm 边车与主库同源损坏，只删主文件可能留下
+    // 与新建库不一致的边车导致再次打开失败；清理失败不阻断重建，仅上报。
+    for (final suffix in const ['-journal', '-wal', '-shm']) {
+      try {
+        final sidecar = File('$dbPath$suffix');
+        if (sidecar.existsSync()) sidecar.deleteSync();
+      } catch (e, s) {
+        reportSwallowedError('用户数据库边车文件清理失败（$suffix）', e, s);
+      }
     }
     return openDatabase(dbPath, version: 4, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }

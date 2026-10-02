@@ -36,6 +36,10 @@ void main() {
     await wordsDb.insert('words', {'id': 5, 'word': 'vitamin', 'interpret': 'n. 维生素(维他命)'});
     await wordsDb.insert('words', {'id': 6, 'word': 'pure_en', 'interpret': 'only english here'});
     await wordsDb.insert('words', {'id': 7, 'word': '考试', 'interpret': '中文词本身也可命中'});
+    // P2-1 回归词行：叠词串在 interpret 中真实存在，保证叠词查询「非空」断言有靶
+    await wordsDb.insert('words', {'id': 8, 'word': 'step_by_step', 'interpret': '一步一步来，人人人人有责'});
+    await wordsDb.insert('words', {'id': 9, 'word': '渐进步骤', 'interpret': '一步一个脚印，一步一步走'});
+    await wordsDb.insert('words', {'id': 10, 'word': 'study', 'interpret': '反复研究研究才能掌握'});
   });
 
   tearDown(() async {
@@ -114,6 +118,21 @@ void main() {
       // 必含相邻对 '生素' → 预筛候选是命中的超集，验证后与全表严格一致
       for (final q in ['生素(', '他命', '苹果C']) {
         await expectConsistentWithFullScan(index, q);
+      }
+    });
+
+    test('叠词查询（重复 bigram）：索引路径与全表一致且非空（P2-1 回归）', () async {
+      final index = makeIndex();
+      await index.ensureBuilt(wordsDb: wordsDb, wordsPath: wordsPath, indexPath: indexPath);
+
+      // 叠词产生重复 bigram：建索引侧每词每 bigram 只存一行，查询侧不去重时
+      // HAVING COUNT(DISTINCT bigram) = N 因 N 虚大恒假 → 索引路径静默返回空，
+      // 与全表路径不一致。回归口径：走索引 + 非空 + 与全表序列严格一致。
+      for (final q in ['人人人', '一步一步', '研究研究']) {
+        await expectConsistentWithFullScan(index, q);
+        // 防「双空互证」：一致性断言对空==空也会绿，显式要求索引路径非空
+        final maps = await index.searchByInterpret(wordsDb: wordsDb, query: q, escapedQuery: q, limit: 50);
+        expect(maps!, isNotEmpty, reason: '叠词查询 "$q" 必须命中词库中的目标行，不得漏配为空');
       }
     });
   });
