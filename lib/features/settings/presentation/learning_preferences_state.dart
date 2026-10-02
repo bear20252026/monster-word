@@ -1,4 +1,5 @@
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/features/settings/application/settings_reader.dart';
@@ -85,8 +86,8 @@ class LearningPreferencesState extends ChangeNotifier {
     notifyListeners();
     try {
       await _writer.save(next);
-    } catch (error) {
-      debugLog('Learning preferences saving error: $error');
+    } catch (error, stack) {
+      reportSwallowedError('学习偏好保存失败', error, stack);
     }
   }
 }

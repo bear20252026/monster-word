@@ -1,4 +1,5 @@
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -59,8 +60,7 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
   final total = steps.length;
   for (var i = 0; i < total; i++) {
     await steps[i]();
-    // ignore: avoid_print
-    print('[Bootstrap] 初始化进度 ${i + 1}/$total: ${labels[i]}');
+    debugLog('[Bootstrap] 初始化进度 ${i + 1}/$total: ${labels[i]}');
     onProgress?.call(i + 1, total, labels[i]);
   }
 }
@@ -68,6 +68,8 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
 void _configureGlobalErrorHandling() {
   ErrorWidget.builder = (details) {
     debugLog('[GlobalError] Widget build error: ${details.exception}');
+    // 审计 P2-3：release 下 debugLog 零输出，全局构建异常必须远程可见（保留 debugLog 双写）
+    reportSwallowedError('全局构建异常', details.exception, details.stack ?? StackTrace.current);
     return AppBuildErrorPage(exception: details.exception);
   };
 
@@ -76,12 +78,16 @@ void _configureGlobalErrorHandling() {
     if (details.stack != null) {
       debugLog('[GlobalError] Stack:\n${details.stack}');
     }
+    // 审计 P2-3：release 下 debugLog 零输出，补远程上报（与 main.dart runZonedGuarded 的 Sentry 转发口径一致）
+    reportSwallowedError('全局 Flutter 异常', details.exception, details.stack ?? StackTrace.current);
     FlutterError.presentError(details);
   };
 
   WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
     debugLog('[GlobalError] Uncaught: $error');
     debugLog('[GlobalError] Stack:\n$stack');
+    // 审计 P2-3：release 下 debugLog 零输出，补远程上报（与 main.dart runZonedGuarded 的 Sentry 转发口径一致）
+    reportSwallowedError('全局未捕获异常', error, stack);
     return true;
   };
 }

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/nav_utils.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/learning/presentation/share_image_service.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
@@ -54,7 +55,7 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
   @override
   void initState() {
     super.initState();
-    // 会话结算（发币）只在完成页首次展示时执行一次；失败静默——奖励不应阻塞完成页。
+    // 会话结算（发币）只在完成页首次展示时执行一次；失败不打断——奖励不应阻塞完成页，异常已上报。
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 复习错题后再次完成会重挂载本页；每会话只结算一次
       final sessionState = context.read<LearningSessionState>();
@@ -69,8 +70,9 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
         );
         if (!mounted || result.totalGranted <= 0) return;
         setState(() => _grantedCoins = result.totalGranted);
-      } catch (_) {
-        // 奖励结算失败不打断完成页；下次会话仍有机会获得
+      } catch (e, s) {
+        // 奖励结算失败不打断完成页（异常已上报）；下次会话仍有机会获得
+        reportSwallowedError('会话结算发币失败', e, s);
       }
     });
   }
