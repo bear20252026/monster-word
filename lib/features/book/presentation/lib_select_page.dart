@@ -429,16 +429,6 @@ class _LibSelectPageState extends State<LibSelectPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.sort, color: colors.text1),
-              title: Text('排序', style: TextStyle(color: colors.text1)),
-              onTap: () => Navigator.pop(ctx),
-            ),
-            ListTile(
-              leading: Icon(Icons.filter_list, color: colors.text1),
-              title: Text('筛选', style: TextStyle(color: colors.text1)),
-              onTap: () => Navigator.pop(ctx),
-            ),
-            ListTile(
               leading: Icon(Icons.refresh, color: colors.text1),
               title: Text('刷新词书', style: TextStyle(color: colors.text1)),
               onTap: () {
