@@ -87,6 +87,7 @@ class _ReviewPageState extends State<ReviewPage> {
           done: session.done,
           total: session.total,
           selectedWrongChoice: session.selectedWrongChoice,
+          correctRevealed: session.correctRevealed,
           showAnswer: session.showAnswer,
           wallpaper: context.watch<WallpaperState>().current,
           isFavorite: wordActions.isFavorite(word.word),

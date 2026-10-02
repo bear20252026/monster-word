@@ -64,7 +64,7 @@ class FormalReviewHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.xs),
                 child: LinearProgressIndicator(
                   value: value,
-                  minHeight: 4,
+                  minHeight: 6,
                   backgroundColor: skin.onGlassText2.withValues(alpha: AppAlphas.o18),
                   valueColor: AlwaysStoppedAnimation(skin.accent),
                 ),
