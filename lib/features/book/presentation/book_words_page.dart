@@ -10,6 +10,7 @@ import 'package:word_app/features/learning/application/learning_favorites_store.
 import 'package:word_app/features/learning/application/learning_session_starter.dart';
 import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/app/router/route_names.dart';
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:word_app/widgets/common/mw_skeleton.dart';
 import 'package:word_app/widgets/flow_in.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
@@ -109,13 +110,20 @@ class _BookWordsPageState extends State<BookWordsPage> {
                 try {
                   final result = await context.read<WordBookMaintenanceService>().forceRebuild();
                   await bookState.reloadWords();
-                  messenger?.showSnackBar(
-                    SnackBar(
-                      content: Text(result.success ? '重建成功: ${result.books} 本词书 / ${result.words} 词条' : result.message),
-                    ),
-                  );
+                  if (messenger != null && context.mounted) {
+                    showMwSnackBar(
+                      context,
+                      SnackBar(
+                        content: Text(
+                          result.success ? '重建成功: ${result.books} 本词书 / ${result.words} 词条' : result.message,
+                        ),
+                      ),
+                    );
+                  }
                 } catch (e) {
-                  messenger?.showSnackBar(SnackBar(content: Text('重建失败: $e')));
+                  if (messenger != null && context.mounted) {
+                    showMwSnackBar(context, SnackBar(content: Text('重建失败: $e')));
+                  }
                 }
               },
             );

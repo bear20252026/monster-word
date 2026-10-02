@@ -11,6 +11,7 @@ import 'package:word_app/features/word_browse/application/sentence_favorites_sto
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/text_generate_effect.dart';
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 
@@ -71,7 +72,6 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
   Future<void> _toggleFav() async {
     final sentenceId = widget.example.en.hashCode.toString();
     final store = context.read<SentenceFavoritesStore>();
-    final messenger = ScaffoldMessenger.of(context);
 
     // 触觉反馈 + 弹性动画
     unawaited(HapticFeedback.lightImpact());
@@ -89,9 +89,10 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
     if (mounted) {
       // 直接获取新状态，不设中间值避免闪烁
       final newStatus = await store.isFavorite(wordId: widget.wordId, sentenceId: sentenceId);
-      if (mounted) setState(() => _isFav = newStatus);
-
-      messenger.showSnackBar(
+      if (!mounted) return;
+      setState(() => _isFav = newStatus);
+      showMwSnackBar(
+        context,
         SnackBar(content: Text(_isFav ? '已收藏到句库' : '已取消收藏'), duration: const Duration(seconds: 1)),
       );
     }

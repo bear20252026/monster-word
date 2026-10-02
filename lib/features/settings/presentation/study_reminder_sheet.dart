@@ -8,6 +8,7 @@ import 'package:word_app/features/settings/presentation/learning_preferences_sta
 import 'package:word_app/features/settings/presentation/settings_bottom_sheet.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/common/mw_feedback.dart';
 
 Future<void> showStudyReminderSheet(
   BuildContext context, {
@@ -36,7 +37,10 @@ Future<void> showStudyReminderSheet(
               final message = await _applySystemReminder(preferences, service, v);
               if (ctx.mounted) setSheetState(() {});
               if (ctx.mounted && message != null) {
-                ScaffoldMessenger.maybeOf(ctx)?.showSnackBar(SnackBar(content: Text(message)));
+                final messenger = ScaffoldMessenger.maybeOf(ctx);
+                if (messenger != null) {
+                  showMwSnackBar(ctx, SnackBar(content: Text(message)));
+                }
               }
             },
           ),
@@ -107,7 +111,10 @@ Future<void> _pickReminderTime(
       await service.scheduleDaily(hour: picked.hour, minute: picked.minute);
     } catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text('提醒设置失败：$error')));
+        final messenger = ScaffoldMessenger.maybeOf(context);
+        if (messenger != null) {
+          showMwSnackBar(context, SnackBar(content: Text('提醒设置失败：$error')));
+        }
         return;
       }
     }
