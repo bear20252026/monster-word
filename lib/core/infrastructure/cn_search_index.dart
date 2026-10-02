@@ -86,7 +86,12 @@ class CnSearchIndex {
   }) async {
     final indexDb = _indexDb;
     if (!_ready || indexDb == null) return null;
-    final bigrams = bigramsOf(query);
+    // P2-1（审计）：查询侧必须去重——建索引侧同一词行内每个 bigram 只存一行
+    //（见 _build 的 bigramSet），而叠词查询（'人人人'/'一步一步'/'研究研究'）
+    // 会产生重复 bigram，直接拿重复列表参与 `HAVING COUNT(DISTINCT bigram) = N`
+    // 会因 N 虚大而恒假、永远返回空。超集性质只要求「互异 bigram 全部在场」，
+    // 去重不改变命中集合；IN 列表顺序无关，占位符与参数按去重后列表生成。
+    final bigrams = bigramsOf(query).toSet().toList();
     if (bigrams.isEmpty) return null;
     final path = _indexPath;
     final wordsPath = _wordsPath;
@@ -97,12 +102,21 @@ class CnSearchIndex {
     // 本次回退全表并允许下次 ensureBuilt 重建——索引内容永不超前于词库。
     try {
       if (_fingerprintOf(wordsPath) != indexed) {
+        // P2-4（审计）：失效必须可观测。结构性事实：顶部 `!_ready` 守卫会拦截
+        // 后续查询，就绪周期内只有首次失效走到这里，天然每轮就绪周期只报一次。
         _ready = false;
         _building = null;
+        reportSwallowedError(
+          '中文搜索索引指纹失效（词库文件已重建/升级），本次回退全表扫描',
+          StateError('fingerprint mismatch: indexed=$indexed'),
+          StackTrace.current,
+        );
         return null;
       }
-    } catch (_) {
+    } catch (e, s) {
+      // stat IO 失败同样按失效回退处理，但异常不得静默（与上方失效上报同款）。
       _ready = false;
+      reportSwallowedError('中文搜索索引指纹校验失败（stat 异常），本次回退全表扫描', e, s);
       return null;
     }
 
