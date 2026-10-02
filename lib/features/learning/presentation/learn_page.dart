@@ -5,8 +5,6 @@
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
 import 'package:word_app/widgets/common/mw_feedback.dart';
 
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -26,6 +24,7 @@ import 'package:word_app/features/learning/presentation/word_lookup_popup.dart';
 import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/monster_icon.dart';
+import 'package:word_app/widgets/quiz_feedback_fx.dart';
 import 'package:word_app/widgets/scratch_to_reveal.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
@@ -714,12 +713,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
               color: bgColor,
               borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(color: borderColor, width: isCorrect || isWrong ? 1.5 : 0.5),
-              boxShadow: isCorrect || isWrong
-                  ? null
-                  : const [
-                      BoxShadow(color: MwShadows.softShadow, blurRadius: 0.5, offset: Offset(0, 0)),
-                      BoxShadow(color: MwShadows.liftShadow, blurRadius: 1, offset: Offset(0, 1)),
-                    ],
+              boxShadow: isCorrect || isWrong ? null : MwQuizElevation.shadows,
             ),
             child: Center(
               child: Text(
@@ -737,15 +731,11 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
           if (isCorrect)
             Padding(
               padding: const EdgeInsets.only(right: 14),
-              child: ScaleTransition(
-                scale: Tween<double>(
-                  begin: 0.6,
-                  end: 1.0,
-                ).animate(CurvedAnimation(parent: _checkController, curve: const Cubic(0.32, 2.32, 0.61, 0.27))),
-                child: FadeTransition(
-                  opacity: _checkController,
-                  child: Icon(Icons.check_circle_outline, color: colors.quizCorrectText, size: 24),
-                ),
+              child: MwCheckIconPop(
+                controller: _checkController,
+                icon: Icons.check_circle_outline,
+                color: colors.quizCorrectText,
+                size: 24,
               ),
             ),
         ],
@@ -757,19 +747,8 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     }
 
     if (isWrong) {
-      tile = AnimatedBuilder(
-        animation: _shakeController,
-        builder: (context, child) {
-          // 温柔下沉：exit 家族下探 5px 即回＋轻淡，不再左右抖（去惩罚感）。
-          final dip = math.sin(_shakeController.value * math.pi) * 5;
-          final fade = 1 - _shakeController.value * 0.12;
-          return Transform.translate(
-            offset: Offset(0, dip),
-            child: Opacity(opacity: fade, child: child),
-          );
-        },
-        child: tile,
-      );
+      // 温柔下沉：exit 家族下探 5px 即回＋轻淡，不再左右抖（去惩罚感）。
+      tile = MwDipFeedback(progress: _shakeController, child: tile);
     }
 
     if (_correctIndex >= 0 && !isCorrect) {
