@@ -36,7 +36,11 @@ class ReviewSessionState extends ChangeNotifier {
 
   ReviewSessionLoadPhase _loadPhase = ReviewSessionLoadPhase.idle;
   Object? _loadError;
-  late final ReviewSessionAnswerState _answerState = ReviewSessionAnswerState(onChanged: notifyListeners);
+  late final ReviewSessionAnswerState _answerState = ReviewSessionAnswerState(
+    onChanged: notifyListeners,
+    // 答对反馈驻留（对勾+彩带）结束后再推进评分，体验对齐学习页的答对时刻
+    onCorrectFeedbackElapsed: () => rate(RecallRating.good),
+  );
   List<WordChoicePair> _choices = const [];
   int _total = 0;
   int _done = 0;
@@ -88,13 +92,15 @@ class ReviewSessionState extends ChangeNotifier {
     final reviewedWord = currentWord;
     if (reviewedWord == null) return;
 
-    final selection = _answerState.selectChoice(selectedWord: selectedWord, correctWord: reviewedWord.word);
-    if (selection == ReviewChoiceSelection.correct) {
-      rate(RecallRating.good);
-    }
+    // 答对进入反馈驻留，驻留结束经 onCorrectFeedbackElapsed → rate(good) 推进；
+    // 此处不再立即评分，避免对勾/彩带未展示即切题。
+    _answerState.selectChoice(selectedWord: selectedWord, correctWord: reviewedWord.word);
   }
 
   bool isWrongChoiceSelected(String word) => _answerState.isWrongChoiceSelected(word);
+
+  /// 本题已答对并处于反馈驻留窗口。
+  bool get correctRevealed => _answerState.correctRevealed;
 
   /// 记录本题评分，推进本地引擎，并异步提交同一题目的 FSRS 持久化请求。
   void rate(RecallRating rating) {

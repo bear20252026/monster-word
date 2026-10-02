@@ -21,6 +21,7 @@ class FormalReviewSessionLayout extends StatelessWidget {
     required this.done,
     required this.total,
     required this.selectedWrongChoice,
+    required this.correctRevealed,
     required this.showAnswer,
     required this.wallpaper,
     required this.isFavorite,
@@ -40,6 +41,9 @@ class FormalReviewSessionLayout extends StatelessWidget {
   final int done;
   final int total;
   final String? selectedWrongChoice;
+
+  /// 本题已答对（反馈驻留窗口内）：卡片变绿 + 对勾 + 彩带。
+  final bool correctRevealed;
   final bool showAnswer;
   final dynamic wallpaper;
   final bool isFavorite;
@@ -100,6 +104,7 @@ class FormalReviewSessionLayout extends StatelessWidget {
                                   word: word,
                                   choices: choices,
                                   selectedWrongChoice: selectedWrongChoice,
+                                  correctRevealed: correctRevealed,
                                   showAnswer: showAnswer,
                                   onSelectChoice: onSelectChoice,
                                 ),
@@ -122,6 +127,7 @@ class FormalReviewSessionLayout extends StatelessWidget {
                                   word: word,
                                   choices: choices,
                                   selectedWrongChoice: selectedWrongChoice,
+                                  correctRevealed: correctRevealed,
                                   showAnswer: showAnswer,
                                   onSelectChoice: onSelectChoice,
                                 ),

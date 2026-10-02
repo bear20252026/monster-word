@@ -5,6 +5,10 @@ import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/effect_palette.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
+import 'package:word_app/widgets/box_reveal.dart';
+import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/features/learning/presentation/widgets/formal_review_choice_card.dart';
 
 /// 单词、音标和发音入口。
@@ -89,12 +93,16 @@ class FormalReviewWordPrompt extends StatelessWidget {
 }
 
 /// 正式复习的四选一候选区。
-class FormalReviewChoiceGrid extends StatelessWidget {
+///
+/// 体验对齐学习页：选项经 BoxReveal 左侧波次入场（换词重放）；答对瞬间
+/// 撒彩带（反馈驻留窗口内）。仍为纯展示组件——状态由布尔快照传入。
+class FormalReviewChoiceGrid extends StatefulWidget {
   const FormalReviewChoiceGrid({
     super.key,
     required this.word,
     required this.choices,
     required this.selectedWrongChoice,
+    required this.correctRevealed,
     required this.showAnswer,
     required this.onSelectChoice,
   });
@@ -102,32 +110,75 @@ class FormalReviewChoiceGrid extends StatelessWidget {
   final MwWordProcess word;
   final List<WordChoicePair> choices;
   final String? selectedWrongChoice;
+
+  /// 本题已答对（反馈驻留窗口内）：答对瞬间触发彩带。
+  final bool correctRevealed;
   final bool showAnswer;
   final ValueChanged<String> onSelectChoice;
+
+  @override
+  State<FormalReviewChoiceGrid> createState() => _FormalReviewChoiceGridState();
+}
+
+class _FormalReviewChoiceGridState extends State<FormalReviewChoiceGrid> {
+  final ConfettiController _confetti = ConfettiController();
+
+  @override
+  void didUpdateWidget(covariant FormalReviewChoiceGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 答对沿触发：反馈驻留开始即撒彩带；换词（新题）自然复位
+    if (widget.correctRevealed && !oldWidget.correctRevealed) {
+      _confetti.play();
+    }
+  }
+
+  @override
+  void dispose() {
+    _confetti.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
     final responsive = context.responsive;
+    final w = widget;
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding),
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
-          if (choices.isNotEmpty)
-            ...choices.asMap().entries.map(
-              (entry) => FormalReviewChoiceCard(
-                pair: entry.value,
-                index: entry.key,
-                isCorrect: entry.value.word == word.word,
-                isSelectedWrong: entry.value.word == selectedWrongChoice,
-                showAnswer: showAnswer,
-                skin: skin,
-                responsive: responsive,
-                onTap: () => onSelectChoice(entry.value.word),
+      child: ConfettiOverlay(
+        controller: _confetti,
+        particleCount: 30,
+        direction: ConfettiDirection.down,
+        duration: const Duration(seconds: 2),
+        colors: GradientEffects.celebration,
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
+            if (w.choices.isNotEmpty)
+              ...w.choices.asMap().entries.map(
+                (entry) => BoxReveal(
+                  // 换词即新 key：每题重新波次入场（学习页同款「页面会话内
+                  // 一次」语义在复习中按题重放——题目本身就是新会话）
+                  key: ValueKey('${w.word.word}-${entry.key}'),
+                  direction: BoxRevealDirection.left,
+                  duration: MotionDurations.slow,
+                  delay: Duration(milliseconds: 50 * entry.key),
+                  reveal: true,
+                  child: FormalReviewChoiceCard(
+                    pair: entry.value,
+                    index: entry.key,
+                    isCorrect: entry.value.word == w.word.word,
+                    isSelectedWrong: entry.value.word == w.selectedWrongChoice,
+                    correctRevealed: w.correctRevealed,
+                    showAnswer: w.showAnswer,
+                    skin: skin,
+                    responsive: responsive,
+                    onTap: () => w.onSelectChoice(entry.value.word),
+                  ),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
