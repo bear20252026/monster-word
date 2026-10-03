@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
@@ -10,6 +12,7 @@ import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
+import 'package:word_app/widgets/redeem_swallow_sheet.dart';
 
 /// 兑换中心页面。
 ///
@@ -38,6 +41,10 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
   Set<String> _redeemedIds = <String>{};
   int _protectionStock = 0;
   bool _redeeming = false;
+
+  /// 兑换弹层的怪兽进化阶段（MonsterIcon.stageFor，0/7/30/100 天口径）。
+  /// 异步补齐：默认 0（奶泡形态），读到累计签到天数后换装；读取失败保持 0。
+  int _monsterStage = 0;
 
   static const List<_RedeemItem> _items = [
     _RedeemItem(
@@ -104,6 +111,20 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       _protectionStock = results[2] as int;
       _redeemedIds = _items.map((i) => i.id).where((id) => prefs.getBool('$_redeemedPrefix$id') ?? false).toSet();
     });
+    // 弹层展示用进化阶段异步补齐（与怪兽探头同口径）：独立读取、失败降级，不牵连页面主数据。
+    unawaited(_loadMonsterStage(store));
+  }
+
+  /// 累计签到天数 → 进化阶段（MonsterIcon.stageFor，与怪兽探头/小屋同口径）。
+  /// 纯展示数据：失败上报后降级默认形态（0 奶泡），不上抛、不阻断兑换主流程。
+  Future<void> _loadMonsterStage(ScareCoinStore store) async {
+    try {
+      final totalDays = (await store.checkinDates()).length;
+      if (!mounted) return;
+      setState(() => _monsterStage = MonsterIcon.stageFor(totalDays));
+    } catch (e, s) {
+      reportSwallowedError('兑换弹层怪兽形态读取失败', e, s);
+    }
   }
 
   static String _isoDay(DateTime t) => t.toIso8601String().substring(0, 10);
@@ -165,7 +186,11 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
         rethrow;
       }
       if (!mounted) return;
-      showMwSnackBar(context, SnackBar(content: Text('兑换成功！「${item.title}」已收入囊中')));
+      // 兑换成交仪式弹层（纯展示；扣币已在上方 grant 完成）。不 await：
+      // 弹层挂起期间 _reload 照常刷新余额与「已拥有」态。
+      unawaited(
+        showRedeemSwallowSheet(context, itemName: item.title, coinCost: item.cost, monsterStage: _monsterStage),
+      );
       await _reload();
     } catch (_) {
       if (mounted) {

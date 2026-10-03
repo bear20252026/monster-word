@@ -28,6 +28,8 @@ import 'package:provider/provider.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/treasure_palette.dart';
+import 'package:word_app/widgets/evolution_ceremony_overlay.dart';
+import 'package:word_app/widgets/monster_icon.dart';
 
 part 'treasure_checkin_painters.dart';
 part 'treasure_checkin_widgets.dart';
@@ -263,6 +265,12 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     }
     widget.onChecked?.call();
     final reward = store.checkInReward;
+    // 进化仪式检测：checkIn() 返回前今日已写入 checkinDates（写日期先于算余额），
+    // 故此刻取的天数已含今天；与本次签到前快照 diff，跨阈值才演出。
+    final datesAfter = await store.checkinDates();
+    final stageBefore = MonsterIcon.stageFor(datesAfter.length - 1);
+    final stageAfter = MonsterIcon.stageFor(datesAfter.length);
+    final evolved = stageAfter > stageBefore;
 
     if (_reduceMotion) {
       setState(() {
@@ -272,6 +280,9 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
         _bellyTarget = _pctFor(_streak);
         _busy = false;
       });
+      if (evolved && mounted) {
+        EvolutionCeremonyOverlay.show(context, fromStage: stageBefore, toStage: stageAfter);
+      }
       return;
     }
 
@@ -295,6 +306,10 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
         _gainValue = reward;
         _bellyTarget = _pctFor(_streak);
       });
+      // 进化演出放在结算之后（肚皮/盖印先落定，仪式作为当日高光收尾）。
+      if (evolved) {
+        EvolutionCeremonyOverlay.show(context, fromStage: stageBefore, toStage: stageAfter);
+      }
     });
 
     // ③ 散开 → 停顿 → 对角波重组（可反复体验）。

@@ -13,6 +13,7 @@ import 'package:word_app/features/learning/presentation/learning_session_state.d
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/monster_feed_celebration.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 
 class LearnCompletionScreen extends StatefulWidget {
@@ -95,7 +96,11 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.celebration, size: 80, color: colors.accent),
+              // 结算成功（totalGranted > 0）→ 怪兽吃币庆祝主视觉；0/失败态保留图标现状。
+              if (_grantedCoins != null && _grantedCoins! > 0)
+                MonsterFeedCelebration(coinCount: _grantedCoins!)
+              else
+                Icon(Icons.celebration, size: 80, color: colors.accent),
               const SizedBox(height: 24),
               Text(
                 '今日学习完成！',

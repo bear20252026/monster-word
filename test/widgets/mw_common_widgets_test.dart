@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/widgets/common/mw_empty_state.dart';
+import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/common/mw_error_boundary.dart' show mwErrorBuilder;
 import 'package:word_app/widgets/common/mw_skeleton.dart';
 
@@ -44,6 +45,20 @@ void main() {
       expect(find.text('自定义标题'), findsOneWidget);
       await tester.tap(find.text('重试'));
       expect(tapped, isTrue);
+    });
+
+    testWidgets('monsterPhrase=null 保持静态图标路径，不渲染怪兽', (tester) async {
+      await tester.pumpWidget(wrap(const MwEmptyState(kind: MwEmptyKind.search)));
+      expect(find.byType(MonsterIcon), findsNothing);
+      expect(find.byIcon(Icons.search_off_rounded), findsOneWidget);
+    });
+
+    testWidgets('monsterPhrase 非空渲染怪兽气泡文案并替代静态图标', (tester) async {
+      const phrase = '怪兽也没找到这个词，换两个字母试试？';
+      await tester.pumpWidget(wrap(const MwEmptyState(kind: MwEmptyKind.search, monsterPhrase: phrase)));
+      expect(find.byType(MonsterIcon), findsOneWidget);
+      expect(find.text(phrase), findsOneWidget);
+      expect(find.byIcon(Icons.search_off_rounded), findsNothing);
     });
   });
 

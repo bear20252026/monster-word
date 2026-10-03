@@ -24,6 +24,7 @@ import 'package:word_app/features/learning/presentation/word_lookup_popup.dart';
 import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/monster_icon.dart';
+import 'package:word_app/widgets/monster_peek_overlay.dart';
 import 'package:word_app/widgets/quiz_feedback_fx.dart';
 import 'package:word_app/widgets/scratch_to_reveal.dart';
 import 'package:word_app/app/router/nav_utils.dart';
@@ -459,6 +460,8 @@ class _QuizArea extends StatefulWidget {
 }
 
 class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
+  /// 连击里程碑探头去重（5/10/15 每档每会话一次）。
+  final Set<int> _peekedMilestones = <int>{};
   int _wrongIndex = -1;
   int _correctIndex = -1;
 
@@ -515,11 +518,23 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       _checkController.forward(from: 0);
       _confettiController.play();
       _rewardFly(i);
+      _maybePeekForCombo();
     } else {
       setState(() => _wrongIndex = i);
       widget.state.recordAnswer(false);
       _shakeController.forward(from: 0);
     }
+  }
+
+  /// 连击里程碑全屏探头（蓝图 W2：5/10/15 三档，每档每会话一次）。
+  /// 非阻塞：MonsterPeekOverlay 自带 IgnorePointer，不碰答题节奏预算。
+  void _maybePeekForCombo() {
+    const milestones = {5: '小怪兽为你欢呼！', 10: '火力全开！', 15: '无可阻挡！'};
+    final combo = widget.state.combo;
+    if (!milestones.containsKey(combo)) return;
+    if (_peekedMilestones.contains(combo)) return;
+    _peekedMilestones.add(combo);
+    MonsterPeekOverlay.show(context, phrase: milestones[combo]!);
   }
 
   static Offset? _centerOf(GlobalKey key) {

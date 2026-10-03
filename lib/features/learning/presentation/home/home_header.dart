@@ -1,10 +1,56 @@
 part of '../home_screen.dart';
 
-/// 问候头部：按时段问候 + 日期；右侧词典/单词机入口。
-class _Header extends StatelessWidget {
+/// 问候头部：左侧怪兽伙伴（呼吸 bob + 点击咕噜进我的空间）+ 时段问候 + 日期；右侧词典/单词机入口。
+class _Header extends StatefulWidget {
   const _Header({required this.skin});
 
   final SkinSystem skin;
+
+  @override
+  State<_Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends State<_Header> with TickerProviderStateMixin {
+  // 怪兽呼吸 bob 相位（2.8s 一循环，写法参照 profile_screen _idleCtrl：repeat + sin 相位；
+  // 档位复用 MotionDurations.splash —— 唯一的 2800ms 档，棘轮口径内）
+  late final AnimationController _bobCtrl = AnimationController(vsync: this, duration: MotionDurations.splash);
+  // 点击问候：张嘴 0→0.3 的 0.3s 过渡
+  late final AnimationController _mouthCtrl = AnimationController(vsync: this, duration: MotionDurations.slow);
+  late final Animation<double> _mouth = CurvedAnimation(parent: _mouthCtrl, curve: Curves.easeInOut);
+  bool _gurgleVisible = false;
+
+  bool get _reduceMotion => WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_reduceMotion) _bobCtrl.repeat();
+  }
+
+  @override
+  void dispose() {
+    _bobCtrl.dispose();
+    _mouthCtrl.dispose();
+    super.dispose();
+  }
+
+  /// 点怪兽：张嘴冒「咕噜~」，留出可感知节拍后进入「我的空间」。
+  Future<void> _greet() async {
+    _mouthCtrl.forward(from: 0);
+    setState(() => _gurgleVisible = true);
+    await Future<void>.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+    Navigator.pushNamed(context, RouteNames.mySpace);
+    unawaited(_settleGurgle());
+  }
+
+  /// 跳转后首页仍在路由栈下：气泡淡出、嘴闭合，状态收敛。
+  Future<void> _settleGurgle() async {
+    await Future<void>.delayed(const Duration(milliseconds: 1600));
+    if (!mounted) return;
+    setState(() => _gurgleVisible = false);
+    _mouthCtrl.reverse();
+  }
 
   String _greeting() {
     final hour = DateTime.now().hour;
@@ -22,13 +68,15 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = skin.colors;
+    final colors = widget.skin.colors;
     final resp = context.responsive;
     return Padding(
       padding: EdgeInsets.fromLTRB(resp.pageMargin, 12, resp.pageMargin, 0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          _monsterGreeting(colors),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,6 +110,51 @@ class _Header extends StatelessWidget {
             onTap: () => Navigator.pushNamed(context, WordMachinePage.routeName),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 怪兽伙伴：2.8s 呼吸 bob；点击张嘴 0.3s 并冒「咕噜~」气泡。
+  Widget _monsterGreeting(ThemeVars colors) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _greet,
+      child: AnimatedBuilder(
+        animation: _bobCtrl,
+        builder: (context, child) {
+          // reduce-motion 时静止（不 repeat，不位移）
+          if (_reduceMotion) return child!;
+          return Transform.translate(offset: Offset(0, 2 * math.sin(2 * math.pi * _bobCtrl.value)), child: child);
+        },
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedBuilder(
+              animation: _mouth,
+              builder: (context, _) => MonsterIcon(size: 32, mouthOpen: 0.3 * _mouth.value),
+            ),
+            // 「咕噜~」气泡：悬在怪兽头顶右上，默认隐藏
+            Positioned(
+              top: -16,
+              left: 20,
+              child: AnimatedOpacity(
+                opacity: _gurgleVisible ? 1 : 0,
+                duration: const Duration(milliseconds: 180),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: ShapeDecoration(
+                    color: colors.cardBg,
+                    shape: StadiumBorder(side: BorderSide(color: colors.divider)),
+                  ),
+                  child: Text(
+                    '咕噜~',
+                    style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, color: colors.text2),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

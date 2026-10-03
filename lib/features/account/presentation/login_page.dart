@@ -13,6 +13,7 @@ import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
+import 'package:word_app/widgets/monster_peek_overlay.dart';
 import 'package:word_app/widgets/animations.dart';
 import 'package:word_app/features/account/application/password_auth_store.dart';
 import 'package:word_app/features/account/application/sms_code_service.dart';
@@ -317,7 +318,13 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   void _onLoginSuccess() {
-    Navigator.of(context).pushReplacementNamed('/');
+    // 史诗化 W1：登录成功怪兽开门惊喜——探头演出挂在根 Overlay（跨路由存活），
+    // 先起「欢迎回家！」再延迟切首页，给这一拍留出可见时刻。
+    MonsterPeekOverlay.show(context, phrase: '欢迎回家！');
+    final navigator = Navigator.of(context);
+    Future<void>.delayed(const Duration(milliseconds: 900), () {
+      navigator.pushReplacementNamed('/');
+    });
   }
 
   /// 发送短信验证码（Spug Push），成功后启动 60s 冷却倒计时。
