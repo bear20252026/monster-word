@@ -8,14 +8,32 @@ class _CheckInStrip extends StatefulWidget {
   State<_CheckInStrip> createState() => _CheckInStripState();
 }
 
-class _CheckInStripState extends State<_CheckInStrip> {
+class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderStateMixin {
   bool? _checkedToday;
   int _streakDays = 0;
+
+  // 未签到火苗的 2s alpha 呼吸循环（o40↔o90，easeInOut 反复；时长字面量与库内循环动画惯例一致）
+  late final AnimationController _flameCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2000),
+  );
+  late final Animation<double> _flameBreath = Tween<double>(
+    begin: 0,
+    end: 1,
+  ).animate(CurvedAnimation(parent: _flameCtrl, curve: Curves.easeInOut));
+
+  bool get _reduceMotion => WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
 
   @override
   void initState() {
     super.initState();
     _reload();
+  }
+
+  @override
+  void dispose() {
+    _flameCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _reload() async {
@@ -26,6 +44,33 @@ class _CheckInStripState extends State<_CheckInStrip> {
       _checkedToday = results[0] as bool;
       _streakDays = results[1] as int;
     });
+    // 未签到才呼吸；reduce-motion 时保持静态
+    if (_checkedToday == false && !_reduceMotion && !_flameCtrl.isAnimating) {
+      _flameCtrl.repeat(reverse: true);
+    }
+  }
+
+  /// 火苗图标：未签到时 alpha 呼吸（o40↔o90 lerp，easeInOut 反复）；已签或 reduce-motion 时静态。
+  Widget _flameIcon(ThemeVars colors) {
+    if (_checkedToday != false || _reduceMotion) {
+      return Icon(
+        Icons.local_fire_department_rounded,
+        size: 18,
+        color: _checkedToday == true ? colors.accent : colors.text3,
+      );
+    }
+    return AnimatedBuilder(
+      animation: _flameBreath,
+      builder: (context, _) => Icon(
+        Icons.local_fire_department_rounded,
+        size: 18,
+        color: Color.lerp(
+          colors.text3.withValues(alpha: AppAlphas.o40),
+          colors.text3.withValues(alpha: AppAlphas.o90),
+          _flameBreath.value,
+        ),
+      ),
+    );
   }
 
   /// 打开「聚宝日历」签到页（GUI 外观设计落地版；旧弹性日历见 widgets/spring_check_in_calendar.dart）。
@@ -54,11 +99,7 @@ class _CheckInStripState extends State<_CheckInStrip> {
                 color: skin.colors.accent.withValues(alpha: AppAlphas.o10),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.local_fire_department_rounded,
-                size: 18,
-                color: checked ? skin.colors.accent : skin.colors.text3,
-              ),
+              child: _flameIcon(skin.colors),
             ),
             const SizedBox(width: 12),
             Expanded(

@@ -20,7 +20,7 @@ class _TodayHeroCard extends StatelessWidget {
         final progress = goal > 0 ? (learned / goal).clamp(0.0, 1.0) : 0.0;
         final done = goal > 0 && learned >= goal;
 
-        return MwCard(
+        final heroCard = MwCard(
           padding: EdgeInsets.all(24 * resp.scale),
           child: Row(
             children: [
@@ -28,7 +28,8 @@ class _TodayHeroCard extends StatelessWidget {
                 size: 96 * resp.scale,
                 progress: progress,
                 trackColor: skin.colors.divider,
-                progressColor: skin.colors.accent,
+                // 今日达标：金色环庆祝；未达标保持主题 accent
+                progressColor: done ? StarGold.gold : skin.colors.accent,
                 learned: learned,
                 goal: goal,
               ),
@@ -111,6 +112,8 @@ class _TodayHeroCard extends StatelessWidget {
             ],
           ),
         );
+        // 今日达标沿触发一次金色 confetti（30 粒 StarGold.gold）
+        return _DoneConfetti(done: done, child: heroCard);
       },
     );
   }
@@ -187,6 +190,47 @@ class _TodayHeroCard extends StatelessWidget {
     if (context.mounted) {
       Navigator.pushNamed(context, LearnPage.routeName);
     }
+  }
+}
+
+/// 今日达标沿触发金色 confetti：ConfettiController 字段 + didUpdateWidget 沿触发 play，
+/// 惯例照 formal_review_question（跨天复位后再次达标可重放）。
+class _DoneConfetti extends StatefulWidget {
+  const _DoneConfetti({required this.done, required this.child});
+
+  final bool done;
+  final Widget child;
+
+  @override
+  State<_DoneConfetti> createState() => _DoneConfettiState();
+}
+
+class _DoneConfettiState extends State<_DoneConfetti> {
+  final ConfettiController _confetti = ConfettiController();
+
+  @override
+  void didUpdateWidget(covariant _DoneConfetti oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 未达标 → 达标的瞬间撒一次；再次变回未达标后重新达标会再触发
+    if (widget.done && !oldWidget.done) {
+      _confetti.play();
+    }
+  }
+
+  @override
+  void dispose() {
+    _confetti.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ConfettiOverlay(
+      controller: _confetti,
+      particleCount: 30,
+      colors: const [StarGold.gold],
+      child: widget.child,
+    );
   }
 }
 
