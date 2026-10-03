@@ -22,7 +22,6 @@ void main() {
       'lib/tokens',
       'lib/utils',
     ];
-    final self = 'lib/core/utils/sfx.dart';
     // 发音系统（TTS/例句播放）与音效系统是两条线：audio_players.dart 合法直用 audioplayers。
     final whitelist = {'lib/core/utils/sfx.dart', 'lib/core/audio/audio_players.dart'};
     final useRe = RegExp(r"import 'package:audioplayers/");
