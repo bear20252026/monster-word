@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 import 'package:word_app/features/account/presentation/splash_page.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -74,14 +75,22 @@ void main() {
     );
     await tester.tap(find.text('开始使用'), warnIfMissed: false);
     await tester.pump();
-    debugPrint(
-      'PROBE after tap pump0: MAIN=${find.text('MAIN_PAGE').evaluate().length}, 引导页=${find.text('持续进步').evaluate().length}',
-    );
     await tester.pump(const Duration(milliseconds: 600));
-    debugPrint(
-      'PROBE after pump600: MAIN=${find.text('MAIN_PAGE').evaluate().length}, 引导页=${find.text('持续进步').evaluate().length}, Splash=${find.text('Monster Word').evaluate().length}',
-    );
-    expect(find.text('MAIN_PAGE'), findsOneWidget, reason: '点「开始使用」后必须进入主页，不得卡在 Splash/引导页');
+    // 2026-10-03 命名仪式插入引导与主页之间（蓝图 W4）：首启未破壳 → 先进开局仪式。
+    expect(find.text('台灯下，有一颗蛋在等你。'), findsOneWidget, reason: '引导完成后先进开局命名仪式页');
+
+    // 敲三下破壳 → 开始冒险 → 主页。
+    await tester.tap(find.text('敲三下（0/3）'));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('敲三下（1/3）'));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('敲三下（2/3）'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(MonsterIcon), findsOneWidget, reason: '第三下破壳');
+    await tester.tap(find.text('开始冒险！'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('MAIN_PAGE'), findsOneWidget, reason: '点「开始冒险」后必须进入主页，不得卡在仪式页');
   });
 
   testWidgets('REG-START-002: hasShownInitGuide 持久化——重启后不再重看引导', (tester) async {
