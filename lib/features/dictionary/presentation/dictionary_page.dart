@@ -19,6 +19,7 @@ import 'package:word_app/features/dictionary/presentation/dictionary_feature_pro
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_exam_sentence_card.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail/word_detail_example_tile.dart';
 import 'package:word_app/core/application/app_messages.dart';
+import 'package:word_app/widgets/petal_badge.dart';
 
 /// 词典详情页 — 编辑式单页排版。
 ///
@@ -445,19 +446,8 @@ class _CollinsList extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 义项序号：衬线数字，编辑感
-                    SizedBox(
-                      width: 22,
-                      child: Text(
-                        '${i + 1}',
-                        style: TextStyle(
-                          fontFamily: 'Charter',
-                          fontSize: AppFontSizes.bodyMd,
-                          fontStyle: FontStyle.italic,
-                          color: skin.accent,
-                        ),
-                      ),
-                    ),
+                    // 义项序号：12 瓣花齿徽章（几何同签到印章）
+                    PetalBadge(index: i + 1, total: senses.length),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
