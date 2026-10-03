@@ -63,7 +63,7 @@
 | REG-STEREO-001 | 随身听词源空态/连播/播放顺序入口回归 | 播放器与词源装配脱节 | 随身听批 | `test/regression/regression_stereo001_sources_test.dart` |
 | REG-LISTEN-001 | 磁带机 UI：旋转/进度/上一首下一首禁用 | 同族化改造后控件契约漂移 | C1 磁带批 | `test/regression/regression_listen001_player_test.dart` |
 | REG-SPELL-001 | 快速拼写反馈/计数/空态/超时结束 | 拼写测验脚手架统一后行为回归 | 拼写脚手架批 | `test/regression/regression_spell001_quiz_flow_test.dart` |
-| REG-DICT-005b | 词根/例句字段契约：非空 word_root 必须是合法 JSON；非空 example 解析后例句非空 | 词库导入字段质量无守卫 | 数据质量批 | `test/regression/regression_dict005_fields_test.dart` |
+| REG-DICT-005b | 词根/例句字段契约：非空 word_root 必须是合法 JSON；非空 example 解析后例句或柯林斯释义至少其一非空（2026-10-03 词库修复批放宽：柯林斯压扁串已结构化复原，def-only 词条 parseCollins 可渲染） | 词库导入字段质量无守卫 | 数据质量批（2026-10-03 修复：771,251 词条 C1-C10 契约全过，80.0→79.0MB） | `test/regression/regression_dict005_fields_test.dart` |
 | REG-ARCH-006 | presentation 直取 GetIt / 直连同 feature data / 直触 core 仓储与 AppPreferences | 守卫字符串匹配洞 + 端口模型空心化 | PR #44 + 残债④⑤⑥ | `import_guard.dart` R6-DI(package:get_it)/R3(presentation→data)/R-core-repo/R-prefs + `import_guard_test.dart` |
 
 
