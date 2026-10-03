@@ -470,6 +470,7 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildNoResults(ThemeVars skin) {
     return MwEmptyState(
       kind: MwEmptyKind.search,
+      monsterPhrase: '怪兽也没找到这个词，换两个字母试试？',
       title: '未找到匹配的单词',
       subtitle: _lastQuery.isNotEmpty ? '搜索词: "$_lastQuery"，试试其他关键词' : '请检查拼写，或尝试搜索其他关键词',
     );

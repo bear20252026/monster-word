@@ -168,6 +168,7 @@ class _LibSelectPageState extends State<LibSelectPage> {
                       if (books.isEmpty) {
                         return MwEmptyState(
                           kind: MwEmptyKind.empty,
+                          monsterPhrase: '书架还空着，等一本属于你的词书',
                           title: '暂无词书',
                           subtitle: '当前分类下没有词书，请切换分类或刷新',
                           actionLabel: '刷新',
