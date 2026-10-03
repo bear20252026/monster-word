@@ -9,7 +9,7 @@ import 'package:word_app/core/parsers/example_parser.dart';
 
 /// 用 App 的真实解析器校验词库结构化字段，防止未来数据写入破坏格式。
 /// REG-DICT-005：word_root 必须是 {"prefix","roots","suffix"} 结构；
-/// example 必须能被 ExampleParser 解析出非空例句。
+/// example 必须能被 ExampleParser 解析出例句或柯林斯结构化释义。
 class _FakePathProvider extends PathProviderPlatform {
   final String dir;
   _FakePathProvider(this.dir);
@@ -78,8 +78,18 @@ void main() {
       for (final w in words) {
         if (w.example.trim().isEmpty) continue;
         final sentences = ExampleParser.parse(w.example);
-        expect(sentences, isNotEmpty, reason: 'example should yield >=1 sentence for "${w.word}" (id=${w.id})');
-        expect(sentences.first.en.trim(), isNotEmpty);
+        // 2026-10-03 词库修复：柯林斯压扁串已结构化复原，部分词条只有
+        // def-only 释义（i 有内容、g 无例句）——parseCollins 可正常渲染。
+        // 契约放宽为：例句或柯林斯释义至少其一非空（仍是格式守卫）。
+        final collins = ExampleParser.parseCollins(w.example);
+        expect(
+          sentences.isNotEmpty || collins.isNotEmpty,
+          isTrue,
+          reason: 'example should yield >=1 sentence or collins sense for "${w.word}" (id=${w.id})',
+        );
+        if (sentences.isNotEmpty) {
+          expect(sentences.first.en.trim(), isNotEmpty);
+        }
         checked++;
       }
       expect(checked, greaterThan(0), reason: 'should have at least one non-empty example');
