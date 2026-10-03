@@ -4,9 +4,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
@@ -109,7 +109,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
 
     if (_dragOffset < -threshold) {
       // 上滑 = 认识（触感反馈：体验审计 P1）
-      unawaited(HapticFeedback.mediumImpact());
+      HapticsGate.play(HapticCue.medium);
       _slideOut(const Offset(0, -2), () {
         setState(() {
           _knownCount++;
@@ -120,7 +120,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       });
     } else if (_dragOffset > threshold) {
       // 下滑 = 不认识
-      unawaited(HapticFeedback.lightImpact());
+      HapticsGate.play(HapticCue.light);
       _slideOut(const Offset(0, 2), () {
         setState(() {
           _unknownCount++;
@@ -224,7 +224,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
     final duration = _sessionStart == null ? null : DateTime.now().difference(_sessionStart!).inSeconds;
     if (!_celebrated) {
       _celebrated = true;
-      unawaited(HapticFeedback.mediumImpact());
+      HapticsGate.play(HapticCue.medium);
       WidgetsBinding.instance.addPostFrameCallback((_) => _confettiController.play());
       _settleRewards(context, state, total);
     }
