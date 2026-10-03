@@ -2,9 +2,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/core/parsers/example_parser.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
@@ -74,7 +74,7 @@ class ExampleTileState extends State<ExampleTile> with SingleTickerProviderState
     final store = context.read<SentenceFavoritesStore>();
 
     // 触觉反馈 + 弹性动画
-    unawaited(HapticFeedback.lightImpact());
+    HapticsGate.play(HapticCue.light);
     unawaited(_favAnimController.forward(from: 0.0));
 
     await store.toggle(

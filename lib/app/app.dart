@@ -28,7 +28,12 @@ import 'package:word_app/features/book/presentation/lib_select_page.dart';
 import 'package:word_app/features/learning/presentation/home_screen.dart';
 import 'package:word_app/features/settings/presentation/profile_screen.dart';
 import 'package:word_app/app/main_shell.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:word_app/core/utils/monster_speech.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/widgets/reunion_overlay.dart';
 import 'package:word_app/theme/wallpaper_state.dart';
 import 'package:word_app/utils/screen_utils.dart';
 import 'package:word_app/widgets/adaptive_scale.dart';
@@ -357,8 +362,50 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
   }
 }
 
-class _HomeShell extends StatelessWidget {
+class _HomeShell extends StatefulWidget {
   const _HomeShell();
+
+  @override
+  State<_HomeShell> createState() => _HomeShellState();
+}
+
+class _HomeShellState extends State<_HomeShell> {
+  @override
+  void initState() {
+    super.initState();
+    // 蓝图 W4 回家仪式：距上次打开 ≥3 天（有旧访问记录）→ 门缝演出 + 免费送断签保护卡。
+    // 仅首帧执行一次；无论是否触发都刷新 last_visit 为今天。
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeReunion());
+  }
+
+  Future<void> _maybeReunion() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = MonsterSpeech.dayKeyOf(DateTime.now());
+      final last = prefs.getString(ReunionOverlay.lastVisitPrefKey);
+      await prefs.setString(ReunionOverlay.lastVisitPrefKey, today);
+      if (!mounted || last == null) return; // 首次使用不迎接
+      final lastDate = DateTime.tryParse(last);
+      if (lastDate == null) return;
+      final now = DateTime.now();
+      final absent = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).difference(DateTime(lastDate.year, lastDate.month, lastDate.day)).inDays;
+      if (absent < 3) return;
+      showReunionOverlay(context, absentDays: absent);
+      // 回家礼：断签保护卡 ×1（走既有 API；失败不阻断演出）。
+      try {
+        final store = context.read<ScareCoinStore>();
+        await store.addProtection(count: 1, reason: '回家礼');
+      } catch (e, s) {
+        reportSwallowedError('回家礼保护卡发放失败', e, s);
+      }
+    } catch (e, s) {
+      reportSwallowedError('回家仪式判定失败', e, s);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

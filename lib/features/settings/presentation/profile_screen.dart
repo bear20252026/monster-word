@@ -28,6 +28,7 @@ import 'package:word_app/features/account/application/account_profile_state.dart
 // 跨 feature 只依赖 application 端口（R4 通道）
 import 'package:word_app/features/learning/application/learning_statistics_reader.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
+import 'package:word_app/features/learning/application/monster_mood.dart';
 import 'package:word_app/features/settings/presentation/more_settings_page.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -138,6 +139,21 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   Timer? _blinkTimer;
   int _blinkRound = 0;
 
+  // 蓝图 W4 五档心情机：默认 calm；由 resolver 按真实数据驱动（数据不可得不猜，降级 calm）。
+  MonsterMood _mood = MonsterMood.calm;
+  double get _hopAmplitude => switch (_mood) {
+    MonsterMood.excited => 1.25,
+    MonsterMood.calm => 1.0,
+    MonsterMood.sleepy => 0.5,
+    MonsterMood.worried => 0.0,
+  };
+  double get _idleSpeed => switch (_mood) {
+    MonsterMood.excited => 0.7, // 周期缩短→呼吸更快
+    MonsterMood.calm => 1.0,
+    MonsterMood.sleepy => 1.6,
+    MonsterMood.worried => 1.3,
+  };
+
   /// 眨眼序列：快闭 → 缓开并轻微睁大回弹（旧版线性闭合后会停在闭眼 3.2s，观感差）。
   static final Animatable<double> _blinkSeq = TweenSequence<double>([
     TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeIn)), weight: 34),
@@ -149,9 +165,45 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   void initState() {
     super.initState();
     _loadBalance();
+    _resolveMood();
     if (!_reduceMotion) {
       _idleCtrl.repeat();
       _blinkTimer = Timer.periodic(const Duration(milliseconds: 3400), (_) => _runBlink());
+    }
+  }
+
+  /// 蓝图 W4：按真实学习数据解析心情（只读，零新持久层）。
+  Future<void> _resolveMood() async {
+    int? dueCount;
+    try {
+      // 走 application 层 Reader 端口（跨 feature 不直接依赖他域 presentation 类）。
+      final stats = context.read<LearningStatisticsReader>();
+      dueCount = stats.dueCount;
+    } catch (_) {
+      dueCount = null; // 未装配统计域（如单独预览）→ 不可得
+    }
+    // combo 为会话内部状态（learning presentation 私有），小屋不跨域读：v0 只用 dueCount + 回归两路数据。
+    final int? combo = null;
+    ScareCoinStore? store;
+    try {
+      store = context.read<ScareCoinStore>();
+    } catch (_) {
+      store = null;
+    }
+    final resolvedDue = dueCount;
+    final resolvedCombo = combo;
+    final mood = await resolveMonsterMood(
+      dueCountReader: resolvedDue == null ? null : () => resolvedDue,
+      todayComboReader: resolvedCombo == null ? null : () => resolvedCombo,
+      store: store,
+    );
+    if (!mounted) return;
+    setState(() => _mood = mood);
+    // 心情变化后重排呼吸节奏（repeat 周期变更需重启）。
+    if (!_reduceMotion) {
+      _idleCtrl.stop();
+      _idleCtrl.duration = Duration(milliseconds: (3200 * _idleSpeed).round());
+      _idleCtrl.repeat();
     }
   }
 
@@ -569,13 +621,17 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
                 child: AnimatedBuilder(
                   animation: Listenable.merge([_hopCtrl, _blinkCtrl, _idleCtrl]),
                   builder: (context, child) {
-                    final air = _reduceMotion ? 0.0 : math.sin(math.pi * _hopCtrl.value);
+                    // 蓝图 W4：心情驱动——hop 振幅分档；worried 不跳，改为呼吸相位驱动的小碎步左右微摆。
+                    final air = _reduceMotion ? 0.0 : math.sin(math.pi * _hopCtrl.value) * _hopAmplitude;
                     final breathe = _reduceMotion ? 0.0 : math.sin(2 * math.pi * _idleCtrl.value);
+                    final pace = _mood == MonsterMood.worried && !_reduceMotion
+                        ? math.sin(2 * math.pi * _idleCtrl.value) * 2.0
+                        : 0.0;
                     // 跳起拉伸（纵向拉长横向收窄），落地恢复；呼吸叠加微小起伏
                     final sy = (1 + 0.12 * air) * (1 + 0.015 * breathe);
                     final sx = (1 - 0.10 * air) * (1 - 0.01 * breathe);
                     return Transform.translate(
-                      offset: Offset(0, -16 * air),
+                      offset: Offset(pace, -16 * air),
                       child: Transform(
                         transform: Matrix4.diagonal3Values(sx.toDouble(), sy.toDouble(), 1),
                         alignment: Alignment.bottomCenter,

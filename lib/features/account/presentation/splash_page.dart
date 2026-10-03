@@ -15,7 +15,9 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:word_app/widgets/brand_intro.dart';
+
 import 'package:word_app/features/account/presentation/app_session_state.dart';
+import 'package:word_app/features/account/presentation/monster_hatching_page.dart';
 import 'package:word_app/features/account/presentation/login_page.dart';
 
 class SplashPage extends StatefulWidget {
@@ -122,7 +124,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
           setState(() => _showGuide = true);
         } else {
           _phase = _SplashPhase.completed;
-          _goToMain();
+          unawaited(_goToMain());
         }
       } else {
         _phase = _SplashPhase.completed;
@@ -134,7 +136,14 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     }
   }
 
-  void _goToMain() {
+  Future<void> _goToMain() async {
+    if (!mounted) return;
+    // 蓝图 W4 命名仪式：首次使用（未破壳）先进开局仪式页，完成后再进主页。
+    if (!await MonsterIdentityPrefs.hatched) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(MaterialPageRoute<void>(builder: (_) => MonsterHatchingPage()));
+      return;
+    }
     if (!mounted) return;
     Navigator.of(context).pushReplacementNamed('/');
   }

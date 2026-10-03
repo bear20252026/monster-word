@@ -26,6 +26,7 @@ import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/monster_peek_overlay.dart';
 import 'package:word_app/widgets/quiz_feedback_fx.dart';
+import 'package:word_app/widgets/rolling_number.dart';
 import 'package:word_app/widgets/scratch_to_reveal.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
@@ -36,6 +37,7 @@ import 'package:word_app/models/word.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
+import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/core/application/app_messages.dart';
 
@@ -318,8 +320,9 @@ class _CoinPillState extends State<_CoinPill> {
               AnimatedSwitcher(
                 duration: MotionDurations.base,
                 transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-                child: Text(
-                  '$balance',
+                // 蓝图 W3「数字的戏剧」：余额滚动递增（300ms），替代硬切。
+                child: RollingNumber(
+                  value: balance,
                   key: ValueKey('${widget.tick}-$balance'),
                   style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: colors.text1),
                 ),
@@ -506,8 +509,11 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
 
   void _onChoice(int i) {
     if (_correctIndex >= 0) return;
+    // 蓝图 W3：选项点选 = 输入确认触视。
+    HapticsGate.play(HapticCue.tap);
     final isCorrect = widget.state.choices[i].word == widget.word.word;
     if (isCorrect) {
+      HapticsGate.play(widget.state.combo >= 3 ? HapticCue.medium : HapticCue.light);
       setState(() {
         _correctIndex = i;
         _wrongIndex = -1;
@@ -613,7 +619,15 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '连击 ×${widget.state.combo}',
+                      '连击 ×',
+                      style: TextStyle(
+                        fontSize: AppFontSizes.bodySm * resp.fontScale,
+                        fontWeight: FontWeight.w800,
+                        color: colors.text1,
+                      ),
+                    ),
+                    RollingNumber(
+                      value: widget.state.combo,
                       style: TextStyle(
                         fontSize: AppFontSizes.bodySm * resp.fontScale,
                         fontWeight: FontWeight.w800,

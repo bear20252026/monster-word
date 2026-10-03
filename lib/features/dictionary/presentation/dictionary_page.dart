@@ -1,7 +1,7 @@
+import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
-import 'package:flutter/services.dart' show HapticFeedback;
 
 import 'package:provider/provider.dart';
 
@@ -230,7 +230,7 @@ class _DictionaryPageState extends State<DictionaryPage> {
                     ),
                     tooltip: state.isFavorite ? '取消收藏' : '收藏单词',
                     onPressed: () {
-                      HapticFeedback.lightImpact();
+                      HapticsGate.play(HapticCue.light);
                       state.toggleFavorite();
                     },
                   ),

@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
@@ -66,9 +67,21 @@ void main() {
     await tester.tap(find.byType(MonsterIcon));
     await tester.pump(const Duration(milliseconds: 300)); // 张嘴 0.3s + 气泡淡入 180ms
 
-    // 「咕噜~」气泡淡入至可见
+    // 气泡淡入至可见（2026-10-03 W4：文案来自台词引擎随机模板，不再固定「咕噜~」——
+    // 断言「某 Text 内容 ∈ dailyGreeting 模板渲染候选」且气泡层全亮）。
+    final candidates = MonsterSpeech.templatesOf(SpeechSlot.dailyGreeting)
+        .map(
+          (tpl) => tpl
+              .replaceAll('{stage}', '奶泡')
+              .replaceAll('{days}', '0')
+              .replaceAll('{streak}', '0')
+              .replaceAll('{balance}', '0'),
+        )
+        .toSet();
+    final bubbleTextFinder = find.byWidgetPredicate((w) => w is Text && w.data != null && candidates.contains(w.data));
+    expect(bubbleTextFinder, findsOneWidget, reason: '气泡文案必须是台词引擎模板之一');
     final bubble = tester.widget<AnimatedOpacity>(
-      find.ancestor(of: find.text('咕噜~'), matching: find.byType(AnimatedOpacity)),
+      find.ancestor(of: bubbleTextFinder, matching: find.byType(AnimatedOpacity)),
     );
     expect(bubble.opacity, 1.0);
 
@@ -79,13 +92,9 @@ void main() {
     // 把 _settleGurgle 的 1600ms 延时跑完（否则测试结束时留下 pending timer）
     await tester.pump(const Duration(milliseconds: 2000));
     // pushNamed 后首页在不透明路由下方变 offstage，finder 需包含 offstage 子树。
-    final bubbleAfter = tester.widget<AnimatedOpacity>(
-      find.ancestor(
-        of: find.text('咕噜~', skipOffstage: false),
-        matching: find.byType(AnimatedOpacity, skipOffstage: false),
-      ),
-    );
-    expect(bubbleAfter.opacity, 0.0); // 气泡收敛，状态复原
+    // 收敛断言（offstage + 随机文案）：不再有全亮气泡层。
+    final allBubbles = tester.widgetList<AnimatedOpacity>(find.byType(AnimatedOpacity, skipOffstage: false));
+    expect(allBubbles.any((w) => w.opacity >= 1.0), isFalse, reason: '跳转后气泡应收敛');
   });
 
   testWidgets('今日达标（learned≥goal）：进度环变金色并挂金色 confetti', (tester) async {

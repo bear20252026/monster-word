@@ -19,12 +19,42 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
   late final Animation<double> _mouth = CurvedAnimation(parent: _mouthCtrl, curve: Curves.easeInOut);
   bool _gurgleVisible = false;
 
+  /// 台词引擎（可测注入时间/随机源）。
+  final MonsterSpeech _speech = MonsterSpeech();
+
+  /// 气泡当前文案（点击或今日首见 welcomeBack）。
+  String _greetingText = '咕噜~';
+
   bool get _reduceMotion => WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
 
   @override
   void initState() {
     super.initState();
     if (!_reduceMotion) _bobCtrl.repeat();
+    // 蓝图 W4：今日首见且距上次打开 ≥1 天 → 主动弹 welcomeBack 气泡（消耗 1 预算，每日 ≤3）。
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeProactiveGreeting());
+  }
+
+  Future<void> _maybeProactiveGreeting() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = MonsterSpeech.dayKeyOf(DateTime.now());
+      final last = prefs.getString('monster_last_home_visit');
+      if (last == today || !_speech.canSpeak()) return;
+      await prefs.setString('monster_last_home_visit', today);
+      if (!mounted || last == null) return; // 首次使用无分离可言，不迎接回归
+      setState(() {
+        _greetingText = _speech.pick(
+          SpeechSlot.welcomeBack,
+          vars: const {'days': 1, 'streak': 0, 'balance': 0, 'stage': '奶泡'},
+        );
+        _gurgleVisible = true;
+      });
+      _speech.consumeBudget();
+      unawaited(_settleGurgle());
+    } catch (e, s) {
+      reportSwallowedError('首页主动问候气泡失败', e, s);
+    }
   }
 
   @override
@@ -37,7 +67,14 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
   /// 点怪兽：张嘴冒「咕噜~」，留出可感知节拍后进入「我的空间」。
   Future<void> _greet() async {
     _mouthCtrl.forward(from: 0);
-    setState(() => _gurgleVisible = true);
+    // 用户主动点击：只 pick 不消耗每日预算（预算只管主动弹）。
+    setState(() {
+      _greetingText = _speech.pick(
+        SpeechSlot.dailyGreeting,
+        vars: const {'days': 0, 'streak': 0, 'balance': 0, 'stage': '奶泡'},
+      );
+      _gurgleVisible = true;
+    });
     await Future<void>.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
     Navigator.pushNamed(context, RouteNames.mySpace);
@@ -147,7 +184,7 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
                     shape: StadiumBorder(side: BorderSide(color: colors.divider)),
                   ),
                   child: Text(
-                    '咕噜~',
+                    _greetingText,
                     style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, color: colors.text2),
                   ),
                 ),
