@@ -3,6 +3,8 @@
 // 由账号4生成
 // 学习页：明亮简约设计风格
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:word_app/core/utils/milestone_guard.dart';
 import 'package:word_app/widgets/common/mw_feedback.dart';
 
 import 'package:flutter/material.dart';
@@ -38,6 +40,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:word_app/core/utils/haptics_gate.dart';
+import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/core/application/app_messages.dart';
 
@@ -130,6 +133,7 @@ class _LearnPageState extends State<LearnPage> {
                                           skin: skin,
                                           pillKey: _pillKey,
                                           onRewarded: (_) {
+                                            SfxPlayer.fire(Sfx.coinTick);
                                             if (mounted) setState(() => _balanceTick++);
                                           },
                                         ),
@@ -150,6 +154,7 @@ class _LearnPageState extends State<LearnPage> {
                                           skin: skin,
                                           pillKey: _pillKey,
                                           onRewarded: (_) {
+                                            SfxPlayer.fire(Sfx.coinTick);
                                             if (mounted) setState(() => _balanceTick++);
                                           },
                                         ),
@@ -509,11 +514,19 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
 
   void _onChoice(int i) {
     if (_correctIndex >= 0) return;
-    // 蓝图 W3：选项点选 = 输入确认触视。
+    // 蓝图 W3：选项点选 = 输入确认（触视 + 短嗒）。
     HapticsGate.play(HapticCue.tap);
+    SfxPlayer.fire(Sfx.tap);
     final isCorrect = widget.state.choices[i].word == widget.word.word;
     if (isCorrect) {
       HapticsGate.play(widget.state.combo >= 3 ? HapticCue.medium : HapticCue.light);
+      // 蓝图 W3 音效阶梯：五声音阶 C5→D5→E5→G5，连对越多音越高（≥4 停在最高档）。
+      SfxPlayer.fire(switch (widget.state.combo) {
+        < 1 => Sfx.correctC5,
+        1 => Sfx.correctD5,
+        2 => Sfx.correctE5,
+        _ => Sfx.correctG5,
+      });
       setState(() {
         _correctIndex = i;
         _wrongIndex = -1;
@@ -526,6 +539,8 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       _rewardFly(i);
       _maybePeekForCombo();
     } else {
+      // 蓝图红线：答错轻提示音（无触觉无惩罚，缺席即信号）。
+      SfxPlayer.fire(Sfx.wrongSoft);
       setState(() => _wrongIndex = i);
       widget.state.recordAnswer(false);
       _shakeController.forward(from: 0);
@@ -576,8 +591,32 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       onArrive: () {
         if (!mounted) return;
         widget.onRewarded(granted);
+        _maybeCelebrateMilestone(granted);
       },
     );
+  }
+
+  /// 里程碑金币雨（蓝图 W3）：余额跨 100/500/1000/5000 → 探头 + jingle + heavy。
+  /// SP 持久化防重复；失败静默（守卫：庆祝不阻断答题）。
+  Future<void> _maybeCelebrateMilestone(int granted) async {
+    // await 前先取 store（async gap 后禁用 context，lint 口径）。
+    final store = context.read<ScareCoinStore?>();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      const key = 'monster_last_milestone';
+      final celebrated = prefs.getInt(key) ?? 0;
+      if (store == null) return;
+      final balance = await store.balance();
+      final crossed = MilestoneGuard.crossedMilestone(celebrated, balance);
+      if (crossed == null) return;
+      await prefs.setInt(key, crossed);
+      if (!mounted) return;
+      SfxPlayer.fire(Sfx.milestone);
+      HapticsGate.play(HapticCue.heavy);
+      MonsterPeekOverlay.show(context, phrase: '第 $crossed 枚金币！钱包鼓鼓的！');
+    } catch (e, s) {
+      reportSwallowedError('里程碑庆祝失败', e, s);
+    }
   }
 
   @override

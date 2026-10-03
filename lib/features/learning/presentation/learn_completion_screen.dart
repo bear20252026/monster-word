@@ -1,6 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 // 学习完成结算页：发币结算 / 目标庆祝 / 四项统计 / 战报分享 / 复习错题入口。
 // 自 learn_page.dart 拆出（code_style_guard：单文件 ≤900 行 / build() ≤120 行）。
+import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -70,6 +71,7 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
           dailyGoalAchieved: widget.goalAchieved,
         );
         if (!mounted || result.totalGranted <= 0) return;
+        SfxPlayer.fire(Sfx.milestone);
         setState(() => _grantedCoins = result.totalGranted);
       } catch (e, s) {
         // 奖励结算失败不打断完成页（异常已上报）；下次会话仍有机会获得
