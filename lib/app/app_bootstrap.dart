@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/sfx_settings.dart';
 import 'package:word_app/core/utils/debug_log.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:flutter/material.dart';
@@ -57,6 +58,8 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
   ];
   final labels = const ['词书与用户数据库（并行）', '偏好设置', '音频会话', '依赖注册'];
 
+  // 蓝图 W3：音效静音偏好预加载（Sfx 门面读缓存）。
+  await SfxSettings.load();
   final total = steps.length;
   for (var i = 0; i < total; i++) {
     await steps[i]();

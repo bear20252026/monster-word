@@ -105,6 +105,10 @@ flutter:
     - assets/db/wordbook.db.gz
     - assets/db/dictionary_extra.json
     - assets/wallpapers/
+    - assets/sfx/ui/
+    - assets/sfx/quiz/
+    - assets/sfx/celebrate/
+    - assets/sfx/monster/
 
   # 字体（Inter 无衬线 + Charter 衬线）
   fonts:

@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/core/audio/word_audio_scope.dart';
@@ -394,6 +395,7 @@ class _HomeShellState extends State<_HomeShell> {
         now.day,
       ).difference(DateTime(lastDate.year, lastDate.month, lastDate.day)).inDays;
       if (absent < 3) return;
+      HapticsGate.play(HapticCue.success);
       showReunionOverlay(context, absentDays: absent);
       // 回家礼：断签保护卡 ×1（走既有 API；失败不阻断演出）。
       try {

@@ -1,6 +1,8 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
+import 'package:word_app/core/utils/sfx.dart';
+import 'package:word_app/core/utils/sfx_settings.dart';
 import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:word_app/core/utils/debug_log.dart';
 
@@ -513,6 +515,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                   SizedBox(height: context.design.spacing.md),
                   _buildFeedbackGroup(skin),
                   SizedBox(height: context.design.spacing.md),
+                  _buildSfxGroup(skin),
                   _buildRedeemReportGroup(skin),
                   SizedBox(height: context.design.spacing.md),
                   _buildLegalGroup(skin),
@@ -579,6 +582,27 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         iconColor: context.skin.colors.text1,
         title: '推荐给好友',
         onTap: () => _showShareDialog(context),
+      ),
+    ]);
+  }
+
+  /// 音效组（蓝图 W3）：三态静音循环（全开 → 仅视觉 → 全静音）。
+  Widget _buildSfxGroup(SkinSystem skin) {
+    return _SettingGroup([
+      _Cell(
+        icon: Icons.volume_up_outlined,
+        iconColor: context.skin.colors.accent,
+        title: '音效',
+        subtitle: switch (SfxSettings.current) {
+          SfxMode.all => '全开（夜间自动减半）',
+          SfxMode.visualOnly => '仅视觉（庆祝保留，无声音）',
+          SfxMode.silent => '全静音',
+        },
+        onTap: () async {
+          await SfxSettings.cycle();
+          SfxPlayer.fire(Sfx.toggle);
+          if (mounted) setState(() {});
+        },
       ),
     ]);
   }

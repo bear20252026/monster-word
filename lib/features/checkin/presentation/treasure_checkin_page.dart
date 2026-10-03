@@ -17,8 +17,15 @@
 // 无障碍：系统「减少动态效果」时跳过散落与粒子，控件立即可用。
 // 位置说明：审计 I11 归位 features/checkin/presentation——业务页面不再
 // 借住 widgets 层（跨 feature 经 scare_coin application 端口，现行规则放行）。
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:word_app/widgets/monster_peek_overlay.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/core/utils/haptics_gate.dart';
+import 'package:word_app/core/utils/milestone_guard.dart';
+import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
 
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -250,6 +257,25 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
   }
 
   // ── 签到（同原型 doCheckin 时序） ──
+  /// 里程碑跨档庆祝（守卫 + SP 持久化防重复，探头复用 MonsterPeekOverlay）。
+  Future<void> _maybeCelebrateMilestone({required int newBalance}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      const key = 'monster_last_milestone';
+      final celebrated = prefs.getInt(key) ?? 0;
+      final crossed = MilestoneGuard.crossedMilestone(celebrated, newBalance);
+      if (crossed == null) return;
+      await prefs.setInt(key, crossed);
+      if (!mounted) return;
+      SfxPlayer.fire(Sfx.milestone);
+      HapticsGate.play(HapticCue.heavy);
+      MonsterPeekOverlay.show(context, phrase: '第 $crossed 枚金币！钱包鼓鼓的！');
+    } catch (e, s) {
+      // 庆祝失败不阻断签到主流程。
+      reportSwallowedError('里程碑庆祝失败', e, s);
+    }
+  }
+
   Future<void> _doCheckIn() async {
     if (_busy || _todayChecked) return;
     final store = context.read<ScareCoinStore>();
@@ -265,6 +291,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     }
     widget.onChecked?.call();
     final reward = store.checkInReward;
+    unawaited(_maybeCelebrateMilestone(newBalance: newBalance));
     // 进化仪式检测：checkIn() 返回前今日已写入 checkinDates（写日期先于算余额），
     // 故此刻取的天数已含今天；与本次签到前快照 diff，跨阈值才演出。
     final datesAfter = await store.checkinDates();
@@ -281,6 +308,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
         _busy = false;
       });
       if (evolved && mounted) {
+        SfxPlayer.fire(Sfx.evolve);
         EvolutionCeremonyOverlay.show(context, fromStage: stageBefore, toStage: stageAfter);
       }
       return;
@@ -308,6 +336,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
       });
       // 进化演出放在结算之后（肚皮/盖印先落定，仪式作为当日高光收尾）。
       if (evolved) {
+        SfxPlayer.fire(Sfx.evolve);
         EvolutionCeremonyOverlay.show(context, fromStage: stageBefore, toStage: stageAfter);
       }
     });
