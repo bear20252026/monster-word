@@ -24,6 +24,23 @@ void main() {
     expect(find.text('99'), findsOneWidget);
   });
 
+  testWidgets('动画中途换目标：从当前显示值继续滚，不跳回旧目标', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: RollingNumber(value: 0))));
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: RollingNumber(value: 100))));
+    await tester.pump(const Duration(milliseconds: 150));
+    final midway = int.parse(tester.widget<Text>(find.byType(Text)).data!);
+    expect(midway, greaterThan(0));
+    expect(midway, lessThan(100));
+
+    // 半程改目标：新 tween 起点应是「正在显示的值」，而非旧目标 100 或初始 0（审计 P2-2 次项）。
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: RollingNumber(value: 200))));
+    await tester.pump();
+    expect(int.parse(tester.widget<Text>(find.byType(Text)).data!), midway, reason: '应从当前显示值接续滚动');
+
+    await tester.pumpAndSettle();
+    expect(find.text('200'), findsOneWidget);
+  });
+
   testWidgets('style 透传：字号颜色生效', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(

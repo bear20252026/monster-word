@@ -39,6 +39,9 @@ class MonsterSpeech {
   /// 每槽去重窗口：最近 3 条不再选中。
   static const int _recentWindow = 3;
 
+  /// 模板变量名（渲染与「无通道跳过模板」共用同一口径）。
+  static const List<String> _varKeys = ['days', 'streak', 'balance', 'stage'];
+
   // 每日预算（进程级）：_todayKey 为 yyyy-MM-dd，跨日首次访问清零 _todayCount。
   static String _todayKey = '';
   static int _todayCount = 0;
@@ -99,9 +102,15 @@ class MonsterSpeech {
   /// 从槽位文案组挑一条并渲染 {days}/{streak}/{balance}/{stage}。
   ///
   /// 纯挑选：不消耗每日预算——是否 [consumeBudget] 由调用方按「是否主动弹」决定。
-  /// 建议传全 4 个变量；缺失的变量按空串渲染。
-  String pick(SpeechSlot slot, {required Map<String, Object> vars}) {
-    final group = _templates[slot]!;
+  /// [vars] 值为 null（或键缺失）表示「这条数据没有通道」：含该占位符的模板整条跳过，
+  /// 绝不渲染成 `{balance}` → 空串这种「怪兽对用户报假事实」。每槽都保有不含占位符的
+  /// 条目（monster_speech_test 锁定该不变式），故过滤后候选必非空。
+  String pick(SpeechSlot slot, {required Map<String, Object?> vars}) {
+    final unknown = [
+      for (final key in _varKeys)
+        if (vars[key] == null) key,
+    ];
+    final group = _templates[slot]!.where((t) => !unknown.any((key) => t.contains('{$key}'))).toList();
     final recent = _recent.putIfAbsent(slot, () => <String>[]);
     final candidates = group.where((t) => !recent.contains(t)).toList();
     if (candidates.isEmpty) {
@@ -125,9 +134,9 @@ class MonsterSpeech {
     }
   }
 
-  String _render(String template, Map<String, Object> vars) {
+  String _render(String template, Map<String, Object?> vars) {
     var out = template;
-    for (final key in const ['days', 'streak', 'balance', 'stage']) {
+    for (final key in _varKeys) {
       final value = vars[key];
       out = out.replaceAll('{$key}', value == null ? '' : '$value');
     }

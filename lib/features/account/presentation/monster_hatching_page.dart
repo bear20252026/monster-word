@@ -7,44 +7,18 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:word_app/core/utils/monster_identity_prefs.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 
-/// SP 键清单（与 app.dart 回家仪式、profile 门牌共用）。
-class MonsterIdentityPrefs {
-  MonsterIdentityPrefs._();
-
-  static const String nameKey = 'monster_name';
-  static const String birthdayKey = 'monster_birthday';
-  static const String hatchedKey = 'monster_hatched';
-
-  /// 怪兽名（未命名返回默认「咕噜」）。
-  static Future<String> name() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(nameKey) ?? '咕噜';
-  }
-
-  static Future<void> save({required String name}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-    await prefs.setString(nameKey, name.trim().isEmpty ? '咕噜' : name.trim());
-    await prefs.setString(
-      birthdayKey,
-      '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
-    );
-    await prefs.setInt(hatchedKey, 1);
-  }
-
-  static Future<bool> get hatched async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(hatchedKey) == 1;
-  }
-}
+/// 怪兽名输入闸：拒绝控制字符 / 零宽 / RTL 覆写字符（名字将在小屋门牌以纯 Text 回显）。
+final RegExp _nameForbiddenChars = RegExp(r'[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u2028-\u202E\u2060-\u2064\uFEFF]');
 
 class MonsterHatchingPage extends StatefulWidget {
   const MonsterHatchingPage({super.key, this.onFinished});
@@ -61,6 +35,9 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
 
   /// 敲蛋次数（0-3；3 = 已破壳）。
   int _taps = 0;
+
+  /// 保存进行中（防重复点击与重复落库）。
+  bool _saving = false;
 
   late final AnimationController _shakeCtrl = AnimationController(vsync: this, duration: MotionDurations.base);
   late final AnimationController _popCtrl = AnimationController(vsync: this, duration: MotionDurations.expressive);
@@ -89,7 +66,18 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
   }
 
   Future<void> _startAdventure() async {
-    await MonsterIdentityPrefs.save(name: _nameCtrl.text);
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      await MonsterIdentityPrefs.save(name: _nameCtrl.text);
+    } catch (e, s) {
+      // 三段 SP 写失败：不静默、不假装成功——留原态让用户再敲一次即可（save 可重入）。
+      reportSwallowedError('命名仪式保存失败', e, s);
+      if (!mounted) return;
+      setState(() => _saving = false);
+      showMwSnackBar(context, const SnackBar(content: Text('名字没记上，再点一次「开始冒险」试试')));
+      return;
+    }
     if (!mounted) return;
     if (widget.onFinished != null) {
       widget.onFinished!();
@@ -178,6 +166,7 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
       controller: _nameCtrl,
       textAlign: TextAlign.center,
       maxLength: 12,
+      inputFormatters: [FilteringTextInputFormatter.deny(_nameForbiddenChars)],
       decoration: InputDecoration(
         hintText: _hatched ? '它的名字（可改，默认「咕噜」）' : '给它起个名字吧（可跳过，默认「咕噜」）',
         counterText: '',
@@ -189,7 +178,7 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
-        onPressed: _hatched ? _startAdventure : _knock,
+        onPressed: _hatched ? (_saving ? null : _startAdventure) : _knock,
         style: ElevatedButton.styleFrom(
           backgroundColor: colors.accent,
           foregroundColor: colors.onGlassAccent,
@@ -197,7 +186,7 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
           elevation: 0,
         ),
         child: Text(
-          _hatched ? '开始冒险！' : '敲三下（$_taps/3）',
+          _hatched ? (_saving ? '保存中…' : '开始冒险！') : '敲三下（$_taps/3）',
           style: MwTypography.bodyBold.copyWith(color: colors.onGlassAccent),
         ),
       ),

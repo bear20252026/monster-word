@@ -24,6 +24,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/route_names.dart';
+import 'package:word_app/core/utils/monster_identity_prefs.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 // 跨 feature 只依赖 application 端口（R4 通道）
 import 'package:word_app/features/learning/application/learning_statistics_reader.dart';
@@ -118,6 +120,9 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   // ── 数据 ──
   int _balance = 0;
   bool _balanceLoaded = false;
+
+  /// 怪兽名（蓝图 W4 命名仪式的回显；未破壳/未读到 → null → 门牌不出这一行）。
+  String? _monsterName;
   final int _sceneIdx = 0; // 窗外天色：0 日 / 1 暮 / 2 夜（进入外观页编辑）
   String? _activeKey;
   Offset _pupilOffset = Offset.zero;
@@ -165,6 +170,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   void initState() {
     super.initState();
     _loadBalance();
+    _loadMonsterName();
     _resolveMood();
     if (!_reduceMotion) {
       _idleCtrl.repeat();
@@ -232,6 +238,19 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
       _balance = balance;
       _balanceLoaded = true;
     });
+  }
+
+  /// 门牌回显怪兽名——蓝图 W4「开局命名仪式」闭环的最后一环（仪式页写，这里读）。
+  /// 世界观红线：名字只进展示，绝不参与任何数值计算。
+  Future<void> _loadMonsterName() async {
+    try {
+      if (!await MonsterIdentityPrefs.hatched) return;
+      final name = await MonsterIdentityPrefs.name();
+      if (!mounted) return;
+      setState(() => _monsterName = name);
+    } catch (e, s) {
+      reportSwallowedError('小屋门牌怪兽名读取失败', e, s);
+    }
   }
 
   // ── 交互 ──
@@ -428,6 +447,16 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
                   overflow: TextOverflow.ellipsis,
                   style: MwTypography.bodyMd.copyWith(fontWeight: FontWeight.w800, color: TreasurePalette.ink),
                 ),
+                if (_monsterName != null) ...[
+                  const SizedBox(height: 2),
+                  // 纯 Text 回显（不做富文本/方向嵌入），名字来自开局命名仪式。
+                  Text(
+                    '怪兽 · $_monsterName',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, color: TreasurePalette.dim),
+                  ),
+                ],
                 const SizedBox(height: 3),
                 const _RoomStatsRow(),
               ],

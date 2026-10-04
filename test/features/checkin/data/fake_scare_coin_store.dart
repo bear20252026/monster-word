@@ -8,12 +8,13 @@ class FakeScareCoinStore implements ScareCoinStore {
   int streakDays = 0;
   int reward = 10;
   int? checkInResult = 10;
+  int balanceValue = 0;
 
   @override
   int get checkInReward => reward;
 
   @override
-  Future<int> balance() async => 0;
+  Future<int> balance() async => balanceValue;
 
   @override
   Future<Set<String>> checkinDates() async => dates;

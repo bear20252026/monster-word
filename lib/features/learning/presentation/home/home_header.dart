@@ -25,14 +25,64 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
   /// 气泡当前文案（点击或今日首见 welcomeBack）。
   String _greetingText = '咕噜~';
 
+  /// 台词变量：只装真实读到的数据，读不到的槽位为 null（引擎随即跳过含该占位符的模板）。
+  /// 硬编码占位值会让怪兽对金冠用户说「我现在是奶泡形态」「钱包里躺着 0 枚尖叫币」。
+  Map<String, Object?> _speechVars = const {'days': null, 'streak': null, 'balance': null, 'stage': null};
+
+  /// 800ms 问候节拍窗内的重入闸（双击会推开两层「我的空间」）；入页后复位，返回仍可再点。
+  bool _navigating = false;
+
   bool get _reduceMotion => WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
 
   @override
   void initState() {
     super.initState();
     if (!_reduceMotion) _bobCtrl.repeat();
+    // 台词变量预热：点击气泡用的是缓存值，不等取数（点击反馈不能有延迟）。
+    unawaited(_refreshSpeechVars());
     // 蓝图 W4：今日首见且距上次打开 ≥1 天 → 主动弹 welcomeBack 气泡（消耗 1 预算，每日 ≤3）。
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeProactiveGreeting());
+  }
+
+  /// 取台词变量：累计签到天数 / 连击 / 尖叫币余额 / 由天数换算的进化形态。
+  ///
+  /// context 一律在 await 之前取（async gap 后禁用 context）。任一路读不到即该槽位为
+  /// null——宁可不提这个数字，也不向用户报假数字。
+  Future<Map<String, Object?>> _loadSpeechVars() async {
+    final reader = context.read<CheckinStatusReader?>();
+    final store = context.read<ScareCoinStore?>();
+    int? days;
+    int? streak;
+    int? balance;
+    if (reader != null) {
+      try {
+        final results = await Future.wait([reader.getCheckinDates(), reader.getStreakDays()]);
+        days = (results[0] as Set<String>).length;
+        streak = results[1] as int;
+      } catch (e, s) {
+        reportSwallowedError('首页台词签到数据读取失败', e, s);
+      }
+    }
+    if (store != null) {
+      try {
+        balance = await store.balance();
+      } catch (e, s) {
+        reportSwallowedError('首页台词余额读取失败', e, s);
+      }
+    }
+    return {
+      'days': days,
+      'streak': streak,
+      'balance': balance,
+      // 形态由累计签到天数换算（与怪兽小屋、探头演出口径一致）。
+      'stage': days == null ? null : MonsterIcon.stageName(MonsterIcon.stageFor(days)),
+    };
+  }
+
+  Future<void> _refreshSpeechVars() async {
+    final vars = await _loadSpeechVars();
+    if (!mounted) return;
+    setState(() => _speechVars = vars);
   }
 
   Future<void> _maybeProactiveGreeting() async {
@@ -43,11 +93,12 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
       if (last == today || !_speech.canSpeak()) return;
       await prefs.setString('monster_last_home_visit', today);
       if (!mounted || last == null) return; // 首次使用无分离可言，不迎接回归
+      // 主动弹是「怪兽开口报数」的场合，等变量取齐再说（取不到就说不带数的台词）。
+      final vars = await _loadSpeechVars();
+      if (!mounted) return;
       setState(() {
-        _greetingText = _speech.pick(
-          SpeechSlot.welcomeBack,
-          vars: const {'days': 1, 'streak': 0, 'balance': 0, 'stage': '奶泡'},
-        );
+        _speechVars = vars;
+        _greetingText = _speech.pick(SpeechSlot.welcomeBack, vars: vars);
         _gurgleVisible = true;
       });
       _speech.consumeBudget();
@@ -64,19 +115,19 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  /// 点怪兽：张嘴冒「咕噜~」，留出可感知节拍后进入「我的空间」。
+  /// 点怪兽：张嘴冒气泡，留出可感知节拍后进入「我的空间」。
   Future<void> _greet() async {
+    if (_navigating) return;
+    _navigating = true;
     _mouthCtrl.forward(from: 0);
     // 用户主动点击：只 pick 不消耗每日预算（预算只管主动弹）。
     setState(() {
-      _greetingText = _speech.pick(
-        SpeechSlot.dailyGreeting,
-        vars: const {'days': 0, 'streak': 0, 'balance': 0, 'stage': '奶泡'},
-      );
+      _greetingText = _speech.pick(SpeechSlot.dailyGreeting, vars: _speechVars);
       _gurgleVisible = true;
     });
     await Future<void>.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
+    _navigating = false; // 入页后解除：防的是节拍窗内的双击，不是永久关门
     Navigator.pushNamed(context, RouteNames.mySpace);
     unawaited(_settleGurgle());
   }
@@ -185,6 +236,7 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
                   ),
                   child: Text(
                     _greetingText,
+                    key: const ValueKey('monster-greeting-bubble'),
                     style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, color: colors.text2),
                   ),
                 ),

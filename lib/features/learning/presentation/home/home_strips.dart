@@ -45,8 +45,11 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
       _streakDays = results[1] as int;
     });
     // 未签到才呼吸；reduce-motion 时保持静态
-    if (_checkedToday == false && !_reduceMotion && !_flameCtrl.isAnimating) {
-      _flameCtrl.repeat(reverse: true);
+    if (_checkedToday == false && !_reduceMotion) {
+      if (!_flameCtrl.isAnimating) _flameCtrl.repeat(reverse: true);
+    } else if (_flameCtrl.isAnimating) {
+      // 签到后火苗不再上树，但 ticker 不会自己停——不停就是剩下全天 60fps 空转。
+      _flameCtrl.stop();
     }
   }
 

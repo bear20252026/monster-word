@@ -24,26 +24,33 @@ class RollingNumber extends StatefulWidget {
 }
 
 class _RollingNumberState extends State<RollingNumber> {
-  /// 上一帧展示值（tween 起点；didUpdateWidget 更新）。
-  late int _displayed = widget.value;
+  /// 下一次 tween 的起点。
+  late int _from = widget.value;
+
+  /// 当前实际显示值（build 内跟踪，只作下一次 tween 起点，不触发重建）。
+  late int _shown = widget.value;
 
   @override
   void didUpdateWidget(covariant RollingNumber oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
-      _displayed = oldWidget.value;
+      // 动画中途来新值：从「正在显示的值」接着滚，而不是跳回旧目标值。
+      _from = _shown;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<int>(
-      key: ValueKey('$_displayed-${widget.value}'),
-      tween: IntTween(begin: _displayed, end: widget.value),
+      key: ValueKey('$_from-${widget.value}'),
+      tween: IntTween(begin: _from, end: widget.value),
       duration: widget.duration,
       curve: Curves.easeOutCubic,
-      onEnd: () => _displayed = widget.value,
-      builder: (context, animated, _) => Text('$animated', style: widget.style),
+      onEnd: () => _from = widget.value,
+      builder: (context, animated, _) {
+        _shown = animated;
+        return Text('$animated', style: widget.style);
+      },
     );
   }
 }
