@@ -24,7 +24,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/route_names.dart';
+import 'package:word_app/core/utils/haptics_gate.dart';
+import 'package:word_app/core/utils/monster_bond_prefs.dart';
 import 'package:word_app/core/utils/monster_identity_prefs.dart';
+import 'package:word_app/core/utils/monster_rhythm.dart';
+import 'package:word_app/core/utils/monster_speech.dart';
+import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 // 跨 feature 只依赖 application 端口（R4 通道）
@@ -39,6 +44,7 @@ import 'package:word_app/tokens/treasure_palette.dart';
 import 'package:word_app/widgets/message_badge_icon.dart';
 
 part 'monster_room_painters.dart';
+part 'monster_room_life.dart';
 
 /// 房间物件规格：名牌 + 抽屉行（行可携带真实路由）。
 class _RoomSpec {
@@ -144,6 +150,22 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   Timer? _blinkTimer;
   int _blinkRound = 0;
 
+  // ── W4.5 宠物化：昼夜节律 / 抚摸 / 羁绊 / 房间气泡（方法在 monster_room_life.dart）──
+  bool _isNight = false;
+  bool _petting = false;
+  double _happy = 0.0; // 抚摸开心度 0~1（驱动 _RoomMonsterPainter.happy）
+  int _petStrokes = 0;
+  double _petStrokeDist = 0;
+  Offset _petLastPos = Offset.zero;
+  String? _roomBubble;
+  Timer? _roomBubbleTimer;
+  String? _bondLevelName;
+  final MonsterSpeech _roomSpeech = MonsterSpeech();
+
+  /// life 扩展（part 文件）专用的 setState 转发：setState 是 @protected 成员，
+  /// 扩展方法内直接调用会触发 invalid_use_of_protected_member。
+  void _lifeSetState(VoidCallback fn) => setState(fn);
+
   // 蓝图 W4 五档心情机：默认 calm；由 resolver 按真实数据驱动（数据不可得不猜，降级 calm）。
   MonsterMood _mood = MonsterMood.calm;
   double get _hopAmplitude => switch (_mood) {
@@ -172,9 +194,12 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
     _loadBalance();
     _loadMonsterName();
     _resolveMood();
+    _initRoomLife();
     if (!_reduceMotion) {
+      // 夜息：睡着时呼吸放慢一倍多，不眨眼（闭眼由 painter blink=1 呈现）。
+      _idleCtrl.duration = Duration(milliseconds: _isNight ? 7600 : 3200);
       _idleCtrl.repeat();
-      _blinkTimer = Timer.periodic(const Duration(milliseconds: 3400), (_) => _runBlink());
+      if (!_isNight) _blinkTimer = Timer.periodic(const Duration(milliseconds: 3400), (_) => _runBlink());
     }
   }
 
@@ -208,13 +233,16 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
     // 心情变化后重排呼吸节奏（repeat 周期变更需重启）。
     if (!_reduceMotion) {
       _idleCtrl.stop();
-      _idleCtrl.duration = Duration(milliseconds: (3200 * _idleSpeed).round());
+      _idleCtrl.duration = Duration(milliseconds: (3200 * _idleSpeed * (_isNight ? 2.4 : 1.0)).round());
       _idleCtrl.repeat();
     }
+    // 白天进屋时按真实数据冒一次需求气泡（W4.5「它会找你」）。
+    unawaited(_maybeShowNeedBubble(dueCount: dueCount));
   }
 
   @override
   void dispose() {
+    _roomBubbleTimer?.cancel();
     _blinkTimer?.cancel();
     _hopCtrl.dispose();
     _blinkCtrl.dispose();
@@ -255,7 +283,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
 
   // ── 交互 ──
   void _onPointerHover(PointerEvent e, Offset monsterCenter) {
-    if (_reduceMotion) return;
+    if (_reduceMotion || _isNight) return; // 睡着了瞳孔不跟人
     final dx = ((e.localPosition.dx - monsterCenter.dx) / 240).clamp(-1.0, 1.0);
     final dy = ((e.localPosition.dy - monsterCenter.dy) / 200).clamp(-1.0, 1.0);
     setState(() => _pupilOffset = Offset(dx * 4, dy * 3));
@@ -264,7 +292,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   void _openObject(String key) {
     final reduced = _reduceMotion;
     setState(() => _activeKey = key);
-    if (!reduced) _hopCtrl.forward(from: 0);
+    if (!reduced && !_isNight) _hopCtrl.forward(from: 0); // 睡着了不蹦
     _showDrawer(key);
   }
 
@@ -457,7 +485,8 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
                   const SizedBox(height: 2),
                   // 纯 Text 回显（不做富文本/方向嵌入），名字来自开局命名仪式。
                   Text(
-                    '怪兽 · $_monsterName',
+                    // 羁绊段（W4.5）：读到才显示，未读到不假装认识。
+                    '怪兽 · $_monsterName${_bondLevelName == null ? '' : ' · 羁绊$_bondLevelName'}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, color: TreasurePalette.dim),
@@ -597,6 +626,8 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
                 bottom: stageH * 0.34,
                 child: Container(height: 2, color: TreasurePalette.line),
               ),
+              // W4.5 夜幕：家具压暗一层，怪兽与 Zzz 画在其上保持清晰。
+              ?_nightOverlay,
               // 家具物件
               obj(
                 'equip',
@@ -649,41 +680,46 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
                 bottom: stageH * 0.26,
                 child: CustomPaint(size: const Size(76, 46), painter: _RoomPiggyPainter()),
               ),
-              // 房主（爪印地毯上）：跳跃 + 挤压拉伸 + 待机呼吸
+              // 房主（爪印地毯上）：跳跃 + 挤压拉伸 + 待机呼吸；长按抚摸（W4.5）
               Positioned(
                 left: stageW / 2 - 58,
                 bottom: stageH * 0.035,
-                child: AnimatedBuilder(
-                  animation: Listenable.merge([_hopCtrl, _blinkCtrl, _idleCtrl]),
-                  builder: (context, child) {
-                    // 蓝图 W4：心情驱动——hop 振幅分档；worried 不跳，改为呼吸相位驱动的小碎步左右微摆。
-                    final air = _reduceMotion ? 0.0 : math.sin(math.pi * _hopCtrl.value) * _hopAmplitude;
-                    final breathe = _reduceMotion ? 0.0 : math.sin(2 * math.pi * _idleCtrl.value);
-                    final pace = _mood == MonsterMood.worried && !_reduceMotion
-                        ? math.sin(2 * math.pi * _idleCtrl.value) * 2.0
-                        : 0.0;
-                    // 跳起拉伸（纵向拉长横向收窄），落地恢复；呼吸叠加微小起伏
-                    final sy = (1 + 0.12 * air) * (1 + 0.015 * breathe);
-                    final sx = (1 - 0.10 * air) * (1 - 0.01 * breathe);
-                    return Transform.translate(
-                      offset: Offset(pace, -16 * air),
-                      child: Transform(
-                        transform: Matrix4.diagonal3Values(sx.toDouble(), sy.toDouble(), 1),
-                        alignment: Alignment.bottomCenter,
-                        child: child,
+                child: _monsterLifeWrap(
+                  AnimatedBuilder(
+                    animation: Listenable.merge([_hopCtrl, _blinkCtrl, _idleCtrl]),
+                    builder: (context, child) {
+                      // 蓝图 W4：心情驱动——hop 振幅分档；worried 不跳，改为呼吸相位驱动的小碎步左右微摆。
+                      final air = _reduceMotion ? 0.0 : math.sin(math.pi * _hopCtrl.value) * _hopAmplitude;
+                      final breathe = _reduceMotion ? 0.0 : math.sin(2 * math.pi * _idleCtrl.value);
+                      final pace = !_isNight && _mood == MonsterMood.worried && !_reduceMotion
+                          ? math.sin(2 * math.pi * _idleCtrl.value) * 2.0
+                          : 0.0;
+                      // 跳起拉伸（纵向拉长横向收窄），落地恢复；呼吸叠加微小起伏
+                      final sy = (1 + 0.12 * air) * (1 + 0.015 * breathe);
+                      final sx = (1 - 0.10 * air) * (1 - 0.01 * breathe);
+                      return Transform.translate(
+                        offset: Offset(pace, -16 * air),
+                        child: Transform(
+                          transform: Matrix4.diagonal3Values(sx.toDouble(), sy.toDouble(), 1),
+                          alignment: Alignment.bottomCenter,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: CustomPaint(
+                      size: const Size(116, 118),
+                      painter: _RoomMonsterPainter(
+                        pupilOffset: _pupilOffset,
+                        blink: _isNight ? 1.0 : (_reduceMotion ? 0 : _blinkSeq.evaluate(_blinkCtrl)),
+                        hop: _isNight || _reduceMotion ? 0.0 : math.sin(math.pi * _hopCtrl.value),
+                        happy: _happy,
                       ),
-                    );
-                  },
-                  child: CustomPaint(
-                    size: const Size(116, 118),
-                    painter: _RoomMonsterPainter(
-                      pupilOffset: _pupilOffset,
-                      blink: _reduceMotion ? 0 : _blinkSeq.evaluate(_blinkCtrl),
-                      hop: _reduceMotion ? 0.0 : math.sin(math.pi * _hopCtrl.value),
                     ),
                   ),
                 ),
               ),
+              ?_sleepGlyph,
+              ?_lifeBubble,
             ],
           ),
         ),

@@ -17,6 +17,23 @@ enum SpeechSlot {
 
   /// 里程碑庆祝：连击/进化/天数达成等事件触发，不主动弹。
   milestone,
+
+  /// 夜间睡话（W4.5 宠物化）：22:00–6:00 点击怪兽/摸到它时的迷糊反应。
+  /// 语气红线：不指责熬夜（「快去睡吧」可以说，「你怎么还不睡」不说）。
+  sleepyGreeting,
+
+  /// 被摸开心（W4.5）：小屋抚摸会话结束、当日羁绊+1 时的反应。
+  petHappy,
+
+  /// 被摸烦了（W4.5）：同日抚摸会话 ≥4 次后的性格反应（脾气也是活物感）。
+  /// 红线：不耐烦不指责——「摸够啦」可以，「别碰我」不说。
+  petAnnoyed,
+
+  /// 想被复习（W4.5 需求气泡）：到期词 ≥20 时小屋头顶的愿望，{due} 为真实到期数。
+  needReview,
+
+  /// 想被签到（W4.5 需求气泡）：≥2 天没签到时小屋头顶的愿望。语气不指责。
+  needCheckin,
 }
 
 /// 怪兽台词模板引擎。
@@ -42,13 +59,13 @@ class MonsterSpeech {
   static const int _recentWindow = 3;
 
   /// 模板变量名（渲染与「无通道跳过模板」共用同一口径）。
-  static const List<String> _varKeys = ['days', 'streak', 'balance', 'stage'];
+  static const List<String> _varKeys = ['days', 'streak', 'balance', 'stage', 'name', 'due'];
 
   // 每日预算（进程级）：_todayKey 为 yyyy-MM-dd，跨日首次访问清零 _todayCount。
   static String _todayKey = '';
   static int _todayCount = 0;
 
-  /// 三槽文案组（每槽 6 条）。语气红线：温暖不指责。
+  /// 八槽文案组（每槽 6 条）。语气红线：温暖不指责。
   static const Map<SpeechSlot, List<String>> _templates = {
     SpeechSlot.dailyGreeting: [
       '今天也一起加油呀~',
@@ -74,9 +91,49 @@ class MonsterSpeech {
       '新纪录达成！咕噜——撒花庆祝！',
       '{days} 天的旅程，每一步我都记着呢。',
     ],
+    SpeechSlot.sleepyGreeting: [
+      '唔……{name}……再睡一小会儿……',
+      '呼……呼……（它翻了个身，把角埋进小毯子）',
+      'z Z……单词卡我叼到枕头边了……呼……',
+      '（揉眼睛）唔？天还没亮吧……',
+      '夜深了，我在替你守着明天的词呢……快去睡吧。',
+      '呼……明天的词……也一起……呼……',
+    ],
+    SpeechSlot.petHappy: [
+      '咕噜咕噜~最喜欢{name}了！',
+      '（眯起眼睛）好舒服……再摸摸角角。',
+      '咕噜——这是开心的声音！',
+      '今天也被你摸得暖暖的，学习都更有劲了。',
+      '（尾巴摇成了小风扇）',
+      '嘿嘿，被你摸到角角了~',
+    ],
+    SpeechSlot.petAnnoyed: [
+      '摸够啦摸够啦，我要晕了！',
+      '（歪头躲开）头要被摸秃啦！',
+      '唔……让我自己静一会儿嘛。',
+      '今天的贴贴额度用完啦，明天再来~',
+      '（抱住自己的角护住）先让单词卡冷静一下。',
+      '咕！再摸我要打嗝了哦。',
+    ],
+    SpeechSlot.needReview: [
+      '有 {due} 个词在排队等你复习……我帮你数着呢。',
+      '{due} 个词快被你忘啦，带我救回来好不好？',
+      '（叼来一摞单词卡）到期的小词们在等我们！',
+      '复习 {due} 个，就当今天喂我一顿饱饭~',
+      '别怕多，我们一个一个来。',
+      '到期的小词们排排坐，等牵它们回家呢。',
+    ],
+    SpeechSlot.needCheckin: [
+      '今天还没签到呢，日历给我留了个空格。',
+      '（趴在日历上）今天的格子还空着哦。',
+      '签个到吧，我想在日历上再画一枚金币。',
+      '今天的签到金币还没领呢~',
+      '打卡的那一下，我最喜欢了。',
+      '今天也从一小格开始吧。',
+    ],
   };
 
-  /// 全部模板（测试断言用：气泡文案 ∈ 樌位模板的渲染结果集）。
+  /// 全部模板（测试断言用：气泡文案 ∈ 槽位模板的渲染结果集）。
   static Iterable<String> templatesOf(SpeechSlot slot) => _templates[slot]!;
 
   // 每槽最近选中记录（内存即可，不持久化）。
@@ -111,7 +168,7 @@ class MonsterSpeech {
     _todayCount++;
   }
 
-  /// 从槽位文案组挑一条并渲染 {days}/{streak}/{balance}/{stage}。
+  /// 从槽位文案组挑一条并渲染 {days}/{streak}/{balance}/{stage}/{name}。
   ///
   /// 纯挑选：不消耗每日预算——是否 [consumeBudget] 由调用方按「是否主动弹」决定。
   /// [vars] 值为 null（或键缺失）表示「这条数据没有通道」：含该占位符的模板整条跳过，

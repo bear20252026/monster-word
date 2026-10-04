@@ -129,8 +129,11 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
     // 跳转返回后再补一次（我的空间内可能改名/进化）。
     unawaited(_refreshSpeechVars());
     // 用户主动点击：只 pick 不消耗每日预算（预算只管主动弹）。
+    // 夜息（W4.5）：22:00–6:00 它睡了——点击只得到迷糊睡话（不拦截导航，
+    // 「我的空间」是统计页照常可进）。vars 无 name 通道 → 含 {name} 的睡话自动跳过。
+    final slot = MonsterRhythm.isSleepTime() ? SpeechSlot.sleepyGreeting : SpeechSlot.dailyGreeting;
     setState(() {
-      _greetingText = _speech.pick(SpeechSlot.dailyGreeting, vars: _speechVars);
+      _greetingText = _speech.pick(slot, vars: _speechVars);
       _gurgleVisible = true;
     });
     await Future<void>.delayed(const Duration(milliseconds: 800));

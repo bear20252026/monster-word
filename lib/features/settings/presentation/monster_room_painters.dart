@@ -453,13 +453,16 @@ class _RoomPiggyPainter extends CustomPainter {
   bool shouldRepaint(covariant _RoomPiggyPainter old) => false;
 }
 
-/// 房主小怪兽：瞳孔跟随 + 眨眼 + 跳跃影子。
+/// 房主小怪兽：瞳孔跟随 + 眨眼 + 跳跃影子 + 被摸开心（W4.5 宠物化）。
 class _RoomMonsterPainter extends CustomPainter {
-  _RoomMonsterPainter({required this.pupilOffset, required this.blink, required this.hop});
+  _RoomMonsterPainter({required this.pupilOffset, required this.blink, required this.hop, this.happy = 0.0});
 
   final Offset pupilOffset;
   final double blink; // 0 睁眼 → 1 闭合（可为轻微负值 = 睁大回弹）
   final double hop; // 0 落地 → 1 空中最高点（驱动脚下影子）
+
+  /// 被摸开心度 0~1（W4.5 抚摸）：>0.5 眯眼笑（∩ 弧眼）、腮红变大、嘴咧更开。
+  final double happy;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -497,8 +500,8 @@ class _RoomMonsterPainter extends CustomPainter {
         p(TreasurePalette.card),
       );
     }
-    // 眼睛（眨眼 scaleY；闭合更彻底，睁大回弹时略超 1）
-    final eyeOpenY = 1 - 0.94 * blink;
+    // 眼睛（眨眼 scaleY；闭合更彻底，睁大回弹时略超 1；被摸时眯到 0.15）
+    final eyeOpenY = 1 - 0.94 * (blink > happy * 0.85 ? blink : happy * 0.85);
     for (final cx in [41.0, 75.0]) {
       // 白眼球（随眨眼压扁）
       canvas.save();
@@ -506,7 +509,19 @@ class _RoomMonsterPainter extends CustomPainter {
       canvas.scale(1, eyeOpenY);
       canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 23 * s, height: 26 * s), p(TreasurePalette.card));
       canvas.restore();
-      if (blink > 0.55) {
+      if (happy > 0.5) {
+        // 眯眼笑（W4.5）：∩ 弧——开心到眼睛弯起来，与睡觉闭眼（直线）区分。
+        canvas.drawPath(
+          Path()
+            ..moveTo((cx - 9) * s, 55 * s)
+            ..quadraticBezierTo(cx * s, 45 * s, (cx + 9) * s, 55 * s),
+          Paint()
+            ..color = TreasurePalette.pigDark
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.6 * s
+            ..strokeCap = StrokeCap.round,
+        );
+      } else if (blink > 0.55) {
         // 闭眼眼缝线（画在变换外，避免被 scaleY 压没）
         canvas.drawLine(
           Offset(cx * s - 9 * s, 52 * s),
@@ -527,19 +542,20 @@ class _RoomMonsterPainter extends CustomPainter {
         );
       }
     }
-    // 微笑 + 腮红 + 胸前 W
+    // 微笑（被摸时咧更开）+ 腮红（被摸时更大更红）+ 胸前 W
     canvas.drawPath(
       Path()
         ..moveTo(50 * s, 70 * s)
-        ..quadraticBezierTo(58 * s, 77 * s, 66 * s, 70 * s),
+        ..quadraticBezierTo(58 * s, 77 * s + 5 * happy, 66 * s, 70 * s),
       Paint()
         ..color = TreasurePalette.pigDark
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.4 * s
         ..strokeCap = StrokeCap.round,
     );
-    canvas.drawCircle(Offset(26 * s, 64 * s), 5.5 * s, p(TreasurePalette.pigBlush));
-    canvas.drawCircle(Offset(90 * s, 64 * s), 5.5 * s, p(TreasurePalette.pigBlush));
+    final blushR = 5.5 * s + 2.6 * s * happy;
+    canvas.drawCircle(Offset(26 * s, 64 * s), blushR, p(TreasurePalette.pigBlush));
+    canvas.drawCircle(Offset(90 * s, 64 * s), blushR, p(TreasurePalette.pigBlush));
     canvas.drawPath(
       Path()
         ..moveTo(42 * s, 80 * s)
@@ -560,7 +576,7 @@ class _RoomMonsterPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _RoomMonsterPainter old) =>
-      old.pupilOffset != pupilOffset || old.blink != blink || old.hop != hop;
+      old.pupilOffset != pupilOffset || old.blink != blink || old.hop != hop || old.happy != happy;
 }
 
 /// 金币小图标（门牌余额胶囊；与聚宝日历同款）。

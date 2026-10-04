@@ -1,9 +1,35 @@
 // MonsterMoodResolver 表驱动：四档全覆盖 + 边界 + 回归优先 + 缺数据降级。
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/features/learning/application/monster_mood.dart';
 
 void main() {
+  group('pickMonsterNeed（W4.5 需求气泡）', () {
+    test('到期 ≥20：给 needReview 槽，due 为真实数字', () {
+      final need = pickMonsterNeed(dueCount: 25, daysSinceLastCheckin: 0);
+      expect(need, isNotNull);
+      expect(need!.slot, SpeechSlot.needReview);
+      expect(need.vars['due'], 25);
+    });
+
+    test('到期不足但 ≥2 天没签到：给 needCheckin', () {
+      final need = pickMonsterNeed(dueCount: 3, daysSinceLastCheckin: 2);
+      expect(need!.slot, SpeechSlot.needCheckin);
+    });
+
+    test('复习优先于签到（学习是主语）', () {
+      final need = pickMonsterNeed(dueCount: 40, daysSinceLastCheckin: 5);
+      expect(need!.slot, SpeechSlot.needReview);
+    });
+
+    test('无需求：返回 null（不硬凑气泡）', () {
+      expect(pickMonsterNeed(dueCount: 5, daysSinceLastCheckin: 0), isNull);
+      // 从未签到（-1 哨兵）：不催新用户
+      expect(pickMonsterNeed(dueCount: 5, daysSinceLastCheckin: -1), isNull);
+    });
+  });
+
   group('MonsterMoodResolver.resolve', () {
     test('到期积压分级', () {
       expect(MonsterMoodResolver.resolve(dueCount: 1, todayCombo: 0, returnedAfterGap: false), MonsterMood.sleepy);

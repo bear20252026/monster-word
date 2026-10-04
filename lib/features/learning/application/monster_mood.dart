@@ -11,6 +11,7 @@
 //   精确化留待持久化「首见 due 日期」（后续 W5）。
 // - todayCombo：LearningSessionState.combo（会话内连击）。
 // - returnedAfterGap：ScareCoinStore.checkinDates 最后日期距今天数。
+import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 
 /// 怪兽心情档（映射 painter 待机参数，见 profile_screen 接线）。
@@ -89,6 +90,30 @@ class MonsterMoodResolver {
     final last0 = DateTime(last.year, last.month, last.day);
     return today0.difference(last0).inDays >= 3;
   }
+}
+
+/// 需求气泡解析结果：用哪个台词槽 + 什么变量（W4.5 宠物化「它会找你」）。
+class MonsterNeed {
+  const MonsterNeed(this.slot, this.vars);
+
+  final SpeechSlot slot;
+  final Map<String, Object?> vars;
+}
+
+/// 从既有事实挑一条「它此刻想要什么」（纯函数；null = 没有需求，不硬凑）。
+///
+/// 优先级：复习（学习核心）> 签到（仪式已有回归庆祝，阈值更低互补）。
+/// 数据红线：只用真实数字（dueCount/离开天数），绝不预测「你快忘了」——
+/// 只陈述「已到期」的事实（与 MonsterMood 同一口径）。
+MonsterNeed? pickMonsterNeed({required int dueCount, required int daysSinceLastCheckin}) {
+  // 从未签过到（空记录按不可得处理）：不催新用户，先让关系自然发生。
+  if (dueCount >= 20) {
+    return MonsterNeed(SpeechSlot.needReview, {'due': dueCount});
+  }
+  if (daysSinceLastCheckin >= 2) {
+    return const MonsterNeed(SpeechSlot.needCheckin, {});
+  }
+  return null;
 }
 
 /// ProfileScreen 接线用的取数聚合（ScareCoinStore 可空，测试最小装配）。

@@ -30,6 +30,25 @@ void main() {
       }
     });
 
+    test('{name} 变量：有名字渲染、缺名字跳过（W4.5 宠物化）', () {
+      final speech = MonsterSpeech(random: Random(3));
+      final withName = speech.pick(SpeechSlot.petHappy, vars: {'name': '阿咕'});
+      expect(withName.contains('{name}'), isFalse);
+      // petHappy 组 6 条中仅 1 条含 {name}：固定种子下不必命中，改验证集合性质。
+      final noName = MonsterSpeech(random: Random(3));
+      var pickedNoName = true;
+      for (var i = 0; i < 20; i++) {
+        final out = noName.pick(SpeechSlot.petHappy, vars: const {});
+        pickedNoName = pickedNoName && !out.contains('{name}');
+      }
+      expect(pickedNoName, isTrue, reason: '无 name 通道时含 {name} 的模板必须整条不可达');
+      // 名字通道存在时渲染结果 ∈ 模板渲染集
+      expect(
+        MonsterSpeech.templatesOf(SpeechSlot.petHappy).map((t) => t.replaceAll('{name}', '阿咕')),
+        contains(withName),
+      );
+    });
+
     test('无通道的变量（值为 null 或键缺失）：含该占位符的模板整条跳过', () {
       // 审计 P2-1：balance 读不到时，「钱包里躺着 0 枚尖叫币」这类假数字一条都不许出现。
       final speech = MonsterSpeech(random: Random(3));

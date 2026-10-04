@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/utils/monster_speech.dart';
+import 'package:word_app/core/utils/monster_rhythm.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
@@ -25,9 +26,12 @@ import '../../checkin/data/fake_scare_coin_store.dart';
 void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    // 昼夜节律（W4.5）时间免疫：默认用例 pin 白天；夜间行为有专测 pin 23 点。
+    MonsterRhythm.nowOverride = () => DateTime(2026, 10, 4, 10);
     await AppPreferences().init();
     await UserPreferences().init();
   });
+  tearDown(MonsterRhythm.resetForTest);
 
   // 装配 HomeScreen：仅注入 build 期真实消费的对象；
   // onGenerateRoute 提供命名路由占位页（断言 pushNamed 到达 /my_space）。
@@ -174,6 +178,34 @@ void main() {
     final confetti = tester.widget<ConfettiOverlay>(find.byType(ConfettiOverlay));
     expect(confetti.particleCount, 30);
     expect(confetti.colors, [StarGold.gold]);
+  });
+
+  testWidgets('夜间 23 点点击怪兽：说睡话（不提余额/形态，W4.5）', (tester) async {
+    MonsterRhythm.nowOverride = () => DateTime(2026, 10, 4, 23);
+    final coins = FakeScareCoinStore()
+      ..balanceValue = 233
+      ..streakDays = 5;
+    await pumpHome(
+      tester,
+      coinStore: coins,
+      reader: _StubCheckinReader(dates: _days(12), streakDays: 5),
+    );
+
+    await tester.tap(find.byType(MonsterIcon));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final text = bubbleText(tester);
+    final candidates = MonsterSpeech.templatesOf(SpeechSlot.sleepyGreeting)
+        .map((t) => t.replaceAll('{name}', '咕噜'))
+        .toSet();
+    expect(candidates, contains(text), reason: '夜里点击必须得到睡话槽文案：$text');
+    expect(text.contains('233'), isFalse, reason: '睡话不报余额（它都睡了）');
+    expect(text.contains('尖角'), isFalse, reason: '睡话不报形态');
+
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump();
+    expect(find.text('page:/my_space'), findsOneWidget, reason: '夜间点击不拦截导航');
+    await tester.pump(const Duration(milliseconds: 2000));
   });
 
   testWidgets('未签到火苗呼吸：alpha 在 o40~o90 间随时间变化', (tester) async {

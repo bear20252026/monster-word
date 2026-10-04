@@ -115,6 +115,16 @@ def main():
     write("monster/hatch_flash.wav", samples)
     # 打嗝（下扫 250→90 方波 140ms，憨感）。
     write("monster/burp.wav", [sweep(250, 90, i, seconds(0.14), gain=0.38) for i in range(seconds(0.14))])
+    # 咕噜声（被摸开心，W4.5）：低频 72→58Hz 正弦 + 24Hz 颤幅（猫呼噜的
+    # rumble 质感），420ms；纯正弦比方波更「喉咙振动」。
+    n = seconds(0.42)
+    samples = []
+    for i in range(n):
+        t = i / SR
+        freq = 72.0 + (58.0 - 72.0) * (i / n)
+        tremolo = 0.55 + 0.45 * math.sin(2 * math.pi * 24.0 * t)
+        samples.append(math.sin(2 * math.pi * freq * t) * tremolo * env(i, n, release=0.35) * 0.5)
+    write("monster/purr.wav", samples)
 
     total = sum(f.stat().st_size for f in ROOT.rglob("*.wav"))
     print(f"total: {total / 1024:.1f}KB（预算 1024KB）")
