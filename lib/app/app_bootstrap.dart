@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx_settings.dart';
 import 'package:word_app/core/utils/debug_log.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
@@ -60,6 +61,8 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
 
   // 蓝图 W3：音效静音偏好预加载（Sfx 门面读缓存）。
   await SfxSettings.load();
+  // 「怪兽语音」开关预加载（默认开；实际出声另过 MonsterVoice 的四道闸）。
+  await MonsterVoiceSettings.load();
   final total = steps.length;
   for (var i = 0; i < total; i++) {
     await steps[i]();

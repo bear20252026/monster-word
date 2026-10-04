@@ -623,6 +623,13 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     final state = widget.state;
     final colors = widget.skin.colors;
     final resp = context.responsive;
+    // 连击徽章三档换色：灰 → 金 → 炽金。≥10 是「今天进入状态」的视觉回执，
+    // 档位用 medal 固定色（与本页火苗同款语义），灰档走主题 text3 以随皮肤。
+    final comboTierColor = switch (state.combo) {
+      < 5 => colors.text3,
+      < 10 => StarGold.goldDark,
+      _ => StarGold.gold,
+    };
 
     return ConfettiOverlay(
       controller: _confettiController,
@@ -645,12 +652,12 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
                       duration: MotionDurations.base,
                       transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
                       child: widget.state.combo >= 5
-                          ? const MonsterIcon(key: ValueKey('cheer'), size: 24)
-                          : const Icon(
-                              key: ValueKey('fire'),
+                          ? const MonsterIcon(key: ValueKey('cheer'), size: 32)
+                          : Icon(
+                              key: const ValueKey('fire'),
                               Icons.local_fire_department_rounded,
-                              size: 20,
-                              color: StarGold.gold,
+                              size: 28,
+                              color: comboTierColor,
                             ),
                     ),
                     const SizedBox(width: 6),
@@ -667,7 +674,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
                       style: TextStyle(
                         fontSize: AppFontSizes.bodySm * resp.fontScale,
                         fontWeight: FontWeight.w800,
-                        color: colors.text1,
+                        color: comboTierColor,
                       ),
                     ),
                     if (widget.state.combo >= 5)

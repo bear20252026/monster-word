@@ -1,6 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
+import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/core/utils/sfx_settings.dart';
 import 'package:word_app/widgets/common/mw_feedback.dart';
@@ -586,7 +587,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     ]);
   }
 
-  /// 音效组（蓝图 W3）：三态静音循环（全开 → 仅视觉 → 全静音）。
+  /// 音效组（蓝图 W3）：三态静音循环（全开 → 仅视觉 → 全静音）+「怪兽语音」开关。
   Widget _buildSfxGroup(SkinSystem skin) {
     return _SettingGroup([
       _Cell(
@@ -601,6 +602,22 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         onTap: () async {
           await SfxSettings.cycle();
           SfxPlayer.fire(Sfx.toggle);
+          if (mounted) setState(() {});
+        },
+      ),
+      Divider(height: 1, color: skin.colors.divider, indent: 52),
+      _Cell(
+        icon: Icons.record_voice_over_outlined,
+        iconColor: context.skin.colors.accent,
+        title: '怪兽语音',
+        subtitle: MonsterVoiceSettings.enabled ? '破壳、你回归、它进化时它会开口（总音效需处于全开档）' : '已关闭——庆祝与台词气泡照常，只是不出声',
+        onTap: () async {
+          final next = !MonsterVoiceSettings.enabled;
+          await MonsterVoiceSettings.setEnabled(next);
+          if (next) {
+            // 打开即给一句反馈：让用户当场知道这档有没有中文语音（设备缺语音包则静默）。
+            unawaited(MonsterVoice.system.say('咕噜——我能说话啦！'));
+          }
           if (mounted) setState(() {});
         },
       ),

@@ -4,12 +4,14 @@
 // → 「敲三下」破壳（每敲一下蛋壳裂纹加深 + 抖动，第三下白闪 + 怪兽 pop）
 // → 「开始冒险！」保存 monster_name / monster_birthday / monster_hatched。
 // 世界观红线：名字与生日只进小屋展示，绝不参与任何数值计算。
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:word_app/core/utils/monster_identity_prefs.dart';
+import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -68,8 +70,9 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
   Future<void> _startAdventure() async {
     if (_saving) return;
     setState(() => _saving = true);
+    String stored;
     try {
-      await MonsterIdentityPrefs.save(name: _nameCtrl.text);
+      stored = await MonsterIdentityPrefs.save(name: _nameCtrl.text);
     } catch (e, s) {
       // 三段 SP 写失败：不静默、不假装成功——留原态让用户再敲一次即可（save 可重入）。
       reportSwallowedError('命名仪式保存失败', e, s);
@@ -78,6 +81,9 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
       showMwSnackBar(context, const SnackBar(content: Text('名字没记上，再点一次「开始冒险」试试')));
       return;
     }
+    // 「怪兽开口」第一刻：破壳后自报家门（一生一次，最该出声的一句）。
+    // 不等本页——发声走进程级 TTS 单例，页面换路由后照样说完；闸门拦下则静默。
+    unawaited(MonsterVoice.system.say('我叫$stored！以后单词就交给我们俩啦~'));
     if (!mounted) return;
     if (widget.onFinished != null) {
       widget.onFinished!();
