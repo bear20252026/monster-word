@@ -42,7 +42,8 @@ enum Sfx {
   evolve('celebrate/evolve.wav'),
   eggKnock('monster/egg_knock.wav'),
   hatchFlash('monster/hatch_flash.wav'),
-  burp('monster/burp.wav');
+  burp('monster/burp.wav'),
+  purr('monster/purr.wav');
 
   const Sfx(this.assetPath);
 
