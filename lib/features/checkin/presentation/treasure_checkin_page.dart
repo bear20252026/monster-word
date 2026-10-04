@@ -294,10 +294,19 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     unawaited(_maybeCelebrateMilestone(newBalance: newBalance));
     // 进化仪式检测：checkIn() 返回前今日已写入 checkinDates（写日期先于算余额），
     // 故此刻取的天数已含今天；与本次签到前快照 diff，跨阈值才演出。
-    final datesAfter = await store.checkinDates();
-    final stageBefore = MonsterIcon.stageFor(datesAfter.length - 1);
-    final stageAfter = MonsterIcon.stageFor(datesAfter.length);
-    final evolved = stageAfter > stageBefore;
+    // 读失败只降级为「不演跨档仪式」——账已在上一步落定，绝不因此卡死结算 UI。
+    var evolved = false;
+    var stageBefore = 0;
+    var stageAfter = 0;
+    try {
+      final datesAfter = await store.checkinDates();
+      stageBefore = MonsterIcon.stageFor(datesAfter.length - 1);
+      stageAfter = MonsterIcon.stageFor(datesAfter.length);
+      evolved = stageAfter > stageBefore;
+    } catch (e, s) {
+      reportSwallowedError('签到进化仪式形态读取失败', e, s);
+    }
+    if (!mounted) return;
 
     if (_reduceMotion) {
       setState(() {

@@ -15,9 +15,12 @@ import 'package:word_app/features/checkin/application/checkin_status_reader.dart
 import 'package:word_app/features/checkin/domain/checkin_status.dart';
 import 'package:word_app/features/learning/presentation/home_screen.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/tokens/star_gold.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/monster_icon.dart';
+
+import '../../checkin/data/fake_scare_coin_store.dart';
 
 void main() {
   setUp(() async {
@@ -26,9 +29,14 @@ void main() {
     await UserPreferences().init();
   });
 
-  // 装配 HomeScreen：仅注入 build 期真实消费的三个对象；
+  // 装配 HomeScreen：仅注入 build 期真实消费的对象；
   // onGenerateRoute 提供命名路由占位页（断言 pushNamed 到达 /my_space）。
-  Future<TodayProgressStore> pumpHome(WidgetTester tester) async {
+  // coinStore 传 null 即「无账本语境」（余额无通道）。
+  Future<TodayProgressStore> pumpHome(
+    WidgetTester tester, {
+    FakeScareCoinStore? coinStore,
+    _StubCheckinReader reader = const _StubCheckinReader(),
+  }) async {
     tester.view.physicalSize = const Size(800, 1600); // 竖屏口径，避免默认 800x600 走横屏布局
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -38,8 +46,9 @@ void main() {
       MultiProvider(
         providers: [
           ChangeNotifierProvider<TodayProgressStore>.value(value: store),
-          Provider<CheckinStatusReader>.value(value: _StubCheckinReader()),
+          Provider<CheckinStatusReader>.value(value: reader),
           ChangeNotifierProvider<LearningStatisticsState>.value(value: LearningStatisticsState()),
+          if (coinStore != null) Provider<ScareCoinStore>.value(value: coinStore),
         ],
         child: MaterialApp(
           onGenerateRoute: (settings) => MaterialPageRoute<void>(
@@ -54,6 +63,26 @@ void main() {
     return store;
   }
 
+  /// 真实数据注入后的候选文案集合：模板 ×（天数/连击/余额/形态）渲染结果。
+  /// 审计 P2-1 的守卫口径——候选只能由真实变量生成，不得再写死占位值；
+  /// balance 为 null 时含 {balance} 的模板整条不参与（与引擎同规则）。
+  Set<String> candidatesWith({required int days, required int streak, int? balance}) {
+    final stage = MonsterIcon.stageName(MonsterIcon.stageFor(days));
+    return MonsterSpeech.templatesOf(SpeechSlot.dailyGreeting)
+        .where((t) => balance != null || !t.contains('{balance}'))
+        .map(
+          (tpl) => tpl
+              .replaceAll('{stage}', stage)
+              .replaceAll('{days}', '$days')
+              .replaceAll('{streak}', '$streak')
+              .replaceAll('{balance}', '$balance'),
+        )
+        .toSet();
+  }
+
+  String bubbleText(WidgetTester tester) =>
+      tester.widget<Text>(find.byKey(const ValueKey('monster-greeting-bubble'))).data!;
+
   CustomPaint ringPaint(WidgetTester tester) => tester.widget<CustomPaint>(
     find.byWidgetPredicate(
       (w) => w is CustomPaint && w.painter != null && w.painter!.runtimeType.toString() == '_RingPainter',
@@ -61,27 +90,28 @@ void main() {
   );
 
   testWidgets('问候语左侧有怪兽：MonsterIcon 存在，点击张嘴冒泡并跳转我的空间', (tester) async {
-    await pumpHome(tester);
+    final coins = FakeScareCoinStore()
+      ..balanceValue = 233
+      ..streakDays = 5;
+    await pumpHome(
+      tester,
+      coinStore: coins,
+      reader: _StubCheckinReader(dates: _days(12), streakDays: 5),
+    );
     expect(find.byType(MonsterIcon), findsOneWidget);
 
     await tester.tap(find.byType(MonsterIcon));
     await tester.pump(const Duration(milliseconds: 300)); // 张嘴 0.3s + 气泡淡入 180ms
 
-    // 气泡淡入至可见（2026-10-03 W4：文案来自台词引擎随机模板，不再固定「咕噜~」——
-    // 断言「某 Text 内容 ∈ dailyGreeting 模板渲染候选」且气泡层全亮）。
-    final candidates = MonsterSpeech.templatesOf(SpeechSlot.dailyGreeting)
-        .map(
-          (tpl) => tpl
-              .replaceAll('{stage}', '奶泡')
-              .replaceAll('{days}', '0')
-              .replaceAll('{streak}', '0')
-              .replaceAll('{balance}', '0'),
-        )
-        .toSet();
-    final bubbleTextFinder = find.byWidgetPredicate((w) => w is Text && w.data != null && candidates.contains(w.data));
-    expect(bubbleTextFinder, findsOneWidget, reason: '气泡文案必须是台词引擎模板之一');
+    // 气泡文案必须来自「真实数据渲染出的模板」：12 天 → 尖角形态、余额 233、连击 5。
+    // 硬编码占位值（奶泡/0 枚/签到 0 天）会落进 candidates 之外而失败（审计 P2-1）。
+    final candidates = candidatesWith(days: 12, streak: 5, balance: 233);
+    final text = bubbleText(tester);
+    expect(candidates, contains(text), reason: '气泡文案必须是真实变量渲染出的模板之一');
+    expect(text, isNot(contains('0 枚尖叫币')), reason: '不得向用户报假余额');
+    expect(text, isNot(contains('奶泡')), reason: '12 天已是尖角形态，不得报初生形态');
     final bubble = tester.widget<AnimatedOpacity>(
-      find.ancestor(of: bubbleTextFinder, matching: find.byType(AnimatedOpacity)),
+      find.ancestor(of: find.byKey(const ValueKey('monster-greeting-bubble')), matching: find.byType(AnimatedOpacity)),
     );
     expect(bubble.opacity, 1.0);
 
@@ -95,6 +125,35 @@ void main() {
     // 收敛断言（offstage + 随机文案）：不再有全亮气泡层。
     final allBubbles = tester.widgetList<AnimatedOpacity>(find.byType(AnimatedOpacity, skipOffstage: false));
     expect(allBubbles.any((w) => w.opacity >= 1.0), isFalse, reason: '跳转后气泡应收敛');
+  });
+
+  testWidgets('无账本语境：气泡不提尖叫币，也不留未渲染占位符', (tester) async {
+    await pumpHome(tester); // 不注入 ScareCoinStore → 余额无通道
+
+    await tester.tap(find.byType(MonsterIcon));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final text = bubbleText(tester);
+    expect(text, isNot(contains('{')), reason: '不得留下未渲染占位符');
+    expect(text, isNot(contains('尖叫币')), reason: '读不到余额就不许报余额');
+    expect(candidatesWith(days: 0, streak: 0, balance: null), contains(text));
+
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 2000)); // 收敛 _settleGurgle
+  });
+
+  testWidgets('800ms 节拍窗内连点两下只推开一层我的空间（审计 P2-6）', (tester) async {
+    await pumpHome(tester);
+
+    await tester.tap(find.byType(MonsterIcon));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.byType(MonsterIcon)); // 节拍窗内的第二次点击应被闸门吃掉
+    await tester.pump(const Duration(milliseconds: 750));
+    await tester.pump();
+
+    expect(find.text('page:/my_space'), findsOneWidget, reason: '双击不得叠两层路由');
+
+    await tester.pump(const Duration(milliseconds: 2000)); // 跑完 _settleGurgle 的延时
   });
 
   testWidgets('今日达标（learned≥goal）：进度环变金色并挂金色 confetti', (tester) async {
@@ -132,20 +191,28 @@ void main() {
   });
 }
 
-/// 测试替身：CheckinStatusReader（未签到口径）。
+/// 测试替身：CheckinStatusReader（默认未签到口径）。
 class _StubCheckinReader implements CheckinStatusReader {
+  const _StubCheckinReader({this.dates = const <String>{}, this.streakDays = 0});
+
+  final Set<String> dates;
+  final int streakDays;
+
   @override
   Future<CheckinStatus> getStatus() async => const CheckinStatus.empty();
 
   @override
-  Future<Set<String>> getCheckinDates() async => const <String>{};
+  Future<Set<String>> getCheckinDates() async => dates;
 
   @override
-  Future<int> getStreakDays() async => 0;
+  Future<int> getStreakDays() async => streakDays;
 
   @override
   Future<bool> hasCheckedInToday() async => false;
 }
+
+/// n 个互不相同的签到日期串（累计天数即 n）。
+Set<String> _days(int n) => {for (var i = 1; i <= n; i++) '2026-09-${i.toString().padLeft(2, '0')}'};
 
 /// 与 TodayProgressStore._date 同口径的今日日期串。
 String _today() {

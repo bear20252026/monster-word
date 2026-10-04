@@ -18,19 +18,34 @@ void main() {
 
     test('同槽连续 4 次不重复（去重窗口 3）', () {
       final speech = MonsterSpeech(random: Random(7));
+      const allVars = {'days': 12, 'streak': 5, 'balance': 233, 'stage': '尖角'};
       final seen = <String>{};
       for (var i = 0; i < 4; i++) {
-        final out = speech.pick(SpeechSlot.dailyGreeting, vars: const {});
+        final out = speech.pick(SpeechSlot.dailyGreeting, vars: allVars);
         expect(seen.contains(out), isFalse, reason: '第 ${i + 1} 次不应与最近 3 条重复');
         seen.add(out);
       }
     });
 
-    test('缺失变量按空串渲染，不抛错', () {
+    test('无通道的变量（值为 null 或键缺失）：含该占位符的模板整条跳过', () {
+      // 审计 P2-1：balance 读不到时，「钱包里躺着 0 枚尖叫币」这类假数字一条都不许出现。
       final speech = MonsterSpeech(random: Random(3));
-      final out = speech.pick(SpeechSlot.welcomeBack, vars: const {});
-      expect(out, isNotEmpty);
-      expect(out.contains('{'), isFalse);
+      final balanceLines = MonsterSpeech.templatesOf(SpeechSlot.dailyGreeting)
+          .where((t) => t.contains('{balance}'))
+          .map((t) => t.replaceAll('{balance}', '0'))
+          .toSet();
+      for (var i = 0; i < 12; i++) {
+        final out = speech.pick(SpeechSlot.dailyGreeting, vars: const {'days': null, 'streak': null});
+        expect(out.contains('{'), isFalse, reason: '不应留下未渲染占位符');
+        expect(out.contains('尖叫币'), isFalse, reason: '无余额通道时不得报余额');
+        expect(balanceLines.contains(out), isFalse);
+      }
+    });
+
+    test('每槽都保有不含占位符的文案（pick 过滤后候选必非空）', () {
+      for (final slot in SpeechSlot.values) {
+        expect(MonsterSpeech.templatesOf(slot).any((t) => !t.contains('{')), isTrue, reason: '$slot 需要至少一条不带变量的保底文案');
+      }
     });
   });
 

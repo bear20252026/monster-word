@@ -4,6 +4,8 @@
 // 动画分镜见 lib/widgets/brand_intro.dart；全程点按可跳过（最短展示 800ms
 // 的会话安全下限保留，避免会话未恢复时误判登录态）。
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/core/utils/monster_identity_prefs.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 import 'dart:async';
 
@@ -124,7 +126,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
           setState(() => _showGuide = true);
         } else {
           _phase = _SplashPhase.completed;
-          unawaited(_goToMain());
+          await _goToMain();
         }
       } else {
         _phase = _SplashPhase.completed;
@@ -136,10 +138,18 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     }
   }
 
+  /// 已登录用户的唯一出口。破壳标记读不到时按「已破壳」降级直进主页：命名仪式下次启动还能补演，
+  /// 把已登录用户关在启动页不行（fail-safe 契约，配合 [_finishSplash] 外层 try）。
   Future<void> _goToMain() async {
     if (!mounted) return;
     // 蓝图 W4 命名仪式：首次使用（未破壳）先进开局仪式页，完成后再进主页。
-    if (!await MonsterIdentityPrefs.hatched) {
+    var hatched = true;
+    try {
+      hatched = await MonsterIdentityPrefs.hatched;
+    } catch (e, s) {
+      reportSwallowedError('启动页读取破壳标记失败', e, s);
+    }
+    if (!hatched) {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(MaterialPageRoute<void>(builder: (_) => MonsterHatchingPage()));
       return;

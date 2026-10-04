@@ -98,6 +98,21 @@ void main() {
     }
   });
 
+  testWidgets('门牌回显开局命名的怪兽名（蓝图 W4「命名的仪式」最后一环）', (tester) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{'monster_hatched': 1, 'monster_name': '阿咕'});
+    await tester.pumpWidget(_wrap(FakeScareCoinStore()));
+    await _pumpSeq(tester);
+
+    expect(find.text('怪兽 · 阿咕'), findsOneWidget);
+  });
+
+  testWidgets('未破壳：门牌不出怪兽名行（不把默认名冒充用户命名）', (tester) async {
+    await tester.pumpWidget(_wrap(FakeScareCoinStore()));
+    await _pumpSeq(tester);
+
+    expect(find.textContaining('怪兽 · '), findsNothing);
+  });
+
   testWidgets('怪兽小屋：点台灯出抽屉，行点击跳转学习偏好', (tester) async {
     await tester.pumpWidget(_wrap(FakeScareCoinStore()));
     await _pumpSeq(tester);

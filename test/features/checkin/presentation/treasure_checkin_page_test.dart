@@ -74,4 +74,37 @@ void main() {
     // 推完入场聚合定时器。
     await tester.pump(const Duration(seconds: 1));
   });
+
+  testWidgets('进化仪式取数失败：结算照常落定，按钮不软锁（审计 P2-5）', (tester) async {
+    await tester.pumpWidget(_wrap(_DatesBoom()));
+    await tester.pump(const Duration(milliseconds: 50));
+
+    await tester.tap(find.text('立即签到 · +10'));
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // 取 checkinDates 抛错只该让「进化仪式」不演——结算与解锁必须照常，
+    // 否则 _busy 永久 true（软锁到重进页面）。
+    expect(find.text('今日已签到 · 明天再来'), findsOneWidget, reason: '结算未被异常牵连');
+    expect(find.text('10'), findsWidgets); // 余额已入账
+    await tester.pump(const Duration(seconds: 3));
+  });
+}
+
+/// 签到后取日期即抛的替身（模拟库失效/句柄关闭现场，守护 P2-5 的错误边界）。
+class _DatesBoom extends _BalanceFake {
+  bool _checkedIn = false;
+
+  @override
+  Future<int?> checkIn() async {
+    final result = await super.checkIn();
+    if (result != null) _checkedIn = true;
+    return result;
+  }
+
+  @override
+  Future<Set<String>> checkinDates() async {
+    if (_checkedIn) throw StateError('database_closed');
+    return super.checkinDates();
+  }
 }

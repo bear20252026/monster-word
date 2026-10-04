@@ -273,7 +273,7 @@ class _TopBar extends StatelessWidget {
 
 /// 顶栏金币余额 pill：金币＋余额数字，答对飞行终点。
 /// 无账本语境（如单测最小装配）自动隐身，不抛 ProviderNotFound。
-/// tick 变化即重查余额，数字经 AnimatedSwitcher 缩放 pop（落袋感）。
+/// tick 变化即重查余额，数字由 [RollingNumber] 滚动到新值（落袋感）。
 /// 性能审计 M-8：改 StatefulWidget 缓存 Future——此前每次 build 都新建
 /// future 触发重复 SP 读取与 loading 闪烁。
 class _CoinPill extends StatefulWidget {
@@ -306,8 +306,10 @@ class _CoinPillState extends State<_CoinPill> {
     final future = _balanceFuture;
     if (future == null) return const SizedBox.shrink();
     final colors = context.skin.colors;
+    // 不给 FutureBuilder / RollingNumber 挂 ValueKey（审计 P2-2）：挂 key = State 整体重建，
+    // 快照回退 data==null（查询完成前闪一下 0），且 RollingNumber 的 tween 起点==终点，
+    // 滚动动画永不发生。保留 State 才能用旧值垫底过渡到新值。
     return FutureBuilder<int>(
-      key: ValueKey(widget.tick),
       future: future,
       builder: (context, snap) {
         final balance = snap.data ?? 0;
@@ -322,15 +324,10 @@ class _CoinPillState extends State<_CoinPill> {
             children: [
               const CoinBadge(size: 18),
               const SizedBox(width: 4),
-              AnimatedSwitcher(
-                duration: MotionDurations.base,
-                transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-                // 蓝图 W3「数字的戏剧」：余额滚动递增（300ms），替代硬切。
-                child: RollingNumber(
-                  value: balance,
-                  key: ValueKey('${widget.tick}-$balance'),
-                  style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: colors.text1),
-                ),
+              // 蓝图 W3「数字的戏剧」：余额滚动递增（300ms），替代硬切。
+              RollingNumber(
+                value: balance,
+                style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: colors.text1),
               ),
             ],
           ),

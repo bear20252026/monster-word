@@ -85,6 +85,14 @@
 | REG-NAV-006 | SearchPage 路由双源 | 无全库 RouteNames 守卫 | R4 批 | RouteNames.search + route_name_consistency_test |
 | REG-TYPE-002 | fontSize N*fontScale 盲区 | regex 未覆盖 scale | R6 批 | AppFontSizes.* * fontScale + scale 棘轮 0 |
 | REG-FSRS-005 | 迁移行数校验语义 | 空迁移/双实现 | R7 批 | migrateFromSp 校验 count≥cards.length |
+| REG-SPEECH-001 | 首页怪兽对真实用户报假事实：「钱包里躺着 0 枚尖叫币」「我现在是奶泡形态」「签到 0 天啦」 | 台词变量在调用处硬编码占位值（未接线），且测试把同一组假值渲染结果锁进断言 | 2026-10-04 P2 批（10-03 审计 P2-1） | `test/core/utils/monster_speech_test.dart`（值为 null/键缺失 → 含该占位符模板整条跳过；每槽保底无变量文案不变式）、`test/features/learning/presentation/home_greeting_test.dart`（候选集按注入的真实余额/天数生成；无账本语境不提尖叫币） |
+| REG-SPEECH-002 | 点怪兽后 800ms 节拍窗内再点一次，路由栈叠两层「我的空间」（需返回两次） | `_greet` 无重入闸（同区间 overlay 都有 `_playing` 串行门，此处漏） | 2026-10-04 P2 批（P2-6） | `home_greeting_test.dart`（连点两下只推开一层 my_space） |
+| REG-ROLL-001 | 顶栏余额滚动动画永不发生，且新余额查询期间闪一下 0 | FutureBuilder 与 RollingNumber 各挂 ValueKey → State 整体重建（快照回退 data==null、tween begin==end）；`didUpdateWidget` 取旧目标而非当前显示值 | 2026-10-04 P2 批（P2-2） | `test/widgets/rolling_number_test.dart`（中途换目标必须从当前显示值接续滚动） |
+| REG-CHECKIN-001 | 签到成功路径中段裸 await：取 checkinDates 抛错则 `_busy` 永久 true（按钮软锁到重进页面），且 await 后 setState 缺 mounted | 同步改 async 时未重画错误边界 | 2026-10-04 P2 批（P2-5） | `test/features/checkin/presentation/treasure_checkin_page_test.dart`（checkinDates 抛错仍照常结算） |
+| REG-IDENT-001 | 开局命名的怪兽名「只写不读」：`MonsterIdentityPrefs.name()` 全库零消费点，头注释虚报「与 profile 门牌共用」 | 交付即接线缺口 + 注释不实 | 2026-10-04 P2 批（P2-4；类同时从 account/presentation 移至 `core/utils/monster_identity_prefs.dart` 以走跨域合规通道） | `test/features/settings/presentation/monster_room_view_test.dart`（门牌回显真实怪兽名；未破壳不出该行，不把默认名冒充命名） |
+| REG-START-002 | 已登录用户可能永久卡死启动页 | `_goToMain` 改 async 后以 `unawaited` 调用，其内部 await 脱离外层 try/catch，而 `_phase` 已置 completed 拒绝一切重入 | 2026-10-04 P2 批（P2-7：改回 try 内 await + `_goToMain` 内部读失败降级进主页） | 守护测试待补（需 SharedPreferences 读抛错注入点）；正常流仍由 `regression_start_flow_test.dart` 覆盖 |
+| REG-HATCH-001 | 命名仪式唯一持久化路径无 catch：失败时按钮无 loading 无提示，异常经 zone 变匿名全局错 | 交付即接线缺口的错误边界侧 | 2026-10-04 P2 批（P2-9：try/catch + reportSwallowedError + SnackBar + `_saving` 闸门） | 守护测试待补（SP 写抛错无注入点） |
+| REG-FLAME-001 | 首页签到后火苗 ticker 永不停止，残留全天 60fps 空转（AnimatedBuilder 已不在树上） | controller 只启动不回收 | 2026-10-04 P2 批（P2-10：`_reload` 已签/降级分支 `_flameCtrl.stop()`） | 守护测试待补（controller 私有；建议随 I 类常驻 ticker 专测一并做） |
 
 ## 修复新 bug 的流程
 
