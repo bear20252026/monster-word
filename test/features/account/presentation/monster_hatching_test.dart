@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/utils/monster_identity_prefs.dart';
 import 'package:word_app/features/account/presentation/monster_hatching_page.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 
@@ -10,6 +11,8 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
+
+  tearDown(MonsterIdentityPrefs.resetForTest);
 
   testWidgets('敲三下破壳：裂纹递进 → MonsterIcon 出现 → 保存名字与标记', (tester) async {
     var finished = false;
@@ -58,5 +61,27 @@ void main() {
 
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString('monster_name'), '咕噜');
+  });
+
+  testWidgets('REG-HATCH-001: 保存炸 → 用户可见提示 + 可重试（不静默不软锁）', (tester) async {
+    MonsterIdentityPrefs.saveOverride = ({required String name}) async => throw StateError('sp disk full');
+    await tester.pumpWidget(const MaterialApp(home: MonsterHatchingPage()));
+
+    for (final label in ['敲三下（0/3）', '敲三下（1/3）', '敲三下（2/3）']) {
+      await tester.tap(find.text(label));
+      await tester.pumpAndSettle();
+    }
+    await tester.tap(find.text('开始冒险！'));
+    await tester.pump();
+
+    expect(find.text('名字没记上，再点一次「开始冒险」试试'), findsOneWidget, reason: '保存失败必须有可见反馈');
+    expect(find.text('开始冒险！'), findsOneWidget, reason: '按钮不得因异常被永久禁用（_saving 复位）');
+
+    // 修复注入后可重入保存成功。
+    MonsterIdentityPrefs.resetForTest();
+    await tester.tap(find.text('开始冒险！'));
+    await tester.pump();
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getInt('monster_hatched'), 1, reason: '重试走通真实保存');
   });
 }

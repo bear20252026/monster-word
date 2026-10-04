@@ -5,22 +5,26 @@ part of 'audio_players.dart';
 // 公共下载工具（DownloadHttpClient 的简化替代）
 // ============================================================
 
-/// 下载结果
-class _DownloadResult {
+/// 下载结果（公开给测试断言；字段只读）。
+class DownloadResult {
   final File? file;
   final bool success;
   final int statusCode;
 
-  _DownloadResult({this.file, this.success = false, this.statusCode = 0});
+  DownloadResult({this.file, this.success = false, this.statusCode = 0});
 }
 
 /// 简化的下载客户端（替代 DownloadHttpClient）
-class _AudioDownloader {
+class AudioDownloader {
   static const int _connectTimeout = 5;
   static const int _readTimeout = 10;
 
+  /// 测试注入缝（REG-AUDIT-005 守护）：替代 http.get，可注入失败/慢响应。
+  /// 非 null 时 [_tryDownload] 直走替身；生产恒为 null。
+  static Future<http.Response> Function(Uri url)? fetchOverride;
+
   /// 下载文件到本地路径，支持主/备 URL 切换
-  static Future<_DownloadResult> downloadFile(String localPath, String primaryUrl, {String? fallbackUrl}) async {
+  static Future<DownloadResult> downloadFile(String localPath, String primaryUrl, {String? fallbackUrl}) async {
     // 确保目录存在
     final dir = Directory(p.dirname(localPath));
     if (!dir.existsSync()) {
@@ -38,13 +42,14 @@ class _AudioDownloader {
     return result;
   }
 
-  static Future<_DownloadResult> _tryDownload(String localPath, String url) async {
+  static Future<DownloadResult> _tryDownload(String localPath, String url) async {
     try {
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: _connectTimeout + _readTimeout));
+      final fetch = fetchOverride ?? http.get;
+      final response = await fetch(Uri.parse(url)).timeout(const Duration(seconds: _connectTimeout + _readTimeout));
       if (response.statusCode == 200) {
         // 安全审计 S4：下载内容上限 10MB（音频文件实际 <1MB），防恶意服务器撑爆磁盘/内存
         if (response.bodyBytes.length > 10 * 1024 * 1024) {
-          return _DownloadResult(statusCode: 413);
+          return DownloadResult(statusCode: 413);
         }
         // 数据完整性：先写 tmp 再原子改名。直写最终路径时下载中断会留下
         // 半写 mp3 永久占位，此后该词每次都命中坏缓存并静默播不出。
@@ -58,14 +63,14 @@ class _AudioDownloader {
           if (file.existsSync()) file.deleteSync();
           await tmp.rename(file.path);
         }
-        return _DownloadResult(file: file, success: true, statusCode: 200);
+        return DownloadResult(file: file, success: true, statusCode: 200);
       }
-      return _DownloadResult(statusCode: response.statusCode);
+      return DownloadResult(statusCode: response.statusCode);
     } catch (e, s) {
       // 错误处理审计 P3：网络层故障不可观测。此处为单次尝试（主或备），
       // 「主备均失败」的汇总上报由 downloadFile 调用方口径负责。
       reportSwallowedError('音频下载尝试失败（主/备单次）', e, s);
-      return _DownloadResult(statusCode: -1);
+      return DownloadResult(statusCode: -1);
     }
   }
 }

@@ -95,7 +95,7 @@ class PhoneticAudioPlayer {
     // 主 URL：有道词典
     final primaryUrl = _buildYoudaoUrl(word, isUK: _isPronounceUK);
 
-    final result = await _AudioDownloader.downloadFile(localPath, primaryUrl);
+    final result = await AudioDownloader.downloadFile(localPath, primaryUrl);
 
     if (result.success && result.file != null) {
       playStateListener?.onLoadSuc(primaryUrl);

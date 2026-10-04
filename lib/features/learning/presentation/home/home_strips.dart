@@ -30,6 +30,10 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
     _reload();
   }
 
+  /// REG-FLAME-001 守护观测口：火苗 ticker 是否仍在转
+  /// （签到后必须 stop，否则全天 60fps 空转）。
+  bool get flameAnimatingForTest => _flameCtrl.isAnimating;
+
   @override
   void dispose() {
     _flameCtrl.dispose();

@@ -10,6 +10,7 @@ import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 import 'package:word_app/features/account/presentation/splash_page.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/core/utils/monster_identity_prefs.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
 
 Widget _host(AppSessionState session) {
@@ -41,6 +42,8 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
+
+  tearDown(MonsterIdentityPrefs.resetForTest);
 
   testWidgets('REG-START-001: 已登录首启 → Splash 2秒 → 引导页 → 下一步×2 → 开始使用 → 主页', (tester) async {
     final session = AppSessionState(prefs: PresentationPrefs());
@@ -115,5 +118,22 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.text('LOGIN_PAGE'), findsOneWidget);
+  });
+
+  testWidgets('REG-START-002b: 已登录读破壳标记炸 → fail-safe 直进主页，绝不卡启动页', (tester) async {
+    // 10-03 审计 P2-7 的守护测试（台账「待补」补齐）：SP 读取抛错注入点。
+    MonsterIdentityPrefs.hatchedOverride = () async => throw StateError('sp disk boom');
+    final session = AppSessionState(prefs: PresentationPrefs());
+    await session.restore();
+    await session.login('user', 'pass');
+    await session.setHasShownInitGuide(true);
+
+    await tester.pumpWidget(_host(session));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('MAIN_PAGE'), findsOneWidget, reason: '读不到破壳标记必须按已破壳降级进主页');
+    expect(find.byType(SplashPage), findsNothing, reason: '不得滞留启动页');
   });
 }

@@ -120,7 +120,7 @@ class SentenceAudioPlayer {
   Future<void> _downloadAndPlay(String fullUrl, String localPath, double speed) async {
     playStateListener?.onLoadStart(fullUrl);
 
-    final result = await _AudioDownloader.downloadFile(
+    final result = await AudioDownloader.downloadFile(
       localPath,
       fullUrl,
       fallbackUrl: fullUrl.replaceFirst(_baseAudioUrl, _qiniuResourceUrl),
