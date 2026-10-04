@@ -84,9 +84,10 @@ class SfxPlayer {
     return _isNight ? v * 0.5 : v;
   }
 
-  /// 播放一次音效（静音模式下为 no-op，视觉庆祝照常）。
+  /// 播放一次音效（静音/仅视觉模式下为 no-op，视觉庆祝照常）。
   static Future<void> play(Sfx sfx) async {
-    if (mode == SfxMode.silent) return;
+    // 仅视觉档此前只把音量归零仍解码播放——白白占用音频焦点，直接短路。
+    if (mode != SfxMode.all) return;
     _assertNoSpam(sfx);
     final player = _players[sfx.channel]!;
     try {
@@ -116,11 +117,13 @@ class SfxPlayer {
     }
   }
 
-  /// 释放全部实例（测试/退出）。
+  /// 释放全部实例（测试/退出）。释放后播放器重建——清空映射会让后续
+  /// `play()` 的 `_players[sfx.channel]!` 空断言崩溃，池必须始终可用。
   static Future<void> disposeAll() async {
-    for (final p in _players.values) {
-      await p.dispose();
+    for (final c in SfxChannel.values) {
+      final old = _players.remove(c);
+      await old?.dispose();
+      _players[c] = AudioPlayer();
     }
-    _players.clear();
   }
 }

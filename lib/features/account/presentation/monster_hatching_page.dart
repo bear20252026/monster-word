@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 
 import 'package:word_app/core/utils/monster_identity_prefs.dart';
 import 'package:word_app/core/utils/monster_voice.dart';
+import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -60,8 +61,10 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
     _taps += 1;
     if (_taps >= 3) {
       // 第三下：白闪 + 怪兽破壳 pop。
+      SfxPlayer.fire(Sfx.hatchFlash);
       _popCtrl.forward(from: 0);
     } else {
+      SfxPlayer.fire(Sfx.eggKnock);
       _shakeCtrl.forward(from: 0);
     }
     setState(() {});

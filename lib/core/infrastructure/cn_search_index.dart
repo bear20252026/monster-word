@@ -20,6 +20,7 @@
 // 调用方回退旧第 3 层全表路径，行为与迁移前完全一致。
 // 指纹：词库文件 size+mtime——解压重建/资产升级必变，不符即自动重建索引。
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -232,13 +233,22 @@ class CnSearchIndex {
         // 分块让出主 isolate：读取阶段 UI 与其他查询可用
         await Future<void>.delayed(Duration.zero);
       }
-      // record 未实现 Comparable：显式按 (bigram, word_id) 字典序
+      // record 未实现 Comparable：显式按 (bigram, word_id) 字典序。
+      // 性能审计 P2：~160 万对的 sort 是单次同步调用（无法像读取那样分块
+      // 让出），主 isolate 会被阻塞数秒——挪到后台 isolate（列表整体转移，
+      // 不复制）。插入阶段仍逐批让出，UI 保持可用。
       int comparePairs((String, int) a, (String, int) b) {
         final c = a.$1.compareTo(b.$1);
         return c != 0 ? c : a.$2.compareTo(b.$2);
       }
 
-      pairs.sort(comparePairs);
+      final sorted = await Isolate.run(() {
+        pairs.sort(comparePairs);
+        return pairs;
+      });
+      pairs
+        ..clear()
+        ..addAll(sorted);
 
       var pending = 0;
       var batch = db.batch();

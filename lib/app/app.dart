@@ -397,12 +397,12 @@ class _HomeShellState extends State<_HomeShell> {
       if (absent < 3) return;
       HapticsGate.play(HapticCue.success);
       showReunionOverlay(context, absentDays: absent);
-      // 回家礼：断签保护卡 ×1（走既有 API；失败不阻断演出）。
+      // 回家礼：断签保护卡 ×1（走既有 API；满额抛错/失败不阻断演出）。
       try {
         final store = context.read<ScareCoinStore>();
         await store.addProtection(count: 1, reason: '回家礼');
       } catch (e, s) {
-        reportSwallowedError('回家礼保护卡发放失败', e, s);
+        reportSwallowedError('回家礼保护卡未发放（发放失败或库存已满）', e, s);
       }
     } catch (e, s) {
       reportSwallowedError('回家仪式判定失败', e, s);

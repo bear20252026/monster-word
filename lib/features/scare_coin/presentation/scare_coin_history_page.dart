@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/presentation/responsive.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
@@ -51,7 +52,15 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
 
   Future<void> _onCheckIn() async {
     final store = context.read<ScareCoinStore>();
-    final newBalance = await store.checkIn();
+    final int? newBalance;
+    try {
+      newBalance = await store.checkIn();
+    } catch (e, s) {
+      // 入账失败要有用户可见反馈，不能只把异常丢给 zone。
+      reportSwallowedError('签到入账失败', e, s);
+      if (mounted) showMwSnackBar(context, const SnackBar(content: Text('签到失败了，稍后再试一次吧')));
+      return;
+    }
     if (!mounted) return;
     if (newBalance == null) {
       showMwSnackBar(context, const SnackBar(content: Text('今天已经签到过啦，明天再来～')));

@@ -440,7 +440,7 @@ void main() {
         isFalse,
         reason: '共享组件不得在代码中使用 AppPreferences.equipRackCount（注释亦应已迁移）',
       );
-      const ownedRule = '1 + (redeemedCount > 0 ? 1 : 0) + ((snap.data ?? 0) > 0 ? 1 : 0)';
+      const ownedRule = '1 + (redeemedCount > 0 ? 1 : 0) + ((streakDays ?? 0) > 0 ? 1 : 0)';
       expect(ownedRule.allMatches(cardsSource).length, 1, reason: '装备数规则只能写一遍');
 
       // 零双写：不定义私有卡片类、不算装备数、不写死字符串路由。

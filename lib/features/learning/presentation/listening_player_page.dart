@@ -5,6 +5,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/app/router/route_names.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
@@ -48,7 +50,6 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
   bool _isPaused = false;
   bool _showMeaning = false;
   double _speechRate = 0.5;
-  Timer? _autoPlayTimer;
 
   @override
   void initState() {
@@ -61,7 +62,6 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
 
   @override
   void dispose() {
-    _autoPlayTimer?.cancel();
     // MEM：清空全局 SystemTts 回调，避免单例钉住本 State。
     _tts.onComplete = null;
     _tts.onErrorHandler = null;
@@ -108,28 +108,35 @@ class _ListeningPlayerPageState extends State<ListeningPlayerPage> {
     });
 
     final word = _currentWord;
-    switch (widget.mode) {
-      case ListeningMode.wordOnly:
-        await _tts.speakEnglish(word.word);
-        break;
-      case ListeningMode.wordMeaning:
-        await _tts.speakWordWithMeaning(word.word, word.cleanInterpret);
-        break;
-      case ListeningMode.meaningWord:
-        // 先中文后英文
-        await _tts.speakChinese(word.cleanInterpret);
-        await Future.delayed(const Duration(milliseconds: 500));
-        await _tts.speakEnglish(word.word);
-        break;
-      case ListeningMode.wordExample:
-        await _tts.speakEnglish(word.word);
-        if (word.example.isNotEmpty) {
-          final sentences = ExampleParser.parse(word.example);
-          final firstEn = sentences.isNotEmpty ? sentences.first.en : word.example;
-          await Future.delayed(const Duration(milliseconds: 400));
-          await _tts.speakEnglish(firstEn);
-        }
-        break;
+    // speakChinese 失败会 rethrow（怪兽发声闸门依赖该信号）；随身听不能让
+    // 朗读异常炸掉播放循环——上报并回落到停止态。
+    try {
+      switch (widget.mode) {
+        case ListeningMode.wordOnly:
+          await _tts.speakEnglish(word.word);
+          break;
+        case ListeningMode.wordMeaning:
+          await _tts.speakWordWithMeaning(word.word, word.cleanInterpret);
+          break;
+        case ListeningMode.meaningWord:
+          // 先中文后英文
+          await _tts.speakChinese(word.cleanInterpret);
+          await Future.delayed(const Duration(milliseconds: 500));
+          await _tts.speakEnglish(word.word);
+          break;
+        case ListeningMode.wordExample:
+          await _tts.speakEnglish(word.word);
+          if (word.example.isNotEmpty) {
+            final sentences = ExampleParser.parse(word.example);
+            final firstEn = sentences.isNotEmpty ? sentences.first.en : word.example;
+            await Future.delayed(const Duration(milliseconds: 400));
+            await _tts.speakEnglish(firstEn);
+          }
+          break;
+      }
+    } catch (e, s) {
+      reportSwallowedError('随身听朗读失败', e, s);
+      if (mounted) setState(() => _isPlaying = false);
     }
   }
 

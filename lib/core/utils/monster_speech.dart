@@ -5,6 +5,8 @@
 // → 0/7/30/100 天阈值映射 奶泡/尖角/飞翼/金冠（monster_icon.dart，阈值已核对）。
 import 'dart:math' show Random;
 
+import 'package:word_app/core/utils/debug_log.dart';
+
 /// 台词槽位。
 enum SpeechSlot {
   /// 日常打招呼：点击怪兽/主动问候共用文案组。
@@ -78,7 +80,9 @@ class MonsterSpeech {
   static Iterable<String> templatesOf(SpeechSlot slot) => _templates[slot]!;
 
   // 每槽最近选中记录（内存即可，不持久化）。
-  final Map<SpeechSlot, List<String>> _recent = {};
+  // 去重窗口为进程级共享：调用方各持 MonsterSpeech() 实例（首页/进化仪式），
+  // 实例级记忆会让连续两场仪式连出同一条台词。
+  static final Map<SpeechSlot, List<String>> _recent = {};
 
   /// yyyy-MM-dd（本地时区；预算跨日键与「上次打开首页」SP 值共用同一口径）。
   static String dayKeyOf(DateTime d) {
@@ -91,6 +95,14 @@ class MonsterSpeech {
   bool canSpeak() {
     _rollDayIfNeeded();
     return _todayCount < _maxProactivePerDay;
+  }
+
+  /// 测试隔离：复位进程级 static（每日预算/去重窗口），setUp 调用。
+  /// 生产禁止调用（会重置当日已消耗预算，导致超预算弹窗）。
+  static void resetForTest() {
+    _todayKey = '';
+    _todayCount = 0;
+    _recent.clear();
   }
 
   /// 记一次主动弹（调用方应先用 [canSpeak] 把门再消耗）。
@@ -117,6 +129,13 @@ class MonsterSpeech {
       // 兜底（窗口 3 < 组大小 6，正常不会触达）：全组解禁再挑。
       recent.clear();
       candidates.addAll(group);
+    }
+    if (candidates.isEmpty) {
+      // 数据不变式被破坏（某槽全部模板都含未注入占位符）时的运行时守卫：
+      // 降级为中性文案，绝不让 _random.nextInt(0) 抛 ArgumentError 炸掉仪式。
+      // 不变量由 monster_speech_test 锁定，正常不可触达。
+      debugLog('[MonsterSpeech] 槽位过滤后无候选（不变式被破坏）：$slot / 缺失变量=$unknown');
+      return '……';
     }
     final picked = candidates[_random.nextInt(candidates.length)];
     recent.add(picked);

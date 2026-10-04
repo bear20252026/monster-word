@@ -88,10 +88,11 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
   Future<void> _maybeProactiveGreeting() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      const lastHomeVisitKey = 'monster_last_home_visit';
       final today = MonsterSpeech.dayKeyOf(DateTime.now());
-      final last = prefs.getString('monster_last_home_visit');
+      final last = prefs.getString(lastHomeVisitKey);
       if (last == today || !_speech.canSpeak()) return;
-      await prefs.setString('monster_last_home_visit', today);
+      await prefs.setString(lastHomeVisitKey, today);
       if (!mounted || last == null) return; // 首次使用无分离可言，不迎接回归
       // 主动弹是「怪兽开口报数」的场合，等变量取齐再说（取不到就说不带数的台词）。
       final vars = await _loadSpeechVars();
@@ -123,6 +124,10 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
     if (_navigating) return;
     _navigating = true;
     _mouthCtrl.forward(from: 0);
+    // 台词变量只在 initState 预热一次：签到/答题回来后点击怪兽会报陈旧余额。
+    // 点击瞬间先补一次取数（本次气泡仍用缓存保即时反馈，下次即新值），
+    // 跳转返回后再补一次（我的空间内可能改名/进化）。
+    unawaited(_refreshSpeechVars());
     // 用户主动点击：只 pick 不消耗每日预算（预算只管主动弹）。
     setState(() {
       _greetingText = _speech.pick(SpeechSlot.dailyGreeting, vars: _speechVars);
@@ -131,7 +136,13 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
     await Future<void>.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
     _navigating = false; // 入页后解除：防的是节拍窗内的双击，不是永久关门
-    Navigator.pushNamed(context, RouteNames.mySpace);
+    // 气泡收敛与导航同时起步（跳转期间即开始收敛，返回时不残留）；
+    // 返回后补一次变量取数（我的空间内可能改名/进化）。
+    unawaited(
+      Navigator.pushNamed(context, RouteNames.mySpace).then((_) {
+        if (mounted) unawaited(_refreshSpeechVars());
+      }),
+    );
     unawaited(_settleGurgle());
   }
 

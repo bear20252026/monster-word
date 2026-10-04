@@ -80,6 +80,19 @@ class _FluidCursorOverlayState extends State<FluidCursorOverlay> with SingleTick
     _controller = FluidCursorController()..setRippleColor(widget.rippleColor ?? context.skin.colors.accent);
     _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
     _controller.addListener(_onControllerChanged);
+    // 性能审计：涟漪过期清理此前只挂在 controller 事件上——最后一次点按后
+    // 再无事件，repeat() 空转到进程结束。由动画 tick 驱动收尾：
+    // 涟漪清空即 stop（当前 app 以 enabled:false 挂载，启用时才生效）。
+    _animController.addListener(_onTick);
+  }
+
+  void _onTick() {
+    if (!mounted) return;
+    _controller.cleanOldRipples();
+    if (_controller.ripples.isEmpty && _animController.isAnimating) {
+      _animController.stop();
+      setState(() {});
+    }
   }
 
   void _onControllerChanged() {

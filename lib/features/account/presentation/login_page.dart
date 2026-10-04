@@ -253,9 +253,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     required String label,
     String initial = '',
     bool obscure = false,
-  }) {
+  }) async {
     final controller = TextEditingController(text: initial);
-    return showDialog<String>(
+    final result = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(title),
@@ -271,6 +271,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ],
       ),
     );
+    // 内存审计 P2：controller 是 ChangeNotifier，弹窗关闭后必须释放
+    //（对齐 account_info_page / user_info_manage_page 的既有惯例）。
+    controller.dispose();
+    return result;
   }
 
   Future<void> _loginWithPhone(String phone, String code) async {

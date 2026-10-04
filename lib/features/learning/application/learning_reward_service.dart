@@ -52,16 +52,32 @@ class LearningRewardService {
       }
       final count = prefs.getInt(_kSessionCount) ?? 0;
       if (count < _sessionDailyCap) {
-        await _store.grant(delta: _sessionReward, reason: '学习完成');
-        await prefs.setInt(_kSessionCount, count + 1);
+        // 先持久化防重标记（SP 写失败返回 false 时不发币），发币失败回滚标记：
+        // 反序（先发币后写标记）在标记写失败时会让同日下一会话重复发奖。
+        if (!await prefs.setInt(_kSessionCount, count + 1)) {
+          return SessionRewardResult(totalGranted: granted, goalJustAchieved: goalJustAchieved);
+        }
+        try {
+          await _store.grant(delta: _sessionReward, reason: '学习完成');
+        } catch (_) {
+          await prefs.setInt(_kSessionCount, count);
+          rethrow;
+        }
         granted += _sessionReward;
       }
     }
 
     // 2) 每日目标达成奖励（当日仅一次）
     if (dailyGoalAchieved && prefs.getString(_kGoalDate) != today) {
-      await _store.grant(delta: _goalReward, reason: '今日目标达成');
-      await prefs.setString(_kGoalDate, today);
+      if (!await prefs.setString(_kGoalDate, today)) {
+        return SessionRewardResult(totalGranted: granted, goalJustAchieved: goalJustAchieved);
+      }
+      try {
+        await _store.grant(delta: _goalReward, reason: '今日目标达成');
+      } catch (_) {
+        await prefs.remove(_kGoalDate);
+        rethrow;
+      }
       granted += _goalReward;
       goalJustAchieved = true;
     }

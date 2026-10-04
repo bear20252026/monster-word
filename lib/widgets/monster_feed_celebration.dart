@@ -5,10 +5,12 @@
 // 总时长 = coinCount*120ms + 600ms；coinCount > 12 时只飞 12 枚并显示 +N。
 // 金币「嘴部」目标点取画布中心偏下（MonsterIcon 嘴位 0.22r 的视觉近似），
 // 起点在画布上方，Stack clipBehavior: Clip.none 允许入画前越界绘制。
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
 import 'package:word_app/widgets/coin_swallow_celebration.dart';
@@ -89,11 +91,18 @@ class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with Si
           curve: Interval(_frac(i * _kStaggerMs + _kFlightMs), _frac(i * _kStaggerMs + _kFlightMs + _kSwallowMs)),
         ),
     ];
-    if (_visibleCoins > 0) _controller.forward();
+    if (_visibleCoins > 0) {
+      _controller.forward();
+      // 末枚金币落嘴 = 打嗝回弹起点：同步给一声 burp（SfxPlayer 静音档自会短路）。
+      _burpTimer = Timer(Duration(milliseconds: _feedEndMs), () => SfxPlayer.fire(Sfx.burp));
+    }
   }
+
+  Timer? _burpTimer;
 
   @override
   void dispose() {
+    _burpTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }

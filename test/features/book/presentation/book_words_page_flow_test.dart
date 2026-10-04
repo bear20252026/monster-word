@@ -13,7 +13,6 @@ import 'package:word_app/features/learning/application/learning_favorites_store.
 import 'package:word_app/features/learning/application/new_words_store.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/widgets/flow_in.dart';
 
 import '../test_helpers/fake_learning_progress_reader.dart';
 
@@ -247,6 +246,6 @@ void main() {
     // FlowIn 在 disableAnimations 下不包 Opacity/Transform，直接给最终态
     expect(find.text('apple'), findsOneWidget);
     expect(find.byType(Opacity), findsNothing);
-    expect(tester.widget<FlowIn>(find.byKey(const ValueKey('word-flow-1'))), isNotNull);
+    expect(find.byKey(const ValueKey('word-flow-1')), findsOneWidget, reason: '入场动画节点必须存在');
   });
 }

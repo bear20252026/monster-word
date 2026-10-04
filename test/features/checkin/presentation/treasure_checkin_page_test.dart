@@ -89,6 +89,31 @@ void main() {
     expect(find.text('10'), findsWidgets); // 余额已入账
     await tester.pump(const Duration(seconds: 3));
   });
+
+  testWidgets('签到入账失败：按钮不软锁、给出用户可见提示（2026-10-04 审计）', (tester) async {
+    await tester.pumpWidget(_wrap(_CheckInBoom()));
+    await tester.pump(const Duration(milliseconds: 50));
+
+    await tester.tap(find.text('立即签到 · +10'));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // 入账抛错必须复位 _busy 并提示——不能软锁到重进页面、异常只进 zone。
+    expect(find.text('签到失败了，稍后再试一次吧'), findsOneWidget, reason: '入账失败要有用户可见反馈');
+    expect(find.text('立即签到 · +10'), findsOneWidget, reason: 'CTA 不得因异常被永久禁用');
+    // CTA 仍可再次点击（未软锁）。
+    await tester.tap(find.text('立即签到 · +10'));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('签到失败了，稍后再试一次吧'), findsWidgets);
+    await tester.pump(const Duration(seconds: 1));
+  });
+}
+
+/// 签到入账即抛的替身（模拟 applyDelta 失败/database_closed，守护 2026-10-04 审计的 busy 软锁修复）。
+class _CheckInBoom extends _BalanceFake {
+  @override
+  Future<int?> checkIn() async {
+    throw StateError('database_closed');
+  }
 }
 
 /// 签到后取日期即抛的替身（模拟库失效/句柄关闭现场，守护 P2-5 的错误边界）。

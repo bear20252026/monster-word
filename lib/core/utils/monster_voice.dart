@@ -65,6 +65,15 @@ class MonsterVoice {
     try {
       if (await (availability?.call() ?? SystemTts().chineseVoiceAvailable()) == false) return false;
       await (speak?.call(line) ?? SystemTts().speakChinese(line));
+      if (speak == null) {
+        // Android 侧 speak() 入队即返回：占用保持到引擎真正念完（isSpeaking
+        // 回落），否则紧随其后的第二场仪式会在引擎尚未开口的窗口截断上一句
+        // （REG-VOICE-001 只修了占用侧，这里是释放侧）。
+        for (var i = 0; i < 100; i++) {
+          await Future.delayed(const Duration(milliseconds: 100));
+          if (!SystemTts().isSpeaking) break;
+        }
+      }
       return true;
     } catch (e, s) {
       // 缺中文语音包 / 引擎异常：退回文案气泡，并记住本进程不再敲引擎（C 级合理降级）。

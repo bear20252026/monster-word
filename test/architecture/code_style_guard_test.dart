@@ -30,7 +30,11 @@ void main() {
   /// build() 超长存量豁免：文件名 -> 豁免的 build 起始行号集合
   const kBuildAllowlist = {
     'lib/features/learning/presentation/list_word_listen_page.dart': {99, 100, 101}, // 121 行（I1 import 插入 +1）
-    'lib/features/scare_coin/presentation/scare_coin_history_page.dart': {64, 65}, // 154 行
+    'lib/features/scare_coin/presentation/scare_coin_history_page.dart': {
+      64,
+      65,
+      74,
+    }, // 160 行（2026-10-04 签到守卫 +9 行，起始行 64→74）
     'lib/features/settings/presentation/more_settings_page.dart': {494, 495}, // 133 行
   };
 

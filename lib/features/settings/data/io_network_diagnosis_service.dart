@@ -42,7 +42,8 @@ class IoNetworkDiagnosisService implements NetworkDiagnosisService {
       onStep?.call(r);
     }
 
-    emit(await _checkDns('网络连接', 'www.baidu.com'));
+    // 中性连通性探针：不向商业站点暴露「用户正在使用本应用」的元数据。
+    emit(await _checkDns('网络连接', 'connectioncheck.gstatic.com'));
     emit(await _checkDns('DNS 解析', kSmsServiceHost));
     emit(await _checkHttp('短信服务可达', Uri.https(kSmsServiceHost, '/')));
     emit(await _checkHttp('崩溃上报可达', Uri.https(kSentryIngestHost, '/')));

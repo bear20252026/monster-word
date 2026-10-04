@@ -2,6 +2,7 @@
 // 使用设备内置语音合成，无需网络，支持中英双语
 // 仅在移动端使用，桌面端回退到网络音频
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 import 'dart:async';
 import 'dart:io';
@@ -25,9 +26,6 @@ class SystemTts {
 
   // 怪兽发声闸门用：系统引擎同一时刻只能说一句，单词/例句朗读正在跑时怪兽必须让路。
   bool _speaking = false;
-
-  // 中文语音包探测结果：null=尚未探到，true=可用，false=确认缺失（缺失即静默降级回文案气泡）。
-  bool? _chineseVoiceAvailable;
 
   // 状态回调
   VoidCallback? onStart;
@@ -111,13 +109,18 @@ class SystemTts {
         _lastLanguage = TtsLanguage.english;
       }
       await _tts.speak(text);
-    } catch (e) {
+    } catch (e, s) {
+      // B 级豁免：朗读失败调用方各有降级（网络音频/静默），此处保底可见。
       debugLog('[SystemTts] speakEnglish error: $e');
+      reportSwallowedError('系统 TTS 英语朗读失败', e, s);
       onErrorHandler?.call();
     }
   }
 
-  /// 说中文
+  /// 说中文。
+  ///
+  /// 失败会 rethrow：怪兽发声闸门（MonsterVoice）依赖该异常把设备标记为
+  /// 「无中文语音」并降级回文案气泡——吞错会让降级路径成为死代码。
   Future<void> speakChinese(String text) async {
     await init();
     try {
@@ -129,6 +132,7 @@ class SystemTts {
     } catch (e) {
       debugLog('[SystemTts] speakChinese error: $e');
       onErrorHandler?.call();
+      rethrow;
     }
   }
 
@@ -162,7 +166,10 @@ class SystemTts {
         await completer.future;
       } finally {
         timeout.cancel();
-        onComplete = oldComplete;
+        // 内存审计 P2（2026-10-04 复审）：页面 dispose 会把回调槽清空以解绑
+        // 已销毁 State——此刻不得把旧回调装回单例（钉住整页对象图直到下次
+        // 赋值）。仅当槽位仍被占用（正常路径=本包装）时才恢复原回调。
+        if (onComplete != null) onComplete = oldComplete;
       }
 
       // 短暂停顿后读中文
@@ -267,16 +274,21 @@ class SystemTts {
 
   /// 设备中文语音可用性：true 可用 / false 确认缺失 / null 无从判断（按可用先试一次）。
   ///
-  /// 只在首次发声时探一次并缓存——缺中文语音包的设备（部分 Windows / 精简 ROM 安卓）
-  /// 上怪兽不出声，退回文案气泡，不反复敲引擎。
+  /// 只探一次并缓存（含「平台不返回列表」的 null 结论——否则此类设备上
+  /// 每场仪式都重敲一次 getLanguages）。
   Future<bool?> chineseVoiceAvailable() async {
-    if (_chineseVoiceAvailable != null) return _chineseVoiceAvailable;
+    if (_chineseVoiceProbed) return _chineseVoiceAvailable;
+    _chineseVoiceProbed = true;
     final langs = await getLanguages();
     final flat = langs.map((e) => '$e').join('|').toLowerCase();
     if (flat.isEmpty) return null; // 平台不返回列表：不下结论
     _chineseVoiceAvailable = flat.contains('zh');
     return _chineseVoiceAvailable;
   }
+
+  /// 中文语音包探测结果：null=尚未探到，true=可用，false=确认缺失（缺失即静默降级回文案气泡）。
+  bool? _chineseVoiceAvailable;
+  bool _chineseVoiceProbed = false;
 
   /// 发声实际失败后标记不可用（本进程内不再打扰）。
   void markChineseVoiceUnavailable() => _chineseVoiceAvailable = false;

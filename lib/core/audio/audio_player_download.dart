@@ -46,14 +46,25 @@ class _AudioDownloader {
         if (response.bodyBytes.length > 10 * 1024 * 1024) {
           return _DownloadResult(statusCode: 413);
         }
+        // 数据完整性：先写 tmp 再原子改名。直写最终路径时下载中断会留下
+        // 半写 mp3 永久占位，此后该词每次都命中坏缓存并静默播不出。
+        final tmp = File('$localPath.tmp');
+        await tmp.writeAsBytes(response.bodyBytes, flush: true);
         final file = File(localPath);
-        await file.writeAsBytes(response.bodyBytes);
+        try {
+          await tmp.rename(file.path);
+        } catch (_) {
+          // C 级豁免：个别平台 rename 覆盖已存在文件受限，回退删除后重命名
+          if (file.existsSync()) file.deleteSync();
+          await tmp.rename(file.path);
+        }
         return _DownloadResult(file: file, success: true, statusCode: 200);
       }
       return _DownloadResult(statusCode: response.statusCode);
     } catch (e, s) {
-      // 错误处理审计 P3：此前连 debugPrint 都没有，网络层故障完全不可观测
-      reportSwallowedError('音频下载失败（主备 URL 均失败）', e, s);
+      // 错误处理审计 P3：网络层故障不可观测。此处为单次尝试（主或备），
+      // 「主备均失败」的汇总上报由 downloadFile 调用方口径负责。
+      reportSwallowedError('音频下载尝试失败（主/备单次）', e, s);
       return _DownloadResult(statusCode: -1);
     }
   }

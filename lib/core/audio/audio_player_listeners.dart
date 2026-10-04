@@ -39,23 +39,3 @@ abstract class PlayAudioListener {
   void onPlayComplete();
   void onPlayError();
 }
-
-/// 带默认空实现的 PlayAudioListener（方便只关心部分回调的场景）
-class PlayAudioListenerAdapter implements PlayAudioListener {
-  @override
-  void onLoadStart(String url) {}
-  @override
-  void onLoadSuc(String url) {}
-  @override
-  void onLoadError(String url) {}
-  @override
-  void onPlayFileChanged(String url) {}
-  @override
-  void onPlayStart() {}
-  @override
-  void onPlayPause() {}
-  @override
-  void onPlayComplete() {}
-  @override
-  void onPlayError() {}
-}

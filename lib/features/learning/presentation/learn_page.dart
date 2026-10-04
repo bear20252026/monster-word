@@ -536,8 +536,9 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       _rewardFly(i);
       _maybePeekForCombo();
     } else {
-      // 蓝图红线：答错轻提示音（无触觉无惩罚，缺席即信号）。
-      SfxPlayer.fire(Sfx.wrongSoft);
+      // 蓝图红线：答错轻提示音（无触觉无惩罚，缺席即信号）；
+      // 连击 ≥3 时叠加 combo_break——连击中断是值得听见的瞬间。
+      SfxPlayer.fire(widget.state.combo >= 3 ? Sfx.comboBreak : Sfx.wrongSoft);
       setState(() => _wrongIndex = i);
       widget.state.recordAnswer(false);
       _shakeController.forward(from: 0);
@@ -588,29 +589,31 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       onArrive: () {
         if (!mounted) return;
         widget.onRewarded(granted);
-        _maybeCelebrateMilestone(granted);
+        _maybeCelebrateMilestone();
       },
     );
   }
 
   /// 里程碑金币雨（蓝图 W3）：余额跨 100/500/1000/5000 → 探头 + jingle + heavy。
-  /// SP 持久化防重复；失败静默（守卫：庆祝不阻断答题）。
-  Future<void> _maybeCelebrateMilestone(int granted) async {
+  /// SP 持久化防重复（键与判定集中在 MilestoneGuard，与签到页同源）；
+  /// 失败静默（守卫：庆祝不阻断答题）。
+  Future<void> _maybeCelebrateMilestone() async {
     // await 前先取 store（async gap 后禁用 context，lint 口径）。
     final store = context.read<ScareCoinStore?>();
     try {
       final prefs = await SharedPreferences.getInstance();
-      const key = 'monster_last_milestone';
-      final celebrated = prefs.getInt(key) ?? 0;
       if (store == null) return;
       final balance = await store.balance();
+      final celebrated = await MilestoneGuard.readBaseline(prefs, balance);
+      if (celebrated == null) return; // 首次基线化：不为存量余额补庆祝
       final crossed = MilestoneGuard.crossedMilestone(celebrated, balance);
       if (crossed == null) return;
-      await prefs.setInt(key, crossed);
       if (!mounted) return;
       SfxPlayer.fire(Sfx.milestone);
       HapticsGate.play(HapticCue.heavy);
       MonsterPeekOverlay.show(context, phrase: '第 $crossed 枚金币！钱包鼓鼓的！');
+      // 演出排定后再落「已庆祝」：页面中途销毁则标记未写，下个机会补演。
+      await prefs.setInt(MilestoneGuard.lastCelebratedKey, crossed);
     } catch (e, s) {
       reportSwallowedError('里程碑庆祝失败', e, s);
     }

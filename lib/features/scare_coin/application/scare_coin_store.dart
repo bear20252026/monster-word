@@ -31,7 +31,8 @@ abstract interface class ScareCoinStore {
   /// 断签保护卡库存（耗材；不占装备架、不计 redeemedBadge）。
   Future<int> protectionCount();
 
-  /// 发放保护卡（连签奖励／兑换），钳制上限后返回当前库存。
+  /// 发放保护卡（连签奖励／兑换），返回发放后的当前库存；
+  /// 库存已满时抛 StateError——调用方（兑换扣币路径）依赖该抛错触发补偿退款。
   Future<int> addProtection({required int count, required String reason});
 
   /// 答对即时奖励上限（＋1／次，每日封顶，防刷）。

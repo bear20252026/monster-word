@@ -3,21 +3,18 @@ import 'package:word_app/core/infrastructure/wordbook_database.dart';
 
 void main() {
   group('WordBookDatabase (XP-FIX-4)', () {
-    test('isInitialized 可通过 instance 访问', () {
-      // WordBookDatabase 使用单例模式，isInitialized getter 是公开的
-      final db = WordBookDatabase.instance;
-      // 测试期间数据库可能已初始化（由其他测试触发），只验证 getter 可访问
-      expect(db.isInitialized, isA<bool>());
+    test('instance 为真单例（重复访问同一实例）', () {
+      expect(WordBookDatabase.instance, same(WordBookDatabase.instance));
     });
 
-    test('isInitialized 为 false 时调用方可安全跳过 db 访问', () {
+    test('isInitialized 与 db 可用性一致：未初始化时访问 db 必抛 StateError', () {
       final db = WordBookDatabase.instance;
-      // 调用方可以检查 isInitialized 再决定是否访问 db
-      // 若未初始化，访问 db 会抛 StateError；isInitialized 提供了安全前置检查
-      if (!db.isInitialized) {
-        expect(() => db.db, throwsA(isA<StateError>()));
+      if (db.isInitialized) {
+        // 已被同 isolate 其他用例初始化：getter 不抛即正确行为
+        expect(() => db.db, returnsNormally);
+      } else {
+        expect(() => db.db, throwsA(isA<StateError>()), reason: 'isInitialized=false 时 db getter 必须显式失败，不能返回半开状态');
       }
-      expect(db.isInitialized, isA<bool>());
     });
   });
 }

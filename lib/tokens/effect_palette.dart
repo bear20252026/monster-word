@@ -23,14 +23,6 @@ class PartyColors {
 }
 
 /// GameBoy 复古配色（home_screen 像素风彩蛋装饰）
-class GameBoyColors {
-  /// 经典 GB 屏幕绿
-  static const Color screen = Color(0xFF9BBC0F);
-
-  /// 经典 GB 像素深绿
-  static const Color pixel = Color(0xFF0F380F);
-}
-
 /// 吉祥物形象色（monster_icon.dart 角色绘制专用）
 class MonsterPalette {
   /// 浅青色肚皮
@@ -50,12 +42,6 @@ class MonsterPalette {
 
   /// 进化金（7天尖角金角／30天飞翼描边／100天光环，吉祥物进化专用）
   static const Color evoGold = Color(0xFFD9A62E);
-}
-
-/// 流星特效色（meteors.dart）
-class MeteorPalette {
-  /// 夜空底色（流星背景渐变深端）
-  static const Color nightSky = Color(0xFF0A0F0D);
 }
 
 /// 品牌渐变组合（多处双写已收口为共享常量）

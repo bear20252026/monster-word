@@ -20,6 +20,7 @@ import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/func_colors.dart';
+import 'package:word_app/widgets/common/memo_future_builder.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/mw_card.dart';
 
@@ -57,11 +58,12 @@ class ScareCoinCard extends StatelessWidget {
               children: [
                 const MonsterAvatar(size: 32),
                 const SizedBox(width: 8),
-                FutureBuilder<int>(
-                  future: context.read<ScareCoinStore>().balance(),
-                  builder: (context, snap) {
+                MemoFutureBuilder<int>(
+                  create: () => context.read<ScareCoinStore>().balance(),
+                  placeholder: 0,
+                  builder: (context, balance) {
                     return Text(
-                      '${snap.data ?? 0}',
+                      '$balance',
                       style: MwTypography.heading4.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
                     );
                   },
@@ -107,10 +109,11 @@ class EquipCard extends StatelessWidget {
                 style: MwTypography.bodyMd.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: 6),
-              FutureBuilder<int>(
-                future: streakFuture,
-                builder: (context, snap) {
-                  final owned = 1 + (redeemedCount > 0 ? 1 : 0) + ((snap.data ?? 0) > 0 ? 1 : 0);
+              MemoFutureBuilder<int>(
+                create: () => streakFuture,
+                placeholder: 0,
+                builder: (context, streakDays) {
+                  final owned = 1 + (redeemedCount > 0 ? 1 : 0) + ((streakDays ?? 0) > 0 ? 1 : 0);
                   return Text(
                     '$owned/${PresentationPrefs.equipRackCount}',
                     style: MwTypography.caption.copyWith(color: skin.text3),
