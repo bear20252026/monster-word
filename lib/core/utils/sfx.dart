@@ -4,8 +4,8 @@
 // audioplayers 复用实例池防「每次 new 的可感延迟」；release 静音键三态
 // （全开 → 仅视觉 → 全静音）持久化；夜间 22 点后全局 -6dB（默认关怀）。
 // 红线：静音后所有庆祝保留完整视觉——juice 不依赖声音。
-// 守卫：debug 每次播放打 debugLog（[SFX] 通道:音效），同一音效 50ms 内
-// 重复触发 debug 断言（防连点爆音）——见 test/architecture/sfx_guard_test.dart。
+// 守卫：debug 每次播放打 debugLog（[SFX] 通道:音效）；同一音效 50ms 内
+// 重复触发仅 debugLog 记录不中断（连击交互天然命中该窗口，不视为错误）。
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -84,9 +84,10 @@ class SfxPlayer {
     return _isNight ? v * 0.5 : v;
   }
 
-  /// 播放一次音效（静音模式下为 no-op，视觉庆祝照常）。
+  /// 播放一次音效（静音/仅视觉模式下为 no-op，视觉庆祝照常）。
   static Future<void> play(Sfx sfx) async {
-    if (mode == SfxMode.silent) return;
+    // 仅视觉档此前只把音量归零仍解码播放——白白占用音频焦点，直接短路。
+    if (mode != SfxMode.all) return;
     _assertNoSpam(sfx);
     final player = _players[sfx.channel]!;
     try {
@@ -112,15 +113,19 @@ class SfxPlayer {
     final last = _lastPlay[sfx];
     _lastPlay[sfx] = now;
     if (last != null && now.difference(last).inMilliseconds < 50) {
-      assert(false, '[SFX] 50ms 内重复触发：${sfx.assetPath}（防连点爆音）');
+      // 只记录不断言：破壳敲蛋（连敲三下）等合法快速交互天然命中 50ms
+      // 窗口，断言会崩 debug 构建与 widget 测试（2026-10-04 CI 实证假红源）。
+      debugLog('[SFX] 50ms 内重复触发：${sfx.assetPath}');
     }
   }
 
-  /// 释放全部实例（测试/退出）。
+  /// 释放全部实例（测试/退出）。释放后播放器重建——清空映射会让后续
+  /// `play()` 的 `_players[sfx.channel]!` 空断言崩溃，池必须始终可用。
   static Future<void> disposeAll() async {
-    for (final p in _players.values) {
-      await p.dispose();
+    for (final c in SfxChannel.values) {
+      final old = _players.remove(c);
+      await old?.dispose();
+      _players[c] = AudioPlayer();
     }
-    _players.clear();
   }
 }

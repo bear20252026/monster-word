@@ -319,7 +319,11 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
               ),
               onPressed: () async {
                 Navigator.pop(ctx);
-                await launchUrl(Uri.parse(result.releaseUrl), mode: LaunchMode.externalApplication);
+                // 安全加固：releaseUrl 来自 GitHub API 响应，仓库/Release 失守时
+                // 可能被注入任意 URI（file:/自定义协议）唤起外部程序——只放行 GitHub 站点。
+                final uri = Uri.tryParse(result.releaseUrl);
+                if (uri == null || uri.scheme != 'https' || uri.host != 'github.com') return;
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
               },
               child: const Text('前往下载'),
             ),
@@ -393,7 +397,10 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     );
     if (confirmed != true || !context.mounted) return;
 
-    // 不可取消的进度弹窗
+    // 不可取消的进度弹窗。弹窗的关闭走 await 前捕获的 navigator 引用：
+    // 重建数秒期间宿主页可能被编程式移除（登出清栈/深链），届时再经
+    // context 取 navigator 会失败，进度弹窗永久滞留 root navigator 阻塞交互。
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
     unawaited(
       showDialog(
         context: context,
@@ -406,14 +413,15 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     try {
       result = await context.read<WordBookMaintenanceService>().forceRebuild();
     } catch (e) {
+      rootNavigator.pop();
       if (context.mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
         showMwSnackBar(context, SnackBar(content: Text('词库重建失败: $e')));
       }
       return;
     }
-    if (context.mounted) {
-      Navigator.of(context, rootNavigator: true).pop();
+    {
+      rootNavigator.pop();
+      if (!context.mounted) return;
       unawaited(
         showDialog(
           context: context,
@@ -600,8 +608,10 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           SfxMode.silent => '全静音',
         },
         onTap: () async {
-          await SfxSettings.cycle();
+          // 确认音必须先响再切档：切完再响的话，all→仅视觉/全静音两档
+          // 音量已归零（或被短路），用户 3 次切换里 2 次听不到反馈。
           SfxPlayer.fire(Sfx.toggle);
+          await SfxSettings.cycle();
           if (mounted) setState(() {});
         },
       ),

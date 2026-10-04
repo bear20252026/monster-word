@@ -62,7 +62,7 @@ void main() {
           if (!f.path.endsWith('.dart')) continue;
           final rel = f.path.replaceAll('\\', '/');
           // 特效装饰色唯一入口与调色板定义不在本规则范围
-          if (rel.contains('effect_palette') || rel.contains('meteors')) continue;
+          if (rel.contains('effect_palette')) continue;
           final lines = f.readAsLinesSync();
           for (var i = 0; i < lines.length; i++) {
             if (materialSemantic.hasMatch(lines[i])) {
@@ -92,7 +92,6 @@ void main() {
       final source = File('lib/tokens/effect_palette.dart').readAsStringSync();
       // 白名单文件必须存在且承载特效调色板
       expect(source, contains('class PartyColors'));
-      expect(source, contains('class GameBoyColors'));
       expect(source, contains('class MonsterPalette'));
       expect(source, contains('class GradientEffects'));
       // 渐变/彩纸列表必须引品牌常量或本文件具名色，禁止重新发明字面量组合

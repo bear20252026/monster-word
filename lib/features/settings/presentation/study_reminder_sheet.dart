@@ -119,6 +119,8 @@ Future<void> _pickReminderTime(
       }
     }
   }
+  // 平台通道调用期间 sheet 可能被划走：onChanged 是 sheet 的 setState，失活即崩。
+  if (!context.mounted) return;
   onChanged();
 }
 

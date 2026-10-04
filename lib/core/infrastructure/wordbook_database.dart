@@ -264,6 +264,17 @@ class WordBookDatabase {
       } else {
         // MEM：哈希一致无需解压同样释放，后续 openDatabase/COUNT 自检零大对象持有。
         assetBytes = null;
+        // 2026-10-04 审计：应用发版但词库资产未变时，版本指纹若不回写，
+        // extractedVersion 永久滞留旧值 → 此后每次冷启动 versionMatches
+        // 恒 false，白付 35MB gz 加载 + MD5 慢路径（连发两版即触发）。
+        if (canPersist && assetVersion != null && extractedVersion != assetVersion) {
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString(_kDbVersionKey, assetVersion);
+          } catch (_) {
+            // C 级豁免：指纹回写失败仅性能劣化（下次冷启动再走一次慢路径）
+          }
+        }
       }
     }
 

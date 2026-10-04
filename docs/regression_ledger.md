@@ -115,6 +115,14 @@ push/PR → main
 | REG-AUDIT-001 | 收藏词 SQLite 迁移：事务提交与 marker 写入之间崩溃后，每次启动行数校验失败→永久降级 SP 且循环报错 | 迁移校验只看本次插入数，未考虑 DB 已含全集的自愈场景 | 2026-09-27 审计批次（B6） | `test/core/infrastructure/favorite_words_dao_test.dart`（迁移幂等 + REG-AUDIT-001 崩溃现场自愈注入 + 持久化失败回滚） |
 | REG-AUDIT-002 | FSRS 每日统计在 Android ≤9 全部静默不落盘（`ON CONFLICT DO UPDATE` 需 SQLite≥3.24，系统库 3.22 抛语法错被上层吞） | UPSERT 语法兼容性 | 同上（B13） | `test/features/learning/data/review_schedule_store_test.dart`（统计累加口径）；API≤28 真机验证待补（I91） |
 | REG-AUDIT-003 | 金币账本/反馈存档 JSON 损坏后被"仅含 1 条"的列表覆写清空 | 吞错后继续走覆写路径 | 同上（B1/B2/I56） | `test/features/scare_coin/data/preferences_scare_coin_store_test.dart`（REG-AUDIT-003 损坏不覆写双路径 + 负余额拒绝）、`test/regression/regression_feedback_diagnosis_test.dart`（存档损坏不覆写仍上报）、`test/core/infrastructure/fav_sentence_dao_test.dart`（SP 损坏中止迁移） |
-| REG-AUDIT-004 | 设置页"每日新学"弹层输入即崩（控制器在弹窗关闭前被 dispose）；搜索页 300ms 内退出崩（防抖 Timer 未取消） | 生命周期时序 | 同上（A1/A2） | 页面级 widget 测试待补（I69， dispose 后回调时序难在单测覆盖，先靠 review） |
+| REG-AUDIT-004 | 设置页"每日新学"弹层输入即崩（控制器在弹窗关闭前被 dispose）；搜索页 300ms 内退出崩（防抖 Timer 未取消） | 生命周期时序 | 同上（A1/A2） | `test/regression/regression_dispose_timing_test.dart`（A1/A2 两条 testWidgets 守护；2026-10-04 复核更新） |
 | REG-AUDIT-005 | TTS 文本朗读必然 404（完整 URL 再拼基址）；时区回退名反号（UTC+8 → `Etc/GMT--8` 非法） | URL 拼接与 POSIX 反号语义 | 同上（D2/D3） | `local_study_reminder_service_test.dart`（时区名构造可单测）；音频主备 URL 逻辑待补单测 |
 | REG-AUTH-001 | 本机密码哈希为单轮 SHA-256（快速哈希），安全存储被提取后弱口令可秒级爆破 | KDF 缺位 | 同上（J3/I42） | `test/features/account/data/secure_password_auth_store_test.dart`（RFC 2898 参考向量 + 存量透明升级 + 失败不升级） |
+| REG-COIN-001 | 兑换耗材在库存被并发填满时扣 200 币、卡未到账、退款不触发（页面预检用陈旧快照，addProtection 满额静默钳制不抛错） | 满额钳制无信号，补偿退款分支不可达 | 2026-10-04 审计批（P1：addProtection 满额抛 StateError + 退款独立 try/catch 上报） | `test/features/scare_coin/data/preferences_scare_coin_store_test.dart`（满额抛错口径）；页面级注入待补 |
+| REG-COIN-002 | 补偿退款自身失败被外层 catch(_) 吞掉：扣币已落地、退款未到账且零上报 | 退款路径无第二层保护 | 2026-10-04 审计批（_refund 独立 try/catch + reportSwallowedError） | 守护测试待补（退款 grant 抛错注入） |
+| REG-USERDB-001 | user_data.db 打开遇到瞬时文件锁（杀毒/备份软件）即被当损坏删库重建，生词本（无 SP 快照）永久清空 | 打开异常不区分「瞬时 IO」与「真损坏」，且删除前无备份 | 2026-10-04 审计批（P1：先重试一次，判损后改名 .corrupt.bak 留档再重建） | 守护测试待补（需注入文件锁场景） |
+| REG-CHECKIN-002 | 签到入账失败 `_busy` 永久 true：按钮软锁到重进页面，异常只进 zone 无提示 | `await store.checkIn()` 无 try/catch/finally | 2026-10-04 审计批 | `test/features/checkin/presentation/treasure_checkin_page_test.dart`（入账抛错 → SnackBar + CTA 可再点） |
+| REWARD-001 | 答对奖励「先计数后发币」：发币失败烧掉当日封顶名额；会话结算「先发币后写标记」：标记写失败次日重复发奖 | 两处写序相反且都无回滚 | 2026-10-04 审计批（统一「先持久化防重标记（校验返回值）、发币失败回滚标记」） | `test/features/learning/application/`（待补：setInt 失败/发币抛错注入） |
+| REG-VOICE-002 | MonsterVoice 失败降级是死代码：speakChinese 吞错，say() 实际无声仍返回 true，markChineseVoiceUnavailable 不可达 | 错误信号链断裂 | 2026-10-04 审计批（speakChinese rethrow + say catch 标记降级） | `test/core/utils/monster_voice_test.dart`（throwOnSpeak → false）既有用例即守护 |
+| REG-SFX-001 | 静音三态切换确认音 2/3 档位听不到（先切档再发声，音量已归零/被短路） | 反馈音时序 | 2026-10-04 审计批（先 fire 再 cycle） | 守护测试待补（SfxPlayer 行为测试，见测试审计 #2） |
+| REG-TTS-001 | 随身听 wordMeaning 播放中退出页面：TTS 完成回调把已 dispose 的 State 闭包装回单例（引用泄漏直到下次赋值） | speakWordWithMeaning finally 无条件恢复旧回调 | 2026-10-04 审计批（槽位被清空则不恢复） | 守护测试待补（单例回调时序） |

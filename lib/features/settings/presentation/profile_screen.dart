@@ -415,7 +415,13 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
                     boxShadow: const [
                       BoxShadow(color: TreasurePalette.pillShadow, blurRadius: 10, offset: Offset(0, 3)),
                     ],
-                    image: avatar.isEmpty ? null : DecorationImage(image: FileImage(File(avatar)), fit: BoxFit.cover),
+                    image: avatar.isEmpty
+                        ? null
+                        : DecorationImage(
+                            // 头像小窗（~64px 逻辑）：按 2x 解码即可，别把相机原图驻进内存。
+                            image: ResizeImage(FileImage(File(avatar)), width: 192, height: 192),
+                            fit: BoxFit.cover,
+                          ),
                   ),
                   child: avatar.isEmpty ? Icon(Icons.menu_book_rounded, color: RoomPalette.woodDark, size: 28) : null,
                 ),

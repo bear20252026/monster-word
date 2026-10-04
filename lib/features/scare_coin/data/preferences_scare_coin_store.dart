@@ -68,14 +68,18 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     if (dates.isEmpty) return 0;
     var day = DateTime.now();
     bool has(DateTime value) => dates.contains(_iso(value));
-    if (!has(day)) day = day.subtract(const Duration(days: 1));
+    if (!has(day)) day = _dayBefore(day);
     var count = 0;
     while (has(day)) {
       count++;
-      day = day.subtract(const Duration(days: 1));
+      day = _dayBefore(day);
     }
     return count;
   }
+
+  /// 日历日前一天（日期分量运算）：Duration(days:1) 是 24h 绝对时长，
+  /// 夏令时切换日的 [00:00,01:00) 区间会跳过一整个日历日，误断连击。
+  static DateTime _dayBefore(DateTime day) => DateTime(day.year, day.month, day.day - 1);
 
   @override
   Future<List<ScareCoinEntry>> history() async {
@@ -110,6 +114,10 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     final now = DateTime.now();
     final last = await lastCheckInDate();
     if (isSameDay(last, now)) return null;
+    // 幂等双闸：last_checkin 在 _apply 成功之后才写，崩溃落在两写之间时
+    // （币已 +10、标记未落），仅凭日期标记会重复入账——账本里已有当日
+    // 「每日签到」流水则视为已签到，宁可少发一次也不重复发。
+    if (await _checkinAlreadyGranted(_iso(now))) return null;
     final prefs = await SharedPreferences.getInstance();
     // 断签自动续命：有卡则回填最近的缺勤日（先近后远），不断连击。
     await _autoProtect(prefs, now);
@@ -125,6 +133,18 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     // 连签 7 倍数自动发卡（满额跳过发放但仍标记，避免无限囤积）。
     await _maybeIssueProtection(prefs);
     return newBalance;
+  }
+
+  /// 账本（SQLite/SP 同口径）里是否已有当日的签到入账流水。
+  Future<bool> _checkinAlreadyGranted(String iso) async {
+    try {
+      final entries = await history();
+      return entries.any((e) => e.delta == checkInReward && e.reason == '每日签到' && _iso(e.time) == iso);
+    } catch (e, s) {
+      // 读取失败不影响主流程：退回仅按日期标记判定。
+      reportSwallowedError('签到幂等流水读取失败', e, s);
+      return false;
+    }
   }
 
   @override
@@ -150,7 +170,13 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     if (count >= answerRewardCapValue) return 0;
     await prefs.setString(answerRewardDateKey, today);
     await prefs.setInt(answerRewardCountKey, count + 1);
-    await _apply(delta: 1, reason: '答对＋1');
+    try {
+      await _apply(delta: 1, reason: '答对＋1');
+    } catch (e) {
+      // 发币失败回滚日计数：否则该次答题名额被烧掉（计数已 +1、币未发）。
+      await prefs.setInt(answerRewardCountKey, count);
+      rethrow;
+    }
     return 1;
   }
 
@@ -163,7 +189,13 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   @override
   Future<int> addProtection({required int count, required String reason}) async {
     final prefs = await SharedPreferences.getInstance();
-    final next = ((prefs.getInt(protectionKey) ?? 0) + count).clamp(0, protectionCapValue);
+    final current = prefs.getInt(protectionKey) ?? 0;
+    // 满额拒收而非静默钳制：调用方（兑换页已扣 200 币）依赖本抛错触发
+    // 补偿退款；静默 clamp 会让「扣了币、卡没到手、无退款」三事同时发生。
+    if (count > 0 && current >= protectionCapValue) {
+      throw StateError('保护卡库存已满（$protectionCapValue 张）');
+    }
+    final next = (current + count).clamp(0, protectionCapValue);
     await prefs.setInt(protectionKey, next);
     await _insertHistory(prefs, ScareCoinEntry(time: DateTime.now(), delta: 0, reason: reason));
     return next;
@@ -184,7 +216,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     if (count <= 0) return;
     final backfill = <String>[];
     for (var i = 1; i < gap && backfill.length < count; i++) {
-      backfill.add(_iso(today.subtract(Duration(days: i))));
+      backfill.add(_iso(DateTime(now.year, now.month, now.day - i)));
     }
     if (backfill.isEmpty) return;
     final dates = (prefs.getStringList(checkinDatesKey) ?? const <String>[]).toSet()..addAll(backfill);
@@ -202,7 +234,11 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     if (!issued.add('$newStreak')) return;
     await prefs.setStringList(protectionIssuedKey, issued.toList()..sort());
     final count = prefs.getInt(protectionKey) ?? 0;
-    if (count >= protectionCapValue) return;
+    if (count >= protectionCapValue) {
+      // 满额只标记不发放，但留一条流水：否则审计面上「视为已发」却查无此事。
+      await _insertHistory(prefs, ScareCoinEntry(time: DateTime.now(), delta: 0, reason: '连签$newStreak天·发卡满额未发放'));
+      return;
+    }
     await prefs.setInt(protectionKey, count + 1);
     await _insertHistory(prefs, ScareCoinEntry(time: DateTime.now(), delta: 0, reason: '连签$newStreak天·保护卡＋1'));
   }

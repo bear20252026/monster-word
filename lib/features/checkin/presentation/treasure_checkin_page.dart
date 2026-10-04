@@ -35,6 +35,7 @@ import 'package:provider/provider.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/treasure_palette.dart';
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:word_app/widgets/evolution_ceremony_overlay.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 
@@ -261,15 +262,17 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
   Future<void> _maybeCelebrateMilestone({required int newBalance}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      const key = 'monster_last_milestone';
-      final celebrated = prefs.getInt(key) ?? 0;
+      final celebrated = await MilestoneGuard.readBaseline(prefs, newBalance);
+      if (celebrated == null) return; // 首次基线化：不为存量余额补庆祝
       final crossed = MilestoneGuard.crossedMilestone(celebrated, newBalance);
       if (crossed == null) return;
-      await prefs.setInt(key, crossed);
       if (!mounted) return;
       SfxPlayer.fire(Sfx.milestone);
       HapticsGate.play(HapticCue.heavy);
       MonsterPeekOverlay.show(context, phrase: '第 $crossed 枚金币！钱包鼓鼓的！');
+      // 演出排定后再落「已庆祝」：页面中途销毁则标记未写，下个机会补演
+      //（宁可重复庆祝也不永久吞掉一次跨档）。
+      await prefs.setInt(MilestoneGuard.lastCelebratedKey, crossed);
     } catch (e, s) {
       // 庆祝失败不阻断签到主流程。
       reportSwallowedError('里程碑庆祝失败', e, s);
@@ -280,7 +283,28 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     if (_busy || _todayChecked) return;
     final store = context.read<ScareCoinStore>();
     setState(() => _busy = true);
-    final newBalance = await store.checkIn();
+    // 进化仪式基线：签到前的累计天数快照。不能用「签到后 length-1」近似——
+    // 自动续命回填 k 天时 -1 不等于签到前的天数，跨档仪式会被误吞。
+    var stageBefore = 0;
+    try {
+      stageBefore = MonsterIcon.stageFor((await store.checkinDates()).length);
+    } catch (e, s) {
+      reportSwallowedError('签到进化仪式基线读取失败', e, s);
+    }
+    if (!mounted) return;
+    final int? newBalance;
+    try {
+      newBalance = await store.checkIn();
+    } catch (e, s) {
+      // 入账失败（database_closed/磁盘错）不得把 _busy 永久卡死——按钮软锁
+      // 到重进页面，且用户看不到任何提示。
+      reportSwallowedError('签到入账失败', e, s);
+      if (mounted) {
+        setState(() => _busy = false);
+        showMwSnackBar(context, const SnackBar(content: Text('签到失败了，稍后再试一次吧')));
+      }
+      return;
+    }
     if (!mounted) return;
     if (newBalance == null) {
       // 并发已签过：同步状态收尾。
@@ -289,18 +313,17 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
       setState(() => _busy = false);
       return;
     }
+    final int awarded = newBalance;
     widget.onChecked?.call();
     final reward = store.checkInReward;
-    unawaited(_maybeCelebrateMilestone(newBalance: newBalance));
+    unawaited(_maybeCelebrateMilestone(newBalance: awarded));
     // 进化仪式检测：checkIn() 返回前今日已写入 checkinDates（写日期先于算余额），
-    // 故此刻取的天数已含今天；与本次签到前快照 diff，跨阈值才演出。
+    // 故此刻取的天数已含今天；与基线快照 diff，跨阈值才演出。
     // 读失败只降级为「不演跨档仪式」——账已在上一步落定，绝不因此卡死结算 UI。
     var evolved = false;
-    var stageBefore = 0;
     var stageAfter = 0;
     try {
       final datesAfter = await store.checkinDates();
-      stageBefore = MonsterIcon.stageFor(datesAfter.length - 1);
       stageAfter = MonsterIcon.stageFor(datesAfter.length);
       evolved = stageAfter > stageBefore;
     } catch (e, s) {
@@ -312,7 +335,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
       setState(() {
         _todayChecked = true;
         _streak += 1;
-        _balance = newBalance;
+        _balance = awarded;
         _bellyTarget = _pctFor(_streak);
         _busy = false;
       });
@@ -338,7 +361,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
       setState(() {
         _todayChecked = true;
         _streak += 1;
-        _balance = newBalance;
+        _balance = awarded;
         _gainAt = _now;
         _gainValue = reward;
         _bellyTarget = _pctFor(_streak);

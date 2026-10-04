@@ -6,6 +6,7 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
@@ -33,8 +34,8 @@ class RedemptionCenterPage extends StatefulWidget {
 }
 
 class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
-  /// 已兑换收藏章键前缀（与 AppPreferences.redeemedBadgePrefix 同值；presentation 不 import infrastructure）。
-  static const String _redeemedPrefix = 'scare_coin.redeemed.';
+  /// 已兑换收藏章键前缀（单一事实来源：AppPreferences 经 PresentationPrefs 端口下发）。
+  static const String _redeemedPrefix = PresentationPrefs.redeemedBadgePrefix;
 
   int _coins = 0;
   int _todayEarned = 0;
@@ -150,7 +151,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       } catch (e, s) {
         // 数据完整性审计 P2：扣币后落账失败需补偿退款，否则币丢奖励没到手。
         reportSwallowedError('兑换耗材落账失败，补偿回滚', e, s);
-        await store.grant(delta: item.cost, reason: '兑换失败退款 · ${item.title}');
+        await _refund(item, store);
         rethrow;
       }
     } catch (_) {
@@ -159,6 +160,16 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       }
     } finally {
       if (mounted) setState(() => _redeeming = false);
+    }
+  }
+
+  /// 补偿退款：退款 grant 自身失败时不能被外层 catch(_) 静默吞掉——
+  /// 那是「扣币已落地、商品没到手、退款也没到账」的资金丢失态，必须独立上报。
+  Future<void> _refund(_RedeemItem item, ScareCoinStore store) async {
+    try {
+      await store.grant(delta: item.cost, reason: '兑换失败退款 · ${item.title}');
+    } catch (e, s) {
+      reportSwallowedError('兑换退款失败（币可能丢失，待人工对账）· ${item.id}', e, s);
     }
   }
 
@@ -182,7 +193,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       } catch (e, s) {
         // 数据完整性审计 P2：扣币后标记失败需补偿退款，否则币丢奖励没落账。
         reportSwallowedError('兑换标记写入失败，补偿回滚', e, s);
-        await store.grant(delta: item.cost, reason: '兑换失败退款 · ${item.title}');
+        await _refund(item, store);
         rethrow;
       }
       if (!mounted) return;

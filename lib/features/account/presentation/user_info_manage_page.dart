@@ -64,7 +64,11 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
                             border: Border.all(color: context.skin.colors.divider, width: 2),
                             image: profile.avatar.isEmpty
                                 ? null
-                                : DecorationImage(image: FileImage(File(profile.avatar)), fit: BoxFit.cover),
+                                : DecorationImage(
+                                    // 相机原图可达数千万像素：按 2x 显示尺寸解码，常驻内存降两个量级。
+                                    image: ResizeImage(FileImage(File(profile.avatar)), width: 256, height: 256),
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                           child: profile.avatar.isEmpty
                               ? Icon(Icons.person, size: 40, color: context.skin.colors.text3)

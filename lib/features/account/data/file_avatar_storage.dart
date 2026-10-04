@@ -31,7 +31,22 @@ class FileAvatarStorage implements AvatarStorage {
     final dir = await _ensureAvatarDir();
     final dest = File(p.join(dir.path, 'avatar_${DateTime.now().millisecondsSinceEpoch}.$safeExt'));
     // XFile 无 copy 方法，经 path 落盘（Windows/Android 均有真实路径）。
-    await File(file.path).copy(dest.path);
+    // 先写 tmp 再原子改名：直写目标路径时复制中断会留下损坏头像被永久展示。
+    final tmp = File('${dest.path}.tmp');
+    await File(file.path).copy(tmp.path);
+    await tmp.rename(dest.path);
+    // 旧头像清理：目录内同前缀的历史文件（含上一张头像）不再被引用，
+    // 不清理则随每次换头像无界增长。
+    try {
+      for (final entity in dir.listSync()) {
+        final name = p.basename(entity.path);
+        if (entity is File && name.startsWith('avatar_') && entity.path != dest.path) {
+          entity.deleteSync();
+        }
+      }
+    } catch (_) {
+      // C 级豁免：清理失败只影响磁盘占用，不影响功能。
+    }
     return dest.path;
   }
 

@@ -234,6 +234,26 @@ class _HaloBgPainter extends CustomPainter {
 
   _HaloBgPainter({required this.progress, required this.color});
 
+  // 性能审计 P2：painter 随 AnimatedBuilder 每帧重建，shader 缓存必须 static。
+  // 渐变以 Offset.zero 为圆心创建一次，移动用 canvas.translate 表达——
+  // 半径按 2px 粒度量化（百像素级光晕上不可感知），整个 4s 周期只产生
+  // 十几个 shader，替代原先每帧 2 个 Paint + 2 个渐变 shader 的分配。
+  static final Map<String, Shader> _shaderCache = {};
+  static final Paint _sharedPaint = Paint();
+
+  static Shader _shaderFor(Color c, double radius) {
+    final key = '${c.toARGB32()}:${(radius / 2).round()}';
+    return _shaderCache.putIfAbsent(key, () {
+      if (_shaderCache.length > 64) _shaderCache.clear();
+      return RadialGradient(
+        colors: [
+          c.withValues(alpha: AppAlphas.o06),
+          c.withValues(alpha: AppAlphas.o0),
+        ],
+      ).createShader(Rect.fromCircle(center: Offset.zero, radius: radius));
+    });
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final t = progress * 2 * math.pi;
@@ -245,18 +265,15 @@ class _HaloBgPainter extends CustomPainter {
       final y = size.height * (0.2 + 0.3 * math.cos(phase * 0.7));
       final radius = size.width * (0.25 + 0.05 * math.sin(phase * 2));
 
-      final paint = Paint()
-        ..shader = RadialGradient(
-          colors: [
-            color.withValues(alpha: AppAlphas.o06),
-            color.withValues(alpha: AppAlphas.o0),
-          ],
-        ).createShader(Rect.fromCircle(center: Offset(x, y), radius: radius));
-
-      canvas.drawCircle(Offset(x, y), radius, paint);
+      canvas.save();
+      canvas.translate(x, y);
+      _sharedPaint.shader = _shaderFor(color, radius);
+      canvas.drawCircle(Offset.zero, radius, _sharedPaint);
+      canvas.restore();
     }
   }
 
   @override
-  bool shouldRepaint(covariant _HaloBgPainter oldDelegate) => oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _HaloBgPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.color != color;
 }

@@ -6,6 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/utils/monster_speech.dart';
 
 void main() {
+  // 进程级 static 复位（每日预算 + 去重窗口现为 static 共享）：防跨用例顺序依赖。
+  setUp(MonsterSpeech.resetForTest);
+
   group('pick（变量渲染与去重）', () {
     test('变量替换：days/streak/balance/stage 全渲染', () {
       final speech = MonsterSpeech(random: Random(1));

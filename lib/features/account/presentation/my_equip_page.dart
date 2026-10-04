@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
+import 'package:word_app/widgets/common/memo_future_builder.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/func_colors.dart';
@@ -169,10 +170,10 @@ class _StreakValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<int>(
-      future: reader.getStreakDays(),
-      builder: (context, snap) => Text(
-        snap.data == null ? '—' : '连击 ${snap.data} 天',
+    return MemoFutureBuilder<int>(
+      create: () => reader.getStreakDays(),
+      builder: (context, streakDays) => Text(
+        streakDays == null ? '—' : '连击 $streakDays 天',
         style: MwTypography.bodySm.copyWith(color: context.skin.colors.text2),
       ),
     );

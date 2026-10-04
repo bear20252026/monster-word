@@ -124,7 +124,11 @@ extension _TreasureCheckInUi on _TreasureCheckInPageState {
     const weekLabels = ['一', '二', '三', '四', '五', '六', '日'];
     return LayoutBuilder(
       builder: (context, constraints) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _computeGeometry());
+        // 回调内先查存活：同帧内 element 被卸载时 findRenderObject 会打在
+        // defunct element 上（热重载/测试可见的真实窗口）。
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _computeGeometry();
+        });
         return Stack(
           key: _stageKey,
           children: [

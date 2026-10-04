@@ -2,6 +2,7 @@ import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx_settings.dart';
 import 'package:word_app/core/utils/debug_log.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -59,10 +60,14 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
   ];
   final labels = const ['词书与用户数据库（并行）', '偏好设置', '音频会话', '依赖注册'];
 
-  // 蓝图 W3：音效静音偏好预加载（Sfx 门面读缓存）。
-  await SfxSettings.load();
-  // 「怪兽语音」开关预加载（默认开；实际出声另过 MonsterVoice 的四道闸）。
-  await MonsterVoiceSettings.load();
+  // 蓝图 W3：音效静音/怪兽语音偏好预加载（Sfx 门面读缓存）。
+  // 非关键偏好：读失败降级为默认值即可，不能把整个应用送进 bootstrap 兜底页。
+  try {
+    await SfxSettings.load();
+    await MonsterVoiceSettings.load();
+  } catch (e, s) {
+    reportSwallowedError('音效/语音偏好加载失败，按默认值继续', e, s);
+  }
   final total = steps.length;
   for (var i = 0; i < total; i++) {
     await steps[i]();
@@ -72,10 +77,16 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
 }
 
 void _configureGlobalErrorHandling() {
+  // 2026-10-04 审计（10-03 P2-8 落地）：SentryFlutter.init 的 FlutterErrorIntegration /
+  // OnErrorIntegration 会捕获事件后回调先前 handler——若这里再 reportSwallowedError，
+  // 同一错误在 Sentry 里变成 message 事件 + exception 事件两个 issue（build 错误三个）。
+  // 故 Sentry 启用期间三个 handler 只留 debugLog 本地观测，遥测交给 Sentry 自身集成；
+  // Sentry 未启用时 reportSwallowedError 本就 no-op，无需补报。
   ErrorWidget.builder = (details) {
     debugLog('[GlobalError] Widget build error: ${details.exception}');
-    // 审计 P2-3：release 下 debugLog 零输出，全局构建异常必须远程可见（保留 debugLog 双写）
-    reportSwallowedError('全局构建异常', details.exception, details.stack ?? StackTrace.current);
+    if (!Sentry.isEnabled) {
+      reportSwallowedError('全局构建异常', details.exception, details.stack ?? StackTrace.current);
+    }
     return AppBuildErrorPage(exception: details.exception);
   };
 
@@ -84,16 +95,18 @@ void _configureGlobalErrorHandling() {
     if (details.stack != null) {
       debugLog('[GlobalError] Stack:\n${details.stack}');
     }
-    // 审计 P2-3：release 下 debugLog 零输出，补远程上报（与 main.dart runZonedGuarded 的 Sentry 转发口径一致）
-    reportSwallowedError('全局 Flutter 异常', details.exception, details.stack ?? StackTrace.current);
+    if (!Sentry.isEnabled) {
+      reportSwallowedError('全局 Flutter 异常', details.exception, details.stack ?? StackTrace.current);
+    }
     FlutterError.presentError(details);
   };
 
   WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
     debugLog('[GlobalError] Uncaught: $error');
     debugLog('[GlobalError] Stack:\n$stack');
-    // 审计 P2-3：release 下 debugLog 零输出，补远程上报（与 main.dart runZonedGuarded 的 Sentry 转发口径一致）
-    reportSwallowedError('全局未捕获异常', error, stack);
+    if (!Sentry.isEnabled) {
+      reportSwallowedError('全局未捕获异常', error, stack);
+    }
     return true;
   };
 }

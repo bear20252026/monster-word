@@ -197,7 +197,7 @@ void main() {
         anyElement(contains('R5b')),
       );
       // app 层消费 core 允许
-      expect(check('app/web/uri_scheme_page.dart', 'core/web/base_web_page.dart'), isEmpty);
+      expect(check('app/app.dart', 'core/utils/monster_speech.dart'), isEmpty);
     });
 
     test('非 feature、非 core 壳层（遗留薄适配）依赖 feature 允许', () {

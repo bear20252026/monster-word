@@ -38,7 +38,8 @@ const _queries = [
 const _rounds = 3;
 
 Future<File> _prepareDb() async {
-  final out = File('${Directory.systemTemp.path}/wordbook_bench.db');
+  // pid 隔离：并发 suite / 上次被 kill 的截断残留会互相污染固定名缓存。
+  final out = File('${Directory.systemTemp.path}/wordbook_bench_$pid.db');
   if (out.existsSync() && out.lengthSync() > 100 * 1024 * 1024) return out;
   final gz = File('assets/db/wordbook.db.gz');
   final t0 = DateTime.now();
@@ -143,7 +144,7 @@ void main() {
     final database = WordBookDatabase.instance;
     database.debugInjectDbForTest(db);
     final index = CnSearchIndex();
-    final indexPath = '${Directory.systemTemp.path}/wordbook_cn_idx_bench.db';
+    final indexPath = '${Directory.systemTemp.path}/wordbook_cn_idx_bench_$pid.db';
 
     final t0 = DateTime.now();
     await index.ensureBuilt(wordsDb: db, wordsPath: dbFile.path, indexPath: indexPath);

@@ -496,8 +496,11 @@ class _DailyNewWordsSheetBodyState extends State<_DailyNewWordsSheetBody> {
 
   Future<void> _setGoal(int n) async {
     await context.read<TodayProgressStore>().setGoal(n);
+    // sheet 提前关闭（SP 写盘期间下滑）时 State 已 dispose，
+    // mounted 检查必须在对 controller 写值之前。
+    if (!mounted) return;
     _textCtrl.text = '$n';
-    if (mounted) setState(() {});
+    setState(() {});
   }
 
   @override

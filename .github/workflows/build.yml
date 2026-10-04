@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main ]
 
+# 最小权限基线：未显式声明 permissions 的 job 继承此 read-only，
+# 仅 release job 按需提升为 contents: write。
+permissions:
+  contents: read
+
 jobs:
   build-windows:
     runs-on: windows-latest

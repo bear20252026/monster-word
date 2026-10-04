@@ -53,32 +53,44 @@ class UserDatabase {
     final dbPath = p.join(dir.path, 'user_data.db');
 
     try {
-      _db = await openDatabase(
-        dbPath,
-        version: 4,
-        onCreate: _onCreate,
-        onUpgrade: _onUpgrade,
-        // 审计 I37：sqflite 默认静默降版本号且不回滚 schema。这里不抛错
-        //（抛错会落入下方删库重建路径毁掉用户数据），仅让降版本事件可观测。
-        onDowngrade: (db, oldVersion, newVersion) async {
-          reportSwallowedError(
-            '用户数据库版本回退（old=$oldVersion new=$newVersion），schema 未回滚',
-            StateError('database downgrade observed'),
-            StackTrace.current,
-          );
-        },
-      );
+      _db = await _open(dbPath);
     } catch (e, s) {
-      // 错误处理审计 P2：user_data.db 损坏（onUpgrade 抛错/磁盘错误）会让
-      // bootstrap 整体失败，runApp 永不执行（白屏死应用）。参照
-      // WordBookDatabase 的口径：删坏库重建一次；收藏/生词等可由
-      // SP 快照与 DAO 迁移路径回迁，优于完全起不来。
-      // 审计 P1-2：删库重建此前静默吞掉首错，重建失败时用户收藏/生词静默清空，
-      // 首错与删除失败都必须上报（与 wordbook_database.dart 打开失败重建同口径）。
-      reportSwallowedError('用户数据库打开失败，删除重建', e, s);
-      _db = await _deleteAndRebuild(dir, dbPath);
+      // 2026-10-04 审计 P1：打开失败不必然是损坏——Windows 上杀毒/备份软件
+      // 的瞬时文件锁、磁盘瞬时 IO 错同样会让 openDatabase 抛错；而 new_words
+      // （生词本）没有任何 SP 快照可回迁，误判损坏直接删库 = 永久清空。
+      // 先关句柄重试一次，仍失败才按损坏走「备份 + 重建」。
+      reportSwallowedError('用户数据库打开失败，关闭句柄后重试一次', e, s);
+      await _safeClose();
+      try {
+        _db = await _open(dbPath);
+      } catch (e2, s2) {
+        // 错误处理审计 P2：user_data.db 损坏（onUpgrade 抛错/磁盘错误）会让
+        // bootstrap 整体失败，runApp 永不执行（白屏死应用）。参照
+        // WordBookDatabase 的口径：删坏库重建一次；收藏/尖叫币可由 SP 快照
+        // 与 DAO 迁移路径回迁，优于完全起不来。首错与重建路径都必须上报。
+        reportSwallowedError('用户数据库重试仍失败，按损坏备份后删除重建', e2, s2);
+        _db = await _deleteAndRebuild(dir, dbPath);
+      }
     }
     _initialized = true;
+  }
+
+  Future<Database> _open(String dbPath) {
+    return openDatabase(
+      dbPath,
+      version: 4,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+      // 审计 I37：sqflite 默认静默降版本号且不回滚 schema。这里不抛错
+      //（抛错会落入下方删库重建路径毁掉用户数据），仅让降版本事件可观测。
+      onDowngrade: (db, oldVersion, newVersion) async {
+        reportSwallowedError(
+          '用户数据库版本回退（old=$oldVersion new=$newVersion），schema 未回滚',
+          StateError('database downgrade observed'),
+          StackTrace.current,
+        );
+      },
+    );
   }
 
   Future<Database> _deleteAndRebuild(Directory dir, String dbPath) async {
@@ -86,11 +98,23 @@ class UserDatabase {
     try {
       final file = File(p.join(dir.path, 'user_data.db'));
       if (file.existsSync()) {
-        file.deleteSync();
+        // 2026-10-04 审计 P1：损坏库先改名留档（.corrupt.bak，只保留最近一份）
+        // 再重建——生词本无快照，直接删除把「可人工抢救」变成「永久清空」。
+        final backup = File('$dbPath.corrupt.bak');
+        if (backup.existsSync()) backup.deleteSync();
+        file.renameSync(backup.path);
       }
     } catch (e, s) {
-      // 删除失败也上报；仍再开一次原库，仍失败让异常上抛（与重建前口径一致）
-      reportSwallowedError('用户数据库损坏文件删除失败，尝试直接重开', e, s);
+      // 改名失败（文件仍被占用等）也上报；退回直接删除，仍失败让异常上抛
+      reportSwallowedError('用户数据库损坏文件备份改名失败，尝试直接删除', e, s);
+      try {
+        final file = File(p.join(dir.path, 'user_data.db'));
+        if (file.existsSync()) {
+          file.deleteSync();
+        }
+      } catch (e2, s2) {
+        reportSwallowedError('用户数据库损坏文件删除失败，尝试直接重开', e2, s2);
+      }
     }
     // 审计 P3-2：journal/wal/shm 边车与主库同源损坏，只删主文件可能留下
     // 与新建库不一致的边车导致再次打开失败；清理失败不阻断重建，仅上报。

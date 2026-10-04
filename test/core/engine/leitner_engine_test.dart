@@ -91,7 +91,7 @@ void main() {
       final engine = LeitnerCardEngine(strategy: const LearnStrategy(groupSize: 3));
       final words = List.generate(6, (i) => _w('w$i'));
       engine.init(words);
-      expect(engine.currentWord()?.word, isNotNull);
+      expect(words.map((w) => w.word), contains(engine.currentWord()?.word), reason: '首词必须来自输入词表');
       engine.iReallyKnow();
       expect(engine.unFinishedNum(), 2); // 3 - 1
       expect(engine.remainWordsNum(), 5);

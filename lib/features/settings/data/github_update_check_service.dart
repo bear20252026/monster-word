@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
 import 'package:word_app/features/settings/domain/version_compare.dart';
 
@@ -39,7 +40,10 @@ class GithubUpdateCheckService implements UpdateCheckService {
         notes: (notes == null || notes.isEmpty) ? null : notes,
         hasUpdate: compareVersions(latest, currentVersion) > 0,
       );
-    } catch (_) {
+    } catch (e, s) {
+      // B 级：离线/超时/限流属正常降级，但 release 不可见会让更新检查
+      // 静默失效——上报后仍按失败态返回（UI 显示检查失败）。
+      reportSwallowedError('更新检查失败（离线/超时/限流）', e, s);
       return UpdateCheckResult(
         currentVersion: currentVersion,
         latestVersion: '',

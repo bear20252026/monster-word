@@ -16,6 +16,9 @@ class PresentationPrefs {
   static const String sessionTokenKey = AppPreferences.userToken;
   static const String sessionSecretKey = AppPreferences.userSecret;
 
+  /// 已兑换收藏章键前缀（单一事实来源：AppPreferences；兑换页与 redeemedBadgeCount 共用）。
+  static const String redeemedBadgePrefix = AppPreferences.redeemedBadgePrefix;
+
   final AppPreferences _p;
 
   int get todayLearned => _p.getTodayLearned();
