@@ -17,6 +17,20 @@ class MonsterIdentityPrefs {
   /// 未命名时的默认名。
   static const String defaultName = '咕噜';
 
+  // ── 测试注入缝（REG-START-002 / REG-HATCH-001 守护用）：SP 抛错场景
+  // 无法经 setMockInitialValues 造出，注入抛错闭包模拟磁盘故障。──
+  /// 破壳标记读取替身（非 null 时 [hatched] 直走替身）。
+  static Future<bool> Function()? hatchedOverride;
+
+  /// 命名保存替身（非 null 时 [save] 直走替身，可注入抛错）。
+  static Future<String> Function({required String name})? saveOverride;
+
+  /// 清除全部注入（测试 tearDown 调用；生产禁止调用）。
+  static void resetForTest() {
+    hatchedOverride = null;
+    saveOverride = null;
+  }
+
   /// 怪兽名（未命名返回 [defaultName]）。
   static Future<String> name() async {
     final prefs = await SharedPreferences.getInstance();
@@ -27,6 +41,8 @@ class MonsterIdentityPrefs {
   /// 返回**实际落库的名字**（空输入归一为 [defaultName]），供调用方直接开口自报家门，
   /// 避免各处重算一遍默认名口径。
   static Future<String> save({required String name}) async {
+    final override = saveOverride;
+    if (override != null) return override(name: name);
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
     final trimmed = name.trim();
@@ -41,6 +57,8 @@ class MonsterIdentityPrefs {
   }
 
   static Future<bool> get hatched async {
+    final override = hatchedOverride;
+    if (override != null) return override();
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(hatchedKey) == 1;
   }

@@ -14,6 +14,7 @@ import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/features/checkin/domain/checkin_status.dart';
+import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/learning/presentation/home_screen.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
@@ -39,7 +40,7 @@ void main() {
   Future<TodayProgressStore> pumpHome(
     WidgetTester tester, {
     FakeScareCoinStore? coinStore,
-    _StubCheckinReader reader = const _StubCheckinReader(),
+    CheckinStatusReader reader = const _StubCheckinReader(),
   }) async {
     tester.view.physicalSize = const Size(800, 1600); // 竖屏口径，避免默认 800x600 走横屏布局
     tester.view.devicePixelRatio = 1.0;
@@ -221,6 +222,36 @@ void main() {
     expect(c2.a, inInclusiveRange(0.40, 0.90));
     expect(c1, isNot(c2)); // 呼吸在动
   });
+
+  testWidgets('REG-FLAME-001: 签到后火苗 ticker 必须停（不全天 60fps 空转）', (tester) async {
+    bool flameAnimating() {
+      final state = tester.state(find.byWidgetPredicate((w) => w.runtimeType.toString() == '_CheckInStrip')) as dynamic;
+      return state.flameAnimatingForTest as bool;
+    }
+
+    // 未签到：呼吸在转（REG-FLAME 前置口径）。
+    final reader = _FlippableCheckinReader(checkedToday: false);
+    await pumpHome(tester, reader: reader);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(flameAnimating(), isTrue, reason: '未签到时火苗呼吸必须开着');
+
+    // 真实 reload 触发路径：点开签到条（推聚宝日历）再返回 → _openSheet 返回后 _reload。
+    // （两次 pumpHome 根组件同类型会复用 Element，_reload 不会重跑——必须走真实路径。）
+    reader.checkedToday = true;
+    await tester.ensureVisible(find.text('今天还没签到，别断啦'));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.text('今天还没签到，别断啦'), warnIfMissed: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    // 过渡期间路由文本可能带 offstage 标记：finder 必须带上 skipOffstage:false。
+    expect(find.text('page:${RouteNames.treasureCheckIn}', skipOffstage: false), findsOneWidget, reason: '签到条应推开聚宝日历');
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(flameAnimating(), isFalse, reason: '签到后返回首页，_reload 必须 stop 火苗 ticker');
+    await tester.pump(const Duration(milliseconds: 2000)); // 收敛 home 其余延时
+  });
 }
 
 /// 测试替身：CheckinStatusReader（默认未签到口径）。
@@ -241,6 +272,27 @@ class _StubCheckinReader implements CheckinStatusReader {
 
   @override
   Future<bool> hasCheckedInToday() async => false;
+}
+
+/// 可变签到读取替身：REG-FLAME 用（签到状态在会话中途翻转）。
+class _FlippableCheckinReader implements CheckinStatusReader {
+  _FlippableCheckinReader({required this.checkedToday});
+
+  bool checkedToday;
+
+  @override
+  Future<CheckinStatus> getStatus() async => const CheckinStatus.empty();
+
+  @override
+  Future<Set<String>> getCheckinDates() async => {
+    for (var i = 1; i <= 12; i++) '2026-09-${i.toString().padLeft(2, '0')}',
+  };
+
+  @override
+  Future<int> getStreakDays() async => 5;
+
+  @override
+  Future<bool> hasCheckedInToday() async => checkedToday;
 }
 
 /// n 个互不相同的签到日期串（累计天数即 n）。

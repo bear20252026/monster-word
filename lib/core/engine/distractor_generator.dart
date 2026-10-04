@@ -17,11 +17,14 @@ List<WordChoicePair> buildRandomFourChoices(MwWordProcess? current, Iterable<MwW
   // 正确选项
   final correctPair = WordChoicePair(current.word, current.interpret);
 
-  // 构建干扰项池（排除当前单词，按单词去重）
+  // 构建干扰项池（排除当前单词，按单词去重，按释义去重——头注释契约；
+  // 原实现只按单词去重，同义干扰项可重复出现造成两个「都对」的选项）。
+  // 释义集合以当前词释义为种子：与正确项同义的干扰项同样排除。
   final seen = <String>{current.word};
+  final seenInterpret = <String>{current.interpret};
   final distractorPool = <WordChoicePair>[];
   for (final w in pool) {
-    if (w.interpret.isNotEmpty && !seen.contains(w.word)) {
+    if (w.interpret.isNotEmpty && !seen.contains(w.word) && seenInterpret.add(w.interpret)) {
       seen.add(w.word);
       distractorPool.add(WordChoicePair(w.word, w.interpret));
     }

@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/utils/monster_rhythm.dart';
 import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/core/utils/sfx_settings.dart';
@@ -33,7 +34,10 @@ void main() {
     hold = null;
     SfxSettings.current = SfxMode.all;
     MonsterVoiceSettings.enabled = true;
+    // 夜息闸（W4.5）时间免疫：默认 pin 白天，夜间行为由专门用例 pin 23 点。
+    MonsterRhythm.nowOverride = () => DateTime(2026, 10, 4, 10);
   });
+  tearDown(MonsterRhythm.resetForTest);
 
   group('出声条件', () {
     test('四道闸全过：原样念出并返回 true', () async {
@@ -71,6 +75,15 @@ void main() {
       expect(spoken, ['你好']);
     });
 
+    test('夜息闸（W4.5）：22:00–6:00 它睡了——任何时刻都不出声，气泡照常', () async {
+      MonsterRhythm.nowOverride = () => DateTime(2026, 10, 4, 23);
+      expect(await build().say('我就知道你会回来！'), isFalse);
+      expect(spoken, isEmpty);
+      // 凌晨同样安静
+      MonsterRhythm.nowOverride = () => DateTime(2026, 10, 5, 3);
+      expect(await build().say('你好'), isFalse);
+      expect(spoken, isEmpty);
+    });
     test('发声实际抛错：返回 false 不炸调用方（仪式不被声音拖垮）', () async {
       expect(await build(throwOnSpeak: StateError('no voice')).say('你好'), isFalse);
       expect(spoken, isEmpty);

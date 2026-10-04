@@ -11,6 +11,7 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/core/utils/monster_rhythm.dart';
 
 /// 音效通道（目录即分类，防混用）。
 enum SfxChannel { ui, quiz, celebrate, monster }
@@ -71,19 +72,20 @@ class SfxPlayer {
   static final Map<Sfx, DateTime> _lastPlay = {};
 
   /// 是否夜间（22:00-次日 6:00）——全局 -6dB。
-  static bool get _isNight {
-    final h = DateTime.now().hour;
-    return h >= 22 || h < 6;
-  }
+  /// 与 MonsterRhythm 夜息窗口对齐（同一节律，勿改出一套时间口径）。
+  static bool get _isNight => MonsterRhythm.isSleepTime();
 
-  /// 音量：通道基准 × 夜间衰减。
-  static double _volumeFor(SfxChannel channel) {
+  /// 音量：通道基准 × 夜间衰减（纯函数表测锚点）。
+  /// [mode] 非 all 一律 0（播放侧已短路，这里保证语义自洽）。
+  static double volumeFor(SfxChannel channel, {required SfxMode mode, required bool isNight}) {
     if (mode != SfxMode.all) return 0;
-    // celebrate 全量；quiz/ui 打折；夜间统一 -6dB（约 ×0.5）。
+    // celebrate 全量；quiz/ui 打折；monster 次之；夜间统一 -6dB（约 ×0.5）。
     const base = {SfxChannel.celebrate: 1.0, SfxChannel.quiz: 0.85, SfxChannel.ui: 0.6, SfxChannel.monster: 0.8};
     final v = base[channel] ?? 0.8;
-    return _isNight ? v * 0.5 : v;
+    return isNight ? v * 0.5 : v;
   }
+
+  static double _volumeFor(SfxChannel channel) => volumeFor(channel, mode: mode, isNight: _isNight);
 
   /// 播放一次音效（静音/仅视觉模式下为 no-op，视觉庆祝照常）。
   static Future<void> play(Sfx sfx) async {

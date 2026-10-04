@@ -97,7 +97,7 @@ class TextAudioPlayer {
       fallbackUrl = '$_qiniuResourceUrl$audioUrl';
     }
 
-    final result = await _AudioDownloader.downloadFile(localPath, primaryUrl, fallbackUrl: fallbackUrl);
+    final result = await AudioDownloader.downloadFile(localPath, primaryUrl, fallbackUrl: fallbackUrl);
 
     if (result.success && result.file != null) {
       playStateListener?.onLoadSuc(audioUrl);
