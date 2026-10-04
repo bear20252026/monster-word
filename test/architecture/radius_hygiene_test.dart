@@ -1,9 +1,13 @@
-// 圆角卫生守卫（棘轮）——BorderRadius.circular(数字) 只减不增。
+// 圆角卫生守卫（棘轮）——Radius.circular(数字) 只减不增。
 //
 // 背景：圆角字面量曾达 ~100 处（B1 只清了颜色）。v2.8.4 批量收敛为
 // context.design.radius 阶梯（6 xs / 10 sm / 14 md / 16 control / 20 lg /
 // 24 xl / 28 sheet / 32 xxl / 9999 pill），存量降到棘轮上限以下。
 // 本测试锁定：消费处数字字面量总数 ≤ 上限；移除存量时同步下调。
+// 2026-10-05 审计（Q2）：正则从 `BorderRadius\.circular(N)` 扩为
+// `Radius\.circular(N)`——vertical/horizontal(…: Radius.circular(N)) 形态
+// 此前完全不可见（8+ 处活体绕过）；新正则同时覆盖两种前缀。上限随可见
+// 存量上调，新违规照拦（棘轮只减不增）。
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -16,10 +20,13 @@ const _whitelist = <String>[
 
 const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app'];
 
-/// 棘轮上限：当前存量。只允许下降；清理存量后请把数字改小。
-const _ceiling = 3;
+/// 棘轮上限：当前存量（2026-10-05 正则扩宽后可见 11 处：
+/// appearance/lib_select/review_dialog/settings_bottom_sheet/mw_modal/
+/// mw_style_grid×2/redeem_swallow/global_nav_history_bar×3）。
+/// 只允许下降；清理存量后请把数字改小。
+const _ceiling = 11;
 
-final _pattern = RegExp(r'BorderRadius\.circular\(\d+\)');
+final _pattern = RegExp(r'Radius\.circular\(\d+\)');
 
 void main() {
   test('BorderRadius.circular 数字字面量存量只减不增（当前上限 $_ceiling）', () {

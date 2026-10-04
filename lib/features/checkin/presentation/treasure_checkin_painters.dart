@@ -12,6 +12,7 @@ class _SealBadge extends StatelessWidget {
     required this.squareness,
     required this.glowAlpha,
     required this.reduceMotion,
+    this.frame,
   });
 
   final _BadgeKind kind;
@@ -19,6 +20,10 @@ class _SealBadge extends StatelessWidget {
   final double squareness;
   final double glowAlpha;
   final bool reduceMotion;
+
+  /// 今日徽章虚线环的逐帧重绘信号（State._fxSignal；性能审计 P2——
+  /// 全页 setState 停止后，环的旋转由本信号 + RepaintBoundary 自驱）。
+  final Listenable? frame;
 
   static Color numColor(_BadgeKind kind) => switch (kind) {
     _BadgeKind.checked => TreasurePalette.checkedNum,
@@ -39,9 +44,15 @@ class _SealBadge extends StatelessWidget {
             size: const Size(44, 44),
             painter: _SealPainter(kind: kind, squareness: squareness, glowAlpha: glowAlpha),
           ),
-          // 今日：品牌绿虚线旋转描边（聚合后持续旋转）。
+          // 今日：品牌绿虚线旋转描边（聚合后持续旋转；frame 信号自驱重绘）。
           if (kind == _BadgeKind.today && !reduceMotion)
-            const Positioned.fill(child: CustomPaint(painter: _DashedRingPainter())),
+            Positioned.fill(
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  painter: frame == null ? const _DashedRingPainter() : _DashedRingPainter(repaint: frame),
+                ),
+              ),
+            ),
           Text(
             '$num',
             style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w800, color: numColor(kind)),
@@ -60,21 +71,26 @@ class _SealPainter extends CustomPainter {
   final double squareness;
   final double glowAlpha;
 
-  /// 花齿极坐标轮廓（同原型 sealPath(24,24,22.4,2.8,12)）。
+  /// 花齿极坐标轮廓缓存（同原型 sealPath(24,24,22.4,2.8,12)）。
+  /// 徽章尺寸恒 44，144 段折线全页 31 个徽章共享同一 Path。
+  static final Map<double, Path> _flowerCache = {};
+
   static Path flowerPath(Size size) {
-    final unit = size.width / 48;
-    final cx = 24 * unit, cy = 24 * unit, R = 22.4 * unit, amp = 2.8 * unit;
-    final path = Path();
-    const n = 144;
-    for (var i = 0; i <= n; i++) {
-      final a = i / n * math.pi * 2;
-      final rad = R - amp * (0.5 - 0.5 * math.cos(12 * a));
-      final x = cx + math.cos(a - math.pi / 2) * rad;
-      final y = cy + math.sin(a - math.pi / 2) * rad;
-      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
-    }
-    path.close();
-    return path;
+    return _flowerCache.putIfAbsent(size.width, () {
+      final unit = size.width / 48;
+      final cx = 24 * unit, cy = 24 * unit, R = 22.4 * unit, amp = 2.8 * unit;
+      final path = Path();
+      const n = 144;
+      for (var i = 0; i <= n; i++) {
+        final a = i / n * math.pi * 2;
+        final rad = R - amp * (0.5 - 0.5 * math.cos(12 * a));
+        final x = cx + math.cos(a - math.pi / 2) * rad;
+        final y = cy + math.sin(a - math.pi / 2) * rad;
+        i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+      }
+      path.close();
+      return path;
+    });
   }
 
   @override
@@ -166,8 +182,14 @@ class _SealPainter extends CustomPainter {
 }
 
 /// 今日徽章的品牌绿虚线旋转描边（14s/圈）。
+/// [repaint] 提供（正常路径）时重绘由信号直驱；null（无信号语境）时
+/// 退回 shouldRepaint=true 旧口径（跟随整页重建）。
 class _DashedRingPainter extends CustomPainter {
-  const _DashedRingPainter();
+  // 不能用 super 参数：_hasSignal 需要捕获 repaint 是否被提供。
+  // ignore: use_super_parameters
+  const _DashedRingPainter({Listenable? repaint}) : _hasSignal = repaint != null, super(repaint: repaint);
+
+  final bool _hasSignal;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -190,7 +212,7 @@ class _DashedRingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DashedRingPainter old) => true;
+  bool shouldRepaint(covariant _DashedRingPainter old) => !_hasSignal;
 }
 
 /// 小怪兽储蓄罐（专利特征④，几何同原型 piggy SVG 220×128）。
@@ -322,9 +344,16 @@ class _PiggyPainter extends CustomPainter {
 
 /// 全页粒子层：氛围微尘 + 环绕尘粒 + 金币弹道（页面坐标系）。
 class _FxPainter extends CustomPainter {
-  _FxPainter({required this.state});
+  // 重绘全权由 repaint（State._fxSignal）驱动；painter 实例在粒子层
+  // RepaintBoundary 内跨帧存活，Paint 字段跨帧复用（性能审计 P2：原每帧
+  // 循环内 new Paint ~150 个）。
+  _FxPainter({required this.state, required super.repaint});
 
   final _TreasureCheckInPageState state;
+
+  final Paint _ambientPaint = Paint()..color = TreasurePalette.dust;
+  final Paint _dustPaint = Paint();
+  final Paint _burstPaint = Paint();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -332,10 +361,9 @@ class _FxPainter extends CustomPainter {
     if (st._stageW <= 0) return;
 
     // 氛围微尘。
-    final ambientPaint = Paint()..color = TreasurePalette.dust;
     for (final a in st._ambient) {
-      ambientPaint.color = TreasurePalette.dust.withValues(alpha: 0.10 + 0.10 * (0.5 + 0.5 * math.sin(a.tw)));
-      canvas.drawCircle(Offset(_stageOriginX(st) + a.x, _stageOriginY(st) + a.y), a.size, ambientPaint);
+      _ambientPaint.color = TreasurePalette.dust.withValues(alpha: 0.10 + 0.10 * (0.5 + 0.5 * math.sin(a.tw)));
+      canvas.drawCircle(Offset(_stageOriginX(st) + a.x, _stageOriginY(st) + a.y), a.size, _ambientPaint);
     }
 
     // 环绕尘粒（绕徽章 / 螺旋吸入）。
@@ -343,11 +371,8 @@ class _FxPainter extends CustomPainter {
       final d = st._days[p.part];
       final px = _stageOriginX(st) + d.x + math.cos(p.ang) * p.rad;
       final py = _stageOriginY(st) + d.y + math.sin(p.ang) * p.rad * 0.82;
-      canvas.drawCircle(
-        Offset(px, py),
-        p.size,
-        Paint()..color = TreasurePalette.coinColors[p.color].withValues(alpha: p.alpha.clamp(0.0, 1.0)),
-      );
+      _dustPaint.color = TreasurePalette.coinColors[p.color].withValues(alpha: p.alpha.clamp(0.0, 1.0));
+      canvas.drawCircle(Offset(px, py), p.size, _dustPaint);
     }
 
     // 金币弹道：二次贝塞尔 + smoothstep（专利特征③）。
@@ -357,11 +382,8 @@ class _FxPainter extends CustomPainter {
       final e = u * u * (3 - 2 * u);
       final x = (1 - e) * (1 - e) * c.sx + 2 * (1 - e) * e * c.cx + e * e * st._bellyPoint.dx;
       final y = (1 - e) * (1 - e) * c.sy + 2 * (1 - e) * e * c.cy + e * e * st._bellyPoint.dy;
-      canvas.drawCircle(
-        Offset(x, y),
-        c.size * (1 - u * 0.35),
-        Paint()..color = TreasurePalette.coinColors[c.color].withValues(alpha: 1 - u * u * 0.4),
-      );
+      _burstPaint.color = TreasurePalette.coinColors[c.color].withValues(alpha: 1 - u * u * 0.4);
+      canvas.drawCircle(Offset(x, y), c.size * (1 - u * 0.35), _burstPaint);
     }
   }
 
@@ -369,7 +391,7 @@ class _FxPainter extends CustomPainter {
   double _stageOriginY(_TreasureCheckInPageState st) => st._stageOrigin.dy;
 
   @override
-  bool shouldRepaint(covariant _FxPainter old) => true;
+  bool shouldRepaint(covariant _FxPainter old) => false;
 }
 
 /// 金币小图标（顶部余额胶囊 / CTA）。
