@@ -9,6 +9,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:word_app/core/utils/monster_speech.dart';
+import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
@@ -119,6 +121,10 @@ class _EvolutionCeremonyState extends State<_EvolutionCeremony> with TickerProvi
       if (!mounted) return;
       _crossCtrl.forward();
       _confettiCtrl.play();
+      // 「怪兽开口」第三刻：新形态现身那一刻说出进化台词——这也是 MonsterSpeech 的
+      // milestone 槽首次接进生产（此前只有测试消费）。闸门拦下则只有画面，无声音。
+      final line = MonsterSpeech().pick(SpeechSlot.milestone, vars: {'stage': MonsterIcon.stageName(widget.toStage)});
+      unawaited(MonsterVoice.system.say(line));
     });
     // 总驻留后自动关（点击关共用 _finish，幂等）。
     Future<void>.delayed(widget.totalHold, () {

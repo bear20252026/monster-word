@@ -23,6 +23,12 @@ class SystemTts {
   double _pitch = 1.0;
   TtsLanguage _lastLanguage = TtsLanguage.english;
 
+  // 怪兽发声闸门用：系统引擎同一时刻只能说一句，单词/例句朗读正在跑时怪兽必须让路。
+  bool _speaking = false;
+
+  // 中文语音包探测结果：null=尚未探到，true=可用，false=确认缺失（缺失即静默降级回文案气泡）。
+  bool? _chineseVoiceAvailable;
+
   // 状态回调
   VoidCallback? onStart;
   VoidCallback? onComplete;
@@ -52,22 +58,26 @@ class SystemTts {
       // 事件监听
       _tts.setStartHandler(() {
         debugLog('[SystemTts] Speech started');
+        _speaking = true;
         onStart?.call();
       });
 
       _tts.setCompletionHandler(() {
         debugLog('[SystemTts] Speech completed');
+        _speaking = false;
         onComplete?.call();
       });
 
       _tts.setErrorHandler((msg) {
         debugLog('[SystemTts] Error: $msg');
+        _speaking = false;
         onErrorHandler?.call();
       });
 
       if (!kIsWeb) {
         _tts.setCancelHandler(() {
           debugLog('[SystemTts] Speech cancelled');
+          _speaking = false;
         });
 
         _tts.setPauseHandler(() {
@@ -171,6 +181,7 @@ class SystemTts {
   Future<void> stop() async {
     try {
       await _tts.stop();
+      _speaking = false; // 停止不一定触发 cancel/error 回调，忙标记必须自己清
     } catch (e) {
       debugLog('[SystemTts] stop error: $e');
     }
@@ -250,6 +261,25 @@ class SystemTts {
   }
 
   bool get initialized => _initialized;
+
+  /// 系统引擎正在朗读中（单词/例句/怪兽台词共用同一引擎，一次只能说一句）。
+  bool get isSpeaking => _speaking;
+
+  /// 设备中文语音可用性：true 可用 / false 确认缺失 / null 无从判断（按可用先试一次）。
+  ///
+  /// 只在首次发声时探一次并缓存——缺中文语音包的设备（部分 Windows / 精简 ROM 安卓）
+  /// 上怪兽不出声，退回文案气泡，不反复敲引擎。
+  Future<bool?> chineseVoiceAvailable() async {
+    if (_chineseVoiceAvailable != null) return _chineseVoiceAvailable;
+    final langs = await getLanguages();
+    final flat = langs.map((e) => '$e').join('|').toLowerCase();
+    if (flat.isEmpty) return null; // 平台不返回列表：不下结论
+    _chineseVoiceAvailable = flat.contains('zh');
+    return _chineseVoiceAvailable;
+  }
+
+  /// 发声实际失败后标记不可用（本进程内不再打扰）。
+  void markChineseVoiceUnavailable() => _chineseVoiceAvailable = false;
 }
 
 // 便捷函数

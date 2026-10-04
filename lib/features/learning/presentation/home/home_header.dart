@@ -102,6 +102,9 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
         _gurgleVisible = true;
       });
       _speech.consumeBudget();
+      // 「怪兽开口」第二刻：回归时把这句欢迎念出来。点击气泡不发声——
+      // 主动弹才是它开口说话，否则每点一下都出声就成了噪音。
+      unawaited(MonsterVoice.system.say(_greetingText));
       unawaited(_settleGurgle());
     } catch (e, s) {
       reportSwallowedError('首页主动问候气泡失败', e, s);
@@ -219,12 +222,12 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
           children: [
             AnimatedBuilder(
               animation: _mouth,
-              builder: (context, _) => MonsterIcon(size: 32, mouthOpen: 0.3 * _mouth.value),
+              builder: (context, _) => MonsterIcon(size: 44, mouthOpen: 0.3 * _mouth.value),
             ),
             // 「咕噜~」气泡：悬在怪兽头顶右上，默认隐藏
             Positioned(
-              top: -16,
-              left: 20,
+              top: -14,
+              left: 26,
               child: AnimatedOpacity(
                 opacity: _gurgleVisible ? 1 : 0,
                 duration: const Duration(milliseconds: 180),

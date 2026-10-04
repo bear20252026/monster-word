@@ -93,6 +93,7 @@
 | REG-START-002 | 已登录用户可能永久卡死启动页 | `_goToMain` 改 async 后以 `unawaited` 调用，其内部 await 脱离外层 try/catch，而 `_phase` 已置 completed 拒绝一切重入 | 2026-10-04 P2 批（P2-7：改回 try 内 await + `_goToMain` 内部读失败降级进主页） | 守护测试待补（需 SharedPreferences 读抛错注入点）；正常流仍由 `regression_start_flow_test.dart` 覆盖 |
 | REG-HATCH-001 | 命名仪式唯一持久化路径无 catch：失败时按钮无 loading 无提示，异常经 zone 变匿名全局错 | 交付即接线缺口的错误边界侧 | 2026-10-04 P2 批（P2-9：try/catch + reportSwallowedError + SnackBar + `_saving` 闸门） | 守护测试待补（SP 写抛错无注入点） |
 | REG-FLAME-001 | 首页签到后火苗 ticker 永不停止，残留全天 60fps 空转（AnimatedBuilder 已不在树上） | controller 只启动不回收 | 2026-10-04 P2 批（P2-10：`_reload` 已签/降级分支 `_flameCtrl.stop()`） | 守护测试待补（controller 私有；建议随 I 类常驻 ticker 专测一并做） |
+| REG-VOICE-001 | 同一帧内两场仪式双双通过发声闸门 → 系统 TTS 被连续 speak 两次，前一句被后一句截断（台词堆叠） | 「查 `_talking` → await 语音可用性 → 才置位」不是原子占用：两个调用在同一次 await 的交叠期都过了闸 | 2026-10-04「怪兽开口」批（写测试时抓到，非事后补记——占用发声道移到任何 await 之前） | `test/core/utils/monster_voice_test.dart`（发声期间的第二个请求返回 false 且只念一句，结束后闸门复位） |
 
 ## 修复新 bug 的流程
 

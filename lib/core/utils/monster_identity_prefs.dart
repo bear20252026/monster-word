@@ -24,15 +24,20 @@ class MonsterIdentityPrefs {
   }
 
   /// 三段顺序写（非原子）：半写态由下次启动重演仪式覆盖，`hatched` 未置位即视为未命名。
-  static Future<void> save({required String name}) async {
+  /// 返回**实际落库的名字**（空输入归一为 [defaultName]），供调用方直接开口自报家门，
+  /// 避免各处重算一遍默认名口径。
+  static Future<String> save({required String name}) async {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
-    await prefs.setString(nameKey, name.trim().isEmpty ? defaultName : name.trim());
+    final trimmed = name.trim();
+    final stored = trimmed.isEmpty ? defaultName : trimmed;
+    await prefs.setString(nameKey, stored);
     await prefs.setString(
       birthdayKey,
       '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
     );
     await prefs.setInt(hatchedKey, 1);
+    return stored;
   }
 
   static Future<bool> get hatched async {
