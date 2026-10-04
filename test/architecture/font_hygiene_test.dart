@@ -22,9 +22,11 @@ const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app'];
 /// 棘轮上限：当前存量（batch7 起仅剩 hero 字号 40 一处）。只允许下降。
 const _ceiling = 1;
 
-final _pattern = RegExp(r'fontSize:\s*\d+\s*[,)]');
-final _scalePattern = RegExp(r'fontSize:\s*\d+\s*\*');
-const _scaleCeiling = 0;
+// 2026-10-05 审计（Q3）：放宽到小数字面量——`fontSize: 40.0 * fontScale`
+// 形态此前不可见（dictionary_page hero 现形）。
+final _pattern = RegExp(r'fontSize:\s*\d+(?:\.\d+)?\s*[,)]');
+final _scalePattern = RegExp(r'fontSize:\s*\d+(?:\.\d+)?\s*\*');
+const _scaleCeiling = 1;
 
 void main() {
   test('fontSize 数字字面量存量只减不增（当前上限 $_ceiling）', () {

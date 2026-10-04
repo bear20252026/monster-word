@@ -182,6 +182,7 @@ extension _TreasureCheckInUi on _TreasureCheckInPageState {
                             squareness: d.square,
                             glowAlpha: i == _justIndex ? _glowValue(_now - _justAt) : 0,
                             reduceMotion: _reduceMotion,
+                            frame: _fxSignal,
                           ),
                         ),
                       ),

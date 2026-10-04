@@ -69,6 +69,11 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
 
   // ── 模拟 ──
   late final Ticker _ticker = createTicker(_onTick);
+
+  /// 粒子层重绘信号（性能审计 P2，2026-10-05）：徽章弹簧收敛后全页 setState
+  /// 停止，fx 层经本信号 + RepaintBoundary 自驱重绘——微尘/氛围常驻但只重绘
+  /// 自己那一层，徽章/储蓄罐/CTA 不再陪跑 60fps。
+  final _TickSignal _fxSignal = _TickSignal();
   double _now = 0;
   String _mode = 'scatter'; // scatter | grid
   List<_DaySim> _days = [];
@@ -107,6 +112,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
   @override
   void dispose() {
     _ticker.dispose();
+    _fxSignal.dispose();
     super.dispose();
   }
 
@@ -411,6 +417,8 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     final t = now;
     final assembled = _mode == 'grid';
 
+    // 徽章弹簧是否仍在收敛（性能审计 P2：收敛后可停全页 setState）。
+    var springActive = !assembled;
     for (var i = 0; i < _days.length; i++) {
       final d = _days[i];
       final ready = assembled && now >= d.assembleAt;
@@ -440,6 +448,15 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
       d.rot += d.vrot * dt;
       d.scale += d.vscale * dt;
       d.square = ready ? ((now - d.assembleAt - 0.15) / 0.45).clamp(0.0, 1.0) : 0.0;
+      // 收敛判据（阈值按舞台像素量级取，远小于可视差）。
+      if (springActive ||
+          d.vx.abs() > 0.5 ||
+          d.vy.abs() > 0.5 ||
+          d.vrot.abs() > 0.1 ||
+          (tx - d.x).abs() > 0.25 ||
+          (ty - d.y).abs() > 0.25) {
+        springActive = true;
+      }
     }
 
     // 肚皮充盈度平滑趋近目标。
@@ -479,7 +496,20 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     }
     _bumpT += dt;
 
-    if (mounted) setState(() {});
+    // 全页重建只在「有 UI 在动」时发生：busy（签到结算）/散落模式/金币弹道/
+    // 肚皮趋近/+N 浮字/罐体 bump/徽章弹簧。全部收敛后仅重绘粒子层
+    // （_fxSignal + RepaintBoundary），页面停留期间不再 60fps 整页 setState。
+    final uiActive =
+        _busy ||
+        _mode != 'grid' ||
+        _burst.isNotEmpty ||
+        (_bellyTarget - _bellyPct).abs() > 0.001 ||
+        (_now - _gainAt) < 1.0 ||
+        _bumpT < 0.7 ||
+        springActive;
+    if (!mounted) return;
+    _fxSignal.fire();
+    if (uiActive) setState(() {});
   }
 
   // ── 几何缓存（舞台原点 / 罐口） ──
@@ -546,11 +576,16 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
               ),
             ),
             // 粒子层（尘粒 + 金币弹道），覆盖全页：徽章散落区与罐口同坐标系。
-            // 重建由主循环 setState 驱动（Ticker 非 Listenable）。
+            // 重绘由 _fxSignal 经 RepaintBoundary 直驱——只重绘本层，
+            // 不再牵动徽章/储蓄罐/CTA 整页重建（性能审计 P2）。
             if (!_reduceMotion)
               Positioned.fill(
                 child: IgnorePointer(
-                  child: CustomPaint(painter: _FxPainter(state: this)),
+                  child: RepaintBoundary(
+                    child: CustomPaint(
+                      painter: _FxPainter(state: this, repaint: _fxSignal),
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -558,4 +593,10 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
       ),
     );
   }
+}
+
+/// Ticker 每帧通知一次的自定义 Listenable（不用 ChangeNotifier：notifyListeners
+/// 是 @protected 成员，State 外调用属违规；此处是受控的帧信号语义）。
+class _TickSignal extends ChangeNotifier {
+  void fire() => notifyListeners();
 }
