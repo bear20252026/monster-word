@@ -79,5 +79,6 @@ installer.iss Windows 安装器脚本
 - `docs/architecture_boundaries.md` —— 架构边界现行规范（import 分层、路由、主题 token、数据层口径）
 - `docs/regression_ledger.md` —— 回归台账（REG-ID 体系）
 - `docs/release_checklist.md` / `docs/release_pipeline.md` / `docs/commit_convention.md` —— 发版与协作规范
+- `docs/boss_siege_design.md` —— 「Boss 战复习」设计稿（**已定未实施**：复习链路挂载点、两个到期数的口径分工、守卫硬约束清单）
 - `docs/audit/` —— 重大审计报告存档（最新：2026-09-27 六维全面审计，五轮修复 144 项）
 - `docs/reports/` —— 历史报告归档（整体标记 HISTORICAL，为过程快照而非现状）
