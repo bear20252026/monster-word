@@ -1,6 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:word_app/core/presentation/responsive.dart';
+import 'package:word_app/core/utils/boss_siege.dart';
+import 'package:word_app/core/utils/haptics_gate.dart';
+import 'package:word_app/core/utils/monster_voice.dart';
+import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/mw_button.dart';
@@ -74,14 +80,44 @@ class FormalReviewLoadErrorView extends StatelessWidget {
 }
 
 /// 正式复习完成页面：情绪收尾瞬间——绿色完成环 + 衬线大数字 + 胶囊返回。
-class FormalReviewCompleteView extends StatelessWidget {
+///
+/// 「Boss 战围城」的守城庆典挂在这里：真的击退过（done>0）才放里程碑音、才让怪兽开口。
+class FormalReviewCompleteView extends StatefulWidget {
   const FormalReviewCompleteView({super.key, required this.done, required this.onReturnHome});
 
   final int done;
   final VoidCallback onReturnHome;
 
   @override
+  State<FormalReviewCompleteView> createState() => _FormalReviewCompleteViewState();
+}
+
+class _FormalReviewCompleteViewState extends State<FormalReviewCompleteView> {
+  bool _celebrated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.done > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _celebrate());
+    }
+  }
+
+  /// 守城成功收尾：里程碑音 + heavy 触觉 + 怪兽说出那句「这一城是你守住的」。
+  ///
+  /// 一题都没答（今天本来没有到期词）时不进来——没打过仗不能说守住了；
+  /// post-frame 而非 build 内触发，避免在构建期发副作用（同族仪式浮层口径）。
+  void _celebrate() {
+    if (_celebrated || !mounted) return;
+    _celebrated = true;
+    SfxPlayer.fire(Sfx.milestone);
+    HapticsGate.play(HapticCue.heavy);
+    unawaited(MonsterVoice.system.say(siegeVictoryLine));
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final done = widget.done;
     final skin = context.skin.colors;
     final resp = context.responsive;
     return Scaffold(
@@ -134,9 +170,13 @@ class FormalReviewCompleteView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text('已把今天到期的单词又牢牢记住了一遍', style: MwTypography.bodySm.copyWith(color: skin.text3)),
+            // done==0 时不能说「已把今天到期的单词记住了」——今天根本没有到期词。
+            Text(
+              done > 0 ? '已把今天到期的单词又牢牢记住了一遍' : siegeQuietLine,
+              style: MwTypography.bodySm.copyWith(color: skin.text3),
+            ),
             const SizedBox(height: 28),
-            MwButton(label: '返回首页', onTap: onReturnHome, minWidth: 180),
+            MwButton(label: '返回首页', onTap: widget.onReturnHome, minWidth: 180),
           ],
         ),
       ),

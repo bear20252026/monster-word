@@ -542,6 +542,10 @@ void main() {
         'lib/features/learning/presentation/widgets/formal_review_session_layout.dart',
         'lib/features/learning/presentation/widgets/formal_review_header.dart',
         'lib/features/learning/presentation/widgets/formal_review_question.dart',
+        // 2026-10-05「Boss 战围城」新增两个展示位：围城条带与完成页，同样只吃纯入参
+        // （HUD 的击退数就是协调层传入的 done，不在组件内自造第二个计数器）。
+        'lib/features/learning/presentation/widgets/boss_siege_header.dart',
+        'lib/features/learning/presentation/widgets/formal_review_state_views.dart',
       ];
       final executorSource = File('lib/features/learning/application/review_session_rating_executor.dart')
           .readAsStringSync();
