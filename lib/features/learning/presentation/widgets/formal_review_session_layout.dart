@@ -6,6 +6,7 @@ import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/features/learning/presentation/widgets/boss_siege_header.dart';
 import 'package:word_app/features/learning/presentation/widgets/formal_review_header.dart';
 import 'package:word_app/features/learning/presentation/widgets/formal_review_question.dart';
 
@@ -88,6 +89,8 @@ class FormalReviewSessionLayout extends StatelessWidget {
                     onMarkAsKnown: onMarkAsKnown,
                     onShowMore: onShowMore,
                   ),
+                  // 围城条带：把「还剩几只捣蛋兽」画在进度条下面，答掉一题少一只。
+                  BossSiegeHeader(done: done, total: total),
                   Expanded(
                     child: isLandscape
                         ? Row(

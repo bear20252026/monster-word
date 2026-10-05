@@ -11,6 +11,7 @@
 //   精确化留待持久化「首见 due 日期」（后续 W5）。
 // - todayCombo：LearningSessionState.combo（会话内连击）。
 // - returnedAfterGap：ScareCoinStore.checkinDates 最后日期距今天数。
+import 'package:word_app/core/utils/boss_siege.dart';
 import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 
@@ -39,8 +40,9 @@ class MonsterMoodResolver {
   static MonsterMood resolve({required int dueCount, required int todayCombo, required bool returnedAfterGap}) {
     // 回归惊喜优先：刚回家先开心（负向数据不出场）。
     if (returnedAfterGap) return MonsterMood.excited;
-    // 积压分级（近似口径见文件头）。
-    if (dueCount >= 40) return MonsterMood.worried;
+    // 积压分级（近似口径见文件头）。大军压境阈值与「Boss 战围城」档位同源，
+    // 单源定义在 core/utils/boss_siege.dart 的 legionDueThreshold。
+    if (dueCount >= legionDueThreshold) return MonsterMood.worried;
     if (dueCount > 0) return MonsterMood.sleepy;
     if (todayCombo >= 5) return MonsterMood.excited;
     return MonsterMood.calm;
