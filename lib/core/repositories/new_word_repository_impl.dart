@@ -10,6 +10,10 @@ class NewWordRepositoryImpl implements NewWordRepository {
 
   final UserDatabase _database;
 
+  /// 切换串行闸：toggle 是「查后改」跨 await，快速双击两次都读到「未加入」
+  /// 都走 add，终态停在已加入而非切换回（审计：check-then-act 竞态）。
+  Future<void> _toggleQueue = Future<void>.value();
+
   @override
   Future<bool> addNewWord(Word word, {String source = 'manual'}) async {
     _validateWord(word);
@@ -79,7 +83,13 @@ class NewWordRepositoryImpl implements NewWordRepository {
   }
 
   @override
-  Future<bool> toggleNewWord(Word word, {String source = 'manual'}) async {
+  Future<bool> toggleNewWord(Word word, {String source = 'manual'}) {
+    final run = _toggleQueue.then((_) => _toggleNewWordLocked(word, source: source));
+    _toggleQueue = run.then<void>((_) {}, onError: (Object _) {});
+    return run;
+  }
+
+  Future<bool> _toggleNewWordLocked(Word word, {String source = 'manual'}) async {
     _validateWord(word);
     if (await isNewWord(word.id)) {
       await removeNewWord(word.id);

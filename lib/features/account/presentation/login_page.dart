@@ -17,6 +17,7 @@ import 'package:word_app/widgets/monster_peek_overlay.dart';
 import 'package:word_app/widgets/animations.dart';
 import 'package:word_app/features/account/application/password_auth_store.dart';
 import 'package:word_app/features/account/application/sms_code_service.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 
 class LoginPage extends StatefulWidget {
@@ -202,11 +203,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
     if (username == null || username.isEmpty || !mounted) return;
 
-    if (!await auth.hasPassword(username)) {
-      _showToast('本机不存在账号「$username」');
+    String? phone;
+    try {
+      // 本机账号库（secure storage）读取抛 PlatformException 时按「读取失败」
+      // 提示，不能让按钮静默无响应（同文件登录主路径已接的同类异常口径）。
+      if (!await auth.hasPassword(username)) {
+        _showToast('本机不存在账号「$username」');
+        return;
+      }
+      phone = await auth.boundPhone(username);
+    } catch (e, s) {
+      reportSwallowedError('找回密码读取本机账号失败', e, s);
+      if (!mounted) return;
+      _showToast('本机账号读取失败，请稍后重试');
       return;
     }
-    final phone = await auth.boundPhone(username);
     if (phone == null) {
       _showToast('该账号未绑定手机号，无法短信找回；手机号格式的用户名注册时自动绑定');
       return;

@@ -16,7 +16,7 @@ import 'package:word_app/features/learning/data/review_schedule_store.dart';
 ///
 /// 批次 E（v2.7.56）起持久化层切换为独立 SQLite 库文件
 /// review_schedule.db（见 [ReviewScheduleStore] 与
-/// docs/fsrs_sqlite_migration_plan.md），写路径从"每次评分 3 次全量
+/// 原 docs/fsrs_sqlite_migration_plan.md，文件已不存在），写路径从"每次评分 3 次全量
 /// jsonEncode 重写 SP blob"变为单事务 O(1)。
 ///
 /// 迁移与降级策略（最保守路径）：
@@ -468,7 +468,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
 
   /// H2：E2 清 SP 前把快照挪到应急备份 key（不清除），供库损坏时人工恢复。
   ///
-  /// 恢复路径见 docs/fsrs_sqlite_migration_plan.md「E2 恢复」。
+  /// 恢复路径：SP 快照回放（原 docs/fsrs_sqlite_migration_plan.md「E2 恢复」，文件已不存在）。
   static const emergencyBackupKey = 'fsrs6_emergency_backup_v1';
 
   Future<void> _clearLegacySpSnapshotIfMigrated() async {

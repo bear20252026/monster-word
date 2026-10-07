@@ -84,7 +84,11 @@ Future<void> _extractBytesInBackground(Uint8List gzBytes, String dbPath) async {
           if (target.existsSync()) {
             try {
               await target.delete();
-            } catch (_) {}
+            } catch (e, s) {
+              // C 级豁免注释放宽为上报：删旧库失败会让 rename 紧随其后抛错，
+              // 上抛路径已带上下文；此处留痕以便区分「谁先失败」。
+              reportSwallowedError('词库解压：旧库删除失败（rename 将随后失败）', e, s);
+            }
           }
           await File(tmpDb).rename(dbPath);
           return;
@@ -98,7 +102,10 @@ Future<void> _extractBytesInBackground(Uint8List gzBytes, String dbPath) async {
           try {
             final sf = File('$dbPath.tmp');
             if (sf.existsSync()) await sf.delete();
-          } catch (_) {}
+          } catch (e, s) {
+            // C 级（清理临时文件失败无碍主流程），留痕防「永远成功」假象。
+            reportSwallowedError('词库解压：tmp 清理失败', e, s);
+          }
         }
       }
     });
@@ -107,7 +114,10 @@ Future<void> _extractBytesInBackground(Uint8List gzBytes, String dbPath) async {
       try {
         final sf = File(stale);
         if (sf.existsSync()) await sf.delete();
-      } catch (_) {}
+      } catch (e, s) {
+        // C 级（staging 残留只占磁盘，下次启动会再清）。
+        reportSwallowedError('词库解压：staging 清理失败（残留只占磁盘）', e, s);
+      }
     }
   }
 }
@@ -345,7 +355,11 @@ class WordBookDatabase {
     if (inflight != null) {
       try {
         await inflight.future;
-      } catch (_) {}
+      } catch (e, s) {
+        // 等待中的初始化失败由重建重做，但要留痕：否则首次初始化失败原因
+        // 被重建入口吞掉，排障时只见「重建又成功」不见「为何需要重建」。
+        reportSwallowedError('词库重建前等待 in-flight 初始化失败（将由重建重做）', e, s);
+      }
     }
     // A6：重建期间到达的 initialize() 挂到屏障上等待，不再与重建竞写库文件
     final initBarrier = Completer<void>();

@@ -54,10 +54,18 @@ class LearnPage extends StatefulWidget {
 
 class _LearnPageState extends State<LearnPage> {
   /// 顶栏余额刷新节拍（金币落袋时+1，_CoinPill 按 tick 重查余额）。
-  int _balanceTick = 0;
+  /// 用 ValueNotifier 局部通知：答对落币不再整页 setState——原先为刷新
+  /// 一颗金币 pill 重建整个 LearnPage（含 _WordArea/_QuizArea）。
+  final ValueNotifier<int> _balanceTick = ValueNotifier<int>(0);
 
   /// 顶栏金币 pill 定位（金币飞行终点）。
   final GlobalKey _pillKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _balanceTick.dispose();
+    super.dispose();
+  }
 
   Future<void> _playAudio(String word, {String? audioUrl}) async {
     final player = context.read<AudioPlaybackState>();
@@ -134,7 +142,7 @@ class _LearnPageState extends State<LearnPage> {
                                           pillKey: _pillKey,
                                           onRewarded: (_) {
                                             SfxPlayer.fire(Sfx.coinTick);
-                                            if (mounted) setState(() => _balanceTick++);
+                                            _balanceTick.value++;
                                           },
                                         ),
                                       ),
@@ -155,7 +163,7 @@ class _LearnPageState extends State<LearnPage> {
                                           pillKey: _pillKey,
                                           onRewarded: (_) {
                                             SfxPlayer.fire(Sfx.coinTick);
-                                            if (mounted) setState(() => _balanceTick++);
+                                            _balanceTick.value++;
                                           },
                                         ),
                                       ),
@@ -179,7 +187,7 @@ class _TopBar extends StatelessWidget {
 
   /// 金币 pill 定位＋刷新节拍（答对飞行终点，落袋刷新）。
   final GlobalKey pillKey;
-  final int balanceTick;
+  final ValueNotifier<int> balanceTick;
   const _TopBar({required this.skin, required this.state, required this.pillKey, required this.balanceTick});
 
   @override
@@ -276,8 +284,9 @@ class _TopBar extends StatelessWidget {
 /// tick 变化即重查余额，数字由 [RollingNumber] 滚动到新值（落袋感）。
 /// 性能审计 M-8：改 StatefulWidget 缓存 Future——此前每次 build 都新建
 /// future 触发重复 SP 读取与 loading 闪烁。
+/// 刷新节拍改 ValueNotifier 直驱（不再依赖整页 setState 传导 tick）。
 class _CoinPill extends StatefulWidget {
-  final int tick;
+  final ValueNotifier<int> tick;
   const _CoinPill({super.key, required this.tick});
 
   @override
@@ -291,14 +300,21 @@ class _CoinPillState extends State<_CoinPill> {
   void initState() {
     super.initState();
     _balanceFuture = context.read<ScareCoinStore?>()?.balance();
+    widget.tick.addListener(_onTick);
+  }
+
+  void _onTick() {
+    if (!mounted) return;
+    // 只重查余额 future：本 State 不重建，页面的 _WordArea/_QuizArea 也不重建。
+    setState(() {
+      _balanceFuture = context.read<ScareCoinStore?>()?.balance();
+    });
   }
 
   @override
-  void didUpdateWidget(covariant _CoinPill oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.tick != widget.tick) {
-      _balanceFuture = context.read<ScareCoinStore?>()?.balance();
-    }
+  void dispose() {
+    widget.tick.removeListener(_onTick);
+    super.dispose();
   }
 
   @override

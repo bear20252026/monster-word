@@ -97,13 +97,16 @@ class MonsterBondPrefs {
     final prefs = await SharedPreferences.getInstance();
     final isSameDay = prefs.getString(dayKey) == today;
     final count = isSameDay ? (prefs.getInt(countKey) ?? 0) + 1 : 1;
-    await prefs.setString(dayKey, today);
-    await prefs.setInt(countKey, count);
     var awarded = false;
+    // 写序：points 先于 dayKey。三写非原子，崩溃在 dayKey 落盘而 points 未落
+    // 的窗口会把当日羁绊点永久吞掉（当日不再补发）；正序崩溃窗口最坏只是
+    // 「点已 +1 而当日标记未写」，次日重记一次（多 1 点，可接受的方向）。
     if (!isSameDay) {
       await prefs.setInt(pointsKey, (prefs.getInt(pointsKey) ?? 0) + 1);
       awarded = true;
     }
+    await prefs.setString(dayKey, today);
+    await prefs.setInt(countKey, count);
     return BondRecordResult(awarded: awarded, todayCount: count);
   }
 }

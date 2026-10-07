@@ -1,6 +1,6 @@
 // lib/tokens/star_gold.dart
 // 成就徽章色 Token 集 — 金/银/铜
-// 来源：docs/hardcode_color_audit.md §6 Token 缺口分析
+// 来源：硬编码颜色审计 Token 缺口分析（原 docs/hardcode_color_audit.md 已不存在）
 import 'package:flutter/material.dart';
 
 /// 成就徽章色集

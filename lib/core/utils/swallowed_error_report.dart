@@ -13,11 +13,16 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-/// 上报被吞掉的异常：debugPrint 始终输出；Sentry 已初始化时附带上下文上报。
+/// 上报被吞掉的异常：debug 下 debugPrint 输出；Sentry 已初始化时附带上下文上报。
 ///
 /// [context] 描述"什么操作失败了"，与错误一起组成事件 message 便于 Sentry 分组。
 void reportSwallowedError(String context, Object error, StackTrace stack) {
-  debugPrint('[SwallowedError] $context: $error');
+  // 隐私审计：debugPrint 在 release 仍写平台日志（Android logcat 可读），
+  // 错误原文可能携带用户数据（如解析失败的用户信息 JSON 含手机号）。
+  // release 的可见性交给 Sentry（sendDefaultPii=false 已裁剪），本地不再落日志。
+  if (kDebugMode) {
+    debugPrint('[SwallowedError] $context: $error');
+  }
   if (!Sentry.isEnabled) return;
   unawaited(Sentry.captureEvent(SentryEvent(message: SentryMessage('$context: $error')), stackTrace: stack));
 }

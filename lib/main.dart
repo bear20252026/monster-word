@@ -9,6 +9,7 @@ import 'package:word_app/app/app.dart';
 import 'package:word_app/app/app_bootstrap.dart';
 import 'package:word_app/core/infrastructure/sentry_bootstrap.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/treasure_palette.dart';
 
 Future<void> main() async {
   // Zone 契约：runZonedGuarded 必须包住 bootstrapApp + runApp 的全部流程。
@@ -102,25 +103,25 @@ class _BootstrapRecoveryAppState extends State<_BootstrapRecoveryApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        backgroundColor: const Color(0xFFFBF7F0),
+        // 守卫整改（2026-10 审计）：兜底页此前用 4 处硬编码色 + 2 处字面量
+        // 字号，而 font/color 守卫不扫 main.dart（Q1 盲区）。现改走
+        // TreasurePalette/MwTypography，并把 main.dart 纳入守卫扫描根。
+        backgroundColor: TreasurePalette.card,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xxl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, size: 56, color: Color(0xFFB08968)),
+                const Icon(Icons.error_outline, size: 56, color: TreasurePalette.dim),
                 const SizedBox(height: 16),
-                const Text(
-                  'Monster Word 启动失败',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF3E2D22)),
-                ),
+                Text('Monster Word 启动失败', style: MwTypography.titleLg.copyWith(color: TreasurePalette.ink)),
                 const SizedBox(height: 8),
                 Text(
                   '初始化遇到问题${_retryError == null ? '' : '，重试仍失败'}：\n'
                   '${_retryError ?? widget.error}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF6B5B4D)),
+                  style: MwTypography.bodySm.copyWith(color: TreasurePalette.dim),
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(

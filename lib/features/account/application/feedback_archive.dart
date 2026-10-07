@@ -54,8 +54,10 @@ class FeedbackArchive {
 
     try {
       await upload(entry);
-    } catch (_) {
+    } catch (e, s) {
       // 上报失败不阻断提交：内容已在本地存档，下次诊断/反馈可复查。
+      // 但上报通道自身故障必须可观测（否则「永远上报成功」是假象）。
+      reportSwallowedError('反馈 Sentry 上报失败（本地存档仍完整）', e, s);
     }
     return history;
   }

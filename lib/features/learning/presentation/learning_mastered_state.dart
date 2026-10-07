@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 import 'package:word_app/features/learning/application/mastered_writer_port.dart';
 
@@ -31,6 +32,10 @@ class LearningMasteredState extends ChangeNotifier {
     notifyListeners();
     try {
       _masteredWords = (await _masteredWordsReader.loadTexts()).toSet();
+    } catch (e, s) {
+      // 构造期 unawaited(refresh()) 的兜底：读库异常不能进 unhandled，
+      // 降级为空集合（掌握徽标不显示，重进页面可重试）。
+      reportSwallowedError('掌握词集合加载失败', e, s);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -38,8 +43,15 @@ class LearningMasteredState extends ChangeNotifier {
   }
 
   Future<bool> toggle(String word) async {
-    await _writerPort.toggleMastered(word);
-    _masteredWords = (await _masteredWordsReader.loadTexts()).toSet();
+    try {
+      await _writerPort.toggleMastered(word);
+      _masteredWords = (await _masteredWordsReader.loadTexts()).toSet();
+    } catch (e, s) {
+      // 调用方为 fire-and-forget：写库失败在此接住上报，返回旧状态。
+      reportSwallowedError('掌握标记写入失败', e, s);
+      notifyListeners();
+      return _masteredWords.contains(word);
+    }
     notifyListeners();
     return _masteredWords.contains(word);
   }

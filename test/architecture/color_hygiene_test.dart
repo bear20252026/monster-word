@@ -20,7 +20,9 @@ const _whitelistPrefixes = <String>[
   'lib/theme/wallpaper_data.dart', // 壁纸颜色数据定义处
 ];
 
-const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/core', 'lib/app', 'lib/theme'];
+// 守卫扫描根（2026-10 审计 Q1）：补 lib/main.dart——兜底恢复页曾藏 4 处
+// 硬编码色而本守卫不可见（其余守卫多数已含 main.dart，口径不再互相矛盾）。
+const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/core', 'lib/app', 'lib/theme', 'lib/main.dart'];
 
 final _colorLiteralPattern = RegExp(r'Color\(0x[0-9a-fA-F]{8}\)');
 

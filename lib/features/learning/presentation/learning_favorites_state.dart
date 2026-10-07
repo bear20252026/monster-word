@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/application/favorites_port.dart';
@@ -38,6 +39,10 @@ class LearningFavoritesState extends ChangeNotifier implements LearningFavorites
     notifyListeners();
     try {
       _favoriteWords = await _favoritesPort.getFavoriteWords();
+    } catch (e, s) {
+      // 构造期 unawaited(refresh()) 的兜底：DAO 读库异常不能进 unhandled
+      //（吞掉后保持空集合降级，收藏按钮仍可点击重试）。
+      reportSwallowedError('收藏词集合加载失败', e, s);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -46,8 +51,16 @@ class LearningFavoritesState extends ChangeNotifier implements LearningFavorites
 
   @override
   Future<bool> toggle(String word) async {
-    await _favoritesPort.toggleFavorite(word);
-    _favoriteWords = await _favoritesPort.getFavoriteWords();
+    try {
+      await _favoritesPort.toggleFavorite(word);
+      _favoriteWords = await _favoritesPort.getFavoriteWords();
+    } catch (e, s) {
+      // 调用方多为 fire-and-forget（learn_page 收藏按钮）：写库失败在此接住
+      // 并上报，返回持久层未变的旧状态，不把异常抛进 unhandled。
+      reportSwallowedError('收藏切换写入失败', e, s);
+      notifyListeners();
+      return _favoriteWords.contains(word);
+    }
     notifyListeners();
     return _favoriteWords.contains(word);
   }

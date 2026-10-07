@@ -1,5 +1,5 @@
 // Monster Word — 星巴克胶囊按钮组件
-// 来源规格：docs/component_spec.md §1（PillButton）
+// 组件规格：PillButton（原 component_spec.md §1 已不存在，2026-10 审计修注）
 // 50px 高度，全胶囊圆角，四变体，包装 ScaleDownOnPress 按压反馈
 
 import 'package:flutter/material.dart';

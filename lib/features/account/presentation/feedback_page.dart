@@ -131,10 +131,13 @@ class _FeedbackPageState extends State<FeedbackPage> {
             ),
             child: TextField(
               controller: _contactController,
+              // 安全审计：联系方式明文进 SP 反馈存档并外发 Sentry，限长防滥用。
+              maxLength: 100,
               style: MwTypography.body.copyWith(color: colors.text1),
               decoration: InputDecoration(
                 hintText: '邮箱或手机号，方便我们回复您',
                 hintStyle: MwTypography.body.copyWith(color: colors.text3),
+                counterText: '',
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.all(context.design.spacing.md),
               ),

@@ -1,6 +1,7 @@
 // AudioServiceImpl — 音频播放服务实现
 
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 import 'dart:async';
 
@@ -70,7 +71,9 @@ class AudioServiceImpl implements AudioService {
     // 与历史行为一致：主播放器同步标记释放；单例播放器异步 release（不 await、无 Timer）。
     try {
       _bbPlayer.release();
-    } catch (_) {}
+    } catch (e, s) {
+      reportSwallowedError('主播放器同步释放失败', e, s);
+    }
     unawaited(_safeRelease(() => PhoneticAudioPlayer().release()));
     unawaited(_safeRelease(() => SentenceAudioPlayer().release()));
     unawaited(_safeRelease(() => TextAudioPlayer().release()));
@@ -80,6 +83,9 @@ class AudioServiceImpl implements AudioService {
   Future<void> _safeRelease(Future<void> Function() op) async {
     try {
       await op();
-    } catch (_) {}
+    } catch (e, s) {
+      // 单例播放器释放失败只降级（进程多在退出路径），但须可见。
+      reportSwallowedError('单例播放器释放失败', e, s);
+    }
   }
 }

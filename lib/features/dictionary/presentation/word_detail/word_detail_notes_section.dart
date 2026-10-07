@@ -70,6 +70,9 @@ class _WordNotesSectionState extends State<WordNotesSection> {
     if (result != null && result.trim().isNotEmpty) {
       final note = WordNote(wordId: word.id, word: word.word, content: result.trim());
       await store.add(note);
+      // 弹窗 await 期间详情页可能已被关闭：_loadNotes 入口的 context.read
+      // 会在元素失效时抛错（审计：async gap 后无存活检查）。
+      if (!mounted) return;
       await _loadNotes();
     }
   }
@@ -84,6 +87,7 @@ class _WordNotesSectionState extends State<WordNotesSection> {
     controller.dispose();
     if (result != null && result.trim().isNotEmpty) {
       await store.update(note.copyWith(content: result.trim()));
+      if (!mounted) return;
       await _loadNotes();
     }
   }
@@ -103,6 +107,7 @@ class _WordNotesSectionState extends State<WordNotesSection> {
     );
     if (confirmed == true) {
       await store.deleteById(note.id!);
+      if (!mounted) return;
       await _loadNotes();
     }
   }
@@ -250,6 +255,8 @@ class _NoteDialog extends StatelessWidget {
       content: TextField(
         controller: controller,
         maxLines: 5,
+        // 安全审计：笔记按 wordId 整键 JSON 落 SP，无上限的单键可无限膨胀。
+        maxLength: 2000,
         autofocus: true,
         decoration: InputDecoration(
           hintText: '输入笔记内容...',

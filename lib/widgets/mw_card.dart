@@ -1,5 +1,5 @@
 // Monster Word — 星巴克卡片组件
-// 来源规格：docs/component_spec.md §2（MwCard）
+// 组件规格：MwCard（原 component_spec.md §2 已不存在，2026-10 审计修注）
 // 24px 圆角、白底、双层低透明度阴影、奶油画布浮起效果（圆润温润版）
 
 import 'package:flutter/material.dart';

@@ -1,7 +1,7 @@
 // 由 MotionEngineer 生成 | Monster Word App
 // 星巴克模态框组件：居中款 + 底部弹出版
 // 使用 ThemeVars 语义 token，支持深色模式
-// 规格来源：docs/component_spec.md §8 + docs/motion_spec.md
+// 规格来源：docs/motion_spec.md（component_spec.md 已不存在，2026-10 审计修注）
 
 import 'package:flutter/material.dart';
 

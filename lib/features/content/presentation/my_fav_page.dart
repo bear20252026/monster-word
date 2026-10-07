@@ -84,6 +84,10 @@ class _MyFavPageState extends State<MyFavPage> {
       for (final word in toRemove) {
         await favorites.toggle(word);
       }
+      // 确认弹窗与逐词 toggle 都是 async gap：期间页面可能已被移出树，
+      // 再走 setState/context.read 会触发 use-after-dispose（单条删除
+      // 路径已有同款守卫，这里对齐口径）。
+      if (!mounted) return;
       _toggleBatchEdit();
       await _loadData();
     }
