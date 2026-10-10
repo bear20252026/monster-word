@@ -737,7 +737,8 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           label: '退出',
           onTap: () {
             Navigator.pop(context);
-            context.read<AppSessionController>().logout();
+            // MW-63：登出等待 durable 清理完成（fire-and-forget 曾有 restore 竞态）
+            unawaited(context.read<AppSessionController>().logout());
           },
           fillColor: context.skin.colors.danger,
         ),

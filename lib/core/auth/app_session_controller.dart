@@ -13,6 +13,6 @@ abstract interface class AppSessionController {
   /// 当前是否已登录。
   bool get isLoggedIn;
 
-  /// 退出登录（清除登录态并通知监听者）。
-  void logout();
+  /// 退出登录（durable 清理会话数据后置内存态并通知；MW-63 原子化）。
+  Future<void> logout();
 }

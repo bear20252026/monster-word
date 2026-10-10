@@ -62,12 +62,18 @@ class AccountProfileState extends ChangeNotifier {
   Future<void> updatePhone(String value) => _update(_profile.copyWith(phone: value));
 
   Future<void> _update(AccountProfile next) async {
+    final previous = _profile;
+    // MW-55：乐观更新先行（UI 即时反馈），但持久化失败必须回滚——
+    // 原实现吞掉失败让「UI=新值 / 磁盘=旧值」静默分叉到下次重启。
     _profile = next;
     _safeNotify();
     try {
       await _profileStore.save(next);
     } catch (error, stack) {
-      reportSwallowedError('账号资料保存失败', error, stack);
+      _profile = previous;
+      _safeNotify();
+      reportSwallowedError('账号资料保存失败（已回滚 UI 状态）', error, stack);
+      rethrow;
     }
   }
 }

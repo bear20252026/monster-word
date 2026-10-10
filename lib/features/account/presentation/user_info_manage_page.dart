@@ -144,16 +144,24 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
   Future<void> _changeAvatar() async {
     final storage = context.read<AvatarStorage>();
     final oldPath = _profile.avatar;
+    String? newPath;
     try {
-      final newPath = await storage.pickAndSave();
+      newPath = await storage.pickAndSave();
       if (newPath == null) return; // 用户取消
+      // MW-54 两阶段提交：
+      //   ① 新头像文件已就位（pickAndSave，不动旧文件）
+      //   ② 资料 durable 保存（updateAvatar 失败会回滚 UI 并抛出）
+      //   ③ 全部成功后才删除旧头像文件。
+      // 任何一步失败：旧头像文件与资料引用都完好，仅可能残留一个新文件
+      // （由 cleanOrphans 兜底清理），绝无「引用指向已删除文件」。
       await _profile.updateAvatar(newPath);
-      // 持久化成功后清理旧头像文件（仅清理应用私有目录内的）
       await storage.delete(oldPath);
       if (mounted) {
         showMwSnackBar(context, const SnackBar(content: Text('头像已更新')));
       }
     } catch (e) {
+      // 保存失败：回滚尝试由 updateAvatar 内部完成（UI/内存态）；
+      // 新文件残留交 cleanOrphans，不在这里删（旧文件可能已被 update 成功路径引用）。
       if (mounted) {
         showMwSnackBar(context, SnackBar(content: Text('更换头像失败: $e')));
       }

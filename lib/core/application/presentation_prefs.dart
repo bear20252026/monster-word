@@ -57,16 +57,21 @@ class PresentationPrefs {
 
   Future<void> setInitGuideShown(bool value) => _p.setBool(_initGuideShownKey, value);
 
-  /// 登出清理：会话标记 + 用户信息/凭证缓存（key 单一事实来源：app_preferences.dart）。
+  /// 登出清理：只清「会话态 + 凭证」，保留本地资料（MW-62）。
+  ///
+  /// 当前无服务端账号体系——monster_word_user_info 是昵称/头像/签名的
+  /// 【唯一副本】，登出删除后无法从任何地方恢复。会话数据（登录标记）
+  /// 与本地资料（LocalProfile）是两个概念：登出只清前者；资料的清除
+  /// 属「删除账号/清除本机数据」的显式动作，另行入口。
   /// 失败不抛出（登出语义不阻断），上报保持可观测。
   Future<void> clearSessionData() async {
     await ensureReady();
     try {
       await _p.remove(_sessionLoggedInKey);
-      await _p.remove(_initGuideShownKey);
-      await _p.remove(kUserInfoPrefsKey);
       await _p.remove(AppPreferences.userToken);
       await _p.remove(AppPreferences.userSecret);
+      // MW-62：不再 remove(kUserInfoPrefsKey)——本地资料保留。
+      // 引导标记同样保留（展示过一次即可，与登录态无关）。
     } catch (e, s) {
       reportSwallowedError('会话数据清理失败', e, s);
     }

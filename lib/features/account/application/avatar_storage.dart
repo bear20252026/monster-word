@@ -17,4 +17,7 @@ abstract interface class AvatarStorage {
   /// 仅删除位于应用私有头像目录内的文件（防误删外部文件）；路径为空或
   /// 文件不存在时静默忽略。
   Future<void> delete(String? path);
+
+  /// MW-54：清理头像目录内除 [keepPaths] 外的孤儿头像文件。
+  Future<void> cleanOrphans(Set<String> keepPaths);
 }
