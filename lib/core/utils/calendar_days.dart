@@ -13,16 +13,8 @@ DateTime calendarDayBefore(DateTime day) =>
 ///
 /// 时刻分量必须保留：提醒排程等调用方传入的是「今天 20:00」这类时刻，
 /// 截断到零点会把「明天 20:00」排成「明天 00:00」（回归测试锚定）。
-DateTime calendarDayAdd(DateTime day, int days) => DateTime(
-  day.year,
-  day.month,
-  day.day + days,
-  day.hour,
-  day.minute,
-  day.second,
-  day.millisecond,
-  day.microsecond,
-);
+DateTime calendarDayAdd(DateTime day, int days) =>
+    DateTime(day.year, day.month, day.day + days, day.hour, day.minute, day.second, day.millisecond, day.microsecond);
 
 /// 两个时刻之间的日历日差（[to] 晚于 [from] 为正）。
 ///

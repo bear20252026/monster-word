@@ -182,10 +182,7 @@ class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with Si
               for (int i = 0; i < _visibleCoins; i++)
                 Opacity(
                   opacity: (_fadeIns[i].value * (1 - _swallows[i].value)).clamp(0.0, 1.0),
-                  child: Transform.translate(
-                    offset: _flights[i].value,
-                    child: _coinWidgets[i],
-                  ),
+                  child: Transform.translate(offset: _flights[i].value, child: _coinWidgets[i]),
                 ),
               if (widget.coinCount > _kMaxVisibleCoins)
                 Positioned(right: widget.size * 0.02, bottom: widget.size * 0.02, child: _buildOverflowBadge()),

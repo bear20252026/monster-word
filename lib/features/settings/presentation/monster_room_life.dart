@@ -53,7 +53,6 @@ extension _MonsterRoomLife on _MonsterRoomViewState {
     }
   }
 
-
   /// 载入持久化天色；无记录则自动模式按当前时刻起档。
   Future<void> _loadSkyScene() async {
     try {
@@ -134,11 +133,7 @@ extension _MonsterRoomLife on _MonsterRoomViewState {
     // 跨阈值（初识→熟络→…）时触发升级仪式：关系时刻值得庆祝。
     if (lastMin != null && level.min > lastMin) {
       final next = BondLevel.nextMin(points);
-      BondLevelUpOverlay.show(
-        context,
-        levelName: level.name,
-        pointsToNext: next == null ? null : next - points,
-      );
+      BondLevelUpOverlay.show(context, levelName: level.name, pointsToNext: next == null ? null : next - points);
     }
   }
 

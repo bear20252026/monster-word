@@ -63,10 +63,7 @@ class BookRepositoryImpl implements BookRepository {
       final db = _database.db;
       // LIKE 元字符转义（\ → % → _，与 word_repository_impl._escapeLike 同款）：
       // 输入 % 曾全库匹配。
-      final escaped = query
-          .replaceAll(r'\', r'\\')
-          .replaceAll('%', r'\%')
-          .replaceAll('_', r'\_');
+      final escaped = query.replaceAll(r'\', r'\\').replaceAll('%', r'\%').replaceAll('_', r'\_');
       final maps = await db.query(
         'books',
         where: "name LIKE ? ESCAPE '\\' OR code LIKE ? ESCAPE '\\'",

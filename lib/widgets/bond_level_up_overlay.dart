@@ -117,7 +117,10 @@ class _BondCeremonyState extends State<_BondCeremony> with TickerProviderStateMi
             } else if (elapsed <= widget.rise) {
               t = Curves.easeOutBack.transform((elapsed.inMilliseconds / widget.rise.inMilliseconds).clamp(0.0, 1.0));
             } else if (elapsed >= widget.rise + widget.hold) {
-              final f = ((elapsed - widget.rise - widget.hold).inMilliseconds / widget.fade.inMilliseconds).clamp(0.0, 1.0);
+              final f = ((elapsed - widget.rise - widget.hold).inMilliseconds / widget.fade.inMilliseconds).clamp(
+                0.0,
+                1.0,
+              );
               t = 1 - Curves.easeIn.transform(f);
             } else {
               t = 1;
@@ -146,8 +149,14 @@ class _BondCeremonyState extends State<_BondCeremony> with TickerProviderStateMi
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 10),
                               child: Opacity(
-                                opacity: reduceMotion ? 0.9 : (0.35 + 0.55 * math.sin(phase / 700 + i * 1.1)).abs().clamp(0.2, 0.95),
-                                child: Icon(Icons.favorite_rounded, size: 18 + 4.0 * (i == 1 ? 1 : 0), color: MwColors.danger),
+                                opacity: reduceMotion
+                                    ? 0.9
+                                    : (0.35 + 0.55 * math.sin(phase / 700 + i * 1.1)).abs().clamp(0.2, 0.95),
+                                child: Icon(
+                                  Icons.favorite_rounded,
+                                  size: 18 + 4.0 * (i == 1 ? 1 : 0),
+                                  color: MwColors.danger,
+                                ),
                               ),
                             ),
                         ],

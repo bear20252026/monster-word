@@ -455,7 +455,13 @@ class _RoomPiggyPainter extends CustomPainter {
 
 /// 房主小怪兽：瞳孔跟随 + 眨眼 + 跳跃影子 + 被摸开心（W4.5 宠物化）。
 class _RoomMonsterPainter extends CustomPainter {
-  _RoomMonsterPainter({required this.pupilOffset, required this.blink, required this.hop, this.happy = 0.0, this.evoStage = 0});
+  _RoomMonsterPainter({
+    required this.pupilOffset,
+    required this.blink,
+    required this.hop,
+    this.happy = 0.0,
+    this.evoStage = 0,
+  });
 
   final Offset pupilOffset;
   final double blink; // 0 睁眼 → 1 闭合（可为轻微负值 = 睁大回弹）
@@ -605,7 +611,11 @@ class _RoomMonsterPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _RoomMonsterPainter old) =>
-      old.pupilOffset != pupilOffset || old.blink != blink || old.hop != hop || old.happy != happy || old.evoStage != evoStage;
+      old.pupilOffset != pupilOffset ||
+      old.blink != blink ||
+      old.hop != hop ||
+      old.happy != happy ||
+      old.evoStage != evoStage;
 }
 
 /// 金币小图标（门牌余额胶囊；与聚宝日历同款）。

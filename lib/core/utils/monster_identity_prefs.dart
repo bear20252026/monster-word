@@ -47,8 +47,7 @@ class MonsterIdentityPrefs {
     final now = DateTime.now();
     final trimmed = name.trim();
     final stored = trimmed.isEmpty ? defaultName : trimmed;
-    final birthday =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final birthday = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     // hatched 置位前先确认名字真的落了盘：写返回 false（磁盘满等）不抛错，
     // 若照样置位，调用方会跳过重演仪式——命名静默丢失。三写全查，任一失败即抛。
     if (!await prefs.setString(nameKey, stored)) {

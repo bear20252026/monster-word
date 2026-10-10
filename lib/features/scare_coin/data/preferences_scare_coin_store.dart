@@ -338,7 +338,11 @@ class PreferencesScareCoinStore implements ScareCoinStore {
         // 标记写失败上报（余额/库存均走 _writeChecked，此处曾漏网；仅靠流水幂等兑底）。
         final saved = await prefs.setString(lastCheckInKey, lastCheckInIso);
         if (!saved) {
-          reportSwallowedError('签到日期标记写入失败', StateError('setString($lastCheckInIso) returned false'), StackTrace.current);
+          reportSwallowedError(
+            '签到日期标记写入失败',
+            StateError('setString($lastCheckInIso) returned false'),
+            StackTrace.current,
+          );
         }
       }
       return newBalance;

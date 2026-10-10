@@ -80,7 +80,11 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
       prefs.setString(reminderTimeKey, preferences.reminderTime),
     ]);
     if (results.any((ok) => !ok)) {
-      reportSwallowedError('学习偏好保存部分写入失败', StateError('${results.where((ok) => !ok).length}/${results.length} writes returned false'), StackTrace.current);
+      reportSwallowedError(
+        '学习偏好保存部分写入失败',
+        StateError('${results.where((ok) => !ok).length}/${results.length} writes returned false'),
+        StackTrace.current,
+      );
     }
   }
 }

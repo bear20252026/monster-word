@@ -43,7 +43,9 @@ class FloatingDock extends StatelessWidget {
     // 深色皮肤：白底浮条在暗画布上刺眼且对比度失控（图标 ~1.9:1），改用
     // 深色玻璃底 + 亮文字（与系统 Dock 深色形态同语言）。
     final isDark = skin.effectiveUiBrightness == Brightness.dark;
-    final dockBase = isDark ? skin.colors.cardBg.withValues(alpha: AppAlphas.o92) : AppColors.white100.withValues(alpha: AppAlphas.o85);
+    final dockBase = isDark
+        ? skin.colors.cardBg.withValues(alpha: AppAlphas.o92)
+        : AppColors.white100.withValues(alpha: AppAlphas.o85);
     final inactiveIcon = skin.colors.text2;
 
     return Container(

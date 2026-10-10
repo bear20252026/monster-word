@@ -252,7 +252,9 @@ class _EvolutionCeremonyState extends State<_EvolutionCeremony> with TickerProvi
                               opacity: _inAnim.value,
                               child: Text(
                                 _milestoneLine,
-                                style: MwTypography.bodyMd.copyWith(color: MwColors.charcoal.withValues(alpha: AppAlphas.o85)),
+                                style: MwTypography.bodyMd.copyWith(
+                                  color: MwColors.charcoal.withValues(alpha: AppAlphas.o85),
+                                ),
                               ),
                             ),
                           ),

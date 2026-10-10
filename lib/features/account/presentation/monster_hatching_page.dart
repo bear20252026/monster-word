@@ -152,7 +152,10 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
                   Semantics(
                     label: '怪兽蛋，点按敲击（$_taps/3）',
                     button: true,
-                    child: CustomPaint(size: const Size(132, 156), painter: _HatchEggPainter(taps: _taps)),
+                    child: CustomPaint(
+                      size: const Size(132, 156),
+                      painter: _HatchEggPainter(taps: _taps),
+                    ),
                   ),
                 // 破壳后：怪兽破光而出。
                 if (_hatched)

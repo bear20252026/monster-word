@@ -74,11 +74,14 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
       final service = LearningRewardService(store);
       // 形态异步补齐（喂币庆祝的怪兽随真实进化阶段换装；失败降级奶泡态）。
       unawaited(
-        store.checkinDates().then((dates) {
-          if (mounted) setState(() => _evoStage = MonsterIcon.stageFor(dates.length));
-        }).catchError((Object e, StackTrace s) {
-          reportSwallowedError('完成页形态读取失败', e, s);
-        }),
+        store
+            .checkinDates()
+            .then((dates) {
+              if (mounted) setState(() => _evoStage = MonsterIcon.stageFor(dates.length));
+            })
+            .catchError((Object e, StackTrace s) {
+              reportSwallowedError('完成页形态读取失败', e, s);
+            }),
       );
       try {
         final result = await service.settleSession(

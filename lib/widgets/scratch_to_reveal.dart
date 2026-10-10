@@ -114,15 +114,15 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
     final localPos = box.globalToLocal(details.globalPosition);
     _points.add(localPos);
     if (box.size.width > 0 && box.size.height > 0) {
-        // 按笔刷半径标记覆盖格：格心落在 strokeWidth/2 内即视为已擦除，
-        // 与视觉擦除范围一致，避免"看起来刮开了却不算数"。
-        final cellW = box.size.width / _gridCols;
-        final cellH = box.size.height / _gridRows;
-        final r = widget.strokeWidth / 2;
-        final colMin = ((localPos.dx - r) / cellW).floor().clamp(0, _gridCols - 1);
-        final colMax = ((localPos.dx + r) / cellW).ceil().clamp(0, _gridCols - 1);
-        final rowMin = ((localPos.dy - r) / cellH).floor().clamp(0, _gridRows - 1);
-        final rowMax = ((localPos.dy + r) / cellH).ceil().clamp(0, _gridRows - 1);
+      // 按笔刷半径标记覆盖格：格心落在 strokeWidth/2 内即视为已擦除，
+      // 与视觉擦除范围一致，避免"看起来刮开了却不算数"。
+      final cellW = box.size.width / _gridCols;
+      final cellH = box.size.height / _gridRows;
+      final r = widget.strokeWidth / 2;
+      final colMin = ((localPos.dx - r) / cellW).floor().clamp(0, _gridCols - 1);
+      final colMax = ((localPos.dx + r) / cellW).ceil().clamp(0, _gridCols - 1);
+      final rowMin = ((localPos.dy - r) / cellH).floor().clamp(0, _gridRows - 1);
+      final rowMax = ((localPos.dy + r) / cellH).ceil().clamp(0, _gridRows - 1);
       for (var row = rowMin; row <= rowMax; row++) {
         for (var col = colMin; col <= colMax; col++) {
           final cx = (col + 0.5) * cellW;
@@ -169,10 +169,7 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
               // 底层内容（揭示后显示）。未揭示时从语义树排除：
               // TalkBack 曾可逐条读出全部被遮的释义（直接泄答案）。
               Positioned.fill(
-                child: ExcludeSemantics(
-                  excluding: !_revealed,
-                  child: widget.child,
-                ),
+                child: ExcludeSemantics(excluding: !_revealed, child: widget.child),
               ),
               // 覆盖层（擦除效果）；读屏用户有一条无需手势的揭示路径（双击）。
               AnimatedBuilder(
@@ -188,37 +185,37 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
                       onTap: _revealed ? null : _doReveal,
                       child: CustomPaint(
                         painter: _ScratchPainter(
-                        points: _points,
-                        strokeWidth: widget.strokeWidth,
-                        opacity: opacity,
-                        color: coverColor,
-                        repaint: _strokeSeq,
-                      ),
-                      child: Container(
-                        color: coverColor.withValues(alpha: opacity),
-                        child: Center(
-                          child: Opacity(
-                            opacity: opacity,
-                            child: widget.coverText != null
-                                ? Text(
-                                    widget.coverText!,
-                                    style:
-                                        widget.coverTextStyle ??
-                                        TextStyle(
-                                          color: AppColors.white100.withValues(alpha: AppAlphas.o80),
-                                          fontSize: AppFontSizes.bodyMd,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                  )
-                                : Icon(
-                                    Icons.touch_app,
-                                    color: AppColors.white100.withValues(alpha: AppAlphas.o70),
-                                    size: 32,
-                                  ),
+                          points: _points,
+                          strokeWidth: widget.strokeWidth,
+                          opacity: opacity,
+                          color: coverColor,
+                          repaint: _strokeSeq,
+                        ),
+                        child: Container(
+                          color: coverColor.withValues(alpha: opacity),
+                          child: Center(
+                            child: Opacity(
+                              opacity: opacity,
+                              child: widget.coverText != null
+                                  ? Text(
+                                      widget.coverText!,
+                                      style:
+                                          widget.coverTextStyle ??
+                                          TextStyle(
+                                            color: AppColors.white100.withValues(alpha: AppAlphas.o80),
+                                            fontSize: AppFontSizes.bodyMd,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    )
+                                  : Icon(
+                                      Icons.touch_app,
+                                      color: AppColors.white100.withValues(alpha: AppAlphas.o70),
+                                      size: 32,
+                                    ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     ),
                   );
                 },
@@ -237,7 +234,13 @@ class _ScratchPainter extends CustomPainter {
   final double opacity;
   final Color color;
 
-  _ScratchPainter({required this.points, required this.strokeWidth, required this.opacity, required this.color, super.repaint});
+  _ScratchPainter({
+    required this.points,
+    required this.strokeWidth,
+    required this.opacity,
+    required this.color,
+    super.repaint,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {

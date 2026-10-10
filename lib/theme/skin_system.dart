@@ -149,13 +149,22 @@ class SkinSystem extends ChangeNotifier {
     if (!DesignLanguages.all.containsKey(id) || _designLanguageId == id) return;
     _designLanguageId = id;
     notifyListeners();
-    SharedPreferences.getInstance().then((p) => p.setString(_kDesignPrefKey, id)).then<void>((saved) {
-      if (!saved) {
-        reportSwallowedError('设计语言偏好写入失败（重启后回退旧档）', StateError('setString($id) returned false'), StackTrace.current);
-      }
-    }, onError: (Object e, StackTrace s) {
-      reportSwallowedError('设计语言偏好写入失败', e, s);
-    });
+    SharedPreferences.getInstance()
+        .then((p) => p.setString(_kDesignPrefKey, id))
+        .then<void>(
+          (saved) {
+            if (!saved) {
+              reportSwallowedError(
+                '设计语言偏好写入失败（重启后回退旧档）',
+                StateError('setString($id) returned false'),
+                StackTrace.current,
+              );
+            }
+          },
+          onError: (Object e, StackTrace s) {
+            reportSwallowedError('设计语言偏好写入失败', e, s);
+          },
+        );
   }
 
   /// 品牌风格 → 默认颜色主题映射（整站换肤 A/B 联动用）。

@@ -118,11 +118,14 @@ class _ReunionGreetingState extends State<_ReunionGreeting> with TickerProviderS
     final store = context.read<ScareCoinStore?>();
     if (store != null) {
       unawaited(
-        store.checkinDates().then((dates) {
-          if (mounted) setState(() => _evoStage = MonsterIcon.stageFor(dates.length));
-        }).catchError((Object e, StackTrace s) {
-          reportSwallowedError('回家仪式形态读取失败', e, s);
-        }),
+        store
+            .checkinDates()
+            .then((dates) {
+              if (mounted) setState(() => _evoStage = MonsterIcon.stageFor(dates.length));
+            })
+            .catchError((Object e, StackTrace s) {
+              reportSwallowedError('回家仪式形态读取失败', e, s);
+            }),
       );
     }
     _inCtrl = AnimationController(vsync: this, duration: widget.slideIn);

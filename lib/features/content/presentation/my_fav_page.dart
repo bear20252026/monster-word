@@ -205,7 +205,7 @@ class _MyFavPageState extends State<MyFavPage> {
     );
   }
 
-/// 加载失败态：重试入口（不再永久转圈）。
+  /// 加载失败态：重试入口（不再永久转圈）。
   Widget _buildErrorView(SkinSystem skin) {
     return Center(
       child: Column(
@@ -225,7 +225,7 @@ class _MyFavPageState extends State<MyFavPage> {
     );
   }
 
-    Widget _buildEmptyView(SkinSystem skin) {
+  Widget _buildEmptyView(SkinSystem skin) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

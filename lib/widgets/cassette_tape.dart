@@ -92,10 +92,8 @@ class _CassetteTapeState extends State<CassetteTape> with SingleTickerProviderSt
   Widget _spinningReel(double size, {bool reverse = false}) {
     return AnimatedBuilder(
       animation: _reel,
-      builder: (context, child) => Transform.rotate(
-        angle: (reverse ? -1 : 1) * _reel.value * 2 * math.pi,
-        child: child,
-      ),
+      builder: (context, child) =>
+          Transform.rotate(angle: (reverse ? -1 : 1) * _reel.value * 2 * math.pi, child: child),
       child: CustomPaint(
         size: Size(size, size),
         painter: _ReelPainter(color: context.skin.colors.text1),

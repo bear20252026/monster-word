@@ -25,10 +25,7 @@ class ServiceDictionarySearchReader implements DictionarySearchReader {
     try {
       // 子串匹配：%query%（LIKE 元字符转义 \ → % → _，与
       // word_repository_impl._escapeLike 同款：输入 % 曾匹配全库）
-      final escaped = trimmed
-          .replaceAll(r'\', r'\\')
-          .replaceAll('%', r'\%')
-          .replaceAll('_', r'\_');
+      final escaped = trimmed.replaceAll(r'\', r'\\').replaceAll('%', r'\%').replaceAll('_', r'\_');
       final rows = await database.db.query(
         'words',
         where: "word LIKE ? ESCAPE '\\'",

@@ -23,10 +23,9 @@ class ReviewSessionRatingExecutor {
     _advanceEngine(rating);
     // 持久化 Future 未接也未处理：引擎已推进而 FSRS 写失败只产生
     // unhandled async error，评分静默丢失。接住并上报（会话不阻断）。
-    _ratingWriter.rate(word: reviewedWord.word, rating: _toFsrsRating(rating)).then<void>(
-      (_) {},
-      onError: (Object e, StackTrace s) => reportSwallowedError('FSRS 评分写入失败', e, s),
-    );
+    _ratingWriter
+        .rate(word: reviewedWord.word, rating: _toFsrsRating(rating))
+        .then<void>((_) {}, onError: (Object e, StackTrace s) => reportSwallowedError('FSRS 评分写入失败', e, s));
   }
 
   /// 保留“熟”只推进本地会话、不写入 FSRS 评分的既有语义。

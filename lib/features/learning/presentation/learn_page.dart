@@ -752,12 +752,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
               ? const MonsterIcon(key: ValueKey('sad'), size: 32, sad: true)
               : widget.state.combo >= 5
               ? const MonsterIcon(key: ValueKey('cheer'), size: 32)
-              : Icon(
-                  key: const ValueKey('fire'),
-                  Icons.local_fire_department_rounded,
-                  size: 28,
-                  color: comboTierColor,
-                ),
+              : Icon(key: const ValueKey('fire'), Icons.local_fire_department_rounded, size: 28, color: comboTierColor),
         ),
         const SizedBox(width: 6),
         if (_monsterSad)
