@@ -26,9 +26,28 @@ void main() {
     });
 
     test('历史复习深链仍使用正式复习的渐变转场', () {
-      final route = AppRouter.buildPageRoute(RouteNames.reviewSession, const ReviewPage());
+      final route = AppRouter.buildPageRoute(const RouteSettings(name: RouteNames.reviewSession), const ReviewPage());
 
       expect(route, isA<FadeRoute>());
+    });
+
+    test('MW-26 REG-ROUTE-001：生产路由保留 RouteSettings 的 name 与 arguments', () {
+      final settings = RouteSettings(name: RouteNames.wordDetail, arguments: 'probe-word');
+      final page = AppRouter.buildPage(settings)!;
+      final route = AppRouter.buildPageRoute(settings, page);
+
+      expect(route.settings.name, RouteNames.wordDetail);
+      expect(route.settings.arguments, 'probe-word');
+    });
+
+    test('MW-26 REG-ROUTE-002：默认分支（MaterialPageRoute）同样透传 settings', () {
+      final settings = RouteSettings(name: RouteNames.wordDetail, arguments: 42);
+      final page = AppRouter.buildPage(settings)!;
+      final route = AppRouter.buildPageRoute(settings, page);
+
+      expect(route, isA<MaterialPageRoute<dynamic>>());
+      expect(route.settings.name, RouteNames.wordDetail);
+      expect(route.settings.arguments, 42);
     });
   });
 }

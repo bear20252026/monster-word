@@ -360,7 +360,8 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
         }
         page = resolved;
     }
-    return AppRouter.buildPageRoute(name, page);
+    // MW-26：全部分支透传原始 settings（name + arguments 不再丢失）。
+    return AppRouter.buildPageRoute(settings, page);
   }
 }
 
