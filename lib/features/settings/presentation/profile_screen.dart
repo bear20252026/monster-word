@@ -22,9 +22,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/utils/haptics_gate.dart';
+import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/core/utils/monster_bond_prefs.dart';
 import 'package:word_app/core/utils/monster_identity_prefs.dart';
 import 'package:word_app/core/utils/monster_rhythm.dart';
@@ -42,6 +44,8 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/room_palette.dart';
 import 'package:word_app/tokens/treasure_palette.dart';
 import 'package:word_app/widgets/message_badge_icon.dart';
+import 'package:word_app/widgets/bond_level_up_overlay.dart';
+import 'package:word_app/widgets/monster_icon.dart';
 
 part 'monster_room_painters.dart';
 part 'monster_room_life.dart';
@@ -81,7 +85,9 @@ class _RoomObjects {
     ]),
     'coin': _RoomSpec('尖叫币', [
       _RoomRow('余额与明细', '存钱罐肚皮 = 学习奖励', TreasurePalette.gold, RouteNames.scareCoinHistory),
-      _RoomRow('兑换中心', '断签保护卡等', TreasurePalette.pigAccent, RouteNames.scareCoinHistory),
+      // 曾错接 scareCoinHistory（余额明细）：真实兑换中心路由已注册却从未被
+      // 小屋使用，点「兑换中心」进的是明细页。
+      _RoomRow('兑换中心', '断签保护卡等', TreasurePalette.pigAccent, RouteNames.redemption),
     ]),
   };
 }
@@ -129,7 +135,16 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
 
   /// 怪兽名（蓝图 W4 命名仪式的回显；未破壳/未读到 → null → 门牌不出这一行）。
   String? _monsterName;
-  final int _sceneIdx = 0; // 窗外天色：0 日 / 1 暮 / 2 夜（进入外观页编辑）
+
+  /// 窗外天色：0 日 / 1 暮 / 2 夜（专利要点④「点窗循环 日/暮/夜」）。
+  /// 未手动选过（_skyAuto）时跟随真实时钟自动流转；点窗循环并持久化选择。
+  int _sceneIdx = 0;
+  bool _skyAuto = true;
+  static const String _skySceneKey = 'monster_room.sky_scene';
+
+  /// 房间时钟：每分钟重估昼夜节律与自动天色（此前 _isNight 只在 initState
+  /// 求值一次，21:55 进 App 23:00 切到本页仍见白天怪兽在蹦跶）。
+  Timer? _roomClock;
   String? _activeKey;
   Offset _pupilOffset = Offset.zero;
   final bool _reduceMotion = WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
@@ -162,6 +177,28 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   String? _bondLevelName;
   final MonsterSpeech _roomSpeech = MonsterSpeech();
 
+  /// 上次读到的羁终等级阈值（null = 首次载入不办仪式；
+  /// 跨阈值时触发 BondLevelUpOverlay）。
+  int? _lastBondMin;
+
+  /// 需求气泡是否还没弹过（首次「进屋」可见时才弹——IndexedStack 会在
+  /// 启动时就构建全部 tab，不可见时弹掉等于永远看不见）。
+  bool _needBubblePending = true;
+
+  /// 心情解析是否已完成（需求气泡依赖 _lastDueCount；didChangeDependencies
+  /// 触发时异步解析往往未就绪，两个入口都经 _tryFireNeedBubble 守门）。
+  bool _moodReady = false;
+
+  /// 最近一次解析心情时的到期数（供首次可见时的需求气泡复用）。
+  int? _lastDueCount;
+
+  /// 统计域监听（dueCount 变化 → 心情实时刷新；此前只在 initState 解析一次，
+  /// 80 个到期词清零后小屋怪兽仍 worried 停跳踱步）。
+  LearningStatisticsReader? _statsReader;
+
+  /// 房主进化阶段（签到天数换算；签完到进化仪式回来重读）。
+  int _evoStage = 0;
+
   /// life 扩展（part 文件）专用的 setState 转发：setState 是 @protected 成员，
   /// 扩展方法内直接调用会触发 invalid_use_of_protected_member。
   void _lifeSetState(VoidCallback fn) => setState(fn);
@@ -193,6 +230,12 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
     super.initState();
     _loadBalance();
     _loadMonsterName();
+    try {
+      _statsReader = context.read<LearningStatisticsReader?>();
+      _statsReader?.addListener(_onStatsChanged);
+    } catch (_) {
+      _statsReader = null; // 未装配统计域（如单独预览）
+    }
     _resolveMood();
     _initRoomLife();
     if (!_reduceMotion) {
@@ -201,6 +244,28 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
       _idleCtrl.repeat();
       if (!_isNight) _blinkTimer = Timer.periodic(const Duration(milliseconds: 3400), (_) => _runBlink());
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // W4.5「它会找你」：本 tab 首次可见（TickerMode 翻 true）才弹需求气泡。
+    // 主壳 IndexedStack 常驻构建全部 tab，以前不可见也会弹掉并超时消失。
+    _tryFireNeedBubble();
+  }
+
+  /// 需求气泡双条件守门：可见 + 心情取数已就绪。didChangeDependencies 触发时
+  /// _resolveMood 的异步往往未完成（dueCount 还是 null），由其完成后再补一发。
+  void _tryFireNeedBubble() {
+    if (!_needBubblePending || !_moodReady) return;
+    if (!TickerMode.valuesOf(context).enabled) return;
+    _needBubblePending = false;
+    unawaited(_maybeShowNeedBubble(dueCount: _lastDueCount));
+  }
+
+  void _onStatsChanged() {
+    if (!mounted) return;
+    _resolveMood();
   }
 
   /// 蓝图 W4：按真实学习数据解析心情（只读，零新持久层）。
@@ -230,18 +295,21 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
     );
     if (!mounted) return;
     setState(() => _mood = mood);
+    _lastDueCount = dueCount;
+    _moodReady = true;
+    _tryFireNeedBubble();
     // 心情变化后重排呼吸节奏（repeat 周期变更需重启）。
     if (!_reduceMotion) {
       _idleCtrl.stop();
       _idleCtrl.duration = Duration(milliseconds: (3200 * _idleSpeed * (_isNight ? 2.4 : 1.0)).round());
       _idleCtrl.repeat();
     }
-    // 白天进屋时按真实数据冒一次需求气泡（W4.5「它会找你」）。
-    unawaited(_maybeShowNeedBubble(dueCount: dueCount));
   }
 
   @override
   void dispose() {
+    _statsReader?.removeListener(_onStatsChanged);
+    _roomClock?.cancel();
     _roomBubbleTimer?.cancel();
     _blinkTimer?.cancel();
     _hopCtrl.dispose();
@@ -261,10 +329,17 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   Future<void> _loadBalance() async {
     final store = context.read<ScareCoinStore>();
     final balance = await store.balance();
+    var stage = 0;
+    try {
+      stage = MonsterIcon.stageFor((await store.checkinDates()).length);
+    } catch (e, s) {
+      reportSwallowedError('小屋房主形态读取失败（降级奶泡）', e, s);
+    }
     if (!mounted) return;
     setState(() {
       _balance = balance;
       _balanceLoaded = true;
+      _evoStage = stage;
     });
   }
 
@@ -545,17 +620,21 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
     const stageW = 460.0, stageH = 560.0;
     Widget obj(String key, {double? left, double? top, double? right, double? bottom, required Widget child}) {
       final active = _activeKey == key;
+      // 专利要点④：窗是「点窗循环 日/暮/夜」的戏法位——点窗换天色，
+      // 长按才展开外观抽屉（入口不丢，双手势都进 Semantics 说明）。
+      final isWindow = key == 'scene';
       return Positioned(
         left: left,
         right: right,
         top: top,
         bottom: bottom,
         child: Semantics(
-          label: _RoomObjects.specs[key]!.label,
+          label: isWindow ? '窗外天色，点按切换日暮夜，长按打开外观设置' : _RoomObjects.specs[key]!.label,
           button: true,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => _openObject(key),
+            onTap: isWindow ? _cycleSky : () => _openObject(key),
+            onLongPress: isWindow ? () => _openObject(key) : null,
             child: AnimatedScale(
               scale: active ? 1.06 : 1.0,
               duration: const Duration(milliseconds: 250),
@@ -713,6 +792,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
                         blink: _isNight ? 1.0 : (_reduceMotion ? 0 : _blinkSeq.evaluate(_blinkCtrl)),
                         hop: _isNight || _reduceMotion ? 0.0 : math.sin(math.pi * _hopCtrl.value),
                         happy: _happy,
+                        evoStage: _evoStage,
                       ),
                     ),
                   ),

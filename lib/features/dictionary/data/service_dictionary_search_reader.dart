@@ -1,4 +1,5 @@
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
 
 /// 基于 WordBookDatabase 的词典搜索适配器。
@@ -19,16 +20,27 @@ class ServiceDictionarySearchReader implements DictionarySearchReader {
 
   @override
   Future<List<Word>> searchFuzzy(String query) async {
-    if (query.trim().isEmpty) return [];
-    // 子串匹配：%query%
-    final rows = await database.db.query(
-      'words',
-      where: 'word LIKE ?',
-      whereArgs: ['%${query.trim()}%'],
-      orderBy: 'word',
-      limit: 40,
-    );
-    return rows.map(Word.fromMap).toList();
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return [];
+    try {
+      // 子串匹配：%query%（LIKE 元字符转义 \ → % → _，与
+      // word_repository_impl._escapeLike 同款：输入 % 曾匹配全库）
+      final escaped = trimmed
+          .replaceAll(r'\', r'\\')
+          .replaceAll('%', r'\%')
+          .replaceAll('_', r'\_');
+      final rows = await database.db.query(
+        'words',
+        where: "word LIKE ? ESCAPE '\\'",
+        whereArgs: ['%$escaped%'],
+        orderBy: 'word',
+        limit: 40,
+      );
+      return rows.map(Word.fromMap).toList();
+    } catch (e, s) {
+      reportSwallowedError('DictionarySearchReader.searchFuzzy failed', e, s);
+      return [];
+    }
   }
 
   @override

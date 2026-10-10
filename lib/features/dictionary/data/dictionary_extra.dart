@@ -6,6 +6,8 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+
 import 'package:word_app/features/dictionary/application/dictionary_extra_reader.dart';
 import 'package:word_app/features/dictionary/domain/dictionary_extra.dart';
 
@@ -28,9 +30,12 @@ class DictionaryExtraStore {
       final raw = await rootBundle.loadString('assets/db/dictionary_extra.json');
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
       _raw = (decoded['entries'] as Map<String, dynamic>?) ?? const {};
-    } catch (_) {
-      // 资产缺失或解析失败时降级为空数据，不影响主流程
-      _raw = const {};
+    } catch (e, s) {
+      // 资产缺失或解析失败时不影响主流程；上报且不缓存失败
+      // （此前 _loading 把失败当成功缓存，本进程永不重试）。
+      reportSwallowedError('dictionary_extra.json 加载失败（下次访问重试）', e, s);
+      _loading = null;
+      return;
     }
   }
 

@@ -8,6 +8,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 
 import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/core/utils/monster_voice.dart';
@@ -91,9 +96,14 @@ class _EvolutionCeremonyState extends State<_EvolutionCeremony> with TickerProvi
   late final Animation<double> _scaleAnim;
   bool _finished = false;
 
+  /// 进化台词（带真实变量的 milestone 槽；TTS 之外也上屏——静音/缺语音包
+  /// 用户此前完全感知不到这句「它说了什么」）。
+  String _milestoneLine = '';
+
   @override
   void initState() {
     super.initState();
+    unawaited(_loadMilestoneLine());
     _fadeCtrl = AnimationController(vsync: this, duration: widget.fadeIn);
     _crossCtrl = AnimationController(vsync: this, duration: widget.cross);
     _confettiCtrl = ConfettiController();
@@ -123,13 +133,37 @@ class _EvolutionCeremonyState extends State<_EvolutionCeremony> with TickerProvi
       _confettiCtrl.play();
       // 「怪兽开口」第三刻：新形态现身那一刻说出进化台词——这也是 MonsterSpeech 的
       // milestone 槽首次接进生产（此前只有测试消费）。闸门拦下则只有画面，无声音。
-      final line = MonsterSpeech().pick(SpeechSlot.milestone, vars: {'stage': MonsterIcon.stageName(widget.toStage)});
-      unawaited(MonsterVoice.system.say(line));
+      unawaited(MonsterVoice.system.say(_milestoneLine.isEmpty ? '你的怪兽长出了新形态！' : _milestoneLine));
     });
     // 总驻留后自动关（点击关共用 _finish，幂等）。
     Future<void>.delayed(widget.totalHold, () {
       if (mounted) _finish();
     });
+  }
+
+  /// 载入带真实数据的 milestone 台词：days/streak/balance 全注入（此前只注入
+  /// stage，6 条模板中 4 条含其它占位符被永久过滤——「第 N 天！」「连击 xN！」
+  /// 之类庆祝文案不可达）。读不到的槽位保持 null，引擎自动跳过含槽模板。
+  Future<void> _loadMilestoneLine() async {
+    var vars = <String, Object?>{'stage': MonsterIcon.stageName(widget.toStage)};
+    try {
+      final reader = context.read<CheckinStatusReader?>();
+      final store = context.read<ScareCoinStore?>();
+      int? days;
+      int? streak;
+      if (reader != null) {
+        final results = await Future.wait([reader.getCheckinDates(), reader.getStreakDays()]);
+        days = (results[0] as Set<String>).length;
+        streak = results[1] as int;
+      }
+      int? balance;
+      if (store != null) balance = await store.balance();
+      vars = {'days': days, 'streak': streak, 'balance': balance, 'stage': MonsterIcon.stageName(widget.toStage)};
+    } catch (e, s) {
+      reportSwallowedError('进化仪式台词变量读取失败', e, s);
+    }
+    if (!mounted) return;
+    setState(() => _milestoneLine = MonsterSpeech().pick(SpeechSlot.milestone, vars: vars));
   }
 
   void _finish() {
@@ -210,6 +244,18 @@ class _EvolutionCeremonyState extends State<_EvolutionCeremony> with TickerProvi
                             ),
                           ),
                         ),
+                        // 它说的那句话也上屏（TTS 之外的第二通道）。
+                        if (_milestoneLine.isNotEmpty)
+                          Positioned(
+                            bottom: 58,
+                            child: Opacity(
+                              opacity: _inAnim.value,
+                              child: Text(
+                                _milestoneLine,
+                                style: MwTypography.bodyMd.copyWith(color: MwColors.charcoal.withValues(alpha: AppAlphas.o85)),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),

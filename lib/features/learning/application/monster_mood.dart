@@ -12,6 +12,7 @@
 // - todayCombo：LearningSessionState.combo（会话内连击）。
 // - returnedAfterGap：ScareCoinStore.checkinDates 最后日期距今天数。
 import 'package:word_app/core/utils/boss_siege.dart';
+import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 
@@ -88,9 +89,8 @@ class MonsterMoodResolver {
       if (last == null || d.isAfter(last)) last = d;
     }
     if (last == null) return false;
-    final today0 = DateTime(today.year, today.month, today.day);
-    final last0 = DateTime(last.year, last.month, last.day);
-    return today0.difference(last0).inDays >= 3;
+    // 日历日差（DST 安全）：绝对时长差在夏令时周会漏触发回归惊喜档。
+    return calendarDaysBetween(last, today) >= 3;
   }
 }
 

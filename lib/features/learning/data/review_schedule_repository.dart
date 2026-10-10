@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/core/utils/debug_log.dart';
 
 import 'dart:async';
@@ -118,7 +119,8 @@ class ReviewScheduleRepository extends ChangeNotifier {
     var date = DateTime.now();
     while (_activeDates.contains(_dateKey(date))) {
       count++;
-      date = date.subtract(const Duration(days: 1));
+      // 日历日分量递减（DST 安全）：24h 绝对减法在夏令时切换日会跳日断计。
+      date = calendarDayBefore(date);
     }
     return count;
   }
@@ -280,7 +282,12 @@ class ReviewScheduleRepository extends ChangeNotifier {
     // 重置调度进度；同时保证计数增量的 before 口径正确。
     FsrsCard? prior = _cards[word];
     if (prior == null && _useSqlite && _store != null) {
-      prior = await _store!.cardForWord(word);
+      // database_closed/磁盘错直接打断评分链路（同文件其它 DB 调用均有兜底）。
+      try {
+        prior = await _store!.cardForWord(word);
+      } catch (error, stack) {
+        reportSwallowedError('FSRS rateWord cardForWord', error, stack);
+      }
     }
     final isLearn = prior == null;
     final card = isLearn ? _engine.learn(word, rating) : _engine.review(prior, rating);
@@ -320,27 +327,38 @@ class ReviewScheduleRepository extends ChangeNotifier {
   Future<void> forget(String word) async {
     await initialize();
     // MEM/F3：与 rateWord 同理——map 未命中须查库，防子集加载下漏删。
-    var removed = _cards.remove(word);
+    FsrsCard? removed = _cards.remove(word);
     if (removed == null && _useSqlite && _store != null) {
-      removed = await _store!.cardForWord(word);
+      try {
+        removed = await _store!.cardForWord(word);
+      } catch (error, stack) {
+        reportSwallowedError('FSRS forget cardForWord', error, stack);
+      }
       if (removed == null) return;
     } else if (removed == null) {
       return;
     }
     _applyCountsDelta(removed, null);
-    if (_useSqlite && _store != null) {
-      try {
-        await _store!.deleteCard(word);
-      } catch (error, stack) {
-        reportSwallowedError('FSRS forget persist', error, stack);
+    // MEM/C6 同款：forget 也走 _writeGate——SP 模式下与 rateWord 的全量
+    // jsonEncode 交错会互相覆写（删掉的卡被评分写复活）；SQLite 模式下
+    // deleteCard 与排队的 recordRating 无序执行同样能复活已删卡片。
+    final persist = _writeGate.then((_) async {
+      if (_useSqlite && _store != null) {
+        try {
+          await _store!.deleteCard(word);
+        } catch (error, stack) {
+          reportSwallowedError('FSRS forget persist', error, stack);
+        }
+      } else {
+        try {
+          await _saveCards();
+        } catch (error, stack) {
+          reportSwallowedError('FSRS forget persist (sp)', error, stack);
+        }
       }
-    } else {
-      try {
-        await _saveCards();
-      } catch (error, stack) {
-        reportSwallowedError('FSRS forget persist (sp)', error, stack);
-      }
-    }
+    });
+    _writeGate = persist.catchError((_) {});
+    await persist;
     notifyListeners();
   }
 
@@ -422,8 +440,18 @@ class ReviewScheduleRepository extends ChangeNotifier {
       return;
     }
 
+    // 顶层 jsonDecode 先兑一层：SP blob 整体损坏时抛出会让每次启动重复失败并永久卡在 SP 降级模式
+    //（降级路径同样解不动→空表→下一次评分用近空 map 覆写）。改为：记录为空迁入并写标记，
+    // 原 blob 由 E2 应急备份保留（供人工恢复）——损坏数据本就不可读，不能拿它阻塞启动。
+    Map<String, dynamic> decodedCards;
+    try {
+      decodedCards = jsonDecode(rawCards) as Map<String, dynamic>;
+    } catch (error, stack) {
+      reportSwallowedError('FSRS migration: SP cards blob corrupt; migrate as empty', error, stack);
+      decodedCards = const <String, dynamic>{};
+    }
+
     // 逐行解析，损坏行跳过（学习记录不可再生产，能救一行是一行）。
-    final decodedCards = jsonDecode(rawCards) as Map<String, dynamic>;
     final cards = <FsrsCard>[];
     var skipped = 0;
     for (final entry in decodedCards.entries) {
@@ -438,7 +466,13 @@ class ReviewScheduleRepository extends ChangeNotifier {
     final dailyStats = <String, Map<String, int>>{};
     final rawStats = prefs.getString(dailyStatsPrefKey);
     if (rawStats != null && rawStats.isNotEmpty) {
-      final decodedStats = jsonDecode(rawStats) as Map<String, dynamic>;
+      Map<String, dynamic> decodedStats;
+      try {
+        decodedStats = jsonDecode(rawStats) as Map<String, dynamic>;
+      } catch (error, stack) {
+        reportSwallowedError('FSRS migration: SP stats blob corrupt; skip', error, stack);
+        decodedStats = const <String, dynamic>{};
+      }
       for (final entry in decodedStats.entries) {
         try {
           final map = entry.value as Map<String, dynamic>;
@@ -477,8 +511,11 @@ class ReviewScheduleRepository extends ChangeNotifier {
       if (prefs.getString(migratedMarkerKey) != 'done') return;
       // H2：若尚无应急备份且 SP 仍有数据，先打包到 emergencyBackupKey。
       final cardsRaw = prefs.getString(cardsPrefKey);
-      if ((prefs.getString(emergencyBackupKey) ?? '').isEmpty && cardsRaw != null && cardsRaw.isNotEmpty) {
-        await prefs.setString(
+      final hasBackup = (prefs.getString(emergencyBackupKey) ?? '').isNotEmpty;
+      if (!hasBackup && cardsRaw != null && cardsRaw.isNotEmpty) {
+        // 写返回 false（磁盘满等）不抛错：此时绝不能删主键——唯一可恢复
+        // 快照还不存在，删了学习记录就永久丢失。留原键，下次启动重试打包。
+        final saved = await prefs.setString(
           emergencyBackupKey,
           jsonEncode({
             'savedAt': DateTime.now().toIso8601String(),
@@ -487,6 +524,14 @@ class ReviewScheduleRepository extends ChangeNotifier {
             activeDatesPrefKey: prefs.getStringList(activeDatesPrefKey),
           }),
         );
+        if (!saved) {
+          reportSwallowedError(
+            'FSRS E2 emergency backup write returned false; keep legacy keys',
+            StateError('setString($emergencyBackupKey) returned false'),
+            StackTrace.current,
+          );
+          return;
+        }
       }
       await prefs.remove(cardsPrefKey);
       await prefs.remove(dailyStatsPrefKey);
@@ -500,19 +545,47 @@ class ReviewScheduleRepository extends ChangeNotifier {
   // 旧 SP blob 解析（降级模式专用）
   // ============================================================
 
+  /// 降级路径逐行解析：单行损坏只丢该行，不再整表清空
+  ///（整表清空后任意评分会用近空 map 覆写 SP blob，把可救的行也葬掉）。
   Map<String, FsrsCard> _readCards(String? raw) {
     if (raw == null || raw.isEmpty) return {};
-    final decoded = jsonDecode(raw) as Map<String, dynamic>;
-    return decoded.map((word, card) => MapEntry(word, FsrsCard.fromJson(card as Map<String, dynamic>)));
+    Map<String, dynamic> decoded;
+    try {
+      decoded = jsonDecode(raw) as Map<String, dynamic>;
+    } catch (error, stack) {
+      reportSwallowedError('FSRS degraded _readCards: blob corrupt', error, stack);
+      return {};
+    }
+    final cards = <String, FsrsCard>{};
+    for (final entry in decoded.entries) {
+      try {
+        cards[entry.key] = FsrsCard.fromJson(entry.value as Map<String, dynamic>);
+      } catch (error, stack) {
+        reportSwallowedError('FSRS degraded _readCards: skip corrupt "${entry.key}"', error, stack);
+      }
+    }
+    return cards;
   }
 
   Map<String, Map<String, int>> _readDailyStats(String? raw) {
     if (raw == null || raw.isEmpty) return {};
-    final decoded = jsonDecode(raw) as Map<String, dynamic>;
-    return decoded.map((date, counts) {
-      final map = counts as Map<String, dynamic>;
-      return MapEntry(date, {'learn': map['learn'] as int? ?? 0, 'review': map['review'] as int? ?? 0});
-    });
+    Map<String, dynamic> decoded;
+    try {
+      decoded = jsonDecode(raw) as Map<String, dynamic>;
+    } catch (error, stack) {
+      reportSwallowedError('FSRS degraded _readDailyStats: blob corrupt', error, stack);
+      return {};
+    }
+    final stats = <String, Map<String, int>>{};
+    for (final entry in decoded.entries) {
+      try {
+        final map = entry.value as Map<String, dynamic>;
+        stats[entry.key] = {'learn': map['learn'] as int? ?? 0, 'review': map['review'] as int? ?? 0};
+      } catch (error, stack) {
+        reportSwallowedError('FSRS degraded _readDailyStats: skip corrupt "${entry.key}"', error, stack);
+      }
+    }
+    return stats;
   }
 
   Future<void> _saveCards() async {

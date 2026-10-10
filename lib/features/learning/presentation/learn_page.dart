@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/utils/milestone_guard.dart';
 import 'package:word_app/widgets/common/mw_feedback.dart';
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -484,6 +486,11 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   /// 连击里程碑探头去重（5/10/15 每档每会话一次）。
   final Set<int> _peekedMilestones = <int>{};
   int _wrongIndex = -1;
+
+  /// 答错情绪反应（多邻国式）：怪兽在连击条位霂320ms 委屈表情，
+  /// 之后自动收回——答错不指责，它先替你难过一下。
+  bool _monsterSad = false;
+  Timer? _sadTimer;
   int _correctIndex = -1;
 
   /// 选项 tile 定位（金币飞行起点）；选项固定 4 席。
@@ -505,6 +512,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _sadTimer?.cancel();
     _shakeController.dispose();
     _bounceController.dispose();
     _checkController.dispose();
@@ -555,7 +563,14 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       // 蓝图红线：答错轻提示音（无触觉无惩罚，缺席即信号）；
       // 连击 ≥3 时叠加 combo_break——连击中断是值得听见的瞬间。
       SfxPlayer.fire(widget.state.combo >= 3 ? Sfx.comboBreak : Sfx.wrongSoft);
-      setState(() => _wrongIndex = i);
+      setState(() {
+        _wrongIndex = i;
+        _monsterSad = true;
+      });
+      _sadTimer?.cancel();
+      _sadTimer = Timer(const Duration(milliseconds: 1400), () {
+        if (mounted) setState(() => _monsterSad = false);
+      });
       widget.state.recordAnswer(false);
       _shakeController.forward(from: 0);
     }
@@ -563,13 +578,17 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
 
   /// 连击里程碑全屏探头（蓝图 W2：5/10/15 三档，每档每会话一次）。
   /// 非阻塞：MonsterPeekOverlay 自带 IgnorePointer，不碰答题节奏预算。
+  /// 探头被串行防重入拦下（如金币探头同帧在演）时撤回会话内标记，
+  /// 下一次答对到同一档位补演——错过不该等于看过。
   void _maybePeekForCombo() {
     const milestones = {5: '小怪兽为你欢呼！', 10: '火力全开！', 15: '无可阻挡！'};
     final combo = widget.state.combo;
     if (!milestones.containsKey(combo)) return;
     if (_peekedMilestones.contains(combo)) return;
     _peekedMilestones.add(combo);
-    MonsterPeekOverlay.show(context, phrase: milestones[combo]!);
+    if (!MonsterPeekOverlay.show(context, phrase: milestones[combo]!)) {
+      _peekedMilestones.remove(combo);
+    }
   }
 
   static Offset? _centerOf(GlobalKey key) {
@@ -627,9 +646,15 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       if (!mounted) return;
       SfxPlayer.fire(Sfx.milestone);
       HapticsGate.play(HapticCue.heavy);
-      MonsterPeekOverlay.show(context, phrase: '第 $crossed 枚金币！钱包鼓鼓的！');
+      // 探头被串行防重入拦下时不落「已庆祝」：这一档留待下个机会补演
+      //（曾把它标记成已庆祝，导致该次里程碑庆祝被永久吞掉）。
+      if (!MonsterPeekOverlay.show(context, phrase: '第 $crossed 枚尖叫币！钱包鼓鼓的！')) return;
       // 演出排定后再落「已庆祝」：页面中途销毁则标记未写，下个机会补演。
-      await prefs.setInt(MilestoneGuard.lastCelebratedKey, crossed);
+      final saved = await prefs.setInt(MilestoneGuard.lastCelebratedKey, crossed);
+      if (!saved) {
+        // 标记写失败不阻断答题，但要让这次异常可见（下次跨额会重复庆祝）。
+        reportSwallowedError('里程碑庆祝标记写入失败', StateError('setInt($crossed) returned false'), StackTrace.current);
+      }
     } catch (e, s) {
       reportSwallowedError('里程碑庆祝失败', e, s);
     }
@@ -664,45 +689,9 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 连击条：≥2 现身，≥3 火苗，≥5 怪兽探头欢呼（形态切换带缩放 pop）。
-              if (widget.state.combo >= 2) ...[
-                Row(
-                  children: [
-                    AnimatedSwitcher(
-                      duration: MotionDurations.base,
-                      transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-                      child: widget.state.combo >= 5
-                          ? const MonsterIcon(key: ValueKey('cheer'), size: 32)
-                          : Icon(
-                              key: const ValueKey('fire'),
-                              Icons.local_fire_department_rounded,
-                              size: 28,
-                              color: comboTierColor,
-                            ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '连击 ×',
-                      style: TextStyle(
-                        fontSize: AppFontSizes.bodySm * resp.fontScale,
-                        fontWeight: FontWeight.w800,
-                        color: colors.text1,
-                      ),
-                    ),
-                    RollingNumber(
-                      value: widget.state.combo,
-                      style: TextStyle(
-                        fontSize: AppFontSizes.bodySm * resp.fontScale,
-                        fontWeight: FontWeight.w800,
-                        color: comboTierColor,
-                      ),
-                    ),
-                    if (widget.state.combo >= 5)
-                      Text(
-                        ' 小怪兽为你欢呼！',
-                        style: TextStyle(fontSize: AppFontSizes.caption * resp.fontScale, color: colors.text2),
-                      ),
-                  ],
-                ),
+              // 答错窗口内怪兽优先占位：垂眼撜嘴陪你难过 1.4s（连击归零后条位仍保留）。
+              if (widget.state.combo >= 2 || _monsterSad) ...[
+                _buildComboRow(colors, resp, comboTierColor),
                 const SizedBox(height: 8),
               ],
               Text(
@@ -748,6 +737,62 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
           ),
         ),
       ),
+    );
+  }
+
+  /// 连击条（从 build 抽出：原 build 超 120 行守卫线）。
+  /// 怪兽三态：答错 sad 委屈 / ≥5 cheer 欢呼 / 其余火苗。
+  Widget _buildComboRow(ThemeVars colors, AppResponsive resp, Color comboTierColor) {
+    return Row(
+      children: [
+        AnimatedSwitcher(
+          duration: MotionDurations.base,
+          transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+          child: _monsterSad
+              ? const MonsterIcon(key: ValueKey('sad'), size: 32, sad: true)
+              : widget.state.combo >= 5
+              ? const MonsterIcon(key: ValueKey('cheer'), size: 32)
+              : Icon(
+                  key: const ValueKey('fire'),
+                  Icons.local_fire_department_rounded,
+                  size: 28,
+                  color: comboTierColor,
+                ),
+        ),
+        const SizedBox(width: 6),
+        if (_monsterSad)
+          Text(
+            '它比你还难受……再试一次！',
+            style: TextStyle(
+              fontSize: AppFontSizes.bodySm * resp.fontScale,
+              fontWeight: FontWeight.w700,
+              color: colors.text2,
+            ),
+          )
+        else ...[
+          Text(
+            '连击 ×',
+            style: TextStyle(
+              fontSize: AppFontSizes.bodySm * resp.fontScale,
+              fontWeight: FontWeight.w800,
+              color: colors.text1,
+            ),
+          ),
+          RollingNumber(
+            value: widget.state.combo,
+            style: TextStyle(
+              fontSize: AppFontSizes.bodySm * resp.fontScale,
+              fontWeight: FontWeight.w800,
+              color: comboTierColor,
+            ),
+          ),
+        ],
+        if (widget.state.combo >= 5)
+          Text(
+            ' 小怪兽为你欢呼！',
+            style: TextStyle(fontSize: AppFontSizes.caption * resp.fontScale, color: colors.text2),
+          ),
+      ],
     );
   }
 

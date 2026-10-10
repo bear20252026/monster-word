@@ -31,10 +31,16 @@ class BookRepositoryImpl implements BookRepository {
 
   @override
   Future<Book?> getBookById(int id) async {
-    final db = _database.db;
-    final maps = await db.query('books', where: 'id = ?', whereArgs: [id]);
-    if (maps.isEmpty) return null;
-    return Book.fromMap(maps.first);
+    try {
+      final db = _database.db;
+      final maps = await db.query('books', where: 'id = ?', whereArgs: [id]);
+      if (maps.isEmpty) return null;
+      return Book.fromMap(maps.first);
+    } catch (e, s) {
+      // 与 getBooks 同口径：库未初始化/查询异常不沿 getCurrentBook() 直抛 UI
+      reportSwallowedError('BookRepositoryImpl.getBookById failed', e, s);
+      return null;
+    }
   }
 
   @override
@@ -53,9 +59,24 @@ class BookRepositoryImpl implements BookRepository {
 
   @override
   Future<List<Book>> searchBooks(String query) async {
-    final db = _database.db;
-    final maps = await db.query('books', where: 'name LIKE ? OR code LIKE ?', whereArgs: ['%$query%', '%$query%']);
-    return maps.map((m) => Book.fromMap(m)).toList();
+    try {
+      final db = _database.db;
+      // LIKE 元字符转义（\ → % → _，与 word_repository_impl._escapeLike 同款）：
+      // 输入 % 曾全库匹配。
+      final escaped = query
+          .replaceAll(r'\', r'\\')
+          .replaceAll('%', r'\%')
+          .replaceAll('_', r'\_');
+      final maps = await db.query(
+        'books',
+        where: "name LIKE ? ESCAPE '\\' OR code LIKE ? ESCAPE '\\'",
+        whereArgs: ['%$escaped%', '%$escaped%'],
+      );
+      return maps.map((m) => Book.fromMap(m)).toList();
+    } catch (e, s) {
+      reportSwallowedError('BookRepositoryImpl.searchBooks failed', e, s);
+      return [];
+    }
   }
 
   @override

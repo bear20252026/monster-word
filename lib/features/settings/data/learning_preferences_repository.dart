@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/infrastructure/app_preferences.dart';
@@ -58,7 +59,8 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
   @override
   Future<void> save(LearningPreferences preferences) async {
     final prefs = await SharedPreferences.getInstance();
-    await Future.wait([
+    // 全部写返回值收集：任一 false 上报（磁盘异常时设置半保存不可观测）。
+    final results = await Future.wait([
       prefs.setBool(autoPlayAudioKey, preferences.autoPlayAudio),
       prefs.setBool(showPhoneticKey, preferences.showPhonetic),
       prefs.setBool(darkModeKey, preferences.darkMode),
@@ -77,5 +79,8 @@ class LearningPreferencesRepository implements SettingsReader, SettingsWriter {
       prefs.setBool(showRootsKey, preferences.showRoots),
       prefs.setString(reminderTimeKey, preferences.reminderTime),
     ]);
+    if (results.any((ok) => !ok)) {
+      reportSwallowedError('学习偏好保存部分写入失败', StateError('${results.where((ok) => !ok).length}/${results.length} writes returned false'), StackTrace.current);
+    }
   }
 }

@@ -19,6 +19,8 @@ import 'package:word_app/features/account/application/password_auth_store.dart';
 import 'package:word_app/features/account/application/sms_code_service.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
+import 'package:word_app/core/utils/monster_identity_prefs.dart';
+import 'package:word_app/features/account/presentation/monster_hatching_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -337,7 +339,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     // 先起「欢迎回家！」再延迟切首页，给这一拍留出可见时刻。
     MonsterPeekOverlay.show(context, phrase: '欢迎回家！');
     final navigator = Navigator.of(context);
-    Future<void>.delayed(const Duration(milliseconds: 900), () {
+    Future<void>.delayed(const Duration(milliseconds: 900), () async {
+      // 蓝图 W4 命名仪式：首次登录（未破壳）先进开局仪式，完成后再进主页。
+      // 此前直接 push '/'，新用户的命名/生日/羁绊起点全部缺失，需重启才能补演。
+      var hatched = true;
+      try {
+        hatched = await MonsterIdentityPrefs.hatched;
+      } catch (e, s) {
+        // 读不到按「已破壳」降级直进主页（fail-safe 口径与 splash _goToMain 一致）。
+        reportSwallowedError('登录后读取破壳标记失败', e, s);
+      }
+      if (!navigator.mounted) return;
+      if (!hatched) {
+        navigator.pushReplacement(MaterialPageRoute<void>(builder: (_) => const MonsterHatchingPage()));
+        return;
+      }
       navigator.pushReplacementNamed('/');
     });
   }

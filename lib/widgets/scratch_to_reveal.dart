@@ -50,6 +50,10 @@ class ScratchToReveal extends StatefulWidget {
 class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProviderStateMixin {
   final List<Offset> _points = [];
   bool _revealed = false;
+
+  /// 笔画序号：CustomPaint 的 repaint listenable——指针移动只通知 painter
+  /// 重绘（此前 60-120 次/秒 setState 重建整个 Stack，含被遮 child 与文案）。
+  final ValueNotifier<int> _strokeSeq = ValueNotifier<int>(0);
   late AnimationController _revealController;
   late Animation<double> _revealAnim;
   double _scratchedArea = 0;
@@ -90,11 +94,13 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
     _points.clear();
     _coveredCells.clear();
     _scratchedArea = 0;
+    _strokeSeq.value++;
     _revealController.reset();
   }
 
   @override
   void dispose() {
+    _strokeSeq.dispose();
     _revealController.dispose();
     super.dispose();
   }
@@ -106,9 +112,8 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
     if (box == null) return;
 
     final localPos = box.globalToLocal(details.globalPosition);
-    setState(() {
-      _points.add(localPos);
-      if (box.size.width > 0 && box.size.height > 0) {
+    _points.add(localPos);
+    if (box.size.width > 0 && box.size.height > 0) {
         // 按笔刷半径标记覆盖格：格心落在 strokeWidth/2 内即视为已擦除，
         // 与视觉擦除范围一致，避免"看起来刮开了却不算数"。
         final cellW = box.size.width / _gridCols;
@@ -118,18 +123,18 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
         final colMax = ((localPos.dx + r) / cellW).ceil().clamp(0, _gridCols - 1);
         final rowMin = ((localPos.dy - r) / cellH).floor().clamp(0, _gridRows - 1);
         final rowMax = ((localPos.dy + r) / cellH).ceil().clamp(0, _gridRows - 1);
-        for (var row = rowMin; row <= rowMax; row++) {
-          for (var col = colMin; col <= colMax; col++) {
-            final cx = (col + 0.5) * cellW;
-            final cy = (row + 0.5) * cellH;
-            if (math.sqrt(math.pow(cx - localPos.dx, 2) + math.pow(cy - localPos.dy, 2)) <= r) {
-              _coveredCells.add(row * _gridCols + col);
-            }
+      for (var row = rowMin; row <= rowMax; row++) {
+        for (var col = colMin; col <= colMax; col++) {
+          final cx = (col + 0.5) * cellW;
+          final cy = (row + 0.5) * cellH;
+          if (math.sqrt(math.pow(cx - localPos.dx, 2) + math.pow(cy - localPos.dy, 2)) <= r) {
+            _coveredCells.add(row * _gridCols + col);
           }
         }
-        _scratchedArea = _coveredCells.length / (_gridCols * _gridRows);
       }
-    });
+      _scratchedArea = _coveredCells.length / (_gridCols * _gridRows);
+    }
+    _strokeSeq.value++; // repaint 直驱 painter，不走 setState 整树重建
 
     if (_scratchedArea >= widget.revealThreshold) {
       _doReveal();
@@ -161,21 +166,33 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
           borderRadius: BorderRadius.circular(context.design.radius.control),
           child: Stack(
             children: [
-              // 底层内容（揭示后显示）
-              Positioned.fill(child: widget.child),
-              // 覆盖层（擦除效果）
+              // 底层内容（揭示后显示）。未揭示时从语义树排除：
+              // TalkBack 曾可逐条读出全部被遮的释义（直接泄答案）。
+              Positioned.fill(
+                child: ExcludeSemantics(
+                  excluding: !_revealed,
+                  child: widget.child,
+                ),
+              ),
+              // 覆盖层（擦除效果）；读屏用户有一条无需手势的揭示路径（双击）。
               AnimatedBuilder(
                 animation: _revealAnim,
                 builder: (context, _) {
                   final opacity = _revealAnim.value;
                   if (opacity <= 0) return const SizedBox.shrink();
                   return Positioned.fill(
-                    child: CustomPaint(
-                      painter: _ScratchPainter(
+                    child: Semantics(
+                      label: widget.coverText ?? '遮盖层',
+                      hint: '滑动擦除或双击直接揭示',
+                      button: true,
+                      onTap: _revealed ? null : _doReveal,
+                      child: CustomPaint(
+                        painter: _ScratchPainter(
                         points: _points,
                         strokeWidth: widget.strokeWidth,
                         opacity: opacity,
                         color: coverColor,
+                        repaint: _strokeSeq,
                       ),
                       child: Container(
                         color: coverColor.withValues(alpha: opacity),
@@ -202,6 +219,7 @@ class _ScratchToRevealState extends State<ScratchToReveal> with SingleTickerProv
                         ),
                       ),
                     ),
+                    ),
                   );
                 },
               ),
@@ -219,7 +237,7 @@ class _ScratchPainter extends CustomPainter {
   final double opacity;
   final Color color;
 
-  _ScratchPainter({required this.points, required this.strokeWidth, required this.opacity, required this.color});
+  _ScratchPainter({required this.points, required this.strokeWidth, required this.opacity, required this.color, super.repaint});
 
   @override
   void paint(Canvas canvas, Size size) {

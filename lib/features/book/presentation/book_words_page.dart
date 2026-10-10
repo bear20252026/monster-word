@@ -128,7 +128,11 @@ class _BookWordsPageState extends State<BookWordsPage> {
               },
             );
           }
-          return ListView.builder(
+          // 桌面端滚动条：千词长列表鼠标滚轮无位置感知（手机端系统叠加滚动条自动隐藏）。
+          return Scrollbar(
+            thumbVisibility: false,
+            interactive: true,
+            child: ListView.builder(
             padding: EdgeInsets.all(context.design.spacing.md),
             // +1：首项为词数统计头（验收标准：总数与词书标注一致）
             // +1：MEM/F2 分页窗口未到底时的底部加载指示项
@@ -176,6 +180,7 @@ class _BookWordsPageState extends State<BookWordsPage> {
                   ? FlowIn(key: ValueKey('word-flow-${word.id}'), index: waveIndex, child: card)
                   : KeyedSubtree(key: ValueKey('word-flow-${word.id}'), child: card);
             },
+            ),
           );
         },
       ),

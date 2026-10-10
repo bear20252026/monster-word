@@ -241,15 +241,18 @@ class _HaloSearchBackgroundState extends State<HaloSearchBackground> with Single
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: _HaloBgPainter(progress: _controller.value, color: widget.color ?? context.skin.colors.accent),
-          child: child,
-        );
-      },
-      child: widget.child,
+    return RepaintBoundary(
+      // 全屏 4s 常驲循环重绘单独成层：没有边界时每帧重绘扩散到与整页共享的 layer。
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return CustomPaint(
+            painter: _HaloBgPainter(progress: _controller.value, color: widget.color ?? context.skin.colors.accent),
+            child: child,
+          );
+        },
+        child: widget.child,
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 import 'package:word_app/features/learning/application/learning_session_reader.dart';
@@ -23,6 +24,9 @@ class MyFavPage extends StatefulWidget {
 class _MyFavPageState extends State<MyFavPage> {
   List<Word> _words = [];
   bool _isLoading = true;
+
+  /// 加载失败态（提供重试入口，不再永久转圈）。
+  bool _loadError = false;
   bool _isBatchEditMode = false;
   final Set<int> _selectedIndices = {};
 
@@ -33,14 +37,28 @@ class _MyFavPageState extends State<MyFavPage> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadError = false;
+    });
     final favorites = context.read<LearningFavoritesStore>();
-    final words = await favorites.loadFavoriteWords(currentQueue: context.read<LearningSessionReader>().queue);
-    if (mounted) {
-      setState(() {
-        _words = words.cast<Word>();
-        _isLoading = false;
-      });
+    try {
+      final words = await favorites.loadFavoriteWords(currentQueue: context.read<LearningSessionReader>().queue);
+      if (mounted) {
+        setState(() {
+          _words = words.cast<Word>();
+          _isLoading = false;
+        });
+      }
+    } catch (e, s) {
+      // 读取异常时此前 _isLoading 永久为 true（页面永久转圈）。
+      reportSwallowedError('收藏页加载失败', e, s);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _loadError = true;
+        });
+      }
     }
   }
 
@@ -120,6 +138,8 @@ class _MyFavPageState extends State<MyFavPage> {
             Expanded(
               child: _isLoading
                   ? Center(child: CircularProgressIndicator(color: context.skin.colors.accent))
+                  : _loadError
+                  ? _buildErrorView(skin)
                   : _words.isEmpty
                   ? _buildEmptyView(skin)
                   : _buildWordList(skin),
@@ -185,7 +205,27 @@ class _MyFavPageState extends State<MyFavPage> {
     );
   }
 
-  Widget _buildEmptyView(SkinSystem skin) {
+/// 加载失败态：重试入口（不再永久转圈）。
+  Widget _buildErrorView(SkinSystem skin) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 48, color: skin.colors.text3),
+          const SizedBox(height: AppSpacing.md),
+          Text('收藏加载失败，请稍后重试', style: MwTypography.bodyMd.copyWith(color: skin.colors.text2)),
+          const SizedBox(height: AppSpacing.md),
+          FilledButton(
+            onPressed: _loadData,
+            style: FilledButton.styleFrom(backgroundColor: skin.colors.accent),
+            child: const Text('重试'),
+          ),
+        ],
+      ),
+    );
+  }
+
+    Widget _buildEmptyView(SkinSystem skin) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

@@ -30,6 +30,10 @@ class MonsterIcon extends StatelessWidget {
   /// 腮帮鼓起 0~1（饱嗝时刻双颊 puff，平时为 0）。
   final double cheekPuff;
 
+  /// 难过表情（答错反馈用）：瞳孔下垂 + 撇嘴 + 眼角挂泪光。
+  /// 多邻国式「怪兽陪你有喜有忧」——答对它欢呼，答错它先替你难过一下。
+  final bool sad;
+
   const MonsterIcon({
     super.key,
     this.size = 40,
@@ -41,6 +45,7 @@ class MonsterIcon extends StatelessWidget {
     this.bellyScale = 1.0,
     this.evoStage = 0,
     this.cheekPuff = 0.0,
+    this.sad = false,
   });
 
   /// 累计签到天数 → 进化阶段（0/7/30/100）。
@@ -75,6 +80,7 @@ class MonsterIcon extends StatelessWidget {
           bellyScale: bellyScale.clamp(0.6, 1.8),
           evoStage: evoStage.clamp(0, 3),
           cheekPuff: cheekPuff.clamp(0.0, 1.0),
+          sad: sad,
         ),
       ),
     );
@@ -102,6 +108,7 @@ class _MonsterPainter extends CustomPainter {
   final double bellyScale;
   final int evoStage;
   final double cheekPuff;
+  final bool sad;
 
   _MonsterPainter({
     required this.bodyColor,
@@ -110,6 +117,7 @@ class _MonsterPainter extends CustomPainter {
     this.bellyScale = 1.0,
     this.evoStage = 0,
     this.cheekPuff = 0.0,
+    this.sad = false,
   });
 
   // 性能审计：paint() 单次分配 ~16 个 Paint；本 painter 被喂币/吞币/首页
@@ -228,18 +236,38 @@ class _MonsterPainter extends CustomPainter {
       _eyeWhitePaint,
     );
 
-    // 瞳孔
+    // 瞳孔（难过时下垂：视线落地面 + 双眼靠拢一点，委屈感）
+    final sadDrop = sad ? r * 0.09 : 0.0;
+    final sadPinch = sad ? r * 0.05 : 0.0;
     // 左瞳孔
-    canvas.drawCircle(Offset(cx - r * 0.22, cy - r * 0.12), r * 0.13, _pupilPaint);
+    canvas.drawCircle(Offset(cx - r * 0.22 + sadPinch, cy - r * 0.12 + sadDrop), r * 0.13, _pupilPaint);
     // 右瞳孔
-    canvas.drawCircle(Offset(cx + r * 0.32, cy - r * 0.12), r * 0.12, _pupilPaint);
+    canvas.drawCircle(Offset(cx + r * 0.32 - sadPinch, cy - r * 0.12 + sadDrop), r * 0.12, _pupilPaint);
 
-    // 高光
-    canvas.drawCircle(Offset(cx - r * 0.18, cy - r * 0.2), r * 0.05, _highlightPaint);
-    canvas.drawCircle(Offset(cx + r * 0.36, cy - r * 0.2), r * 0.045, _highlightPaint);
+    // 高光（难过时高光也随瞳孔下移，「眼里没光」的落寞感）
+    canvas.drawCircle(Offset(cx - r * 0.18 + sadPinch, cy - r * 0.2 + sadDrop), r * 0.05, _highlightPaint);
+    canvas.drawCircle(Offset(cx + r * 0.36 - sadPinch, cy - r * 0.2 + sadDrop), r * 0.045, _highlightPaint);
 
-    // === 5. 嘴巴（小微笑 / 张开吃金币）===
-    if (mouthOpen <= 0.01) {
+    // 难过眉：内高外低的斜眉（担忧脸）；正常态不画眉（干净）。
+    if (sad) {
+      _mouthPaint.strokeWidth = r * 0.045;
+      canvas.drawLine(Offset(cx - r * 0.42, cy - r * 0.38), Offset(cx - r * 0.12, cy - r * 0.30), _mouthPaint);
+      canvas.drawLine(Offset(cx + r * 0.12, cy - r * 0.30), Offset(cx + r * 0.40, cy - r * 0.38), _mouthPaint);
+      // 眼角泪光：右眼外角一颗小水珠。
+      _highlightPaint.color = MwColors.info;
+      canvas.drawCircle(Offset(cx + r * 0.48, cy - r * 0.04), r * 0.05, _highlightPaint);
+      _highlightPaint.color = AppColors.white100;
+    }
+
+    // === 5. 嘴巴（小微笑 / 张开吃金币 / 难过撇嘴）===
+    if (sad && mouthOpen <= 0.01) {
+      // 撇嘴：下弯小弧（替你难过的表情，不指责）。
+      _mouthPaint.strokeWidth = r * 0.05;
+      final mouthPath = Path();
+      mouthPath.moveTo(cx - r * 0.12, cy + r * 0.26);
+      mouthPath.quadraticBezierTo(cx, cy + r * 0.16, cx + r * 0.12, cy + r * 0.26);
+      canvas.drawPath(mouthPath, _mouthPaint);
+    } else if (mouthOpen <= 0.01) {
       _mouthPaint.strokeWidth = r * 0.05;
 
       final mouthPath = Path();
@@ -298,7 +326,8 @@ class _MonsterPainter extends CustomPainter {
         oldDelegate.mouthOpen != mouthOpen ||
         oldDelegate.bellyScale != bellyScale ||
         oldDelegate.evoStage != evoStage ||
-        oldDelegate.cheekPuff != cheekPuff;
+        oldDelegate.cheekPuff != cheekPuff ||
+        oldDelegate.sad != sad;
   }
 }
 

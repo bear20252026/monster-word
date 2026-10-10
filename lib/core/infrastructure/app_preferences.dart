@@ -86,8 +86,13 @@ class SecureTokenStorage {
     final prefs = AppPreferences();
     value = prefs.getString(_keyToken);
     if (value.isNotEmpty) {
-      await _storage.write(key: _keyToken, value: value);
-      await prefs.remove(_keyToken); // 清除明文
+      // 迁移写失败不能打断登录链：保留 SP 旧值下次再迁（成功才清明文）。
+      try {
+        await _storage.write(key: _keyToken, value: value);
+        await prefs.remove(_keyToken); // 清除明文
+      } catch (e, s) {
+        reportSwallowedError('安全存储迁移写失败（保留 SP 下次重试）', e, s);
+      }
     }
     return value;
   }
@@ -117,8 +122,13 @@ class SecureTokenStorage {
     final prefs = AppPreferences();
     value = prefs.getString(_keySecret);
     if (value.isNotEmpty) {
-      await _storage.write(key: _keySecret, value: value);
-      await prefs.remove(_keySecret); // 清除明文
+      // 迁移写失败不能打断登录链：保留 SP 旧值下次再迁（成功才清明文）。
+      try {
+        await _storage.write(key: _keySecret, value: value);
+        await prefs.remove(_keySecret); // 清除明文
+      } catch (e, s) {
+        reportSwallowedError('安全存储迁移写失败（保留 SP 下次重试）', e, s);
+      }
     }
     return value;
   }

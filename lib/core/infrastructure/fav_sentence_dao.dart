@@ -219,8 +219,8 @@ class FavSentenceDao {
     int type = 0,
   }) async {
     await ensureLoaded();
-    if (isFavSentence(wordId, sentenceId)) return false;
-
+    // 预检在闸外：双击两次都过检→闸内 _indexCount++ 两次，内存计数与 DB 行数永久分叉。
+    // 改为闸内判重复（下方 _serialized 块内检查后才递增计数）。
     final now = DateTime.now();
     final updateTime =
         '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}'
@@ -239,6 +239,7 @@ class FavSentenceDao {
     if (_useSqlite) {
       // 审计 I33：索引变更与持久化整体进串行闸门（单独包 persist 仍有交错窗口）
       return await _serialized(() async {
+        if (_indexByWordId[wordId]?.contains(sentenceId) ?? false) return false;
         _indexByWordId.putIfAbsent(wordId, () => <String>{}).add(sentenceId);
         _indexCount++;
         try {
@@ -262,6 +263,7 @@ class FavSentenceDao {
       });
     }
 
+    if (_cache.any((e) => e.wordId == wordId && e.sentenceId == sentenceId)) return false;
     _cache.insert(0, favData);
     await _saveAll();
     return true;
@@ -348,9 +350,13 @@ class FavSentenceDao {
     String wordUsage = '',
     int type = 0,
   }) async {
-    if (isFavSentence(wordId, sentenceId)) {
-      return removeFavSentence(wordId, sentenceId);
-    } else {
+    await ensureLoaded();
+    // 预检收进闸内再分派：闸外判定时双击两次都看到「未收藏」→两次 add，停在收藏态而非切回。
+    // add/remove 内部各自仍走 _serialized（闸嵌套闸，口径与 I33 一致）。
+    return _serialized(() async {
+      if (isFavSentence(wordId, sentenceId)) {
+        return removeFavSentence(wordId, sentenceId);
+      }
       return addFavSentence(
         word: word,
         wordId: wordId,
@@ -359,7 +365,7 @@ class FavSentenceDao {
         wordUsage: wordUsage,
         type: type,
       );
-    }
+    });
   }
 
   /// 清空缓存（用于刷新；SQLite 模式下仅丢弃已建索引，下次访问重建）
@@ -380,7 +386,9 @@ class FavSentenceDao {
       final list = jsonList.map((e) => FavSentenceData.fromJson(e as Map<String, dynamic>)).toList();
       list.sort((a, b) => b.updateTime.compareTo(a.updateTime));
       return list;
-    } catch (e) {
+    } catch (e, s) {
+      // 快照损坏按空表降级但必须上报：随后首次 _saveAll 会用近空列表覆写原快照，事件要可追溯。
+      reportSwallowedError('FavSentenceDao SP 快照损坏，按空表降级', e, s);
       return [];
     }
   }

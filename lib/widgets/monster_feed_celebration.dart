@@ -41,7 +41,10 @@ class MonsterFeedCelebration extends StatefulWidget {
   /// 怪兽画布边长，金币尺寸与徽标字号随画布等比缩放。
   final double size;
 
-  const MonsterFeedCelebration({super.key, required this.coinCount, this.size = 80});
+  /// 进化阶段（默认 0 奶泡；调用方传签到换算的 stage，进化不该只在探头页可见）。
+  final int evoStage;
+
+  const MonsterFeedCelebration({super.key, required this.coinCount, this.size = 80, this.evoStage = 0});
 
   @override
   State<MonsterFeedCelebration> createState() => _MonsterFeedCelebrationState();
@@ -61,6 +64,7 @@ class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with Si
     super.initState();
     final requested = widget.coinCount < 0 ? 0 : widget.coinCount;
     _visibleCoins = math.min(requested, _kMaxVisibleCoins);
+    _initCoinWidgets();
     _totalMs = _visibleCoins > 0 ? _visibleCoins * _kStaggerMs + _kTailMs : 0;
     _controller = AnimationController(
       vsync: this,
@@ -99,6 +103,15 @@ class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with Si
   }
 
   Timer? _burpTimer;
+
+  /// 金币子树只建一次：AnimatedBuilder 每帧重建时传同一 widget 实例，
+  /// Element 侧 identical 短路——渐变+边框+阴影的 BoxDecoration 不再逐帧重分配。
+  late final List<CoinBadge> _coinWidgets;
+
+  void _initCoinWidgets() {
+    final coinSize = widget.size * 0.24;
+    _coinWidgets = [for (int i = 0; i < _visibleCoins; i++) CoinBadge(size: coinSize)];
+  }
 
   @override
   void dispose() {
@@ -145,7 +158,6 @@ class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with Si
 
   @override
   Widget build(BuildContext context) {
-    final coinSize = widget.size * 0.24;
     return SizedBox(
       width: widget.size,
       height: widget.size,
@@ -159,7 +171,12 @@ class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with Si
             children: [
               Transform.scale(
                 scale: _burpScale(t),
-                child: MonsterIcon(size: widget.size, mouthOpen: _mouthOpen(t), cheekPuff: _cheekPuff(t)),
+                child: MonsterIcon(
+                  size: widget.size,
+                  mouthOpen: _mouthOpen(t),
+                  cheekPuff: _cheekPuff(t),
+                  evoStage: widget.evoStage,
+                ),
               ),
               // 金币全程挂载（透明度控制显隐，不移除节点），错峰飞入嘴部。
               for (int i = 0; i < _visibleCoins; i++)
@@ -167,7 +184,7 @@ class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with Si
                   opacity: (_fadeIns[i].value * (1 - _swallows[i].value)).clamp(0.0, 1.0),
                   child: Transform.translate(
                     offset: _flights[i].value,
-                    child: CoinBadge(size: coinSize),
+                    child: _coinWidgets[i],
                   ),
                 ),
               if (widget.coinCount > _kMaxVisibleCoins)

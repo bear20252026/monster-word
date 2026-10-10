@@ -47,13 +47,28 @@ class MonsterIdentityPrefs {
     final now = DateTime.now();
     final trimmed = name.trim();
     final stored = trimmed.isEmpty ? defaultName : trimmed;
-    await prefs.setString(nameKey, stored);
-    await prefs.setString(
-      birthdayKey,
-      '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
-    );
-    await prefs.setInt(hatchedKey, 1);
+    final birthday =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    // hatched 置位前先确认名字真的落了盘：写返回 false（磁盘满等）不抛错，
+    // 若照样置位，调用方会跳过重演仪式——命名静默丢失。三写全查，任一失败即抛。
+    if (!await prefs.setString(nameKey, stored)) {
+      throw StateError('monster_name setString returned false');
+    }
+    if (!await prefs.setString(birthdayKey, birthday)) {
+      throw StateError('monster_birthday setString returned false');
+    }
+    if (!await prefs.setInt(hatchedKey, 1)) {
+      throw StateError('monster_hatched setInt returned false');
+    }
     return stored;
+  }
+
+  /// 生日（命名仪式落库的破壳日；未落库返回 null）。
+  /// 生日彩蛋消费方：小屋进届时检查「今天是它的生日吗」。
+  static Future<DateTime?> birthday() async {
+    final raw = (await SharedPreferences.getInstance()).getString(birthdayKey);
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw);
   }
 
   static Future<bool> get hatched async {

@@ -7,6 +7,7 @@
 //   style_migration.dart — 旧主题偏好迁移
 // 本文件保留运行时：SkinSystem 状态机 + SkinProvider 注入 + context 扩展。
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -148,7 +149,13 @@ class SkinSystem extends ChangeNotifier {
     if (!DesignLanguages.all.containsKey(id) || _designLanguageId == id) return;
     _designLanguageId = id;
     notifyListeners();
-    SharedPreferences.getInstance().then((p) => p.setString(_kDesignPrefKey, id)).catchError((e) => false);
+    SharedPreferences.getInstance().then((p) => p.setString(_kDesignPrefKey, id)).then<void>((saved) {
+      if (!saved) {
+        reportSwallowedError('设计语言偏好写入失败（重启后回退旧档）', StateError('setString($id) returned false'), StackTrace.current);
+      }
+    }, onError: (Object e, StackTrace s) {
+      reportSwallowedError('设计语言偏好写入失败', e, s);
+    });
   }
 
   /// 品牌风格 → 默认颜色主题映射（整站换肤 A/B 联动用）。

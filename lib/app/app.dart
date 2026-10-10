@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/audio/audio_service.dart';
@@ -389,11 +390,8 @@ class _HomeShellState extends State<_HomeShell> {
       final lastDate = DateTime.tryParse(last);
       if (lastDate == null) return;
       final now = DateTime.now();
-      final absent = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      ).difference(DateTime(lastDate.year, lastDate.month, lastDate.day)).inDays;
+      // 日历日差（DST 安全）：绝对时长差在夏令时周会少算一天，误杀 3 天回归礼。
+      final absent = calendarDaysBetween(lastDate, now);
       if (absent < 3) return;
       HapticsGate.play(HapticCue.success);
       showReunionOverlay(context, absentDays: absent);

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/infrastructure/scare_coin_ledger_dao.dart';
+import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/models/scare_coin_entry.dart';
@@ -243,9 +244,9 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     if (last.isEmpty) return;
     final lastDay = DateTime.tryParse(last);
     if (lastDay == null) return;
-    final today = DateTime(now.year, now.month, now.day);
-    final base = DateTime(lastDay.year, lastDay.month, lastDay.day);
-    final gap = today.difference(base).inDays;
+    // 日历日差（DST 安全，与 _dayBefore 同族口径）：
+    // 绝对时长差在夏令时周少算 1 天→该回填的断签日不回填。
+    final gap = calendarDaysBetween(lastDay, now);
     if (gap <= 1) return;
     var count = prefs.getInt(protectionKey) ?? 0;
     if (count <= 0) return;
@@ -333,7 +334,13 @@ class PreferencesScareCoinStore implements ScareCoinStore {
         delta: delta,
         entry: ScareCoinEntry(time: DateTime.now(), delta: delta, reason: reason),
       );
-      if (lastCheckInIso != null) await prefs.setString(lastCheckInKey, lastCheckInIso);
+      if (lastCheckInIso != null) {
+        // 标记写失败上报（余额/库存均走 _writeChecked，此处曾漏网；仅靠流水幂等兑底）。
+        final saved = await prefs.setString(lastCheckInKey, lastCheckInIso);
+        if (!saved) {
+          reportSwallowedError('签到日期标记写入失败', StateError('setString($lastCheckInIso) returned false'), StackTrace.current);
+        }
+      }
       return newBalance;
     }
     final current = prefs.getInt(balanceKey) ?? 0;

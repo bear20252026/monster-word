@@ -455,7 +455,7 @@ class _RoomPiggyPainter extends CustomPainter {
 
 /// 房主小怪兽：瞳孔跟随 + 眨眼 + 跳跃影子 + 被摸开心（W4.5 宠物化）。
 class _RoomMonsterPainter extends CustomPainter {
-  _RoomMonsterPainter({required this.pupilOffset, required this.blink, required this.hop, this.happy = 0.0});
+  _RoomMonsterPainter({required this.pupilOffset, required this.blink, required this.hop, this.happy = 0.0, this.evoStage = 0});
 
   final Offset pupilOffset;
   final double blink; // 0 睁眼 → 1 闭合（可为轻微负值 = 睁大回弹）
@@ -463,6 +463,11 @@ class _RoomMonsterPainter extends CustomPainter {
 
   /// 被摸开心度 0~1（W4.5 抚摸）：>0.5 眯眼笑（∩ 弧眼）、腮红变大、嘴咧更开。
   final double happy;
+
+  /// 进化阶段 0~3（与 MonsterIcon.stageFor 同源）：房主随签到进化——
+  /// 1 镀金角、2 飞翼、3 金冠光环。此前小屋怪兽永远不进化，与首页/探头
+  /// 形态互相矛盾（进化的稀缺感被最大的展示位吃掉了）。
+  final int evoStage;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -488,16 +493,40 @@ class _RoomMonsterPainter extends CustomPainter {
       Rect.fromCenter(center: Offset(78 * s, 108 * s), width: 24 * s, height: 12 * s),
       p(TreasurePalette.pigAccent),
     );
+    // 进化件（画在身体后、角前打底，与 MonsterIcon 的分层一致）。
+    if (evoStage >= 3) {
+      // 金冠光环：100 天形态的尊贵背光。
+      canvas.drawCircle(
+        Offset(58 * s, 60 * s),
+        60 * s,
+        Paint()
+          ..color = TreasurePalette.goldDeep.withValues(alpha: AppAlphas.o85)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.2 * s,
+      );
+    }
+    if (evoStage >= 2) {
+      // 飞翼：30 天形态，左右各一叶（身体两侧探出的羽叶）。
+      final wing = Paint()..color = TreasurePalette.pigSkinTop.withValues(alpha: AppAlphas.o92);
+      for (final side in [-1.0, 1.0]) {
+        canvas.save();
+        canvas.translate((58 + side * 54) * s, 66 * s);
+        canvas.rotate(side * 0.5);
+        canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 30 * s, height: 14 * s), wing);
+        canvas.restore();
+      }
+    }
     // 身体
     canvas.drawOval(body, Paint()..shader = skinShader);
-    // 白角
+    // 双角（7 天起镀金——进化最直观的回执）
+    final hornColor = evoStage >= 1 ? TreasurePalette.goldDeep : TreasurePalette.card;
     for (final dx in [44.0, 72.0]) {
       canvas.drawPath(
         Path()
           ..moveTo(dx * s, 22 * s)
           ..quadraticBezierTo((dx - 3) * s, 6 * s, (dx + 9) * s, 5 * s)
           ..quadraticBezierTo((dx + 18) * s, 4 * s, (dx + 18) * s, 17 * s),
-        p(TreasurePalette.card),
+        p(hornColor),
       );
     }
     // 眼睛（眨眼 scaleY；闭合更彻底，睁大回弹时略超 1；被摸时眯到 0.15）
@@ -576,7 +605,7 @@ class _RoomMonsterPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _RoomMonsterPainter old) =>
-      old.pupilOffset != pupilOffset || old.blink != blink || old.hop != hop || old.happy != happy;
+      old.pupilOffset != pupilOffset || old.blink != blink || old.hop != hop || old.happy != happy || old.evoStage != evoStage;
 }
 
 /// 金币小图标（门牌余额胶囊；与聚宝日历同款）。
