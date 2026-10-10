@@ -20,7 +20,7 @@ class UserDatabase {
   UserDatabase._();
 
   /// 应用当前支持的 schema 版本（与 [_onUpgrade] 步进保持同步）。
-  static const int _schemaVersion = 4;
+  static const int _schemaVersion = 5;
 
   Database? _db;
   bool _initialized = false;
@@ -275,6 +275,7 @@ class UserDatabase {
     await _createNewWordsTable(db);
     await _createFavoriteTables(db);
     await _createScareCoinTables(db);
+    await _createRewardTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -289,6 +290,30 @@ class UserDatabase {
     if (oldVersion < 4) {
       await _createScareCoinTables(db);
     }
+    // P1-03：奖励事件幂等表 + 签到日期（签到/答题奖励/保护卡与币同库同事务）
+    if (oldVersion < 5) {
+      await _createRewardTables(db);
+    }
+  }
+
+  /// P1-03：奖励域表。
+  ///
+  /// reward_events：业务幂等键（如 checkin:2026-10-10、answer:2026-10-10:18）。
+  /// UNIQUE(event_key) 让 N 个并发签到/奖励只有一个能插入成功——
+  /// 并发幂等从 UI 层 _busy/SP 读改写下沉为数据库约束。
+  /// checkin_dates：签到日历迁入本库，与 +10 币同事务（MW-25 跨存储半成功收口）。
+  Future<void> _createRewardTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS reward_events (
+        event_key TEXT PRIMARY KEY,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS checkin_dates (
+        date TEXT PRIMARY KEY
+      )
+    ''');
   }
 
   /// P0-4（I18）：尖叫币账本表。

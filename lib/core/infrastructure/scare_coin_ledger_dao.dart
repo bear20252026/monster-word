@@ -165,6 +165,61 @@ class ScareCoinLedgerDao {
     return _runGuarded<void>((db) => db.insert(_entriesTable, _entryRow(entry)));
   }
 
+  /// P1-03：业务幂等键是否已被占用（事件已发生过）。
+  Future<bool> hasRewardEvent(String eventKey) {
+    return _runGuarded<bool>((db) async {
+      final rows = await db.query('reward_events', where: 'event_key = ?', whereArgs: [eventKey], limit: 1);
+      return rows.isNotEmpty;
+    });
+  }
+
+  /// P1-03：奖励事件 + 余额变动 + 流水追加 —— 单事务。
+  ///
+  /// [eventKey] UNIQUE 冲突 = 事件已发生过，抛 [RewardEventDuplicate]，
+  /// 余额与流水全部回滚。并发 N 个同 key 调用只有第一个成功。
+  /// 余额不足同样整体回滚。
+  Future<int> applyDeltaWithEvent({required int delta, required ScareCoinEntry entry, required String eventKey}) {
+    return _runGuarded<int>((db) {
+      return db.transaction<int>((txn) async {
+        final inserted = await txn.insert(
+          'reward_events',
+          {'event_key': eventKey, 'created_at': DateTime.now().millisecondsSinceEpoch},
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+        if (inserted == 0) {
+          throw RewardEventDuplicate(eventKey);
+        }
+        final rows = await txn.query(_metaTable, where: 'key = ?', whereArgs: [_kBalance]);
+        final current = rows.isEmpty ? 0 : rows.first['value']! as int;
+        final next = current + delta;
+        if (next < 0) {
+          throw StateError('余额不足：current=$current, delta=$delta');
+        }
+        await txn.insert(_metaTable, {'key': _kBalance, 'value': next}, conflictAlgorithm: ConflictAlgorithm.replace);
+        await txn.insert(_entriesTable, _entryRow(entry));
+        return next;
+      });
+    });
+  }
+
+  /// P1-03：签到日期入本库（与币同事务域）。返回写入前的集合（供回填合并）。
+  Future<Set<String>> loadCheckinDates() {
+    return _runGuarded<Set<String>>((db) async {
+      final rows = await db.query('checkin_dates');
+      return {for (final row in rows) row['date']! as String};
+    });
+  }
+
+  Future<void> addCheckinDates(Set<String> dates) {
+    return _runGuarded<void>((db) async {
+      await db.transaction((txn) async {
+        for (final date in dates) {
+          await txn.insert('checkin_dates', {'date': date}, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+      });
+    });
+  }
+
   /// 最新 [limit] 条流水，时间倒序（同毫秒按插入序倒序），与旧排序口径一致。
   Future<List<ScareCoinEntry>> history({int limit = historyLimit}) {
     return _runGuarded<List<ScareCoinEntry>>((db) async {
@@ -216,6 +271,15 @@ class ScareCoinLedgerDao {
     'delta': entry.delta,
     'reason': entry.reason,
   };
+}
+
+/// P1-03：奖励事件幂等冲突（同 event_key 已发生过）。
+class RewardEventDuplicate implements Exception {
+  RewardEventDuplicate(this.eventKey);
+  final String eventKey;
+
+  @override
+  String toString() => 'RewardEventDuplicate($eventKey)';
 }
 
 // 数据层审计 P2-2：UserDatabase.close()（user_database.dart）复位自身但不

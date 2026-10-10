@@ -79,6 +79,23 @@ class PreferencesScareCoinStore implements ScareCoinStore {
 
   @override
   Future<Set<String>> checkinDates() async {
+    // P1-03：签到日期迁入 user_data.db（与 +10 币同事务域，MW-25 收口）；
+    // 首次切换时把 SP 历史快照合并入库（幂等 ignore）。SQLite 不可用回退 SP。
+    final ledger = await _sqliteLedger();
+    if (ledger != null) {
+      try {
+        final dbDates = await ledger.loadCheckinDates();
+        final prefs = await SharedPreferences.getInstance();
+        final spDates = (prefs.getStringList(checkinDatesKey) ?? const <String>[]).toSet();
+        final merged = <String>{...dbDates, ...spDates};
+        if (merged.length > dbDates.length) {
+          await ledger.addCheckinDates(merged);
+        }
+        return merged;
+      } catch (e, s) {
+        reportSwallowedError('签到日历读取失败，回退 SP 快照', e, s);
+      }
+    }
     final prefs = await SharedPreferences.getInstance();
     return (prefs.getStringList(checkinDatesKey) ?? const <String>[]).toSet();
   }
@@ -137,14 +154,48 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     final now = DateTime.now();
     final last = await lastCheckInDate();
     if (isSameDay(last, now)) return null;
+    final iso = _iso(now);
+    final prefs = await SharedPreferences.getInstance();
+
+    // ── P1-03：SQLite 模式——「签到事件 + 断签回填 + +10 币 + 流水 + 日历」
+    // 同库事务；event_key = checkin:<date> UNIQUE 保证并发 N 个签到只发一次
+    // （MW-23），不再依赖 SP 读改写与 UI 防抖。
+    final ledger = await _sqliteLedger();
+    if (ledger != null) {
+      try {
+        if (await ledger.hasRewardEvent('checkin:$iso')) return null;
+        // 断签自动续命：有卡则回填最近的缺勤日（先近后远），不断连击。
+        await _autoProtectSqlite(ledger, now);
+        final newBalance = await ledger.applyDeltaWithEvent(
+          delta: checkInReward,
+          entry: ScareCoinEntry(time: DateTime.now(), delta: checkInReward, reason: '每日签到'),
+          eventKey: 'checkin:$iso',
+        );
+        await ledger.addCheckinDates({iso});
+        // SP 侧标记同步写（last_checkin 是低频标量，供旧路径/展示读取）；
+        // 写失败仅上报——SQLite 侧已 durable，重开不会再发（事件键已占用）。
+        final saved = await prefs.setString(lastCheckInKey, iso);
+        if (!saved) {
+          reportSwallowedError('签到日期标记写入失败', StateError('setString returned false'), StackTrace.current);
+        }
+        // 连签 7 倍数自动发卡（满额跳过发放但仍标记，避免无限囤积）。
+        await _maybeIssueProtection(prefs, ledger: ledger);
+        return newBalance;
+      } on RewardEventDuplicate {
+        return null; // 并发重复签到：第二者拿不到事件即无事发生
+      } catch (e, s) {
+        reportSwallowedError('SQLite 签到事务失败，回退 SP 路径', e, s);
+        // 落入下方 SP 路径（历史快照仍有幂等双闸）。
+      }
+    }
+
+    // ── SP 回退路径（原实现，保留幂等双闸）──
     // 幂等双闸：last_checkin 在 _apply 成功之后才写，崩溃落在两写之间时
     // （币已 +10、标记未落），仅凭日期标记会重复入账——账本里已有当日
     // 「每日签到」流水则视为已签到，宁可少发一次也不重复发。
-    if (await _checkinAlreadyGranted(_iso(now))) return null;
-    final prefs = await SharedPreferences.getInstance();
-    // 断签自动续命：有卡则回填最近的缺勤日（先近后远），不断连击。
+    if (await _checkinAlreadyGranted(iso)) return null;
+    // 断签自动续命（SP 快照口径）。
     await _autoProtect(prefs, now);
-    final iso = _iso(now);
     try {
       final dates = (prefs.getStringList(checkinDatesKey) ?? const <String>[]).toSet()..add(iso);
       await prefs.setStringList(checkinDatesKey, dates.toList()..sort());
@@ -156,6 +207,38 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     // 连签 7 倍数自动发卡（满额跳过发放但仍标记，避免无限囤积）。
     await _maybeIssueProtection(prefs);
     return newBalance;
+  }
+
+  /// SQLite 侧断签回填：保护卡库存仍在 SP（低频标量），回填日期入本库。
+  Future<void> _autoProtectSqlite(ScareCoinLedgerDao ledger, DateTime now) async {
+    final last = await lastCheckInDate();
+    if (last.isEmpty) return;
+    final lastDay = DateTime.tryParse(last);
+    if (lastDay == null) return;
+    final gap = calendarDaysBetween(lastDay, now);
+    if (gap <= 1) return;
+    final prefs = await SharedPreferences.getInstance();
+    var count = prefs.getInt(protectionKey) ?? 0;
+    if (count <= 0) return;
+    final backfill = <String>{};
+    for (var i = 1; i < gap && backfill.length < count; i++) {
+      backfill.add(_iso(DateTime(now.year, now.month, now.day - i)));
+    }
+    if (backfill.isEmpty) return;
+    final dbDates = await ledger.loadCheckinDates();
+    final fresh = backfill.difference(dbDates);
+    if (fresh.isEmpty) return;
+    await ledger.addCheckinDates(fresh);
+    count -= fresh.length;
+    if (!await prefs.setInt(protectionKey, count)) {
+      reportSwallowedError('断签保护回填：库存写失败（保护卡可能多计）', StateError('SP write returned false'), StackTrace.current);
+      return;
+    }
+    try {
+      await ledger.appendEntry(ScareCoinEntry(time: DateTime.now(), delta: 0, reason: '断签保护·自动续命×${fresh.length}'));
+    } catch (e, s) {
+      reportSwallowedError('断签保护流水追加失败（SQLite）', e, s);
+    }
   }
 
   /// 账本（SQLite/SP 同口径）里是否已有当日的签到入账流水。
@@ -193,6 +276,43 @@ class PreferencesScareCoinStore implements ScareCoinStore {
       count = prefs.getInt(answerRewardCountKey) ?? 0;
     }
     if (count >= answerRewardCapValue) return 0;
+
+    // ── P1-03：SQLite 模式——「占用名额 + 发币」同事务（MW-24）。
+    // event_key = answer:<date>:<count> UNIQUE：并发同读旧计数时只有一个
+    // 能插入成功，后继拿递增序号重试，上限由 DB 事件键硬性封顶。
+    final ledger = await _sqliteLedger();
+    if (ledger != null) {
+      var seq = count;
+      while (seq < answerRewardCapValue) {
+        try {
+          await ledger.applyDeltaWithEvent(
+            delta: 1,
+            entry: ScareCoinEntry(time: DateTime.now(), delta: 1, reason: '答对＋1'),
+            eventKey: 'answer:$today:$seq',
+          );
+        } on RewardEventDuplicate {
+          seq++; // 该序号已被占用（并发），尝试下一序号
+          continue;
+        } catch (e, s) {
+          reportSwallowedError('SQLite 答对奖励事务失败，回退 SP 路径', e, s);
+          break; // 落入下方 SP 路径
+        }
+        // 名额计数同步 SP（写失败仅上报：SQLite 事件键已封顶当日总额）。
+        final okDate = await prefs.setString(answerRewardDateKey, today);
+        final okCount = await prefs.setInt(answerRewardCountKey, seq + 1);
+        if (!okDate || !okCount) {
+          reportSwallowedError(
+            '答对奖励计数同步失败（SQLite 侧已记账）',
+            StateError('answer reward SP sync failed'),
+            StackTrace.current,
+          );
+        }
+        return 1;
+      }
+      if (seq >= answerRewardCapValue) return 0;
+    }
+
+    // ── SP 回退路径（原实现）──
     // 计数先落盘且校验返回值：写失败直接抛（名额与币都不动），
     // 不能带着旧计数发币——否则同一名额可重复兑换。
     await _writeChecked(prefs.setString(answerRewardDateKey, today), '答对奖励日期');
@@ -267,7 +387,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   }
 
   /// 连签 7 倍数发卡（去重标记防重复领，满额只标记不发放）。
-  Future<void> _maybeIssueProtection(SharedPreferences prefs) async {
+  /// [ledger] 非 null 时流水走 SQLite（签到事务同域）；null 走 SP 快照。
+  Future<void> _maybeIssueProtection(SharedPreferences prefs, {ScareCoinLedgerDao? ledger}) async {
     final newStreak = await streak();
     if (newStreak <= 0 || newStreak % 7 != 0) return;
     final issued = (prefs.getStringList(protectionIssuedKey) ?? const <String>[]).toSet();
@@ -280,14 +401,28 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     final count = prefs.getInt(protectionKey) ?? 0;
     if (count >= protectionCapValue) {
       // 满额只标记不发放，但留一条流水：否则审计面上「视为已发」却查无此事。
-      await _insertHistory(prefs, ScareCoinEntry(time: DateTime.now(), delta: 0, reason: '连签$newStreak天·发卡满额未发放'));
+      await _recordZeroDelta(ledger, prefs, '连签$newStreak天·发卡满额未发放');
       return;
     }
     if (!await prefs.setInt(protectionKey, count + 1)) {
       reportSwallowedError('连签发卡：库存写失败（卡未到账）', StateError('SP write returned false'), StackTrace.current);
       return;
     }
-    await _insertHistory(prefs, ScareCoinEntry(time: DateTime.now(), delta: 0, reason: '连签$newStreak天·保护卡＋1'));
+    await _recordZeroDelta(ledger, prefs, '连签$newStreak天·保护卡＋1');
+  }
+
+  /// 零变动流水：ledger 在则 SQLite（失败不阻断），否则 SP 快照。
+  Future<void> _recordZeroDelta(ScareCoinLedgerDao? ledger, SharedPreferences prefs, String reason) async {
+    final entry = ScareCoinEntry(time: DateTime.now(), delta: 0, reason: reason);
+    if (ledger != null) {
+      try {
+        await ledger.appendEntry(entry);
+      } catch (e, s) {
+        reportSwallowedError('零变动流水追加失败（SQLite）', e, s);
+      }
+      return;
+    }
+    await _insertHistory(prefs, entry);
   }
 
   /// 零币变动也记账（发卡／续命审计）。SQLite 模式为追加单行写；
