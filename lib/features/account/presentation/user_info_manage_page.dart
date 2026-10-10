@@ -168,6 +168,9 @@ class _UserInfoManagePageState extends State<UserInfoManagePage> {
         title: Text('修改$label'),
         content: TextField(
           controller: controller,
+          // 安全审计：昵称/微信名/签名进 SP 用户信息 JSON 并参与多处展示，
+          // 无上限的长文本既膨胀存储也撑爆布局。
+          maxLength: 30,
           decoration: InputDecoration(hintText: '请输入$label'),
         ),
         actions: [

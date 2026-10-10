@@ -128,54 +128,59 @@ class _BookWordsPageState extends State<BookWordsPage> {
               },
             );
           }
-          return ListView.builder(
-            padding: EdgeInsets.all(context.design.spacing.md),
-            // +1：首项为词数统计头（验收标准：总数与词书标注一致）
-            // +1：MEM/F2 分页窗口未到底时的底部加载指示项
-            itemCount: words.length + 1 + (state.hasMore ? 1 : 0),
-            addAutomaticKeepAlives: false,
-            addRepaintBoundaries: true,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return FlowIn(
-                  index: 0,
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: context.design.spacing.sm),
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        '共 ${state.totalWords} 词（按字母排序）',
-                        style: MwTypography.micro.copyWith(color: skin.text3),
+          // 桌面端滚动条：千词长列表鼠标滚轮无位置感知（手机端系统叠加滚动条自动隐藏）。
+          return Scrollbar(
+            thumbVisibility: false,
+            interactive: true,
+            child: ListView.builder(
+              padding: EdgeInsets.all(context.design.spacing.md),
+              // +1：首项为词数统计头（验收标准：总数与词书标注一致）
+              // +1：MEM/F2 分页窗口未到底时的底部加载指示项
+              itemCount: words.length + 1 + (state.hasMore ? 1 : 0),
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: true,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return FlowIn(
+                    index: 0,
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: context.design.spacing.sm),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          '共 ${state.totalWords} 词（按字母排序）',
+                          style: MwTypography.micro.copyWith(color: skin.text3),
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }
-              final wordIndex = index - 1;
-              if (wordIndex >= words.length) {
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: context.design.spacing.sm),
-                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                );
-              }
-              // MEM/F2：临近窗口末尾预取下一页（loadMore 自幂等，重复触发安全）
-              if (state.hasMore && wordIndex >= words.length - 20) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (context.mounted) context.read<BookState>().loadMore();
-                });
-              }
-              final word = words[wordIndex];
-              // 有序流动入场（与 lib_select_page 同一动效语言）：首屏十行走完整
-              // 波次；懒加载/翻页新行按单列相位 0 入场，近乎立即不排队（同
-              // 网格「index % 列数」式，单列相位恒 0）。key 绑词 id；入场一
-              // 次后（_enteredWordIds）同 id 重建走静终态，不再重放。
-              final firstTime = _enteredWordIds.add(word.id);
-              final waveIndex = wordIndex < 10 ? wordIndex : 0;
-              final card = _WordCard(word: word, book: book);
-              return firstTime
-                  ? FlowIn(key: ValueKey('word-flow-${word.id}'), index: waveIndex, child: card)
-                  : KeyedSubtree(key: ValueKey('word-flow-${word.id}'), child: card);
-            },
+                  );
+                }
+                final wordIndex = index - 1;
+                if (wordIndex >= words.length) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: context.design.spacing.sm),
+                    child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  );
+                }
+                // MEM/F2：临近窗口末尾预取下一页（loadMore 自幂等，重复触发安全）
+                if (state.hasMore && wordIndex >= words.length - 20) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (context.mounted) context.read<BookState>().loadMore();
+                  });
+                }
+                final word = words[wordIndex];
+                // 有序流动入场（与 lib_select_page 同一动效语言）：首屏十行走完整
+                // 波次；懒加载/翻页新行按单列相位 0 入场，近乎立即不排队（同
+                // 网格「index % 列数」式，单列相位恒 0）。key 绑词 id；入场一
+                // 次后（_enteredWordIds）同 id 重建走静终态，不再重放。
+                final firstTime = _enteredWordIds.add(word.id);
+                final waveIndex = wordIndex < 10 ? wordIndex : 0;
+                final card = _WordCard(word: word, book: book);
+                return firstTime
+                    ? FlowIn(key: ValueKey('word-flow-${word.id}'), index: waveIndex, child: card)
+                    : KeyedSubtree(key: ValueKey('word-flow-${word.id}'), child: card);
+              },
+            ),
           );
         },
       ),

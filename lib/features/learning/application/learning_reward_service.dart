@@ -8,6 +8,7 @@
 // 3. 诚实入账：走 ScareCoinStore.grant()，账本 reason 为中文，历史页直接可读。
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 
 /// 会话结算结果：本次实际发出的尖叫币总额（0 表示没有可发奖励）。
@@ -47,8 +48,10 @@ class LearningRewardService {
     // 1) 会话完成奖励（每日限量）
     if (wordsLearned >= _sessionMinWords) {
       if (prefs.getString(_kSessionDate) != today) {
-        await prefs.setString(_kSessionDate, today);
+        // 写序：先清计数再翻日期。反序崩溃在两写之间会留下「新日期+旧计数」，
+        // 当日剩余次数被错误压低；正序崩溃窗口只会多清一次计数（幂等无害）。
         await prefs.setInt(_kSessionCount, 0);
+        await prefs.setString(_kSessionDate, today);
       }
       final count = prefs.getInt(_kSessionCount) ?? 0;
       if (count < _sessionDailyCap) {
@@ -59,8 +62,12 @@ class LearningRewardService {
         }
         try {
           await _store.grant(delta: _sessionReward, reason: '学习完成');
-        } catch (_) {
-          await prefs.setInt(_kSessionCount, count);
+        } catch (e) {
+          // 回滚写失败只上报（此时 rethrow 的语义是「发币失败」，不能被覆盖）：
+          // 名额可能被烧一次，留在遥测里对账。
+          if (!await prefs.setInt(_kSessionCount, count)) {
+            reportSwallowedError('会话奖励回滚：计数写失败（当日名额可能少计一次）', e, StackTrace.current);
+          }
           rethrow;
         }
         granted += _sessionReward;
@@ -74,8 +81,10 @@ class LearningRewardService {
       }
       try {
         await _store.grant(delta: _goalReward, reason: '今日目标达成');
-      } catch (_) {
-        await prefs.remove(_kGoalDate);
+      } catch (e) {
+        if (!await prefs.remove(_kGoalDate)) {
+          reportSwallowedError('目标奖励回滚：标记清除失败（当日可能重复发奖）', e, StackTrace.current);
+        }
         rethrow;
       }
       granted += _goalReward;

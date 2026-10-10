@@ -1,6 +1,6 @@
 // lib/tokens/func_colors.dart
 // 功能色 Token 集 — 补充缺失的信息蓝/警告橙/紫色
-// 来源：docs/hardcode_color_audit.md §6 Token 缺口分析
+// 来源：硬编码颜色审计 Token 缺口分析（原 docs/hardcode_color_audit.md 已不存在）
 import 'package:flutter/material.dart';
 
 /// 功能色集（不随主题变化的语义色）

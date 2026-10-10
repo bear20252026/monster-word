@@ -1,5 +1,5 @@
 // Monster Word — 星巴克胶囊按钮组件
-// 来源规格：docs/component_spec.md §1（PillButton）
+// 组件规格：PillButton（原 component_spec.md §1 已不存在，2026-10 审计修注）
 // 50px 高度，全胶囊圆角，四变体，包装 ScaleDownOnPress 按压反馈
 
 import 'package:flutter/material.dart';
@@ -68,6 +68,10 @@ class MwButton extends StatelessWidget {
   /// 是否禁用（叠加在 onTap==null 之上）
   final bool enabled;
 
+  /// 忙碌态（统一防重复点击）：true 时禁用点击并展示
+  /// 小转圆（各页手写 _busy/_saving 的平替化入口）。
+  final bool busy;
+
   /// 最小宽度（默认不限制）
   final double? minWidth;
 
@@ -83,6 +87,7 @@ class MwButton extends StatelessWidget {
     this.textColor,
     this.borderSide,
     this.enabled = true,
+    this.busy = false,
     this.minWidth,
     this.padding = const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
   });
@@ -96,6 +101,7 @@ class MwButton extends StatelessWidget {
     this.textColor,
     this.borderSide,
     this.enabled = true,
+    this.busy = false,
     this.minWidth,
     this.padding = const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
   }) : variant = MwButtonVariant.outlined;
@@ -109,6 +115,7 @@ class MwButton extends StatelessWidget {
     this.textColor,
     this.borderSide,
     this.enabled = true,
+    this.busy = false,
     this.minWidth,
     this.padding = const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
   }) : variant = MwButtonVariant.dark;
@@ -122,6 +129,7 @@ class MwButton extends StatelessWidget {
     this.textColor,
     this.borderSide,
     this.enabled = true,
+    this.busy = false,
     this.minWidth,
     this.padding = const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
   }) : variant = MwButtonVariant.inverse;
@@ -166,7 +174,7 @@ class MwButton extends StatelessWidget {
     }
   }
 
-  bool get _isInteractive => enabled && onTap != null;
+  bool get _isInteractive => enabled && onTap != null && !busy;
 
   @override
   Widget build(BuildContext context) {
@@ -190,15 +198,30 @@ class MwButton extends StatelessWidget {
           ),
           child: Padding(
             padding: padding,
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: AppFontSizes.bodyMd,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.16, // -0.01em ≈ -0.16px @16px
-                color: resolvedColor,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 忙碌指示：与文字同高的小转圆（busy 时替换点击反馈，不挤布局）。
+                if (busy) ...[
+                  SizedBox(
+                    width: AppFontSizes.bodyMd,
+                    height: AppFontSizes.bodyMd,
+                    child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(resolvedColor)),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: AppFontSizes.bodyMd,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.16, // -0.01em ≈ -0.16px @16px
+                    color: resolvedColor,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

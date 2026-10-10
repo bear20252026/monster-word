@@ -138,6 +138,7 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
       _particles.clear();
       _initParticles();
     });
+    _lastTick = null; // 重置帧间隔基准，防上一轮残留时间戳产生巨大 dt
     _controller.forward(from: 0);
   }
 
@@ -203,12 +204,18 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
     );
   }
 
+  DateTime? _lastTick;
+
   // 逐帧粒子推进：只原地修改粒子字段，不再 setState / 不再整组件 rebuild。
   // 重绘由传给 painter 的 AnimationController（repaint listenable）在每个 tick 直接驱动。
   void _updateParticles() {
     if (!_isPlaying) return;
 
-    final dt = 1 / 60; // 假设 60fps
+    // 真实帧间隔１90/120Hz 屏上固定 1/60 会把粒子速度按刷新率倍率加速，
+    // 3s 演出提前落完；用上一次 tick 的真实时间戳换算。
+    final now = DateTime.now();
+    final dt = _lastTick == null ? 1 / 60 : (now.difference(_lastTick!).inMicroseconds / 1e6).clamp(1 / 240, 1 / 20);
+    _lastTick = now;
     for (final p in _particles) {
       // 更新位置
       p.position = Offset(p.position.dx + p.velocity.dx * dt, p.position.dy + p.velocity.dy * dt);

@@ -17,6 +17,7 @@ void main() {
       'lib/theme',
       'lib/tokens',
       'lib/utils',
+      'lib/main.dart', // 2026-10 审计 Q1：兜底页/入口直用也须被守卫看见
     ];
     final self = 'lib/core/utils/haptics_gate.dart';
     final callRe = RegExp(r'\bHapticFeedback\.');

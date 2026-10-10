@@ -191,7 +191,10 @@ void main() {
     });
 
     test('R-core-app / R5b: core 不得依赖 app 壳层；domain 不得依赖 infrastructure', () {
-      expect(check('core/web/base_web_page.dart', 'app/router/nav_utils.dart'), anyElement(contains('R-core-app')));
+      expect(
+        check('core/infrastructure/wordbook_database.dart', 'app/router/nav_utils.dart'),
+        anyElement(contains('R-core-app')),
+      );
       expect(
         check('features/settings/domain/learning_preferences.dart', 'core/infrastructure/app_preferences.dart'),
         anyElement(contains('R5b')),

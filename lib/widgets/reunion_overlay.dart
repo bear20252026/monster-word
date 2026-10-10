@@ -8,9 +8,14 @@
 // 回来！（{absentDays} 天不见）」停留 1.2s → 滑出并自动移除。
 // 时长字面量惯例同 monster_peek_overlay.dart（仪式性短演出不落 MotionDurations
 // 档位，避免动效卫生棘轮误锁）。
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
@@ -101,11 +106,28 @@ class _ReunionGreetingState extends State<_ReunionGreeting> with TickerProviderS
   late final Animation<double> _outAnim;
   late final Animation<double> _bounceAnim;
 
+  /// 进化阶段（异步补齐；默认 0 奶泡）。
+  int _evoStage = 0;
   bool _finished = false;
 
   @override
   void initState() {
     super.initState();
+    // 形态异步补齐：先以默认形态入演（show 立即生效），签到数据读到后无缝换装（与探头演出同款，
+    // 曾硬编码 evoStage: 0——老用户回家看到的仍是奶泡）。
+    final store = context.read<ScareCoinStore?>();
+    if (store != null) {
+      unawaited(
+        store
+            .checkinDates()
+            .then((dates) {
+              if (mounted) setState(() => _evoStage = MonsterIcon.stageFor(dates.length));
+            })
+            .catchError((Object e, StackTrace s) {
+              reportSwallowedError('回家仪式形态读取失败', e, s);
+            }),
+      );
+    }
     _inCtrl = AnimationController(vsync: this, duration: widget.slideIn);
     _holdCtrl = AnimationController(vsync: this, duration: widget.hold);
     _outCtrl = AnimationController(vsync: this, duration: widget.slideOut);
@@ -211,7 +233,7 @@ class _ReunionGreetingState extends State<_ReunionGreeting> with TickerProviderS
                 animation: _bounceAnim,
                 builder: (context, child) =>
                     Transform.scale(scale: 1 + 0.06 * _bounceAnim.value, alignment: Alignment.centerLeft, child: child),
-                child: MonsterIcon(size: widget.monsterSize, evoStage: 0),
+                child: MonsterIcon(size: widget.monsterSize, evoStage: _evoStage),
               ),
             ],
           ),

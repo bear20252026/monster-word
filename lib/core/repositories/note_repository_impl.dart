@@ -21,6 +21,16 @@ class NoteRepositoryImpl implements NoteRepository {
   int? _cachedTotal;
   Set<String>? _cachedKeys;
 
+  /// 写串行闸：add/update/delete 都是「整键 JSON 读-改-写」，无闸时并发
+  /// 添加两条笔记会让后落盘的旧列表覆盖先写的新条目（审计：丢笔记窗口）。
+  Future<void> _writeQueue = Future<void>.value();
+
+  Future<T> _serialized<T>(Future<T> Function() action) {
+    final run = _writeQueue.then((_) => action());
+    _writeQueue = run.then<void>((_) {}, onError: (Object _) {});
+    return run;
+  }
+
   @override
   Future<List<WordNote>> getNotesByWord(int wordId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -76,7 +86,10 @@ class NoteRepositoryImpl implements NoteRepository {
   }
 
   @override
-  Future<int> addNote(int wordId, String content, {String word = ''}) async {
+  Future<int> addNote(int wordId, String content, {String word = ''}) =>
+      _serialized(() => _addNoteLocked(wordId, content, word: word));
+
+  Future<int> _addNoteLocked(int wordId, String content, {String word = ''}) async {
     final notes = await getNotesByWord(wordId);
     final now = DateTime.now();
     final note = WordNote(
@@ -93,7 +106,9 @@ class NoteRepositoryImpl implements NoteRepository {
   }
 
   @override
-  Future<int> insertNote(WordNote note) async {
+  Future<int> insertNote(WordNote note) => _serialized(() => _insertNoteLocked(note));
+
+  Future<int> _insertNoteLocked(WordNote note) async {
     final notes = await getNotesByWord(note.wordId);
     notes.add(note);
     await _saveNotes(note.wordId, notes);
@@ -101,7 +116,9 @@ class NoteRepositoryImpl implements NoteRepository {
   }
 
   @override
-  Future<int> updateNote(WordNote note) async {
+  Future<int> updateNote(WordNote note) => _serialized(() => _updateNoteLocked(note));
+
+  Future<int> _updateNoteLocked(WordNote note) async {
     final notes = await getNotesByWord(note.wordId);
     final idx = notes.indexWhere((n) => n.id == note.id);
     if (idx >= 0) {
@@ -113,7 +130,9 @@ class NoteRepositoryImpl implements NoteRepository {
   }
 
   @override
-  Future<int> deleteNote(int noteId) async {
+  Future<int> deleteNote(int noteId) => _serialized(() => _deleteNoteLocked(noteId));
+
+  Future<int> _deleteNoteLocked(int noteId) async {
     // 需要遍历所有 wordId 的笔记来找到并删除
     final prefs = await SharedPreferences.getInstance();
     final keys = prefs.getKeys().where((k) => k.startsWith('${_notesKey}_'));

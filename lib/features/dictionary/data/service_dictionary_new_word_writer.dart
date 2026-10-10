@@ -17,7 +17,9 @@ class ServiceDictionaryNewWordWriter implements DictionaryNewWordWriter {
 
   final UserDatabase userDatabase;
 
-  NewWordRepositoryImpl get _repo => NewWordRepositoryImpl(userDatabase);
+  /// 单例持有：此前每次访问 `new` 一个新仓储，使实例级 _toggleQueue
+  /// 串行闸失效（与 DI 单例是两个互不串行的闸，双击 check-then-act 复活）。
+  late final NewWordRepositoryImpl _repo = NewWordRepositoryImpl(userDatabase);
 
   @override
   Future<bool> toggleNewWord(Word word, {String source = 'dictionary'}) async {

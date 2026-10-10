@@ -141,18 +141,30 @@ class _SealPainter extends CustomPainter {
     if (shader != null) facePaint.shader = shader;
 
     // 花齿面（散落态）与方章面（聚合态）交叉渐隐。
+    // 性能审计：alpha==1（各自的常态档）时 saveLayer 是纯离屏合成开销，
+    // 直接绘制结果逐像素相同；31 个徽章 × 2 层 × 60fps 每帧省 ~62 次合成。
     final flowerAlpha = 1 - squareness;
     if (flowerAlpha > 0) {
-      canvas.saveLayer(flower.getBounds(), Paint()..color = AppColors.white100.withValues(alpha: flowerAlpha));
-      canvas.drawPath(flower, facePaint);
-      canvas.drawPath(flower, stroke);
-      canvas.restore();
+      if (flowerAlpha >= 1.0) {
+        canvas.drawPath(flower, facePaint);
+        canvas.drawPath(flower, stroke);
+      } else {
+        canvas.saveLayer(flower.getBounds(), Paint()..color = AppColors.white100.withValues(alpha: flowerAlpha));
+        canvas.drawPath(flower, facePaint);
+        canvas.drawPath(flower, stroke);
+        canvas.restore();
+      }
     }
     if (squareness > 0) {
-      canvas.saveLayer(square.getBounds(), Paint()..color = AppColors.white100.withValues(alpha: squareness));
-      canvas.drawPath(square, facePaint);
-      canvas.drawPath(square, stroke);
-      canvas.restore();
+      if (squareness >= 1.0) {
+        canvas.drawPath(square, facePaint);
+        canvas.drawPath(square, stroke);
+      } else {
+        canvas.saveLayer(square.getBounds(), Paint()..color = AppColors.white100.withValues(alpha: squareness));
+        canvas.drawPath(square, facePaint);
+        canvas.drawPath(square, stroke);
+        canvas.restore();
+      }
     }
 
     // 爪印盖章（仅已签态，压章色 #8a5a00）。

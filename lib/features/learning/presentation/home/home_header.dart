@@ -29,6 +29,9 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
   /// 硬编码占位值会让怪兽对金冠用户说「我现在是奶泡形态」「钱包里躺着 0 枚尖叫币」。
   Map<String, Object?> _speechVars = const {'days': null, 'streak': null, 'balance': null, 'stage': null};
 
+  /// 累计签到天数（形态/肚皮的驱动源；null = 读不到 → 默认奶泡态，不猜）。
+  int? _checkinDays;
+
   /// 800ms 问候节拍窗内的重入闸（双击会推开两层「我的空间」）；入页后复位，返回仍可再点。
   bool _navigating = false;
 
@@ -82,7 +85,10 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
   Future<void> _refreshSpeechVars() async {
     final vars = await _loadSpeechVars();
     if (!mounted) return;
-    setState(() => _speechVars = vars);
+    setState(() {
+      _speechVars = vars;
+      _checkinDays = vars['days'] as int?;
+    });
   }
 
   Future<void> _maybeProactiveGreeting() async {
@@ -99,6 +105,7 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
       if (!mounted) return;
       setState(() {
         _speechVars = vars;
+        _checkinDays = vars['days'] as int?;
         _greetingText = _speech.pick(SpeechSlot.welcomeBack, vars: vars);
         _gurgleVisible = true;
       });
@@ -236,7 +243,14 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
           children: [
             AnimatedBuilder(
               animation: _mouth,
-              builder: (context, _) => MonsterIcon(size: 44, mouthOpen: 0.3 * _mouth.value),
+              // 形态与成长随真实签到数据（曾不传 evoStage：100 天金冠用户
+              // 首页永远奶泡，台词却播「我现在是金冠形态」自相矛盾）。
+              builder: (context, _) => MonsterIcon(
+                size: 44,
+                mouthOpen: 0.3 * _mouth.value,
+                evoStage: _checkinDays == null ? 0 : MonsterIcon.stageFor(_checkinDays!),
+                bellyScale: _checkinDays == null ? 1.0 : MonsterIcon.growthFor(_checkinDays!),
+              ),
             ),
             // 「咕噜~」气泡：悬在怪兽头顶右上，默认隐藏
             Positioned(

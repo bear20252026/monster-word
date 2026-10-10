@@ -1,5 +1,5 @@
 // Monster Word — 星巴克标准按压反馈包装器
-// 来源规格：docs/pressable_inventory.md §5、docs/component_spec.md §1（按压态）
+// 组件规格：按压态（原 pressable_inventory.md/component_spec.md 已不存在，2026-10 审计修注）
 // scale(0.95) + 200ms easeOut；回调在恢复完成后触发（防误触）
 
 import 'package:flutter/material.dart';

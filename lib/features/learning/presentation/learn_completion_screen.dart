@@ -18,6 +18,7 @@ import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_feed_celebration.dart';
+import 'package:word_app/widgets/bond_level_up_overlay.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 
 class LearnCompletionScreen extends StatefulWidget {
@@ -57,6 +58,9 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
   int? _grantedCoins;
   bool _sharing = false;
 
+  /// 怪兽进化阶段（签到天数换算；喂币庆祝用它——进化不该只在探头页可见）。
+  int _evoStage = 0;
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +72,17 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
       sessionState.markSessionRewardSettled();
       final store = context.read<ScareCoinStore>();
       final service = LearningRewardService(store);
+      // 形态异步补齐（喂币庆祝的怪兽随真实进化阶段换装；失败降级奶泡态）。
+      unawaited(
+        store
+            .checkinDates()
+            .then((dates) {
+              if (mounted) setState(() => _evoStage = MonsterIcon.stageFor(dates.length));
+            })
+            .catchError((Object e, StackTrace s) {
+              reportSwallowedError('完成页形态读取失败', e, s);
+            }),
+      );
       try {
         final result = await service.settleSession(
           wordsLearned: widget.totalAnswered,
@@ -75,7 +90,30 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
         );
         if (!mounted || result.totalGranted <= 0) return;
         // W4.5 宠物化：喂到它了（发币成功 = 喂食成功）→ 羁绊 +1/日。
-        unawaited(MonsterBondPrefs.recordFeed());
+        // 失败要上报（对照抚摸侧口径）：_record 内 SP 写抛错否则进 unhandled。
+        unawaited(
+          MonsterBondPrefs.points()
+              .then((before) => MonsterBondPrefs.recordFeed().then((_) => before))
+              .then<void>((before) async {
+                // 喂食跨羁绊阈值：等吞币庆祝先演完（延迟 2.2s）再升羁绊仪式。
+                final after = await MonsterBondPrefs.points();
+                final beforeLevel = BondLevel.levelOf(before);
+                final afterLevel = BondLevel.levelOf(after);
+                if (afterLevel.min > beforeLevel.min) {
+                  await Future<void>.delayed(const Duration(milliseconds: 2200));
+                  if (!mounted) return;
+                  final next = BondLevel.nextMin(after);
+                  BondLevelUpOverlay.show(
+                    context,
+                    levelName: afterLevel.name,
+                    pointsToNext: next == null ? null : next - after,
+                  );
+                }
+              })
+              .catchError((Object e, StackTrace s) {
+                reportSwallowedError('喂食羁绊记账失败', e, s);
+              }),
+        );
         SfxPlayer.fire(Sfx.milestone);
         setState(() => _grantedCoins = result.totalGranted);
       } catch (e, s) {
@@ -105,7 +143,7 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
             children: [
               // 结算成功（totalGranted > 0）→ 怪兽吃币庆祝主视觉；0/失败态保留图标现状。
               if (_grantedCoins != null && _grantedCoins! > 0)
-                MonsterFeedCelebration(coinCount: _grantedCoins!)
+                MonsterFeedCelebration(coinCount: _grantedCoins!, evoStage: _evoStage)
               else
                 Icon(Icons.celebration, size: 80, color: colors.accent),
               const SizedBox(height: 24),

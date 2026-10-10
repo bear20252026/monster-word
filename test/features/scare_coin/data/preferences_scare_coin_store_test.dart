@@ -68,6 +68,44 @@ void main() {
     });
   });
 
+  group('REG-COIN-001 保护卡满额必须抛错（兑换退款依赖此口径）', () {
+    test('库存满额时 addProtection 抛 StateError 而非静默钳制', () async {
+      SharedPreferences.setMockInitialValues({
+        'scare_coin.protection.count': PreferencesScareCoinStore.protectionCapValue,
+      });
+      final store = PreferencesScareCoinStore();
+
+      await expectLater(
+        store.addProtection(count: 1, reason: '兑换'),
+        throwsStateError,
+        reason: '兑换页已扣 200 币：静默钳制=扣币无卡无退款三事同时发生',
+      );
+      expect(await store.protectionCount(), PreferencesScareCoinStore.protectionCapValue, reason: '拒收后库存不得变动');
+    });
+  });
+
+  group('2026-10 审计：变更操作串行闸（TOCTOU 消除）', () {
+    test('并发 grantAnswerReward 不突破日上限', () async {
+      final store = PreferencesScareCoinStore();
+
+      // 并发 25 次（上限 20）：修复前两次调用可同读旧计数同过检查多计。
+      final results = await Future.wait(List.generate(25, (_) => store.grantAnswerReward()));
+
+      final totalGranted = results.fold<int>(0, (a, b) => a + b);
+      expect(totalGranted, store.answerRewardDailyCap, reason: '并发请求总额恰好等于日上限，不许多发一枚');
+      expect(await store.balance(), store.answerRewardDailyCap);
+    });
+
+    test('并发签到只入账一次', () async {
+      final store = PreferencesScareCoinStore();
+
+      final results = await Future.wait(List.generate(5, (_) => store.checkIn()));
+
+      expect(results.whereType<int>().length, 1, reason: '五路并发只有一路真正入账');
+      expect(await store.balance(), store.checkInReward);
+    });
+  });
+
   group('P0-4 SQLite 模式（注入内存库 Ledger DAO）', () {
     late Database db;
 

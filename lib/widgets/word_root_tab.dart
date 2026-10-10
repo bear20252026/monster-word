@@ -15,9 +15,22 @@ class WordRootTab extends StatelessWidget {
 
   const WordRootTab({super.key, required this.wordRootJson});
 
+  // 性能审计：build 内每次 jsonDecode 同一词条的词根 JSON；单条记忆化
+  //（详情页重建高频、同词重建占绝大多数）后重复解码归零。
+  static String? _memoSource;
+  static WordRootData? _memoData;
+
+  WordRootData _parse() {
+    if (_memoSource != wordRootJson || _memoData == null) {
+      _memoSource = wordRootJson;
+      _memoData = WordRootData.fromJson(wordRootJson);
+    }
+    return _memoData!;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final wordRoot = WordRootData.fromJson(wordRootJson);
+    final wordRoot = _parse();
     final skin = context.skin.colors;
 
     if (!wordRoot.hasData) {

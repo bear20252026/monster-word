@@ -12,6 +12,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/utils/monster_rhythm.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/core/utils/monster_speech.dart';
 
 /// 羁绊等级（阈值 [min] 含：points >= min 即达该级）。
@@ -65,6 +66,12 @@ class BondRecordResult {
 class MonsterBondPrefs {
   MonsterBondPrefs._();
 
+  // 并发说明（2026-10-08 审计回归）：pet/feed 同毫秒并发理论上可能丢 1 点，
+  // 曾用静态链式 gate 串行化，但静态 future 链在 testWidgets 的 FakeAsync zone
+  // 跨用例会非确定性櫂置（微任务不再流动），得不偿失——撤销。
+  // 写序保护（points 先于 dayKey）已把最坏损失限定为「次日多记 1 点」；
+  // 真正的串行化留待 zone-安全的互斥方案（见审计报告开放项）。
+
   static const String pointsKey = 'monster_bond.points';
   static const String petDayKey = 'monster_bond.pet_day';
   static const String petCountKey = 'monster_bond.pet_count';
@@ -79,7 +86,8 @@ class MonsterBondPrefs {
     try {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getInt(pointsKey) ?? 0;
-    } catch (_) {
+    } catch (e, s) {
+      reportSwallowedError('羁终点读取失败（0 降级）', e, s);
       return 0;
     }
   }
@@ -91,19 +99,25 @@ class MonsterBondPrefs {
   /// 记一次喂食（完成页结算发币成功即算喂到）：同日 +1。
   static Future<BondRecordResult> recordFeed({DateTime? at}) => _record(feedDayKey, feedCountKey, at: at);
 
-  static Future<BondRecordResult> _record(String dayKey, String countKey, {DateTime? at}) async {
+  static Future<BondRecordResult> _record(String dayKey, String countKey, {DateTime? at}) =>
+      _doRecord(dayKey, countKey, at: at);
+
+  static Future<BondRecordResult> _doRecord(String dayKey, String countKey, {DateTime? at}) async {
     final now = at ?? MonsterRhythm.now();
     final today = MonsterSpeech.dayKeyOf(now);
     final prefs = await SharedPreferences.getInstance();
     final isSameDay = prefs.getString(dayKey) == today;
     final count = isSameDay ? (prefs.getInt(countKey) ?? 0) + 1 : 1;
-    await prefs.setString(dayKey, today);
-    await prefs.setInt(countKey, count);
     var awarded = false;
+    // 写序：points 先于 dayKey。三写非原子，崩溃在 dayKey 落盘而 points 未落
+    // 的窗口会把当日羁绊点永久吞掉（当日不再补发）；正序崩溃窗口最坏只是
+    // 「点已 +1 而当日标记未写」，次日重记一次（多 1 点，可接受的方向）。
     if (!isSameDay) {
       await prefs.setInt(pointsKey, (prefs.getInt(pointsKey) ?? 0) + 1);
       awarded = true;
     }
+    await prefs.setString(dayKey, today);
+    await prefs.setInt(countKey, count);
     return BondRecordResult(awarded: awarded, todayCount: count);
   }
 }

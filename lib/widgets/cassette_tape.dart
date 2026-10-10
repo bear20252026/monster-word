@@ -25,17 +25,25 @@ class CassetteTape extends StatefulWidget {
 class _CassetteTapeState extends State<CassetteTape> with SingleTickerProviderStateMixin {
   late final AnimationController _reel = AnimationController(vsync: this, duration: const Duration(seconds: 3));
 
+  bool get _reduceMotion => WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
+
   @override
   void initState() {
     super.initState();
-    if (widget.spinning) _reel.repeat();
+    // reduce-motion 门控（同库 FlowIn/HaloBg 口径）：播放页全程旋转的常驻
+    // ticker 对「减弱动态效果」用户是眩晕源；静帧呈现播放状态（磁带窗仍有状态色）。
+    if (widget.spinning && !_reduceMotion) _reel.repeat();
   }
 
   @override
   void didUpdateWidget(CassetteTape old) {
     super.didUpdateWidget(old);
     if (widget.spinning == old.spinning) return;
-    widget.spinning ? _reel.repeat() : _reel.stop();
+    if (widget.spinning && !_reduceMotion) {
+      _reel.repeat();
+    } else {
+      _reel.stop();
+    }
   }
 
   @override
@@ -75,16 +83,17 @@ class _CassetteTapeState extends State<CassetteTape> with SingleTickerProviderSt
               border: Border.all(color: context.skin.colors.text2.withValues(alpha: AppAlphas.o50), width: 2),
             ),
           ),
-          _spinningReel(reelSize),
+          _spinningReel(reelSize, reverse: true),
         ],
       ),
     );
   }
 
-  Widget _spinningReel(double size) {
+  Widget _spinningReel(double size, {bool reverse = false}) {
     return AnimatedBuilder(
       animation: _reel,
-      builder: (context, child) => Transform.rotate(angle: _reel.value * 2 * math.pi, child: child),
+      builder: (context, child) =>
+          Transform.rotate(angle: (reverse ? -1 : 1) * _reel.value * 2 * math.pi, child: child),
       child: CustomPaint(
         size: Size(size, size),
         painter: _ReelPainter(color: context.skin.colors.text1),

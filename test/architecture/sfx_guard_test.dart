@@ -21,6 +21,7 @@ void main() {
       'lib/theme',
       'lib/tokens',
       'lib/utils',
+      'lib/main.dart', // 2026-10 审计 Q1：兜底页/入口直用也须被守卫看见
     ];
     // 发音系统（TTS/例句播放）与音效系统是两条线：audio_players.dart 合法直用 audioplayers。
     final whitelist = {'lib/core/utils/sfx.dart', 'lib/core/audio/audio_players.dart'};

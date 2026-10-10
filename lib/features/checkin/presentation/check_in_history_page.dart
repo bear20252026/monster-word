@@ -3,6 +3,7 @@
 // 路由：/check_in_history
 import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
@@ -531,8 +532,9 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> with TickerProv
 
   /// 判断某天是否与前后签到日连续
   bool _isConsecutiveDay(DateTime date) {
-    final prev = _iso(date.subtract(const Duration(days: 1)));
-    final next = _iso(date.add(const Duration(days: 1)));
+    // 日历日分量步进（DST 安全）：绝对时长步进在切换日会跳两天/重一天。
+    final prev = _iso(calendarDayBefore(date));
+    final next = _iso(calendarDayAdd(date, 1));
     return _checkedDates.contains(prev) || _checkedDates.contains(next);
   }
 

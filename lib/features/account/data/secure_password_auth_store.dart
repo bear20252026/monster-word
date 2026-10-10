@@ -130,10 +130,34 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
   @override
   Future<void> setPassword(String username, String password, {String? phone}) async {
     final prefix = _prefix(username);
-    // 每次设置都换新盐（重置后旧哈希彻底失效）
+    // 每次设置都换新盐（重置后旧哈希彻底失效）。
+    // 两键非原子：无论先写哪个，崩溃落在中间都是「新盐×旧哈希」组合——
+    // 新旧两个密码都验不过，用户被永久锁死。对策：先读旧值，任一写失败就回滚到旧组合（保持可登录）并抛错。
+    final oldSalt = await _storage.read(key: '$prefix.salt');
+    final oldHash = await _storage.read(key: '$prefix.hash');
     final salt = _randomSalt();
-    await _storage.write(key: '$prefix.salt', value: salt);
-    await _storage.write(key: '$prefix.hash', value: hashPassword(salt, password));
+    final newHash = hashPassword(salt, password);
+    try {
+      await _storage.write(key: '$prefix.salt', value: salt);
+      await _storage.write(key: '$prefix.hash', value: newHash);
+    } catch (e) {
+      // 回滚：两键一起写回旧值（旧值为空则移除，维持「未设密码」初态）。
+      try {
+        if (oldSalt != null) {
+          await _storage.write(key: '$prefix.salt', value: oldSalt);
+        } else {
+          await _storage.delete(key: '$prefix.salt');
+        }
+        if (oldHash != null) {
+          await _storage.write(key: '$prefix.hash', value: oldHash);
+        } else {
+          await _storage.delete(key: '$prefix.hash');
+        }
+      } catch (rollbackError, rollbackStack) {
+        reportSwallowedError('密码设置失败后回滚也失败（可能已锁死，需短信重置）', rollbackError, rollbackStack);
+      }
+      rethrow;
+    }
     // 手机号格式的用户名自动绑定（单一事实来源：绑定逻辑只在此处）
     var phoneToBind = phone?.trim();
     if ((phoneToBind == null || phoneToBind.isEmpty) && isPhoneFormat(username)) {

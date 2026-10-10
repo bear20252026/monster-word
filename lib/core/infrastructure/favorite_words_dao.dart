@@ -153,14 +153,19 @@ class FavoriteWordsDao {
   }
 
   /// 返回 true 表示收藏、false 表示取消收藏。
+  /// 判定必须在闸内：闸外预检时两次快速双击都会看到「未收藏」而走 add，终态停在已收藏而非切回。
   Future<bool> toggle(String word) async {
     await ensureLoaded();
-    if (!_index.contains(word)) {
-      await add(word);
+    return _serialized(() async {
+      if (_index.contains(word)) {
+        _index.remove(word);
+        await _persistRemove(word);
+        return false;
+      }
+      _index.add(word);
+      await _persistAdd(word);
       return true;
-    }
-    await remove(word);
-    return false;
+    });
   }
 
   Future<void> _persistAdd(String word) async {

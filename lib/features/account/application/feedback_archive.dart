@@ -38,9 +38,17 @@ class FeedbackArchive {
 
   /// 提交反馈：先本地存档（必成功），再尽力上报 Sentry（失败不影响提交语义）。
   /// 返回本地存档后的完整历史。
+  /// 单写者闸：读改写无闸时并发提交互相覆盖丢条目。
+  Future<void> _gate = Future<void>.value();
+
   Future<List<FeedbackEntry>> submit({required String content, String? contact}) async {
     final entry = FeedbackEntry(content: content.trim(), contact: contact?.trim(), submittedAt: DateTime.now());
+    final run = _gate.then((_) => _doSubmit(entry));
+    _gate = run.then<void>((_) {}, onError: (Object _) {});
+    return run;
+  }
 
+  Future<List<FeedbackEntry>> _doSubmit(FeedbackEntry entry) async {
     final prefs = prefsOverride ?? await SharedPreferences.getInstance();
     final decoded = _decode(prefs.getString(_storageKey));
     final history = (decoded ?? <FeedbackEntry>[])..add(entry);
@@ -54,8 +62,10 @@ class FeedbackArchive {
 
     try {
       await upload(entry);
-    } catch (_) {
+    } catch (e, s) {
       // 上报失败不阻断提交：内容已在本地存档，下次诊断/反馈可复查。
+      // 但上报通道自身故障必须可观测（否则「永远上报成功」是假象）。
+      reportSwallowedError('反馈 Sentry 上报失败（本地存档仍完整）', e, s);
     }
     return history;
   }

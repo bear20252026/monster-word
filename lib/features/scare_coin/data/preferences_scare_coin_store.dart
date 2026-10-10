@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/infrastructure/scare_coin_ledger_dao.dart';
+import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/models/scare_coin_entry.dart';
@@ -17,6 +18,26 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   PreferencesScareCoinStore({ScareCoinLedgerDao? ledgerDao}) : _ledgerDao = ledgerDao ?? ScareCoinLedgerDao.instance;
 
   final ScareCoinLedgerDao _ledgerDao;
+
+  /// 变更操作串行闸（审计：TOCTOU）。checkIn/grantAnswerReward/addProtection/
+  /// grant 都是「异步读 → 判 → 写」结构，无闸时并发双击可同读旧值同过检查，
+  /// 产生重复入账/突破日上限/丢失更新。单写者队列化后读与写之间不会交错。
+  Future<void> _writeQueue = Future<void>.value();
+
+  Future<T> _serialized<T>(Future<T> Function() action) {
+    final run = _writeQueue.then((_) => action());
+    // 单次失败不断流（下一个操作照常排队），异常原样还给调用方。
+    _writeQueue = run.then<void>((_) {}, onError: (Object _) {});
+    return run;
+  }
+
+  /// 关键持久化写：SP 在磁盘满/背板异常时返回 false 而非抛错，
+  /// 静默忽略会让计数/库存与余额失真（名额被烧、卡未到账）。
+  Future<void> _writeChecked(Future<bool> write, String label) async {
+    if (!await write) {
+      throw StateError('SharedPreferences 写入失败：$label');
+    }
+  }
 
   static const String balanceKey = 'scare_coin.balance';
   static const String historyKey = 'scare_coin.history';
@@ -110,7 +131,9 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   bool isSameDay(String isoDate, DateTime time) => isoDate == _iso(time);
 
   @override
-  Future<int?> checkIn() async {
+  Future<int?> checkIn() => _serialized(_checkInLocked);
+
+  Future<int?> _checkInLocked() async {
     final now = DateTime.now();
     final last = await lastCheckInDate();
     if (isSameDay(last, now)) return null;
@@ -160,7 +183,9 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   int get answerRewardDailyCap => answerRewardCapValue;
 
   @override
-  Future<int> grantAnswerReward() async {
+  Future<int> grantAnswerReward() => _serialized(_grantAnswerRewardLocked);
+
+  Future<int> _grantAnswerRewardLocked() async {
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now().toIso8601String().substring(0, 10);
     var count = 0;
@@ -168,13 +193,20 @@ class PreferencesScareCoinStore implements ScareCoinStore {
       count = prefs.getInt(answerRewardCountKey) ?? 0;
     }
     if (count >= answerRewardCapValue) return 0;
-    await prefs.setString(answerRewardDateKey, today);
-    await prefs.setInt(answerRewardCountKey, count + 1);
+    // 计数先落盘且校验返回值：写失败直接抛（名额与币都不动），
+    // 不能带着旧计数发币——否则同一名额可重复兑换。
+    await _writeChecked(prefs.setString(answerRewardDateKey, today), '答对奖励日期');
+    await _writeChecked(prefs.setInt(answerRewardCountKey, count + 1), '答对奖励计数');
     try {
       await _apply(delta: 1, reason: '答对＋1');
     } catch (e) {
       // 发币失败回滚日计数：否则该次答题名额被烧掉（计数已 +1、币未发）。
-      await prefs.setInt(answerRewardCountKey, count);
+      // 回滚写自身失败只上报（此刻抛出会被外层误读为「发币也失败了」）。
+      try {
+        await _writeChecked(prefs.setInt(answerRewardCountKey, count), '答对奖励计数回滚');
+      } catch (e2, s2) {
+        reportSwallowedError('答对奖励计数回滚失败（当日名额可能少计一次）', e2, s2);
+      }
       rethrow;
     }
     return 1;
@@ -187,7 +219,10 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   }
 
   @override
-  Future<int> addProtection({required int count, required String reason}) async {
+  Future<int> addProtection({required int count, required String reason}) =>
+      _serialized(() => _addProtectionLocked(count: count, reason: reason));
+
+  Future<int> _addProtectionLocked({required int count, required String reason}) async {
     final prefs = await SharedPreferences.getInstance();
     final current = prefs.getInt(protectionKey) ?? 0;
     // 满额拒收而非静默钳制：调用方（兑换页已扣 200 币）依赖本抛错触发
@@ -196,7 +231,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
       throw StateError('保护卡库存已满（$protectionCapValue 张）');
     }
     final next = (current + count).clamp(0, protectionCapValue);
-    await prefs.setInt(protectionKey, next);
+    // 库存写校验：写失败抛错走调用方退款路径，不能「无卡也无错」。
+    await _writeChecked(prefs.setInt(protectionKey, next), '保护卡库存');
     await _insertHistory(prefs, ScareCoinEntry(time: DateTime.now(), delta: 0, reason: reason));
     return next;
   }
@@ -208,9 +244,9 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     if (last.isEmpty) return;
     final lastDay = DateTime.tryParse(last);
     if (lastDay == null) return;
-    final today = DateTime(now.year, now.month, now.day);
-    final base = DateTime(lastDay.year, lastDay.month, lastDay.day);
-    final gap = today.difference(base).inDays;
+    // 日历日差（DST 安全，与 _dayBefore 同族口径）：
+    // 绝对时长差在夏令时周少算 1 天→该回填的断签日不回填。
+    final gap = calendarDaysBetween(lastDay, now);
     if (gap <= 1) return;
     var count = prefs.getInt(protectionKey) ?? 0;
     if (count <= 0) return;
@@ -222,7 +258,11 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     final dates = (prefs.getStringList(checkinDatesKey) ?? const <String>[]).toSet()..addAll(backfill);
     await prefs.setStringList(checkinDatesKey, dates.toList()..sort());
     count -= backfill.length;
-    await prefs.setInt(protectionKey, count);
+    if (!await prefs.setInt(protectionKey, count)) {
+      // 回填已入日历但库存未扣：上报对账（比静默多一张卡诚实）。
+      reportSwallowedError('断签保护回填：库存写失败（保护卡可能多计）', StateError('SP write returned false'), StackTrace.current);
+      return;
+    }
     await _insertHistory(prefs, ScareCoinEntry(time: now, delta: 0, reason: '断签保护·自动续命×${backfill.length}'));
   }
 
@@ -232,14 +272,21 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     if (newStreak <= 0 || newStreak % 7 != 0) return;
     final issued = (prefs.getStringList(protectionIssuedKey) ?? const <String>[]).toSet();
     if (!issued.add('$newStreak')) return;
-    await prefs.setStringList(protectionIssuedKey, issued.toList()..sort());
+    if (!await prefs.setStringList(protectionIssuedKey, issued.toList()..sort())) {
+      // 去重标记未落盘：上报（次日若 streak 仍为同档 7 倍数有重复发卡窗口）。
+      reportSwallowedError('连签发卡：去重标记写失败', StateError('SP write returned false'), StackTrace.current);
+      return;
+    }
     final count = prefs.getInt(protectionKey) ?? 0;
     if (count >= protectionCapValue) {
       // 满额只标记不发放，但留一条流水：否则审计面上「视为已发」却查无此事。
       await _insertHistory(prefs, ScareCoinEntry(time: DateTime.now(), delta: 0, reason: '连签$newStreak天·发卡满额未发放'));
       return;
     }
-    await prefs.setInt(protectionKey, count + 1);
+    if (!await prefs.setInt(protectionKey, count + 1)) {
+      reportSwallowedError('连签发卡：库存写失败（卡未到账）', StateError('SP write returned false'), StackTrace.current);
+      return;
+    }
     await _insertHistory(prefs, ScareCoinEntry(time: DateTime.now(), delta: 0, reason: '连签$newStreak天·保护卡＋1'));
   }
 
@@ -274,7 +321,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   }
 
   @override
-  Future<int> grant({required int delta, required String reason}) => _apply(delta: delta, reason: reason);
+  Future<int> grant({required int delta, required String reason}) =>
+      _serialized(() => _apply(delta: delta, reason: reason));
 
   Future<int> _apply({required int delta, required String reason, String? lastCheckInIso}) async {
     final prefs = await SharedPreferences.getInstance();
@@ -286,7 +334,17 @@ class PreferencesScareCoinStore implements ScareCoinStore {
         delta: delta,
         entry: ScareCoinEntry(time: DateTime.now(), delta: delta, reason: reason),
       );
-      if (lastCheckInIso != null) await prefs.setString(lastCheckInKey, lastCheckInIso);
+      if (lastCheckInIso != null) {
+        // 标记写失败上报（余额/库存均走 _writeChecked，此处曾漏网；仅靠流水幂等兑底）。
+        final saved = await prefs.setString(lastCheckInKey, lastCheckInIso);
+        if (!saved) {
+          reportSwallowedError(
+            '签到日期标记写入失败',
+            StateError('setString($lastCheckInIso) returned false'),
+            StackTrace.current,
+          );
+        }
+      }
       return newBalance;
     }
     final current = prefs.getInt(balanceKey) ?? 0;
@@ -296,7 +354,9 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     if (newBalance < 0) {
       throw StateError('余额不足：current=$current, delta=$delta');
     }
-    await prefs.setInt(balanceKey, newBalance);
+    // 余额写校验：写失败抛错（币不能「看起来发出去了」实际没落盘），
+    // 抛出时流水尚未追加，账面保持一致。
+    await _writeChecked(prefs.setInt(balanceKey, newBalance), '尖叫币余额（SP 回退路径）');
     if (lastCheckInIso != null) await prefs.setString(lastCheckInKey, lastCheckInIso);
     // 与 _insertHistory 同口径：解析失败保留原账本并上报，本次新条目不落账
     // （宁可丢一条新账也不清账本；余额与签到日已正确写入）。

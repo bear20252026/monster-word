@@ -86,8 +86,13 @@ class SecureTokenStorage {
     final prefs = AppPreferences();
     value = prefs.getString(_keyToken);
     if (value.isNotEmpty) {
-      await _storage.write(key: _keyToken, value: value);
-      await prefs.remove(_keyToken); // 清除明文
+      // 迁移写失败不能打断登录链：保留 SP 旧值下次再迁（成功才清明文）。
+      try {
+        await _storage.write(key: _keyToken, value: value);
+        await prefs.remove(_keyToken); // 清除明文
+      } catch (e, s) {
+        reportSwallowedError('安全存储迁移写失败（保留 SP 下次重试）', e, s);
+      }
     }
     return value;
   }
@@ -117,8 +122,13 @@ class SecureTokenStorage {
     final prefs = AppPreferences();
     value = prefs.getString(_keySecret);
     if (value.isNotEmpty) {
-      await _storage.write(key: _keySecret, value: value);
-      await prefs.remove(_keySecret); // 清除明文
+      // 迁移写失败不能打断登录链：保留 SP 旧值下次再迁（成功才清明文）。
+      try {
+        await _storage.write(key: _keySecret, value: value);
+        await prefs.remove(_keySecret); // 清除明文
+      } catch (e, s) {
+        reportSwallowedError('安全存储迁移写失败（保留 SP 下次重试）', e, s);
+      }
     }
     return value;
   }
@@ -373,34 +383,8 @@ class UserPreferences extends BaseSharedPreferences {
   Future<bool> setRemindTime(String value) => setString(remindTime, value);
 }
 
-/// 引导偏好
-class GuidePreference extends BaseSharedPreferences {
-  static final GuidePreference _instance = GuidePreference._();
-  factory GuidePreference() => _instance;
-  GuidePreference._();
-
-  static const String guideLearn = 'guide_learn';
-  static const String guideReview = 'guide_review';
-  static const String guideMain = 'guide_main';
-  static const String guideSpell = 'guide_spell';
-
-  @override
-  Future<void> init() async {
-    await super.init();
-  }
-
-  bool isGuideLearnShown() => getBool(guideLearn);
-  Future<bool> setGuideLearnShown(bool v) => setBool(guideLearn, v);
-
-  bool isGuideReviewShown() => getBool(guideReview);
-  Future<bool> setGuideReviewShown(bool v) => setBool(guideReview, v);
-
-  bool isGuideMainShown() => getBool(guideMain);
-  Future<bool> setGuideMainShown(bool v) => setBool(guideMain, v);
-
-  bool isGuideSpellShown() => getBool(guideSpell);
-  Future<bool> setGuideSpellShown(bool v) => setBool(guideSpell, v);
-}
+// 死代码清理（2026-10 审计）：GuidePreference（guide_learn 等四个引导标记）
+// 全库零引用已删除。SP 中可能残留旧键值，无消费方、无迁移必要。
 
 /// 用户信息 Bean
 class UserInfoBean {
