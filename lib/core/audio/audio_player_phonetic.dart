@@ -57,6 +57,12 @@ class PhoneticAudioPlayer {
     await _playPhoneticAudio(word, isUK ?? _isPronounceUK);
   }
 
+  /// MW-46：公开停止能力——AudioServiceImpl.stop 覆盖真实发声通道所需。
+  Future<void> stop() => _audioPlayer.stop();
+
+  /// MW-46：公开播放状态查询。
+  bool isPlaying() => _audioPlayer.isPlaying;
+
   /// 内部播放（playPhoneticAudio）
   Future<void> _playPhoneticAudio(String word, bool isUK) async {
     _isPronounceUK = isUK;

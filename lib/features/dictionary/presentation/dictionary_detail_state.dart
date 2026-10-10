@@ -116,7 +116,13 @@ class DictionaryDetailState extends ChangeNotifier {
   }
 
   /// 执行搜索并缓存结果。
+  ///
+  /// MW-37：请求代际——快速连续输入时旧查询的迟到响应不再覆盖新结果
+  /// （SearchPage 已有 _searchSeq 同款模式，此处补齐 DictionaryDetailState）。
+  int _searchSeq = 0;
+
   Future<void> search(String query) async {
+    final seq = ++_searchSeq;
     if (query.trim().isEmpty) {
       _searchResults = const [];
       notifyListeners();
@@ -125,9 +131,14 @@ class DictionaryDetailState extends ChangeNotifier {
     _searching = true;
     notifyListeners();
     try {
-      _searchResults = await _searchReader.searchSmart(query.trim());
+      final results = await _searchReader.searchSmart(query.trim());
+      // 过期响应：更新请求已发出，本次结果整体丢弃。
+      if (seq != _searchSeq) return;
+      _searchResults = results;
     } finally {
-      _searching = false;
+      if (seq == _searchSeq) {
+        _searching = false;
+      }
       notifyListeners();
     }
   }

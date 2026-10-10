@@ -57,11 +57,36 @@ class AudioServiceImpl implements AudioService {
   @override
   Future<void> stop() async {
     if (_disposed) return;
-    await _bbPlayer.stop();
+    // MW-46：stop 必须覆盖真实发声的所有通道——原实现只 stop 从未参与
+    // 播放的 _bbPlayer，正在响的音标/句子播放器完全不受控。
+    try {
+      await _phoneticPlayer.stop();
+    } catch (e) {
+      debugLog('[AudioService] phonetic stop error: ');
+    }
+    try {
+      await _sentencePlayer.stop();
+    } catch (e) {
+      debugLog('[AudioService] sentence stop error: ');
+    }
+    try {
+      await _bbPlayer.stop();
+    } catch (e) {
+      debugLog('[AudioService] bb stop error: ');
+    }
+    try {
+      await SystemTts().stop();
+    } catch (e) {
+      debugLog('[AudioService] tts stop error: ');
+    }
   }
 
   @override
-  bool get isPlaying => _disposed ? false : _bbPlayer.isPlaying;
+  bool get isPlaying {
+    if (_disposed) return false;
+    // MW-46：任一真实通道在响即为 playing（原实现读 _bbPlayer 恒 false 语义）。
+    return _phoneticPlayer.isPlaying() || _sentencePlayer.isPlaying() || _bbPlayer.isPlaying;
+  }
 
   /// 释放所有音频资源（防止内存泄漏）
   @override

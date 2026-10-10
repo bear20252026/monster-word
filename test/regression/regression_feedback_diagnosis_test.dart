@@ -95,6 +95,7 @@ void main() {
 
     expect(uploads, hasLength(1), reason: '内容永不静默丢弃：本条仍走 Sentry 兜底');
     expect(prefs.getString('mw.feedback.archive'), corrupted, reason: '损坏原档不被覆写清空');
-    expect(result.map((e) => e.content), contains('损坏后仍能提交'), reason: '提交语义返回本次历史');
+    expect(result.history.map((e) => e.content), contains('损坏后仍能提交'), reason: '提交语义返回本次历史');
+    expect(result.remoteUploaded, isTrue, reason: 'MW-56: 存档损坏时远端通道必须成功才算 durable');
   });
 }

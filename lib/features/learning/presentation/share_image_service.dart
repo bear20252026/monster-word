@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/tokens/starbucks_tokens.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
@@ -221,7 +222,8 @@ class ShareImageService {
     required int totalDays,
   }) async {
     final bytes = await generateShareImage(totalWords: totalWords, streakDays: streakDays, totalDays: totalDays);
-    final dir = await getApplicationDocumentsDirectory();
+    // MW-33：分享图落系统临时目录（OS 可回收），不再永久堆积在 Documents。
+    final dir = await getTemporaryDirectory();
     final filePath = '${dir.path}/monster_word_share_${DateTime.now().millisecondsSinceEpoch}.png';
     final file = File(filePath);
     await file.writeAsBytes(bytes);
@@ -235,11 +237,26 @@ class ShareImageService {
     required int totalDays,
   }) async {
     final filePath = await generateAndSave(totalWords: totalWords, streakDays: streakDays, totalDays: totalDays);
-    await Share.shareXFiles(
-      [XFile(filePath)],
-      subject: 'Monster Word 学习打卡',
-      text: '我在 Monster Word 已学习 $totalDays 天，掌握 $totalWords 个单词，连续签到 $streakDays 天！一起来背单词吧！',
-    );
+    try {
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        subject: 'Monster Word 学习打卡',
+        text: '我在 Monster Word 已学习 $totalDays 天，掌握 $totalWords 个单词，连续签到 $streakDays 天！一起来背单词吧！',
+      );
+    } finally {
+      // MW-33：分享完成后删除临时文件（失败仅上报，不影响分享结果）。
+      _deleteQuietly(filePath);
+    }
+  }
+
+  /// 静默删除临时分享文件。
+  static void _deleteQuietly(String path) {
+    try {
+      final f = File(path);
+      if (f.existsSync()) f.deleteSync();
+    } catch (e, s) {
+      reportSwallowedError('临时分享文件删除失败（残留于系统临时目录）', e, s);
+    }
   }
 
   /// 生成今日战报海报（结算页分享）：学对／答对率／最高连击／连签。
@@ -358,7 +375,8 @@ class ShareImageService {
       bestCombo: bestCombo,
       streakDays: streakDays,
     );
-    final dir = await getApplicationDocumentsDirectory();
+    // MW-33：同 generateAndSave——临时目录。
+    final dir = await getTemporaryDirectory();
     final filePath = '${dir.path}/monster_word_report_${DateTime.now().millisecondsSinceEpoch}.png';
     final file = File(filePath);
     await file.writeAsBytes(bytes);
@@ -380,10 +398,15 @@ class ShareImageService {
       bestCombo: bestCombo,
       streakDays: streakDays,
     );
-    await Share.shareXFiles(
-      [XFile(filePath)],
-      subject: 'Monster Word 今日战报',
-      text: '今日在 Monster Word 学对 $correct/$total（最高连击×$bestCombo），连续签到 $streakDays 天！一起来背单词吧！',
-    );
+    try {
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        subject: 'Monster Word 今日战报',
+        text: '今日在 Monster Word 学对 $correct/$total（最高连击×$bestCombo），连续签到 $streakDays 天！一起来背单词吧！',
+      );
+    } finally {
+      // MW-33：同 generateAndShare。
+      _deleteQuietly(filePath);
+    }
   }
 }

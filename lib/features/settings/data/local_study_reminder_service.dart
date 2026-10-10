@@ -119,7 +119,11 @@ class LocalStudyReminderService implements StudyReminderService {
 
   @override
   Future<void> cancelDaily() async {
-    if (!_initialized) return; // 从未调度过，无需取消
+    // MW-53：OS 侧是否存在本应用的通知与「当前 Dart 实例是否初始化过」是
+    // 两件事——应用昨天调度了提醒、今天新实例尚未 scheduleDaily，原实现
+    // 直接 return 会让系统通知永远无法被取消。改为幂等初始化后必发 cancel
+    // （无通知时 cancel 本身是 no-op，幂等安全）。
+    await _ensureInitialized();
     await _client.cancel(id: _notificationId);
   }
 }

@@ -120,7 +120,19 @@ class MwAudioPlayer {
   }
 
   /// 停止（stop）
+  ///
+  /// MW-47：桌面端实际播放走 audioplayers（_apPlayer），原实现只 stop
+  /// just_audio 的 _player——「播放 A 引擎、停止 B 引擎」，Windows 上
+  /// stop 按钮对正在响的音频完全无效。按平台控制真实后端。
   Future<void> stop() async {
+    if (_useAudioPlayersDesktop) {
+      try {
+        await _apPlayer.stop();
+      } catch (e) {
+        debugLog('[MwAudioPlayer] desktop stop() error (player may be disposed): $e');
+      }
+      return;
+    }
     try {
       await _player.stop();
     } catch (e) {
@@ -129,7 +141,20 @@ class MwAudioPlayer {
   }
 
   /// 暂停（pause）
+  ///
+  /// MW-47：同 stop()——按平台控制真实播放后端。
   Future<void> pause() async {
+    if (_useAudioPlayersDesktop) {
+      try {
+        await _apPlayer.pause();
+      } catch (e) {
+        debugLog('[MwAudioPlayer] desktop pause() error (player may be disposed): $e');
+      }
+      if (_currentFileName.isNotEmpty) {
+        playStateListener?.onPlayPause(_currentFileName);
+      }
+      return;
+    }
     try {
       await _player.pause();
     } catch (e) {
@@ -172,7 +197,15 @@ class MwAudioPlayer {
   }
 
   /// 是否正在播放
-  bool get isPlaying => _player.playerState.playing;
+  ///
+  /// MW-47：按平台读真实后端的状态（桌面 audioplayers 的 state 为 playing）。
+  bool get isPlaying {
+    if (_useAudioPlayersDesktop) {
+      final instance = _apPlayerInstance;
+      return instance != null && instance.state == ap.PlayerState.playing;
+    }
+    return _player.playerState.playing;
+  }
 
   /// 锁定播放（setLock）
   void setLock(bool lock) {

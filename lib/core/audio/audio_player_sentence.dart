@@ -96,6 +96,9 @@ class SentenceAudioPlayer {
     }
   }
 
+  /// MW-46：公开停止能力（原实现 stop 不可达，AudioServiceImpl 无法停它）。
+  Future<void> stop() => _audioPlayer.stop();
+
   /// 暂停（pause）
   void pause() {
     _audioPlayer.pause();

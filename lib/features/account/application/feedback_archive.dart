@@ -28,6 +28,15 @@ class FeedbackEntry {
   };
 }
 
+/// 提交结果（MW-56 durable 语义）：至少一个通道成功才算提交成功。
+class FeedbackSubmitResult {
+  const FeedbackSubmitResult({required this.localPersisted, required this.remoteUploaded, required this.history});
+  final bool localPersisted;
+  final bool remoteUploaded;
+  final List<FeedbackEntry> history;
+  bool get durable => localPersisted || remoteUploaded;
+}
+
 class FeedbackArchive {
   FeedbackArchive({FeedbackUploader? upload, this.prefsOverride}) : upload = upload ?? _sentryUpload;
 
@@ -41,33 +50,40 @@ class FeedbackArchive {
   /// 单写者闸：读改写无闸时并发提交互相覆盖丢条目。
   Future<void> _gate = Future<void>.value();
 
-  Future<List<FeedbackEntry>> submit({required String content, String? contact}) async {
+  Future<FeedbackSubmitResult> submit({required String content, String? contact}) async {
     final entry = FeedbackEntry(content: content.trim(), contact: contact?.trim(), submittedAt: DateTime.now());
     final run = _gate.then((_) => _doSubmit(entry));
     _gate = run.then<void>((_) {}, onError: (Object _) {});
     return run;
   }
 
-  Future<List<FeedbackEntry>> _doSubmit(FeedbackEntry entry) async {
+  Future<FeedbackSubmitResult> _doSubmit(FeedbackEntry entry) async {
     final prefs = prefsOverride ?? await SharedPreferences.getInstance();
     final decoded = _decode(prefs.getString(_storageKey));
     final history = (decoded ?? <FeedbackEntry>[])..add(entry);
+    var localPersisted = false;
     if (decoded != null) {
       // MEM：本地反馈存档封顶，避免 SP 与内存无界增长。
       const maxEntries = 50;
       final trimmed = history.length > maxEntries ? history.sublist(history.length - maxEntries) : history;
-      await prefs.setString(_storageKey, jsonEncode(trimmed.map((e) => e.toJson()).toList()));
+      // MW-56：setString 返回值必须校验——false 不是成功，本地通道未落盘。
+      localPersisted = await prefs.setString(_storageKey, jsonEncode(trimmed.map((e) => e.toJson()).toList()));
+      if (!localPersisted) {
+        reportSwallowedError('反馈本地存档写入返回 false', StateError('feedback SP setString false'), StackTrace.current);
+      }
     }
-    // decoded == null（存档损坏）：不覆写原档，本条仍上报 Sentry 兜底
+    // decoded == null（存档损坏）：不覆写原档，本条只能依赖远端通道。
 
+    var remoteUploaded = false;
     try {
       await upload(entry);
+      remoteUploaded = true;
     } catch (e, s) {
-      // 上报失败不阻断提交：内容已在本地存档，下次诊断/反馈可复查。
+      // 上报失败不阻断提交：内容可能已在本地存档，下次诊断/反馈可复查。
       // 但上报通道自身故障必须可观测（否则「永远上报成功」是假象）。
       reportSwallowedError('反馈 Sentry 上报失败（本地存档仍完整）', e, s);
     }
-    return history;
+    return FeedbackSubmitResult(localPersisted: localPersisted, remoteUploaded: remoteUploaded, history: history);
   }
 
   /// 读取本地反馈历史（供设置页后续展示/导出扩展）。
