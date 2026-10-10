@@ -11,6 +11,8 @@ import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/models/word.dart';
 
+import 'package:word_app/features/learning/application/review_schedule_writer_port.dart'
+    show FsrsRatingOutcome, FsrsRatingPersistException;
 import 'package:word_app/features/learning/data/review_schedule_store.dart';
 
 /// 正式复习的 FSRS 调度与统计事实来源。
@@ -33,6 +35,9 @@ import 'package:word_app/features/learning/data/review_schedule_store.dart';
 /// `Provider<ReviewScheduleRepository>` 暴露给 UI；展示侧统一经
 /// `ReviewScheduleReader`（`RepositoryReviewScheduleReader` 监听本仓储）。
 /// 评分写入经 `ReviewRatingWriter` 组合根注入。
+/// 评分持久化内部阶段信号（failed 由上层转 FsrsRatingPersistException）。
+enum _PersistPhase { saved, pendingRetry, failed }
+
 class ReviewScheduleRepository extends ChangeNotifier {
   static const cardsPrefKey = 'fsrs6_cards_v1';
   static const dailyStatsPrefKey = 'daily_stats_v1';
@@ -48,6 +53,11 @@ class ReviewScheduleRepository extends ChangeNotifier {
   Future<void>? _initialization;
   bool _useSqlite = false;
   Future<void> _writeGate = Future<void>.value();
+
+  // MW-03：按词互斥锁——同一单词的「读取→FSRS 计算→持久化→内存提交」
+  // 全程串行；不同单词互不阻塞。并发同词评分按到达顺序依次完整执行。
+  final Map<String, Future<void>> _wordLocks = <String, Future<void>>{};
+  int _ratingSeq = 0;
 
   // MEM/F3+异步化：SQLite 模式下 _cards 是【有界 LRU 缓存】而非全量事实来源——
   // 启动只装「到期子集」（复习关键路径 t0 正确），其余词经读穿填充/批量异步
@@ -70,9 +80,19 @@ class ReviewScheduleRepository extends ChangeNotifier {
   bool get isInitialized => _initialization != null;
 
   /// MEM：释放 SQLite 应用与句柄（由 DI disposeServiceLocator 调用）。
+  ///
+  /// MW-59：先等 _writeGate 排空在途评分写，再关库；同时清空 _initialization
+  /// 与 _writeGate——同实例 initialize→close→initialize 必须能重新加载，
+  /// 不再进入「store 已关但 _initialization 仍完成态」的半关闭状态。
   Future<void> close() async {
+    await _writeGate;
     final store = _store;
     _store = null;
+    _initialization = null;
+    _writeGate = Future<void>.value();
+    _cards = {};
+    _dailyStats = {};
+    _activeDates = {};
     _initializedReset();
     await store?.close();
   }
@@ -81,6 +101,26 @@ class ReviewScheduleRepository extends ChangeNotifier {
     _useSqlite = false;
     _counts = null;
     _fillingWords.clear();
+    _wordLocks.clear();
+  }
+
+  /// MW-03：按词串行执行 [action]；同一 word 的调用按到达顺序链式执行。
+  /// action 的异常直接向本次调用方传播，不污染后继。
+  Future<T> _withWordLock<T>(String word, Future<T> Function() action) {
+    final prev = _wordLocks[word] ?? Future<void>.value();
+    final completer = Completer<void>();
+    _wordLocks[word] = completer.future;
+    return prev.then((_) => action()).whenComplete(() {
+      if (identical(_wordLocks[word], completer.future)) {
+        _wordLocks.remove(word);
+      }
+      completer.complete();
+    });
+  }
+
+  String _nextRatingId(String word) {
+    _ratingSeq++;
+    return 'r${DateTime.now().microsecondsSinceEpoch}-$_ratingSeq-$word';
   }
 
   /// LRU 写入：重插到队尾，触顶淘汰最旧项。
@@ -276,13 +316,21 @@ class ReviewScheduleRepository extends ChangeNotifier {
         .toList(growable: false);
   }
 
-  Future<void> rateWord({required String word, required FsrsRating rating}) async {
+  /// P1-02 Durable Command：先持久化成功，再提交内存并通知 UI。
+  ///
+  /// 返回 [FsrsRatingOutcome.saved]（已落库）或 [FsrsRatingOutcome.pendingRetry]
+  /// （落库暂失败但评分意图已写入 SP 降级日志，恢复后幂等回放）；连降级日志
+  /// 都写不进时抛 [FsrsRatingPersistException]（内存不提交，无假成功）。
+  Future<FsrsRatingOutcome> rateWord({required String word, required FsrsRating rating}) {
+    return _withWordLock(word, () => _rateWordLocked(word, rating));
+  }
+
+  Future<FsrsRatingOutcome> _rateWordLocked(String word, FsrsRating rating) async {
     await initialize();
     // MEM/F3：子集加载下 map 未命中不代表没学过——必须查库防「已学词被当新学」
     // 重置调度进度；同时保证计数增量的 before 口径正确。
     FsrsCard? prior = _cards[word];
     if (prior == null && _useSqlite && _store != null) {
-      // database_closed/磁盘错直接打断评分链路（同文件其它 DB 调用均有兜底）。
       try {
         prior = await _store!.cardForWord(word);
       } catch (error, stack) {
@@ -291,40 +339,89 @@ class ReviewScheduleRepository extends ChangeNotifier {
     }
     final isLearn = prior == null;
     final card = isLearn ? _engine.learn(word, rating) : _engine.review(prior, rating);
+    final date = _todayKey();
+    final ratingId = _nextRatingId(word);
+
+    // ── 持久化阶段（durable first）──
+    final persist = _writeGate.then((_) => _persistRating(word, rating, card, date, isLearn, ratingId));
+    _writeGate = persist.then<void>((_) {}, onError: (Object _, StackTrace _) {});
+    final stored = await persist;
+    if (stored == _PersistPhase.failed) {
+      // 硬失败：内存不提交，调用方明确知道评分未落任何持久层。
+      throw FsrsRatingPersistException('FSRS 评分持久化失败且降级日志不可写（word=$word）');
+    }
+
+    // ── 提交内存（仅在持久化成功或已安全入日志后）──
+    _commitRatingToMemory(word, prior, card, date, isLearn);
+    notifyListeners();
+    return stored == _PersistPhase.saved ? FsrsRatingOutcome.saved : FsrsRatingOutcome.pendingRetry;
+  }
+
+  void _commitRatingToMemory(String word, FsrsCard? prior, FsrsCard card, String date, bool isLearn) {
     _cachePut(word, card);
     _applyCountsDelta(prior, card);
-
-    final date = _todayKey();
     final counts = _dailyStats.putIfAbsent(date, () => {'learn': 0, 'review': 0});
     counts[isLearn ? 'learn' : 'review'] = (counts[isLearn ? 'learn' : 'review'] ?? 0) + 1;
     _activeDates.add(date);
+  }
 
-    // MEM/C6：持久化写串行化，避免并发 rateWord 对同词/统计交错覆盖。
-    final persist = _writeGate.then((_) async {
-      if (_useSqlite && _store != null) {
+  /// 持久化单次评分。SQLite 模式有界重试 1 次；仍失败或 SP 模式写失败时把
+  /// 评分意图写入 SP 降级日志（P1-01），SQLite 恢复后幂等回放。
+  Future<_PersistPhase> _persistRating(
+    String word,
+    FsrsRating rating,
+    FsrsCard card,
+    String date,
+    bool isLearn,
+    String ratingId,
+  ) async {
+    if (_useSqlite && _store != null) {
+      for (var attempt = 0; attempt < 2; attempt++) {
         try {
-          await _store!.recordRating(card: card, dateKey: date, isLearn: isLearn);
+          await _store!.recordRating(card: card, dateKey: date, isLearn: isLearn, ratingId: ratingId);
+          return _PersistPhase.saved;
         } catch (error, stack) {
-          reportSwallowedError('FSRS rateWord persist (sqlite)', error, stack);
-        }
-      } else {
-        try {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(cardsPrefKey, jsonEncode(_cards.map((word, card) => MapEntry(word, card.toJson()))));
-          await prefs.setString(dailyStatsPrefKey, jsonEncode(_dailyStats));
-          await prefs.setStringList(activeDatesPrefKey, _activeDates.toList());
-        } catch (error, stack) {
-          reportSwallowedError('FSRS rateWord persist (sp)', error, stack);
+          reportSwallowedError('FSRS rateWord persist (sqlite, attempt ${attempt + 1})', error, stack);
         }
       }
-    });
-    _writeGate = persist.catchError((_) {});
-    await persist;
-    notifyListeners();
+      // 有界重试耗尽 → 降级日志兜底。
+      final journaled = await _appendDegradedJournal(word, rating, date, ratingId, isLearn);
+      return journaled ? _PersistPhase.pendingRetry : _PersistPhase.failed;
+    }
+
+    // ── SP 降级模式：日志先行（评分意图先落 SP），再写「前瞻 blob 快照」──
+    // 快照临时并入本次评分（内存正式提交在上层），保证旧版装回时能从旧 key
+    // 读到含本次评分的完整历史（回归契约：SP 降级评分仍写旧 key）。
+    final journaled = await _appendDegradedJournal(word, rating, date, ratingId, isLearn);
+    if (!journaled) {
+      return _PersistPhase.failed;
+    }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final prospectiveCards = <String, FsrsCard>{};
+      _cards.forEach((k, v) => prospectiveCards[k] = v);
+      prospectiveCards[word] = card;
+      final prospectiveStats = <String, Map<String, int>>{};
+      _dailyStats.forEach((k, v) => prospectiveStats[k] = Map<String, int>.from(v));
+      final dayCounts = prospectiveStats.putIfAbsent(date, () => {'learn': 0, 'review': 0});
+      dayCounts[isLearn ? 'learn' : 'review'] = (dayCounts[isLearn ? 'learn' : 'review'] ?? 0) + 1;
+      final prospectiveDates = Set<String>.from(_activeDates)..add(date);
+      await prefs.setString(cardsPrefKey, jsonEncode(prospectiveCards.map((w, c) => MapEntry(w, c.toJson()))));
+      await prefs.setString(dailyStatsPrefKey, jsonEncode(prospectiveStats));
+      await prefs.setStringList(activeDatesPrefKey, prospectiveDates.toList());
+      return _PersistPhase.saved;
+    } catch (error, stack) {
+      reportSwallowedError('FSRS rateWord persist (sp blob；日志已保底)', error, stack);
+      return _PersistPhase.pendingRetry;
+    }
   }
 
   /// 移除一张卡片并持久化，供遗留学习会话的“重学”操作使用。
-  Future<void> forget(String word) async {
+  Future<void> forget(String word) {
+    return _withWordLock(word, () => _forgetLocked(word));
+  }
+
+  Future<void> _forgetLocked(String word) async {
     await initialize();
     // MEM/F3：与 rateWord 同理——map 未命中须查库，防子集加载下漏删。
     FsrsCard? removed = _cards.remove(word);
@@ -344,21 +441,21 @@ class ReviewScheduleRepository extends ChangeNotifier {
     // deleteCard 与排队的 recordRating 无序执行同样能复活已删卡片。
     final persist = _writeGate.then((_) async {
       if (_useSqlite && _store != null) {
-        try {
-          await _store!.deleteCard(word);
-        } catch (error, stack) {
-          reportSwallowedError('FSRS forget persist', error, stack);
-        }
+        await _store!.deleteCard(word);
       } else {
-        try {
-          await _saveCards();
-        } catch (error, stack) {
-          reportSwallowedError('FSRS forget persist (sp)', error, stack);
-        }
+        await _saveCards();
       }
     });
-    _writeGate = persist.catchError((_) {});
-    await persist;
+    _writeGate = persist.then<void>((_) {}, onError: (Object _, StackTrace _) {});
+    try {
+      await persist;
+    } catch (error, stack) {
+      // forget 持久化失败：上报并外抛（内存不提交语义与 rateWord 对齐——
+      // 但删除方向上内存已移除，靠下次启动迁移/回放链兜底；此路径之前
+      // 完全静默，连 Sentry 都不可见）。
+      reportSwallowedError('FSRS forget persist', error, stack);
+      rethrow;
+    }
     notifyListeners();
   }
 
@@ -383,6 +480,9 @@ class ReviewScheduleRepository extends ChangeNotifier {
       _store = store;
       _useSqlite = true;
       sqliteReady = true;
+      // P1-01：SQLite 恢复后先回放降级期间的评分日志（幂等），再清旧快照——
+      // 否则降级期新数据会被 marker=done 跳过迁移而静默消失（MW-22）。
+      await _replayDegradedJournal(store);
       // E2：SQLite 模式就绪后清除旧 SP 回滚快照（降级模式保留 SP，供重试/旧版）。
       await _clearLegacySpSnapshotIfMigrated();
     } catch (error, stack) {
@@ -504,6 +604,96 @@ class ReviewScheduleRepository extends ChangeNotifier {
   ///
   /// 恢复路径：SP 快照回放（原 docs/fsrs_sqlite_migration_plan.md「E2 恢复」，文件已不存在）。
   static const emergencyBackupKey = 'fsrs6_emergency_backup_v1';
+
+  /// P1-01：SQLite 故障降级期间的评分意图日志（SP StringList，逐条 JSON）。
+  /// SQLite 恢复后按序幂等回放（fsrs_rating_log 主键去重），成功后清空。
+  static const degradedJournalKey = 'fsrs6_degraded_journal_v1';
+  static const int degradedJournalCap = 5000;
+
+  /// 把一次评分意图追加进 SP 降级日志（P1-01）。
+  /// 返回 false = 日志都写不进（磁盘满/SP 不可用）——上层按硬失败处理。
+  Future<bool> _appendDegradedJournal(
+    String word,
+    FsrsRating rating,
+    String date,
+    String ratingId,
+    bool isLearn,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final journal = prefs.getStringList(degradedJournalKey) ?? <String>[];
+      journal.add(
+        jsonEncode({
+          'ratingId': ratingId,
+          'word': word,
+          'rating': rating.value,
+          'date': date,
+          'isLearn': isLearn,
+          'savedAt': DateTime.now().toIso8601String(),
+        }),
+      );
+      // 容量上限：极端积压时丢最旧（上报可见），保护 SP 体积。
+      var kept = journal;
+      if (kept.length > degradedJournalCap) {
+        kept = kept.sublist(kept.length - degradedJournalCap);
+        reportSwallowedError(
+          'FSRS 降级日志超上限，丢弃最旧 ${journal.length - kept.length} 条',
+          StateError('degraded journal overflow'),
+          StackTrace.current,
+        );
+      }
+      return await prefs.setStringList(degradedJournalKey, kept);
+    } catch (error, stack) {
+      reportSwallowedError('FSRS 降级日志写入失败（评分硬失败）', error, stack);
+      return false;
+    }
+  }
+
+  /// SQLite 恢复后回放降级日志：按序重算卡片并落库，fsrs_rating_log 主键
+  /// 幂等去重（重复回放不会重复计数）；任一条失败保留整个日志下次重试。
+  Future<void> _replayDegradedJournal(ReviewScheduleStore store) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final journal = prefs.getStringList(degradedJournalKey);
+      if (journal == null || journal.isEmpty) return;
+      var applied = 0;
+      var duplicates = 0;
+      for (final entry in journal) {
+        try {
+          final map = jsonDecode(entry) as Map<String, dynamic>;
+          final word = map['word'] as String;
+          final rating = FsrsRating.values[(map['rating'] as num).toInt() - 1];
+          final dateKey = map['date'] as String;
+          final ratingId = map['ratingId'] as String;
+          final isLearn = (map['isLearn'] as bool?) ?? false;
+          final prior = await store.cardForWord(word);
+          final card = prior == null ? _engine.learn(word, rating) : _engine.review(prior, rating);
+          final ok = await store.recordRating(
+            card: card,
+            dateKey: dateKey,
+            isLearn: isLearn || prior == null,
+            ratingId: ratingId,
+          );
+          if (ok) {
+            applied++;
+          } else {
+            duplicates++;
+          }
+        } catch (error, stack) {
+          reportSwallowedError('FSRS 降级日志回放单条失败（保留日志下次重试）', error, stack);
+          return;
+        }
+      }
+      await prefs.remove(degradedJournalKey);
+      reportSwallowedError(
+        'FSRS 降级日志回放完成（applied=$applied duplicate=$duplicates）',
+        StateError('degraded journal replayed'),
+        StackTrace.current,
+      );
+    } catch (error, stack) {
+      reportSwallowedError('FSRS 降级日志回放读取失败（保留日志下次重试）', error, stack);
+    }
+  }
 
   Future<void> _clearLegacySpSnapshotIfMigrated() async {
     try {

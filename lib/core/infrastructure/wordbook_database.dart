@@ -79,23 +79,40 @@ Future<void> _extractBytesInBackground(Uint8List gzBytes, String dbPath) async {
           final data = GZipDecoder().decodeBytes(File(staging).readAsBytesSync());
           final tmpDb = '$dbPath.tmp';
           await File(tmpDb).writeAsBytes(data, flush: true);
-          // 原子替换：rename 前清掉旧目标（Windows rename 不覆盖已存在文件）
+          // MW-05 双槽替换：旧库先改名 .prev 留档再切换，杜绝「旧已删、新未就位」
+          // 的同时不可用窗口；切换失败可回滚 .prev（词库可由资产重解压，但可用性优先）。
           final target = File(dbPath);
+          final prevPath = '$dbPath.prev';
           if (target.existsSync()) {
             try {
-              await target.delete();
+              final prev = File(prevPath);
+              if (prev.existsSync()) {
+                try {
+                  prev.deleteSync();
+                } catch (e, s) {
+                  // 旧 .prev 是更早一代留档，删除失败不阻断（仅损失一代回滚点）
+                  reportSwallowedError('词库解压：旧 .prev 清理失败', e, s);
+                }
+              }
+              target.renameSync(prevPath);
             } catch (e, s) {
-              // C 级豁免注释放宽为上报：删旧库失败会让 rename 紧随其后抛错，
-              // 上抛路径已带上下文；此处留痕以便区分「谁先失败」。
-              reportSwallowedError('词库解压：旧库删除失败（rename 将随后失败）', e, s);
+              // 改名失败（占用）：退化为直接删除目标后切换。词库事实来源是随包
+              // 资产，此处只影响可用性窗口，不涉及用户不可再生数据。
+              reportSwallowedError('词库解压：旧库改名 .prev 失败，退化为删除后切换', e, s);
+              try {
+                target.deleteSync();
+              } catch (e2, s2) {
+                reportSwallowedError('词库解压：旧库删除失败（rename 将随后失败）', e2, s2);
+              }
             }
           }
           await File(tmpDb).rename(dbPath);
           return;
         } catch (e) {
+          // MW-05 附带修复：解码失败时【绝不删除当前 dbPath】——原实现把尚可
+          // 使用的旧词库一并删掉；旧库只要还在，本轮重试失败后下一次
+          // initialize 仍可直接打开旧库，避免人为制造「无词库」状态。
           debugLog('[WordBookDatabase] 解压失败 (attempt ${attempt + 1}): $e');
-          final f = File(dbPath);
-          if (f.existsSync()) f.deleteSync();
           if (attempt == 1) rethrow;
         } finally {
           // 清理本目录内的半成品 db（staging gz 由主 isolate 统一清理）
@@ -294,12 +311,29 @@ class WordBookDatabase {
       _db = await openDatabase(dbPath, readOnly: true);
     } catch (e, s) {
       // 词库损坏是应远程可见的事件（此前仅 debugPrint，release 不可见）
-      reportSwallowedError('词库打开失败，删除损坏库并重建', e, s);
-      assetBytes ??= await loadBytes();
-      await _extractBytesInBackground(assetBytes, dbPath);
-      assetBytes = null;
-      _db = await openDatabase(dbPath, readOnly: true);
-      reopened = true;
+      reportSwallowedError('词库打开失败，尝试 .prev 回滚后重建', e, s);
+      // MW-05：先尝试回滚上一次切换留档的 .prev（免去 2-4s 重解压）；
+      // 回滚后仍打不开才走资产重解压慢路径。
+      final prev = File('$dbPath.prev');
+      if (prev.existsSync()) {
+        try {
+          final cur = File(dbPath);
+          if (cur.existsSync()) await _deleteWithRetry(dbPath);
+          await prev.rename(dbPath);
+          _db = await openDatabase(dbPath, readOnly: true);
+          reopened = true;
+          reportSwallowedError('词库已从 .prev 回滚恢复', StateError('wordbook restored from .prev'), StackTrace.current);
+        } catch (ePrev) {
+          debugLog('[WordBookDatabase] .prev 回滚失败，走资产重解压: $ePrev');
+        }
+      }
+      if (!reopened) {
+        assetBytes ??= await loadBytes();
+        await _extractBytesInBackground(assetBytes, dbPath);
+        assetBytes = null;
+        _db = await openDatabase(dbPath, readOnly: true);
+        reopened = true;
+      }
     }
 
     // 完整性自检：三表任一为空 = 坏库（哈希相等但内容损坏的死锁场景），
@@ -402,11 +436,20 @@ class WordBookDatabase {
     _db = null;
     _initialized = false;
 
-    // 2) 删除旧库与 journal 残留——零旧数据残留（占用时重试）
+    // 2) 旧库改名 .prev 留一代回滚点（MW-05 同口径），再清 journal 残留。
     final dir = await getApplicationSupportDirectory();
     final dbPath = p.join(dir.path, 'wordbook.db');
     _dbPath = dbPath;
-    await _deleteWithRetry(dbPath);
+    try {
+      final prev = File('$dbPath.prev');
+      if (prev.existsSync()) await _deleteWithRetry(prev.path);
+      final old = File(dbPath);
+      if (old.existsSync()) old.renameSync(prev.path);
+    } catch (e, s) {
+      // 留档失败不阻断重建（forceRebuild 本就是显式覆盖语义），仅上报。
+      reportSwallowedError('词库重建：旧库 .prev 留档失败', e, s);
+      await _deleteWithRetry(dbPath);
+    }
     for (final suffix in ['-wal', '-shm', '-journal']) {
       await _deleteWithRetry('$dbPath$suffix');
     }

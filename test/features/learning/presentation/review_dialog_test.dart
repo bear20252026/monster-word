@@ -154,7 +154,7 @@ class _StubProgressPort implements LearningProgressPort {
 
 class _StubReviewScheduleWriterPort implements ReviewScheduleWriterPort {
   @override
-  Future<void> rateWord({required String word, required FsrsRating rating}) async {}
+  Future<FsrsRatingOutcome> rateWord({required String word, required FsrsRating rating}) async => FsrsRatingOutcome.saved;
 
   @override
   Future<void> forget(String word) async {}

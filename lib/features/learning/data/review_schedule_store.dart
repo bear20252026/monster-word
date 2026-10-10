@@ -55,6 +55,7 @@ class ReviewScheduleStore {
   @visibleForTesting
   static Future<ReviewScheduleStore> forTest(Database db) async {
     await _createSchema(db);
+    await _createRatingLogTable(db);
     return ReviewScheduleStore._(db);
   }
 
@@ -79,12 +80,31 @@ class ReviewScheduleStore {
     final dirPath = directoryPath ?? (await getApplicationSupportDirectory()).path;
     final db = await openDatabase(
       p.join(dirPath, defaultDbFileName),
-      version: 1,
+      version: 2,
       onCreate: (db, _) => _createSchema(db),
+      onUpgrade: (db, oldV, newV) async {
+        // P1-02：v1→v2 新增 fsrs_rating_log（评分幂等日志）。失败会上抛，
+        // 上层按 SQLite 不可用降级 SP 模式，下次启动重试迁移。
+        if (oldV < 2) {
+          await _createRatingLogTable(db);
+        }
+      },
     );
     // 防御旧文件缺表（理论上 onCreate 已覆盖，双保险成本为零）。
     await _createSchema(db);
     return ReviewScheduleStore._(db);
+  }
+
+  /// P1-02：评分幂等日志表。rating_id 主键——同一评分重复回放 INSERT 冲突
+  /// 即跳过（ignore），保证「重试恢复后不重复增加学习次数」。
+  static Future<void> _createRatingLogTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS fsrs_rating_log (
+        rating_id TEXT PRIMARY KEY,
+        word TEXT NOT NULL,
+        applied_at TEXT NOT NULL
+      )
+    ''');
   }
 
   static Future<void> _createSchema(Database db) async {
@@ -258,12 +278,30 @@ class ReviewScheduleStore {
   // 写路径（评分 O(1) 单事务：1 卡片行 + 1 统计行 + 1 活跃日期）
   // ============================================================
 
-  /// 评分落库：卡片 UPSERT + 今日统计自增 + 活跃日期忽略式插入。
-  Future<void> recordRating({required FsrsCard card, required String dateKey, required bool isLearn}) async {
-    await _db.transaction((txn) async {
+  /// 评分落库：卡片 UPSERT + 今日统计自增 + 活跃日期忽略式插入，
+  /// 同事务写入评分幂等日志（[ratingId] 主键去重）。
+  ///
+  /// 返回 false = [ratingId] 已落过库（重复回放），本次全部跳过——
+  /// 「重试恢复后不重复增加学习次数」由该唯一键保证。
+  Future<bool> recordRating({
+    required FsrsCard card,
+    required String dateKey,
+    required bool isLearn,
+    String? ratingId,
+  }) async {
+    return await _db.transaction((txn) async {
+      if (ratingId != null) {
+        final logged = await txn.insert('fsrs_rating_log', {
+          'rating_id': ratingId,
+          'word': card.word,
+          'applied_at': DateTime.now().toIso8601String(),
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        if (logged == 0) return false; // 幂等命中：该评分已应用过
+      }
       await txn.insert('fsrs_cards', _cardToRow(card), conflictAlgorithm: ConflictAlgorithm.replace);
       await _upsertDailyStats(txn, dateKey, isLearn ? 1 : 0, isLearn ? 0 : 1);
       await txn.insert('fsrs_active_dates', {'date': dateKey}, conflictAlgorithm: ConflictAlgorithm.ignore);
+      return true;
     });
   }
 

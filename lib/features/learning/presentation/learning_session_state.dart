@@ -227,8 +227,10 @@ class LearningSessionState extends ChangeNotifier {
     _isRating = true;
 
     try {
-      _totalAnswered++;
-      unawaited(_incrementTodayLearned());
+      // P1-02 Durable Command：FSRS 持久化成功才推进会话与计数——
+      // 硬失败（连降级日志都写不进）时 UI 停留当前词，绝无「假成功」。
+      // 引擎推进（Leitner 会话状态）同样放在持久化之后，保证一致。
+      await _reviewSchedulePort.rateWord(word: word.word, rating: rating);
       switch (rating) {
         case FsrsRating.again:
           _leitnerEngine.iDontKnow();
@@ -240,12 +242,15 @@ class LearningSessionState extends ChangeNotifier {
         case FsrsRating.easy:
           _leitnerEngine.tooEasy();
       }
+      _totalAnswered++;
+      unawaited(_incrementTodayLearned());
 
-      await _reviewSchedulePort.rateWord(word: word.word, rating: rating);
-      final wasLastWord = _currentIndex < _queue.length;
+      // MW-40：wasLastWord 判定修正——原 `_currentIndex < _queue.length` 恒真、
+      // `> _queue.length` 永不触发，最后一词的会话完成 breadcrumb 从未记录。
+      final wasLastWord = _currentIndex == _queue.length - 1;
       _currentIndex++;
       // 完成整个队列：让 currentWord 变为 null，触发学习完成界面，而不是永远停在最后一个词。
-      if (_currentIndex > _queue.length) {
+      if (_currentIndex >= _queue.length) {
         _currentIndex = _queue.length;
         // 审计 I87：会话完成漏斗（过转变守卫，完成后的重复评分不重复记录）
         if (wasLastWord) {
@@ -253,6 +258,12 @@ class LearningSessionState extends ChangeNotifier {
         }
       }
       _regenerateChoices();
+      notifyListeners();
+      // MW-27 断点①：每次评分后持久化索引（原实现只在 loadBook/jumpTo 保存）。
+      unawaited(_saveProgress());
+    } on FsrsRatingPersistException catch (error, stack) {
+      // 持久化硬失败：不推进索引、不计数、不推进引擎，UI 停留当前词。
+      reportSwallowedError('FSRS 评分持久化硬失败（会话未推进）', error, stack);
       notifyListeners();
     } finally {
       _isRating = false;
