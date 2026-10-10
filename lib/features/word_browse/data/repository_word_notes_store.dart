@@ -18,9 +18,7 @@ class RepositoryWordNotesStore implements WordNotesStore {
   Future<int> countAll() => _repository.countAllNotes();
 
   @override
-  Future<void> add(WordNote note) async {
-    await _repository.insertNote(note);
-  }
+  Future<int> add(WordNote note) => _repository.insertNote(note);
 
   @override
   Future<void> update(WordNote note) async {

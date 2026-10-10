@@ -9,7 +9,9 @@ abstract interface class WordNotesStore {
   /// 全量笔记计数（跨所有单词，"我的内容-笔记"真实计数）。
   Future<int> countAll();
 
-  Future<void> add(WordNote note);
+  /// 新增笔记，返回持久化层生成的真实 ID（MW-41：ID 只允许由持久化层
+  /// 生成——此前 UI 构造的 note 无 id，删除时 `note.id!` 直接崩溃）。
+  Future<int> add(WordNote note);
 
   Future<void> update(WordNote note);
 

@@ -69,7 +69,10 @@ class _WordNotesSectionState extends State<WordNotesSection> {
     controller.dispose();
     if (result != null && result.trim().isNotEmpty) {
       final note = WordNote(wordId: word.id, word: word.word, content: result.trim());
-      await store.add(note);
+      // MW-41：add 返回持久化层生成的真实 ID（AUTOINCREMENT）——此前
+      // 本地实体 id 为 null，删除走 `note.id!` 直接运行时崩溃。
+      final id = await store.add(note);
+      assert(id > 0, 'persisted note id must be positive');
       // 弹窗 await 期间详情页可能已被关闭：_loadNotes 入口的 context.read
       // 会在元素失效时抛错（审计：async gap 后无存活检查）。
       if (!mounted) return;
@@ -106,7 +109,14 @@ class _WordNotesSectionState extends State<WordNotesSection> {
       ),
     );
     if (confirmed == true) {
-      await store.deleteById(note.id!);
+      // MW-41：无 id 的存量实体（迁移前的 null-id 笔记已随迁移获得真实
+      // 主键；此处防御性兜底）不得触发 null! 崩溃。
+      final id = note.id;
+      if (id == null) {
+        await _loadNotes();
+        return;
+      }
+      await store.deleteById(id);
       if (!mounted) return;
       await _loadNotes();
     }

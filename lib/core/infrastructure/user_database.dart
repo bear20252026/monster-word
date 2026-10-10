@@ -20,7 +20,7 @@ class UserDatabase {
   UserDatabase._();
 
   /// 应用当前支持的 schema 版本（与 [_onUpgrade] 步进保持同步）。
-  static const int _schemaVersion = 5;
+  static const int _schemaVersion = 6;
 
   Database? _db;
   bool _initialized = false;
@@ -276,6 +276,7 @@ class UserDatabase {
     await _createFavoriteTables(db);
     await _createScareCoinTables(db);
     await _createRewardTables(db);
+    await _createWordNotesTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -294,6 +295,28 @@ class UserDatabase {
     if (oldVersion < 5) {
       await _createRewardTables(db);
     }
+    // P1-07：笔记迁入本库（MW-41/42/43 一次解决：AUTOINCREMENT 由 DB 生成 ID、
+    // 单条 INSERT 消灭整键读改写竞态、word 文本作稳定身份）。
+    if (oldVersion < 6) {
+      await _createWordNotesTable(db);
+    }
+  }
+
+  /// P1-07：笔记表。以 word 文本为稳定业务身份（与 favorite_words 同口径，
+  /// word_id 在词库重建后不保证稳定，只作当前词库版本的加速引用，可空）。
+  Future<void> _createWordNotesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS word_notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        word TEXT NOT NULL DEFAULT '',
+        word_id INTEGER,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_word_notes_word ON word_notes(word)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_word_notes_word_id ON word_notes(word_id)');
   }
 
   /// P1-03：奖励域表。
