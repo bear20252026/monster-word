@@ -110,8 +110,10 @@ void main() {
 
   test('词书列表端口全量加载无硬编码截断；分页 limit 必须参数化（REG-LEARN-001，MEM/F2 修订）', () {
     final listReader = File('lib/features/book/data/repository_book_word_list_reader.dart').readAsStringSync();
-    // 全量路径保持原样：lightweight、不带任何 limit（验收口径仍由调用方保证）
-    expect(listReader, contains('getWordsByBook(bookId, lightweight: true)'));
+    // MW-44：全量路径（导出专用）必须取全字段——lightweight:true 会让
+    // example/phrase 恒为空串，「包含例句/短语」勾选后导出为空。分页路径
+    // 仍走 lightweight 列（下行断言锁定），两端口各守其职。
+    expect(listReader, contains('getWordsByBook(bookId, lightweight: false)'));
     // MEM/F2：列表浏览改走分页窗口，但 limit 只允许来自方法参数——
     // 历史 bug 即硬编码 `limit: 1000` 静默缺词，此处禁止任何数字字面量截断回潮
     expect(listReader, contains('lightweight: true, limit: limit, offset: offset'));

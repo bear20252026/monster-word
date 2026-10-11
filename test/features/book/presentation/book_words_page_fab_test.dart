@@ -218,7 +218,8 @@ class MockLearningProgressPort implements LearningProgressPort {
 /// Mock ReviewScheduleWriterPort for tests.
 class MockReviewScheduleWriterPort implements ReviewScheduleWriterPort {
   @override
-  Future<FsrsRatingOutcome> rateWord({required String word, required FsrsRating rating}) async => FsrsRatingOutcome.saved;
+  Future<FsrsRatingOutcome> rateWord({required String word, required FsrsRating rating}) async =>
+      FsrsRatingOutcome.saved;
 
   @override
   Future<void> forget(String word) async {}

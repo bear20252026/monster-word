@@ -181,11 +181,10 @@ class ScareCoinLedgerDao {
   Future<int> applyDeltaWithEvent({required int delta, required ScareCoinEntry entry, required String eventKey}) {
     return _runGuarded<int>((db) {
       return db.transaction<int>((txn) async {
-        final inserted = await txn.insert(
-          'reward_events',
-          {'event_key': eventKey, 'created_at': DateTime.now().millisecondsSinceEpoch},
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
+        final inserted = await txn.insert('reward_events', {
+          'event_key': eventKey,
+          'created_at': DateTime.now().millisecondsSinceEpoch,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
         if (inserted == 0) {
           throw RewardEventDuplicate(eventKey);
         }

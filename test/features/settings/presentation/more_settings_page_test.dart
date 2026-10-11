@@ -94,7 +94,8 @@ void main() {
       ),
     );
 
-    expect(find.text('v9.9.9'), findsNWidgets(2), reason: '评价应用与关于我们两处副标题');
+    // MW-13：版本展示含 buildNumber（2.12.2+128 口径，更新比较同源）
+    expect(find.text('v9.9.9+1'), findsNWidgets(2), reason: '评价应用与关于我们两处副标题');
   });
 
   testWidgets('词库重建：确认后执行并在结果弹窗展示完整性计数', (tester) async {

@@ -214,7 +214,14 @@ class NoteRepositoryImpl implements NoteRepository {
       final id = _nextNoteId();
       final now = DateTime.now();
       notes.add(
-        WordNote(id: id, wordId: wordId, word: word, content: content, createdAt: now.toIso8601String(), updatedAt: now.toIso8601String()),
+        WordNote(
+          id: id,
+          wordId: wordId,
+          word: word,
+          content: content,
+          createdAt: now.toIso8601String(),
+          updatedAt: now.toIso8601String(),
+        ),
       );
       await _saveNotesSp(wordId, notes);
       return id;
