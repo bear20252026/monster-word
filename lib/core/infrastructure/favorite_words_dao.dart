@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:word_app/core/infrastructure/degraded_journal.dart';
 import 'package:word_app/core/infrastructure/user_database.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 
@@ -23,6 +24,12 @@ class FavoriteWordsDao {
 
   static const String _spKey = 'favorite_words_v1';
   static const String _migratedMarker = 'favorite_words_sqlite_migrated_v1';
+
+  /// P1-01 余项：SQLite 写失败时的收藏意图降级日志（复用 FSRS journal 模式）。
+  /// 幂等键即单词文本（favorite_words 主键），回放用 INSERT OR IGNORE / DELETE，
+  /// 重复回放无副作用。
+  static const String degradedJournalKey = 'favorite_words_degraded_journal_v1';
+  final DegradedJournal _journal = const DegradedJournal(key: degradedJournalKey, domain: '单词收藏');
 
   /// 测试注入口：提供即强制 SQLite 模式（绕过 FLUTTER_TEST 探测）。
   final Future<Database> Function()? _openOverride;
@@ -42,11 +49,7 @@ class FavoriteWordsDao {
     if (override != null) {
       try {
         final db = await override();
-        await _migrateFromSpIfNeeded(db);
-        final rows = await db.query('favorite_words', orderBy: 'created_at DESC');
-        _db = db;
-        _index = {for (final row in rows) row['word']! as String};
-        _useSqlite = true;
+        await _activateSqlite(db);
         return;
       } catch (e, s) {
         reportSwallowedError('FavoriteWordsDao sqlite init', e, s);
@@ -55,11 +58,7 @@ class FavoriteWordsDao {
       try {
         await UserDatabase.instance.initialize();
         final db = UserDatabase.instance.db;
-        await _migrateFromSpIfNeeded(db);
-        final rows = await db.query('favorite_words', orderBy: 'created_at DESC');
-        _db = db;
-        _index = {for (final row in rows) row['word']! as String};
-        _useSqlite = true;
+        await _activateSqlite(db);
         return;
       } catch (e, s) {
         reportSwallowedError('FavoriteWordsDao sqlite init', e, s);
@@ -111,6 +110,41 @@ class FavoriteWordsDao {
       });
     }
     await prefs.setString(_migratedMarker, 'done');
+  }
+
+  /// SQLite 就绪激活：迁移 → 回放降级日志 → 建内存索引。
+  ///
+  /// P1-01 余项：回放必须在建索引**之前**——否则降级期间（SQLite 写失败）
+  /// 产生的收藏要等到下一次启动才在内存索引中可见，而本函数正是「本次启动」
+  /// 的唯一入口。
+  Future<void> _activateSqlite(Database db) async {
+    await _migrateFromSpIfNeeded(db);
+    _db = db;
+    _useSqlite = true;
+    await _replayDegradedJournal();
+    final rows = await db.query('favorite_words', orderBy: 'created_at DESC');
+    _index = {for (final row in rows) row['word']! as String};
+  }
+
+  /// 回放降级日志：add → INSERT OR IGNORE（词为主键，天然幂等）；
+  /// remove → DELETE（重复删除无副作用）。回放内部任何一条失败即整体保留，
+  /// 下次启动重试（DegradedJournal 口径）。
+  Future<void> _replayDegradedJournal() async {
+    final db = _db;
+    if (db == null) return;
+    await _journal.replay((entry) async {
+      final word = entry['word'] as String?;
+      if (word == null || word.isEmpty) return;
+      final op = entry['op'] as String?;
+      if (op == 'remove') {
+        await db.delete('favorite_words', where: 'word = ?', whereArgs: [word]);
+        return;
+      }
+      await db.insert('favorite_words', {
+        'word': word,
+        'created_at': (entry['at'] as num?)?.toInt() ?? DateTime.now().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    });
   }
 
   // ── 同步读（索引缓存口径） ──────────────────────────────────────────────
@@ -178,9 +212,16 @@ class FavoriteWordsDao {
         }, conflictAlgorithm: ConflictAlgorithm.ignore);
       } catch (e, s) {
         reportSwallowedError('FavoriteWordsDao add persist', e, s);
-        // 数据层审计 P2-3：持久化失败回滚内存索引，避免内存/磁盘分叉
-        // （否则 UI 显示收藏成功，重启后收藏消失）。
-        _index.remove(word);
+        // P1-01 余项：先落降级日志。日志写入成功则内存**不回滚**——重启后
+        // 回放补上，用户这一次收藏不丢；只有连日志都写不进（磁盘满/SP 不可用）
+        // 才回滚内存按硬失败处理，保留 P2-3 原意：绝不出现「界面说成功、
+        // 重启后消失」的分叉。
+        final journaled = await _journal.append({
+          'op': 'add',
+          'word': word,
+          'at': DateTime.now().millisecondsSinceEpoch,
+        });
+        if (!journaled) _index.remove(word);
       }
       return;
     }
@@ -194,8 +235,13 @@ class FavoriteWordsDao {
         await db.delete('favorite_words', where: 'word = ?', whereArgs: [word]);
       } catch (e, s) {
         reportSwallowedError('FavoriteWordsDao remove persist', e, s);
-        // 同 P2-3：持久化失败回滚内存索引（否则取消收藏重启后复活）。
-        _index.add(word);
+        // 同 _persistAdd：日志保底成功则内存不回滚（否则取消收藏重启后复活）。
+        final journaled = await _journal.append({
+          'op': 'remove',
+          'word': word,
+          'at': DateTime.now().millisecondsSinceEpoch,
+        });
+        if (!journaled) _index.add(word);
       }
       return;
     }

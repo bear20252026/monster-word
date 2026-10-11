@@ -17,9 +17,12 @@ import 'package:word_app/widgets/monster_peek_overlay.dart';
 import 'package:word_app/widgets/animations.dart';
 import 'package:word_app/features/account/application/password_auth_store.dart';
 import 'package:word_app/features/account/application/sms_code_service.dart';
+import 'package:word_app/features/account/application/legal_consent_store.dart';
+import 'package:word_app/features/account/domain/legal_documents.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 import 'package:word_app/core/utils/monster_identity_prefs.dart';
+import 'package:word_app/features/account/presentation/legal_document_page.dart';
 import 'package:word_app/features/account/presentation/monster_hatching_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -335,6 +338,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   void _onLoginSuccess() {
+    // MW-78：协议同意留痕——登录成功即视为同意当前版本协议，落
+    // policyVersion + acceptedAt。写入失败不阻断登录（留痕是合规补强，
+    // 不改变登录语义），但必须可观测。
+    unawaited(_recordLegalConsent(context.read<LegalConsentStore>()));
     // 史诗化 W1：登录成功怪兽开门惊喜——探头演出挂在根 Overlay（跨路由存活），
     // 先起「欢迎回家！」再延迟切首页，给这一拍留出可见时刻。
     MonsterPeekOverlay.show(context, phrase: '欢迎回家！');
@@ -356,6 +363,20 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       }
       navigator.pushReplacementNamed('/');
     });
+  }
+
+  /// MW-78：协议同意留痕（policyVersion + acceptedAt）。
+  Future<void> _recordLegalConsent(LegalConsentStore store) async {
+    try {
+      await store.record(LegalDocuments.policyVersion);
+    } catch (e, s) {
+      reportSwallowedError('协议同意留痕失败', e, s);
+    }
+  }
+
+  /// MW-78：打开协议正文页（纯本地渲染，离线可用）。
+  void _openLegalDocument(LegalDocument document) {
+    Navigator.of(context).push(LegalDocumentPage.route(document));
   }
 
   /// 发送短信验证码（Spug Push），成功后启动 60s 冷却倒计时。
@@ -526,7 +547,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           ),
         ),
         SizedBox(height: 16),
-        // 用户协议
+        // 用户协议 / 隐私政策（MW-78：可点击查看正文，此前只是不可点的文字）
         Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
           child: Text.rich(
@@ -534,14 +555,16 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               text: '登录即同意 ',
               style: MwTypography.micro.copyWith(color: skin.colors.text3),
               children: [
-                TextSpan(
-                  text: '用户协议',
-                  style: TextStyle(color: context.skin.colors.accent),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.baseline,
+                  baseline: TextBaseline.alphabetic,
+                  child: _LegalLink(label: '用户协议', onTap: () => _openLegalDocument(LegalDocuments.userAgreement)),
                 ),
                 const TextSpan(text: ' 和 '),
-                TextSpan(
-                  text: '隐私政策',
-                  style: TextStyle(color: context.skin.colors.accent),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.baseline,
+                  baseline: TextBaseline.alphabetic,
+                  child: _LegalLink(label: '隐私政策', onTap: () => _openLegalDocument(LegalDocuments.privacyPolicy)),
                 ),
               ],
             ),
@@ -765,6 +788,32 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               ),
               style: ElevatedButton.styleFrom(backgroundColor: color, shape: const StadiumBorder(), elevation: 0),
             ),
+    );
+  }
+}
+
+/// MW-78：协议链接（登录页「用户协议 / 隐私政策」）。
+///
+/// 用下划线 + 主题强调色表达可点击；语义层声明为按钮并给出「查看 XXX」标签，
+/// 读屏用户不必依赖颜色推断可交互性。
+class _LegalLink extends StatelessWidget {
+  const _LegalLink({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: '查看$label',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Text(
+          label,
+          style: MwTypography.micro.copyWith(color: context.skin.colors.accent, decoration: TextDecoration.underline),
+        ),
+      ),
     );
   }
 }

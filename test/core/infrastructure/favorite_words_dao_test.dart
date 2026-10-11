@@ -4,6 +4,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:word_app/core/infrastructure/degraded_journal.dart';
 import 'package:word_app/core/infrastructure/favorite_words_dao.dart';
 
 void main() {
@@ -106,7 +107,7 @@ void main() {
       expect(await db.query('favorite_words'), hasLength(2), reason: '不产生重复行');
     });
 
-    test('持久化失败回滚：add 失败索引不含、remove 失败索引仍含', () async {
+    test('持久化失败：日志保底成功则索引不回滚（P1-01 新契约）', () async {
       final dao = FavoriteWordsDao(openDatabase: () async => db);
       await dao.ensureLoaded();
       await dao.add('apple');
@@ -116,11 +117,81 @@ void main() {
       await db.close();
       db = await openDatabase(inMemoryDatabasePath); // tearDown 关闭的是新库
 
+      // P1-01 契约变更：写失败 → 降级日志保底 → 内存**不回滚**。
+      // 旧契约（无条件回滚）会让用户这一次收藏直接消失；新契约下日志会在
+      // 下次加载时回放，内存态与最终事实来源仍然一致。
       await dao.add('banana');
-      expect(dao.isFavorite('banana'), isFalse, reason: 'add 持久化失败必须回滚索引（否则重启后收藏消失）');
+      expect(dao.isFavorite('banana'), isTrue, reason: '日志保底成功 → 保留内存态（回放补库）');
 
       await dao.remove('apple');
-      expect(dao.isFavorite('apple'), isTrue, reason: 'remove 持久化失败必须回滚索引（否则取消收藏复活）');
+      expect(dao.isFavorite('apple'), isFalse, reason: '取消收藏同样由日志保底');
+    });
+  });
+
+  group('P1-01 降级日志：收藏意图不丢（2026-10-11 批次）', () {
+    const journal = DegradedJournal(key: FavoriteWordsDao.degradedJournalKey, domain: '测试');
+
+    test('add 写失败落日志，新实例加载时回放补库并清空日志', () async {
+      final dao = FavoriteWordsDao(openDatabase: () async => db);
+      await dao.ensureLoaded();
+
+      await db.close(); // 制造写失败
+      await dao.add('banana');
+      expect(dao.isFavorite('banana'), isTrue);
+      expect(await journal.pendingCount(), 1, reason: '写失败必须留下可回放的意图记录');
+
+      // 恢复：新库 + 新 DAO，ensureLoaded 时回放
+      db = await openDatabase(inMemoryDatabasePath);
+      await db.execute(
+        'CREATE TABLE IF NOT EXISTS favorite_words (word TEXT PRIMARY KEY, created_at INTEGER NOT NULL)',
+      );
+      final dao2 = FavoriteWordsDao(openDatabase: () async => db);
+      await dao2.ensureLoaded();
+
+      expect(dao2.isFavorite('banana'), isTrue, reason: '回放后进入事实来源');
+      expect(await journal.pendingCount(), 0, reason: '回放成功后日志清空');
+      expect(await db.query('favorite_words', where: 'word = ?', whereArgs: ['banana']), hasLength(1));
+    });
+
+    test('remove 写失败落日志，回放后不复活', () async {
+      final dao = FavoriteWordsDao(openDatabase: () async => db);
+      await dao.ensureLoaded();
+      await dao.add('apple');
+
+      await db.close();
+      await dao.remove('apple');
+      expect(dao.isFavorite('apple'), isFalse);
+      expect(await journal.pendingCount(), 1);
+
+      // 新库里预置 apple（模拟故障前的持久化态），回放 remove 必须删掉它
+      db = await openDatabase(inMemoryDatabasePath);
+      await db.execute(
+        'CREATE TABLE IF NOT EXISTS favorite_words (word TEXT PRIMARY KEY, created_at INTEGER NOT NULL)',
+      );
+      await db.insert('favorite_words', {'word': 'apple', 'created_at': 1});
+
+      final dao2 = FavoriteWordsDao(openDatabase: () async => db);
+      await dao2.ensureLoaded();
+
+      expect(dao2.isFavorite('apple'), isFalse, reason: '回放 remove 生效，取消收藏不复活');
+      expect(await journal.pendingCount(), 0);
+    });
+
+    test('回放幂等：重复执行同一份日志不产生重复行', () async {
+      await journal.append({'op': 'add', 'word': 'grape', 'at': 1});
+      await db.execute(
+        'CREATE TABLE IF NOT EXISTS favorite_words (word TEXT PRIMARY KEY, created_at INTEGER NOT NULL)',
+      );
+
+      final dao = FavoriteWordsDao(openDatabase: () async => db);
+      await dao.ensureLoaded();
+      expect(dao.isFavorite('grape'), isTrue);
+
+      // 再放一份同样的日志，回放后仍只有一行（主键 OR IGNORE）
+      await journal.append({'op': 'add', 'word': 'grape', 'at': 2});
+      final dao2 = FavoriteWordsDao(openDatabase: () async => db);
+      await dao2.ensureLoaded();
+      expect(await db.query('favorite_words', where: 'word = ?', whereArgs: ['grape']), hasLength(1));
     });
   });
 }
