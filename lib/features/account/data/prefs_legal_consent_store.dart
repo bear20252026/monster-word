@@ -10,7 +10,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/account/application/legal_consent_store.dart';
-import 'package:word_app/features/account/domain/legal_documents.dart';
 
 class PrefsLegalConsentStore implements LegalConsentStore {
   static const String prefsKey = 'legal_consent_v1';
