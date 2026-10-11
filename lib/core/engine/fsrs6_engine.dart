@@ -194,10 +194,14 @@ class Fsrs6Engine {
     return raw.round().clamp(1, 36500);
   }
 
-  /// 评分一个卡片，返回更新后的卡片（官方 FSRS-6 流程）
-  FsrsCard review(FsrsCard card, FsrsRating rating) {
+  /// 评分一个卡片，返回更新后的卡片（官方 FSRS-6 流程）。
+  ///
+  /// [reviewedAt] 可选显式复习时刻——默认 DateTime.now() 保持既有语义；
+  /// 注入固定时刻让跨时区/系统时间调整/夏令时场景可做确定性回归
+  /// （QA-01：官方参考向量测试即经此参数对表）。
+  FsrsCard review(FsrsCard card, FsrsRating rating, {DateTime? reviewedAt}) {
     final updated = card.copy();
-    final now = DateTime.now();
+    final now = reviewedAt ?? DateTime.now();
 
     // 距上次复习的天数（同日 = 0 → 短时模型）
     final elapsed = now.difference(card.lastReview).inDays;
@@ -248,10 +252,11 @@ class Fsrs6Engine {
     return _clampStability(next);
   }
 
-  /// 首次学习一个单词
-  FsrsCard learn(String word, FsrsRating rating) {
-    final card = FsrsCard(word: word, lastReview: DateTime.now(), dueDate: DateTime.now());
-    return review(card, rating);
+  /// 首次学习一个单词（[reviewedAt] 语义同 [review]）。
+  FsrsCard learn(String word, FsrsRating rating, {DateTime? reviewedAt}) {
+    final now = reviewedAt ?? DateTime.now();
+    final card = FsrsCard(word: word, lastReview: now, dueDate: now);
+    return review(card, rating, reviewedAt: now);
   }
 
   /// 获取到期的卡片

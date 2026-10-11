@@ -53,7 +53,11 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     super.initState();
     PackageInfo.fromPlatform()
         .then((info) {
-          if (mounted) setState(() => _appVersion = info.version);
+          if (mounted) {
+            // MW-13：比较口径必须含 buildNumber（2.12.2+128）——只取 version
+            // 会让「已装最新版」仍被判 hasUpdate（远端 2.12.2+128 > 本地 2.12.2）。
+            setState(() => _appVersion = '${info.version}+${info.buildNumber}');
+          }
         })
         .catchError((e) => debugLog('读取应用版本失败: $e'));
   }

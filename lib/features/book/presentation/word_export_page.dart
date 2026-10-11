@@ -193,6 +193,13 @@ class _WordExportPageState extends State<WordExportPage> {
     return context.read<BookWordListReader>().loadWords(widget.bookId);
   }
 
+  /// MW-31：RFC 4180 CSV 单元格——内部双引号必须编码为两个双引号，
+  /// 否则原始 JSON 释义中的 " 会破坏列结构（Excel 拆列错乱）。
+  String _csvCell(String value) => '"${value.replaceAll('"', '""')}"';
+
+  /// MW-30：Markdown 单元格——竖线与换行必须转义，否则多出表格列。
+  String _mdCell(String value) => value.replaceAll('|', '\\|').replaceAll('\n', '<br>');
+
   String _generateContent(List<Word> words) {
     final buffer = StringBuffer();
 
@@ -201,7 +208,9 @@ class _WordExportPageState extends State<WordExportPage> {
         for (final w in words) {
           buffer.write(w.word);
           if (_includePhonetic && w.usPron.isNotEmpty) buffer.write('  ${w.usPron}');
-          buffer.write('  ${w.interpret}');
+          // MW-30：导出可读释义（cleanInterpret 已把结构化 JSON 转人话），
+          // 不再输出原始 interpret JSON。
+          buffer.write('  ${w.cleanInterpret}');
           if (_includePhrase && PhraseParser.hasData(w.phrase)) {
             buffer.write('\n  短语:');
             for (final p in PhraseParser.flatItems(w.phrase)) {
@@ -224,26 +233,19 @@ class _WordExportPageState extends State<WordExportPage> {
       case ExportFormat.csv:
         buffer.writeln('单词,音标,释义${_includePhrase ? ",短语" : ""}${_includeExample ? ",例句" : ""}');
         for (final w in words) {
-          buffer.write('"${w.word}"');
-          buffer.write(_includePhonetic ? ',"${w.usPron}"' : ',""');
-          buffer.write(',"${w.interpret}"');
+          // MW-31：所有列统一走 _csvCell（内部引号双写转义）。
+          buffer.write(_csvCell(w.word));
+          buffer.write(_includePhonetic ? _csvCell(w.usPron) : _csvCell(''));
+          buffer.write(_csvCell(w.cleanInterpret));
           if (_includePhrase) {
             final phrases = PhraseParser.flatItems(w.phrase);
-            if (phrases.isNotEmpty) {
-              final text = phrases.map((p) => '${p.en}　${p.cn}').join('; ');
-              buffer.write(',"$text"');
-            } else {
-              buffer.write(',""');
-            }
+            final text = phrases.map((p) => '${p.en}　${p.cn}').join('; ');
+            buffer.write(_csvCell(text));
           }
           if (_includeExample) {
             final examples = ExampleParser.parse(w.example);
-            if (examples.isNotEmpty) {
-              final text = examples.map((ex) => ex.cleanEn).join('; ');
-              buffer.write(',"$text"');
-            } else {
-              buffer.write(',""');
-            }
+            final text = examples.map((ex) => ex.cleanEn).join('; ');
+            buffer.write(_csvCell(text));
           }
           buffer.writeln();
         }
@@ -255,26 +257,18 @@ class _WordExportPageState extends State<WordExportPage> {
         buffer.writeln('| 单词 | 音标 | 释义 |${_includePhrase ? ' 短语 |' : ''}${_includeExample ? ' 例句 |' : ''}');
         buffer.writeln('|------|------|------|${_includePhrase ? '------|' : ''}${_includeExample ? '------|' : ''}');
         for (final w in words) {
-          buffer.write('| ${w.word} | ');
-          buffer.write(_includePhonetic ? (w.usPron.isNotEmpty ? w.usPron : '-') : '-');
-          buffer.write(' | ${w.interpret} |');
+          buffer.write('| ${_mdCell(w.word)} | ');
+          buffer.write(_includePhonetic ? _mdCell(w.usPron.isEmpty ? '-' : w.usPron) : '-');
+          buffer.write(' | ${_mdCell(w.cleanInterpret)} |');
           if (_includePhrase) {
             final phrases = PhraseParser.flatItems(w.phrase);
-            if (phrases.isNotEmpty) {
-              final text = phrases.map((p) => '${p.en}　${p.cn}').join('<br>');
-              buffer.write(' $text |');
-            } else {
-              buffer.write(' - |');
-            }
+            final text = phrases.map((p) => '${p.en}　${p.cn}').join('<br>');
+            buffer.write(text.isEmpty ? ' - |' : ' ${_mdCell(text)} |');
           }
           if (_includeExample) {
             final examples = ExampleParser.parse(w.example);
-            if (examples.isNotEmpty) {
-              final text = examples.map((ex) => ex.cleanEn).join('<br>');
-              buffer.write(' $text |');
-            } else {
-              buffer.write(' - |');
-            }
+            final text = examples.map((ex) => ex.cleanEn).join('<br>');
+            buffer.write(text.isEmpty ? ' - |' : ' ${_mdCell(text)} |');
           }
           buffer.writeln();
         }
@@ -298,7 +292,10 @@ class _WordExportPageState extends State<WordExportPage> {
   String _getFileName() {
     final name = widget.bookName.isNotEmpty ? widget.bookName : '词表';
     final ext = _getExtension();
-    return '${name}_导出.$ext';
+    // 文件名消毒：Windows/Android 非法字符与控制符替换为下划线
+    //（词书名可能含斜杠/冒号/引号等）。
+    final safeName = name.replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1f]'), '_').trim();
+    return '${safeName}_导出.$ext';
   }
 
   Future<void> _exportAsFile() async {

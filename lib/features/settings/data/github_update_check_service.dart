@@ -14,7 +14,11 @@ class GithubUpdateCheckService implements UpdateCheckService {
   GithubUpdateCheckService({this.fetchOverride});
 
   static const String repoUrl = appGitHubRepoUrl;
-  static const String _latestApiUrl = '$repoUrl/releases/latest';
+
+  /// MW-12：GitHub Release 的 REST API 地址——原实现把网页地址
+  /// github.com/.../releases/latest 当 API 调 jsonDecode，必然解析失败。
+  /// html_url 由 API 响应提供，网页跳转仍用它。
+  static const String _latestApiUrl = 'https://api.github.com/repos/bear20252026/monster-word/releases/latest';
   static const Duration _timeout = Duration(seconds: 10);
 
   /// 测试注入：绕过真实 HTTP，返回 JSON 原文。
@@ -30,7 +34,7 @@ class GithubUpdateCheckService implements UpdateCheckService {
       final latest = tag.startsWith('v') ? tag.substring(1) : tag;
       final releaseUrl = (json['html_url'] as String?)?.trim().isNotEmpty == true
           ? json['html_url'] as String
-          : _latestApiUrl;
+          : repoUrl;
       final notes = (json['body'] as String?)?.trim();
 
       return UpdateCheckResult(
