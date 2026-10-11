@@ -187,6 +187,10 @@ void main() {
       await journal.append({'op': 'add', 'wordId': 9, 'wordText': 'cherry', 'source': 'manual', 'at': 1});
       await journal.append({'op': 'add', 'wordId': 9, 'wordText': 'cherry', 'source': 'manual', 'at': 2});
 
+      // 本用例测的是回放幂等（不是写失败），故须用可写连接让回放真正落库。
+      await db.close();
+      db = await openWritable();
+
       final repo = NewWordRepositoryImpl(UserDatabase.instance, databaseOverride: db);
       expect(await repo.isNewWord(9), isTrue);
       expect(await repo.getNewWordCount(), 1, reason: 'word_id 主键 REPLACE，重复回放不叠加');

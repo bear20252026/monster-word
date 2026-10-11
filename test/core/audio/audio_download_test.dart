@@ -35,10 +35,16 @@ void main() {
 
   http.Response ok(Uint8List bytes) => http.Response.bytes(bytes, 200);
 
+  /// 合法 MP3 载荷（ID3v2 文件头 'ID3' + 任意尾字节）。
+  ///
+  /// MW-50 起下载落盘后校验 magic bytes：测试载荷必须带真实文件头，否则会被
+  /// 判为「CDN 返回的 HTML 错误页」而按 415 丢弃（见文件末尾的 415 用例）。
+  Uint8List mp3(List<int> tail) => Uint8List.fromList([0x49, 0x44, 0x33, ...tail]);
+
   test('主源成功：落盘原子文件、不再请求备源', () async {
     AudioDownloader.fetchOverride = (url) async {
       requested.add(url);
-      return ok(Uint8List.fromList([1, 2, 3, 4]));
+      return ok(mp3([1, 2, 3, 4]));
     };
     final result = await AudioDownloader.downloadFile(
       localPath,
@@ -46,7 +52,7 @@ void main() {
       fallbackUrl: 'https://fallback.example/a.mp3',
     );
     expect(result.success, isTrue);
-    expect(result.file?.readAsBytesSync(), [1, 2, 3, 4]);
+    expect(result.file?.readAsBytesSync(), [0x49, 0x44, 0x33, 1, 2, 3, 4]);
     expect(requested.length, 1, reason: '主源成功不应触碰备源');
     expect(File('$localPath.tmp').existsSync(), isFalse, reason: 'tmp 必须原子改名不留半写文件');
   });
@@ -54,7 +60,7 @@ void main() {
   test('主源失败（404）→ 切备源成功', () async {
     AudioDownloader.fetchOverride = (url) async {
       requested.add(url);
-      return url.host == 'primary.example' ? http.Response('nf', 404) : ok(Uint8List.fromList([9]));
+      return url.host == 'primary.example' ? http.Response('nf', 404) : ok(mp3([9]));
     };
     final result = await AudioDownloader.downloadFile(
       localPath,
@@ -62,7 +68,7 @@ void main() {
       fallbackUrl: 'https://fallback.example/a.mp3',
     );
     expect(result.success, isTrue);
-    expect(result.file?.readAsBytesSync(), [9]);
+    expect(result.file?.readAsBytesSync(), [0x49, 0x44, 0x33, 9]);
     expect(requested.map((u) => u.host), ['primary.example', 'fallback.example'], reason: '失败后必须切备源');
   });
 
@@ -98,5 +104,22 @@ void main() {
     expect(result.success, isFalse, reason: '防恶意服务器撑爆磁盘（安全审计 S4）');
     expect(File(localPath).existsSync(), isFalse);
     expect(requested.length, 2, reason: '413 亦触发备源重试');
+  });
+
+  test('MW-50：CDN 返回 HTML 错误页（200 + <!DOCTYPE）→ 415 拒收且不落盘', () async {
+    AudioDownloader.fetchOverride = (url) async {
+      requested.add(url);
+      return ok(Uint8List.fromList('<!DOCTYPE html><html>not found</html>'.codeUnits));
+    };
+    final result = await AudioDownloader.downloadFile(
+      localPath,
+      'https://primary.example/a.mp3',
+      fallbackUrl: 'https://fallback.example/a.mp3',
+    );
+    expect(result.success, isFalse, reason: '非音频内容不得当作音频缓存（否则此后永久命中坏缓存）');
+    expect(result.statusCode, 415);
+    expect(File(localPath).existsSync(), isFalse, reason: '判为损坏必须丢弃，不留半写文件');
+    expect(File('$localPath.tmp').existsSync(), isFalse);
+    expect(requested.length, 2, reason: '415 亦触发备源重试');
   });
 }
