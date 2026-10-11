@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:get_it/get_it.dart';
 
 import 'package:word_app/core/infrastructure/user_database.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:word_app/features/book/data/book_repository.dart';
 import 'package:word_app/features/book/data/book_repository_impl.dart';
@@ -157,7 +158,9 @@ Future<void> disposeServiceLocator() async {
   if (sl.isRegistered<AudioService>()) {
     try {
       sl<AudioService>().dispose();
-    } catch (_) {}
+    } catch (e, s) {
+      reportSwallowedError('退出时 AudioService 释放失败', e, s);
+    }
   }
   await sl.reset();
 }
@@ -167,12 +170,16 @@ void disposePlatformSingletons() {
   unawaited(() async {
     try {
       await SystemTts().dispose();
-    } catch (_) {}
+    } catch (e, s) {
+      reportSwallowedError('退出时 TTS 释放失败', e, s);
+    }
     try {
       if (sl.isRegistered<ReviewScheduleRepository>()) {
         await sl<ReviewScheduleRepository>().close();
       }
-    } catch (_) {}
+    } catch (e, s) {
+      reportSwallowedError('退出时复习仓储关闭失败', e, s);
+    }
   }());
 }
 

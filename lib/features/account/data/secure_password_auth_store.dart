@@ -86,29 +86,38 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
 
   @override
   Future<bool> hasPassword(String username) async {
-    final hash = await _readHash(username);
+    final (_, hash) = await _readCredential(username);
     return hash != null && hash.isNotEmpty;
   }
 
   @override
   Future<bool> verify(String username, String password) async {
     final prefix = _prefix(username);
-    final salt = await _storage.read(key: '$prefix.salt');
-    final hash = await _readHash(username);
+    final (salt, hash) = await _readCredential(username);
     if (salt == null || salt.isEmpty || hash == null || hash.isEmpty) return false;
 
     if (hash.startsWith('$_hashPrefix\$')) {
-      // 新格式：解析迭代数后 PBKDF2 比对
+      // 新格式：解析迭代数后 PBKDF2 比对。
+      // MW-66：格式长度 + 迭代数上下界校验——损坏/被篡改的存储值曾可触发
+      // RangeError 或让应用执行数十亿次 PBKDF2 轮（CPU 长时间占满）。
+      if (!_isValidHashFormat(hash)) return false;
       final parts = hash.split(r'$');
-      final iterations = int.tryParse(parts[1]);
-      if (iterations == null || iterations < 1) return false;
+      final iterations = int.tryParse(parts[1])!;
+      if (iterations < minIterations || iterations > maxIterations) return false;
       return _constantTimeEquals(_encodePbkdf2(salt, password, iterations), hash);
     }
 
-    // 存量单轮 SHA-256：验证通过则透明升级为 PBKDF2（同盐，无需用户重设）
+    // 存量单轮 SHA-256：验证通过则透明升级为 PBKDF2（同盐，无需用户重设）；
+    // 升级结果直接落单 Blob（MW-65 读取优先级最高）。
     if (_constantTimeEquals(legacyHashPassword(salt, password), hash)) {
       try {
-        await _storage.write(key: '$prefix.hash', value: hashPassword(salt, password));
+        final upgraded = jsonEncode({
+          'v': 2,
+          'algorithm': _hashPrefix,
+          'salt': salt,
+          'hash': hashPassword(salt, password),
+        });
+        await _storage.write(key: '$prefix.credential', value: upgraded);
       } catch (e, s) {
         // 升级写失败不影响本次登录结果（下次成功登录会再试）
         reportSwallowedError('密码哈希透明升级写入失败', e, s);
@@ -117,8 +126,6 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
     }
     return false;
   }
-
-  Future<String?> _readHash(String username) => _storage.read(key: '${_prefix(username)}.hash');
 
   @override
   Future<String?> boundPhone(String username) async {
@@ -130,10 +137,23 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
   @override
   Future<void> setPassword(String username, String password, {String? phone}) async {
     final prefix = _prefix(username);
-    // 每次设置都换新盐（重置后旧哈希彻底失效）
+    // 每次设置都换新盐（重置后旧哈希彻底失效）。
+    // MW-65：盐+哈希合并为单 credential Blob 一次写入——「新盐×旧哈希」的
+    // 中间态从根上消失（安全存储的单键写即原子语义边界）。旧的两键组合
+    // 仍被 verify 兼容读取；新写入一律走单键。写失败直接抛（旧凭据从未
+    // 被触碰，不存在锁死窗口），不再需要回滚路径。
     final salt = _randomSalt();
-    await _storage.write(key: '$prefix.salt', value: salt);
-    await _storage.write(key: '$prefix.hash', value: hashPassword(salt, password));
+    final newHash = hashPassword(salt, password);
+    final credential = jsonEncode({'v': 2, 'algorithm': _hashPrefix, 'salt': salt, 'hash': newHash});
+    await _storage.write(key: '$prefix.credential', value: credential);
+    // 迁移清理：旧的散键一旦新 Blob 写成功即作废（读取优先级低于 Blob），
+    // 静默清理失败无碍——旧键残留只是冗余，不构成风险面。
+    try {
+      await _storage.delete(key: '$prefix.salt');
+      await _storage.delete(key: '$prefix.hash');
+    } catch (e, s) {
+      reportSwallowedError('旧密码散键清理失败（残留无害）', e, s);
+    }
     // 手机号格式的用户名自动绑定（单一事实来源：绑定逻辑只在此处）
     var phoneToBind = phone?.trim();
     if ((phoneToBind == null || phoneToBind.isEmpty) && isPhoneFormat(username)) {
@@ -143,6 +163,35 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
       await _storage.write(key: '$prefix.phone', value: phoneToBind);
     }
   }
+
+  /// 读取凭据（MW-65）：优先单 Blob；无 Blob 时回退旧散键组合（存量兼容）。
+  Future<(String?, String?)> _readCredential(String username) async {
+    final prefix = _prefix(username);
+    final blob = await _storage.read(key: '$prefix.credential');
+    if (blob != null && blob.isNotEmpty) {
+      try {
+        final map = jsonDecode(blob) as Map<String, dynamic>;
+        return (map['salt'] as String?, map['hash'] as String?);
+      } catch (e, s) {
+        reportSwallowedError('密码凭据 Blob 解析失败，回退旧散键', e, s);
+      }
+    }
+    final salt = await _storage.read(key: '$prefix.salt');
+    final hash = await _storage.read(key: '$prefix.hash');
+    return (salt, hash);
+  }
+
+  /// MW-66：哈希格式校验（parts 数 = 3、迭代数可解析、hex 段 64 位小写）。
+  static bool _isValidHashFormat(String hash) {
+    final parts = hash.split(r'$');
+    if (parts.length != 3) return false;
+    if (int.tryParse(parts[1]) == null) return false;
+    if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(parts[2])) return false;
+    return true;
+  }
+
+  static const int minIterations = 1000;
+  static const int maxIterations = 10000000;
 
   static String _randomSalt() {
     final rng = Random.secure();

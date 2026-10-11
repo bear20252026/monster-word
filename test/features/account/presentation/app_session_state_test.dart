@@ -26,7 +26,7 @@ void main() {
       await state.setHasShownInitGuide(true);
       expect(state.hasShownInitGuide, isTrue);
 
-      state.logout();
+      await state.logout();
       expect(state.isLoggedIn, isFalse);
       expect(state.hasShownInitGuide, isTrue);
     });

@@ -111,7 +111,8 @@ void main() {
 
 class _FakeSchedulePort implements ReviewScheduleWriterPort {
   @override
-  Future<void> rateWord({required String word, required FsrsRating rating}) async {}
+  Future<FsrsRatingOutcome> rateWord({required String word, required FsrsRating rating}) async =>
+      FsrsRatingOutcome.saved;
 
   @override
   Future<void> forget(String word) async {}

@@ -69,6 +69,7 @@ Widget _wrap(FakeScareCoinStore store, {int dueCount = 0}) {
         RouteNames.footMark: (_) => dest('footMark'),
         RouteNames.mySpace: (_) => dest('mySpace'),
         RouteNames.scareCoinHistory: (_) => dest('coin'),
+        RouteNames.redemption: (_) => dest('redemption'),
         MoreSettingsPage.routeName: (_) => dest('more'),
         RouteNames.accountInfo: (_) => dest('account'),
       },
@@ -148,7 +149,8 @@ void main() {
 
     await tester.tap(find.text('兑换中心'));
     await _pumpSeq(tester, settleMs: 600);
-    expect(find.byKey(const ValueKey('coin')), findsOneWidget);
+    // 兑换中心应进真实兑换页（曾错接余额明细页，本断言锁死了错误接线）
+    expect(find.byKey(const ValueKey('redemption')), findsOneWidget);
   });
 
   testWidgets('夜间 23 点：它睡着了——Zzz、闭眼、无需求气泡（W4.5）', (tester) async {

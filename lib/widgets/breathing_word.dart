@@ -44,6 +44,15 @@ class _BreathingWordState extends State<BreathingWord> with SingleTickerProvider
       ..forward();
   }
 
+  @override
+  void didUpdateWidget(BreathingWord old) {
+    super.didUpdateWidget(old);
+    // 词列表替换时校准索引：换成更短的列表时旧索引会越界（RangeError）。
+    if (_index >= widget.words.length) {
+      _index = widget.words.isEmpty ? 0 : widget.words.length - 1;
+    }
+  }
+
   void _onStatus(AnimationStatus status) {
     if (status != AnimationStatus.completed) return;
     if (!mounted) return;
@@ -62,6 +71,13 @@ class _BreathingWordState extends State<BreathingWord> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     final style = widget.style ?? DefaultTextStyle.of(context).style;
+    // reduce-motion：无限循环的字级呼吸对「减弱动态效果」用户是持续闪动，
+    // 静态呈现当前词（仍随轮换换词，只去掉呼吸）。
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (reduceMotion) {
+      final word = widget.words.isEmpty ? '' : widget.words[_index];
+      return Text(word, style: style);
+    }
     return AnimatedSwitcher(
       duration: widget.crossfade,
       child: KeyedSubtree(
@@ -69,7 +85,7 @@ class _BreathingWordState extends State<BreathingWord> with SingleTickerProvider
         child: AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
-            final word = widget.words[_index];
+            final word = widget.words.isEmpty ? '' : widget.words[_index];
             final t = _controller.value;
             final stagger = 1.0 / (word.length + 1);
             return Row(

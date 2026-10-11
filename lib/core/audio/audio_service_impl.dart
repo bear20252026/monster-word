@@ -1,6 +1,7 @@
 // AudioServiceImpl — 音频播放服务实现
 
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 import 'dart:async';
 
@@ -56,11 +57,36 @@ class AudioServiceImpl implements AudioService {
   @override
   Future<void> stop() async {
     if (_disposed) return;
-    await _bbPlayer.stop();
+    // MW-46：stop 必须覆盖真实发声的所有通道——原实现只 stop 从未参与
+    // 播放的 _bbPlayer，正在响的音标/句子播放器完全不受控。
+    try {
+      await _phoneticPlayer.stop();
+    } catch (e) {
+      debugLog('[AudioService] phonetic stop error: ');
+    }
+    try {
+      await _sentencePlayer.stop();
+    } catch (e) {
+      debugLog('[AudioService] sentence stop error: ');
+    }
+    try {
+      await _bbPlayer.stop();
+    } catch (e) {
+      debugLog('[AudioService] bb stop error: ');
+    }
+    try {
+      await SystemTts().stop();
+    } catch (e) {
+      debugLog('[AudioService] tts stop error: ');
+    }
   }
 
   @override
-  bool get isPlaying => _disposed ? false : _bbPlayer.isPlaying;
+  bool get isPlaying {
+    if (_disposed) return false;
+    // MW-46：任一真实通道在响即为 playing（原实现读 _bbPlayer 恒 false 语义）。
+    return _phoneticPlayer.isPlaying() || _sentencePlayer.isPlaying() || _bbPlayer.isPlaying;
+  }
 
   /// 释放所有音频资源（防止内存泄漏）
   @override
@@ -70,7 +96,9 @@ class AudioServiceImpl implements AudioService {
     // 与历史行为一致：主播放器同步标记释放；单例播放器异步 release（不 await、无 Timer）。
     try {
       _bbPlayer.release();
-    } catch (_) {}
+    } catch (e, s) {
+      reportSwallowedError('主播放器同步释放失败', e, s);
+    }
     unawaited(_safeRelease(() => PhoneticAudioPlayer().release()));
     unawaited(_safeRelease(() => SentenceAudioPlayer().release()));
     unawaited(_safeRelease(() => TextAudioPlayer().release()));
@@ -80,6 +108,9 @@ class AudioServiceImpl implements AudioService {
   Future<void> _safeRelease(Future<void> Function() op) async {
     try {
       await op();
-    } catch (_) {}
+    } catch (e, s) {
+      // 单例播放器释放失败只降级（进程多在退出路径），但须可见。
+      reportSwallowedError('单例播放器释放失败', e, s);
+    }
   }
 }

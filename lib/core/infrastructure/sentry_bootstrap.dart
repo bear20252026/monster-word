@@ -12,6 +12,12 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 /// 编译参数里的 DSN（build 时 --dart-define=SENTRY_DSN=... 传入）。
 const String _kSentryDsn = String.fromEnvironment('SENTRY_DSN');
 
+/// MW-14：Sentry release/dist 由 CI 构建时注入（--dart-define），
+/// 与 pubspec/Tag 同源。未注入（本地开发）时回退 'dev'，不再硬编码 1.0.0
+/// 把所有版本的崩溃混进同一个 release（Release Health 全部失真）。
+const String _kAppVersion = String.fromEnvironment('APP_VERSION');
+const String _kAppBuildNumber = String.fromEnvironment('APP_BUILD_NUMBER');
+
 /// 是否启用了 Sentry（DSN 非空）。
 bool get sentryEnabled => _kSentryDsn.isNotEmpty;
 
@@ -30,6 +36,11 @@ Future<void> runAppWithSentry(FutureOr<void> Function() appRunner) async {
     options.environment = kReleaseMode ? 'production' : 'development';
     options.sendDefaultPii = false; // 不上报个人信息（隐私底线）
     options.attachScreenshot = false; // 崩溃截图可能含学习数据，默认关
-    options.release = 'monster-word@1.0.0';
+    final versionPart = _kAppVersion.isEmpty ? 'dev' : _kAppVersion;
+    options.release = 'monster-word@$versionPart';
+    // dist=构建号：区分同版本号的不同构建（符号上传/回溯也按 dist 关联）。
+    if (_kAppBuildNumber.isNotEmpty) {
+      options.dist = _kAppBuildNumber;
+    }
   }, appRunner: appRunner);
 }

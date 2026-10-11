@@ -18,7 +18,9 @@ const _whitelist = <String>[
   'lib/features/learning/presentation/share_image_service.dart', // 分享位图固定像素设计
 ];
 
-const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app'];
+// 守卫扫描根（2026-10 审计 Q1）：补 lib/main.dart 与 lib/core（与 alpha/
+// motion/spacing 守卫口径对齐，消灭「同库守卫各扫各的」盲区）。
+const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app', 'lib/main.dart', 'lib/core'];
 
 /// 棘轮上限：当前存量（2026-10-05 正则扩宽后可见 11 处：
 /// appearance/lib_select/review_dialog/settings_bottom_sheet/mw_modal/
@@ -26,7 +28,10 @@ const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app'];
 /// 只允许下降；清理存量后请把数字改小。
 const _ceiling = 11;
 
-final _pattern = RegExp(r'Radius\.circular\(\d+\)');
+// 2026-10-07 审计（Q2 续）：再放宽到小数字面量——`Radius.circular(8.5)`
+// 形态对整数正则不可见。表达式实参（如 `3.5 * s`）仍不在守卫射程内，
+// 由 code review 把关（painter 几何缩放属合理场景）。
+final _pattern = RegExp(r'Radius\.circular\(\d+(?:\.\d+)?\)');
 
 void main() {
   test('BorderRadius.circular 数字字面量存量只减不增（当前上限 $_ceiling）', () {

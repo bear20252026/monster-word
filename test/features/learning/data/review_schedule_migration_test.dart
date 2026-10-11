@@ -148,17 +148,23 @@ void main() {
     expect(prefs.getString(ReviewScheduleRepository.migratedMarkerKey), 'done');
   });
 
-  test('SP blob 顶层损坏：迁移失败降级 SP 模式，不写标记（下次启动可重试）', () async {
+  test('SP blob 顶层损坏：按空迁入并写标记（不卡死启动），原 blob 留应急备份', () async {
     SharedPreferences.setMockInitialValues({ReviewScheduleRepository.cardsPrefKey: '{not-valid-json'});
 
     final store = await newStore();
     final repo = ReviewScheduleRepository(store: store);
     await repo.initialize();
 
-    expect(repo.usesSqlite, isFalse);
+    // 2026-10-08 审计 B12 新契约：损坏数据本就不可读，不能每次启动重复失败并
+    // 永久卡 SP 降级——按空迁入、写标记（下次启动幂等）；原 blob 由 E2 应急
+    // 备份保留，供人工恢复（此前「不写标记等重试」会让启动永久卡死）。
+    expect(repo.usesSqlite, isTrue);
     expect(await store.cardCount(), 0);
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString(ReviewScheduleRepository.migratedMarkerKey), isNull);
+    expect(prefs.getString(ReviewScheduleRepository.migratedMarkerKey), 'done');
+    final backup = prefs.getString(ReviewScheduleRepository.emergencyBackupKey);
+    expect(backup, isNotNull, reason: '损坏的原 blob 必须留应急备份供人工恢复');
+    expect(backup, contains('not-valid-json'));
   });
 
   test('R3：SQLite 不可用且 SP 活键为空时，从 emergency_backup 自动恢复', () async {
@@ -213,11 +219,11 @@ void main() {
   });
 
   test('SP 降级模式下评分仍写旧 key（旧版装回可读到迁移前历史）', () async {
-    // 顶层 blob 损坏 → 迁移失败 → SP 模式；此时评分应写回 SP。
-    SharedPreferences.setMockInitialValues({ReviewScheduleRepository.cardsPrefKey: '{broken'});
+    // 降级触发方式改为「无 store 注入」（open 在测试环境抛错 → SP 模式）：
+    // B12 之后顶层 blob 损坏不再降级（按空迁入），原 Setup 已不可达。
+    SharedPreferences.setMockInitialValues({});
 
-    final store = await newStore();
-    final repo = ReviewScheduleRepository(store: store);
+    final repo = ReviewScheduleRepository();
     await repo.initialize();
     await repo.rateWord(word: 'fallback-word', rating: FsrsRating.good);
 

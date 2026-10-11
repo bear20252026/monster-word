@@ -37,6 +37,9 @@ class UserInfoBean {
     signature: json['signature'] ?? '',
   );
 
+  // MW-61：displayId/wechatName/signature 三键原缺引号（左侧是变量表达式，
+  // 实际 JSON key 为字段值本身），fromJson 查 'displayId' 等永远 miss——
+  // 三个资料字段当场丢失（保存即丢，非重启才丢）。
   Map<String, dynamic> toJson() => {
     'userId': userId,
     'nickname': nickname,
@@ -44,8 +47,8 @@ class UserInfoBean {
     'phone': phone,
     'token': token,
     'secret': secret,
-    displayId: displayId,
-    wechatName: wechatName,
-    signature: signature,
+    'displayId': displayId,
+    'wechatName': wechatName,
+    'signature': signature,
   };
 }

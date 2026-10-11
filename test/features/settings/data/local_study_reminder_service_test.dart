@@ -86,13 +86,13 @@ void main() {
     expect(plugin.lastSchedule!.scheduledDate.isAtSameMomentAs(tz.TZDateTime(tz.UTC, 2026, 9, 3, 7, 30)), isTrue);
   });
 
-  test('cancelDaily：从未调度过 → 不调用插件取消', () async {
+  test('cancelDaily：从未调度过 → 仍向平台发 cancel（幂等 no-op，MW-53）', () async {
     final plugin = _FakePlugin();
     final service = _service(plugin, DateTime(2026, 9, 2, 10, 0));
 
     await service.cancelDaily();
 
-    expect(plugin.cancelCount, 0);
+    expect(plugin.cancelCount, 1, reason: 'MW-53: OS 侧已有通知必须可被取消，cancel 本身幂等');
   });
 
   test('cancelDaily：已调度 → 取消一次', () async {

@@ -63,6 +63,9 @@ class SpugSmsCodeService implements SmsCodeService {
     if (_pendingPhone != phone) return '手机号与验证码不匹配';
     if (_now().difference(_sentAt!) > _ttl) return '验证码已过期，请重新获取';
     if (_pendingCode != code) return '验证码错误';
+    // 一次性消费：校验通过后立即作废，同一码 TTL 内不可重复通过。
+    _pendingCode = null;
+    _sentAt = null;
     return null;
   }
 

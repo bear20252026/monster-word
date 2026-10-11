@@ -17,7 +17,9 @@ const _whitelist = <String>[
   'lib/features/learning/presentation/share_image_service.dart', // 分享位图固定像素设计
 ];
 
-const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app'];
+// 守卫扫描根（2026-10 审计 Q1）：补 lib/main.dart 与 lib/core——兜底页与
+// core 层组件的字号字面量此前对本守卫不可见（与 alpha/motion/spacing 守卫口径对齐）。
+const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app', 'lib/main.dart', 'lib/core'];
 
 /// 棘轮上限：当前存量（batch7 起仅剩 hero 字号 40 一处）。只允许下降。
 const _ceiling = 1;

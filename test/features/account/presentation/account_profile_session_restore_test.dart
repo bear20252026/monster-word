@@ -55,7 +55,7 @@ void main() {
       await state.login('user', 'pass');
       expect(state.isLoggedIn, isTrue);
 
-      state.logout();
+      await state.logout();
       expect(state.isLoggedIn, isFalse);
 
       // 新实例 restore 应为 false
@@ -115,7 +115,7 @@ void main() {
       await state.login('user', 'pass');
       expect(state.isLoggedIn, isTrue);
 
-      state.logout();
+      await state.logout();
       expect(state.isLoggedIn, isFalse);
     });
   });

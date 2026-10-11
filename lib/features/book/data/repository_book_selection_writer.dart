@@ -1,3 +1,4 @@
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/app/service_locator.dart';
@@ -21,7 +22,10 @@ class RepositoryBookSelectionWriter implements BookSelectionWriter {
   @override
   Future<void> selectBook(int bookId) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_currentBookIdKey, bookId);
+    // 写返回值校验：失败时下次启动回旧词书，静默不可接受。
+    if (!await prefs.setInt(_currentBookIdKey, bookId)) {
+      reportSwallowedError('词书选择写入失败', StateError('setInt($bookId) returned false'), StackTrace.current);
+    }
   }
 
   @override

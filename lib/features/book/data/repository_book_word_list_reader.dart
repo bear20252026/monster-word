@@ -15,7 +15,10 @@ class RepositoryBookWordListReader implements BookWordListReader {
 
   @override
   Future<List<Word>> loadWords(int bookId) {
-    return database.getWordsByBook(bookId, lightweight: true);
+    // MW-44：导出契约必须给全量列——原 lightweight:true 让 example/phrase
+    // 恒为空串，「包含例句/短语」勾选后导出内容永远为空（端口注释承诺
+    // 「全量加载仅供导出」与实现直接矛盾）。导出是低频操作，可接受大字段。
+    return database.getWordsByBook(bookId, lightweight: false);
   }
 
   @override

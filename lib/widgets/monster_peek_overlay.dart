@@ -43,9 +43,11 @@ class MonsterPeekOverlay {
   static const double _bottomGap = 8;
 
   /// 展示一次怪兽探头（滑入 → 停留＋弹跳＋气泡 → 演完自动移除）。
-  /// 演出中的重复调用会被忽略（串行防重入）。
-  static void show(BuildContext context, {required String phrase}) {
-    if (_playing) return;
+  /// 演出中的重复调用会被忽略（串行防重入），此时返回 false——调用方
+  /// （里程碑庆祝等「错过即永久丢失」的场景）应据此跳过「已庆祝」落标，
+  /// 留待下个机会补演，而不是把被吞掉的演出标记成已完成。
+  static bool show(BuildContext context, {required String phrase}) {
+    if (_playing) return false;
     final overlay = Overlay.of(context);
     _playing = true;
     late final OverlayEntry entry;
@@ -66,6 +68,7 @@ class MonsterPeekOverlay {
       ),
     );
     overlay.insert(entry);
+    return true;
   }
 }
 

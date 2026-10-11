@@ -275,10 +275,14 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
       if (!mounted) return;
       SfxPlayer.fire(Sfx.milestone);
       HapticsGate.play(HapticCue.heavy);
-      MonsterPeekOverlay.show(context, phrase: '第 $crossed 枚金币！钱包鼓鼓的！');
+      // 探头被串行防重入拦下时不落「已庆祝」：这一档留待下个机会补演。
+      if (!MonsterPeekOverlay.show(context, phrase: '第 $crossed 枚尖叫币！钱包鼓鼓的！')) return;
       // 演出排定后再落「已庆祝」：页面中途销毁则标记未写，下个机会补演
       //（宁可重复庆祝也不永久吞掉一次跨档）。
-      await prefs.setInt(MilestoneGuard.lastCelebratedKey, crossed);
+      final saved = await prefs.setInt(MilestoneGuard.lastCelebratedKey, crossed);
+      if (!saved) {
+        reportSwallowedError('里程碑庆祝标记写入失败', StateError('setInt($crossed) returned false'), StackTrace.current);
+      }
     } catch (e, s) {
       // 庆祝失败不阻断签到主流程。
       reportSwallowedError('里程碑庆祝失败', e, s);

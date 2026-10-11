@@ -392,7 +392,8 @@ class _LibSelectPageState extends State<LibSelectPage> {
         );
         break;
       default:
-        showMwSnackBar(context, SnackBar(content: Text('$tool 功能开发中...')));
+        // 上架口径：商业版不暴露「开发中」stub，未知工具按「即将上线」措辞。
+        showMwSnackBar(context, const SnackBar(content: Text('该功能即将上线，敬请期待')));
     }
   }
 

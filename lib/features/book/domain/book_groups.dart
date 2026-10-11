@@ -17,16 +17,24 @@ abstract final class BookGroup {
   static const others = 6;
 }
 
+/// 词书分组正则（static final：编译一次。每次调用现编译最多 5 个 RegExp，
+/// tab 切换/列表重建的重复编译是纯浪费）。
+final List<RegExp> _specialPatterns = [RegExp(r'^(PHRASEIDIOM|ROOTAFFIX|SYNNOTE|COLLOC|USAGENOTE)$')];
+final List<RegExp> _cetPatterns = [RegExp(r'CET4|四级|CET6|六级')];
+final List<RegExp> _highschoolPatterns = [RegExp(r'GK|高考|KAOYAN|考研|KY|LLYC')];
+final List<RegExp> _ieltsPatterns = [RegExp(r'IELTS|雅思|TOEFL|托福|GDTOEFL')];
+final List<RegExp> _professionalPatterns = [
+  RegExp(r'GRE|GMAT|SAT|BEC|TEM|专四|专八|PRO4|PRO8|XHPRO|PETS|AWL|BARRONSAT|BIZLAW'),
+];
+
+bool _anyMatch(List<RegExp> patterns, String code) => patterns.any((p) => p.hasMatch(code));
+
 /// 词书 code → 分组下标（[BookGroup.others] 兜底）。
 int bookGroupOf(String code) {
-  if (RegExp(r'^(PHRASEIDIOM|ROOTAFFIX|SYNNOTE|COLLOC|USAGENOTE)$').hasMatch(code)) {
-    return BookGroup.special;
-  }
-  if (RegExp(r'CET4|四级|CET6|六级').hasMatch(code)) return BookGroup.cet;
-  if (RegExp(r'GK|高考|KAOYAN|考研|KY|LLYC').hasMatch(code)) return BookGroup.highschoolPostgrad;
-  if (RegExp(r'IELTS|雅思|TOEFL|托福|GDTOEFL').hasMatch(code)) return BookGroup.ieltsToefl;
-  if (RegExp(r'GRE|GMAT|SAT|BEC|TEM|专四|专八|PRO4|PRO8|XHPRO|PETS|AWL|BARRONSAT|BIZLAW').hasMatch(code)) {
-    return BookGroup.professional;
-  }
+  if (_anyMatch(_specialPatterns, code)) return BookGroup.special;
+  if (_anyMatch(_cetPatterns, code)) return BookGroup.cet;
+  if (_anyMatch(_highschoolPatterns, code)) return BookGroup.highschoolPostgrad;
+  if (_anyMatch(_ieltsPatterns, code)) return BookGroup.ieltsToefl;
+  if (_anyMatch(_professionalPatterns, code)) return BookGroup.professional;
   return BookGroup.others;
 }

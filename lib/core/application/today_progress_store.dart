@@ -91,12 +91,17 @@ class TodayProgressStore extends ChangeNotifier {
     _checkedDate = date;
     final savedDate = AppPreferences().getTodayLearnedDate();
     if (savedDate != date) {
-      try {
-        // 跨天：清零已学并落当天日期（与 session 口径一致）
-        AppPreferences().setTodayLearned(0, date: date);
-      } catch (e, s) {
-        reportSwallowedError('TodayProgressStore reset learned', e, s);
-      }
+      // 跨天：清零已学并落当天日期（与 session 口径一致）。
+      // 本方法在 sync() 同步上下文中调用，无法 await——裸 try/catch 捕不到
+      // 异步失败，改挂 onError 上报（内存口径已按 0 返回，写失败时次日重试）。
+      AppPreferences()
+          .setTodayLearned(0, date: date)
+          .then<void>(
+            (_) {},
+            onError: (Object e, StackTrace s) {
+              reportSwallowedError('TodayProgressStore reset learned', e, s);
+            },
+          );
       return 0;
     }
     return AppPreferences().getTodayLearned();

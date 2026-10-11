@@ -1,5 +1,7 @@
 // 本机账号密码认证（SecurePasswordAuthStore）单元测试。
 // flutter_secure_storage 官方 setMockInitialValues 提供测试背板，走真实实现逻辑。
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -91,9 +93,11 @@ void main() {
       final store = SecurePasswordAuthStore();
       // 旧口令验证通过（走 legacy 分支）
       expect(await store.verify(username, 'password123'), isTrue);
-      // 透明升级：存储中的哈希已换成 PBKDF2 新格式
-      final upgraded = await const FlutterSecureStorage().read(key: 'pwauth.$username.hash');
-      expect(upgraded, startsWith('pbkdf2-sha256\$'));
+      // 透明升级：MW-65 后落到单 credential Blob（内含 PBKDF2 新格式哈希）
+      final credentialJson = await const FlutterSecureStorage().read(key: 'pwauth.$username.credential');
+      expect(credentialJson, isNotNull);
+      final credentialMap = jsonDecode(credentialJson!) as Map<String, dynamic>;
+      expect(credentialMap['hash'] as String, startsWith('pbkdf2-sha256\$'));
       // 升级后新格式仍可验证，错密码仍拒绝
       expect(await store.verify(username, 'password123'), isTrue);
       expect(await store.verify(username, 'password124'), isFalse);

@@ -16,6 +16,11 @@ class MasteredRepositoryImpl implements MasteredRepository {
   /// 启动早期触发会用残缺集合覆盖全部已掌握标记（不可逆）。
   Future<void>? _loadFuture;
 
+  /// MW-58：首次读取失败 ≠ 数据为空。置位后禁止全量覆写保存——
+  /// 否则一次瞬态读失败 + 用户一次 toggle 就会用空集合覆盖全部历史掌握记录。
+  bool _loadFailed = false;
+  bool get debugLoadFailed => _loadFailed;
+
   MasteredRepositoryImpl() {
     _loadFuture = _loadMasteredWords();
   }
@@ -27,15 +32,33 @@ class MasteredRepositoryImpl implements MasteredRepository {
       if (saved != null) {
         _masteredWords.addAll(saved);
       }
+      _loadFailed = false;
     } catch (e, s) {
-      // 存储不可用时保留内存中的安全空集合。
-      reportSwallowedError('已掌握词表加载失败', e, s);
+      // 存储不可用时保留内存中的安全空集合，但标记为「未知」而非「空」。
+      _loadFailed = true;
+      reportSwallowedError('已掌握词表加载失败（禁止覆写保存直至读取成功）', e, s);
     }
   }
 
   Future<void> _saveMasteredWords() async {
+    if (_loadFailed) {
+      // 事实来源读取失败期间的破坏性全量覆写守卫（MW-58）。
+      reportSwallowedError(
+        '已掌握词表读取失败期间拒绝覆写保存（防止空集合覆盖历史数据）',
+        StateError('mastered save blocked: load failed'),
+        StackTrace.current,
+      );
+      return;
+    }
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_masteredWordsKey, _masteredWords.toList());
+    final ok = await prefs.setStringList(_masteredWordsKey, _masteredWords.toList());
+    if (!ok) {
+      reportSwallowedError(
+        '已掌握词表保存返回 false（内存保留，下次 toggle 重试）',
+        StateError('setStringList(mastered_words_v1) returned false'),
+        StackTrace.current,
+      );
+    }
   }
 
   @override

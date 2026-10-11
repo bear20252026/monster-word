@@ -37,6 +37,23 @@ class MessageStore extends ChangeNotifier {
   List<MessageItem> _messages = <MessageItem>[];
   bool _loaded = false;
 
+  /// 串行闸：load/append/markRead 全走这一条队列。_persist 是整键全量覆写，
+  /// load 在 getStatus() await 期间持有的旧列表若与并发 append 交错落盘，
+  /// 会把新追加的消息静默覆盖掉（审计：读-改-写无并发闸）。
+  Future<void> _queue = Future<void>.value();
+
+  Future<void> _serialized(String label, Future<void> Function() action) {
+    final run = _queue.then((_) => action());
+    // 单次失败不断流也不外抛（调用方多为 fire-and-forget），但必须可见。
+    _queue = run.then<void>(
+      (_) {},
+      onError: (Object e, StackTrace s) {
+        reportSwallowedError(label, e, s);
+      },
+    );
+    return _queue;
+  }
+
   Future<SharedPreferences> _prefs() async => prefsOverride ?? await SharedPreferences.getInstance();
 
   /// 当前消息列表（新消息在前）。
@@ -61,7 +78,9 @@ class MessageStore extends ChangeNotifier {
   }
 
   /// 加载消息：读持久化 → 刷新学习类消息 → 持久化 → 通知。
-  Future<void> load() async {
+  Future<void> load() => _serialized('消息中心加载失败', _loadLocked);
+
+  Future<void> _loadLocked() async {
     final prefs = await _prefs();
     _messages = _decode(prefs.getString(_storageKey));
     // MEM：历史版本无上限，老用户本地可能堆积数千条，加载即截断。
@@ -79,26 +98,26 @@ class MessageStore extends ChangeNotifier {
   }
 
   /// 全部标记已读。
-  Future<void> markAllRead() async {
+  Future<void> markAllRead() => _serialized('消息标记已读失败', () async {
     if (unreadCount == 0) return;
     _messages = _messages.map((MessageItem m) => m.markRead()).toList();
     final prefs = await _prefs();
     await _persist(prefs);
     notifyListeners();
-  }
+  });
 
   /// 单条标记已读。
-  Future<void> markRead(String id) async {
+  Future<void> markRead(String id) => _serialized('消息单条标记已读失败', () async {
     final index = _messages.indexWhere((MessageItem m) => m.id == id);
     if (index < 0 || _messages[index].isRead) return;
     _messages = List<MessageItem>.of(_messages)..[index] = _messages[index].markRead();
     final prefs = await _prefs();
     await _persist(prefs);
     notifyListeners();
-  }
+  });
 
   /// 追加本地消息（去重键相同则跳过），供后续事件源扩展。
-  Future<void> append(MessageItem item) async {
+  Future<void> append(MessageItem item) => _serialized('消息追加失败', () async {
     if (item.dedupeKey != null && _messages.any((MessageItem m) => m.dedupeKey == item.dedupeKey)) {
       return;
     }
@@ -111,7 +130,7 @@ class MessageStore extends ChangeNotifier {
     final prefs = await _prefs();
     await _persist(prefs);
     notifyListeners();
-  }
+  });
 
   /// 刷新消息（欢迎 + 学习类）。返回 true 表示列表有变化需要持久化。
   Future<bool> _refreshLearningMessages() async {

@@ -67,6 +67,14 @@ class LearningSessionState extends ChangeNotifier {
   Book? _currentBook;
   List<Word> _queue = [];
   int _currentIndex = 0;
+
+  // MW-27 断点②：启动恢复快照暂存区——构造时队列必然为空，原实现直接把
+  // 恢复索引写 _currentIndex 会被随后的 loadBook/_replaceQueue 重置为 0，
+  // 「继续上次学习」从未真正生效。现在：启动只加载快照到 pendingResume，
+  // 用户加载同一本词书（bookId 匹配）时在队列就绪后应用恢复索引。
+  LearningProgress? _pendingResume;
+  @visibleForTesting
+  LearningProgress? get debugPendingResume => _pendingResume;
   bool _showAnswer = false;
   // 防止 rate() 异步 await 期间被连点二次进入，导致索引被双重推进而跳词/越界。
   bool _isRating = false;
@@ -131,7 +139,6 @@ class LearningSessionState extends ChangeNotifier {
 
   /// 队列代际计数：每当用户主动加载新的词库/收藏（`_replaceQueue`）时自增，
   /// 用于防止 `_loadProgress()` 异步返回的过期索引覆盖新会话的当前索引。
-  int _queueGeneration = 0;
 
   Book? get currentBook => _currentBook;
 
@@ -184,6 +191,22 @@ class LearningSessionState extends ChangeNotifier {
     final queue = await _queuePort.loadBook(book, limit: limit, shuffle: shuffle);
     // shuffle=false（测试/确定场景）跳过字母分散洗牌
     _replaceQueue(queue, shuffle: shuffle);
+    // MW-27 断点②闭合：同书恢复——pendingResume 匹配本次词书时应用索引。
+    // 队列已按当前词库重建，恢复索引前校验「恢复指向的词仍在队列」，
+    // 词库升级导致词换队时放弃恢复（宁从头开始，不指向错误词）。
+    final resume = _pendingResume;
+    if (resume != null && _queue.isNotEmpty) {
+      final sameBook = resume.currentBook.id == book.id;
+      final resumeWord = resume.currentIndex < resume.queue.length ? resume.queue[resume.currentIndex] : null;
+      final wordStillQueued = resumeWord == null || _queue.any((w) => w.id == resumeWord.id);
+      if (sameBook && wordStillQueued) {
+        _currentIndex = resume.currentIndex.clamp(0, _queue.length - 1);
+        _regenerateChoices();
+      }
+      // 快照一次性消费（无论是否应用）——旧书快照不应在新会话再次生效。
+      _pendingResume = null;
+      notifyListeners();
+    }
     // 新会话开始，重置完成页数据
     _errorWords.clear();
     _totalAnswered = 0;
@@ -227,8 +250,10 @@ class LearningSessionState extends ChangeNotifier {
     _isRating = true;
 
     try {
-      _totalAnswered++;
-      unawaited(_incrementTodayLearned());
+      // P1-02 Durable Command：FSRS 持久化成功才推进会话与计数——
+      // 硬失败（连降级日志都写不进）时 UI 停留当前词，绝无「假成功」。
+      // 引擎推进（Leitner 会话状态）同样放在持久化之后，保证一致。
+      await _reviewSchedulePort.rateWord(word: word.word, rating: rating);
       switch (rating) {
         case FsrsRating.again:
           _leitnerEngine.iDontKnow();
@@ -240,12 +265,15 @@ class LearningSessionState extends ChangeNotifier {
         case FsrsRating.easy:
           _leitnerEngine.tooEasy();
       }
+      _totalAnswered++;
+      unawaited(_incrementTodayLearned());
 
-      await _reviewSchedulePort.rateWord(word: word.word, rating: rating);
-      final wasLastWord = _currentIndex < _queue.length;
+      // MW-40：wasLastWord 判定修正——原 `_currentIndex < _queue.length` 恒真、
+      // `> _queue.length` 永不触发，最后一词的会话完成 breadcrumb 从未记录。
+      final wasLastWord = _currentIndex == _queue.length - 1;
       _currentIndex++;
       // 完成整个队列：让 currentWord 变为 null，触发学习完成界面，而不是永远停在最后一个词。
-      if (_currentIndex > _queue.length) {
+      if (_currentIndex >= _queue.length) {
         _currentIndex = _queue.length;
         // 审计 I87：会话完成漏斗（过转变守卫，完成后的重复评分不重复记录）
         if (wasLastWord) {
@@ -253,6 +281,12 @@ class LearningSessionState extends ChangeNotifier {
         }
       }
       _regenerateChoices();
+      notifyListeners();
+      // MW-27 断点①：每次评分后持久化索引（原实现只在 loadBook/jumpTo 保存）。
+      unawaited(_saveProgress());
+    } on FsrsRatingPersistException catch (error, stack) {
+      // 持久化硬失败：不推进索引、不计数、不推进引擎，UI 停留当前词。
+      reportSwallowedError('FSRS 评分持久化硬失败（会话未推进）', error, stack);
       notifyListeners();
     } finally {
       _isRating = false;
@@ -314,14 +348,13 @@ class LearningSessionState extends ChangeNotifier {
 
   Future<void> _loadProgress() async {
     await _loadTodayLearned();
-    // 记录发起加载时的代际；若期间用户已加载新词库（代际改变），丢弃过期进度。
-    final generation = _queueGeneration;
     try {
       final saved = await _progressPort.load();
-      // 空队列时 clamp(0, -1) 会抛 ArgumentError——启动时队列必然为空，
-      // 此处必须跳过而不是吞异常（否则每次冷启动都打一条错误日志）。
-      if (saved != null && _queue.isNotEmpty && generation == _queueGeneration) {
-        _currentIndex = saved.currentIndex.clamp(0, _queue.length - 1);
+      // MW-27：启动时队列必然为空，快照只暂存不直接应用——应用时机在
+      // [loadBook] 队列就绪后（同书匹配）。原实现「队列非空才恢复」在
+      // 冷启动路径永远为假，「继续上次学习」形同虚设。
+      if (saved != null) {
+        _pendingResume = saved;
       }
     } catch (error, stack) {
       // 错误处理审计 P3：进度属 A 级持久化路径，debugPrint 在 release 不可见
@@ -348,7 +381,6 @@ class LearningSessionState extends ChangeNotifier {
         .toList(growable: false);
     // 用户需求：单词顺序打乱，避免同一首字母连续出现
     final queue = shuffle ? _shuffler(filtered) : filtered;
-    _queueGeneration++; // 新会话开始：作废任何进行中的旧进度加载
     _queue = queue;
     _currentIndex = 0;
     _showAnswer = false;

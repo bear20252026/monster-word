@@ -25,6 +25,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
   final _controller = TextEditingController();
   final _contactController = TextEditingController();
   bool _submitted = false;
+  // MW-56：双通道全失败时提示用户内容尚未保存。
+  bool _submitFailed = false;
   bool _isSubmitting = false;
 
   @override
@@ -39,18 +41,28 @@ class _FeedbackPageState extends State<FeedbackPage> {
       showMwSnackBar(context, const SnackBar(content: Text('请填写反馈内容')));
       return;
     }
-    setState(() => _isSubmitting = true);
-    // 本地存档兜底 + Sentry 上报（失败不阻断提交语义）。
+    setState(() {
+      _isSubmitting = true;
+      _submitFailed = false;
+    });
+    // MW-56：本地存档 OR 远端上传至少一个 durable 成功才算提交成功；
+    // 双通道全失败必须如实告知「内容尚未保存」，不得显示感谢页。
+    var durable = false;
     try {
       final archive = widget.archiveOverride ?? FeedbackArchive();
-      await archive.submit(content: _controller.text, contact: _contactController.text);
+      final result = await archive.submit(content: _controller.text, contact: _contactController.text);
+      durable = result.durable;
     } catch (_) {
       // FeedbackArchive.submit 自身已兜底，此层防御意外的同步异常。
+      durable = false;
     }
     if (!mounted) return;
     setState(() {
       _isSubmitting = false;
-      _submitted = true;
+      _submitted = durable;
+      if (!durable) {
+        _submitFailed = true;
+      }
     });
   }
 
@@ -78,7 +90,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
             child: Container(height: 1, color: colors.divider),
           ),
         ),
-        body: _submitted ? _buildThankYou(skin, resp) : _buildForm(skin, resp),
+        body: _submitFailed
+            ? _buildSubmitFailed(skin, resp)
+            : _submitted
+            ? _buildThankYou(skin, resp)
+            : _buildForm(skin, resp),
       ),
     );
   }
@@ -131,10 +147,13 @@ class _FeedbackPageState extends State<FeedbackPage> {
             ),
             child: TextField(
               controller: _contactController,
+              // 安全审计：联系方式明文进 SP 反馈存档并外发 Sentry，限长防滥用。
+              maxLength: 100,
               style: MwTypography.body.copyWith(color: colors.text1),
               decoration: InputDecoration(
                 hintText: '邮箱或手机号，方便我们回复您',
                 hintStyle: MwTypography.body.copyWith(color: colors.text3),
+                counterText: '',
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.all(context.design.spacing.md),
               ),
@@ -167,6 +186,38 @@ class _FeedbackPageState extends State<FeedbackPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// MW-56：提交双通道全失败的如实提示——内容尚未保存到任何持久位置。
+  Widget _buildSubmitFailed(SkinSystem skin, AppResponsive resp) {
+    final colors = skin.colors;
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(resp.pageMargin * 2),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: colors.danger.withValues(alpha: AppAlphas.o10),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.cloud_off, size: 48, color: colors.danger),
+            ),
+            const SizedBox(height: 24),
+            Text('提交失败，内容尚未保存', style: MwTypography.heading4.copyWith(color: colors.text1)),
+            const SizedBox(height: 8),
+            Text(
+              '本地存储与上报通道均不可用，请稍后重试。\n你的反馈内容仍在输入框中，不会丢失。',
+              textAlign: TextAlign.center,
+              style: MwTypography.bodyMd.copyWith(color: colors.text2),
+            ),
+          ],
+        ),
       ),
     );
   }

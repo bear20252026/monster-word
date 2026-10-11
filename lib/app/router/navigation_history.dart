@@ -63,7 +63,15 @@ class NavigationHistoryService extends ChangeNotifier {
     final snap = _forward.removeLast();
     // 恢复期间的 push 不清空 forward 栈（这是导航还原，不是新分叉）
     _restoring = true;
-    unawaited(navigator.pushNamed(snap.name, arguments: snap.arguments).whenComplete(() => _restoring = false));
+    unawaited(
+      navigator.pushNamed(snap.name, arguments: snap.arguments).whenComplete(() => _restoring = false).catchError((
+        Object e,
+      ) {
+        // 路由名未注册等导航异常：吞掉防 unhandled（回不去前进页只是
+        // 体验降级，不应崩应用）；whenComplete 已保证 _restoring 复位。
+        return null;
+      }),
+    );
     notifyListeners();
   }
 

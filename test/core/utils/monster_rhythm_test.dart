@@ -35,8 +35,11 @@ void main() {
 
   test('resetForTest 清除注入（防跨测试文件污染）', () {
     MonsterRhythm.nowOverride = () => DateTime(2026, 1, 1);
+    final injected = MonsterRhythm.now();
+    expect(injected.year, 2026, reason: '注入生效中');
     MonsterRhythm.resetForTest();
-    final now = MonsterRhythm.now();
-    expect(now.year, DateTime.now().year, reason: '清除后回落真实墙钟');
+    // 不与真实墙钟比对年份：年末 23:59:59.999 翻年即假红（2026-10 审计 T2）。
+    // 改锁定语义——清除后 now() 不再等于注入时刻。
+    expect(identical(MonsterRhythm.now(), injected), isFalse, reason: '清除后回落真实墙钟');
   });
 }

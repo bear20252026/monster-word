@@ -28,10 +28,24 @@ jobs:
   quality-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      # MW-70：tag 必须与 pubspec.yaml 版本一致（vX.Y.Z+N == X.Y.Z+N），
+      # 防「Release 标签 v2.13.0、二进制实际 2.12.2」的可追溯性错误。
+      - name: Verify tag matches pubspec version (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PUBSPEC_VERSION="$(sed -n 's/^version: *//p' pubspec.yaml | head -n1 | tr -d '[:space:]')"
+          echo "tag=$TAG pubspec=$PUBSPEC_VERSION"
+          if [ "$TAG" != "$PUBSPEC_VERSION" ]; then
+            echo "::error::tag 版本($TAG) 与 pubspec.yaml 版本($PUBSPEC_VERSION) 不一致，拒绝发版。"
+            exit 1
+          fi
+      # MW-76：第三方 Action 固定到已审查的 commit SHA（供应链固定）。
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v7.0.0
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@fd55f4c5d3655f3b8a5f11a5e7f55a1d8e81b92c # v2.19.0
         with:
           flutter-version: '3.47.0'
           channel: stable
@@ -53,16 +67,16 @@ jobs:
     needs: [quality-gate]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v7.0.0
 
       - name: Setup JDK 17
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@dded088991c5b44dda4ff3ed3fa096acc5497a1b # v6.0.0
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@fd55f4c5d3655f3b8a5f11a5e7f55a1d8e81b92c # v2.19.0
         with:
           flutter-version: '3.47.0'
           channel: stable
@@ -112,8 +126,12 @@ jobs:
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         # 安全审计 P2-6：--obfuscate 提高逆向成本（含随包常量的提取门槛）
+        env:
+          APP_VERSION: ${{ env.android_version }}
+          APP_BUILD_NUMBER: ${{ env.app_build }}
         run: >-
           flutter build apk --release --dart-define=SENTRY_DSN=$SENTRY_DSN
+          --dart-define=APP_VERSION=$APP_VERSION --dart-define=APP_BUILD_NUMBER=$APP_BUILD_NUMBER
           --obfuscate --split-debug-info=build/symbols/apk
 
       - name: Build Release AAB
@@ -121,26 +139,36 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: >-
           flutter build appbundle --release --dart-define=SENTRY_DSN=$SENTRY_DSN
+          --dart-define=APP_VERSION=${{ env.android_version }} --dart-define=APP_BUILD_NUMBER=${{ env.app_build }}
           --obfuscate --split-debug-info=build/symbols/aab
 
       - name: Rename packages to brand convention
         shell: bash
         run: |
-          ver=$(sed -n 's/^version: *\([^ ]*\)/\1/p' pubspec.yaml | head -n1)
-          ver=${ver%+*}
+          full=$(sed -n 's/^version: *\([^ ]*\)/\1/p' pubspec.yaml | head -n1)
+          ver=${full%+*}
+          build=${full#*+}
+          # MW-72：产物文件名带 buildNumber——同版本号不同构建可凭文件名区分。
           # 安全审计 P2-2：debug 签名产物必须显式标记，防止被当作官方包分发
           if [ "$signed" = "debug" ]; then suffix="-debugsigned"; else suffix=""; fi
-          cp build/app/outputs/flutter-apk/app-release.apk "MonsterWord_v${ver}${suffix}.apk"
-          cp build/app/outputs/bundle/release/app-release.aab "MonsterWord_v${ver}${suffix}.aab"
+          cp build/app/outputs/flutter-apk/app-release.apk "MonsterWord_v${ver}+${build}${suffix}.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "MonsterWord_v${ver}+${build}${suffix}.aab"
           echo "android_version=$ver" >> "$GITHUB_ENV"
+          echo "app_build=$build" >> "$GITHUB_ENV"
+
+      - name: Archive Android obfuscation symbols (MW-75)
+        shell: bash
+        run: |
+          zip -qr build/debug-symbols-android.zip build/symbols/apk build/symbols/aab
 
       - name: Upload Android packages
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v7.0.0
         with:
           name: android-packages
           path: |
             MonsterWord_v*.apk
             MonsterWord_v*.aab
+            build/debug-symbols-android.zip
 
   # --------------------------------------------------------------------
   # WINDOWS：生产 Inno Setup 安装程序（.exe）
@@ -149,10 +177,10 @@ jobs:
     needs: [quality-gate]
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v7.0.0
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@fd55f4c5d3655f3b8a5f11a5e7f55a1d8e81b92c # v2.19.0
         with:
           flutter-version: '3.47.0'
           channel: stable
@@ -161,12 +189,24 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Read app version
+        shell: pwsh
+        run: |
+          $full = (Get-Content pubspec.yaml | Select-String '^version: ').Line -replace 'version: ','' -replace '\s',''
+          $ver = $full -replace '\+.*',''
+          $build = $full -replace '.*\+',''
+          echo "win_version=$ver" >> $env:GITHUB_ENV
+          echo "win_build=$build" >> $env:GITHUB_ENV
+
       - name: Build Windows Release
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        # 安全审计 P2-6：与 Android 一致开启混淆
+          APP_VERSION: ${{ env.win_version }}
+          APP_BUILD_NUMBER: ${{ env.win_build }}
+        # 安全审计 P2-6：与 Android 一致开启混淆；MW-14：版本/构建号注入编译期常量
         run: >-
           flutter build windows --release --dart-define=SENTRY_DSN=$env:SENTRY_DSN
+          --dart-define=APP_VERSION=$env:APP_VERSION --dart-define=APP_BUILD_NUMBER=$env:APP_BUILD_NUMBER
           --obfuscate --split-debug-info=build/symbols/windows
 
       - name: Bundle VC++ Redistributable
@@ -195,11 +235,31 @@ jobs:
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$ver installer.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Rename installer with build number (MW-72)
+        shell: pwsh
+        run: |
+          $dir = 'build/installer'
+          $build = '${{ env.win_build }}'
+          Get-ChildItem $dir -Filter 'MonsterWord_Setup_v*.exe' | ForEach-Object {
+            if ($_.Name -notmatch '\+\d+') {
+              $newName = $_.Name -replace '_v(\d+\.\d+\.\d+)_', ('_v$1+' + $build + '_')
+              Rename-Item $_.FullName -NewName $newName
+              Write-Host "renamed to $newName"
+            }
+          }
+
+      - name: Archive obfuscation symbols (MW-75)
+        shell: pwsh
+        run: |
+          Compress-Archive -Path 'build/symbols/*' -DestinationPath 'build/debug-symbols.zip' -Force
+
       - name: Upload Windows installer
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v7.0.0
         with:
           name: windows-installer
-          path: build\installer\MonsterWord_Setup_v*.exe
+          path: |
+            build/installer/MonsterWord_Setup_v*.exe
+            build/debug-symbols.zip
 
   # --------------------------------------------------------------------
   # RELEASE：仅 tag 触发，把双端产物挂到 GitHub Release
@@ -212,16 +272,25 @@ jobs:
       contents: write
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v8.0.0
         with:
           path: artifacts
 
+      - name: Generate SHA256SUMS.txt (MW-71)
+        shell: bash
+        run: |
+          cd artifacts
+          find android-packages windows-installer -type f ! -name 'debug-symbols*' | sort \
+            | xargs sha256sum > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@6da8fa9354ddbfd4ce0b4d8f7c8f7b64baf9c370 # v3.0.0
         with:
           files: |
             artifacts/android-packages/*
             artifacts/windows-installer/*
+            artifacts/SHA256SUMS.txt
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

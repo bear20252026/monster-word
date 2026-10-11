@@ -19,9 +19,17 @@ class UserDatabase {
   static final UserDatabase instance = UserDatabase._();
   UserDatabase._();
 
+  /// 应用当前支持的 schema 版本（与 [_onUpgrade] 步进保持同步）。
+  static const int _schemaVersion = 6;
+
   Database? _db;
   bool _initialized = false;
   Completer<void>? _initCompleter;
+
+  /// MW-04：库版本新于应用（应用回滚安装旧版）时以只读方式打开。
+  /// 此状态下所有写入会抛异常并经各 DAO 守卫上报，绝不允许旧版代码写坏新版 schema。
+  bool _readOnlyDowngrade = false;
+  bool get readOnlyDowngrade => _readOnlyDowngrade;
 
   Database get db {
     if (_db == null) {
@@ -53,36 +61,76 @@ class UserDatabase {
     final dbPath = p.join(dir.path, 'user_data.db');
 
     try {
-      _db = await _open(dbPath);
+      _db = await _openWithGuard(dbPath);
     } catch (e, s) {
       // 2026-10-04 审计 P1：打开失败不必然是损坏——Windows 上杀毒/备份软件
       // 的瞬时文件锁、磁盘瞬时 IO 错同样会让 openDatabase 抛错；而 new_words
       // （生词本）没有任何 SP 快照可回迁，误判损坏直接删库 = 永久清空。
-      // 先关句柄重试一次，仍失败才按损坏走「备份 + 重建」。
+      // 先关句柄重试一次，仍失败才进入「恢复分类」。
       reportSwallowedError('用户数据库打开失败，关闭句柄后重试一次', e, s);
       await _safeClose();
       try {
-        _db = await _open(dbPath);
+        _db = await _openWithGuard(dbPath);
       } catch (e2, s2) {
-        // 错误处理审计 P2：user_data.db 损坏（onUpgrade 抛错/磁盘错误）会让
-        // bootstrap 整体失败，runApp 永不执行（白屏死应用）。参照
-        // WordBookDatabase 的口径：删坏库重建一次；收藏/尖叫币可由 SP 快照
-        // 与 DAO 迁移路径回迁，优于完全起不来。首错与重建路径都必须上报。
-        reportSwallowedError('用户数据库重试仍失败，按损坏备份后删除重建', e2, s2);
-        _db = await _deleteAndRebuild(dir, dbPath);
+        // MW-01（第二阶段审计 P0）：「连续打开失败」不再直接等同「数据库损坏」。
+        // 进入恢复分类：只有 PRAGMA quick_check 确证损坏才走备份重建；
+        // 文件锁/权限/磁盘满等可重试故障保留原库并把异常上抛给启动兜底页。
+        reportSwallowedError('用户数据库重试仍失败，进入恢复分类', e2, s2);
+        _db = await _recoverOrRethrow(dbPath, e2, s2);
       }
     }
     _initialized = true;
   }
 
+  /// MW-04：打开前检查库文件 user_version。
+  ///
+  /// sqflite 的版本管理在 openDatabase 内部执行 onDowngrade——到那一步时连接
+  /// 已以可写方式建立。因此在打开前先以只读裸连接读取 user_version：库版本比
+  /// 应用支持的新（应用回滚）→ 只读打开保护数据，不触发降级写路径，更不落入
+  /// 「损坏重建」。
+  Future<Database> _openWithGuard(String dbPath) async {
+    final file = File(dbPath);
+    if (file.existsSync() && file.lengthSync() > 0) {
+      final onDisk = await _peekUserVersion(dbPath);
+      if (onDisk != null && onDisk > _schemaVersion) {
+        reportSwallowedError(
+          '用户数据库 schema($onDisk) 新于应用支持版本($_schemaVersion)——按应用回滚处理，只读保护打开',
+          StateError('database downgrade blocked'),
+          StackTrace.current,
+        );
+        _readOnlyDowngrade = true;
+        return openDatabase(dbPath, readOnly: true);
+      }
+    }
+    _readOnlyDowngrade = false;
+    return _open(dbPath);
+  }
+
+  /// 只读裸连接读取 user_version；任何失败返回 null（交给正常打开路径抛错）。
+  Future<int?> _peekUserVersion(String dbPath) async {
+    Database? ro;
+    try {
+      ro = await openDatabase(dbPath, readOnly: true);
+      final rows = await ro.rawQuery('PRAGMA user_version');
+      if (rows.isEmpty) return null;
+      return (rows.first['user_version'] as num?)?.toInt();
+    } catch (_) {
+      return null;
+    } finally {
+      try {
+        await ro?.close();
+      } catch (_) {}
+    }
+  }
+
   Future<Database> _open(String dbPath) {
     return openDatabase(
       dbPath,
-      version: 4,
+      version: _schemaVersion,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       // 审计 I37：sqflite 默认静默降版本号且不回滚 schema。这里不抛错
-      //（抛错会落入下方删库重建路径毁掉用户数据），仅让降版本事件可观测。
+      //（抛错会落入恢复分类路径），仅让降版本事件可观测。
       onDowngrade: (db, oldVersion, newVersion) async {
         reportSwallowedError(
           '用户数据库版本回退（old=$oldVersion new=$newVersion），schema 未回滚',
@@ -93,40 +141,111 @@ class UserDatabase {
     );
   }
 
-  Future<Database> _deleteAndRebuild(Directory dir, String dbPath) async {
+  /// 恢复分类（MW-01/P0-02 恢复状态机）：
+  ///
+  /// 打开失败 ≠ 数据库损坏。只有「能只读打开 + quick_check 明确失败」才认定
+  /// 损坏并进入备份重建；其余一切情况（文件锁/权限/磁盘满/瞬态 IO/无法分类）
+  /// 一律保留原库并把原始错误上抛给启动兜底页（可重试）。
+  Future<Database> _recoverOrRethrow(String dbPath, Object openError, StackTrace openStack) async {
     await _safeClose();
+    final verdict = await _classifyCorruption(dbPath);
+    switch (verdict) {
+      case _DbHealth.healthy:
+        // 内容完好却打不开 = 可重试故障（锁/权限/磁盘满）。绝不删库。
+        reportSwallowedError('用户数据库内容完好（quick_check 通过）但打开失败，保留原库上抛', openError, openStack);
+        Error.throwWithStackTrace(openError, openStack);
+      case _DbHealth.unreadable:
+        // 连只读分类都做不了：无法确证损坏，同样保留原库。
+        reportSwallowedError('用户数据库无法分类（只读打开也失败），保留原库上抛', openError, openStack);
+        Error.throwWithStackTrace(openError, openStack);
+      case _DbHealth.corrupt:
+        reportSwallowedError('用户数据库 quick_check 确证损坏，进入备份重建', openError, openStack);
+        return _backupAndRebuild(dbPath);
+    }
+  }
+
+  Future<_DbHealth> _classifyCorruption(String dbPath) async {
+    Database? ro;
     try {
-      final file = File(p.join(dir.path, 'user_data.db'));
-      if (file.existsSync()) {
-        // 2026-10-04 审计 P1：损坏库先改名留档（.corrupt.bak，只保留最近一份）
-        // 再重建——生词本无快照，直接删除把「可人工抢救」变成「永久清空」。
-        final backup = File('$dbPath.corrupt.bak');
-        if (backup.existsSync()) backup.deleteSync();
-        file.renameSync(backup.path);
-      }
-    } catch (e, s) {
-      // 改名失败（文件仍被占用等）也上报；退回直接删除，仍失败让异常上抛
-      reportSwallowedError('用户数据库损坏文件备份改名失败，尝试直接删除', e, s);
+      ro = await openDatabase(dbPath, readOnly: true);
+      final rows = await ro.rawQuery('PRAGMA quick_check');
+      final result = rows.isEmpty ? null : (rows.first.values.first as String?);
+      return result == 'ok' ? _DbHealth.healthy : _DbHealth.corrupt;
+    } catch (_) {
+      return _DbHealth.unreadable;
+    } finally {
       try {
-        final file = File(p.join(dir.path, 'user_data.db'));
-        if (file.existsSync()) {
-          file.deleteSync();
-        }
-      } catch (e2, s2) {
-        reportSwallowedError('用户数据库损坏文件删除失败，尝试直接重开', e2, s2);
-      }
+        await ro?.close();
+      } catch (_) {}
     }
-    // 审计 P3-2：journal/wal/shm 边车与主库同源损坏，只删主文件可能留下
-    // 与新建库不一致的边车导致再次打开失败；清理失败不阻断重建，仅上报。
-    for (final suffix in const ['-journal', '-wal', '-shm']) {
+  }
+
+  /// 确证损坏后的备份重建：
+  ///
+  /// 1. 备份文件名带毫秒时间戳——永不覆盖历史备份（原实现会先删旧 .bak）。
+  /// 2. 改名失败（文件占用等）→ 复制到备份并校验字节数，**校验通过才**移除
+  ///    原文件；复制也失败 → 原库原样保留，不再继续重建。
+  /// 3. 边车（journal/wal/shm）只在主库成功留档后随行处理。
+  /// 4. 重建失败时原库必然存在于备份处，唯一副本永不消失。
+  Future<Database> _backupAndRebuild(String dbPath) async {
+    await _safeClose();
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final backupMain = '$dbPath.corrupt.$stamp.bak';
+    final file = File(dbPath);
+    var preserved = true;
+
+    if (file.existsSync()) {
       try {
-        final sidecar = File('$dbPath$suffix');
-        if (sidecar.existsSync()) sidecar.deleteSync();
+        file.renameSync(backupMain);
       } catch (e, s) {
-        reportSwallowedError('用户数据库边车文件清理失败（$suffix）', e, s);
+        reportSwallowedError('损坏库改名备份失败，尝试复制+校验后备', e, s);
+        try {
+          file.copySync(backupMain);
+          if (File(backupMain).lengthSync() != file.lengthSync()) {
+            throw StateError('备份副本字节数与原库不一致');
+          }
+          // 已有校验通过的副本，才允许移除原文件（等价改名，但不丢数据）。
+          file.deleteSync();
+        } catch (e2, s2) {
+          preserved = false;
+          reportSwallowedError('损坏库备份失败——原库保持原样，放弃重建以防数据丢失', e2, s2);
+        }
       }
     }
-    return openDatabase(dbPath, version: 4, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    if (!preserved) {
+      Error.throwWithStackTrace(StateError('用户数据库无法安全备份，已保留原库待重试或人工恢复'), StackTrace.current);
+    }
+
+    // 审计 P3-2：边车与主库同源，主库已留档时把边车一并移出新库路径；
+    // 改名失败才删除（孤立边车不含可独立恢复的数据，残留会让新库打开失败）。
+    for (final suffix in const ['-journal', '-wal', '-shm']) {
+      final sidecar = File('$dbPath$suffix');
+      if (!sidecar.existsSync()) continue;
+      try {
+        sidecar.renameSync('$backupMain$suffix');
+      } catch (e, s) {
+        reportSwallowedError('用户数据库边车随备份改名失败，删除（$suffix）', e, s);
+        try {
+          sidecar.deleteSync();
+        } catch (_) {
+          // 删除失败不阻断：新库打开若再失败会走重试/兜底页
+        }
+      }
+    }
+
+    try {
+      final db = await openDatabase(dbPath, version: _schemaVersion, onCreate: _onCreate, onUpgrade: _onUpgrade);
+      reportSwallowedError(
+        '用户数据库已按损坏流程重建（原库备份：${p.basename(backupMain)}，未删除任何历史备份）',
+        StateError('user db rebuilt after confirmed corruption'),
+        StackTrace.current,
+      );
+      return db;
+    } catch (e, s) {
+      // 重建失败：原库在时间戳备份处完好保留，绝不丢唯一副本。
+      reportSwallowedError('用户数据库重建失败（原库备份保留在 ${p.basename(backupMain)}）', e, s);
+      rethrow;
+    }
   }
 
   Future<void> _safeClose() async {
@@ -156,6 +275,8 @@ class UserDatabase {
     await _createNewWordsTable(db);
     await _createFavoriteTables(db);
     await _createScareCoinTables(db);
+    await _createRewardTables(db);
+    await _createWordNotesTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -170,6 +291,52 @@ class UserDatabase {
     if (oldVersion < 4) {
       await _createScareCoinTables(db);
     }
+    // P1-03：奖励事件幂等表 + 签到日期（签到/答题奖励/保护卡与币同库同事务）
+    if (oldVersion < 5) {
+      await _createRewardTables(db);
+    }
+    // P1-07：笔记迁入本库（MW-41/42/43 一次解决：AUTOINCREMENT 由 DB 生成 ID、
+    // 单条 INSERT 消灭整键读改写竞态、word 文本作稳定身份）。
+    if (oldVersion < 6) {
+      await _createWordNotesTable(db);
+    }
+  }
+
+  /// P1-07：笔记表。以 word 文本为稳定业务身份（与 favorite_words 同口径，
+  /// word_id 在词库重建后不保证稳定，只作当前词库版本的加速引用，可空）。
+  Future<void> _createWordNotesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS word_notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        word TEXT NOT NULL DEFAULT '',
+        word_id INTEGER,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_word_notes_word ON word_notes(word)');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_word_notes_word_id ON word_notes(word_id)');
+  }
+
+  /// P1-03：奖励域表。
+  ///
+  /// reward_events：业务幂等键（如 checkin:2026-10-10、answer:2026-10-10:18）。
+  /// UNIQUE(event_key) 让 N 个并发签到/奖励只有一个能插入成功——
+  /// 并发幂等从 UI 层 _busy/SP 读改写下沉为数据库约束。
+  /// checkin_dates：签到日历迁入本库，与 +10 币同事务（MW-25 跨存储半成功收口）。
+  Future<void> _createRewardTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS reward_events (
+        event_key TEXT PRIMARY KEY,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS checkin_dates (
+        date TEXT PRIMARY KEY
+      )
+    ''');
   }
 
   /// P0-4（I18）：尖叫币账本表。
@@ -256,4 +423,16 @@ class UserDatabase {
     // 而直接返回（_db==null，后续 db getter 抛 StateError）。
     _initCompleter = null;
   }
+}
+
+/// 数据库健康分类结果（[UserDatabase._classifyCorruption]）。
+enum _DbHealth {
+  /// 只读打开成功且 quick_check 通过——失败原因是环境性的，可重试。
+  healthy,
+
+  /// 连只读分类都无法完成——无法确证损坏，保守处理。
+  unreadable,
+
+  /// quick_check 明确失败——确证损坏。
+  corrupt,
 }

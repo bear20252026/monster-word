@@ -77,7 +77,7 @@ class _DictionaryByNamePageState extends State<DictionaryByNamePage> {
       return DictionaryPage(word: word);
     }
 
-    return _NotFoundScaffold(wordName: widget.wordName, failed: _failed);
+    return _NotFoundScaffold(wordName: widget.wordName, failed: _failed, onRetry: _resolve);
   }
 }
 
@@ -85,7 +85,10 @@ class _NotFoundScaffold extends StatelessWidget {
   final String wordName;
   final bool failed;
 
-  const _NotFoundScaffold({required this.wordName, required this.failed});
+  /// 失败态重试回调（搜不到词时不展示重试）。
+  final VoidCallback? onRetry;
+
+  const _NotFoundScaffold({required this.wordName, required this.failed, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -115,6 +118,19 @@ class _NotFoundScaffold extends StatelessWidget {
               SizedBox(height: 8),
               Text(failed ? '请稍后重试' : '该单词可能不在当前词库中', style: MwTypography.caption.copyWith(color: skin.text3)),
               SizedBox(height: 24),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 失败态先给重试（此前只有「返回首页」，恢复路径绕远）。
+                  if (failed)
+                    OutlinedButton.icon(
+                      onPressed: onRetry,
+                      icon: const Icon(Icons.refresh_rounded, size: 18),
+                      label: const Text('重试'),
+                    ),
+                ],
+              ),
+              if (failed) const SizedBox(height: 12),
               Builder(
                 builder: (ctx) => ElevatedButton.icon(
                   onPressed: () => NavUtils.goHome(ctx),

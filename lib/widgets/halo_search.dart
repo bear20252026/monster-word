@@ -70,11 +70,13 @@ class _HaloSearchFieldState extends State<HaloSearchField> with TickerProviderSt
 
     _focusNode.addListener(() {
       if (!mounted) return;
+      final reduceMotion = WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
       setState(() {
         _hasFocus = _focusNode.hasFocus;
         if (_hasFocus) {
           _focusController.forward();
-          _breathController.repeat(reverse: true);
+          // 无障碍出口：「减弱动态效果」下光晕只做一次聚焦过渡，不常驻呼吸。
+          if (!reduceMotion) _breathController.repeat(reverse: true);
         } else {
           _focusController.reverse();
           _breathController.stop();
@@ -115,12 +117,15 @@ class _HaloSearchFieldState extends State<HaloSearchField> with TickerProviderSt
           controller: widget.controller,
           focusNode: _focusNode,
           autofocus: widget.autoFocus,
+          // 搜索词进历史 SP 键与网络请求参数，限长防长串滥用。
+          maxLength: 64,
           style: widget.textStyle,
           onSubmitted: widget.onSubmitted,
           onChanged: widget.onChanged,
           decoration: InputDecoration(
             hintText: widget.hintText,
             hintStyle: widget.hintStyle,
+            counterText: '',
             prefixIcon: widget.prefixIcon ?? Icon(Icons.search, color: haloColor.withValues(alpha: AppAlphas.o60)),
             suffixIcon: widget.suffixIcon,
             border: InputBorder.none,
@@ -140,6 +145,26 @@ class _HaloPainter extends CustomPainter {
 
   _HaloPainter({required this.progress, required this.breath, required this.haloColor, required this.borderRadius});
 
+  // 性能审计：聚焦呼吸期间 60fps 每帧 new 3 Paint + 3 RadialGradient shader。
+  // 渐变 shader 以（颜色, 半径 2px 量化, 透明度 0.01 量化）为键缓存——
+  // 百像素级光晕上量化不可感知，与同文件 _HaloBgPainter 同一套口径。
+  static final Map<String, Shader> _shaderCache = {};
+  static final Paint _sharedPaint = Paint();
+
+  static Shader _shaderFor(Color c, double radius, double opacity) {
+    final key = '${c.toARGB32()}:${(radius / 2).round()}:${(opacity * 100).round()}';
+    return _shaderCache.putIfAbsent(key, () {
+      if (_shaderCache.length > 128) _shaderCache.clear();
+      return RadialGradient(
+        colors: [
+          c.withValues(alpha: opacity),
+          c.withValues(alpha: AppAlphas.o0),
+        ],
+        stops: const [0.0, 1.0],
+      ).createShader(Rect.fromCircle(center: Offset.zero, radius: radius));
+    });
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     if (progress <= 0) return;
@@ -155,16 +180,11 @@ class _HaloPainter extends CustomPainter {
       final radius = maxRadius * layerProgress * (0.5 + i * 0.3);
       final opacity = (1 - layerProgress) * 0.12 / (i + 1);
 
-      final paint = Paint()
-        ..shader = RadialGradient(
-          colors: [
-            haloColor.withValues(alpha: opacity),
-            haloColor.withValues(alpha: AppAlphas.o0),
-          ],
-          stops: const [0.0, 1.0],
-        ).createShader(Rect.fromCircle(center: center, radius: radius));
-
-      canvas.drawCircle(center, radius, paint);
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      _sharedPaint.shader = _shaderFor(haloColor, radius, opacity);
+      canvas.drawCircle(Offset.zero, radius, _sharedPaint);
+      canvas.restore();
     }
 
     // 边框光晕
@@ -204,7 +224,13 @@ class _HaloSearchBackgroundState extends State<HaloSearchBackground> with Single
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 4));
+    // 无障碍出口 + 常驻 ticker 治理：系统「减弱动态效果」时不 repeat——
+    // 全屏 CustomPaint 常驻 60fps 重绘对开启该设置的用户既是眩晕源也是
+    // 纯耗电（首页火苗/头像 bob 已有同款门控，这里对齐口径）。
+    if (!WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations) {
+      _controller.repeat();
+    }
   }
 
   @override
@@ -215,15 +241,18 @@ class _HaloSearchBackgroundState extends State<HaloSearchBackground> with Single
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: _HaloBgPainter(progress: _controller.value, color: widget.color ?? context.skin.colors.accent),
-          child: child,
-        );
-      },
-      child: widget.child,
+    return RepaintBoundary(
+      // 全屏 4s 常驲循环重绘单独成层：没有边界时每帧重绘扩散到与整页共享的 layer。
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return CustomPaint(
+            painter: _HaloBgPainter(progress: _controller.value, color: widget.color ?? context.skin.colors.accent),
+            child: child,
+          );
+        },
+        child: widget.child,
+      ),
     );
   }
 }

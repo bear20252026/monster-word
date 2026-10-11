@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx_settings.dart';
 import 'package:word_app/core/utils/debug_log.dart';
@@ -10,6 +12,7 @@ import 'package:word_app/app/app_error_widget.dart';
 import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
+import 'package:word_app/core/infrastructure/user_data_backup_service.dart';
 import 'package:word_app/core/infrastructure/user_database.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
@@ -44,6 +47,9 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
 
   // 初始化步骤清单 — 每步完成后回调进度。
   // 体验审计 C1：两个本地 DB 初始化无相互依赖，并行执行（离线词库无需串行等待）
+  // MW-07（第六阶段审计）：阶段分级——S1 双库并行（阻塞，首屏数据依赖）→
+  // S2 偏好（阻塞，首帧回退防护）→ S3 依赖注册（阻塞）。音频会话初始化移出
+  // 阻塞链（S4 异步尽力而为，失败仅上报）；数据备份为 S5 后台任务不阻塞。
   final steps = <Future<void> Function()>[
     () async {
       await WordBookDatabase.ensurePlatform();
@@ -55,10 +61,9 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
       await UserPreferences().init();
       await TodayProgressStore.initializePersistentState();
     },
-    () => initMobileAudioSession(),
     () => setupServiceLocator(),
   ];
-  final labels = const ['词书与用户数据库（并行）', '偏好设置', '音频会话', '依赖注册'];
+  final labels = const ['词书与用户数据库（并行）', '偏好设置', '依赖注册'];
 
   // 蓝图 W3：音效静音/怪兽语音偏好预加载（Sfx 门面读缓存）。
   // 非关键偏好：读失败降级为默认值即可，不能把整个应用送进 bootstrap 兜底页。
@@ -74,6 +79,18 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
     debugLog('[Bootstrap] 初始化进度 ${i + 1}/$total: ${labels[i]}');
     onProgress?.call(i + 1, total, labels[i]);
   }
+
+  // MW-07：非关键初始化移出阻塞链——移动端音频会话（iOS AVAudioSession 配置）
+  // 异步执行，失败降级为手机端发音不可用，绝不让它拖住首屏。
+  unawaited(
+    initMobileAudioSession().catchError((Object e, StackTrace s) {
+      reportSwallowedError('移动端音频会话初始化失败（降级继续）', e, s);
+    }),
+  );
+
+  // MW-06：启动后异步触发用户库/复习库一致性备份（24h 节流、不阻塞、
+  // 内部吞掉一切异常）。DB 已就绪，VACUUM INTO 在只读连接上执行。
+  unawaited(UserDataBackupService.runStartupBackup());
 }
 
 void _configureGlobalErrorHandling() {

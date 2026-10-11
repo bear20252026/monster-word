@@ -17,6 +17,7 @@ import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
+import 'package:word_app/tokens/treasure_palette.dart';
 import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 
@@ -145,19 +146,17 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // 蛋壳：裂纹随敲击次数加深（透明度渐显的裂缝线近似）。
-                if (!_hatched) Icon(Icons.egg_rounded, size: 120, color: colors.text2.withValues(alpha: AppAlphas.o90)),
-                // 裂纹（1-3 档，纯视觉近似：竖向细线渐显）。
+                // 手绘蛋（台灯下的暖色渐变 + 呼吸光斑 + 随敲击递进的锯齿裂纹），
+                // 替代旧 Icons.egg + 竖线裂纹（与全项目 CustomPainter 手绘质感断裂）。
                 if (!_hatched)
-                  for (var i = 0; i < _taps; i++)
-                    Transform.translate(
-                      offset: Offset(-14.0 + 14.0 * i, -4.0 + 6.0 * i),
-                      child: Container(
-                        width: 2,
-                        height: 46 + 8.0 * i,
-                        color: colors.text1.withValues(alpha: AppAlphas.o40),
-                      ),
+                  Semantics(
+                    label: '怪兽蛋，点按敲击（$_taps/3）',
+                    button: true,
+                    child: CustomPaint(
+                      size: const Size(132, 156),
+                      painter: _HatchEggPainter(taps: _taps),
                     ),
+                  ),
                 // 破壳后：怪兽破光而出。
                 if (_hatched)
                   FadeTransition(opacity: _pop, child: const MonsterIcon(size: 120, mouthOpen: 1.0, evoStage: 0)),
@@ -202,4 +201,89 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
     );
     return [field, const SizedBox(height: AppSpacing.lg), button];
   }
+}
+
+/// 手绘怪兽蛋：暖色渐变壳 + 恒定斑点 + 随敲击次数递进的锯齿裂纹。
+/// 颜色取 TreasurePalette 的暖纸/金族（与小屋同一美术语言）。
+class _HatchEggPainter extends CustomPainter {
+  _HatchEggPainter({required this.taps});
+
+  /// 已敲次数（0-2 破壳前；3 时舞台已切怪兽，本 painter 不再绘制）。
+  final int taps;
+
+  static final Paint _shellPaint = Paint()..style = PaintingStyle.fill;
+  static final Paint _shellLinePaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round
+    ..strokeJoin = StrokeJoin.round;
+  static final Paint _specklePaint = Paint()..style = PaintingStyle.fill;
+  static final Paint _glowPaint = Paint()..style = PaintingStyle.fill;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+
+    // 台灯下的暖光晕（蛋后一层柔光，说明它「在等你」）。
+    _glowPaint.color = TreasurePalette.gold.withValues(alpha: AppAlphas.o18);
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx, h * 0.52), width: w * 1.25, height: h * 1.2), _glowPaint);
+
+    // 蛋壳：上窄下宽的卵形（贝塞尔近似），暖纸→奶油渐变。
+    final shell = Path()
+      ..moveTo(cx, h * 0.04)
+      ..quadraticBezierTo(w * 0.96, h * 0.42, w * 0.80, h * 0.74)
+      ..quadraticBezierTo(w * 0.60, h * 1.02, cx, h * 1.02)
+      ..quadraticBezierTo(w * 0.40, h * 1.02, w * 0.20, h * 0.74)
+      ..quadraticBezierTo(w * 0.04, h * 0.42, cx, h * 0.04)
+      ..close();
+    _shellPaint.shader = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [AppColors.white100.withValues(alpha: 0.97), TreasurePalette.paperTop, TreasurePalette.paperBottom],
+    ).createShader(Rect.fromLTWH(0, 0, w, h));
+    canvas.drawPath(shell, _shellPaint);
+
+    // 恒定斑点（固定伪随机，同蛋同一张脸）。
+    _specklePaint.color = TreasurePalette.pigSkinBottom.withValues(alpha: AppAlphas.o35);
+    const speckles = [(-0.22, 0.30, 4.2), (0.18, 0.38, 3.4), (-0.05, 0.55, 5.0), (0.26, 0.62, 3.8), (-0.28, 0.68, 3.0)];
+    for (final (dx, dy, r) in speckles) {
+      canvas.drawCircle(Offset(cx + dx * w, h * dy), r, _specklePaint);
+    }
+
+    // 裂纹：随敲击递进的锯齿折线（第 1 敲顶部细纹；第 2 敲中部蔓延分叉）。
+    _shellLinePaint.color = TreasurePalette.ink.withValues(alpha: 0.45);
+    if (taps >= 1) {
+      _shellLinePaint.strokeWidth = 1.8;
+      final c1 = Path()
+        ..moveTo(cx - 8, h * 0.22)
+        ..lineTo(cx - 3, h * 0.28)
+        ..lineTo(cx - 10, h * 0.34)
+        ..lineTo(cx - 2, h * 0.40);
+      canvas.drawPath(c1, _shellLinePaint);
+    }
+    if (taps >= 2) {
+      _shellLinePaint.strokeWidth = 2.4;
+      final c2 = Path()
+        ..moveTo(cx + 6, h * 0.16)
+        ..lineTo(cx + 12, h * 0.24)
+        ..lineTo(cx + 4, h * 0.30)
+        ..lineTo(cx + 14, h * 0.38)
+        ..lineTo(cx + 6, h * 0.44)
+        ..lineTo(cx + 16, h * 0.52);
+      canvas.drawPath(c2, _shellLinePaint);
+      // 第三敲前的预兆：中缝开始透光（金色细缝）。
+      _shellLinePaint.color = TreasurePalette.goldDeep.withValues(alpha: AppAlphas.o80);
+      _shellLinePaint.strokeWidth = 2.0;
+      final c3 = Path()
+        ..moveTo(cx - 2, h * 0.30)
+        ..lineTo(cx + 2, h * 0.42)
+        ..lineTo(cx - 1, h * 0.54)
+        ..lineTo(cx + 3, h * 0.66);
+      canvas.drawPath(c3, _shellLinePaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _HatchEggPainter oldDelegate) => oldDelegate.taps != taps;
 }

@@ -132,7 +132,7 @@ class _StubNotesStore implements WordNotesStore {
   @override
   Future<List<WordNote>> listForWord(int wordId) async => [];
   @override
-  Future<void> add(WordNote note) async {}
+  Future<int> add(WordNote note) async => 1;
   @override
   Future<void> update(WordNote note) async {}
   @override

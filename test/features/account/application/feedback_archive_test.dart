@@ -31,9 +31,10 @@ void main() {
     test('上传抛异常不阻断提交语义，本地仍存档成功', () async {
       final archive = FeedbackArchive(prefsOverride: prefs, upload: (entry) async => throw Exception('network down'));
 
-      final history = await archive.submit(content: '断网也能提交的反馈');
+      final result = await archive.submit(content: '断网也能提交的反馈');
 
-      expect(history, hasLength(1));
+      expect(result.history, hasLength(1));
+      expect(result.localPersisted, isTrue, reason: 'MW-56: 本地通道成功即 durable');
       expect((await archive.history()).first.content, '断网也能提交的反馈');
     });
 

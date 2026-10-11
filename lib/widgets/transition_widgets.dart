@@ -15,7 +15,9 @@ class SlideUpRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
   final Duration duration;
 
-  SlideUpRoute({required this.page, this.duration = MotionDurations.slow})
+  /// MW-26：保留原始 RouteSettings——路由名/参数（如 WordDetail 的 Word 参数）
+  /// 与导航历史快照都依赖它，丢失会让详情页「未找到单词」/前进历史失忆。
+  SlideUpRoute({required this.page, this.duration = MotionDurations.slow, RouteSettings? settings})
     : super(
         transitionDuration: duration,
         pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -34,7 +36,8 @@ class FadeRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
   final Duration duration;
 
-  FadeRoute({required this.page, this.duration = MotionDurations.slow})
+  /// MW-26：见 SlideUpRoute 注释——透传原始 settings。
+  FadeRoute({required this.page, this.duration = MotionDurations.slow, RouteSettings? settings})
     : super(
         transitionDuration: duration,
         pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -49,7 +52,8 @@ class ScaleRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
   final Duration duration;
 
-  ScaleRoute({required this.page, this.duration = MotionDurations.slow})
+  /// MW-26：见 SlideUpRoute 注释——透传原始 settings。
+  ScaleRoute({required this.page, this.duration = MotionDurations.slow, super.settings})
     : super(
         transitionDuration: duration,
         pageBuilder: (context, animation, secondaryAnimation) => page,

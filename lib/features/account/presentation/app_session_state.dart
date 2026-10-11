@@ -51,14 +51,17 @@ class AppSessionState extends ChangeNotifier implements AppSessionController {
     return true;
   }
 
+  /// 登出（MW-63：原子化——durable 清理完成后才改内存态并通知）。
+  ///
+  /// 原实现 void + fire-and-forget：内存立即 false 而持久化清理在途，
+  /// 此刻新建 AppSessionState 调 restore() 可能读到旧的 session 标记
+  /// 「刚退出又被恢复」。现在：await 持久化清理完成 → 再置内存态。
+  /// 清理失败（磁盘异常）同样继续置 false——登出方向宁可少留态。
   @override
-  void logout() {
-    _isLoggedIn = false;
-    // 安全审计 S2 + 审计 P2-5/I8：登出对称清理——会话标记、用户信息缓存、
-    // 旧版明文 user_secret 残留、安全存储凭证，全部经端口一次性清理
-    // （内部失败上报不阻断登出）。
-    unawaited(prefs.clearSessionData());
+  Future<void> logout() async {
+    await prefs.clearSessionData();
     clearSessionSecrets();
+    _isLoggedIn = false;
     notifyListeners();
   }
 

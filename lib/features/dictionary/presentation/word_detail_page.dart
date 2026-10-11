@@ -49,6 +49,12 @@ class _WordDetailPageState extends State<WordDetailPage> {
   /// 发音涟漪触发器：点击发音图标时 pulse 一轮三圈扩散。
   final SoundRippleController _soundRipple = SoundRippleController();
 
+  /// 例句解析缓存（审计：parse 是双次 jsonDecode，84% 词条双层编码）。
+  /// build 里任何 setState（收藏/复习调度 notify）都会整页重建，不缓存
+  /// 则每次重建重复解析同一词条；以原始 JSON 串为键，词变了才重算。
+  String? _parsedExampleSource;
+  List<ExampleSentence> _parsedExamples = const [];
+
   /// 解析要展示的单词：路由参数优先（从词书/收藏/列表点入时显示所点的词），
   /// 否则回退到当前学习词。修复此前所有入口都显示 currentWord 的问题。
   Word? _resolveTargetWord(LearningSessionReader? session) {
@@ -86,6 +92,15 @@ class _WordDetailPageState extends State<WordDetailPage> {
     } catch (e) {
       debugLog('[WordDetail] 完整词重查失败: $e');
     }
+  }
+
+  /// 例句解析的词级缓存（见字段注释）：同一词条的整页重建不再重复 jsonDecode。
+  List<ExampleSentence> _parsedExamplesFor(String raw) {
+    if (_parsedExampleSource != raw) {
+      _parsedExampleSource = raw;
+      _parsedExamples = ExampleParser.parse(raw);
+    }
+    return _parsedExamples;
   }
 
   Future<void> _loadExtra() async {
@@ -139,7 +154,7 @@ class _WordDetailPageState extends State<WordDetailPage> {
       );
     }
 
-    final examples = ExampleParser.parse(word.example);
+    final examples = _parsedExamplesFor(word.example);
     final lines = word.hasStructuredDefinitions
         ? word.formattedDefinitions.split('\n').where((l) => l.trim().isNotEmpty).toList()
         : word.interpretLines;

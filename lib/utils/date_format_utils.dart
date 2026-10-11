@@ -8,13 +8,9 @@
 /// 句库列表用：yyyyMMdd → MM/dd（长度不足返回空串）
 String formatMonthDay(String compact) {
   if (compact.length < 8) return '';
-  try {
-    final month = compact.substring(4, 6);
-    final day = compact.substring(6, 8);
-    return '$month/$day';
-  } catch (_) {
-    return '';
-  }
+  final month = compact.substring(4, 6);
+  final day = compact.substring(6, 8);
+  return '$month/$day';
 }
 
 /// 笔记区用：yyyyMMddHHmmss → yyyy-MM-dd HH:mm（长度不足时返回原文）。
