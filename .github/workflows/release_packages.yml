@@ -122,11 +122,22 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # MW-14/72：版本提取必须在构建【之前】——APP_VERSION/APP_BUILD_NUMBER
+      # 以 dart-define 注入编译期常量（Sentry release/dist 与产物命名同源）。
+      - name: Read app version (MW-72)
+        shell: bash
+        run: |
+          full=$(sed -n 's/^version: *\([^ ]*\)/\1/p' pubspec.yaml | head -n1)
+          ver=${full%+*}
+          build=${full#*+}
+          echo "android_version=$ver" >> "$GITHUB_ENV"
+          echo "app_build=$build" >> "$GITHUB_ENV"
+
       - name: Build Release APK
+        # 安全审计 P2-6：--obfuscate 提高逆向成本（含随包常量的提取门槛）
+        # MW-14：APP_VERSION/APP_BUILD_NUMBER 注入编译期常量。
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        # 安全审计 P2-6：--obfuscate 提高逆向成本（含随包常量的提取门槛）
-        env:
           APP_VERSION: ${{ env.android_version }}
           APP_BUILD_NUMBER: ${{ env.app_build }}
         run: >-
@@ -137,24 +148,23 @@ jobs:
       - name: Build Release AAB
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          APP_VERSION: ${{ env.android_version }}
+          APP_BUILD_NUMBER: ${{ env.app_build }}
         run: >-
           flutter build appbundle --release --dart-define=SENTRY_DSN=$SENTRY_DSN
-          --dart-define=APP_VERSION=${{ env.android_version }} --dart-define=APP_BUILD_NUMBER=${{ env.app_build }}
+          --dart-define=APP_VERSION=$APP_VERSION --dart-define=APP_BUILD_NUMBER=$APP_BUILD_NUMBER
           --obfuscate --split-debug-info=build/symbols/aab
 
       - name: Rename packages to brand convention
         shell: bash
         run: |
-          full=$(sed -n 's/^version: *\([^ ]*\)/\1/p' pubspec.yaml | head -n1)
-          ver=${full%+*}
-          build=${full#*+}
+          ver="$android_version"
+          build="$app_build"
           # MW-72：产物文件名带 buildNumber——同版本号不同构建可凭文件名区分。
           # 安全审计 P2-2：debug 签名产物必须显式标记，防止被当作官方包分发
           if [ "$signed" = "debug" ]; then suffix="-debugsigned"; else suffix=""; fi
           cp build/app/outputs/flutter-apk/app-release.apk "MonsterWord_v${ver}+${build}${suffix}.apk"
           cp build/app/outputs/bundle/release/app-release.aab "MonsterWord_v${ver}+${build}${suffix}.aab"
-          echo "android_version=$ver" >> "$GITHUB_ENV"
-          echo "app_build=$build" >> "$GITHUB_ENV"
 
       - name: Archive Android obfuscation symbols (MW-75)
         shell: bash
