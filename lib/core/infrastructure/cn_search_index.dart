@@ -173,102 +173,186 @@ class CnSearchIndex {
     try {
       _ready = false;
       final fingerprint = _fingerprintOf(wordsPath);
+
+      // ── 测试注入路径：直接使用注入的连接（内存库），不做 staging swap ──
       final override = _openIndexOverride;
-      final db = override != null ? await override(indexPath) : await _openIndexDefault(indexPath);
-      _indexDb = db;
-      _indexPath = indexPath;
-      _wordsPath = wordsPath;
-
-      // 全新索引库尚无表：先幂等建表再查指纹（否则首查即抛 no such table）。
-      // WITHOUT ROWID + PK(bigram, word_id)：bigram 前缀点查即倒排取倒，
-      // (bigram, word_id) 全序覆盖免二次索引。
-      await db.execute(
-        'CREATE TABLE IF NOT EXISTS $table (bigram TEXT NOT NULL, word_id INTEGER NOT NULL, PRIMARY KEY (bigram, word_id)) WITHOUT ROWID',
-      );
-      await db.execute('CREATE TABLE IF NOT EXISTS $_metaTable (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
-
-      final meta = await db.query(_metaTable, where: 'key = ?', whereArgs: ['fingerprint']);
-      final countRows = await db.rawQuery('SELECT COUNT(*) AS c FROM $table');
-      final rowCount = countRows.isEmpty ? 0 : (countRows.first['c'] as int? ?? 0);
-      if (meta.isNotEmpty && meta.first['value'] == fingerprint && rowCount > 0) {
+      if (override != null) {
+        final db = await override(indexPath);
+        _indexDb = db;
+        _indexPath = indexPath;
+        _wordsPath = wordsPath;
+        await _ensureSchema(db);
+        if (!await _isUpToDate(db, fingerprint)) {
+          await _rebuildInto(db, wordsDb, fingerprint);
+        }
         _indexedFingerprint = fingerprint;
         _ready = true;
         return;
       }
 
-      await db.execute('DROP TABLE IF EXISTS $table');
-      await db.execute(
-        'CREATE TABLE $table (bigram TEXT NOT NULL, word_id INTEGER NOT NULL, PRIMARY KEY (bigram, word_id)) WITHOUT ROWID',
-      );
-      await db.execute('DELETE FROM $_metaTable');
-
-      // 两段式构建：先分块读词库、内存收集全部 (bigram, word_id) 对
-      //（真库 ~160 万对 / 峰值 ~100MB，一次性，构建完即释放），排序后
-      // 顺序插入——WITHOUT ROWID 主键表按 PK 序追加可避免随机插入的
-      // B-tree 页分裂（首版随机插入真库 5 分钟未完，排序后分钟内）。
-      final pairs = <(String, int)>[];
-      var lastId = 0;
-      while (true) {
-        final rows = await wordsDb.query(
-          'words',
-          columns: ['id', 'word', 'interpret'],
-          where: 'id > ?',
-          whereArgs: [lastId],
-          orderBy: 'id',
-          limit: 400,
-        );
-        if (rows.isEmpty) break;
-        for (final row in rows) {
-          final id = row['id']! as int;
-          lastId = id;
-          // 词列 + 释义列合并建对（同一词行内去重，PK 无冲突）
-          final bigramSet = <String>{
-            ...bigramsOf(row['word'] as String? ?? ''),
-            ...bigramsOf(row['interpret'] as String? ?? ''),
-          };
-          for (final b in bigramSet) {
-            pairs.add((b, id));
-          }
-        }
-        // 分块让出主 isolate：读取阶段 UI 与其他查询可用
-        await Future<void>.delayed(Duration.zero);
+      // ── 生产路径 ────────────────────────────────────────────────────────
+      // MW-32：① bigram 生成与全量排序（~160 万对）整体交给后台 isolate，
+      // 主 isolate 只保留「原始词行缓冲（3.2 万行，几 MB）+ 一个插入批次」；
+      // ② 新索引先写 staging 文件，构建成功才原子替换正式库——构建中途被
+      // 杀/崩溃时，上一轮已就绪的索引仍完好，不会留下半成品。
+      final existing = await _openIndexDefault(indexPath);
+      await _ensureSchema(existing);
+      if (await _isUpToDate(existing, fingerprint)) {
+        _indexDb = existing;
+        _indexPath = indexPath;
+        _wordsPath = wordsPath;
+        _indexedFingerprint = fingerprint;
+        _ready = true;
+        return;
       }
-      // record 未实现 Comparable：显式按 (bigram, word_id) 字典序。
-      // 性能审计 P2：~160 万对的 sort 是单次同步调用（无法像读取那样分块
-      // 让出），主 isolate 会被阻塞数秒——挪到后台 isolate（列表整体转移，
-      // 不复制）。插入阶段仍逐批让出，UI 保持可用。
-      int comparePairs((String, int) a, (String, int) b) {
-        final c = a.$1.compareTo(b.$1);
-        return c != 0 ? c : a.$2.compareTo(b.$2);
+      try {
+        await existing.close();
+      } catch (_) {
+        // 关闭失败可忽略：句柄即将被丢弃
       }
 
-      final sorted = await Isolate.run(() {
-        pairs.sort(comparePairs);
-        return pairs;
-      });
-      pairs
-        ..clear()
-        ..addAll(sorted);
-
-      var pending = 0;
-      var batch = db.batch();
-      for (final (bigram, wordId) in pairs) {
-        batch.insert(table, {'bigram': bigram, 'word_id': wordId});
-        pending++;
-        if (pending % 8000 == 0) {
-          await batch.commit(noResult: true);
-          batch = db.batch();
-          await Future<void>.delayed(Duration.zero);
-        }
+      final stagingPath = '$indexPath.building';
+      _deleteQuietly(stagingPath);
+      final staging = await _openIndexDefault(stagingPath);
+      try {
+        await _ensureSchema(staging);
+        await _rebuildInto(staging, wordsDb, fingerprint);
+      } catch (_) {
+        try {
+          await staging.close();
+        } catch (_) {}
+        _deleteQuietly(stagingPath);
+        rethrow;
       }
-      if (pending % 8000 != 0) await batch.commit(noResult: true);
-      await db.insert(_metaTable, {'key': 'fingerprint', 'value': fingerprint});
+      await staging.close();
+
+      try {
+        _deleteQuietly(indexPath);
+        await File(stagingPath).rename(indexPath);
+      } catch (e, s) {
+        // 替换失败（Windows 上旧库句柄未及时释放等）：回退到原地重建。
+        // staging 是健壮性优化，不是可用性前提——绝不能因为它建不出索引。
+        reportSwallowedError('索引 staging 替换失败，回退原地重建', e, s);
+        _deleteQuietly(stagingPath);
+        final fallback = await _openIndexDefault(indexPath);
+        await _ensureSchema(fallback);
+        await _rebuildInto(fallback, wordsDb, fingerprint);
+        _indexDb = fallback;
+        _indexPath = indexPath;
+        _wordsPath = wordsPath;
+        _indexedFingerprint = fingerprint;
+        _ready = true;
+        return;
+      }
+
+      final db = await _openIndexDefault(indexPath);
+      _indexDb = db;
+      _indexPath = indexPath;
+      _wordsPath = wordsPath;
       _indexedFingerprint = fingerprint;
       _ready = true;
     } catch (e, s) {
       // C 级豁免：构建失败只影响加速，搜索回退全表路径，须可观测
       reportSwallowedError('中文搜索索引构建失败，搜索回退全表扫描', e, s);
       _ready = false;
+    }
+  }
+
+  Future<void> _ensureSchema(Database db) async {
+    // WITHOUT ROWID + PK(bigram, word_id)：bigram 前缀点查即倒排取倒，
+    // (bigram, word_id) 全序覆盖免二次索引。
+    await db.execute(
+      'CREATE TABLE IF NOT EXISTS $table (bigram TEXT NOT NULL, word_id INTEGER NOT NULL, PRIMARY KEY (bigram, word_id)) WITHOUT ROWID',
+    );
+    await db.execute('CREATE TABLE IF NOT EXISTS $_metaTable (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+  }
+
+  /// 索引是否已就绪且与当前词库指纹一致（不一致即需重建）。
+  Future<bool> _isUpToDate(Database db, String fingerprint) async {
+    final meta = await db.query(_metaTable, where: 'key = ?', whereArgs: ['fingerprint']);
+    if (meta.isEmpty || meta.first['value'] != fingerprint) return false;
+    final countRows = await db.rawQuery('SELECT COUNT(*) AS c FROM $table');
+    final rowCount = countRows.isEmpty ? 0 : (countRows.first['c'] as int? ?? 0);
+    return rowCount > 0;
+  }
+
+  /// 重建索引内容：分块读词库 → 后台 isolate 生成 bigram 并排序 → 分批插入。
+  ///
+  /// 内存口径（MW-32）：主 isolate 全程只持有 [rawRows]（词库原始行，几 MB）
+  /// 与「当前插入批次」；isolate 独立堆上才存在全量 pairs（~160 万条）与排序
+  /// 中间态，isolate 结束即整体释放。此前主 isolate 需要同时持有 pairs、
+  /// Isolate.run 的传输副本与回填列表三份，峰值约 3 倍。
+  Future<void> _rebuildInto(Database db, Database wordsDb, String fingerprint) async {
+    await db.execute('DROP TABLE IF EXISTS $table');
+    await db.execute(
+      'CREATE TABLE $table (bigram TEXT NOT NULL, word_id INTEGER NOT NULL, PRIMARY KEY (bigram, word_id)) WITHOUT ROWID',
+    );
+    await db.execute('DELETE FROM $_metaTable');
+
+    // 读取阶段：分块读词库，每块让出主 isolate（UI 与其他查询可用）
+    final rawRows = <List<Object?>>[];
+    var lastId = 0;
+    while (true) {
+      final rows = await wordsDb.query(
+        'words',
+        columns: ['id', 'word', 'interpret'],
+        where: 'id > ?',
+        whereArgs: [lastId],
+        orderBy: 'id',
+        limit: 400,
+      );
+      if (rows.isEmpty) break;
+      for (final row in rows) {
+        final id = row['id']! as int;
+        lastId = id;
+        rawRows.add([id, row['word'] as String? ?? '', row['interpret'] as String? ?? '']);
+      }
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    // CPU 密集段整体进后台 isolate：生成 (bigram, word_id) 对 + 全量排序。
+    // 排序必须在插入前完成——WITHOUT ROWID 主键表按 PK 序追加可避免随机插入的
+    // B-tree 页分裂（首版随机插入真库 5 分钟未完，排序后分钟内）。
+    final sorted = await Isolate.run(() {
+      final pairs = <(String, int)>[];
+      for (final row in rawRows) {
+        final id = row[0]! as int;
+        // 词列 + 释义列合并建对（同一词行内去重，PK 无冲突）
+        final bigramSet = <String>{...bigramsOf(row[1]! as String), ...bigramsOf(row[2]! as String)};
+        for (final b in bigramSet) {
+          pairs.add((b, id));
+        }
+      }
+      // record 未实现 Comparable：显式按 (bigram, word_id) 字典序
+      pairs.sort((a, b) {
+        final c = a.$1.compareTo(b.$1);
+        return c != 0 ? c : a.$2.compareTo(b.$2);
+      });
+      return pairs;
+    });
+
+    // 写入阶段：逐批提交并让出主 isolate
+    var pending = 0;
+    var batch = db.batch();
+    for (final (bigram, wordId) in sorted) {
+      batch.insert(table, {'bigram': bigram, 'word_id': wordId});
+      pending++;
+      if (pending % 8000 == 0) {
+        await batch.commit(noResult: true);
+        batch = db.batch();
+        await Future<void>.delayed(Duration.zero);
+      }
+    }
+    if (pending % 8000 != 0) await batch.commit(noResult: true);
+    await db.insert(_metaTable, {'key': 'fingerprint', 'value': fingerprint});
+  }
+
+  void _deleteQuietly(String path) {
+    try {
+      final file = File(path);
+      if (file.existsSync()) file.deleteSync();
+    } catch (_) {
+      // 删除失败可忽略：rename 会覆盖，或下次启动重新清理
     }
   }
 

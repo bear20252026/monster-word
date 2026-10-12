@@ -58,12 +58,10 @@ class SentenceAudioPlayer {
     // 暂停之前的播放
     unawaited(_audioPlayer.pause());
 
-    // 检查本地缓存
+    // MW-52：缓存自愈——坏缓存（半写文件 / CDN HTML 错误页）会被删除并走下载路径
     final localPath = await _AudioCacheDir.sentenceAudioPath(fullUrl);
-    final file = File(localPath);
-
-    if (file.existsSync()) {
-      _playFile(file, speed);
+    if (await _AudioCacheDir.isUsable(localPath)) {
+      _playFile(File(localPath), speed);
     } else {
       // 下载后播放
       await _downloadAndPlay(fullUrl, localPath, speed);
@@ -89,6 +87,8 @@ class SentenceAudioPlayer {
     if (result.success && result.file != null) {
       playStateListener?.onLoadSuc(fullUrl);
       _playFile(result.file!, speed);
+      // MW-52：缓存回收（超上限时按最旧淘汰），不阻塞播放
+      unawaited(_AudioCacheDir.enforceLimit());
     } else {
       playStateListener?.onLoadError(fullUrl);
       // 注意：此层拿不到句子文本（URL 文件名可能是哈希），不做 TTS 兜底，

@@ -258,6 +258,52 @@ jobs:
             }
           }
 
+      # MW-16/73：Windows Authenticode 代码签名（预留步骤位）。
+      #
+      # 启用条件：购买代码签名证书后，把 PFX 的 base64 与密码写入仓库 secrets
+      # WINDOWS_CERT_PFX_BASE64 / WINDOWS_CERT_PASSWORD，本步骤自动生效。
+      # 未配置时跳过并告警——产物为未签名安装包，Windows SmartScreen 会提示
+      # 「未知发布者」（属已知上线前遗留项，见 docs/HANDOVER.md 待办）。
+      - name: Check Windows signing secrets (MW-16/73)
+        id: win_signing
+        shell: pwsh
+        env:
+          CERT_PFX_BASE64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CERT_PFX_BASE64)) {
+            echo "available=false" >> $env:GITHUB_OUTPUT
+            echo "::warning::未配置 WINDOWS_CERT_PFX_BASE64，跳过 Authenticode 签名（产物为未签名安装包）"
+          } else {
+            echo "available=true" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Sign installer (Authenticode, MW-16/73)
+        if: steps.win_signing.outputs.available == 'true'
+        shell: pwsh
+        env:
+          CERT_PFX_BASE64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'codesign.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERT_PFX_BASE64))
+
+          $signtool = (Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe' -ErrorAction SilentlyContinue |
+            Sort-Object FullName -Descending | Select-Object -First 1).FullName
+          if (-not $signtool) { throw 'signtool.exe not found in Windows SDK' }
+
+          $exes = Get-ChildItem 'build/installer' -Filter 'MonsterWord_Setup_v*.exe'
+          if (-not $exes) { throw 'installer exe not found for signing' }
+
+          foreach ($exe in $exes) {
+            & $signtool sign /f $pfx /p $env:CERT_PASSWORD /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $exe.FullName
+            if ($LASTEXITCODE -ne 0) { throw "signtool failed for $($exe.Name)" }
+            $sig = Get-AuthenticodeSignature -FilePath $exe.FullName
+            Write-Host "$($exe.Name) signed by: $($sig.SignerCertificate.Subject)"
+            if ($sig.Status -ne 'Valid') { throw "installer signature invalid: $($sig.Status)" }
+          }
+
+          Remove-Item $pfx -Force
+
       - name: Archive obfuscation symbols (MW-75)
         shell: pwsh
         run: |

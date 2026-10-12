@@ -76,10 +76,10 @@ class PhoneticAudioPlayer {
     // 检查本地缓存
     final localPath = isUK ? await _AudioCacheDir.wordUkSpeechPath(word) : await _AudioCacheDir.wordUsSpeechPath(word);
 
-    final file = File(localPath);
-    if (file.existsSync()) {
+    // MW-52：缓存自愈——坏缓存（半写文件 / CDN HTML 错误页）会被删除并走下载路径
+    if (await _AudioCacheDir.isUsable(localPath)) {
       // 直接播放本地文件
-      _playFile(file);
+      _playFile(File(localPath));
     } else {
       // 下载后播放
       await _downloadAndPlay(word, localPath);
@@ -106,6 +106,8 @@ class PhoneticAudioPlayer {
     if (result.success && result.file != null) {
       playStateListener?.onLoadSuc(primaryUrl);
       _playFile(result.file!);
+      // MW-52：缓存回收（超上限时按最旧淘汰），不阻塞播放
+      unawaited(_AudioCacheDir.enforceLimit());
     } else {
       playStateListener?.onLoadError(primaryUrl);
       // 兜底：网络音频不可用时改用系统 TTS 念出单词（离线可用，不再静默）

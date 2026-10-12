@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:word_app/core/infrastructure/degraded_journal.dart';
 import 'package:word_app/core/infrastructure/fav_sentence_dao.dart';
 import 'package:word_app/models/sentence_models.dart';
 
@@ -213,7 +214,7 @@ void main() {
       expect(prefs.getString('fav_sentence_list'), corrupted, reason: 'SP 原档保留供人工恢复');
     });
 
-    test('持久化失败回滚：add 失败索引回退、remove 失败索引保持', () async {
+    test('持久化失败：日志保底成功则索引不回滚（P1-01 新契约）', () async {
       final dao = FavSentenceDao(openDatabase: () async => db);
       await dao.loadAll();
       await dao.addFavSentence(
@@ -234,10 +235,90 @@ void main() {
         sentenceData: SentenceData(sid: '50005', e: 'Fail.', c: ''),
       );
       expect(added, isTrue, reason: 'add 返回值语义保持（persist 失败不改变返回契约）');
-      expect(dao.isFavSentence(7, '50005'), isFalse, reason: 'add 持久化失败回滚索引');
+      // P1-01 契约变更：写失败 → 降级日志（含完整载荷）保底 → 索引不回滚。
+      expect(dao.isFavSentence(7, '50005'), isTrue, reason: '日志保底成功 → 保留索引态（回放补库）');
 
       expect(await dao.removeFavSentence(7, '40004'), isTrue);
-      expect(dao.isFavSentence(7, '40004'), isTrue, reason: 'remove 持久化失败回滚索引');
+      expect(dao.isFavSentence(7, '40004'), isFalse, reason: '取消收藏同样由日志保底');
+    });
+  });
+
+  group('P1-01 降级日志：例句收藏意图不丢（2026-10-11 批次）', () {
+    const journal = DegradedJournal(key: FavSentenceDao.degradedJournalKey, domain: '测试');
+
+    Future<void> createTable() async {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS favorite_sentences (
+          word_id INTEGER NOT NULL,
+          sentence_id TEXT NOT NULL,
+          word TEXT NOT NULL DEFAULT '',
+          update_time TEXT NOT NULL,
+          data_json TEXT NOT NULL,
+          PRIMARY KEY(word_id, sentence_id)
+        )
+      ''');
+    }
+
+    test('add 写失败落日志（载荷无损），新实例加载时回放', () async {
+      final dao = FavSentenceDao(openDatabase: () async => db);
+      await dao.loadAll();
+
+      await db.close();
+      await dao.addFavSentence(
+        word: 'apple',
+        wordId: 7,
+        sentenceId: '60006',
+        sentenceData: SentenceData(sid: '60006', e: 'Replay me.', c: '回放我'),
+      );
+      expect(await journal.pendingCount(), 1, reason: '写失败必须留下可回放的意图记录');
+
+      db = await openDatabase(inMemoryDatabasePath);
+      await createTable();
+
+      final dao2 = FavSentenceDao(openDatabase: () async => db);
+      await dao2.loadAll();
+
+      expect(dao2.isFavSentence(7, '60006'), isTrue, reason: '回放后进入事实来源');
+      expect(await journal.pendingCount(), 0, reason: '回放成功后日志清空');
+
+      final rows = await db.query('favorite_sentences', where: 'sentence_id = ?', whereArgs: ['60006']);
+      expect(rows, hasLength(1));
+      final payload = FavSentenceData.fromJson(jsonDecode(rows.first['data_json']! as String) as Map<String, dynamic>);
+      expect(payload.sentenceData?.e, 'Replay me.', reason: '回放载荷无损（句子原文可还原）');
+    });
+
+    test('remove 写失败落日志，回放后不复活', () async {
+      final dao = FavSentenceDao(openDatabase: () async => db);
+      await dao.loadAll();
+      await dao.addFavSentence(
+        word: 'apple',
+        wordId: 7,
+        sentenceId: '40004',
+        sentenceData: SentenceData(sid: '40004', e: 'Keep me.', c: '留下'),
+      );
+
+      await db.close();
+      await dao.removeFavSentence(7, '40004');
+      expect(await journal.pendingCount(), 1);
+
+      // 新库里预置该行（模拟故障前的持久化态），回放 remove 必须删掉它
+      db = await openDatabase(inMemoryDatabasePath);
+      await createTable();
+      await db.insert('favorite_sentences', {
+        'word_id': 7,
+        'sentence_id': '40004',
+        'word': 'apple',
+        'update_time': '20260101000000',
+        'data_json': jsonEncode(
+          FavSentenceData(word: 'apple', wordId: 7, sentenceId: '40004', updateTime: '20260101000000').toJson(),
+        ),
+      });
+
+      final dao2 = FavSentenceDao(openDatabase: () async => db);
+      await dao2.loadAll();
+
+      expect(dao2.isFavSentence(7, '40004'), isFalse, reason: '回放 remove 生效，取消收藏不复活');
+      expect(await journal.pendingCount(), 0);
     });
   });
 }

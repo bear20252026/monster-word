@@ -15,6 +15,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:word_app/core/infrastructure/degraded_journal.dart';
 import 'package:word_app/core/infrastructure/user_database.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/models/sentence_models.dart';
@@ -29,6 +30,11 @@ class FavSentenceDao {
 
   static const String _spKey = 'fav_sentence_list';
   static const String _migratedMarker = 'fav_sentence_sqlite_migrated_v1';
+
+  /// P1-01 余项：SQLite 写失败时的例句收藏意图降级日志。
+  /// 幂等键为 (word_id, sentence_id) 复合主键，回放用 REPLACE / DELETE。
+  static const String degradedJournalKey = 'favorite_sentences_degraded_journal_v1';
+  final DegradedJournal _journal = const DegradedJournal(key: degradedJournalKey, domain: '例句收藏');
 
   /// 测试注入口：提供即强制 SQLite 模式（绕过 FLUTTER_TEST 探测）。
   final Future<Database> Function()? _openOverride;
@@ -88,10 +94,7 @@ class FavSentenceDao {
       try {
         await UserDatabase.instance.initialize();
         final db = UserDatabase.instance.db;
-        await _migrateFromSpIfNeeded(db);
-        await _buildIndex(db);
-        _db = db;
-        _useSqlite = true;
+        await _activateSqlite(db);
         return;
       } catch (e, s) {
         reportSwallowedError('FavSentenceDao sqlite init', e, s);
@@ -99,10 +102,7 @@ class FavSentenceDao {
     } else if (override != null) {
       try {
         final db = await override();
-        await _migrateFromSpIfNeeded(db);
-        await _buildIndex(db);
-        _db = db;
-        _useSqlite = true;
+        await _activateSqlite(db);
         return;
       } catch (e, s) {
         reportSwallowedError('FavSentenceDao sqlite init', e, s);
@@ -111,6 +111,47 @@ class FavSentenceDao {
     // SP 回退：测试环境（未注入）/开库失败，保持迁移前的旧行为
     _cache = await _loadSpCache();
     _useSqlite = false;
+  }
+
+  /// SQLite 就绪激活：迁移 → 回放降级日志 → 建同步判重索引。
+  ///
+  /// P1-01 余项：回放须在建索引之前，否则降级期间（SQLite 写失败）收藏的
+  /// 例句在本次启动的同步判重索引里缺席（`isFavorite` 假阴性）。
+  Future<void> _activateSqlite(Database db) async {
+    await _migrateFromSpIfNeeded(db);
+    _db = db;
+    _useSqlite = true;
+    await _replayDegradedJournal();
+    await _buildIndex(db);
+  }
+
+  /// 回放降级日志：add → INSERT OR REPLACE（(word_id, sentence_id) 主键幂等）；
+  /// remove → DELETE（重复删除无副作用）。
+  Future<void> _replayDegradedJournal() async {
+    final db = _db;
+    if (db == null) return;
+    await _journal.replay((entry) async {
+      final wordId = (entry['wordId'] as num?)?.toInt();
+      final sentenceId = entry['sentenceId'] as String?;
+      if (wordId == null || sentenceId == null || sentenceId.isEmpty) return;
+      if (entry['op'] == 'remove') {
+        await db.delete(
+          'favorite_sentences',
+          where: 'word_id = ? AND sentence_id = ?',
+          whereArgs: [wordId, sentenceId],
+        );
+        return;
+      }
+      final dataJson = entry['dataJson'] as String?;
+      if (dataJson == null || dataJson.isEmpty) return;
+      await db.insert('favorite_sentences', {
+        'word_id': wordId,
+        'sentence_id': sentenceId,
+        'word': entry['word'] as String? ?? '',
+        'update_time': entry['updateTime'] as String? ?? '',
+        'data_json': dataJson,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
   }
 
   Future<void> _buildIndex(Database db) async {
@@ -252,12 +293,23 @@ class FavSentenceDao {
           }, conflictAlgorithm: ConflictAlgorithm.replace);
         } catch (e, s) {
           reportSwallowedError('FavSentenceDao add persist', e, s);
-          // 数据层审计 P2-4：持久化失败回滚索引，避免内存/磁盘分叉
-          // （否则收藏成功重启后消失）。
-          final ids = _indexByWordId[wordId];
-          ids?.remove(sentenceId);
-          if (ids != null && ids.isEmpty) _indexByWordId.remove(wordId);
-          _indexCount--;
+          // P1-01 余项：先落降级日志（含完整载荷，重启后可无损重建该行）；
+          // 日志成功则索引不回滚——本次收藏不丢。只有连日志都写不进才回滚，
+          // 保留 P2-4 原意：绝不出现「界面说成功、重启后消失」的分叉。
+          final journaled = await _journal.append({
+            'op': 'add',
+            'wordId': wordId,
+            'sentenceId': sentenceId,
+            'word': word,
+            'updateTime': updateTime,
+            'dataJson': jsonEncode(favData.toJson()),
+          });
+          if (!journaled) {
+            final ids = _indexByWordId[wordId];
+            ids?.remove(sentenceId);
+            if (ids != null && ids.isEmpty) _indexByWordId.remove(wordId);
+            _indexCount--;
+          }
         }
         return true;
       });
@@ -287,9 +339,12 @@ class FavSentenceDao {
           );
         } catch (e, s) {
           reportSwallowedError('FavSentenceDao remove persist', e, s);
-          // 同 P2-4：持久化失败回滚索引（否则取消收藏重启后复活）。
-          _indexByWordId.putIfAbsent(wordId, () => <String>{}).add(sentenceId);
-          _indexCount++;
+          // 同 add：日志保底成功则索引不回滚（否则取消收藏重启后复活）。
+          final journaled = await _journal.append({'op': 'remove', 'wordId': wordId, 'sentenceId': sentenceId});
+          if (!journaled) {
+            _indexByWordId.putIfAbsent(wordId, () => <String>{}).add(sentenceId);
+            _indexCount++;
+          }
         }
         return true;
       });
