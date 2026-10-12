@@ -34,6 +34,17 @@ class AudioDownloader {
   /// 非 null 时 [_tryDownload] 直走替身（整包 Response 语义）；生产恒为 null。
   static Future<http.Response> Function(Uri url)? fetchOverride;
 
+  /// 测试注入缝：替代真实改名，用于覆盖「替换失败回滚」分支
+  /// （[_promote] 的第一次/第二次 rename 失败）。生产恒为 null。
+  @visibleForTesting
+  static Future<void> Function(File from, String to)? renameOverrideForTest;
+
+  static Future<void> _rename(File from, String to) {
+    final override = renameOverrideForTest;
+    if (override != null) return override(from, to);
+    return from.rename(to);
+  }
+
   /// 下载文件到本地路径，支持主/备 URL 切换
   static Future<DownloadResult> downloadFile(String localPath, String primaryUrl, {String? fallbackUrl}) async {
     // 确保目录存在
@@ -150,15 +161,43 @@ class AudioDownloader {
   ///
   /// 数据完整性：先写 tmp 再原子改名。直写最终路径时下载中断会留下半写 mp3
   /// 永久占位，此后该词每次都命中坏缓存并静默播不出。
+  ///
+  /// 替换已存在文件时**先把原件移走、绝不先删**（DN-D01 同类口径）：先删原件
+  /// 再改名，一旦第二次改名也失败，原件与新文件就同时不存在了。这里改为
+  /// 原件 → `.old`，改名成功才删 `.old`；失败则把 `.old` 放回原位。
   static Future<File> _promote(File tmp, String localPath) async {
     final file = File(localPath);
     try {
-      await tmp.rename(file.path);
+      await _rename(tmp, file.path);
+      return file;
     } catch (_) {
-      // C 级豁免：个别平台 rename 覆盖已存在文件受限，回退删除后重命名
-      if (file.existsSync()) file.deleteSync();
-      await tmp.rename(file.path);
+      // 个别平台 rename 覆盖已存在文件受限，回退「移走原件后重命名」。
     }
+    File? parked;
+    if (file.existsSync()) {
+      final candidate = File('${file.path}.old');
+      try {
+        _deleteQuietly(candidate);
+        await _rename(file, candidate.path);
+        parked = candidate;
+      } catch (_) {
+        parked = null; // 移走失败：原件仍在原位，直接重试改名
+      }
+    }
+    try {
+      await _rename(tmp, file.path);
+    } catch (e, s) {
+      if (parked != null) {
+        try {
+          await _rename(parked, file.path);
+        } catch (_) {
+          // 放回也失败：.old 仍留有完整原件，下次下载或 LRU 会处理
+        }
+      }
+      reportSwallowedError('音频缓存替换失败（原件已回滚保留）', e, s);
+      rethrow;
+    }
+    if (parked != null) _deleteQuietly(parked);
     return file;
   }
 

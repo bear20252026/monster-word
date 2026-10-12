@@ -30,6 +30,7 @@ void main() {
 
   tearDown(() {
     AudioDownloader.fetchOverride = null;
+    AudioDownloader.renameOverrideForTest = null;
     tmpDir.deleteSync(recursive: true);
   });
 
@@ -121,5 +122,66 @@ void main() {
     expect(File(localPath).existsSync(), isFalse, reason: '判为损坏必须丢弃，不留半写文件');
     expect(File('$localPath.tmp').existsSync(), isFalse);
     expect(requested.length, 2, reason: '415 亦触发备源重试');
+  });
+
+  // DN-D01 同类口径：替换已存在缓存时，**绝不先删原件再改名**——先删后改名时
+  // 一旦第二次改名也失败，原件与新文件会同时不存在（音频表现为该词彻底播不出，
+  // 且离线时无法恢复）。以下三条锁定「失败必留一份完整旧数据」。
+  group('替换已存在缓存的失败保护（DN-D01 同类）', () {
+    const oldBytes = [0x49, 0x44, 0x33, 9, 9, 9];
+
+    test('全部改名失败 → 原件一字未丢', () async {
+      await File(localPath).writeAsBytes(oldBytes);
+      AudioDownloader.fetchOverride = (url) async {
+        requested.add(url);
+        return ok(mp3([1, 2, 3, 4]));
+      };
+      AudioDownloader.renameOverrideForTest = (from, to) async {
+        throw const FileSystemException('injected rename failure');
+      };
+
+      final result = await AudioDownloader.downloadFile(localPath, 'https://primary.example/a.mp3');
+
+      expect(result.success, isFalse);
+      expect(File(localPath).readAsBytesSync(), oldBytes, reason: '替换失败绝不能连原件一起丢（先删后改名即此缺陷）');
+    });
+
+    test('移走原件后第二次改名失败 → 原件回滚到位、无 .old 残留', () async {
+      await File(localPath).writeAsBytes(oldBytes);
+      AudioDownloader.fetchOverride = (url) async {
+        requested.add(url);
+        return ok(mp3([1, 2, 3, 4]));
+      };
+      // 调用序：① tmp→目标(失败) ② 原件→.old(成功) ③ tmp→目标(失败) ④ .old→目标(放回成功)
+      var call = 0;
+      AudioDownloader.renameOverrideForTest = (from, to) async {
+        call++;
+        if (call == 1 || call == 3) {
+          throw const FileSystemException('injected rename failure');
+        }
+        await from.rename(to);
+      };
+
+      final result = await AudioDownloader.downloadFile(localPath, 'https://primary.example/a.mp3');
+
+      expect(result.success, isFalse);
+      expect(File(localPath).readAsBytesSync(), oldBytes, reason: '原件必须被放回原位');
+      expect(File('$localPath.old').existsSync(), isFalse, reason: '.old 已放回，不应残留');
+    });
+
+    test('替换成功 → 新内容生效且不留 .old 残留', () async {
+      await File(localPath).writeAsBytes(oldBytes);
+      AudioDownloader.fetchOverride = (url) async {
+        requested.add(url);
+        return ok(mp3([1, 2, 3, 4]));
+      };
+
+      final result = await AudioDownloader.downloadFile(localPath, 'https://primary.example/a.mp3');
+
+      expect(result.success, isTrue);
+      expect(File(localPath).readAsBytesSync(), [0x49, 0x44, 0x33, 1, 2, 3, 4]);
+      expect(File('$localPath.old').existsSync(), isFalse);
+      expect(File('$localPath.tmp').existsSync(), isFalse);
+    });
   });
 }
