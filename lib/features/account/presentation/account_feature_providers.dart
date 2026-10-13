@@ -6,14 +6,12 @@ import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/features/account/data/file_avatar_storage.dart';
 import 'package:word_app/features/account/data/prefs_legal_consent_store.dart';
 import 'package:word_app/features/account/data/secure_password_auth_store.dart';
-import 'package:word_app/features/account/data/spug_sms_code_service.dart';
 import 'package:word_app/features/account/data/user_service.dart';
 import 'package:word_app/features/account/application/account_profile_store.dart';
 import 'package:word_app/features/account/application/avatar_storage.dart';
 import 'package:word_app/features/account/application/legal_consent_store.dart';
 import 'package:word_app/features/account/application/message_store.dart';
 import 'package:word_app/features/account/application/password_auth_store.dart';
-import 'package:word_app/features/account/application/sms_code_service.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/features/account/data/account_profile_repository.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
@@ -30,7 +28,6 @@ Widget buildAccountFeatureScope({required Widget child}) {
       ProxyProvider<AppSessionState, AppSessionController>(update: (_, session, _) => session),
       Provider<AccountProfileStore>(create: (_) => AccountProfileRepository(userService: sl<UserService>())),
       Provider<AvatarStorage>(create: (_) => FileAvatarStorage()),
-      Provider<SmsCodeService>(create: (_) => SpugSmsCodeService()),
       Provider<PasswordAuthStore>(create: (_) => SecurePasswordAuthStore()),
       // MW-78：协议同意留痕（policyVersion + acceptedAt），登录成功时写入。
       Provider<LegalConsentStore>(create: (_) => PrefsLegalConsentStore()),

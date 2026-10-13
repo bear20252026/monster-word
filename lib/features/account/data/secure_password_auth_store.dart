@@ -9,7 +9,8 @@
 // - 哈希存储带算法+迭代数前缀（`pbkdf2-sha256$<n>$<hex>`），未来调参
 //   无需再迁移
 // - 用户名做 key 时统一小写 trim，避免「Abc/abc」视为两个账号
-// - 手机号格式的用户名注册时自动绑定，供忘记密码走短信找回
+// - 2026-10-13：移除手机号绑定与短信找回（Spug 官方要求验证码由服务端发起，
+//   客户端不再持有调用凭证，见 R2-01）
 
 import 'dart:convert';
 import 'dart:math';
@@ -26,8 +27,6 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
     : _storage = storage ?? const FlutterSecureStorage(aOptions: AndroidOptions(encryptedSharedPreferences: true));
 
   final FlutterSecureStorage _storage;
-
-  static const _phonePattern = r'^1[3-9]\d{9}$';
 
   /// PBKDF2 迭代数。基准（本机 Windows/JIT）：6 万次 ≈190ms，AOT 更快，
   /// 低端 Android 约 0.5-1s（仅登录/设密码时执行，可接受）。
@@ -69,8 +68,6 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
   /// 旧版单轮哈希（仅用于存量验证与透明升级，新写入不再使用）
   static String legacyHashPassword(String salt, String password) =>
       sha256.convert(utf8.encode('mw:$salt:$password')).toString();
-
-  static bool isPhoneFormat(String value) => RegExp(_phonePattern).hasMatch(value.trim());
 
   /// 常量时间字节比较（防时序侧信道；长度不齐直接不等）
   static bool _constantTimeEquals(String a, String b) {
@@ -128,14 +125,7 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
   }
 
   @override
-  Future<String?> boundPhone(String username) async {
-    final phone = await _storage.read(key: '${_prefix(username)}.phone');
-    if (phone == null || phone.isEmpty) return null;
-    return phone;
-  }
-
-  @override
-  Future<void> setPassword(String username, String password, {String? phone}) async {
+  Future<void> setPassword(String username, String password) async {
     final prefix = _prefix(username);
     // 每次设置都换新盐（重置后旧哈希彻底失效）。
     // MW-65：盐+哈希合并为单 credential Blob 一次写入——「新盐×旧哈希」的
@@ -154,14 +144,8 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
     } catch (e, s) {
       reportSwallowedError('旧密码散键清理失败（残留无害）', e, s);
     }
-    // 手机号格式的用户名自动绑定（单一事实来源：绑定逻辑只在此处）
-    var phoneToBind = phone?.trim();
-    if ((phoneToBind == null || phoneToBind.isEmpty) && isPhoneFormat(username)) {
-      phoneToBind = username.trim();
-    }
-    if (phoneToBind != null && phoneToBind.isNotEmpty) {
-      await _storage.write(key: '$prefix.phone', value: phoneToBind);
-    }
+    // 2026-10-13：手机号绑定随短信找回一起移除（绑定只服务短信找回，
+    // 移除后无消费方；见 R2-01）。
   }
 
   /// 读取凭据（MW-65）：优先单 Blob；无 Blob 时回退旧散键组合（存量兼容）。

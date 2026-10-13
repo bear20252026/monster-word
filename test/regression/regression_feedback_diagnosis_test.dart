@@ -68,7 +68,7 @@ void main() {
   testWidgets('REG-NET-001: 诊断失败步骤真实上屏（失败图标与文案）', (WidgetTester tester) async {
     final service = _FakeDiagnosisService([
       const DiagnosisResult(name: '网络连接', success: true, detail: '解析成功：1.2.3.4 (12ms)'),
-      const DiagnosisResult(name: '短信服务可达', success: false, detail: '失败：SocketException (6000ms)'),
+      const DiagnosisResult(name: '崩溃上报可达', success: false, detail: '失败：SocketException (6000ms)'),
     ]);
 
     await tester.pumpWidget(MaterialApp(home: NetDiagnosisPage(serviceOverride: service)));
@@ -77,7 +77,7 @@ void main() {
 
     expect(find.text('网络连接'), findsOneWidget);
     expect(find.text('解析成功：1.2.3.4 (12ms)'), findsOneWidget);
-    expect(find.text('短信服务可达'), findsOneWidget);
+    expect(find.text('崩溃上报可达'), findsOneWidget);
     expect(find.text('失败：SocketException (6000ms)'), findsOneWidget);
     // 成功 1 个 check_circle + 失败 1 个 error：结果真实反映，不再恒成功。
     expect(find.byIcon(Icons.error), findsOneWidget);

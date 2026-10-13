@@ -30,12 +30,5 @@ void main() {
       expect(state.isLoggedIn, isFalse);
       expect(state.hasShownInitGuide, isTrue);
     });
-
-    test('手机号登录同样建立已登录会话', () async {
-      final state = AppSessionState(prefs: PresentationPrefs());
-
-      expect(await state.phoneLogin('13800138000', '123456'), isTrue);
-      expect(state.isLoggedIn, isTrue);
-    });
   });
 }

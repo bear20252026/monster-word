@@ -9,9 +9,6 @@ import 'dart:io';
 import 'package:word_app/features/settings/application/network_diagnosis_service.dart';
 import 'package:word_app/features/settings/domain/diagnosis_result.dart';
 
-/// 短信验证码服务域名（与 SpugSmsCodeService 保持同一事实来源）。
-const String kSmsServiceHost = 'push.spug.cc';
-
 /// 崩溃上报服务主机：从编译期注入的 SENTRY_DSN 派生（审计 I47——消除与
 /// DSN 的双事实来源，DSN 换区/换项目后诊断目标自动跟随）。
 /// DSN 未注入（本地开发/测试）时回退到已知 ingest 主机。
@@ -43,9 +40,8 @@ class IoNetworkDiagnosisService implements NetworkDiagnosisService {
     }
 
     // 中性连通性探针：不向商业站点暴露「用户正在使用本应用」的元数据。
+    // 2026-10-13：短信链路移除后不再探测 push.spug.cc（已无该依赖）。
     emit(await _checkDns('网络连接', 'connectioncheck.gstatic.com'));
-    emit(await _checkDns('DNS 解析', kSmsServiceHost));
-    emit(await _checkHttp('短信服务可达', Uri.https(kSmsServiceHost, '/')));
     emit(await _checkHttp('崩溃上报可达', Uri.https(kSentryIngestHost, '/')));
 
     return results;

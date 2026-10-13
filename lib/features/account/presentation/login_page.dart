@@ -1,6 +1,14 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 登录页：支持手机号登录、账号密码登录
+// 登录页：仅账号密码登录。
+//
+// 2026-10-13 移除短信链路：Spug 官方文档明确要求「验证码发送必须由业务服务端
+// 发起，不要把模板编码放入网页或移动端安装包」，而本项目此前由客户端直连
+// Spug（模板编码随包分发，即 R2-01 P0）。短信原本只服务两件事，都不是必需的：
+//   - 手机号登录：删除（账号密码登录是主路径，且本来就是本机真校验）；
+//   - 忘记密码：改为提示联系管理员（服务端就绪后由后台重置）。
+// 收益：仓库与安装包里不再有任何短信调用凭证 —— R2-01 整体关闭；同时少一个
+// 网络依赖（push.spug.cc）与一条隐私政策披露。
 import 'package:word_app/widgets/common/mw_feedback.dart';
 
 import 'dart:async';
@@ -16,7 +24,6 @@ import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/monster_peek_overlay.dart';
 import 'package:word_app/widgets/animations.dart';
 import 'package:word_app/features/account/application/password_auth_store.dart';
-import 'package:word_app/features/account/application/sms_code_service.dart';
 import 'package:word_app/features/account/application/legal_consent_store.dart';
 import 'package:word_app/features/account/domain/legal_documents.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
@@ -35,17 +42,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
-  // 0 = 主登录选择, 1 = 账号密码登录, 2 = 手机号登录
-  int _loginMode = 0;
-
-  final _phoneController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _codeController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
-  bool _isSendingCode = false;
-  int _countdown = 0; // 验证码发送冷却（秒）
-  Timer? _countdownTimer;
   String? _lastLoginAccountInfo;
 
   late AnimationController _animController;
@@ -69,23 +69,15 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
-    _countdownTimer?.cancel();
     _animController.dispose();
-    _phoneController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
-    _codeController.dispose();
     super.dispose();
   }
 
   // ─── 登录频率限制（防止暴力破解）───────────────────────────────────
   static final List<DateTime> _loginAttempts = [];
   static const int _maxAttemptsPerMinute = 5;
-
-  /// 安全审计 P3-1：完整手机号明文回显有肩窥/截屏泄漏风险，统一脱敏为 138****1234。
-  static String _maskPhone(String phone) {
-    if (phone.length != 11) return phone;
-    return '${phone.substring(0, 3)}****${phone.substring(7)}';
-  }
 
   bool _checkRateLimit() {
     final now = DateTime.now();
@@ -135,10 +127,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     if (!hasAccount) {
       final confirmed = await _confirmCreateLocalAccount(username);
       if (!confirmed || !mounted) return;
-      // 用户名本身是手机号时自动绑定，供忘记密码短信找回
-      final phone = RegExp(r'^1[3-9]\d{9}$').hasMatch(username) ? username : null;
       try {
-        await auth.setPassword(username, password, phone: phone);
+        await auth.setPassword(username, password);
       } catch (e) {
         if (mounted) _showToast('创建本机账号失败：$e');
         return;
@@ -195,146 +185,30 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     return confirmed == true;
   }
 
-  /// 忘记密码：账号绑定手机号 → 短信验证码 → 重置本机密码。
+  /// 忘记密码：提示联系管理员。
+  ///
+  /// 2026-10-13：原实现走「账号绑定手机号 → 短信验证码 → 重置本机密码」，
+  /// 随短信链路一并移除（Spug 官方要求验证码由服务端发起，见文件头注释）。
+  ///
+  /// 这里**不做自助重置**：密码哈希只存在本机安全存储，客户端没有能力证明
+  /// 「你是账号主人」——任何自助通道都等价于「谁拿到设备谁就能改密码」，
+  /// 反而会把登录降级成摆设。真正的重置要等 R2-01 阶段二（服务端账号）上线，
+  /// 由管理员在后台完成。
   Future<void> _forgotPassword() async {
-    final auth = context.read<PasswordAuthStore>();
-    final sms = context.read<SmsCodeService>();
-
-    // 步骤 1：输入账号名（预填当前输入框）
-    final username = await _promptText(
-      title: '找回密码 · 第 1 步',
-      label: '请输入要找回的账号名',
-      initial: _phoneController.text.trim(),
-    );
-    if (username == null || username.isEmpty || !mounted) return;
-
-    String? phone;
-    try {
-      // 本机账号库（secure storage）读取抛 PlatformException 时按「读取失败」
-      // 提示，不能让按钮静默无响应（同文件登录主路径已接的同类异常口径）。
-      if (!await auth.hasPassword(username)) {
-        _showToast('本机不存在账号「$username」');
-        return;
-      }
-      phone = await auth.boundPhone(username);
-    } catch (e, s) {
-      reportSwallowedError('找回密码读取本机账号失败', e, s);
-      if (!mounted) return;
-      _showToast('本机账号读取失败，请稍后重试');
-      return;
-    }
-    if (phone == null) {
-      _showToast('该账号未绑定手机号，无法短信找回；手机号格式的用户名注册时自动绑定');
-      return;
-    }
-
-    // 步骤 2：发送验证码（复用 SmsCodeService 的频控与有效期）
-    final send = await sms.sendCode(phone);
-    if (!send.ok) {
-      _showToast('验证码发送失败：${send.message}');
-      return;
-    }
     if (!mounted) return;
-    _showToast('验证码已发送至 ${_maskPhone(phone)}');
-
-    // 步骤 3：输入验证码 + 新密码
-    final code = await _promptText(title: '找回密码 · 第 2 步', label: '请输入短信验证码（发往 ${_maskPhone(phone)}）');
-    if (code == null || code.isEmpty || !mounted) return;
-    final verifyError = sms.verifyCode(phone, code);
-    if (verifyError != null) {
-      _showToast(verifyError);
-      return;
-    }
-
-    // 步骤 4：设置新密码
-    final newPassword = await _promptText(title: '找回密码 · 第 3 步', label: '请输入新密码（6-64 位）', obscure: true);
-    if (newPassword == null || newPassword.isEmpty || !mounted) return;
-    if (newPassword.length < 6 || newPassword.length > 64) {
-      _showToast('密码长度应为 6-64 个字符');
-      return;
-    }
-    try {
-      // 重置密码并保持原手机号绑定
-      await auth.setPassword(username, newPassword, phone: phone);
-    } catch (e) {
-      _showToast('重置失败：$e');
-      return;
-    }
-    _showToast('密码已重置，请用新密码登录');
-  }
-
-  /// 找回密码流程的通用单行输入弹窗；返回 null 表示取消。
-  Future<String?> _promptText({
-    required String title,
-    required String label,
-    String initial = '',
-    bool obscure = false,
-  }) async {
-    final controller = TextEditingController(text: initial);
-    final result = await showDialog<String>(
+    await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: controller,
-          obscureText: obscure,
-          autofocus: true,
-          decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+        title: const Text('忘记密码'),
+        content: const Text(
+          '本机登录密码只保存在这台设备上，无法远程重置。\n\n'
+          '请联系管理员协助处理。\n\n'
+          '如需自行处理，可在系统设置中清除本应用数据后重新创建账号'
+          '（会一并清除本机学习记录，请谨慎操作）。',
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, null), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text.trim()), child: const Text('确定')),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('知道了'))],
       ),
     );
-    // 内存审计 P2：controller 是 ChangeNotifier，弹窗关闭后必须释放
-    //（对齐 account_info_page / user_info_manage_page 的既有惯例）。
-    controller.dispose();
-    return result;
-  }
-
-  Future<void> _loginWithPhone(String phone, String code) async {
-    // ✅ 输入验证：手机号格式
-    if (phone.isEmpty) {
-      _showToast('手机号不能为空');
-      return;
-    }
-    if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
-      _showToast('请输入有效的手机号');
-      return;
-    }
-    if (code.isEmpty) {
-      _showToast('验证码不能为空');
-      return;
-    }
-    if (code.length != 6 || !RegExp(r'^\d{6}$').hasMatch(code)) {
-      _showToast('验证码应为 6 位数字');
-      return;
-    }
-    // ✅ 频率限制
-    if (!_checkRateLimit()) return;
-
-    // ✅ 验证码本地校验（发送时生成的验证码，5 分钟有效）
-    final smsError = context.read<SmsCodeService>().verifyCode(phone, code);
-    if (smsError != null) {
-      _showToast(smsError);
-      return;
-    }
-
-    setState(() => _isLoading = true);
-    try {
-      final session = context.read<AppSessionState>();
-      final success = await session.phoneLogin(phone, code);
-      if (success && mounted) {
-        _onLoginSuccess();
-      } else if (mounted) {
-        _showToast('登录失败，请再次尝试！');
-      }
-    } catch (e) {
-      if (mounted) _showToast('登录失败：$e');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
   void _onLoginSuccess() {
@@ -379,39 +253,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     Navigator.of(context).push(LegalDocumentPage.route(document));
   }
 
-  /// 发送短信验证码（Spug Push），成功后启动 60s 冷却倒计时。
-  Future<void> _sendSmsCode() async {
-    final phone = _phoneController.text.trim();
-    if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
-      _showToast('请输入有效的手机号');
-      return;
-    }
-    if (_isSendingCode || _countdown > 0) return;
-
-    setState(() => _isSendingCode = true);
-    try {
-      final result = await context.read<SmsCodeService>().sendCode(phone);
-      if (!mounted) return;
-      if (result.ok) _startCountdown();
-      _showToast(result.message);
-    } finally {
-      if (mounted) setState(() => _isSendingCode = false);
-    }
-  }
-
-  void _startCountdown() {
-    _countdownTimer?.cancel();
-    setState(() => _countdown = 60);
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _countdown--);
-      if (_countdown <= 0) timer.cancel();
-    });
-  }
-
   void _showToast(String msg) {
     showMwSnackBar(context, SnackBar(content: Text(msg), duration: const Duration(seconds: 2)));
   }
@@ -420,12 +261,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     final skin = context.skin;
 
-    // 主视图按系统返回键显示退出确认
-    final canExit = _loginMode != 0;
+    // 2026-10-13：登录页只剩一个视图（账号密码），系统返回键一律走退出确认。
     return PopScope(
-      canPop: canExit,
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && !canExit) {
+        if (!didPop) {
           _showExitConfirmDialog(context);
         }
       },
@@ -434,10 +274,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         body: SafeArea(
           child: FadeTransition(
             opacity: _fadeAnim,
-            child: SlideTransition(
-              position: _slideAnim,
-              child: _loginMode == 0 ? _buildMainLoginView(skin) : _buildInputLoginView(skin),
-            ),
+            child: SlideTransition(position: _slideAnim, child: _buildLoginView(skin)),
           ),
         ),
       ),
@@ -465,92 +302,113 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  /// 主登录选择页
-  Widget _buildMainLoginView(SkinSystem skin) {
-    return Column(
-      children: [
-        const Spacer(flex: 2),
-        // 品牌标记：怪兽头像 + 强调色柔环
-        SizedBox(
-          width: 108,
-          height: 108,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: skin.colors.accent.withValues(alpha: AppAlphas.o06),
-                  border: Border.all(color: skin.colors.accent.withValues(alpha: AppAlphas.o18), width: 1),
-                ),
+  /// 唯一登录视图：品牌头 + 账号密码表单。
+  ///
+  /// 2026-10-13：原「主登录选择页 → 输入页」两级结构随手机号登录一并移除；
+  /// 品牌标记保留，表单直接展开，少一次点击。
+  Widget _buildLoginView(SkinSystem skin) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(AppSpacing.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: 40),
+          // 品牌标记：怪兽头像 + 强调色柔环
+          Center(
+            child: SizedBox(
+              width: 108,
+              height: 108,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: skin.colors.accent.withValues(alpha: AppAlphas.o06),
+                      border: Border.all(color: skin.colors.accent.withValues(alpha: AppAlphas.o18), width: 1),
+                    ),
+                  ),
+                  const MonsterAvatar(size: 72),
+                ],
               ),
-              const MonsterAvatar(size: 72),
-            ],
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        // 衬线词标
-        Text(
-          'Monster Word',
-          style: TextStyle(
-            fontFamily: 'Charter',
-            fontSize: AppFontSizes.stat,
-            fontWeight: FontWeight.w400,
-            letterSpacing: -0.5,
-            color: skin.colors.text1,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text('在语境中学习单词', style: MwTypography.body.copyWith(color: skin.colors.text2)),
-        const Spacer(flex: 1),
-        // 上次登录信息
-        if (_lastLoginAccountInfo != null && _lastLoginAccountInfo!.isNotEmpty)
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-            child: Text('上次登录：$_lastLoginAccountInfo', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
-          ),
-        SizedBox(height: 24),
-        // 登录方式按钮组
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-          child: Column(
-            children: [
-              // 手机号登录（主胶囊）
-              Semantics(
-                label: '手机号登录',
-                button: true,
-                child: _buildSocialLoginButton(
-                  skin: skin,
-                  icon: Icons.phone_android_rounded,
-                  label: '手机号登录',
-                  color: skin.colors.accent,
-                  onTap: () => setState(() => _loginMode = 2),
-                ),
+          const SizedBox(height: 20),
+          // 衬线词标
+          Center(
+            child: Text(
+              'Monster Word',
+              style: TextStyle(
+                fontFamily: 'Charter',
+                fontSize: AppFontSizes.stat,
+                fontWeight: FontWeight.w400,
+                letterSpacing: -0.5,
+                color: skin.colors.text1,
               ),
-              const SizedBox(height: 12),
-              // 账号密码登录（描边胶囊）
-              Semantics(
-                label: '账号密码登录',
-                button: true,
-                child: _buildSocialLoginButton(
-                  skin: skin,
-                  icon: Icons.alternate_email_rounded,
-                  label: '账号密码登录',
-                  color: skin.colors.text1,
-                  onTap: () => setState(() => _loginMode = 1),
-                  outlined: true,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-        SizedBox(height: 16),
-        // 用户协议 / 隐私政策（MW-78：可点击查看正文，此前只是不可点的文字）
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-          child: Text.rich(
+          const SizedBox(height: 8),
+          Center(
+            child: Text('在语境中学习单词', style: MwTypography.body.copyWith(color: skin.colors.text2)),
+          ),
+          const SizedBox(height: 32),
+          // 上次登录信息
+          if (_lastLoginAccountInfo != null && _lastLoginAccountInfo!.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Text('上次登录：$_lastLoginAccountInfo', style: MwTypography.bodySm.copyWith(color: skin.colors.text3)),
+            ),
+          _buildTextField(controller: _usernameController, hint: '请输入用户名', icon: Icons.person_outline, skin: skin),
+          SizedBox(height: 16),
+          _buildTextField(
+            controller: _passwordController,
+            hint: '请输入密码',
+            icon: Icons.lock_outline,
+            obscure: !_isPasswordVisible,
+            skin: skin,
+            suffixIcon: IconButton(
+              icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off, color: skin.colors.text3),
+              onPressed: () {
+                setState(() => _isPasswordVisible = !_isPasswordVisible);
+              },
+            ),
+          ),
+          SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: _forgotPassword,
+              child: Text('忘记密码？', style: MwTypography.bodySm.copyWith(color: skin.colors.accent)),
+            ),
+          ),
+          SizedBox(height: 16),
+          // 登录按钮
+          SizedBox(
+            height: 48,
+            child: ElevatedButton(
+              onPressed: _isLoading
+                  ? null
+                  : () => _loginWithCoolID(_usernameController.text.trim(), _passwordController.text.trim()),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: skin.colors.accent,
+                foregroundColor: AppColors.white100,
+                disabledBackgroundColor: skin.colors.text2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
+              ),
+              child: _isLoading
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white100),
+                    )
+                  : const Text('登录'),
+            ),
+          ),
+          SizedBox(height: 24),
+          // 用户协议 / 隐私政策（MW-78：可点击查看正文，此前只是不可点的文字）
+          Text.rich(
             TextSpan(
               text: '登录即同意 ',
               style: MwTypography.micro.copyWith(color: skin.colors.text3),
@@ -570,150 +428,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             ),
             textAlign: TextAlign.center,
           ),
-        ),
-        SizedBox(height: 24),
-      ],
-    );
-  }
-
-  /// 账号密码 / 手机号 登录输入页
-  Widget _buildInputLoginView(SkinSystem skin) {
-    final isPhone = _loginMode == 2;
-
-    return Column(
-      children: [
-        // 顶部导航
-        Container(
-          height: 48,
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                color: skin.colors.text1,
-                onPressed: () => setState(() => _loginMode = 0),
-              ),
-              const Spacer(),
-              Text(isPhone ? '手机号登录' : '账号密码登录', style: MwTypography.heading5.copyWith(color: skin.colors.text1)),
-              const Spacer(),
-              SizedBox(width: 48), // 占位，保持居中
-            ],
-          ),
-        ),
-        Container(height: 1, color: skin.colors.divider),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 32),
-                if (isPhone) ...[
-                  _buildTextField(
-                    controller: _phoneController,
-                    hint: '请输入手机号',
-                    icon: Icons.phone_android,
-                    keyboardType: TextInputType.phone,
-                    skin: skin,
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          controller: _codeController,
-                          hint: '请输入验证码',
-                          icon: Icons.lock_outline,
-                          keyboardType: TextInputType.number,
-                          skin: skin,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: (_isSendingCode || _countdown > 0) ? null : _sendSmsCode,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: context.skin.colors.accent,
-                            foregroundColor: AppColors.white100,
-                            disabledBackgroundColor: context.skin.colors.text2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(context.design.radius.md),
-                            ),
-                          ),
-                          child: Text(_isSendingCode ? '发送中' : (_countdown > 0 ? '${_countdown}s' : '获取验证码')),
-                        ),
-                      ),
-                    ],
-                  ),
-                ] else ...[
-                  _buildTextField(
-                    controller: _phoneController,
-                    hint: '请输入用户名/邮箱',
-                    icon: Icons.person_outline,
-                    skin: skin,
-                  ),
-                  SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _passwordController,
-                    hint: '请输入密码',
-                    icon: Icons.lock_outline,
-                    obscure: !_isPasswordVisible,
-                    skin: skin,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: skin.colors.text3,
-                      ),
-                      onPressed: () {
-                        setState(() => _isPasswordVisible = !_isPasswordVisible);
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: _forgotPassword,
-                      child: Text('忘记密码？', style: MwTypography.bodySm.copyWith(color: context.skin.colors.accent)),
-                    ),
-                  ),
-                ],
-                SizedBox(height: 24),
-                // 登录按钮
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () {
-                            if (isPhone) {
-                              _loginWithPhone(_phoneController.text.trim(), _codeController.text.trim());
-                            } else {
-                              _loginWithCoolID(_phoneController.text.trim(), _passwordController.text.trim());
-                            }
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.skin.colors.accent,
-                      foregroundColor: AppColors.white100,
-                      disabledBackgroundColor: context.skin.colors.text2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.pill)),
-                    ),
-                    child: _isLoading
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white100),
-                          )
-                        : const Text('登录'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+          SizedBox(height: 24),
+        ],
+      ),
     );
   }
 
@@ -752,42 +469,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
-    );
-  }
-
-  Widget _buildSocialLoginButton({
-    required SkinSystem skin,
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-    bool outlined = false,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: outlined
-          ? OutlinedButton.icon(
-              onPressed: onTap,
-              icon: Icon(icon, color: skin.colors.text1, size: 20),
-              label: Text(
-                label,
-                style: TextStyle(color: skin.colors.text1, fontWeight: FontWeight.w600, letterSpacing: 0.3),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: skin.colors.text1.withValues(alpha: AppAlphas.o35)),
-                shape: const StadiumBorder(),
-              ),
-            )
-          : ElevatedButton.icon(
-              onPressed: onTap,
-              icon: Icon(icon, color: AppColors.white100, size: 20),
-              label: Text(
-                label,
-                style: const TextStyle(color: AppColors.white100, fontWeight: FontWeight.w600, letterSpacing: 0.3),
-              ),
-              style: ElevatedButton.styleFrom(backgroundColor: color, shape: const StadiumBorder(), elevation: 0),
-            ),
     );
   }
 }
