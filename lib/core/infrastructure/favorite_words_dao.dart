@@ -221,7 +221,15 @@ class FavoriteWordsDao {
           'word': word,
           'at': DateTime.now().millisecondsSinceEpoch,
         });
-        if (!journaled) _index.remove(word);
+        if (!journaled) {
+          _index.remove(word);
+          // R2-12：DB + 降级日志**双失败** = 硬失败，必须外抛。此前只回滚索引
+          // 就正常返回，`toggle` 于是仍返回 true ⇒「调用方以为收藏成功，实际
+          // isFavorite == false」。上层 LearningFavoritesState.toggle 本就带
+          // catch（其注释即写明「写库失败在此接住并上报，返回持久层未变的旧
+          // 状态」），故外抛正是该契约期待的行为。
+          throw StateError('收藏写入失败且降级日志不可用（DB + journal 双失败）：$word');
+        }
       }
       return;
     }
@@ -241,7 +249,11 @@ class FavoriteWordsDao {
           'word': word,
           'at': DateTime.now().millisecondsSinceEpoch,
         });
-        if (!journaled) _index.add(word);
+        if (!journaled) {
+          _index.add(word);
+          // R2-12：同 _persistAdd——双失败必须外抛，不能回滚索引后静默返回成功。
+          throw StateError('取消收藏失败且降级日志不可用（DB + journal 双失败）：$word');
+        }
       }
       return;
     }

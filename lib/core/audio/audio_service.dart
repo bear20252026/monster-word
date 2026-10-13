@@ -15,6 +15,13 @@ abstract class AudioService {
   /// 停止播放
   Future<void> stop();
 
+  /// 暂停播放
+  ///
+  /// R2-14：此前端口没有 pause，UI 层只能「只改播放标识」，于是出现
+  /// 「界面显示已暂停、扬声器还在响」。补上端口后由实现层覆盖全部真实
+  /// 发声通道（音标 / 例句 / 主播放器 / TTS）。
+  Future<void> pause();
+
   /// 是否正在播放
   bool get isPlaying;
 

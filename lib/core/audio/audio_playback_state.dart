@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:word_app/core/utils/debug_log.dart';
 import 'package:flutter/foundation.dart';
 
@@ -87,8 +89,14 @@ class AudioPlaybackState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 底层服务暂未提供暂停端口，因此保持原有「仅更新 UI 播放标识」的兼容语义。
+  /// 暂停播放。
+  ///
+  /// R2-14：此前只把 `_isPlaying` 置 false（「底层服务暂未提供暂停端口」），
+  /// 结果 UI 显示已暂停而扬声器继续出声。现在端口已补（[AudioService.pause]），
+  /// 真实暂停底层播放。保持 `void` 签名以兼容既有回调用法——暂停是「立即停声」
+  /// 操作，等待完成没有语义价值；失败由 AudioService 内部降级并上报。
   void pause() {
+    unawaited(_audioService.pause());
     _isPlaying = false;
     notifyListeners();
   }

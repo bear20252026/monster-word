@@ -234,20 +234,24 @@ class _WordExportPageState extends State<WordExportPage> {
         buffer.writeln('单词,音标,释义${_includePhrase ? ",短语" : ""}${_includeExample ? ",例句" : ""}');
         for (final w in words) {
           // MW-31：所有列统一走 _csvCell（内部引号双写转义）。
-          buffer.write(_csvCell(w.word));
-          buffer.write(_includePhonetic ? _csvCell(w.usPron) : _csvCell(''));
-          buffer.write(_csvCell(w.cleanInterpret));
+          // R2-10：列之间必须有分隔符——此前只 write 单元格本身，产出
+          // `"apple""ˈæpl""苹果"` 这种无效 CSV（Excel 会并成一列，且与上面
+          // 用逗号写的表头行对不上）。改为先收集再 join(',')，以后加列也
+          // 不会再漏写逗号。
+          final cells = <String>[
+            _csvCell(w.word),
+            _includePhonetic ? _csvCell(w.usPron) : _csvCell(''),
+            _csvCell(w.cleanInterpret),
+          ];
           if (_includePhrase) {
             final phrases = PhraseParser.flatItems(w.phrase);
-            final text = phrases.map((p) => '${p.en}　${p.cn}').join('; ');
-            buffer.write(_csvCell(text));
+            cells.add(_csvCell(phrases.map((p) => '${p.en}　${p.cn}').join('; ')));
           }
           if (_includeExample) {
             final examples = ExampleParser.parse(w.example);
-            final text = examples.map((ex) => ex.cleanEn).join('; ');
-            buffer.write(_csvCell(text));
+            cells.add(_csvCell(examples.map((ex) => ex.cleanEn).join('; ')));
           }
-          buffer.writeln();
+          buffer.writeln(cells.join(','));
         }
         break;
 

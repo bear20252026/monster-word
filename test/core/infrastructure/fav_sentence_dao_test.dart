@@ -76,7 +76,7 @@ void main() {
       expect(prefs.getString('fav_sentence_list'), isNotNull, reason: 'SP 快照保留为回滚依据');
     });
 
-    test('同步判重索引 + 单行写：add/remove/toggle 与 favCount 一致', () async {
+    test('同步判重索引 + 单行写：add/remove 与 favCount 一致（toggle 见下方 R2-02 专项用例）', () async {
       final dao = FavSentenceDao(openDatabase: () async => db);
       await dao.loadAll();
 
@@ -109,6 +109,61 @@ void main() {
       expect(dao.favCount, 0);
       expect(await db.query('favorite_sentences'), isEmpty);
     });
+
+    // R2-02 回归：此前 toggleFavSentence 在外层 _serialized 内又调公开的
+    // addFavSentence/removeFavSentence（各自再取一次同一个闸），而 _writeGate
+    // 已被外层持有的 future 占住 ⇒ 循环等待、Future 永不完成。此前的用例名
+    // 写着「add/remove/toggle 一致」但从未调用过 toggle，所以从未暴露。
+    // 两个用例都带 timeout：修复前表现为超时失败，而不是把测试进程挂死。
+    test('R2-02：toggleFavSentence 在 SQLite 模式下可完成，状态与 DB 一致', () async {
+      final dao = FavSentenceDao(openDatabase: () async => db);
+      await dao.loadAll();
+
+      final on = await dao.toggleFavSentence(
+        word: 'apple',
+        wordId: 7,
+        sentenceId: '30003',
+        sentenceData: SentenceData(sid: '30003', e: 'An apple a day.', c: '一天一苹果。'),
+      );
+      expect(on, isTrue, reason: '未收藏 → 收藏');
+      expect(dao.isFavSentence(7, '30003'), isTrue);
+      expect(dao.favCount, 1);
+      expect(await db.query('favorite_sentences'), hasLength(1));
+
+      final off = await dao.toggleFavSentence(
+        word: 'apple',
+        wordId: 7,
+        sentenceId: '30003',
+        sentenceData: SentenceData(sid: '30003', e: 'An apple a day.', c: '一天一苹果。'),
+      );
+      expect(off, isFalse, reason: '已收藏 → 取消收藏');
+      expect(dao.isFavSentence(7, '30003'), isFalse);
+      expect(dao.favCount, 0, reason: '计数不得因闸嵌套而漂移');
+      expect(await db.query('favorite_sentences'), isEmpty);
+    }, timeout: const Timeout(Duration(seconds: 10)));
+
+    test('R2-02：并发双击 toggle 串行执行、不互相死锁', () async {
+      final dao = FavSentenceDao(openDatabase: () async => db);
+      await dao.loadAll();
+
+      final results = await Future.wait([
+        dao.toggleFavSentence(
+          word: 'apple',
+          wordId: 7,
+          sentenceId: '30003',
+          sentenceData: SentenceData(sid: '30003', e: 'An apple a day.', c: '一天一苹果。'),
+        ),
+        dao.toggleFavSentence(
+          word: 'apple',
+          wordId: 7,
+          sentenceId: '30003',
+          sentenceData: SentenceData(sid: '30003', e: 'An apple a day.', c: '一天一苹果。'),
+        ),
+      ]);
+      expect(results, [true, false], reason: '两次 toggle 按提交顺序串行：先收藏后取消');
+      expect(dao.favCount, 0);
+      expect(await db.query('favorite_sentences'), isEmpty);
+    }, timeout: const Timeout(Duration(seconds: 10)));
   });
 
   group('FavSentenceDao（MEM/U3+分页 countAll/loadPage）', () {

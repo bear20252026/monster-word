@@ -450,10 +450,15 @@ class ReviewScheduleRepository extends ChangeNotifier {
     try {
       await persist;
     } catch (error, stack) {
-      // forget 持久化失败：上报并外抛（内存不提交语义与 rateWord 对齐——
-      // 但删除方向上内存已移除，靠下次启动迁移/回放链兜底；此路径之前
-      // 完全静默，连 Sentry 都不可见）。
-      reportSwallowedError('FSRS forget persist', error, stack);
+      // R2-11：持久化失败必须**回滚内存**。此前只上报并外抛，而内存里的卡
+      // 已经删掉了 ⇒ DB 仍有卡、内存没有卡，两者分叉到下次启动才自愈；
+      // 注释虽写「内存不提交语义与 rateWord 对齐」，但删除方向上并未实现。
+      // 现在先恢复内存与计数再外抛：「调用方看到失败」与「内存/DB 一致」
+      // 同时成立（卡被删前若已被移除，此处即还原为删除前状态）。
+      _cards[word] = removed;
+      _applyCountsDelta(null, removed);
+      notifyListeners();
+      reportSwallowedError('FSRS forget persist（内存已回滚）', error, stack);
       rethrow;
     }
     notifyListeners();
