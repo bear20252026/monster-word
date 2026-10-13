@@ -433,19 +433,25 @@ class FavSentenceDao {
     // Future 永不完成。三处入口各自只锁一次，是唯一正确的组合方式。
     return _serialized(() async {
       if (isFavSentence(wordId, sentenceId)) {
-        return _removeFavSentenceLocked(wordId, sentenceId);
+        await _removeFavSentenceLocked(wordId, sentenceId);
+      } else {
+        await _addFavSentenceLocked(
+          FavSentenceData(
+            word: word,
+            wordId: wordId,
+            sentenceId: sentenceId,
+            sentenceData: sentenceData,
+            wordUsage: wordUsage,
+            updateTime: _stamp(DateTime.now()),
+            type: type,
+          ),
+        );
       }
-      return _addFavSentenceLocked(
-        FavSentenceData(
-          word: word,
-          wordId: wordId,
-          sentenceId: sentenceId,
-          sentenceData: sentenceData,
-          wordUsage: wordUsage,
-          updateTime: _stamp(DateTime.now()),
-          type: type,
-        ),
-      );
+      // 返回**操作后的真实状态**（true = 已收藏），与 FavoriteWordsDao.toggle
+      // 同口径。此前移除分支直接返回 removeFavSentence 的「操作是否成功」
+      // bool（成功恒为 true），于是「取消收藏」也返回 true——语义与调用方
+      // 的理解相反（R2-02 回归用例正是靠这一点暴露出来的）。
+      return isFavSentence(wordId, sentenceId);
     });
   }
 
