@@ -43,14 +43,6 @@ class AppSessionState extends ChangeNotifier implements AppSessionController {
     return true;
   }
 
-  Future<bool> phoneLogin(String phone, String code) async {
-    await prefs.ensureReady();
-    _isLoggedIn = true;
-    await prefs.markSessionLoggedIn();
-    notifyListeners();
-    return true;
-  }
-
   /// 登出（MW-63：原子化——durable 清理完成后才改内存态并通知）。
   ///
   /// 原实现 void + fire-and-forget：内存立即 false 而持久化清理在途，
