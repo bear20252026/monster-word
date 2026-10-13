@@ -55,6 +55,8 @@ class _MockAudioService implements AudioService {
   @override
   Future<void> stop() async {}
   @override
+  Future<void> pause() async {}
+  @override
   bool get isPlaying => false;
   @override
   void dispose() {}

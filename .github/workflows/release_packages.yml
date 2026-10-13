@@ -28,6 +28,13 @@ jobs:
   quality-gate:
     runs-on: ubuntu-latest
     steps:
+      # MW-76：第三方 Action 固定到已审查的 commit SHA（供应链固定）。
+      # R2-03：checkout 必须在任何读仓库文件的步骤之前——runner 的初始工作
+      # 目录是空的，此前「先校验版本、后 checkout」会让 tag 构建在 sed
+      # pubspec.yaml 时直接失败（main push 时该步被 if 跳过，故 CI 长期是绿的，
+      # 只有正式打 tag 才会暴露）。请勿把下面的版本校验挪到本行之前。
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
       # MW-70：tag 必须与 pubspec.yaml 版本一致（vX.Y.Z+N == X.Y.Z+N），
       # 防「Release 标签 v2.13.0、二进制实际 2.12.2」的可追溯性错误。
       - name: Verify tag matches pubspec version (tag builds only)
@@ -41,8 +48,6 @@ jobs:
             echo "::error::tag 版本($TAG) 与 pubspec.yaml 版本($PUBSPEC_VERSION) 不一致，拒绝发版。"
             exit 1
           fi
-      # MW-76：第三方 Action 固定到已审查的 commit SHA（供应链固定）。
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2

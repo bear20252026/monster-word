@@ -11,6 +11,7 @@ import 'package:word_app/models/word.dart';
 class _FakeAudioService implements AudioService {
   final List<String> played = [];
   int stopCount = 0;
+  int pauseCount = 0;
 
   @override
   Future<void> playWordAudio(String word, {String accent = 'us', String? audioUrl}) async {
@@ -23,6 +24,11 @@ class _FakeAudioService implements AudioService {
   @override
   Future<void> stop() async {
     stopCount++;
+  }
+
+  @override
+  Future<void> pause() async {
+    pauseCount++;
   }
 
   @override

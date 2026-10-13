@@ -114,6 +114,13 @@ class SpugSmsCodeService implements SmsCodeService {
   /// 模板码支持构建期注入：轮换凭证后无需改动源码即可出包。
   /// 默认值对应当前线上凭证（用户已书面接受「随包分发」的既有风险，
   /// 待服务端代理上线后本常量整体移除）。
+  ///
+  /// R2-01（2026-10-13 外部审计再次列为唯一未闭环 P0）：审计同时指出
+  /// 「客户端节流不是安全边界」，与本注释第 3 条自述一致——节流只压缩
+  /// 盗刷规模、不阻止提取模板码直接调用供应商。**本常量一旦移除而 secrets
+  /// 未配置，登录会整体不可用**，故本轮不单方面改为 fail-closed；正确的
+  /// 收口顺序是：① 服务端代理上线 → ② Spug 控制台轮换模板码 → ③ 本常量
+  /// 删除并切到代理实现（端口见 application/sms_code_service.dart）。
   static const String _templateCode = String.fromEnvironment(
     'SPUG_TEMPLATE_CODE',
     defaultValue: 'yx5N5ygyQeuGKe9nwDB4tA',

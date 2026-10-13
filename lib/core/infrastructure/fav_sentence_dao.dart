@@ -261,58 +261,74 @@ class FavSentenceDao {
   }) async {
     await ensureLoaded();
     // 预检在闸外：双击两次都过检→闸内 _indexCount++ 两次，内存计数与 DB 行数永久分叉。
-    // 改为闸内判重复（下方 _serialized 块内检查后才递增计数）。
-    final now = DateTime.now();
-    final updateTime =
-        '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}'
-        '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
-
-    final favData = FavSentenceData(
-      word: word,
-      wordId: wordId,
-      sentenceId: sentenceId,
-      sentenceData: sentenceData,
-      wordUsage: wordUsage,
-      updateTime: updateTime,
-      type: type,
+    // 改为闸内判重复（下方 _addFavSentenceLocked 内检查后才递增计数）。
+    // R2-02：闸内实现抽成 _addFavSentenceLocked——toggle 已在外层持闸，若这里
+    // 再调公开的 addFavSentence 就会二次取闸 ⇒ 外层等内层、内层等外层，
+    // Future 永不完成（死锁）。三个公开入口各自只锁一次。
+    return _serialized(
+      () => _addFavSentenceLocked(
+        FavSentenceData(
+          word: word,
+          wordId: wordId,
+          sentenceId: sentenceId,
+          sentenceData: sentenceData,
+          wordUsage: wordUsage,
+          updateTime: _stamp(DateTime.now()),
+          type: type,
+        ),
+      ),
     );
+  }
 
+  /// 收藏行的 `update_time` 列口径：`yyyyMMddHHmmss`。
+  static String _stamp(DateTime now) =>
+      '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}'
+      '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}'
+      '${now.second.toString().padLeft(2, '0')}';
+
+  /// 闸内 add（**调用方负责串行化**）：SQLite 与 SP 两条路径共用。
+  Future<bool> _addFavSentenceLocked(FavSentenceData favData) async {
+    final wordId = favData.wordId;
+    final sentenceId = favData.sentenceId;
     if (_useSqlite) {
-      // 审计 I33：索引变更与持久化整体进串行闸门（单独包 persist 仍有交错窗口）
-      return await _serialized(() async {
-        if (_indexByWordId[wordId]?.contains(sentenceId) ?? false) return false;
-        _indexByWordId.putIfAbsent(wordId, () => <String>{}).add(sentenceId);
-        _indexCount++;
-        try {
-          await _db!.insert('favorite_sentences', {
-            'word_id': wordId,
-            'sentence_id': sentenceId,
-            'word': word,
-            'update_time': updateTime,
-            'data_json': jsonEncode(favData.toJson()),
-          }, conflictAlgorithm: ConflictAlgorithm.replace);
-        } catch (e, s) {
-          reportSwallowedError('FavSentenceDao add persist', e, s);
-          // P1-01 余项：先落降级日志（含完整载荷，重启后可无损重建该行）；
-          // 日志成功则索引不回滚——本次收藏不丢。只有连日志都写不进才回滚，
-          // 保留 P2-4 原意：绝不出现「界面说成功、重启后消失」的分叉。
-          final journaled = await _journal.append({
-            'op': 'add',
-            'wordId': wordId,
-            'sentenceId': sentenceId,
-            'word': word,
-            'updateTime': updateTime,
-            'dataJson': jsonEncode(favData.toJson()),
-          });
-          if (!journaled) {
-            final ids = _indexByWordId[wordId];
-            ids?.remove(sentenceId);
-            if (ids != null && ids.isEmpty) _indexByWordId.remove(wordId);
-            _indexCount--;
-          }
+      // 审计 I33：索引变更与持久化整体进串行闸门（单独包 persist 仍有交错窗口）。
+      // 判重在闸内：闸外预检时两次快速双击都会看到「未收藏」而各 +1，内存计数
+      // 与 DB 行数永久分叉。
+      if (_indexByWordId[wordId]?.contains(sentenceId) ?? false) return false;
+      _indexByWordId.putIfAbsent(wordId, () => <String>{}).add(sentenceId);
+      _indexCount++;
+      try {
+        await _db!.insert('favorite_sentences', {
+          'word_id': wordId,
+          'sentence_id': sentenceId,
+          'word': favData.word,
+          'update_time': favData.updateTime,
+          'data_json': jsonEncode(favData.toJson()),
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      } catch (e, s) {
+        reportSwallowedError('FavSentenceDao add persist', e, s);
+        // P1-01 余项：先落降级日志（含完整载荷，重启后可无损重建该行）；
+        // 日志成功则索引不回滚——本次收藏不丢。只有连日志都写不进才回滚，
+        // 保留 P2-4 原意：绝不出现「界面说成功、重启后消失」的分叉。
+        final journaled = await _journal.append({
+          'op': 'add',
+          'wordId': wordId,
+          'sentenceId': sentenceId,
+          'word': favData.word,
+          'updateTime': favData.updateTime,
+          'dataJson': jsonEncode(favData.toJson()),
+        });
+        if (!journaled) {
+          final ids = _indexByWordId[wordId];
+          ids?.remove(sentenceId);
+          if (ids != null && ids.isEmpty) _indexByWordId.remove(wordId);
+          _indexCount--;
+          // R2-12：DB + 降级日志双失败 = 硬失败，必须外抛（此前静默返回 true，
+          // 调用方以为收藏成功而实际未持久化）。
+          throw StateError('例句收藏写入失败且降级日志不可用（DB + journal 双失败）：wordId=$wordId sentenceId=$sentenceId');
         }
-        return true;
-      });
+      }
+      return true;
     }
 
     if (_cache.any((e) => e.wordId == wordId && e.sentenceId == sentenceId)) return false;
@@ -324,30 +340,34 @@ class FavSentenceDao {
   /// 取消收藏例句
   Future<bool> removeFavSentence(int wordId, String sentenceId) async {
     await ensureLoaded();
+    return _serialized(() => _removeFavSentenceLocked(wordId, sentenceId));
+  }
 
+  /// 闸内 remove（**调用方负责串行化**）：SQLite 与 SP 两条路径共用。
+  Future<bool> _removeFavSentenceLocked(int wordId, String sentenceId) async {
     if (_useSqlite) {
-      return await _serialized(() async {
-        final ids = _indexByWordId[wordId];
-        if (ids == null || !ids.remove(sentenceId)) return false;
-        if (ids.isEmpty) _indexByWordId.remove(wordId);
-        _indexCount--;
-        try {
-          await _db!.delete(
-            'favorite_sentences',
-            where: 'word_id = ? AND sentence_id = ?',
-            whereArgs: [wordId, sentenceId],
-          );
-        } catch (e, s) {
-          reportSwallowedError('FavSentenceDao remove persist', e, s);
-          // 同 add：日志保底成功则索引不回滚（否则取消收藏重启后复活）。
-          final journaled = await _journal.append({'op': 'remove', 'wordId': wordId, 'sentenceId': sentenceId});
-          if (!journaled) {
-            _indexByWordId.putIfAbsent(wordId, () => <String>{}).add(sentenceId);
-            _indexCount++;
-          }
+      final ids = _indexByWordId[wordId];
+      if (ids == null || !ids.remove(sentenceId)) return false;
+      if (ids.isEmpty) _indexByWordId.remove(wordId);
+      _indexCount--;
+      try {
+        await _db!.delete(
+          'favorite_sentences',
+          where: 'word_id = ? AND sentence_id = ?',
+          whereArgs: [wordId, sentenceId],
+        );
+      } catch (e, s) {
+        reportSwallowedError('FavSentenceDao remove persist', e, s);
+        // 同 add：日志保底成功则索引不回滚（否则取消收藏重启后复活）。
+        final journaled = await _journal.append({'op': 'remove', 'wordId': wordId, 'sentenceId': sentenceId});
+        if (!journaled) {
+          _indexByWordId.putIfAbsent(wordId, () => <String>{}).add(sentenceId);
+          _indexCount++;
+          // R2-12：同 add——双失败必须外抛，不能回滚索引后静默返回成功。
+          throw StateError('取消例句收藏失败且降级日志不可用（DB + journal 双失败）：wordId=$wordId sentenceId=$sentenceId');
         }
-        return true;
-      });
+      }
+      return true;
     }
 
     final index = _cache.indexWhere((e) => e.wordId == wordId && e.sentenceId == sentenceId);
@@ -407,19 +427,31 @@ class FavSentenceDao {
   }) async {
     await ensureLoaded();
     // 预检收进闸内再分派：闸外判定时双击两次都看到「未收藏」→两次 add，停在收藏态而非切回。
-    // add/remove 内部各自仍走 _serialized（闸嵌套闸，口径与 I33 一致）。
+    // R2-02（确定性死锁修复）：分派**只能调闸内实现**（_xxxLocked）。此前调的是
+    // 公开的 addFavSentence/removeFavSentence，它们内部再取一次 _serialized，
+    // 而 _writeGate 已被本次持有的 future 占住 ⇒ 外层等内层、内层排队在外层之后，
+    // Future 永不完成。三处入口各自只锁一次，是唯一正确的组合方式。
     return _serialized(() async {
       if (isFavSentence(wordId, sentenceId)) {
-        return removeFavSentence(wordId, sentenceId);
+        await _removeFavSentenceLocked(wordId, sentenceId);
+      } else {
+        await _addFavSentenceLocked(
+          FavSentenceData(
+            word: word,
+            wordId: wordId,
+            sentenceId: sentenceId,
+            sentenceData: sentenceData,
+            wordUsage: wordUsage,
+            updateTime: _stamp(DateTime.now()),
+            type: type,
+          ),
+        );
       }
-      return addFavSentence(
-        word: word,
-        wordId: wordId,
-        sentenceId: sentenceId,
-        sentenceData: sentenceData,
-        wordUsage: wordUsage,
-        type: type,
-      );
+      // 返回**操作后的真实状态**（true = 已收藏），与 FavoriteWordsDao.toggle
+      // 同口径。此前移除分支直接返回 removeFavSentence 的「操作是否成功」
+      // bool（成功恒为 true），于是「取消收藏」也返回 true——语义与调用方
+      // 的理解相反（R2-02 回归用例正是靠这一点暴露出来的）。
+      return isFavSentence(wordId, sentenceId);
     });
   }
 

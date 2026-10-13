@@ -191,17 +191,31 @@ class LearningSessionState extends ChangeNotifier {
     final queue = await _queuePort.loadBook(book, limit: limit, shuffle: shuffle);
     // shuffle=false（测试/确定场景）跳过字母分散洗牌
     _replaceQueue(queue, shuffle: shuffle);
-    // MW-27 断点②闭合：同书恢复——pendingResume 匹配本次词书时应用索引。
-    // 队列已按当前词库重建，恢复索引前校验「恢复指向的词仍在队列」，
-    // 词库升级导致词换队时放弃恢复（宁从头开始，不指向错误词）。
+    // MW-27 断点②闭合：同书恢复——pendingResume 匹配本次词书时恢复位置。
+    // R2-06：**不能复用旧 index**。新队列是重新随机抽样 + 重新洗牌的，同一个
+    // 数字 index 在新队列里指向的是另一个词（旧队列 index 2 = computer，
+    // 新队列 index 2 = school ⇒ 恢复后打开的是 school）。改为按 word identity
+    // 反查真实位置。
     final resume = _pendingResume;
     if (resume != null && _queue.isNotEmpty) {
       final sameBook = resume.currentBook.id == book.id;
       final resumeWord = resume.currentIndex < resume.queue.length ? resume.queue[resume.currentIndex] : null;
-      final wordStillQueued = resumeWord == null || _queue.any((w) => w.id == resumeWord.id);
-      if (sameBook && wordStillQueued) {
-        _currentIndex = resume.currentIndex.clamp(0, _queue.length - 1);
-        _regenerateChoices();
+      if (sameBook && resumeWord != null) {
+        final actualIndex = _queue.indexWhere((w) => w.id == resumeWord.id);
+        if (actualIndex >= 0) {
+          _currentIndex = actualIndex;
+          _regenerateChoices();
+        } else {
+          // 旧词不在本次随机抽样里（每日目标 10～50 词而词书数千词时是常态）：
+          // 此时按 index 恢复必然指向错词，而直接放弃又让「继续上次学习」永久
+          // 失效。改用保存的队列原序重建会话——同一批词、同一顺序、同一位置，
+          // 这才是快照本来的语义。
+          _replaceQueue(resume.queue, shuffle: false);
+          if (_queue.isNotEmpty) {
+            _currentIndex = resume.currentIndex.clamp(0, _queue.length - 1);
+            _regenerateChoices();
+          }
+        }
       }
       // 快照一次性消费（无论是否应用）——旧书快照不应在新会话再次生效。
       _pendingResume = null;

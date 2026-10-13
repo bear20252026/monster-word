@@ -1,5 +1,7 @@
 // 字典详情页 - 笔记区块（从 word_detail_page.dart 拆出）
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -71,7 +73,18 @@ class _WordNotesSectionState extends State<WordNotesSection> {
       final note = WordNote(wordId: word.id, word: word.word, content: result.trim());
       // MW-41：add 返回持久化层生成的真实 ID（AUTOINCREMENT）——此前
       // 本地实体 id 为 null，删除走 `note.id!` 直接运行时崩溃。
-      final id = await store.add(note);
+      // R2-07：SQLite 写失败会外抛（不再静默改落 SP），此处必须接住并明确
+      // 提示，否则用户看到的是「弹窗关了、像保存成功、重载后没了」。
+      final int id;
+      try {
+        id = await store.add(note);
+      } catch (e, s) {
+        reportSwallowedError('笔记保存失败（UI 提示）', e, s);
+        if (mounted) {
+          showMwSnackBar(context, const SnackBar(content: Text('笔记保存失败，请稍后重试')));
+        }
+        return;
+      }
       assert(id > 0, 'persisted note id must be positive');
       // 弹窗 await 期间详情页可能已被关闭：_loadNotes 入口的 context.read
       // 会在元素失效时抛错（审计：async gap 后无存活检查）。
@@ -89,7 +102,16 @@ class _WordNotesSectionState extends State<WordNotesSection> {
     );
     controller.dispose();
     if (result != null && result.trim().isNotEmpty) {
-      await store.update(note.copyWith(content: result.trim()));
+      // R2-07：写失败会外抛（不再静默改落 SP），此处接住并提示。
+      try {
+        await store.update(note.copyWith(content: result.trim()));
+      } catch (e, s) {
+        reportSwallowedError('笔记更新失败（UI 提示）', e, s);
+        if (mounted) {
+          showMwSnackBar(context, const SnackBar(content: Text('笔记更新失败，请稍后重试')));
+        }
+        return;
+      }
       if (!mounted) return;
       await _loadNotes();
     }
@@ -116,7 +138,17 @@ class _WordNotesSectionState extends State<WordNotesSection> {
         await _loadNotes();
         return;
       }
-      await store.deleteById(id);
+      // R2-07：删除失败会外抛——删除方向尤其不能静默：SP 里删了而 SQLite
+      // 仍在时，读路径会把「已删除」的笔记再显示出来。
+      try {
+        await store.deleteById(id);
+      } catch (e, s) {
+        reportSwallowedError('笔记删除失败（UI 提示）', e, s);
+        if (mounted) {
+          showMwSnackBar(context, const SnackBar(content: Text('笔记删除失败，请稍后重试')));
+        }
+        return;
+      }
       if (!mounted) return;
       await _loadNotes();
     }

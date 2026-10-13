@@ -165,6 +165,12 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
   }
 
   /// 读取凭据（MW-65）：优先单 Blob；无 Blob 时回退旧散键组合（存量兼容）。
+  ///
+  /// R2-20：Blob **存在但损坏**时不再回退旧散键。回退等于把「权威凭据损坏」
+  /// 解释成「那就试试更老的凭据」——升级路径允许旧散键删除失败，于是
+  /// 「新 Blob 损坏 + 旧散键残留」会让升级前的旧密码重新生效。此处改为
+  /// fail-closed（返回空凭据 ⇒ 校验必然失败，只能走「忘记密码」重置）；
+  /// 只有 Blob **完全不存在**（从未升级过）才允许读旧散键。
   Future<(String?, String?)> _readCredential(String username) async {
     final prefix = _prefix(username);
     final blob = await _storage.read(key: '$prefix.credential');
@@ -173,7 +179,8 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
         final map = jsonDecode(blob) as Map<String, dynamic>;
         return (map['salt'] as String?, map['hash'] as String?);
       } catch (e, s) {
-        reportSwallowedError('密码凭据 Blob 解析失败，回退旧散键', e, s);
+        reportSwallowedError('密码凭据 Blob 损坏，按 fail-closed 处理（不回退旧散键）', e, s);
+        return (null, null);
       }
     }
     final salt = await _storage.read(key: '$prefix.salt');
@@ -191,7 +198,13 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
   }
 
   static const int minIterations = 1000;
-  static const int maxIterations = 10000000;
+
+  /// R2-20：校验侧接受的迭代数上限。此前为 10,000,000——按本文件自身注释
+  /// （60,000 迭代在低端机约 0.5～1 秒），10M 相当于单次校验阻塞 CPU 约
+  /// 80～170 秒，被篡改/损坏的哈希即可把登录界面卡死（DoS）。改为当前参数的
+  /// 8 倍，既留出将来调参的升级余量，又不给异常值留出灾难性开销。
+  /// 本应用只会写入 [pbkdf2Iterations]，故不存在「存量哈希超上限」的情况。
+  static const int maxIterations = pbkdf2Iterations * 8;
 
   static String _randomSalt() {
     final rng = Random.secure();

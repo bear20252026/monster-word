@@ -82,6 +82,35 @@ class AudioServiceImpl implements AudioService {
   }
 
   @override
+  Future<void> pause() async {
+    if (_disposed) return;
+    // R2-14：与 stop 同款——pause 必须覆盖真实发声的所有通道，否则 UI 显示
+    // 「已暂停」而扬声器继续出声（原实现只有 AudioPlaybackState 改了标识位）。
+    // 注意：音标/例句播放器的 pause() 是 void（内部 unawaited 到底层），
+    // 不能 await；主播放器与 TTS 的 pause() 是 Future，需 await。
+    try {
+      _phoneticPlayer.pause();
+    } catch (e) {
+      debugLog('[AudioService] phonetic pause error: ');
+    }
+    try {
+      _sentencePlayer.pause();
+    } catch (e) {
+      debugLog('[AudioService] sentence pause error: ');
+    }
+    try {
+      await _bbPlayer.pause();
+    } catch (e) {
+      debugLog('[AudioService] bb pause error: ');
+    }
+    try {
+      await SystemTts().pause();
+    } catch (e) {
+      debugLog('[AudioService] tts pause error: ');
+    }
+  }
+
+  @override
   bool get isPlaying {
     if (_disposed) return false;
     // MW-46：任一真实通道在响即为 playing（原实现读 _bbPlayer 恒 false 语义）。

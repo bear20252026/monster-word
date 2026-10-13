@@ -48,6 +48,21 @@ void main() {
       ('resume', 'https://audio.example/resume.mp3'),
     ]);
   });
+
+  // R2-14 回归：pause 必须真正下发到底层音频服务，而不是只改 UI 标识——
+  // 此前实现只置 _isPlaying=false，界面显示「已暂停」而扬声器继续出声。
+  test('暂停会真正下发到底层音频服务', () async {
+    final audio = _FakeAudioService();
+    final state = AudioPlaybackState(audioService: audio);
+
+    await state.playWord('pause', audioUrl: 'https://audio.example/pause.mp3');
+    expect(state.isPlaying, isTrue);
+
+    state.pause();
+
+    expect(audio.pauseCalls, 1, reason: '必须调用底层 pause，不能只改播放标识');
+    expect(state.isPlaying, isFalse);
+  });
 }
 
 class _FakeAudioService implements AudioService {
@@ -57,6 +72,7 @@ class _FakeAudioService implements AudioService {
   final List<(String, String?)> requests = [];
   final Completer<void> _blockedPlay = Completer<void>();
   int stopCalls = 0;
+  int pauseCalls = 0;
 
   @override
   Future<void> playWordAudio(String word, {String accent = 'us', String? audioUrl}) async {
@@ -74,6 +90,11 @@ class _FakeAudioService implements AudioService {
   @override
   Future<void> stop() async {
     stopCalls++;
+  }
+
+  @override
+  Future<void> pause() async {
+    pauseCalls++;
   }
 
   @override
