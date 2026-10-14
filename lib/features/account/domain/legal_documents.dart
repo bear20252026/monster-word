@@ -7,6 +7,12 @@
 // 版本口径：正文有实质修改时同步提升 [LegalDocuments.policyVersion]；届时
 // 旧同意记录视为过期（`isCurrentVersionAccepted` 返回 false），可据此重新
 // 征得同意。版本号用日期，便于与发版记录对照。
+//
+// 2026-10-14（R2-01 阶段二）：正文按**账号存放位置**分叉。装配了服务端认证
+// （AUTH_BASE_URL）的构建里，账号在服务端、密码经网络提交；此前「本应用不设
+// 远程账号服务器」「密码仅保存在本机」在那种构建里就是假陈述——与 R2-23 同类。
+// 两种模式**共用一个版本号**：宁可让本机模式的用户多同意一次，也不要让版本号
+// 相同而正文不同，那等于让用户「同意」了他没看过的文本。
 
 class LegalSection {
   const LegalSection({required this.heading, required this.paragraphs});
@@ -34,9 +40,15 @@ class LegalDocument {
 
 class LegalDocuments {
   /// 当前生效的政策版本。正文实质变更时同步更新。
-  static const String policyVersion = '2026-10-11';
+  static const String policyVersion = '2026-10-14';
 
-  static const LegalDocument userAgreement = LegalDocument(
+  /// 用户协议。
+  ///
+  /// [serverAccountMode] 为 true 时（构建时注入了 AUTH_BASE_URL），账号在服务端、
+  /// 密码经加密连接提交——措辞必须跟着变，否则披露与实际行为不符。
+  /// 参数是裸 `bool` 而不是 `AccountScope`：本文件属 domain 层，不得依赖 application
+  /// （架构守卫 R3），由 presentation 层把 scope 翻译成 bool 传进来。
+  static LegalDocument userAgreement({bool serverAccountMode = false}) => LegalDocument(
     id: 'user_agreement',
     title: '用户协议',
     version: policyVersion,
@@ -53,9 +65,16 @@ class LegalDocuments {
       LegalSection(
         heading: '二、账号与登录',
         paragraphs: [
-          '本应用不设远程账号服务器，账号信息与学习数据均保存在您的本机。',
-          '登录使用「用户名 + 密码」：密码仅以「盐值 + 哈希」形式保存在本机安全存储中，本应用不保存明文密码，'
-              '也不收集手机号用于登录。',
+          if (serverAccountMode)
+            '本应用使用自建账号服务器校验登录：账号由服务端保存，学习数据仍全部保存在您的本机。'
+          else
+            '本应用不设远程账号服务器，账号信息与学习数据均保存在您的本机。',
+          if (serverAccountMode)
+            '登录使用「用户名 + 密码」：密码经加密连接提交至账号服务器校验，服务端以不可逆哈希形式保存；'
+                '本应用不保存明文密码，也不收集手机号用于登录。'
+          else
+            '登录使用「用户名 + 密码」：密码仅以「盐值 + 哈希」形式保存在本机安全存储中，本应用不保存明文密码，'
+                '也不收集手机号用于登录。',
           '请妥善保管本机与登录凭证。因设备丢失、转借或系统重置导致的资料泄露或丢失，本应用无法代为找回。',
         ],
       ),
@@ -80,7 +99,8 @@ class LegalDocuments {
     ],
   );
 
-  static const LegalDocument privacyPolicy = LegalDocument(
+  /// 隐私政策。分叉口径同 [userAgreement]。
+  static LegalDocument privacyPolicy({bool serverAccountMode = false}) => LegalDocument(
     id: 'privacy_policy',
     title: '隐私政策',
     version: policyVersion,
@@ -88,8 +108,12 @@ class LegalDocuments {
       LegalSection(
         heading: '一、我们收集哪些信息',
         paragraphs: [
-          '登录凭证：用户名。密码仅以「盐值 + 哈希」形式保存在本机安全存储中，本应用不保存明文密码，'
-              '也不收集手机号。',
+          if (serverAccountMode)
+            '登录凭证：用户名。密码经加密连接提交至账号服务器校验，服务端以不可逆哈希形式保存；'
+                '本应用不保存明文密码，也不收集手机号。'
+          else
+            '登录凭证：用户名。密码仅以「盐值 + 哈希」形式保存在本机安全存储中，本应用不保存明文密码，'
+                '也不收集手机号。',
           '账号资料：昵称、头像、个性签名。均为选填，由您主动填写。',
           '学习数据：词书进度、答题记录、记忆状态、收藏与生词、签到与虚拟道具流水。',
           '崩溃诊断信息：应用版本、系统版本与崩溃堆栈，用于定位故障。',
@@ -98,9 +122,15 @@ class LegalDocuments {
       LegalSection(
         heading: '二、信息保存在哪里',
         paragraphs: [
-          '上述账号资料与学习数据全部保存在您的本机（本地数据库与本地存储）。本应用不上传至任何服务器，'
-              '也不进行云端同步。',
-          '卸载本应用或清除应用数据会一并删除上述本地数据，且无法恢复。',
+          if (serverAccountMode)
+            '登录账号（用户名与服务端保存的密码哈希）保存在本应用的账号服务器。'
+                '账号资料与学习数据仍全部保存在您的本机（本地数据库与本地存储），'
+                '本应用不上传学习内容，也不进行云端同步。'
+          else
+            '上述账号资料与学习数据全部保存在您的本机（本地数据库与本地存储）。本应用不上传至任何服务器，'
+                '也不进行云端同步。',
+          '卸载本应用或清除应用数据会一并删除上述本地数据，且无法恢复。'
+              '（账号服务器上的登录账号不随卸载删除，如需注销请联系管理员。）',
         ],
       ),
       LegalSection(
@@ -132,5 +162,9 @@ class LegalDocuments {
     ],
   );
 
-  static const List<LegalDocument> all = [userAgreement, privacyPolicy];
+  /// 全部协议（按当前模式生成）。
+  static List<LegalDocument> all({bool serverAccountMode = false}) => [
+    userAgreement(serverAccountMode: serverAccountMode),
+    privacyPolicy(serverAccountMode: serverAccountMode),
+  ];
 }

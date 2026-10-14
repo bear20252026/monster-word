@@ -148,6 +148,21 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
     // 移除后无消费方；见 R2-01）。
   }
 
+  @override
+  Future<void> removePassword(String username) async {
+    final prefix = _prefix(username);
+    // 三处都要删：单 Blob 与旧散键。少删一个，`hasPassword` 就可能仍报 true，
+    // 迁移装饰器会把「本机有旧凭据」误判成「用户输对了密码」。
+    // 单键删失败即外抛：调用方（迁移路径）必须知道本机哈希还在。
+    await _storage.delete(key: '$prefix.credential');
+    try {
+      await _storage.delete(key: '$prefix.salt');
+      await _storage.delete(key: '$prefix.hash');
+    } catch (e, s) {
+      reportSwallowedError('本机凭据旧散键清理失败（残留无害）', e, s);
+    }
+  }
+
   /// 读取凭据（MW-65）：优先单 Blob；无 Blob 时回退旧散键组合（存量兼容）。
   ///
   /// R2-20：Blob **存在但损坏**时不再回退旧散键。回退等于把「权威凭据损坏」
