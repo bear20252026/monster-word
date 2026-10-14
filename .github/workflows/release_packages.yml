@@ -141,6 +141,11 @@ jobs:
       - name: Build Release APK
         # 安全审计 P2-6：--obfuscate 提高逆向成本（含随包常量的提取门槛）
         # MW-14：APP_VERSION/APP_BUILD_NUMBER 注入编译期常量。
+        # R2-01 阶段二（2026-10-14）：AUTH_BASE_URL 一注入，客户端即从「本机校验密码」
+        #   切到「服务端校验」。**去掉这两个 define 就退回本机模式**，是切换/回退的唯一开关。
+        # AUTH_ANON_KEY 不是密钥：anon key 本就随客户端二进制公开，且自建栈不校验它
+        #   （只要求非空 —— 客户端靠「配置完整」判断是否切服务端模式）。
+        #   切勿在这里放任何真实密钥：本仓库是公开仓。
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           APP_VERSION: ${{ env.android_version }}
@@ -148,6 +153,8 @@ jobs:
         run: >-
           flutter build apk --release --dart-define=SENTRY_DSN=$SENTRY_DSN
           --dart-define=APP_VERSION=$APP_VERSION --dart-define=APP_BUILD_NUMBER=$APP_BUILD_NUMBER
+          --dart-define=AUTH_BASE_URL=https://auth.cloudbear.cloud
+          --dart-define=AUTH_ANON_KEY=mw-selfhosted-1
           --obfuscate --split-debug-info=build/symbols/apk
 
       - name: Build Release AAB
@@ -158,6 +165,8 @@ jobs:
         run: >-
           flutter build appbundle --release --dart-define=SENTRY_DSN=$SENTRY_DSN
           --dart-define=APP_VERSION=$APP_VERSION --dart-define=APP_BUILD_NUMBER=$APP_BUILD_NUMBER
+          --dart-define=AUTH_BASE_URL=https://auth.cloudbear.cloud
+          --dart-define=AUTH_ANON_KEY=mw-selfhosted-1
           --obfuscate --split-debug-info=build/symbols/aab
 
       - name: Rename packages to brand convention
@@ -219,9 +228,12 @@ jobs:
           APP_VERSION: ${{ env.win_version }}
           APP_BUILD_NUMBER: ${{ env.win_build }}
         # 安全审计 P2-6：与 Android 一致开启混淆；MW-14：版本/构建号注入编译期常量
+        # R2-01 阶段二：AUTH_BASE_URL 让客户端切到服务端校验（口径同上面的 APK 构建）
         run: >-
           flutter build windows --release --dart-define=SENTRY_DSN=$env:SENTRY_DSN
           --dart-define=APP_VERSION=$env:APP_VERSION --dart-define=APP_BUILD_NUMBER=$env:APP_BUILD_NUMBER
+          --dart-define=AUTH_BASE_URL=https://auth.cloudbear.cloud
+          --dart-define=AUTH_ANON_KEY=mw-selfhosted-1
           --obfuscate --split-debug-info=build/symbols/windows
 
       - name: Bundle VC++ Redistributable

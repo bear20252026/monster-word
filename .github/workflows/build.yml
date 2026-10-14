@@ -34,6 +34,11 @@ jobs:
         run: flutter test --no-pub
 
       - name: Build Windows Release
+        # 刻意**不**注入 AUTH_BASE_URL —— 这个 job 是「每次 push/PR 的编译与测试门禁」，
+        # 产出的 artifact 不是发布件（无签名、无版本号、无安装器）。
+        # 真正发出去的包由 release_packages.yml 构建，那里注入了 AUTH_BASE_URL（服务端模式）。
+        # 留在这里保持本机模式还有一个好处：CI 同时覆盖了「不注入 define」这条路径，
+        # 而它是合法的降级配置（本机模式），不该因为没被编译过而腐化。
         run: flutter build windows --release
 
       - name: Upload artifact
