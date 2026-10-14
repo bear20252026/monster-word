@@ -24,13 +24,11 @@ import 'package:word_app/features/telemetry/domain/usage_daily_stats.dart';
 const String usageStatsBaseUrl = String.fromEnvironment('STATS_BASE_URL');
 
 class HttpUsageStatsUploader implements UsageStatsUploader {
-  HttpUsageStatsUploader({
-    String? baseUrl,
-    Duration timeout = const Duration(seconds: 20),
-    Future<http.Response> Function(Uri url, Map<String, String> headers, String body)? postOverride,
-  }) : baseUrl = _trimSlash(baseUrl ?? usageStatsBaseUrl),
-       timeout = timeout,
-       postOverride = postOverride;
+  HttpUsageStatsUploader({String? baseUrl, this.timeout = const Duration(seconds: 20), this.postOverride})
+    : // baseUrl 需要加工（去尾斜杠），只能走初始化列表；
+      // timeout / postOverride 是直通字段，必须写成参数位上的 this.x ——
+      // 写成 `timeout = timeout` 会触发 prefer_initializing_formals。
+      baseUrl = _trimSlash(baseUrl ?? usageStatsBaseUrl);
 
   final String baseUrl;
   final Duration timeout;
