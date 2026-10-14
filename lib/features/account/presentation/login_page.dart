@@ -23,7 +23,7 @@ import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/monster_peek_overlay.dart';
 import 'package:word_app/widgets/animations.dart';
-import 'package:word_app/features/account/application/password_auth_store.dart';
+import 'package:word_app/features/account/application/account_authenticator.dart';
 import 'package:word_app/features/account/application/legal_consent_store.dart';
 import 'package:word_app/features/account/domain/legal_documents.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
@@ -112,42 +112,28 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     // ✅ 频率限制
     if (!_checkRateLimit()) return;
 
-    // 本机账号闭环：首次登录即创建（用户确认后），此后真校验密码。
-    // 密码校验走 PasswordAuthStore（盐值+哈希存平台安全存储），会话仍走本地语义。
-    final auth = context.read<PasswordAuthStore>();
-    // 错误处理审计 P2：hasPassword 同样走 flutter_secure_storage，无兜底时
-    // 平台异常会让整个 _loginWithCoolID 的 Future 未处理。
-    bool hasAccount;
-    try {
-      hasAccount = await auth.hasPassword(username);
-    } catch (e) {
-      if (mounted) _showToast('本机凭证读取失败，请重试');
-      return;
-    }
-    if (!hasAccount) {
-      final confirmed = await _confirmCreateLocalAccount(username);
+    // 认证走 AccountAuthenticator 端口：UI 不再关心密码在哪校验。
+    // 当前装配的是本机实现；R2-01 阶段二换成服务端实现后，本方法无需改动。
+    final auth = context.read<AccountAuthenticator>();
+
+    // 第一步：尝试登录。账号不存在时实现方返回 needsAccountCreation
+    //（服务端实现刻意**不**提供「用户名是否存在」的独立查询——那等于送出一个
+    // 用户名枚举接口；是否存在只由 signIn 的结果体现）。
+    var outcome = await auth.signIn(username: username, password: password);
+    if (!mounted) return;
+
+    if (outcome.status == AuthStatus.needsAccountCreation) {
+      final confirmed = await _confirmCreateAccount(username, scope: auth.scope);
       if (!confirmed || !mounted) return;
-      try {
-        await auth.setPassword(username, password);
-      } catch (e) {
-        if (mounted) _showToast('创建本机账号失败：$e');
-        return;
-      }
-    } else {
-      // 错误处理审计 P2：flutter_secure_storage 平台调用（系统还原/
-      // Keystore 故障）可能抛 PlatformException，此前无兜底会让登录按钮
-      // “点了没反应”。
-      bool verified;
-      try {
-        verified = await auth.verify(username, password);
-      } catch (e) {
-        if (mounted) _showToast('本机凭证读取失败，请重试');
-        return;
-      }
-      if (!verified) {
-        if (mounted) _showToast('账号或密码不正确');
-        return;
-      }
+      outcome = await auth.createAccount(username: username, password: password);
+      if (!mounted) return;
+    }
+
+    if (!outcome.ok) {
+      // 分类文案：此前无论哪种失败都只提示「账号或密码不正确」或裸异常串，
+      // 用户无法区分「该改密码」还是「该重试网络」。
+      _showToast(outcome.message ?? _authMessage(outcome.status));
+      return;
     }
 
     if (!mounted) return;
@@ -168,14 +154,35 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     }
   }
 
-  /// 首次使用账号密码登录：确认创建本机账号（密码哈希仅存本机）。
-  Future<bool> _confirmCreateLocalAccount(String username) async {
+  /// 认证失败文案。集中在此，避免各调用点各写一份而漂移。
+  static String _authMessage(AuthStatus status) {
+    return switch (status) {
+      AuthStatus.invalidCredentials => '账号或密码不正确',
+      AuthStatus.localCredentialUnavailable => '本机凭证读取失败，请重试',
+      AuthStatus.networkFailure => '网络异常，请检查网络后重试',
+      AuthStatus.serverFailure => '服务暂时不可用，请稍后重试',
+      AuthStatus.tooManyAttempts => '尝试过于频繁，请稍后再试',
+      // success / needsAccountCreation 不会走到这里（调用方已先行处理）
+      AuthStatus.success || AuthStatus.needsAccountCreation => '登录失败，请稍后再试',
+    };
+  }
+
+  /// 首次使用账号密码登录：确认创建账号。
+  ///
+  /// 措辞按 [AccountScope] 区分——本机模式必须让用户知道**密码不出本机**；
+  /// 服务端模式必须让用户知道**密码会提交给服务端**。这是合规披露，
+  /// 不是文案润色，所以放在端口上而不是写死。
+  Future<bool> _confirmCreateAccount(String username, {required AccountScope scope}) async {
     if (!mounted) return false;
+    final (title, content) = switch (scope) {
+      AccountScope.local => ('创建本机账号', '「$username」首次使用，将把当前密码保存为本机登录密码（仅存本机，不上传）。\n\n继续使用该账号密码登录即视为创建。'),
+      AccountScope.remote => ('创建账号', '「$username」首次使用，将在服务端创建账号。密码会通过加密连接提交给服务端用于校验。\n\n继续使用该账号密码登录即视为创建。'),
+    };
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('创建本机账号'),
-        content: Text('「$username」首次使用，将把当前密码保存为本机登录密码（仅存本机，不上传）。\n\n继续使用该账号密码登录即视为创建。'),
+        title: Text(title),
+        content: Text(content),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('取消')),
           FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('确认创建')),

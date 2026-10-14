@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/auth/app_session_controller.dart';
 import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/features/account/data/file_avatar_storage.dart';
+import 'package:word_app/features/account/data/local_account_authenticator.dart';
 import 'package:word_app/features/account/data/prefs_legal_consent_store.dart';
 import 'package:word_app/features/account/data/secure_password_auth_store.dart';
 import 'package:word_app/features/account/data/user_service.dart';
+import 'package:word_app/features/account/application/account_authenticator.dart';
 import 'package:word_app/features/account/application/account_profile_store.dart';
 import 'package:word_app/features/account/application/avatar_storage.dart';
 import 'package:word_app/features/account/application/legal_consent_store.dart';
@@ -29,6 +31,8 @@ Widget buildAccountFeatureScope({required Widget child}) {
       Provider<AccountProfileStore>(create: (_) => AccountProfileRepository(userService: sl<UserService>())),
       Provider<AvatarStorage>(create: (_) => FileAvatarStorage()),
       Provider<PasswordAuthStore>(create: (_) => SecurePasswordAuthStore()),
+      // 登录入口（R2-01 阶段二换服务端实现时只改这一行）。
+      Provider<AccountAuthenticator>(create: (context) => LocalAccountAuthenticator(context.read<PasswordAuthStore>())),
       // MW-78：协议同意留痕（policyVersion + acceptedAt），登录成功时写入。
       Provider<LegalConsentStore>(create: (_) => PrefsLegalConsentStore()),
       // 消息中心单一事实来源；跨 feature 仅依赖 checkin 的 application 端口（R4 通道）。

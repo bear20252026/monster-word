@@ -14,8 +14,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/features/account/application/account_authenticator.dart';
 import 'package:word_app/features/account/application/legal_consent_store.dart';
 import 'package:word_app/features/account/application/password_auth_store.dart';
+import 'package:word_app/features/account/data/local_account_authenticator.dart';
 import 'package:word_app/features/account/data/prefs_legal_consent_store.dart';
 import 'package:word_app/features/account/data/secure_password_auth_store.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
@@ -32,6 +34,11 @@ void main() {
       MultiProvider(
         providers: [
           Provider<PasswordAuthStore>(create: (_) => SecurePasswordAuthStore()),
+          // 登录页只依赖 AccountAuthenticator 端口（R2-01 阶段二换服务端实现
+          // 时改的是装配点，页面与测试都不动）。
+          Provider<AccountAuthenticator>(
+            create: (context) => LocalAccountAuthenticator(context.read<PasswordAuthStore>()),
+          ),
           ChangeNotifierProvider<AppSessionState>(create: (_) => AppSessionState(prefs: PresentationPrefs())),
           Provider<LegalConsentStore>(create: (_) => PrefsLegalConsentStore()),
         ],
