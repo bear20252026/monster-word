@@ -1,0 +1,83 @@
+// 使用统计的端口（application 层）。
+//
+// 为什么把「什么时候上报」这类判断放在 application 而不是直接写进 data 层：
+// 它是有真实分支的业务规则（间隔、退避、补传、保留期），需要能被本机直接跑断言。
+// 本仓 `flutter test` 受 365vpn 影响不可用，所以**纯 Dart 的 application/domain
+// 能在本地真跑测试**这件事本身就是设计约束（见 lib/features/telemetry/README.md）。
+//
+// 本文件不得 import flutter/*。
+
+import 'package:word_app/features/telemetry/domain/usage_daily_stats.dart';
+
+/// 本地按天统计的读写。
+abstract class UsageStatsStore {
+  /// 读某天的统计；没有则返回 null。
+  Future<UsageDailyStats?> readDay(String day);
+
+  /// 覆盖写入某天。实现方需保证「读-改-写」在同一事务里，
+  /// 否则前台时长与模块计数会互相覆盖。
+  Future<void> writeDay(UsageDailyStats stats);
+
+  /// 取出**尚未上报**且**有活动**的日子，按日期升序，最多 [limit] 条。
+  Future<List<UsageDailyStats>> readPending({int limit});
+
+  /// 标记这些天已上报。
+  Future<void> markUploaded(Iterable<String> days);
+
+  /// 删除 [before] 之前的已上报数据（保留期清理；未上报的不删，避免丢数据）。
+  Future<void> pruneUploadedBefore(DateTime before);
+
+  /// 上一次成功上报的时间；从未上报过返回 null。
+  Future<DateTime?> readLastUploadAt();
+
+  /// 记录一次成功上报。
+  Future<void> writeLastUploadAt(DateTime at);
+
+  /// 失败后的下次允许尝试时间（退避）；没有则返回 null。
+  Future<DateTime?> readNextAttemptAt();
+
+  /// 写入退避时间；传 null 清除。
+  Future<void> writeNextAttemptAt(DateTime? at);
+
+  /// 清空全部本地统计（含未上报的）。
+  ///
+  /// 用户把开关关掉时调用：既然承诺「关了就不收集」，就不该把关之前攒下的数据
+  /// 留着等哪天又被打开。
+  Future<void> clearAll();
+}
+
+/// 上报通道。
+abstract class UsageStatsUploader {
+  /// 上报一批数据。**返回是否成功**，实现方不得抛异常
+  /// （上报失败不该影响任何用户可见行为）。
+  Future<bool> upload(UsageStatsReport report);
+}
+
+/// 上报信封所需的运行环境信息（设备标识、版本、平台…）。
+///
+/// 做成端口而不是直接读 `Platform`/`package_info`：一是让 collector 保持纯 Dart，
+/// 二是这些值在测试里必须可替换。
+abstract class UsageStatsEnvironment {
+  /// 稳定的随机设备标识（首次生成后持久化）。
+  Future<String> deviceId();
+
+  Future<String> appVersion();
+
+  Future<int> appBuild();
+
+  /// `windows` / `android` / `linux` / `macos`。
+  String platform();
+
+  /// 系统版本串。
+  String osVersion();
+
+  /// 界面语言，如 `zh_CN`。
+  String locale();
+}
+
+/// 开关（用户在设置里可改；默认值由编译期常量决定）。
+abstract class UsageStatsSettings {
+  Future<bool> isEnabled();
+
+  Future<void> setEnabled(bool value);
+}

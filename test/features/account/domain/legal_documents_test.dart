@@ -104,6 +104,43 @@ void main() {
     });
   });
 
+  group('使用统计披露（新增能力，必须与工程事实一致）', () {
+    test('两种模式都必须披露使用统计，且写明默认关闭', () {
+      for (final mode in [false, true]) {
+        final text = LegalDocuments.privacyPolicy(serverAccountMode: mode).plainText;
+        expect(text, contains('使用统计'), reason: 'serverAccountMode=$mode');
+        expect(text, contains('默认关闭'), reason: 'serverAccountMode=$mode');
+      }
+    });
+
+    test('必须写明每日最多一次、且不与账号关联', () {
+      final text = LegalDocuments.privacyPolicy().plainText;
+      expect(text, contains('最多一次'), reason: '频率是披露的一部分');
+      expect(text, contains('不与您的账号关联'), reason: '不绑 user_id 是本功能的隐私前提');
+    });
+
+    test('必须写明不含学习内容（学了哪些词 / 搜索 / 笔记正文）', () {
+      for (final mode in [false, true]) {
+        expect(LegalDocuments.privacyPolicy(serverAccountMode: mode).plainText, contains('不含您学习的具体内容'));
+      }
+    });
+
+    test('本机模式的「不上传至任何服务器」必须带限定词', () {
+      // 使用统计会外发，所以本机模式那句绝对表述若不限定就是假话。
+      expect(LegalDocuments.privacyPolicy(serverAccountMode: false).plainText, contains('除下方「使用统计」一项外'));
+    });
+
+    test('未成年人条款要写明默认关闭与监护人同意', () {
+      final text = LegalDocuments.privacyPolicy().plainText;
+      expect(text, contains('监护人同意'));
+      expect(text, contains('未满 14 周岁'));
+    });
+
+    test('政策版本已提升（正文变了就不能沿用同一版本号）', () {
+      expect(LegalDocuments.policyVersion, '2026-10-14.1');
+    });
+  });
+
   group('两种模式都必须保留的共性承诺', () {
     test('不保存明文密码', () {
       for (final mode in [false, true]) {

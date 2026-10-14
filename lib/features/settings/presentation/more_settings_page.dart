@@ -14,6 +14,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/auth/app_session_controller.dart';
+import 'package:word_app/features/telemetry/presentation/usage_stats_providers.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
@@ -531,6 +532,8 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                   _buildSfxGroup(skin),
                   _buildRedeemReportGroup(skin),
                   SizedBox(height: context.design.spacing.md),
+                  _buildPrivacyGroup(skin),
+                  SizedBox(height: context.design.spacing.md),
                   _buildLegalGroup(skin),
                   SizedBox(height: context.design.spacing.xxl),
                   _buildLogoutButton(skin),
@@ -655,6 +658,53 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         onTap: () => _showReportDialog(context),
       ),
     ]);
+  }
+
+  /// 隐私：使用统计开关。
+  ///
+  /// 放在协议组**之前**：用户应该在读到隐私协议正文之前就能看到并关掉它。
+  Widget _buildPrivacyGroup(SkinSystem skin) {
+    final toggle = context.watch<UsageStatsToggle>();
+    return _SettingGroup([
+      _Cell(
+        icon: Icons.insights_outlined,
+        iconColor: skin.colors.text3,
+        title: '参与使用统计',
+        subtitle: toggle.enabled ? '已开启' : '已关闭',
+        onTap: () => _toggleUsageStats(toggle),
+      ),
+    ]);
+  }
+
+  /// 开启前先讲清楚收集什么 —— 这是一次性告知，不是每日常规动作，
+  /// 所以用确认弹窗而不是静默打开。
+  ///
+  /// 关闭不做确认：关掉是「少收集」，没有需要用户权衡的代价；
+  /// 而且关掉会立刻清除本机未上报的统计（见 UsageStatsCollector.setEnabled）。
+  Future<void> _toggleUsageStats(UsageStatsToggle toggle) async {
+    if (toggle.enabled) {
+      await toggle.set(false);
+      if (!mounted) return;
+      showMwSnackBar(context, const SnackBar(content: Text('已关闭使用统计，本机不再保留未上传的统计')));
+      return;
+    }
+
+    final agreed = await showMwConfirm(
+      context,
+      title: '开启使用统计',
+      content:
+          '开启后，本应用每天最多上传一次使用统计：\n\n'
+          '· 使用时长、打开次数、学习会话数\n'
+          '· 答题量与正确率、词书进度、连续签到天数\n'
+          '· 应用版本、系统版本，以及一个随机生成的设备标识\n\n'
+          '不会上传您学了哪些词、搜索了什么、笔记与收藏的正文。\n\n'
+          '数据仅用于了解使用情况与改进功能，可随时在本页关闭。',
+      confirmLabel: '开启',
+    );
+    if (!agreed) return;
+    await toggle.set(true);
+    if (!mounted) return;
+    showMwSnackBar(context, const SnackBar(content: Text('已开启使用统计，感谢支持')));
   }
 
   /// 服务条款 / 隐私协议 / 关于我们组

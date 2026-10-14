@@ -20,7 +20,7 @@ class UserDatabase {
   UserDatabase._();
 
   /// 应用当前支持的 schema 版本（与 [_onUpgrade] 步进保持同步）。
-  static const int _schemaVersion = 6;
+  static const int _schemaVersion = 7;
 
   Database? _db;
   bool _initialized = false;
@@ -277,6 +277,7 @@ class UserDatabase {
     await _createScareCoinTables(db);
     await _createRewardTables(db);
     await _createWordNotesTable(db);
+    await _createUsageStatsTables(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -300,6 +301,50 @@ class UserDatabase {
     if (oldVersion < 6) {
       await _createWordNotesTable(db);
     }
+    // 使用统计（使用时长与基本情况）。**只存聚合量，不存任何内容**：
+    // 具体学了哪些词、搜索词、笔记正文一律不入此表。
+    // 与账号库无关、也不与 user_id 绑定（设备级匿名统计）。
+    if (oldVersion < 7) {
+      await _createUsageStatsTables(db);
+    }
+  }
+
+  /// 使用统计的本地累计表（R2-01 之后新增）。
+  ///
+  /// 两张表：
+  ///   - `usage_stats_daily`：按天的聚合量。`uploaded_at` 为 NULL 表示尚未上报
+  ///     （失败要能补传，所以不能删）。
+  ///   - `usage_stats_meta`：上报调度用的键值（上次成功时间、退避到期时间）。
+  ///     用 KV 而不是再加列：这两个是**单例状态**，不是按天的记录。
+  ///
+  /// `module_open_counts` 存 JSON 文本而不是拆列：模块集合会随功能演进变化，
+  /// 拆列意味着每次加模块都要改 schema。读取端有白名单校验（见 domain 模型），
+  /// 所以这里不必担心塞进任意键。
+  Future<void> _createUsageStatsTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS usage_stats_daily (
+        day TEXT PRIMARY KEY,
+        foreground_ms INTEGER NOT NULL DEFAULT 0,
+        session_count INTEGER NOT NULL DEFAULT 0,
+        study_session_count INTEGER NOT NULL DEFAULT 0,
+        words_reviewed INTEGER NOT NULL DEFAULT 0,
+        words_correct INTEGER NOT NULL DEFAULT 0,
+        new_words_learned INTEGER NOT NULL DEFAULT 0,
+        book_word_count INTEGER NOT NULL DEFAULT 0,
+        book_learned_count INTEGER NOT NULL DEFAULT 0,
+        streak_days INTEGER NOT NULL DEFAULT 0,
+        coins_earned INTEGER NOT NULL DEFAULT 0,
+        module_open_counts TEXT NOT NULL DEFAULT '{}',
+        uploaded_at INTEGER
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_usage_stats_pending ON usage_stats_daily(uploaded_at, day)');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS usage_stats_meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    ''');
   }
 
   /// P1-07：笔记表。以 word 文本为稳定业务身份（与 favorite_words 同口径，
