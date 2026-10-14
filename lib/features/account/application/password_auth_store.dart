@@ -17,4 +17,11 @@ abstract class PasswordAuthStore {
 
   /// 创建或重置密码。
   Future<void> setPassword(String username, String password);
+
+  /// 删除本机凭据（含旧散键）。
+  ///
+  /// 为什么必须有：账号迁到服务端后，本机不该再留密码哈希——否则
+  /// 「密码只提交给服务端校验」这句披露就成了假话（R2-23 同类问题）。
+  /// 迁移成功时由 `MigratingAccountAuthenticator` 调用。
+  Future<void> removePassword(String username);
 }

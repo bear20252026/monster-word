@@ -21,6 +21,7 @@ class _FakeStore implements PasswordAuthStore {
   bool throwOnSetPassword = false;
 
   final List<(String, String)> setCalls = [];
+  final List<String> removeCalls = [];
 
   @override
   Future<bool> hasPassword(String username) async {
@@ -40,6 +41,12 @@ class _FakeStore implements PasswordAuthStore {
     setCalls.add((username, password));
     exists = true;
     this.password = password;
+  }
+
+  @override
+  Future<void> removePassword(String username) async {
+    removeCalls.add(username);
+    exists = false;
   }
 }
 

@@ -1,11 +1,19 @@
 # 账号认证服务端契约（R2-01 阶段二）
 
-> 状态：**待实现**（阶段一「移除短信链路」已上线，见 PR #132）。
-> 客户端侧已按本契约抽好端口：`lib/features/account/application/account_authenticator.dart`，
-> 服务端就绪后只需在 `account_feature_providers.dart` 换一行装配。
+> 状态：**客户端已就绪，服务端待部署**。
+> - 客户端端口：`lib/features/account/application/account_authenticator.dart`
+> - 服务端实现：`lib/features/account/data/supabase_account_authenticator.dart`
+> - 迁移装饰器：`lib/features/account/data/migrating_account_authenticator.dart`
+> - 部署与运维：`deploy/supabase/`（compose + 验收脚本 + 运维手册）
 >
-> 技术选型：**自建 Supabase**（用户名 + 密码）。用户名映射为
-> `username@<内部域名>`（Supabase 以邮箱为标识；内部域名不可投递、也无需邮箱服务器）。
+> 技术选型：**自建 Supabase（GoTrue）**，用户名 + 密码。用户名映射为
+> `u<SHA-256(归一化用户名) 前 24 位十六进制>@monster-word.internal`（见 §2.4）。
+>
+> ⚠️ **本文件 §3 的错误码表是逐条对照 supabase/auth 上游源码核对的**，不是照文档抄的。
+> 初版曾写「用户不存在 → 400 `user_not_found`」，这在密码授予里**根本不成立**——
+> 该错误码只出现在 `/user`、管理接口、`/recover`、外部 OAuth 里，密码授予为了防用户名
+> 枚举刻意把它合并进了 `invalid_credentials`。这一条错误会直接导致存量用户永远无法迁移
+> （详见 §6）。改动本文件时请同样对着源码核，不要凭印象。
 
 ---
 
@@ -19,7 +27,7 @@
 
 | 阶段一做法 | 阶段二做法 |
 |---|---|
-| 忘记密码 → 提示联系管理员 | 管理员在 Supabase 后台重置 |
+| 忘记密码 → 提示联系管理员 | 管理员用 `tools/reset-password.mjs` 重置 |
 | 账号仅存在于本机 | 账号在服务端；本机只缓存会话 token |
 
 ---
@@ -32,7 +40,7 @@
 POST /auth/v1/token?grant_type=password
 Content-Type: application/json
 
-{ "email": "<username>@<内部域名>", "password": "<明文密码>" }
+{ "email": "<派生地址>", "password": "<明文密码>" }
 ```
 
 成功（200）：
@@ -40,11 +48,15 @@ Content-Type: application/json
 ```json
 {
   "access_token": "<JWT>",
-  "refresh_token": "<opaque>",
+  "token_type": "bearer",
   "expires_in": 3600,
+  "expires_at": 1790000000,
+  "refresh_token": "<opaque>",
   "user": { "id": "<uuid>" }
 }
 ```
+
+> 字段名取自上游 `tokens.AccessTokenResponse` 的 json tag，勿改。
 
 ### 2.2 创建账号（首次使用）
 
@@ -52,34 +64,85 @@ Content-Type: application/json
 POST /auth/v1/signup
 Content-Type: application/json
 
-{ "email": "<username>@<内部域名>", "password": "<明文密码>" }
+{ "email": "<派生地址>", "password": "<明文密码>", "data": { "username": "<原始用户名>" } }
 ```
 
-成功（200）：同 2.1 的响应体。
+- 账号不存在 → 200，响应体同 §2.1（`GOTRUE_MAILER_AUTOCONFIRM=true` 时立即签发会话）
+- 账号已存在 → **422 `user_already_exists`**
+- `data.username` 是给管理员认人用的：派生地址是哈希，后台看不出是谁。
 
 ### 2.3 刷新 / 登出
 
 - 刷新：`POST /auth/v1/token?grant_type=refresh_token`
 - 登出：`POST /auth/v1/logout`（服务端吊销 refresh token）
 
+### 2.4 用户名 → 账号地址（派生规则）
+
+```
+归一化 = username.trim().toLowerCase()        ← 与 SecurePasswordAuthStore 同口径
+摘要   = SHA-256(UTF-8(归一化))
+地址   = "u" + 摘要前 24 位十六进制 + "@monster-word.internal"
+```
+
+**为什么不直接拼 `用户名@域名`**：本 App 的用户名只校验长度（3–32），不限字符集，
+存量用户里可能有中文、空格、`@`。GoTrue 用 `checkmail.ValidateFormat` 校验邮箱，
+非 ASCII 一律拒绝 ⇒ 这些用户**注册必然失败**，且错误信息难以自诊。哈希派生恒为合法
+ASCII 邮箱、定长（25 字符 local-part）、确定性。
+
+**域名刻意做成不可配置**：它只要求恒定。做成可配置等于给了一个「改一下就与所有存量
+账号失联」的开关，没有对应收益。
+
+**大小写不敏感**：`Abc` / `abc` / ` ABC ` 是同一个账号——与阶段一本机账号的口径一致，
+否则本机认为同一个账号的两种写法会在服务端变成两个账号。
+
+运维侧配套脚本：`deploy/supabase/tools/account-address.mjs`（带自检向量，与 Dart 实现
+逐条比对过）。
+
 ---
 
 ## 3. 错误码 → 客户端 `AuthStatus` 映射（**必须遵守**）
 
-客户端会按状态码分流，**不能一律当「登录失败」**——否则用户无法区分「该改密码」还是
+客户端按状态码分流，**不能一律当「登录失败」**——否则用户无法区分「该改密码」还是
 「该重试网络」。
 
-| 服务端情形 | HTTP / 错误码 | 客户端 `AuthStatus` | 用户可见文案 |
+| 服务端情形 | HTTP / `error_code` | 客户端 `AuthStatus` | 用户可见文案 |
 |---|---|---|---|
-| 密码错 | 400 `invalid_grant` | `invalidCredentials` | 账号或密码不正确 |
-| 用户不存在 | 400 `user_not_found` | `needsAccountCreation` | （不提示，转创建流程） |
-| 请求过频 / 被限流 | 429 | `tooManyAttempts` | 尝试过于频繁，请稍后再试 |
+| 密码错 | 400 `invalid_credentials` | `invalidCredentials` | 账号或密码不正确 |
+| **用户不存在** | **400 `invalid_credentials`** | `invalidCredentials` | （同上，见下方说明） |
+| 注册时账号已存在 | 422 `user_already_exists` | `invalidCredentials` | 账号或密码不正确 |
+| 密码不满足服务端策略 | 400 `validation_failed` | `serverFailure` + message | 服务端拒绝了该请求（密码可能不满足服务端策略）… |
+| 请求过频 / 被限流 | 429（`over_request_rate_limit` 等） | `tooManyAttempts` | 尝试过于频繁，请稍后再试 |
+| 账号未确认 | 400 `email_not_confirmed` | `serverFailure` + message | 账号尚未激活，请联系管理员 |
+| 账号被停用 | 400 `user_banned` | `serverFailure` + message | 账号已被停用，请联系管理员 |
+| 服务端关闭注册 | 422 `signup_disabled` | `serverFailure` + message | 服务端已关闭注册，请联系管理员 |
 | 服务端故障 | 5xx | `serverFailure` | 服务暂时不可用，请稍后重试 |
 | 网络不可达 | —（客户端判定） | `networkFailure` | 网络异常，请检查网络后重试 |
 
-**注意**：`user_not_found` 只允许出现在**登录**响应里。**不要**提供
-`GET /users/exists` 之类的独立查询——那是送出一个用户名枚举接口。客户端已按
-「是否存在只由登录结果体现」设计（`signIn` 返回 `needsAccountCreation`）。
+### 三条与直觉相反、但必须按实际情况实现的地方
+
+1. **`user_not_found` 在密码授予里不存在。** 上游 `ResourceOwnerPasswordGrant`：
+   ```go
+   if err != nil {
+       if models.IsNotFoundError(err) {
+           return apierrors.NewBadRequestError(apierrors.ErrorCodeInvalidCredentials, InvalidLoginMessage)
+       }
+   ```
+   用户不存在与密码错**返回完全一样的响应**（防用户名枚举）。因此：
+   - 客户端在服务端模式下**永不**返回 `AuthStatus.needsAccountCreation`；
+   - 「该建号了」的判断改由本机凭据承担，见 §6。
+
+2. **注册已存在账号是 422 而不是 400**，且只在 `user.IsConfirmed()` 时短路
+   （`GOTRUE_MAILER_AUTOCONFIRM=true` 下新建账号立即确认，所以正常情况都走这条）。
+   客户端按端口契约把它**收敛为 `invalidCredentials`**，不向用户暴露「该用户名已存在」——
+   避免把登录页变成用户名枚举探针。
+
+3. **`validation_failed` 不能并进「密码不正确」。** 它的典型触发是服务端密码策略比客户端
+   严（客户端只校验 6–64 位）。并进去会让用户反复重输同一个密码，而真正的动作是
+   「换一个更复杂的密码」。故单独映射并带 message。
+
+**不要**提供 `GET /users/exists` 之类的独立查询——那是送出一个用户名枚举接口。
+（注意：`/signup` 本身对已存在账号返回 422，客观上也是个存在性探针。内部应用可接受；
+若要收紧，只能靠 §5 的限流。这一点已知并接受。）
 
 ---
 
@@ -87,11 +150,23 @@ Content-Type: application/json
 
 业主决策：**登录一次、之后离线可用**。
 
-- `access_token` 有效期建议 1 小时；`refresh_token` 建议 30 天。
-- 客户端持久化 refresh token 到平台安全存储，启动时静默续期。
-- **续期失败不得阻断使用**：应用是本地优先的，学习数据都在本机；只有需要服务端
-  的能力（多端同步等）才要求在线。
-- 登出必须**服务端吊销** refresh token（否则「退出登录」只在本机生效）。
+- `access_token` 有效期 1 小时（`GOTRUE_JWT_EXP=3600`）；`refresh_token` 建议 30 天。
+- 客户端把整包会话（access + refresh + expiresAt + userId）**原子地**存在平台安全存储的
+  单一 key 里（`mw.auth.session.v1`），与旧 `userToken`/`userSecret` 字段刻意分开：
+  后者是原版遗留的用户资料缓存，复用同一 key 会让「退出登录」误清资料缓存。
+- **续期失败不得阻断使用**：应用是本地优先的，学习数据都在本机；只有需要服务端的能力
+  （多端同步等）才要求在线。
+
+### 已实现 / 未实现（如实标注）
+
+| 项 | 状态 |
+|---|---|
+| 登录成功后持久化会话 | ✅ 已实现（`SupabaseAccountAuthenticator` → `AuthSessionStore.write`） |
+| 启动时静默续期（`refresh_token` 换新） | ❌ **未实现**。需要给 `AccountAuthenticator` 端口加 `refresh()`，牵动全部实现者与 UI 分流；留作阶段三 |
+| 登出时服务端吊销 refresh token | ❌ **未实现**。当前登出只清本机会话，服务端 refresh token 到期前仍有效 |
+
+后两项未实现期间的实际影响：**用户不会因此登不上**（本地优先），但「退出登录」在
+服务端意义上不彻底。`AuthSessionStore` 的 `read()` / `clear()` 就是为这两项预留的接口。
 
 ---
 
@@ -99,65 +174,127 @@ Content-Type: application/json
 
 | 项 | 要求 |
 |---|---|
-| 传输 | 仅 HTTPS；内网部署也要证书（可用内部 CA） |
-| 密码哈希 | 由 Supabase Auth 负责（bcrypt）。**客户端不得再自行校验密码** |
-| 限流 | 按用户名 + 按 IP 双维度。Supabase 内置限流，需在后台调好阈值 |
-| 账号锁定 | 连续失败达阈值锁定并返回 429（客户端映射 `tooManyAttempts`） |
-| 密码强度 | 客户端已校验 6–64 位；服务端应再校验一次（客户端校验不是边界） |
-| RLS | 后续同步表必须开 RLS：`auth.uid() = user_id`，否则一个用户能读到所有人的数据 |
-| 匿名 key | 客户端内置的是 **anon key**（公开无妨，受 RLS 约束）；**service_role key 绝不可下发到客户端** |
+| 传输 | 仅 HTTPS。内网自签证书时客户端需信任该 CA（Android 还要 network_security_config，见部署手册 §3） |
+| 密码哈希 | 由 GoTrue 负责（bcrypt）。**客户端不得再自行校验密码**（迁移判定的本机校验是唯一例外，且只用于「是否已迁移」，不产出登录态） |
+| 限流 | GoTrue 内置**按 IP** 限流，需设 `GOTRUE_RATE_LIMIT_HEADER=x-forwarded-for` 才能取到真实客户端 IP。**按用户名的维度 GoTrue 不提供**——原先写的「双维度」是过高的承诺，实际靠客户端登录页的每分钟尝试上限兜底 |
+| 账号锁定 | 连续失败达阈值后由限流返回 429（客户端映射 `tooManyAttempts`）。GoTrue **没有**「锁定 N 分钟」的独立机制 |
+| 密码强度 | 客户端校验 6–64 位；服务端 `GOTRUE_PASSWORD_MIN_LENGTH=6` 再校验一次（客户端校验不是边界） |
+| RLS | 后续若加同步表必须开 RLS：`auth.uid() = user_id`，否则一个用户能读到所有人的数据。**当前部署不含 PostgREST，尚无此类表** |
+| anon key | 客户端内置的是 anon key（公开无妨）。**service_role key 绝不可下发到客户端**；自建栈里管理员用的 service JWT 由 `tools/gen-service-jwt.mjs` 现场签发，不落地 |
+| **`GOTRUE_MAILER_AUTOCONFIRM` 必须为 true** | 本部署无邮件服务器。若为 false：① 注册会变成「200 但没有 access_token」的防枚举假成功 → 存量用户永远迁不过来；② **未确认账号可被任何人用 signup 直接接管**（GoTrue 对未确认账号不返回 `user_already_exists`，而是静默确认并签发会话）。故运维上必须保证 `select count(*) from auth.users where confirmed_at is null` **恒为 0** |
 
 ---
 
 ## 6. 现有用户迁移（无感）
 
-阶段一的账号只存在本机，服务端没有这些用户。迁移策略：
+本机账号体系自 **v2.7.24+65** 起就已发布，`v2.12.2+128` 里仍在——存量用户是真实的。
+这些账号只存在本机，服务端没有。
 
-1. 用户输入原用户名 + 原密码。
-2. 服务端返回 `user_not_found` → 客户端弹「首次使用，将在服务端创建账号」确认。
-3. 用户确认 → 调 `signup`，用**同一个密码**建号。
-4. 此后密码由服务端校验；本机不再保存密码哈希。
+### 6.1 判据
 
-**用户视角**：输入同一个密码即可，与阶段一「首次使用创建本机账号」的确认步骤
-完全一致 —— 没有额外的迁移动作。
+服务端拒绝（400 `invalid_credentials`）时无法区分「密码打错」与「账号还没迁过来」。
+判据不靠猜，用**本机已有的证据**：
 
-**取舍（需业主知晓）**：这条路径意味着「先到先得」——谁先用某个用户名注册，谁就
-拥有它。内部应用可接受；若要收紧，需要管理员预置账号名单（服务端加白名单校验），
-这会多一步运维流程。**当前按「先到先得」实现**。
+> 本机安全存储里存着这个用户名的凭据、且用户输入的密码能通过本机校验
+> ⇒ 用户输入的密码**就是对的** ⇒ 服务端仍拒绝 ⇒ 服务端确实没有这个账号 ⇒ 可以安全建号。
+
+反之（本机凭据校验不过、或本机压根没这个用户名）⇒ 不迁移，如实回报「账号或密码不正确」。
+
+**不做「先 signup 试探」**：那会在用户每次打错密码时都发一次注册请求，既浪费又会撞限流。
+
+### 6.2 流程
+
+```
+用户输入 用户名 + 原密码
+        │
+        ├─ signIn ──▶ 200 ──────────────────────▶ 登录成功（老用户）
+        │
+        └─ 400 invalid_credentials
+                │
+                ├─ 本机凭据校验不通过 ─────────▶ 「账号或密码不正确」（真的打错了）
+                │
+                └─ 本机凭据校验通过
+                        │
+                        ├─ createAccount ──▶ 200 ─▶ 迁移完成 + 删除本机哈希（存量用户）
+                        │
+                        └─ 422 user_already_exists ─▶ 「账号或密码不正确」
+                                                     （服务端已有该账号，密码确实不对）
+```
+
+**用户视角**：输入同一个密码即可，没有任何额外的迁移动作，也没有「首次使用将创建账号」
+之外的确认弹窗（该弹窗是阶段一就有的）。
+
+### 6.3 安全性
+
+- 建号路径**不会覆盖已有账号的密码**：GoTrue 对已确认账号在写密码之前就返回
+  `user_already_exists`。即使判据失误，最坏结果也只是「多一次无副作用的失败请求」。
+- 迁移成功后删除本机哈希（`PasswordAuthStore.removePassword`）：否则「密码只提交给服务端
+  校验」这句披露就成了假话。
+
+### 6.4 覆盖不到的情况（需运维兜底）
+
+**换了新设备、且服务端还没有该账号的存量用户**无法自动迁移——本机没有可用的凭据证据。
+这类用户会看到「账号或密码不正确」。兜底方式：管理员用 `tools/reset-password.mjs` 或
+直接为其预置账号。
+
+**取舍（需业主知晓）**：迁移路径意味着「先到先得」——谁先用某个用户名注册，谁就拥有它。
+内部应用可接受。若要收紧，需管理员预置账号名单，多一步运维流程。
 
 ---
 
 ## 7. 客户端接入点
 
-服务端就绪后，**只改这一处**：
+装配点只有一处（`lib/features/account/presentation/account_feature_providers.dart`），
+**已实现**：
 
 ```dart
-// lib/features/account/presentation/account_feature_providers.dart
-Provider<AccountAuthenticator>(
-  create: (context) => SupabaseAccountAuthenticator(...),  // ← 换成本实现
-),
+final localStore = context.read<PasswordAuthStore>();
+const config = AuthServerConfig.fromEnvironment;
+if (!config.isConfigured) return LocalAccountAuthenticator(localStore);   // 本机模式
+return MigratingAccountAuthenticator(
+  remote: SupabaseAccountAuthenticator(
+    baseUrl: config.baseUrl,          // --dart-define=AUTH_BASE_URL
+    anonKey: config.anonKey,          // --dart-define=AUTH_ANON_KEY
+    sessionStore: context.read<AuthSessionStore>(),
+  ),
+  localStore: localStore,
+);
 ```
 
-新增 `SupabaseAccountAuthenticator implements AccountAuthenticator`，需满足：
+**未注入 `--dart-define` 时走本机模式**（阶段一行为），所以 CI 与本地开发不受影响。
+配置只配一半（比如漏了 key）也视为未配置——否则会连上去被 401 挡下，错误信息比
+「本机模式」更难自诊。
 
-- `scope` → `AccountScope.remote`（UI 据此把「创建账号」弹窗措辞改为「密码会提交给服务端」）
-- `signIn` / `createAccount` → 按 §2、§3 调用并映射错误码
-- **不做 UI 交互**、**不抛异常**（失败一律返回 `AuthOutcome`）
-- 负责持久化 access/refresh token
-
-UI 层（`login_page.dart`）与端口本身**不需要改动**。
+UI 层（`login_page.dart`）与端口本身**不需要改动**：它已按 `auth.scope` 区分弹窗措辞
+（`AccountScope.local` → 「仅存本机，不上传」；`remote` → 「密码会通过加密连接提交给
+服务端用于校验」）。
 
 ---
 
-## 8. 验收测试（服务端实现必须通过）
+## 8. 验收
 
-以下断言在 `test/features/account/data/local_account_authenticator_test.dart` 里已按
-本机实现写好，服务端实现应照搬同一组（只换被测实现）：
+### 8.1 客户端行为（CI 自动跑）
 
-- 账号不存在 → `needsAccountCreation`（不是失败）
-- 密码正确 → `success`
-- 密码错误 → `invalidCredentials`
-- 限流 → `tooManyAttempts`
-- 5xx → `serverFailure`
-- 网络不可达 → `networkFailure`
-- 创建账号遇到已存在 → `invalidCredentials` 且**不覆盖原密码**
+| 文件 | 覆盖 |
+|---|---|
+| `test/features/account/data/supabase_account_authenticator_test.dart` | §3 映射表逐条 + 地址派生（中文/空格/`@`/emoji）+ 200 无 `access_token` 必须判失败 |
+| `test/features/account/data/migrating_account_authenticator_test.dart` | §6 判据的正反面：网络/限流**不得**被解释成「账号不存在」 |
+| `test/features/account/data/auth_session_store_test.dart` | 会话序列化容错（损坏一律返回 null） |
+| `test/features/account/data/secure_auth_session_store_test.dart` | 整包原子读写、损坏自愈、key 与旧字段隔离 |
+| `test/features/account/data/local_account_authenticator_test.dart` | 本机模式（阶段一行为不回退） |
+
+### 8.2 服务端行为（部署后必跑）
+
+`deploy/supabase/tools/smoke-test.mjs` —— 9 条断言，逐条对应上表的服务端侧：
+
+- `/health` 可达（TLS 握手成功）
+- 注册返回 200 且**含 access_token**（证明 `GOTRUE_MAILER_AUTOCONFIRM` 真的生效）
+- 重复注册 → 422 `user_already_exists`
+- 正确密码 → 200 + token
+- 错误密码 → 400 `invalid_credentials`
+- **用户不存在 → 400 `invalid_credentials`（不得是 `user_not_found`）** ← 迁移方案的前提
+- 中文用户名可注册（证明地址派生对非 ASCII 有效）
+- 大小写/首尾空格归一为同一账号
+- 清理测试账号
+
+**全绿之前不要把客户端切到服务端模式。**

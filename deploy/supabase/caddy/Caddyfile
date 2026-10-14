@@ -1,0 +1,47 @@
+# Monster Word 认证后端入口配置。
+#
+# 职责：TLS 终止 + 把客户端请求的 `/auth/v1/*` 前缀剥掉转发给 GoTrue。
+#
+# 为什么保留 `/auth/v1` 这个前缀：客户端的路径约定与 Supabase Cloud 完全一致
+# （`SupabaseAccountAuthenticator` 请求 `/auth/v1/token`）。日后若从自建迁到
+# Supabase Cloud，客户端一行都不用改。
+
+{
+	# 用公网域名 + Let's Encrypt 时填这里；纯内网可留空。
+	email {$ACME_EMAIL}
+}
+
+{$AUTH_DOMAIN} {
+	# ── TLS ──
+	# `internal` = 用 Caddy 自建 CA 签证书，适合内网无公网域名的情况。
+	# ⚠️ 代价：客户端必须显式信任这个 CA，Android 还要额外的
+	#    network_security_config（用户级 CA 默认不被 App 信任）——见 README「客户端信任」。
+	# 若已有公网域名，把下面这行换成注释掉 tls internal，Caddy 会自动申请 Let's Encrypt 证书。
+	tls internal
+
+	# ── 可选的 apikey 门禁 ──
+	# 默认关闭。anon key 本就随客户端二进制公开，拦住的是扫描器而不是攻击者，
+	# 却多一处可能把所有人锁在门外的配置，所以默认不启用。
+	# 需要时取消下面两行注释，并在 compose 里给 caddy 传 AUTH_ANON_KEY：
+	#   @no_key not header apikey {$AUTH_ANON_KEY}
+	#   respond @no_key "missing apikey" 401
+
+	# 客户端请求 /auth/v1/token → 转发给 GoTrue 的 /token
+	handle_path /auth/v1/* {
+		reverse_proxy auth:9999
+	}
+
+	# 冒烟测试与运维探活用
+	handle /health {
+		respond "ok" 200
+	}
+
+	handle {
+		respond "Monster Word auth backend" 200
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

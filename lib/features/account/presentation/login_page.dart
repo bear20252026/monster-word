@@ -260,6 +260,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     Navigator.of(context).push(LegalDocumentPage.route(document));
   }
 
+  /// 账号存在本机还是服务端——法务正文的措辞必须跟着走。
+  /// 装配的是本机实现时正文写「不设远程账号服务器」；注入了 AUTH_BASE_URL 时
+  /// 必须改写成「账号由服务端保存」，否则就是 R2-23 同类的假陈述。
+  bool get _serverAccountMode => context.read<AccountAuthenticator>().scope == AccountScope.remote;
+
   void _showToast(String msg) {
     showMwSnackBar(context, SnackBar(content: Text(msg), duration: const Duration(seconds: 2)));
   }
@@ -423,13 +428,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 WidgetSpan(
                   alignment: PlaceholderAlignment.baseline,
                   baseline: TextBaseline.alphabetic,
-                  child: _LegalLink(label: '用户协议', onTap: () => _openLegalDocument(LegalDocuments.userAgreement)),
+                  child: _LegalLink(
+                    label: '用户协议',
+                    onTap: () =>
+                        _openLegalDocument(LegalDocuments.userAgreement(serverAccountMode: _serverAccountMode)),
+                  ),
                 ),
                 const TextSpan(text: ' 和 '),
                 WidgetSpan(
                   alignment: PlaceholderAlignment.baseline,
                   baseline: TextBaseline.alphabetic,
-                  child: _LegalLink(label: '隐私政策', onTap: () => _openLegalDocument(LegalDocuments.privacyPolicy)),
+                  child: _LegalLink(
+                    label: '隐私政策',
+                    onTap: () =>
+                        _openLegalDocument(LegalDocuments.privacyPolicy(serverAccountMode: _serverAccountMode)),
+                  ),
                 ),
               ],
             ),

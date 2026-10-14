@@ -67,3 +67,9 @@ coverage/
 
 # 发版安装包太大（>100MB GitHub 限制），产物一律走 Release 页下载
 deliverables/*.exe
+
+# 自建认证后端的部署密钥（JWT_SECRET / POSTGRES_PASSWORD 等）。
+# 只提交 deploy/supabase/.env.example，真实 .env 一律不进仓库。
+deploy/supabase/.env
+deploy/supabase/*.dump
+deploy/supabase/caddy-root.crt

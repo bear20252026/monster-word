@@ -1,0 +1,10 @@
+# 自建认证后端的部署文件必须保持 LF。
+#
+# 原因：这些文件是直接挂进 Linux 容器用的（Caddyfile / init SQL / compose）。
+# 本机 core.autocrlf=true，Windows 工作副本会是 CRLF；若用 scp 直接把工作副本
+# 传到服务器，Caddyfile 里的 \r 可能让指令解析失败（表现为容器起不来但日志信息
+# 很含糊）。显式锁 LF，避免「在我机器上是好的」这类问题。
+deploy/supabase/** text eol=lf
+
+# Shell 脚本同理。
+*.sh text eol=lf

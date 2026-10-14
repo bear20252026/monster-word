@@ -1,0 +1,118 @@
+# Monster Word 自建认证后端（R2-01 阶段二）
+#
+# 只做一件事：**用户名 + 密码的服务端校验**。三个容器：
+#   caddy  ── TLS 终止 + `/auth/v1/*` 前缀路由（对外唯一入口）
+#   auth   ── GoTrue（Supabase Auth）：密码校验、账号管理、签发会话
+#   db     ── PostgreSQL：GoTrue 的存储
+#
+# 刻意**不**包含 Studio / PostgREST / Realtime / Storage：本 App 目前只需要认证，
+# 官方全家桶会带来数倍内存占用与攻击面（Studio 还带一个 Web 管理后台入口）。
+# 管理员重置密码走 `tools/reset-password.sh`（见 README）。
+# 日后若要同步受 RLS 保护的业务表，再按官方 docker 目录补 PostgREST。
+#
+# 版本依据：镜像与关键环境变量取自官方自建栈
+# （supabase/supabase `docker/docker-compose.yml`，auth 用 supabase/gotrue:v2.196.0）。
+# 这里把 auth 提到 v2.197.0（GoTrue 最新 release）。
+#
+# ⚠️ 本文件**未在本机验证过**（交付环境 Docker daemon 未运行）。
+#    首次部署请务必跑 `tools/smoke-test.sh`——它逐条验证客户端契约依赖的每个行为。
+
+name: monster-word-auth
+
+services:
+  db:
+    image: supabase/postgres:17.6.1.136
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 必须设置}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # 首次初始化时把 supabase_auth_admin 的密码对齐到 .env。
+      # ⚠️ init-scripts 只在**数据目录为空**时执行一次：若日后改 POSTGRES_PASSWORD，
+      #    必须手动再跑一遍这个 SQL，否则 auth 连不上库（README 有命令）。
+      - ./db/init/01-auth-role.sql:/docker-entrypoint-initdb.d/init-scripts/01-auth-role.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # 不映射端口到宿主机：只有 auth 需要连它，暴露出去只是多一个攻击面。
+    expose:
+      - "5432"
+
+  auth:
+    image: supabase/gotrue:v2.197.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: "9999"
+
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
+
+      # 对外地址（客户端与邮件链接用；本部署不发邮件，仅作 JWT issuer）
+      API_EXTERNAL_URL: https://${AUTH_DOMAIN}/auth/v1
+      GOTRUE_JWT_ISSUER: https://${AUTH_DOMAIN}/auth/v1
+      GOTRUE_SITE_URL: https://${AUTH_DOMAIN}
+
+      # ── 认证方式：只开邮箱口令，其余全关 ──
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "false"   # 本 App 已整体移除短信链路
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
+      GOTRUE_DISABLE_SIGNUP: "false"           # 存量用户靠「首次登录即建号」迁移，必须允许注册
+
+      # ⚠️ 必须是 true。本部署没有邮件服务器。
+      #   若为 false：注册会变成「200 但没有 access_token」的防枚举假成功，
+      #   存量用户永远迁不过来；且未确认账号可被他人用 signup 直接接管（契约 §5）。
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+
+      # 密码长度下限与客户端（6–64）一致；上限给足，避免误拒强密码。
+      GOTRUE_PASSWORD_MIN_LENGTH: "6"
+
+      # ── JWT ──
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:?JWT_SECRET 必须设置}
+      GOTRUE_JWT_EXP: "3600"                   # 契约 §4：access token 1 小时
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+
+      # 限流：GoTrue 内置按 IP 限流，需要它知道真实客户端 IP。
+      # 不设这一项时所有请求都算在反向代理那一个 IP 上，等于限流失效。
+      GOTRUE_RATE_LIMIT_HEADER: x-forwarded-for
+
+      # 邮件相关全部留空：autoconfirm=true 时不会发信。
+      # 仍给一个占位发件人，避免某些版本在启动时校验必填。
+      GOTRUE_SMTP_ADMIN_EMAIL: no-reply@${AUTH_DOMAIN}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    expose:
+      - "9999"
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    depends_on:
+      auth:
+        condition: service_healthy
+    environment:
+      AUTH_DOMAIN: ${AUTH_DOMAIN:?AUTH_DOMAIN 必须设置}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    ports:
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:
