@@ -10,11 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/features/account/domain/legal_documents.dart';
 
 /// 仅在本机模式下成立的表述。
-const _localOnlyClaims = [
-  '不设远程账号服务器',
-  '本应用不上传至任何服务器',
-  '仅以「盐值 + 哈希」形式保存在本机安全存储中',
-];
+const _localOnlyClaims = ['不设远程账号服务器', '本应用不上传至任何服务器', '仅以「盐值 + 哈希」形式保存在本机安全存储中'];
 
 /// 仅在服务端模式下成立的表述。
 const _serverOnlyClaims = ['账号服务器校验登录', '提交至账号服务器校验'];
@@ -42,8 +38,14 @@ void main() {
     });
 
     test('默认参数等价于本机模式（不传参不会意外变成服务端措辞）', () {
-      expect(LegalDocuments.userAgreement().plainText, LegalDocuments.userAgreement(serverAccountMode: false).plainText);
-      expect(LegalDocuments.privacyPolicy().plainText, LegalDocuments.privacyPolicy(serverAccountMode: false).plainText);
+      expect(
+        LegalDocuments.userAgreement().plainText,
+        LegalDocuments.userAgreement(serverAccountMode: false).plainText,
+      );
+      expect(
+        LegalDocuments.privacyPolicy().plainText,
+        LegalDocuments.privacyPolicy(serverAccountMode: false).plainText,
+      );
     });
 
     test('all() 返回两篇，且与传入模式一致', () {

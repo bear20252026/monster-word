@@ -54,18 +54,18 @@ class _ScriptedHttp {
 }
 
 /// GoTrue 错误响应体（字段名取自上游 `apierrors.HTTPError` 的 json tag）。
-String gotrueError(int status, String code, String msg) =>
-    jsonEncode({'code': status, 'error_code': code, 'msg': msg});
+String gotrueError(int status, String code, String msg) => jsonEncode({'code': status, 'error_code': code, 'msg': msg});
 
 /// GoTrue 成功响应体（字段名取自上游 `tokens.AccessTokenResponse`）。
-String gotrueToken({String access = 'access-jwt', String refresh = 'refresh-opaque', int expiresIn = 3600}) => jsonEncode({
-  'access_token': access,
-  'token_type': 'bearer',
-  'expires_in': expiresIn,
-  'expires_at': 1790000000,
-  'refresh_token': refresh,
-  'user': {'id': 'user-uuid-1'},
-});
+String gotrueToken({String access = 'access-jwt', String refresh = 'refresh-opaque', int expiresIn = 3600}) =>
+    jsonEncode({
+      'access_token': access,
+      'token_type': 'bearer',
+      'expires_in': expiresIn,
+      'expires_at': 1790000000,
+      'refresh_token': refresh,
+      'user': {'id': 'user-uuid-1'},
+    });
 
 void main() {
   late _FakeSessionStore sessionStore;

@@ -62,15 +62,26 @@ void main() {
     });
 
     test('缺 user_id', () {
-      expect(AuthSession.tryParse('{"access_token":"a","refresh_token":"r","expires_at":"2026-10-14T12:00:00Z"}'), isNull);
+      expect(
+        AuthSession.tryParse('{"access_token":"a","refresh_token":"r","expires_at":"2026-10-14T12:00:00Z"}'),
+        isNull,
+      );
     });
 
     test('字段类型不对（数字冒充字符串）', () {
-      expect(AuthSession.tryParse('{"access_token":123,"refresh_token":"r","expires_at":"2026-10-14T12:00:00Z","user_id":"u"}'), isNull);
+      expect(
+        AuthSession.tryParse(
+          '{"access_token":123,"refresh_token":"r","expires_at":"2026-10-14T12:00:00Z","user_id":"u"}',
+        ),
+        isNull,
+      );
     });
 
     test('expires_at 不是合法时间', () {
-      expect(AuthSession.tryParse('{"access_token":"a","refresh_token":"r","expires_at":"tomorrow","user_id":"u"}'), isNull);
+      expect(
+        AuthSession.tryParse('{"access_token":"a","refresh_token":"r","expires_at":"tomorrow","user_id":"u"}'),
+        isNull,
+      );
     });
 
     test('解析失败时把真实异常交给调用方上报', () {

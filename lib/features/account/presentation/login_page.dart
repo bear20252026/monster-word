@@ -430,7 +430,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   baseline: TextBaseline.alphabetic,
                   child: _LegalLink(
                     label: '用户协议',
-                    onTap: () => _openLegalDocument(LegalDocuments.userAgreement(serverAccountMode: _serverAccountMode)),
+                    onTap: () =>
+                        _openLegalDocument(LegalDocuments.userAgreement(serverAccountMode: _serverAccountMode)),
                   ),
                 ),
                 const TextSpan(text: ' 和 '),
@@ -439,7 +440,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   baseline: TextBaseline.alphabetic,
                   child: _LegalLink(
                     label: '隐私政策',
-                    onTap: () => _openLegalDocument(LegalDocuments.privacyPolicy(serverAccountMode: _serverAccountMode)),
+                    onTap: () =>
+                        _openLegalDocument(LegalDocuments.privacyPolicy(serverAccountMode: _serverAccountMode)),
                   ),
                 ),
               ],

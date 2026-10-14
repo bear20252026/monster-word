@@ -35,10 +35,7 @@ class SecureAuthSessionStore implements AuthSessionStore {
       return null;
     }
     if (raw == null || raw.isEmpty) return null;
-    final session = AuthSession.tryParse(
-      raw,
-      onError: (e, s) => reportSwallowedError('会话内容损坏（将清除并要求重新登录）', e, s),
-    );
+    final session = AuthSession.tryParse(raw, onError: (e, s) => reportSwallowedError('会话内容损坏（将清除并要求重新登录）', e, s));
     if (session == null) {
       // 内容损坏（存储被改写 / 版本不兼容）：清掉，避免每次启动都白读一次。
       await clear();

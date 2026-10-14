@@ -70,12 +70,7 @@ class AuthSession {
     if (expiresAt == null) return _bad('expires_at', onError);
     if (userId is! String || userId.isEmpty) return _bad('user_id', onError);
 
-    return AuthSession(
-      accessToken: access,
-      refreshToken: refresh,
-      expiresAt: expiresAt.toUtc(),
-      userId: userId,
-    );
+    return AuthSession(accessToken: access, refreshToken: refresh, expiresAt: expiresAt.toUtc(), userId: userId);
   }
 
   static AuthSession? _bad(String field, void Function(Object, StackTrace)? onError) {

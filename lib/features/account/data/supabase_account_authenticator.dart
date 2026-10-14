@@ -127,15 +127,12 @@ class SupabaseAccountAuthenticator implements AccountAuthenticator {
   }) async {
     final AuthHttpResponse response;
     try {
-      response = await _post(
-        Uri.parse('$baseUrl$path'),
-        {
-          'Content-Type': 'application/json',
-          // Kong 路由要求 apikey；与 Supabase Cloud 行为一致，便于日后迁云。
-          'apikey': anonKey,
-        },
-        jsonEncode(payload),
-      );
+      response = await _post(Uri.parse('$baseUrl$path'), {
+        'Content-Type': 'application/json',
+        // 与 Supabase Cloud 的调用约定保持一致（Cloud 要求 apikey）。
+        // 自建栈默认不校验它——留着是为了日后迁云时客户端一行不用改。
+        'apikey': anonKey,
+      }, jsonEncode(payload));
     } on TimeoutException catch (e, s) {
       reportSwallowedError('认证请求超时', e, s);
       return const AuthOutcome.networkFailure();
@@ -155,7 +152,7 @@ class SupabaseAccountAuthenticator implements AccountAuthenticator {
         // （防枚举假成功）。绝不能当登录成功——那会让用户以为登录了其实没有会话。
         reportSwallowedError(
           '认证 200 响应缺少 access_token（疑似 GOTRUE_MAILER_AUTOCONFIRM 未开启）',
-          StateError(response.body),
+          FormatException('200 响应不是令牌响应', response.body),
           StackTrace.current,
         );
         return const AuthOutcome.serverFailure();
@@ -193,10 +190,7 @@ class SupabaseAccountAuthenticator implements AccountAuthenticator {
         // 例如服务端密码策略比客户端严（客户端只校验 6–64 位）。
         // 不能并进「账号或密码不正确」——那会让用户反复重输同一个密码，
         // 而真正的动作是「换一个更复杂的密码」。
-        return const AuthOutcome(
-          AuthStatus.serverFailure,
-          message: '服务端拒绝了该请求（密码可能不满足服务端策略），请换一个更复杂的密码',
-        );
+        return const AuthOutcome(AuthStatus.serverFailure, message: '服务端拒绝了该请求（密码可能不满足服务端策略），请换一个更复杂的密码');
       case 'email_not_confirmed':
         // autoconfirm 开启时不该出现；出现即服务端配置问题，别让用户白改密码。
         return const AuthOutcome(AuthStatus.serverFailure, message: '账号尚未激活，请联系管理员');

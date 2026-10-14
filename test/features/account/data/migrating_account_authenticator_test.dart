@@ -222,10 +222,10 @@ void main() {
     test('失败 → 不清本机凭据', () async {
       final remote = _ScriptedRemote(createAccountResults: [const AuthOutcome.invalidCredentials()]);
       final local = _FakeLocalStore();
-      await MigratingAccountAuthenticator(remote: remote, localStore: local).createAccount(
-        username: 'newbie',
-        password: 'secret123',
-      );
+      await MigratingAccountAuthenticator(
+        remote: remote,
+        localStore: local,
+      ).createAccount(username: 'newbie', password: 'secret123');
       expect(local.removeCalls, isEmpty);
     });
   });
