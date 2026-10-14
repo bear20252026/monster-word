@@ -83,6 +83,14 @@ class _FakeEnvironment implements UsageStatsEnvironment {
   String locale() => 'zh_CN';
 }
 
+class _FakeIdentity implements UsageStatsIdentity {
+  _FakeIdentity({this.userIdValue});
+  String? userIdValue;
+
+  @override
+  Future<String?> userId() async => userIdValue;
+}
+
 class _FakeSettings implements UsageStatsSettings {
   _FakeSettings({this.enabled = true});
   bool enabled;
@@ -99,15 +107,19 @@ void main() {
   late _FakeSettings settings;
   late DateTime now;
 
-  UsageStatsCollector build({bool enabled = true}) {
+  late _FakeIdentity identity;
+
+  UsageStatsCollector build({bool enabled = true, String? userId = 'user-uuid-1'}) {
     settings = _FakeSettings(enabled: enabled);
     store = _FakeStore();
     uploader = _FakeUploader();
+    identity = _FakeIdentity(userIdValue: userId);
     return UsageStatsCollector(
       store: store,
       uploader: uploader,
       environment: _FakeEnvironment(),
       settings: settings,
+      identity: identity,
       clock: () => now,
     );
   }
@@ -321,6 +333,51 @@ void main() {
       await c.setEnabled(false);
       await c.setEnabled(true);
       expect(await c.skipReason(), 'nothingPending');
+    });
+  });
+
+  group('账号关联（管理端「按人看」的前提）', () {
+    test('已登录 ⇒ 上报带 user_id', () async {
+      final c = build(userId: 'abc-123');
+      await c.initialize();
+      await c.recordStudySession();
+      await c.maybeUpload();
+      expect(uploader.sent.single.userId, 'abc-123');
+      expect(uploader.sent.single.toJson()['user_id'], 'abc-123');
+    });
+
+    test('本机模式（无账号）⇒ user_id 为空串而不是缺字段', () async {
+      final c = build(userId: null);
+      await c.initialize();
+      await c.recordStudySession();
+      await c.maybeUpload();
+      expect(uploader.sent.single.userId, '');
+      // 关键：字段必须在，值为空 —— 服务端据此归到「未绑定账号」，
+      // 而不是当成旧客户端缺字段（那会分不清「没账号」和「老版本」）。
+      expect(uploader.sent.single.toJson().containsKey('user_id'), isTrue);
+    });
+
+    test('上报格式版本已升到 2（v1 的数据不可识别到个人，v2 的与账号关联）', () async {
+      final c = build();
+      await c.initialize();
+      await c.recordStudySession();
+      await c.maybeUpload();
+      expect(uploader.sent.single.schemaVersion, 2);
+      expect(UsageStatsReport.currentSchemaVersion, 2);
+    });
+
+    test('夹紧后 user_id 不丢', () {
+      final report = UsageStatsReport(
+        deviceId: 'd',
+        userId: 'keep-me',
+        appVersion: '1',
+        appBuild: 1,
+        platform: 'windows',
+        osVersion: 'o',
+        locale: 'zh_CN',
+        days: [const UsageDailyStats(day: '2026-10-14', sessionCount: 1)],
+      ).sanitized();
+      expect(report.userId, 'keep-me');
     });
   });
 

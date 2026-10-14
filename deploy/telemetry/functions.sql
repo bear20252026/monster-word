@@ -81,6 +81,7 @@ DECLARE
   v_platform  TEXT;
   v_app_ver   TEXT;
   v_schema    INTEGER;
+  v_user_id   TEXT;
 BEGIN
   IF payload IS NULL OR jsonb_typeof(payload) <> 'object' THEN
     RAISE EXCEPTION 'payload 必须是对象';
@@ -99,6 +100,9 @@ BEGIN
     RAISE EXCEPTION 'days 超过 31 条上限（客户端应分批）';
   END IF;
 
+  -- 账号标识。空串 = 没有可关联的账号（本机模式/未登录），不是错误。
+  -- 只收 UUID 不用户名：用户名由管理页向账号服务解析，避免两处漂移。
+  v_user_id  := mw_clamps(payload -> 'user_id', 64);
   v_platform := mw_clamps(payload -> 'platform', 32);
   v_app_ver  := mw_clamps(payload -> 'app_version', 32);
   v_schema   := mw_clampi(payload -> 'schema_version', 0, 1000);
@@ -121,14 +125,14 @@ BEGIN
     END;
 
     INSERT INTO usage_daily (
-      device_id, day,
+      device_id, user_id, day,
       foreground_ms, session_count, study_session_count,
       words_reviewed, words_correct, new_words_learned,
       book_word_count, book_learned_count, streak_days, coins_earned,
       module_open_counts,
       app_version, app_build, platform, os_version, locale, schema_version
     ) VALUES (
-      v_device_id, v_day_str::date,
+      v_device_id, v_user_id, v_day_str::date,
       mw_clampi(v_day -> 'foreground_ms', 0, 86400000),
       mw_clampi(v_day -> 'session_count', 0, 100000),
       mw_clampi(v_day -> 'study_session_count', 0, 100000),
@@ -152,6 +156,9 @@ BEGIN
     -- 同一天两次上报里，数值更全的那次通常是后到的完整数据；但若客户端重装了、
     -- 计数从 0 重新开始，覆盖会把当天已有的时长抹掉。取较大值对两种情形都安全。
     ON CONFLICT (device_id, day) DO UPDATE SET
+      -- 只在本次带上了账号时覆盖：先未登录后登录要能补上，
+      -- 而「先有账号、后来又变空」不该把已有关联抹掉。
+      user_id             = CASE WHEN EXCLUDED.user_id <> '' THEN EXCLUDED.user_id ELSE usage_daily.user_id END,
       foreground_ms       = GREATEST(usage_daily.foreground_ms, EXCLUDED.foreground_ms),
       session_count       = GREATEST(usage_daily.session_count, EXCLUDED.session_count),
       study_session_count = GREATEST(usage_daily.study_session_count, EXCLUDED.study_session_count),
@@ -180,6 +187,12 @@ BEGIN
     last_seen   = now(),
     platform    = EXCLUDED.platform,
     app_version = EXCLUDED.app_version;
+
+  -- 账号台账：只记 UUID 与时间，不记用户名（名字由管理页向账号服务解析）。
+  IF v_user_id <> '' THEN
+    INSERT INTO telemetry_users (user_id, last_seen) VALUES (v_user_id, now())
+    ON CONFLICT (user_id) DO UPDATE SET last_seen = now();
+  END IF;
 
   RETURN jsonb_build_object('ok', true, 'accepted', v_accepted, 'rejected', v_rejected);
 END;

@@ -26,7 +26,7 @@
 
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
-import { randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 
 const PG_DB = process.env.PG_DB || 'mw_telemetry';
 // ⚠️ 必须走 TCP + 显式角色，不能靠 Unix socket 的对等认证：
@@ -39,6 +39,12 @@ const PORT = Number(process.env.LISTEN_PORT || 8080);
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const TRUST_PROXY = process.env.TRUST_PROXY === '1';
+// 账号服务（用于把 user_id 解析成用户名，供管理页「按人看」）。
+// 只在上报里存 UUID，名字在渲染时向账号服务要 —— 用户名的权威来源是那边，
+// 在统计库里再存一份必然漂移（改名后对不上）。
+const AUTH_ADMIN_URL = process.env.AUTH_ADMIN_URL || '';
+const AUTH_JWT_SECRET = process.env.AUTH_JWT_SECRET || '';
+const AUTH_ISSUER = process.env.AUTH_ISSUER || '';
 const PSQL = process.env.PSQL_BIN || '/usr/bin/psql';
 
 const MAX_BODY_BYTES = 256 * 1024;   // 31 天 × 十几项，几十 KB 足够；留 4 倍余量
@@ -108,6 +114,60 @@ async function ingest(payload) {
   return JSON.parse(out);
 }
 
+// ── 账号名解析 ────────────────────────────────────────────────
+//
+// 用 service_role JWT 调账号服务的 admin API（签法与 deploy/tools/gen-service-jwt.mjs
+// 一致：HS256，payload 带 role=service_role 与 iss=账号服务的 issuer）。
+// 结果缓存 5 分钟：管理页是低频人工查看，没必要每次刷新都去拉全量用户表。
+let nameCache = { at: 0, map: new Map(), error: null };
+
+function mintServiceJwt() {
+  const b64url = (buf) => Buffer.from(buf).toString('base64url');
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const payload = { role: 'service_role', iss: AUTH_ISSUER, iat: now, exp: now + 3600 };
+  const signingInput = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`;
+  return `${signingInput}.${createHmac('sha256', AUTH_JWT_SECRET).update(signingInput).digest('base64url')}`;
+}
+
+async function fetchUserNames() {
+  if (!AUTH_ADMIN_URL || !AUTH_JWT_SECRET) {
+    return { map: new Map(), error: '未配置 AUTH_ADMIN_URL / AUTH_JWT_SECRET' };
+  }
+  if (Date.now() - nameCache.at < 5 * 60 * 1000) return nameCache;
+
+  try {
+    const token = mintServiceJwt();
+    const res = await fetch(`${AUTH_ADMIN_URL}/admin/users?page=1&per_page=1000`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: token },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      // 保留上一次成功的缓存：账号服务临时抖动不该让管理页整页显示 UUID
+      nameCache = { ...nameCache, error: `账号服务返回 HTTP ${res.status}` };
+      return nameCache;
+    }
+    const body = await res.json();
+    const list = Array.isArray(body) ? body : (body.users ?? []);
+    const map = new Map();
+    for (const u of list) {
+      if (!u?.id) continue;
+      // ⚠️ admin API 返回的键是 **user_metadata**（GoTrue 的 API 层命名），
+      // 不是数据库列名 raw_user_meta_data —— 第一版按列名读，结果一律拿不到，
+      // 全部退化成邮箱前缀（实测：管理页显示 u16cfbeee… 而不是用户名）。
+      // 两个都试一遍，免得将来 GoTrue 改回去。
+      const meta = u.user_metadata ?? u.raw_user_meta_data ?? {};
+      // 客户端注册时把用户名放在 raw_user_meta_data.username；退回邮箱本地部分。
+      const name = meta.username || (typeof u.email === 'string' ? u.email.split('@')[0] : '');
+      map.set(u.id, name || '(未命名)');
+    }
+    nameCache = { at: Date.now(), map, error: null };
+  } catch (e) {
+    nameCache = { ...nameCache, error: `账号服务不可达：${e?.message ?? e}` };
+  }
+  return nameCache;
+}
+
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let size = 0;
@@ -169,6 +229,34 @@ async function adminPage() {
                   FROM devices) t;`)
   );
 
+  const perUser = JSON.parse(
+    await psql(`SELECT COALESCE(json_agg(row_to_json(t)), '[]'::json) FROM (
+                  SELECT * FROM usage_user_summary ORDER BY total_minutes DESC NULLS LAST LIMIT 200) t;`)
+  );
+  const unbound = JSON.parse(
+    await psql(`SELECT row_to_json(t) FROM (
+                  SELECT count(DISTINCT device_id) AS devices, round(sum(foreground_ms)/60000.0, 1) AS minutes
+                  FROM usage_daily WHERE user_id = '') t;`)
+  );
+  const { map: names, error: nameError } = await fetchUserNames();
+
+  // 名字解析不到就退回短 UUID —— 宁可难看也不要显示空白让人以为没数据。
+  const displayName = (id) => names.get(id) || `${String(id).slice(0, 8)}…`;
+  const userRows = perUser
+    .map(
+      (u) => `<tr>
+        <td><b>${esc(displayName(u.user_id))}</b><div class="mono sub">${esc(String(u.user_id).slice(0, 8))}…</div></td>
+        <td class="n">${esc(u.active_days)}</td>
+        <td class="n">${esc(u.devices)}</td>
+        <td class="n">${esc(u.total_minutes)}</td>
+        <td class="n">${esc(u.avg_minutes_per_active_day ?? '—')}</td>
+        <td class="n">${esc(u.total_words_reviewed)}</td>
+        <td class="n">${u.accuracy_pct === null ? '—' : esc(u.accuracy_pct) + '%'}</td>
+        <td>${esc(u.last_active_day)}</td>
+      </tr>`
+    )
+    .join('');
+
   const rows = summary
     .map(
       (r) => `<tr>
@@ -215,14 +303,25 @@ async function adminPage() {
   td.n{text-align:right;font-variant-numeric:tabular-nums}
   td.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
   tr:last-child td{border-bottom:none}
+  .sub{color:#8a8880;font-size:11px;margin-top:2px}
+  .warn{background:#FAEEDA;border:1px solid #BA7517;color:#633806;border-radius:8px;padding:8px 12px;font-size:13px}
 </style></head><body>
 <h1>Monster Word 使用统计</h1>
-<p class="muted">匿名设备级统计，不含账号身份与学习内容。上报频率为每设备每日最多一次。</p>
+<p class="muted">使用统计（与账号关联，供按用户查看），不含学习内容。上报频率为每设备每日最多一次。
+用户名在渲染时向账号服务解析，统计库本身只存账号标识。</p>
 <div class="cards">
   <div class="card"><b>${esc(totals.device_count)}</b><span>累计设备</span></div>
   <div class="card"><b>${esc(totals.active_1d)}</b><span>近 1 日活跃</span></div>
   <div class="card"><b>${esc(totals.active_7d)}</b><span>近 7 日活跃</span></div>
 </div>
+<h2>按用户</h2>
+${nameError ? `<p class="warn">⚠️ 用户名解析不可用（${esc(nameError)}）—— 下表显示的是账号标识前 8 位。</p>` : ''}
+<table><thead><tr>
+  <th>用户</th><th class="n">活跃天数</th><th class="n">设备数</th><th class="n">总时长(分)</th>
+  <th class="n">日均(分)</th><th class="n">复习词次</th><th class="n">正确率</th><th>最近活跃</th>
+</tr></thead><tbody>${userRows || '<tr><td colspan="8" class="muted">暂无数据</td></tr>'}</tbody></table>
+${unbound && unbound.devices > 0 ? `<p class="muted">另有未绑定账号的 ${esc(unbound.devices)} 台设备、${esc(unbound.minutes)} 分钟（本机模式或未登录时上报，无法归属到人）。</p>` : ''}
+
 <h2>按天汇总</h2>
 <table><thead><tr>
   <th>日期</th><th class="n">活跃设备</th><th class="n">总时长(分)</th><th class="n">人均(分)</th>

@@ -57,6 +57,31 @@ else
   log "已生成数据库密码与管理页密码"
 fi
 
+# ── 从认证部署里取「解析用户名」所需的凭据 ──────────────────────
+#
+# 统计库只存 user_id（UUID），用户名在管理页渲染时向账号服务解析 ——
+# 用户名的权威来源是账号服务，在统计库再存一份必然漂移。
+# 所以这里要拿到：账号服务的本地地址 + 一个能调 admin API 的 service JWT 的签名密钥。
+#
+# 这两样都在认证部署的 .env 里（同一台机器，认证后端先装）。
+AUTH_ENV=/opt/mw-auth/.env
+AUTH_ADMIN_URL=http://127.0.0.1:9999
+AUTH_JWT_SECRET=""
+AUTH_ISSUER=""
+if [ -f "$AUTH_ENV" ]; then
+  AUTH_JWT_SECRET="$(grep -E '^MW_JWT_SECRET=' "$AUTH_ENV" | cut -d= -f2- || true)"
+  AUTH_ISSUER="$(grep -E '^GOTRUE_JWT_ISSUER=' "$AUTH_ENV" | cut -d= -f2- || true)"
+  AUTH_PORT="$(grep -E '^GOTRUE_API_PORT=' "$AUTH_ENV" | cut -d= -f2- || true)"
+  [ -n "$AUTH_PORT" ] && AUTH_ADMIN_URL="http://127.0.0.1:$AUTH_PORT"
+fi
+if [ -n "$AUTH_JWT_SECRET" ] && [ -n "$AUTH_ISSUER" ]; then
+  log "已从 $AUTH_ENV 取到账号服务凭据（管理页可按用户名显示）"
+else
+  # 不是致命错误：管理页会退化成显示账号标识前 8 位，其余功能不受影响。
+  log "⚠️ 未能从 $AUTH_ENV 取到 JWT 密钥/issuer —— 管理页将显示账号标识而非用户名"
+  log "   （先把认证后端装好，或用 AUTH_JWT_SECRET / AUTH_ISSUER 环境变量补上）"
+fi
+
 log "配置角色 $DB_ROLE 与数据库 $DB_NAME…"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -q <<EOF
 DO \$\$
@@ -114,6 +139,12 @@ TRUST_PROXY=1
 
 ADMIN_USER=admin
 ADMIN_PASSWORD=$ADMIN_PASSWORD
+
+# 账号服务（把 user_id 解析成用户名，供管理页「按人看」）。
+# 留空则该功能降级为显示账号标识前 8 位，不影响上报与入库。
+AUTH_ADMIN_URL=$AUTH_ADMIN_URL
+AUTH_ISSUER=$AUTH_ISSUER
+AUTH_JWT_SECRET=$AUTH_JWT_SECRET
 
 # 供运维脚本读取（服务本身不认这个变量）
 MW_DB_PASSWORD=$DB_PASSWORD
@@ -185,12 +216,16 @@ log "端到端自检（写入一条测试数据再删除）…"
 TEST_DEVICE="__selftest__$(date +%s)"
 curl -sf -m 10 -X POST "http://127.0.0.1:$LISTEN_PORT/v1/report" \
   -H 'Content-Type: application/json' \
-  -d "{\"schema_version\":1,\"device_id\":\"$TEST_DEVICE\",\"app_version\":\"0.0.0\",\"app_build\":0,\"platform\":\"selftest\",\"os_version\":\"\",\"locale\":\"\",\"days\":[{\"day\":\"2026-01-01\",\"foreground_ms\":60000,\"session_count\":1,\"module_open_counts\":{\"learn\":1,\"随便写的\":9}}]}" \
+  -d "{\"schema_version\":2,\"device_id\":\"$TEST_DEVICE\",\"user_id\":\"selftest-user-1\",\"app_version\":\"0.0.0\",\"app_build\":0,\"platform\":\"selftest\",\"os_version\":\"\",\"locale\":\"\",\"days\":[{\"day\":\"2026-01-01\",\"foreground_ms\":60000,\"session_count\":1,\"module_open_counts\":{\"learn\":1,\"随便写的\":9}}]}" \
   > /dev/null || die "上报自检失败（见 journalctl -u mw-telemetry）"
 
 SELFTEST_ROWS="$(PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U "$DB_ROLE" -d "$DB_NAME" -tAc \
   "SELECT count(*) FROM usage_daily WHERE device_id = '$TEST_DEVICE'")"
 [ "$SELFTEST_ROWS" = "1" ] || die "自检数据没入库（期望 1 行，实际 $SELFTEST_ROWS）"
+
+# 顺带验证账号关联真的入库了
+SELFTEST_USER="$(PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U "$DB_ROLE" -d "$DB_NAME" -tAc   "SELECT user_id FROM usage_daily WHERE device_id = '$TEST_DEVICE'")"
+[ "$SELFTEST_USER" = "selftest-user-1" ] || die "user_id 没入库（期望 selftest-user-1，实际 '$SELFTEST_USER'）"
 
 # 顺带验证白名单真的生效：非法模块键不该落库
 BAD_KEY="$(PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U "$DB_ROLE" -d "$DB_NAME" -tAc \
@@ -198,7 +233,7 @@ BAD_KEY="$(PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U "$DB_ROLE" -d "$DB_NAM
 [ "$BAD_KEY" = "f" ] || die "模块白名单未生效（非法键进了库）"
 
 PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U "$DB_ROLE" -d "$DB_NAME" -q -c \
-  "DELETE FROM usage_daily WHERE device_id = '$TEST_DEVICE'; DELETE FROM devices WHERE device_id = '$TEST_DEVICE';"
+  "DELETE FROM usage_daily WHERE device_id = '$TEST_DEVICE'; DELETE FROM devices WHERE device_id = '$TEST_DEVICE'; DELETE FROM telemetry_users WHERE user_id = 'selftest-user-1';"
 
 echo ""
 echo "=== 完成 ==="

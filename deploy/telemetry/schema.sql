@@ -55,6 +55,49 @@ CREATE TABLE IF NOT EXISTS usage_daily (
 -- 按天出报表（日活、总时长）是最常用的查询。
 CREATE INDEX IF NOT EXISTS idx_usage_daily_day ON usage_daily (day);
 
+-- ── 账号关联（2026-10-14 新增，业主要求管理端「按人看」）────────────
+--
+-- ⚠️ 这一列的出现改变了数据的性质：从「不可识别到个人的设备级统计」变成
+--    「可识别到个人的行为记录」。隐私披露已同步改（legal_documents.dart §一/§二/§六）。
+--
+-- 只存 UUID，**不存用户名**：用户名的权威来源是账号服务（mwauth），
+-- 在这里再存一份必然漂移（改名后对不上）。管理页渲染时向账号服务解析。
+--
+-- 空串表示「没有可关联的账号」（客户端处于本机模式或未登录）—— 与「旧客户端
+-- 缺字段」区分开，所以客户端从 v2 起一律带这个字段（取不到就传空串）。
+--
+-- 用 ALTER ... IF NOT EXISTS 而不是只改上面的 CREATE TABLE：
+-- 本表在 2026-10-14 已经上线跑过一轮，必须能就地升级。
+ALTER TABLE usage_daily ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT '';
+CREATE INDEX IF NOT EXISTS idx_usage_daily_user ON usage_daily (user_id, day);
+
+-- 出现过的账号台账（供管理页列「按人」时有个完整名单，含只有设备数据没有账号的行）。
+CREATE TABLE IF NOT EXISTS telemetry_users (
+  user_id    TEXT        PRIMARY KEY,
+  first_seen TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_seen  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 按人汇总。只统计有账号关联的行；未绑定的仍能在 usage_daily_summary 里看到。
+CREATE OR REPLACE VIEW usage_user_summary AS
+SELECT
+  user_id,
+  count(DISTINCT day)                                                  AS active_days,
+  count(DISTINCT device_id)                                            AS devices,
+  round(sum(foreground_ms) / 60000.0, 1)                               AS total_minutes,
+  CASE WHEN count(DISTINCT day) > 0
+       THEN round(sum(foreground_ms) / 60000.0 / count(DISTINCT day), 1)
+       ELSE NULL END                                                   AS avg_minutes_per_active_day,
+  max(day)                                                             AS last_active_day,
+  sum(words_reviewed)                                                  AS total_words_reviewed,
+  sum(new_words_learned)                                               AS total_new_words,
+  CASE WHEN sum(words_reviewed) > 0
+       THEN round(100.0 * sum(words_correct) / sum(words_reviewed), 1)
+       ELSE NULL END                                                   AS accuracy_pct
+FROM usage_daily
+WHERE user_id <> ''
+GROUP BY user_id;
+
 -- 设备台账：日活去重、看留存都靠它，不必每次去重扫 usage_daily。
 CREATE TABLE IF NOT EXISTS devices (
   device_id   TEXT        PRIMARY KEY,

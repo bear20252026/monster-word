@@ -1,7 +1,8 @@
 // 使用统计功能域的装配入口。
 //
-// 依赖方向：本 feature **不依赖任何其它 feature**（只读自己的表 + 一个 HTTP 出口），
-// 所以可以挂在最外层。它被 app.dart 的生命周期钩子（前台/后台）与更多设置页消费。
+// 依赖方向：本 feature 依赖 account 的 **application 层**端口 `AuthSessionStore`
+// （只为了拿当前用户 UUID，供管理端「按人看」），因此**必须挂在 account scope 内层**。
+// 它被 app.dart 的生命周期钩子（前台/后台）与更多设置页消费。
 //
 // 上报频率、开关默认值、保留期这些口径都在 UsageStatsCollector / PrefsUsageStatsSettings
 // 的注释里，改之前先读那边。
@@ -16,6 +17,8 @@ import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 import 'package:word_app/features/telemetry/data/http_usage_stats_uploader.dart';
 import 'package:word_app/features/telemetry/data/platform_usage_stats_environment.dart';
 import 'package:word_app/features/telemetry/data/prefs_usage_stats_settings.dart';
+import 'package:word_app/features/account/application/auth_session_store.dart';
+import 'package:word_app/features/telemetry/data/session_usage_stats_identity.dart';
 import 'package:word_app/features/telemetry/data/usage_stats_dao.dart';
 
 Widget buildTelemetryFeatureScope({required Widget child}) {
@@ -25,6 +28,9 @@ Widget buildTelemetryFeatureScope({required Widget child}) {
       Provider<UsageStatsUploader>(create: (_) => HttpUsageStatsUploader()),
       Provider<UsageStatsEnvironment>(create: (_) => PlatformUsageStatsEnvironment()),
       Provider<UsageStatsSettings>(create: (_) => PrefsUsageStatsSettings()),
+      // 身份来自账号会话（跨 feature 只 import 对方 application 层的端口）。
+      // 正因如此，本 scope **必须挂在 account scope 内层** —— 见 app.dart 的注释。
+      Provider<UsageStatsIdentity>(create: (context) => SessionUsageStatsIdentity(context.read<AuthSessionStore>())),
       Provider<UsageStatsCollector>(
         create: (context) {
           final collector = UsageStatsCollector(
@@ -32,6 +38,7 @@ Widget buildTelemetryFeatureScope({required Widget child}) {
             uploader: context.read<UsageStatsUploader>(),
             environment: context.read<UsageStatsEnvironment>(),
             settings: context.read<UsageStatsSettings>(),
+            identity: context.read<UsageStatsIdentity>(),
             // 时钟注入而不是内部直接 DateTime.now()：跨午夜切分与退避判断都要能测。
             clock: DateTime.now,
           );

@@ -1,6 +1,6 @@
 # 使用统计服务端（mw_telemetry）
 
-接收客户端的使用统计、入库、提供一个只读管理页。
+接收客户端的使用统计、入库、提供一个只读管理页（**支持按用户查看**）。
 
 > 客户端侧的设计与隐私边界见 [`lib/features/telemetry/README.md`](../../lib/features/telemetry/README.md)。
 > **两边一起看**：字段、白名单、频率口径都是成对的，改一边要改另一边。
@@ -59,6 +59,30 @@
 - 客户端重装后计数从 0 重新开始：覆盖会把当天已有的时长抹掉，取较大值不会
 
 `book_learned_count` / `book_word_count` 是**状态量**不是累加量，所以用覆盖。
+
+## 4.1 账号关联与「按人看」（2026-10-14 新增）
+
+业主要求管理端能按人看。客户端上报信封里带 `user_id`（当前登录账号的 UUID），
+`usage_daily.user_id` 存下来，`telemetry_users` 记台账。
+
+**统计库里只存 UUID，不存用户名。** 管理页渲染时用 service_role JWT 调账号服务的
+`GET /admin/users`，在内存里做 UUID → 用户名 的映射（结果缓存 5 分钟）。
+理由：用户名的权威来源是账号服务，在统计库再存一份必然漂移（改名后对不上）。
+副作用也很好：**统计库万一泄露，里面没有用户名**。
+
+映射失败（账号服务抖动、密钥没配）时退化成显示 UUID 前 8 位，并在页面顶部给出警告 ——
+**不会**因为名字解析不了就让整页显示空白，让人误以为没数据。
+
+> ⚠️ **踩过的坑：GoTrue 的 admin API 返回的键是 `user_metadata`，不是数据库列名
+> `raw_user_meta_data`。**
+> 第一版按列名读，结果 `username` 一律取不到，全部退化成邮箱本地部分
+> （实测管理页显示 `u16cfbeee…` 而不是用户名 `percheck2847`）。
+> 代码里两个键都试一遍。
+
+上报格式版本从 v1 升到 **v2**：v1 的数据不可识别到个人，v2 的与账号关联，
+服务端据此能区分历史数据的性质。
+
+隐私披露已同步改写（客户端 `legal_documents.dart` §一/§二/§六，`policyVersion` → `2026-10-14.2`）。
 
 ## 5. 部署
 
@@ -196,6 +220,10 @@ ssh root@101.133.235.110 'cd /tmp/tsql && sed -i "s/\r$//" verify-sql.sh && bash
 | **经 Caddy 的完整上报链路** | ✅ POST `Host: stats.cloudbear.cloud` → `{"ok":true,"accepted":1}`；库内落行正确、非法模块键被剔除、汇总视图算出 30 分钟 / 82.5% |
 | Caddy 路由回归（既有 auth / aionui / gallery） | ✅ 均未受影响 |
 | Cloudflare Public Hostname | ⏳ 待做（见 §5 ②） |
+| **账号关联**（user_id 入库、账号台账、按人汇总视图） | ✅ 6 项断言 |
+| **账号关联的幂等细节**（先未登录后登录要补上；已有账号不被空值抹掉） | ✅ |
+| **管理页按人显示真实用户名** | ✅ 建真实账号 → 上报 → 页面显示 `percheck10761`，而不是 UUID 或邮箱前缀 |
+| 服务本体部署 + 安装脚本端到端自检 | ✅ 含 user_id 入库校验 |
 | 客户端 → 服务端 公网端到端 | ⏳ 待 Cloudflare 入口 + `STATS_BASE_URL` 注入 |
 
 服务本体已部署：systemd `mw-telemetry`，监听 `127.0.0.1:8080`，库 `mw_telemetry`。

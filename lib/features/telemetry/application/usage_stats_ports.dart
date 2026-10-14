@@ -75,6 +75,22 @@ abstract class UsageStatsEnvironment {
   String locale();
 }
 
+/// 当前登录账号的服务端用户标识。
+///
+/// ⚠️ **这是「按人看」的前提，也是本功能隐私边界变化的分界线。**
+/// 一旦上报带上它，数据就从「不可识别到个人的设备级统计」变成
+/// 「可识别到个人的行为记录」—— 隐私披露必须同步写明（见 legal_documents.dart）。
+/// 2026-10-14 业主明确要求管理端按人看，故加上；此前刻意不绑。
+///
+/// 返回 null 表示**没有可关联的账号**（本机模式，或尚未登录）。服务端把这种上报
+/// 归到「未绑定账号」，不丢数据。
+///
+/// 只传 UUID 不传用户名：用户名的权威来源是账号服务，客户端再存一份必然漂移。
+/// 管理页展示名字时由统计服务向账号服务解析。
+abstract class UsageStatsIdentity {
+  Future<String?> userId();
+}
+
 /// 开关（用户在设置里可改；默认值由编译期常量决定）。
 abstract class UsageStatsSettings {
   Future<bool> isEnabled();

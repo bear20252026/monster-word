@@ -38,7 +38,7 @@ POST（最多带 31 天，含补传）。失败写退避（2h），本地数据�
 
 使用时长、打开次数、学习会话数、答题量与正确率、新学词数、词书进度（只传数字不传书名）、
 连续签到天数、虚拟道具数量、各模块打开次数；信封里带应用版本、构建号、平台、系统版本、
-界面语言、**随机生成的设备标识**。
+界面语言、**随机生成的设备标识**，以及**当前登录账号的 UUID**（管理端按人看）。
 
 ### 不上报什么
 
@@ -48,10 +48,24 @@ POST（最多带 31 天，含补传）。失败写退避（2h），本地数据�
   生成的 128 bit 十六进制，只为在服务端把同一台设备的上报归并成一条线
 - **位置、通讯录**：不涉及
 
-### 为什么 deviceId 不与 `user_id` 绑定
+### 账号关联：与 `user_id` 绑定（2026-10-14 业主决定）
 
-本功能的目的是「使用时长 + 基本情况」，不需要知道是谁。不绑定 ⇒ 这批数据**不可识别到个人**，
-合规压力最小。若日后要按人看，**必须同步改披露**（那就成了可识别到个人的行为记录）。
+**管理端要按人看**，所以上报信封带上了当前登录账号的 UUID（`UsageStatsReport.userId`）。
+这改变了数据的性质：从「不可识别到个人的设备级统计」变成**可识别到个人的行为记录**。
+
+因此同时做了三件事：
+1. 隐私披露同步改写（`legal_documents.dart` §一/§二/§六），`policyVersion` 提到 `2026-10-14.2`
+2. 上报格式版本从 v1 升到 **v2** —— 服务端据此能区分历史数据的性质
+3. 设置页开启前的告知弹窗里写明了「会与账号关联」
+
+**只传 UUID，不传用户名**：用户名的权威来源是账号服务，客户端再存一份必然漂移
+（改名后对不上）。管理页渲染时由统计服务向账号服务解析。
+
+**本机模式 / 未登录时**没有账号可关联，`userId` 为空串（不是省略字段）——
+服务端据此把这条归到「未绑定账号」，而不是当成旧客户端缺字段。
+
+**仍不上报**：具体学了哪些词、搜索词、笔记与收藏正文、逐条答题记录。
+账号关联只加了「是谁」，没有加「学了什么」。
 
 ### 开关
 
@@ -74,6 +88,7 @@ data/usage_stats_dao.dart              SQLite（表见 user_database.dart 的 _c
 data/http_usage_stats_uploader.dart    HTTP 出口
 data/platform_usage_stats_environment.dart  设备标识 / 版本 / 平台 / 语言
 data/prefs_usage_stats_settings.dart   开关
+data/session_usage_stats_identity.dart  当前账号 UUID（读 account 的 application 层端口）
 presentation/usage_stats_feature_providers.dart  装配
 ```
 
@@ -119,14 +134,15 @@ presentation/usage_stats_feature_providers.dart  装配
 
 ## 5. 还没做的部分
 
-- **服务端**：`deploy/telemetry/`（接收服务 + 独立库 + 只读管理页 + Caddy 路由）。
-  客户端已经能发，服务端未落地前上报会失败并走退避，数据留在本地不会丢。
+- ~~**服务端**：`deploy/telemetry/`~~ —— **已部署并验证**（2026-10-14，含按人视图）。
+  见 `deploy/telemetry/README.md`。
 - **学习行为埋点**：`recordStudySession` / `recordAnswers` / `recordNewWordsLearned` /
   `syncBookProgress` / `syncStreak` / `recordCoinsEarned` 这些 API 已就绪并有测试覆盖，
   但**尚未接到学习功能里**（需要在学习会话结束、答题批改、签到成功等处调用）。
   目前只有「使用时长 / 打开次数」由 `app.dart` 的生命周期钩子自动采集。
 - **模块打开次数**：`recordModuleOpen` 已就绪，尚未接到路由/页面入口。
-- **发版流水线**：需要在 `release_packages.yml` 注入 `STATS_BASE_URL`（见下）。
+- **发版流水线**：需要在 `release_packages.yml` 注入 `STATS_BASE_URL`；
+  另外 Cloudflare 隧道还要加 `stats.cloudbear.cloud` 的 Public Hostname（业主操作）。
 
 ## 6. 接更多埋点怎么做
 
