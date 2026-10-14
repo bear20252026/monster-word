@@ -314,11 +314,13 @@ flutter build windows \
 - 清理测试账号（两条）
 
 **实测结果（2026-10-14，对真实 GoTrue v2.197.0）：10/10 通过。**
+先直连后端验过一遍，Cloudflare 域名接通后又**走公网完整复验一遍**，两次都全绿；
+另从一台外部机器独立复验了注册 / 错误密码 / 中文用户名注册，结果一致。
 
 ```bash
-# 域名接好之后
-cd deploy/tools && node smoke-test.mjs
-# 域名接好之前先在服务器上直连后端验（当前用的就是这条）
+# 完整端到端（走公网）
+ssh root@101.133.235.110 'cd /opt/mw-auth/tools && node smoke-test.mjs'
+# 直连后端（用来区分「后端坏了」还是「网关坏了」）
 ssh root@101.133.235.110 'cd /opt/mw-auth/tools && node smoke-test.mjs --base-url http://127.0.0.1:9999'
 ```
 

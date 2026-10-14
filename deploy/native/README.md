@@ -16,7 +16,7 @@ Monster Word 认证后端**已经部署在**业主自己的阿里云服务器上
 |---|---|
 | 服务器 | 阿里云 ECS `101.133.235.110`（Ubuntu 24.04.2 LTS，2 vCPU / 1.6 GiB） |
 | 登录方式 | **SSH 密钥**（不是密码）：`~/.ssh/gk-deploy.pem`，用户 `root` |
-| 对外域名 | `https://auth.cloudbear.cloud`（**待加 Cloudflare 隧道入口，见 §3**） |
+| 对外域名 | `https://auth.cloudbear.cloud`（已接通，见 §3） |
 | 认证服务 | GoTrue `v2.197.0`，systemd 单元 `mw-auth`，监听 `127.0.0.1:9999` |
 | 数据库 | PostgreSQL 16.15，库 `mwauth`，角色 `supabase_auth_admin` |
 | 网关 | 复用既有 Caddy（`/etc/caddy/Caddyfile`，监听 `:8081`） |
@@ -82,35 +82,61 @@ Monster Word 认证后端**已经部署在**业主自己的阿里云服务器上
 
 ---
 
-## 3. ⚠️ 唯一剩下的一步（需要业主在 Cloudflare 控制台操作）
+## 3. Cloudflare 入口（已完成 2026-10-14）
 
-服务器侧全部就绪，但 `auth.cloudbear.cloud` 这个域名**还不存在**——
-隧道入口是远程管理的（`cloudflared` 用 token 跑，没有本地 `config.yml`），
-服务器上也没有任何 Cloudflare API 凭据，所以这一步只能在控制台点。
+`auth.cloudbear.cloud` 已接通：DNS 解析到 Cloudflare（`172.67.217.241`），
+`https://auth.cloudbear.cloud/health` 返回 200。
 
-**操作**：Cloudflare Zero Trust → Networks → Tunnels → 选中现有隧道 →
-Public Hostname → **Add a public hostname**：
+下面这套操作留档，日后要再加别的子域照此办理。隧道入口是**远程管理**的
+（`cloudflared` 用 token 跑，没有本地 `config.yml`），服务器上也没有 Cloudflare API
+凭据，所以只能在控制台点。
 
-- Subdomain: `auth`
-- Domain: `cloudbear.cloud`
-- Service: **`http://localhost:8081`**（就是既有 Caddy，不要填 9999）
+**操作**（控制台是中文界面，按下面点；英文界面括号里是原文）：
+
+1. Zero Trust → Networks → **Tunnels** → 选中现有隧道（名为 `gallery`）
+2. 点 **`已发布应用程序路由`** 标签（Published application routes）
+3. 点 **添加路由** → 选 **`已发布应用程序`**（Published application）
+4. 填：
+
+   | 字段 | 值 |
+   |---|---|
+   | 子域 | `auth` |
+   | 域 | `cloudbear.cloud`（下拉里选） |
+   | 路径 | 留空 |
+   | 服务 URL | **`http://localhost:8081`** |
+
+5. 保存（DNS 记录 Cloudflare 会自动建）
+
+> ⚠️ **别点 `主机名路由` 标签**（Hostname routes）。那个标签下的表单长得挺像，但它是
+> **专用/私有主机名路由**——页面顶部会提示「此配置要求流量通过 Cloudflare Gateway，
+> 用户需要 Cloudflare One Client」，只填「主机名 + 描述」两个字段，是给装了 WARP 客户端
+> 的设备访问内网用的，对公网访问不生效。
+> 2026-10-14 实际踩过：我第一版手册写的是旧界面的 `Public Hostname` 标签名，
+> 而当前界面已把它改名并挪到了「已发布应用程序路由」下。
+> 依据：官方文档 <https://developers.cloudflare.com/cloudflare-one/networks/routes/add-routes/>
+> 的「Add a published application route」一节（2026-10-12 更新）。
 
 保存后 Cloudflare 会自动创建 DNS 记录并签好边缘证书。
 
-**验证**（在任意能上网的机器上）：
+### 验证（已完成）
 
 ```bash
 curl -s https://auth.cloudbear.cloud/health
 # 期望：{"version":"v2.197.0","name":"GoTrue",...}
 
-cd deploy/tools && node smoke-test.mjs      # 需要 AUTH_DOMAIN 或 --base-url
+# 完整端到端：走公网 Cloudflare → cloudflared → Caddy → GoTrue，跑完自动清理测试账号
+ssh root@101.133.235.110 'cd /opt/mw-auth/tools && node smoke-test.mjs'
 ```
 
-在此之前，可以先在服务器上直连后端验证（已经这么做过了，10/10 通过）：
+2026-10-14 实测：域名接通的当天，**走公网 10/10 通过**；另外从一台外部机器
+（业主本机，与服务器不同网络路径）独立复验了注册 / 错误密码 / 中文用户名注册三条，
+结果一致；既有站点 `cloudbear.cloud` 与 `aionui.cloudbear.cloud` 均仍为 200。
+
+在没有域名之前，可以先直连后端验证（这条现在也仍然可用，用来区分「后端坏了」还是
+「网关坏了」）：
 
 ```bash
-ssh root@101.133.235.110
-cd /opt/mw-auth/tools && node smoke-test.mjs --base-url http://127.0.0.1:9999
+ssh root@101.133.235.110 'cd /opt/mw-auth/tools && node smoke-test.mjs --base-url http://127.0.0.1:9999'
 ```
 
 ---
@@ -220,7 +246,7 @@ ssh root@101.133.235.110 'cd /opt/mw-auth/tools && node smoke-test.mjs --base-ur
 | `enable-caddy-route.sh --verify-only` | ✅ 新路由通、前缀剥离正确、兜底 404 正常、公网 aionui 与 cloudbear 仍 200 |
 | 既有服务未受影响 | ✅ pm2 三个应用 online；公网两个站点 200 |
 
-**未验证**：`auth.cloudbear.cloud` 的端到端公网可达（等 §3 的 Cloudflare 入口加好）。
+**全部已验证，无遗留项。** `auth.cloudbear.cloud` 的端到端公网可达已实测（见 §3）。
 
 ### 两个操作坑（供下次参考）
 
