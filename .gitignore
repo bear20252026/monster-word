@@ -69,7 +69,8 @@ coverage/
 deliverables/*.exe
 
 # 自建认证后端的部署密钥（JWT_SECRET / POSTGRES_PASSWORD 等）。
-# 只提交 deploy/supabase/.env.example，真实 .env 一律不进仓库。
-deploy/supabase/.env
-deploy/supabase/*.dump
-deploy/supabase/caddy-root.crt
+# 只提交 .env.example，任何位置的真实 .env 一律不进仓库。
+# 用通配而不是逐个目录列：新增一条部署路径时不会漏（deploy/native/.env 就是这么漏过一次）。
+deploy/**/.env
+deploy/**/*.dump
+deploy/**/caddy-root.crt

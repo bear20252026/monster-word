@@ -23,15 +23,25 @@ import { randomBytes } from 'node:crypto';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
+// 按优先级在几个可能的位置找 .env（第一个命中的值优先，不覆盖）：
+//   1. ../.env            —— 原生部署（/opt/mw-auth/tools/ → /opt/mw-auth/.env）
+//   2. ../supabase/.env   —— 仓库里的 docker compose 路径（deploy/tools/ → deploy/supabase/.env）
+//   3. ./.env             —— 当前目录
+// 都找不到就只认环境变量。
 function loadDotEnv() {
   const out = {};
-  try {
-    for (const line of readFileSync(join(here, '..', '.env'), 'utf8').split(/\r?\n/)) {
-      const m = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
-      if (m) out[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
+  const candidates = [join(here, '..', '.env'), join(here, '..', 'supabase', '.env'), join(here, '.env')];
+  for (const path of candidates) {
+    let text;
+    try {
+      text = readFileSync(path, 'utf8');
+    } catch {
+      continue;
     }
-  } catch {
-    // 忽略：只认环境变量
+    for (const line of text.split(/\r?\n/)) {
+      const m = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
+      if (m && !(m[1] in out)) out[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
+    }
   }
   return out;
 }

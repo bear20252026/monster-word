@@ -24,6 +24,12 @@
 //   node smoke-test.mjs                # 用 ../.env 里的 AUTH_DOMAIN
 //   node smoke-test.mjs --insecure     # Caddy 自签证书时跳过 TLS 校验
 //   node smoke-test.mjs --keep         # 保留测试账号（默认跑完删除）
+//   node smoke-test.mjs --base-url http://127.0.0.1:9999
+//                                      # 直接打后端（绕过网关）。用于**域名还没接好之前**
+//                                      # 先在服务器上验后端行为 —— 例如在服务器上跑
+//                                      #   node smoke-test.mjs --base-url http://127.0.0.1:9999
+//                                      # 注意这样验不到 Caddy 的前缀剥离与 TLS，那两条
+//                                      # 由 enable-caddy-route.sh 的回归验证覆盖。
 
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -34,15 +40,25 @@ import { randomBytes } from 'node:crypto';
 const here = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 
+// 按优先级在几个可能的位置找 .env（第一个命中的值优先，不覆盖）：
+//   1. ../.env            —— 原生部署（/opt/mw-auth/tools/ → /opt/mw-auth/.env）
+//   2. ../supabase/.env   —— 仓库里的 docker compose 路径（deploy/tools/ → deploy/supabase/.env）
+//   3. ./.env             —— 当前目录
+// 都找不到就只认环境变量。
 function loadDotEnv() {
   const out = {};
-  try {
-    for (const line of readFileSync(join(here, '..', '.env'), 'utf8').split(/\r?\n/)) {
-      const m = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
-      if (m) out[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
+  const candidates = [join(here, '..', '.env'), join(here, '..', 'supabase', '.env'), join(here, '.env')];
+  for (const path of candidates) {
+    let text;
+    try {
+      text = readFileSync(path, 'utf8');
+    } catch {
+      continue;
     }
-  } catch {
-    // 忽略
+    for (const line of text.split(/\r?\n/)) {
+      const m = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
+      if (m && !(m[1] in out)) out[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
+    }
   }
   return out;
 }
@@ -54,12 +70,21 @@ if (args.includes('--insecure')) {
 
 const env = { ...loadDotEnv(), ...process.env };
 const domain = env.AUTH_DOMAIN;
-if (!domain) {
-  console.error('缺少 AUTH_DOMAIN（请设置环境变量，或在 ../.env 里填写）');
+
+// --base-url 直连后端时不需要域名；否则域名必填。
+const baseUrlIdx = args.indexOf('--base-url');
+const baseUrlOverride = baseUrlIdx >= 0 ? args[baseUrlIdx + 1] : '';
+if (!baseUrlOverride && !domain) {
+  console.error('缺少 AUTH_DOMAIN（请设置环境变量，或在 ../.env 里填写），或用 --base-url 指定后端地址');
   process.exit(1);
 }
 
-const base = `https://${domain}/auth/v1`;
+const base = baseUrlOverride ? baseUrlOverride.replace(/\/$/, '') : `https://${domain}/auth/v1`;
+// 健康检查在网关的根路径上（Caddy 用 strip_prefix 只剥 /auth/v1），
+// 直连后端时则和后端同根。
+const healthUrl = baseUrlOverride
+  ? `${base.replace(/\/auth\/v1$/, '')}/health`
+  : `https://${domain}/health`;
 const results = [];
 let failed = 0;
 
@@ -102,13 +127,13 @@ console.log(`\n目标: ${base}\n`);
 // ── 1. TLS 与网关 ──
 console.log('[1] TLS 与网关');
 try {
-  const res = await fetch(`https://${domain}/health`);
-  check('GET /health 可达（TLS 握手成功）', res.ok, `HTTP ${res.status}`);
+  const res = await fetch(healthUrl);
+  check('GET /health 可达', res.ok, `HTTP ${res.status}`);
 } catch (e) {
   // Node 的 fetch 只抛 "fetch failed"，真正的原因（ENOTFOUND / ECONNREFUSED /
   // 证书错误）在 e.cause 里。不把它带出来，运维只能靠猜。
   const cause = e?.cause ? ` — ${e.cause.code ?? e.cause.message ?? e.cause}` : '';
-  check('GET /health 可达（TLS 握手成功）', false, `${e?.message ?? e}${cause}`);
+  check('GET /health 可达', false, `${e?.message ?? e}${cause}`);
   console.error('\n网关不通，后续断言无法进行。逐项排查：');
   console.error('  1. 容器起来了吗：docker compose ps');
   console.error('  2. AUTH_DOMAIN 能解析到这台机器吗：getent hosts ' + domain);
@@ -219,4 +244,10 @@ if (failed > 0) {
   process.exit(1);
 }
 console.log('\n全部通过：后端满足客户端契约，可以构建带 AUTH_BASE_URL 的客户端了。');
-console.log(`构建示例：flutter build windows --dart-define=AUTH_BASE_URL=https://${domain} --dart-define=AUTH_ANON_KEY=<任意非空值>`);
+if (baseUrlOverride) {
+  console.log(`（本次是 --base-url 直连后端：${base}）`);
+  console.log('注意：这只验了后端行为。网关的前缀剥离与 TLS 由 enable-caddy-route.sh 的回归验证覆盖。');
+}
+if (domain) {
+  console.log(`构建示例：flutter build windows --dart-define=AUTH_BASE_URL=https://${domain} --dart-define=AUTH_ANON_KEY=<任意非空值>`);
+}
