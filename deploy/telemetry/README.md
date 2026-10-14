@@ -73,25 +73,28 @@ ssh root@101.133.235.110 'cd /root/telemetry && sed -i "s/\r$//" *.sh && bash in
 → 装 systemd → 健康检查 → **端到端自检**（真发一条假数据、验证入库与模块白名单、再删掉）。
 管理页密码在脚本输出末尾打印一次。
 
+> ⚠️ **服务连数据库必须走 TCP + 显式角色，不能靠 Unix socket 对等认证。**
+> 服务以系统账户 `mw-telemetry` 运行，而数据库角色叫 `mw_telemetry_app`，两者不同名
+> ⇒ 对等认证会报 `FATAL: role "mw-telemetry" does not exist`（2026-10-14 首次部署就是这么
+> 挂在「服务起来了但 /healthz 全 500」上的）。
+> `.env` 里的 `PG_USER` / `PG_PASSWORD` 就是为此，`server.mjs` 会带上 `-w -h 127.0.0.1 -U …`。
+
 ### 还差两步
 
-**① Caddy 路由**（把统计域名指到 `127.0.0.1:8080`）
+**① Caddy 路由 —— 已完成（2026-10-14）**
 
-在 `/etc/caddy/Caddyfile` 的 `http://:8081` 站点里，兜底 `handle` 之前加：
+`stats.cloudbear.cloud` 已在 `/etc/caddy/Caddyfile` 里指到 `127.0.0.1:8080`
+（纯反代，**没有** `uri strip_prefix` —— 统计服务的路径就是 `/v1/report`）。
+用的是泛化后的 `deploy/native/enable-caddy-route.sh`：
 
+```bash
+bash enable-caddy-route.sh --name mwtelemetry --domain stats.cloudbear.cloud \
+  --upstream 127.0.0.1:8080 --prefix '' --health-path /healthz --health-expect '"ok":true'
 ```
-	@mwtelemetry host stats.cloudbear.cloud
 
-	handle @mwtelemetry {
-		reverse_proxy 127.0.0.1:8080
-	}
-```
+（同一个脚本也服务认证路由，默认参数即 auth；加 `--verify-only` 只做回归验证不改配置。）
 
-改完必须先 `caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile` 再
-`systemctl reload caddy`，并回归验证既有路由（`aionui` 与 `auth`）没被打坏。
-**注意不要**给这条加 `uri strip_prefix` —— 统计服务的路径就是 `/v1/report`。
-
-**② Cloudflare 隧道加 Public Hostname**
+**② Cloudflare 隧道加 Public Hostname —— 待做**
 
 Networks → Tunnels → 选中隧道 → **`已发布应用程序路由`** 标签 → 添加路由 →
 `已发布应用程序` → 子域 `stats`、域 `cloudbear.cloud`、服务 URL `http://localhost:8081`。
@@ -99,7 +102,7 @@ Networks → Tunnels → 选中隧道 → **`已发布应用程序路由`** 标�
 > ⚠️ 别点 `主机名路由` 标签（那是需要 WARP 客户端的专用路由，对公网不生效）。
 > 2026-10-14 在这里踩过一次，详见 `deploy/native/README.md` §3。
 
-**③ 发版流水线注入**
+**③ 发版流水线注入 —— 待做（等 ② 通了再做）**
 
 `release_packages.yml` 的三处构建加：
 
@@ -188,10 +191,11 @@ ssh root@101.133.235.110 'cd /tmp/tsql && sed -i "s/\r$//" verify-sql.sh && bash
 | 缺 device_id / days 非数组 / 超 31 天 被拒 | ✅ |
 | 空 days 正常返回 0 | ✅ |
 | 汇总视图数值格式 | ✅（`sum(bigint)` 返回 numeric，已用 round 收口） |
-| Node 服务（`server.mjs`） | ⏳ 语法校验通过；**未在服务器上跑过** |
-| 管理页 | ⏳ 未看过 |
-| Caddy 路由 + Cloudflare 入口 | ⏳ 未做（见 §5） |
-| 客户端 → 服务端 端到端 | ⏳ 未做 |
+| **服务本体部署 + 安装脚本端到端自检** | ✅ 真写一条测试数据、验白名单、再删掉 |
+| 服务健康 / 管理页鉴权 | ✅ `/healthz` 返回 `{"ok":true}`；无凭据 401，带凭据正常渲染 |
+| **经 Caddy 的完整上报链路** | ✅ POST `Host: stats.cloudbear.cloud` → `{"ok":true,"accepted":1}`；库内落行正确、非法模块键被剔除、汇总视图算出 30 分钟 / 82.5% |
+| Caddy 路由回归（既有 auth / aionui / gallery） | ✅ 均未受影响 |
+| Cloudflare Public Hostname | ⏳ 待做（见 §5 ②） |
+| 客户端 → 服务端 公网端到端 | ⏳ 待 Cloudflare 入口 + `STATS_BASE_URL` 注入 |
 
-**尚未在服务器上部署过服务本体。** 客户端默认关闭统计，所以在服务端就绪前不会有任何
-数据外发，这条链路空着不会造成问题。
+服务本体已部署：systemd `mw-telemetry`，监听 `127.0.0.1:8080`，库 `mw_telemetry`。

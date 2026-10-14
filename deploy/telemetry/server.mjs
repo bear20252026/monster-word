@@ -29,6 +29,12 @@ import { spawn } from 'node:child_process';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 
 const PG_DB = process.env.PG_DB || 'mw_telemetry';
+// ⚠️ 必须走 TCP + 显式角色，不能靠 Unix socket 的对等认证：
+//   服务以系统账户 mw-telemetry 运行，而数据库角色叫 mw_telemetry_app，
+//   两者不同名 ⇒ 对等认证会报 `role "mw-telemetry" does not exist`（实测踩过）。
+const PG_HOST = process.env.PG_HOST || '127.0.0.1';
+const PG_USER = process.env.PG_USER || '';
+const PG_PASSWORD = process.env.PG_PASSWORD || '';
 const PORT = Number(process.env.LISTEN_PORT || 8080);
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
@@ -73,8 +79,14 @@ function clientIp(req) {
 // payload 里不可能预先包含它）。
 function psql(sql) {
   return new Promise((resolve, reject) => {
-    const child = spawn(PSQL, ['-d', PG_DB, '-tA', '-v', 'ON_ERROR_STOP=1', '-f', '-'], {
+    // -w = 绝不交互式要密码。缺凭据时立刻失败，而不是挂住等输入
+    //（systemd 下没有 stdin，挂住会变成「服务活着但请求全超时」这种难查的状态）。
+    const args = ['-w', '-h', PG_HOST];
+    if (PG_USER) args.push('-U', PG_USER);
+    args.push('-d', PG_DB, '-tA', '-v', 'ON_ERROR_STOP=1', '-f', '-');
+    const child = spawn(PSQL, args, {
       stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, PGPASSWORD: PG_PASSWORD },
     });
     let out = '';
     let err = '';
@@ -272,6 +284,6 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`[telemetry] listening on 127.0.0.1:${PORT} (db=${PG_DB}, admin_user=${ADMIN_USER})`);
+  console.log(`[telemetry] listening on 127.0.0.1:${PORT} (db=${PG_DB}@${PG_HOST} as ${PG_USER || '<peer>'}, admin_user=${ADMIN_USER})`);
   if (!ADMIN_PASSWORD) console.warn('[telemetry] ⚠️ 未设置 ADMIN_PASSWORD，管理页将返回 503');
 });

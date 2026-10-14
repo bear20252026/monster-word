@@ -102,6 +102,11 @@ cat > "$ENV_FILE" <<EOF
 # ⚠️ 含密码，权限 640 root:服务账户。不要进仓库、不要贴聊天记录。
 
 PG_DB=$DB_NAME
+PG_HOST=127.0.0.1
+# 必须显式给角色与密码：服务以系统账户 mw-telemetry 运行，没有同名数据库角色，
+# 靠 Unix socket 对等认证会报 role "mw-telemetry" does not exist。
+PG_USER=$DB_ROLE
+PG_PASSWORD=$DB_PASSWORD
 LISTEN_PORT=$LISTEN_PORT
 # Caddy 反代过来，客户端真实 IP 在 X-Forwarded-For 里 —— 不开这个限流会退化成
 # 「所有请求都算 127.0.0.1 一个来源」，等于限流失效。
