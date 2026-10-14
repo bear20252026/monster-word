@@ -1,19 +1,23 @@
 # 账号认证服务端契约（R2-01 阶段二）
 
-> 状态：**客户端已就绪，服务端待部署**。
+> 状态：**服务端已部署并通过验收（2026-10-14）**，客户端已就绪。
+> - 服务端：GoTrue `v2.197.0` @ 阿里云 ECS `101.133.235.110`，`https://auth.cloudbear.cloud`
 > - 客户端端口：`lib/features/account/application/account_authenticator.dart`
 > - 服务端实现：`lib/features/account/data/supabase_account_authenticator.dart`
 > - 迁移装饰器：`lib/features/account/data/migrating_account_authenticator.dart`
-> - 部署与运维：`deploy/supabase/`（compose + 验收脚本 + 运维手册）
+> - 部署与运维：[`deploy/README.md`](../deploy/README.md)（原生路径 `deploy/native/` 是实际在用的；
+>   `deploy/supabase/` 是 Docker 路径，未实测）
+> - 验收脚本：`deploy/tools/smoke-test.mjs` —— **已对真实 GoTrue 跑通 10/10**
 >
 > 技术选型：**自建 Supabase（GoTrue）**，用户名 + 密码。用户名映射为
 > `u<SHA-256(归一化用户名) 前 24 位十六进制>@monster-word.internal`（见 §2.4）。
 >
-> ⚠️ **本文件 §3 的错误码表是逐条对照 supabase/auth 上游源码核对的**，不是照文档抄的。
-> 初版曾写「用户不存在 → 400 `user_not_found`」，这在密码授予里**根本不成立**——
-> 该错误码只出现在 `/user`、管理接口、`/recover`、外部 OAuth 里，密码授予为了防用户名
-> 枚举刻意把它合并进了 `invalid_credentials`。这一条错误会直接导致存量用户永远无法迁移
-> （详见 §6）。改动本文件时请同样对着源码核，不要凭印象。
+> ⚠️ **本文件 §3 的错误码表是逐条对照 supabase/auth 上游源码核对的，并且已在真实
+> GoTrue v2.197.0 上实测确认**，不是照文档抄的。初版曾写「用户不存在 → 400
+> `user_not_found`」，这在密码授予里**根本不成立**——该错误码只出现在 `/user`、
+> 管理接口、`/recover`、外部 OAuth 里，密码授予为了防用户名枚举刻意把它合并进了
+> `invalid_credentials`。这一条错误会直接导致存量用户永远无法迁移（详见 §6）。
+> 改动本文件时请同样对着源码核 + 用 `smoke-test.mjs` 实测，不要凭印象。
 
 ---
 
@@ -267,7 +271,19 @@ return MigratingAccountAuthenticator(
 
 UI 层（`login_page.dart`）与端口本身**不需要改动**：它已按 `auth.scope` 区分弹窗措辞
 （`AccountScope.local` → 「仅存本机，不上传」；`remote` → 「密码会通过加密连接提交给
-服务端用于校验」）。
+服务端用于校验」）。披露文本同样按模式分叉（`legal_documents.dart`），服务端模式下
+不再声称「不设远程账号服务器」。
+
+### 构建命令（服务端就绪后）
+
+```bash
+flutter build windows \
+  --dart-define=AUTH_BASE_URL=https://auth.cloudbear.cloud \
+  --dart-define=AUTH_ANON_KEY=any-non-empty-string
+```
+
+> 本栈不校验 apikey（anon key 本就随客户端二进制公开，拦不住任何人）。
+> 客户端要求这一项非空才切服务端模式，所以填任意非空值即可。
 
 ---
 
@@ -283,18 +299,27 @@ UI 层（`login_page.dart`）与端口本身**不需要改动**：它已按 `aut
 | `test/features/account/data/secure_auth_session_store_test.dart` | 整包原子读写、损坏自愈、key 与旧字段隔离 |
 | `test/features/account/data/local_account_authenticator_test.dart` | 本机模式（阶段一行为不回退） |
 
-### 8.2 服务端行为（部署后必跑）
+### 8.2 服务端行为（`deploy/tools/smoke-test.mjs`）
 
-`deploy/supabase/tools/smoke-test.mjs` —— 9 条断言，逐条对应上表的服务端侧：
+10 条断言，逐条对应 §3 的错误码表：
 
-- `/health` 可达（TLS 握手成功）
-- 注册返回 200 且**含 access_token**（证明 `GOTRUE_MAILER_AUTOCONFIRM` 真的生效）
+- `/health` 可达
+- 注册返回 200 且**含 `access_token`**（证明 `GOTRUE_MAILER_AUTOCONFIRM` 真的生效）
 - 重复注册 → 422 `user_already_exists`
 - 正确密码 → 200 + token
 - 错误密码 → 400 `invalid_credentials`
 - **用户不存在 → 400 `invalid_credentials`（不得是 `user_not_found`）** ← 迁移方案的前提
 - 中文用户名可注册（证明地址派生对非 ASCII 有效）
 - 大小写/首尾空格归一为同一账号
-- 清理测试账号
+- 清理测试账号（两条）
+
+**实测结果（2026-10-14，对真实 GoTrue v2.197.0）：10/10 通过。**
+
+```bash
+# 域名接好之后
+cd deploy/tools && node smoke-test.mjs
+# 域名接好之前先在服务器上直连后端验（当前用的就是这条）
+ssh root@101.133.235.110 'cd /opt/mw-auth/tools && node smoke-test.mjs --base-url http://127.0.0.1:9999'
+```
 
 **全绿之前不要把客户端切到服务端模式。**

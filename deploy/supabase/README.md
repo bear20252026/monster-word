@@ -1,4 +1,10 @@
-# 自建认证后端（R2-01 阶段二）
+# 自建认证后端（R2-01 阶段二）—— Docker 路径
+
+> ⚠️ **这条路径不是实际在用的那条。** 业主的服务器（阿里云 ECS，2 vCPU / 1.6 GiB）
+> **没装 Docker**，实际部署走的是 [`../native/`](../native/README.md)（PostgreSQL +
+> GoTrue 二进制 + systemd），后端已验收 10/10 通过。
+> 本目录保留给「有 Docker 的环境」，以及日后迁到 Supabase Cloud 时的配置对照。
+> **本目录的 compose / Caddyfile / init SQL 未实际启动验证过**（交付环境 Docker daemon 未运行）。
 
 给 Monster Word 提供**用户名 + 密码的服务端校验**。取代阶段一「密码哈希存本机、
 本机自己校验」的做法——那种做法的问题不是哈希算法弱，而是**校验方和被校验方在同一台
@@ -12,7 +18,7 @@
 ```
 
 刻意**不含** Studio / PostgREST / Realtime / Storage：本 App 只需要认证，官方全家桶
-会带来数倍内存占用和一个额外的 Web 管理后台入口。管理员重置密码走 `tools/reset-password.mjs`。
+会带来数倍内存占用和一个额外的 Web 管理后台入口。管理员重置密码走 `../tools/reset-password.mjs`。
 
 ---
 
@@ -47,7 +53,7 @@ docker compose logs -f auth
 ### 1.3 验收（必做）
 
 ```bash
-cd deploy/supabase/tools
+cd deploy/tools
 node smoke-test.mjs --insecure      # Caddy 自签证书时必须带 --insecure
 ```
 
@@ -80,7 +86,7 @@ flutter build windows \
 ### 2.1 用户忘了密码 → 管理员重置
 
 ```bash
-cd deploy/supabase/tools
+cd deploy/tools
 node reset-password.mjs 张三 --insecure          # 生成随机新密码并打印
 node reset-password.mjs 张三 NewPass123 --insecure   # 指定新密码
 ```
