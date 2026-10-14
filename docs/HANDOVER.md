@@ -95,7 +95,9 @@ flutter test                                                       # 全量 904 
    **下一步（需服务端）**：把本机账号升级为服务端账号（自建 Supabase，用户名 + 密码），届时密码由服务端校验、忘记密码由管理员在后台重置。
    **进展（2026-10-14，阶段二）**：客户端侧已完成——`SupabaseAccountAuthenticator`（对接 GoTrue，错误码映射逐条对着上游源码核对）、`MigratingAccountAuthenticator`（存量用户无感迁移）、会话持久化、装配点按 `--dart-define=AUTH_BASE_URL` 切换（不注入即维持本机模式，CI 不受影响）。
    **服务端也已部署并验收**：GoTrue `v2.197.0` 跑在业主自己的阿里云 ECS（`101.133.235.110`，Ubuntu 24.04 / 2 vCPU / 1.6 GiB，**无 Docker** ⇒ 走原生部署而非容器），PostgreSQL 16 库 `mwauth`，复用既有 Caddy + Cloudflare 隧道做入口。`smoke-test.mjs` 对真实 GoTrue **10/10 通过**。
-   **服务端已完整就绪**：`auth.cloudbear.cloud` 已接通（Cloudflare 隧道 → Caddy → GoTrue），走公网验收 **10/10 通过**。剩余动作只有一件：**把 `AUTH_BASE_URL` 加进发版流水线**（`.github/workflows/release_packages.yml` 的三处构建目前只注 `SENTRY_DSN`/`APP_VERSION`/`APP_BUILD_NUMBER`，所以现在发出去的版本仍是本机模式）。这两个值不是密钥，可直接写进 workflow。
+   **服务端与客户端两侧都已就绪（2026-10-14）**：`auth.cloudbear.cloud` 已接通（Cloudflare 隧道 → Caddy → GoTrue），走公网验收 **10/10 通过**；`release_packages.yml` 的三处构建已注入 `AUTH_BASE_URL`，**下次发版即全员切到服务端认证**。
+   **回退方式**：删掉那两行 `--dart-define`（`AUTH_BASE_URL` / `AUTH_ANON_KEY`）重发一版即可，不需要改代码。
+   **切换后须知**：已登录用户不受影响（登录态在本机）；存量用户不会升级即迁移，而是在下次**显式登录**时才迁移到服务端（判据见 `docs/auth_server_contract.md` §6）。已用 `workflow_dispatch` 手动跑通整条发版链路，并下载产物确认编译期常量真的进了二进制（三个 ABI 的 `libapp.so` 里各 1 处 `https://auth.cloudbear.cloud`）。
    部署与运维手册：`deploy/README.md`、`deploy/native/README.md`；契约：`docs/auth_server_contract.md`。
 2. **release keystore 迁出项目目录**：`android/app/*.jks` + `key.properties` 仍在工程内（违反自家 release_pipeline §1.3），建议移至工程外密钥目录 + 高强度密码入管理器 + 仅 CI secrets 签名。
 3. **GitHub 仓库设置**：建议开启分支保护（main 禁直推、PR 必审）——携带签名 secrets 的 job 目前对 main push 开放。
