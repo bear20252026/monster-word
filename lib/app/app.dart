@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/utils/calendar_days.dart';
+import 'package:word_app/features/telemetry/application/usage_stats_collector.dart';
+import 'package:word_app/features/telemetry/presentation/usage_stats_feature_providers.dart';
 import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/audio/audio_service.dart';
@@ -80,7 +82,12 @@ class WordApp extends StatelessWidget {
                               ChangeNotifierProvider(create: (_) => SkinSystem()),
                               ChangeNotifierProvider(create: (_) => WallpaperState()),
                             ],
-                            child: const _AppLifecycle(),
+                            child: buildTelemetryFeatureScope(
+                              // 使用统计（使用时长 + 基本情况）。包在 _AppLifecycle 外层：
+                              // 它既提供前台/后台生命周期钩子，又是 MaterialApp 的持有者，
+                              // 所以「更多设置」页的开关也在这层 provider 之下。
+                              child: const _AppLifecycle(),
+                            ),
                           ),
                         ),
                       ),
@@ -118,6 +125,26 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 使用统计：前台时长按「进入/离开前台」成对累计，并在每次回到前台时
+    // 顺手判断该不该上报（频率规则见 UsageStatsCollector.uploadInterval）。
+    //
+    // ⚠️ `inactive` **刻意不计**：桌面端窗口失焦、移动端下拉通知栏/切到任务列表
+    // 都会触发它，但用户并没有离开应用。把它当成「离开前台」会把一段连续使用
+    // 切成一堆碎片，既虚增打开次数、又让时长统计失真。
+    final collector = context.read<UsageStatsCollector>();
+    switch (state) {
+      case AppLifecycleState.resumed:
+        unawaited(collector.onForeground());
+        unawaited(collector.maybeUpload());
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        unawaited(collector.onBackground());
+      case AppLifecycleState.detached:
+        unawaited(collector.onBackground());
+      case AppLifecycleState.inactive:
+        break;
+    }
+
     // MEM：进程 detach 时回收音频/TTS/DI（桌面关窗常见路径）。
     if (state == AppLifecycleState.detached) {
       ConfettiPlayer.dispose();
