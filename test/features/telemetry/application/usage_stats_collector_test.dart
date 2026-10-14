@@ -56,8 +56,9 @@ class _FakeStore implements UsageStatsStore {
 }
 
 class _FakeUploader implements UsageStatsUploader {
-  _FakeUploader({this.succeed = true});
-  bool succeed;
+  // 不提供构造参数：测试里一律先建好再改 succeed，参数没人用会被
+  // unused_element_parameter 判为失败（本仓把 warning 当失败）。
+  bool succeed = true;
   final List<UsageStatsReport> sent = [];
 
   @override
@@ -124,7 +125,7 @@ void main() {
 
   group('开关关闭时不收集', () {
     test('各类记录都不落盘', () async {
-      final c = build(enabled: false)..initialize();
+      final c = build(enabled: false);
       await c.initialize();
       await c.onForeground();
       await c.recordModuleOpen('learn');

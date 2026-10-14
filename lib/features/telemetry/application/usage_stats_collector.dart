@@ -11,25 +11,23 @@ import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 
 class UsageStatsCollector {
   UsageStatsCollector({
-    required UsageStatsStore store,
-    required UsageStatsUploader uploader,
-    required UsageStatsEnvironment environment,
-    required UsageStatsSettings settings,
-    required DateTime Function() clock,
+    required this.store,
+    required this.uploader,
+    required this.environment,
+    required this.settings,
+    required this.clock,
     this.uploadInterval = const Duration(hours: 24),
     this.retryDelay = const Duration(hours: 2),
     this.retention = const Duration(days: 180),
-  }) : _store = store,
-       _uploader = uploader,
-       _environment = environment,
-       _settings = settings,
-       _clock = clock;
+  });
 
-  final UsageStatsStore _store;
-  final UsageStatsUploader _uploader;
-  final UsageStatsEnvironment _environment;
-  final UsageStatsSettings _settings;
-  final DateTime Function() _clock;
+  final UsageStatsStore store;
+  final UsageStatsUploader uploader;
+  final UsageStatsEnvironment environment;
+  final UsageStatsSettings settings;
+
+  /// 时钟注入而不是内部直接 DateTime.now()：跨午夜切分与退避判断都要能测。
+  final DateTime Function() clock;
 
   /// 两次成功上报之间的最小间隔。
   ///
@@ -52,7 +50,7 @@ class UsageStatsCollector {
 
   /// 启动时调用一次：读开关。
   Future<void> initialize() async {
-    _enabled = await _settings.isEnabled();
+    _enabled = await settings.isEnabled();
   }
 
   bool get isEnabled => _enabled;
@@ -64,10 +62,10 @@ class UsageStatsCollector {
   /// （那属于保留期策略，见 [retention]）。
   Future<void> setEnabled(bool value) async {
     _enabled = value;
-    await _settings.setEnabled(value);
+    await settings.setEnabled(value);
     if (!value) {
       _foregroundSince = null;
-      await _store.clearAll();
+      await store.clearAll();
     }
   }
 
@@ -76,7 +74,7 @@ class UsageStatsCollector {
   /// App 进入前台。重复调用幂等（不会重复计一次启动）。
   Future<void> onForeground() async {
     if (!_enabled || _foregroundSince != null) return;
-    _foregroundSince = _clock();
+    _foregroundSince = clock();
     await _mutateToday((s) => s.copyWith(sessionCount: s.sessionCount + 1));
   }
 
@@ -94,7 +92,7 @@ class UsageStatsCollector {
   Future<void> _flushForeground() async {
     final since = _foregroundSince;
     if (since == null) return;
-    final now = _clock();
+    final now = clock();
     _foregroundSince = now;
     if (!now.isAfter(since)) return; // 时钟回拨：丢弃这段，不写负数
     await _addForegroundMs(since, now);
@@ -180,14 +178,14 @@ class UsageStatsCollector {
   Future<String?> skipReason() async {
     if (!_enabled) return 'disabled';
 
-    final now = _clock();
-    final nextAttempt = await _store.readNextAttemptAt();
+    final now = clock();
+    final nextAttempt = await store.readNextAttemptAt();
     if (nextAttempt != null && now.isBefore(nextAttempt)) return 'backoff';
 
-    final last = await _store.readLastUploadAt();
+    final last = await store.readLastUploadAt();
     if (last != null && now.difference(last) < uploadInterval) return 'tooSoon';
 
-    final pending = await _store.readPending(limit: UsageDailyStats.maxDaysPerReport);
+    final pending = await store.readPending(limit: UsageDailyStats.maxDaysPerReport);
     if (pending.isEmpty) return 'nothingPending';
 
     return null;
@@ -201,30 +199,30 @@ class UsageStatsCollector {
 
     if (await skipReason() != null) return;
 
-    final pending = await _store.readPending(limit: UsageDailyStats.maxDaysPerReport);
+    final pending = await store.readPending(limit: UsageDailyStats.maxDaysPerReport);
     final report = await _buildReport(pending);
     if (report.isEmpty) return;
 
-    final ok = await _uploader.upload(report);
-    final now = _clock();
+    final ok = await uploader.upload(report);
+    final now = clock();
     if (ok) {
-      await _store.markUploaded(report.days.map((d) => d.day));
-      await _store.writeLastUploadAt(now);
-      await _store.writeNextAttemptAt(null);
+      await store.markUploaded(report.days.map((d) => d.day));
+      await store.writeLastUploadAt(now);
+      await store.writeNextAttemptAt(null);
       // 清理过期明细。放在成功之后：失败时不动数据，下一轮还能补传。
-      await _store.pruneUploadedBefore(now.subtract(retention));
+      await store.pruneUploadedBefore(now.subtract(retention));
     } else {
-      await _store.writeNextAttemptAt(now.add(retryDelay));
+      await store.writeNextAttemptAt(now.add(retryDelay));
     }
   }
 
   Future<UsageStatsReport> _buildReport(List<UsageDailyStats> days) async => UsageStatsReport(
-    deviceId: await _environment.deviceId(),
-    appVersion: await _environment.appVersion(),
-    appBuild: await _environment.appBuild(),
-    platform: _environment.platform(),
-    osVersion: _environment.osVersion(),
-    locale: _environment.locale(),
+    deviceId: await environment.deviceId(),
+    appVersion: await environment.appVersion(),
+    appBuild: await environment.appBuild(),
+    platform: environment.platform(),
+    osVersion: environment.osVersion(),
+    locale: environment.locale(),
     days: days,
   ).sanitized();
 
@@ -240,10 +238,10 @@ class UsageStatsCollector {
     return '${at.year}-$m-$d';
   }
 
-  Future<void> _mutateToday(UsageDailyStats Function(UsageDailyStats) change) => _mutateDay(dayKey(_clock()), change);
+  Future<void> _mutateToday(UsageDailyStats Function(UsageDailyStats) change) => _mutateDay(dayKey(clock()), change);
 
   Future<void> _mutateDay(String day, UsageDailyStats Function(UsageDailyStats) change) async {
-    final current = await _store.readDay(day) ?? UsageDailyStats(day: day);
-    await _store.writeDay(change(current));
+    final current = await store.readDay(day) ?? UsageDailyStats(day: day);
+    await store.writeDay(change(current));
   }
 }

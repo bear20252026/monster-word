@@ -29,12 +29,12 @@ class HttpUsageStatsUploader implements UsageStatsUploader {
     Duration timeout = const Duration(seconds: 20),
     Future<http.Response> Function(Uri url, Map<String, String> headers, String body)? postOverride,
   }) : baseUrl = _trimSlash(baseUrl ?? usageStatsBaseUrl),
-       _timeout = timeout,
-       _postOverride = postOverride;
+       timeout = timeout,
+       postOverride = postOverride;
 
   final String baseUrl;
-  final Duration _timeout;
-  final Future<http.Response> Function(Uri, Map<String, String>, String)? _postOverride;
+  final Duration timeout;
+  final Future<http.Response> Function(Uri, Map<String, String>, String)? postOverride;
 
   /// 「未配置」只提醒一次，避免每次启动都刷一条。
   static bool _warnedUnconfigured = false;
@@ -62,9 +62,12 @@ class HttpUsageStatsUploader implements UsageStatsUploader {
     const headers = {'Content-Type': 'application/json'};
 
     try {
-      final response = _postOverride != null
-          ? await _postOverride!(url, headers, body).timeout(_timeout)
-          : await http.post(url, headers: headers, body: body).timeout(_timeout);
+      // 先取到局部变量再判空：直接写 `postOverride != null ? postOverride!(...)` 时
+      // 分析器已把可空性收窄，那个 `!` 会被判为多余（unnecessary_non_null_assertion）。
+      final override = postOverride;
+      final response = override != null
+          ? await override(url, headers, body).timeout(timeout)
+          : await http.post(url, headers: headers, body: body).timeout(timeout);
       // 2xx 才算成功。4xx 是契约问题（不该重试到天荒地老），但也不该丢数据 ——
       // 一律返回 false 让调用方写退避、保留本地数据，由人来看日志。
       if (response.statusCode >= 200 && response.statusCode < 300) return true;
