@@ -213,18 +213,31 @@ class UsageStatsReport {
     required this.osVersion,
     required this.locale,
     required this.days,
+    this.userId = '',
     this.schemaVersion = currentSchemaVersion,
   });
 
   /// 当前上报格式版本。改字段语义时递增，服务端据此兼容旧客户端。
-  static const int currentSchemaVersion = 1;
+  ///
+  /// v1 → v2（2026-10-14）：信封新增 `user_id`，用于管理端「按人看」。
+  /// 递增而不是沿用 v1，是因为**语义变了**：v1 的数据不可识别到个人，
+  /// v2 的与账号关联。服务端据此能区分历史数据的性质。
+  static const int currentSchemaVersion = 2;
 
   /// 随机生成、稳定不变的设备标识。
   ///
-  /// ⚠️ **刻意不与账号 user_id 绑定**：本功能的目的是「使用时长 + 基本情况」，
-  /// 不需要知道是谁。不绑定意味着这批数据不可识别到个人，合规压力最小。
-  /// 若日后确实要按人看，必须同步改隐私披露（属于可识别到个人的行为记录）。
+  /// 用途：在服务端把同一台设备的多次上报归并成一条时间线、算日活去重。
+  /// 不用系统设备标识（IMEI / Android ID / 广告标识）：那些是跨应用可关联的
+  /// 稳定标识，上报即等于把「这台设备装了什么、用了多久」和别处的记录挂上钩。
   final String deviceId;
+
+  /// 当前登录账号的服务端用户标识（UUID）。**空字符串 = 没有可关联的账号**
+  /// （本机模式或未登录），服务端归到「未绑定账号」，不丢数据。
+  ///
+  /// ⚠️ 带上它之后，这批数据从「不可识别到个人的设备级统计」变成
+  /// 「可识别到个人的行为记录」—— 隐私披露必须同步写明。
+  /// 只传 UUID 不传用户名：用户名的权威来源是账号服务，客户端再存一份必然漂移。
+  final String userId;
 
   final String appVersion;
   final int appBuild;
@@ -250,6 +263,7 @@ class UsageStatsReport {
         : cleaned;
     return UsageStatsReport(
       deviceId: deviceId,
+      userId: userId,
       appVersion: appVersion,
       appBuild: appBuild,
       platform: platform,
@@ -265,6 +279,7 @@ class UsageStatsReport {
   Map<String, Object?> toJson() => {
     'schema_version': schemaVersion,
     'device_id': deviceId,
+    'user_id': userId,
     'app_version': appVersion,
     'app_build': appBuild,
     'platform': platform,

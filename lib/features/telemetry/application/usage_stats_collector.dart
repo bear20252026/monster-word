@@ -15,6 +15,7 @@ class UsageStatsCollector implements UsageStatsController {
     required this.uploader,
     required this.environment,
     required this.settings,
+    required this.identity,
     required this.clock,
     this.uploadInterval = const Duration(hours: 24),
     this.retryDelay = const Duration(hours: 2),
@@ -25,6 +26,9 @@ class UsageStatsCollector implements UsageStatsController {
   final UsageStatsUploader uploader;
   final UsageStatsEnvironment environment;
   final UsageStatsSettings settings;
+
+  /// 当前登录账号（管理端「按人看」用）。本机模式返回 null ⇒ 上报里 user_id 为空。
+  final UsageStatsIdentity identity;
 
   /// 时钟注入而不是内部直接 DateTime.now()：跨午夜切分与退避判断都要能测。
   final DateTime Function() clock;
@@ -220,6 +224,9 @@ class UsageStatsCollector implements UsageStatsController {
 
   Future<UsageStatsReport> _buildReport(List<UsageDailyStats> days) async => UsageStatsReport(
     deviceId: await environment.deviceId(),
+    // 取不到账号就传空串（不是省略字段）：服务端据此把这条归到「未绑定账号」，
+    // 而不是当成旧客户端缺字段。
+    userId: await identity.userId() ?? '',
     appVersion: await environment.appVersion(),
     appBuild: await environment.appBuild(),
     platform: environment.platform(),

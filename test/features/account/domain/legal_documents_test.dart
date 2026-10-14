@@ -113,10 +113,21 @@ void main() {
       }
     });
 
-    test('必须写明每日最多一次、且不与账号关联', () {
-      final text = LegalDocuments.privacyPolicy().plainText;
-      expect(text, contains('最多一次'), reason: '频率是披露的一部分');
-      expect(text, contains('不与您的账号关联'), reason: '不绑 user_id 是本功能的隐私前提');
+    test('必须写明每日最多一次', () {
+      expect(LegalDocuments.privacyPolicy().plainText, contains('最多一次'), reason: '频率是披露的一部分');
+    });
+
+    test('必须写明「与账号关联」——按人看的代价，不能含糊', () {
+      for (final mode in [false, true]) {
+        final text = LegalDocuments.privacyPolicy(serverAccountMode: mode).plainText;
+        expect(text, contains('与您的账号关联'), reason: 'serverAccountMode=$mode');
+      }
+      // 反过来：绝不能还留着「不与账号关联」的旧表述（那是绑 user_id 之前的说法）
+      expect(LegalDocuments.privacyPolicy().plainText, isNot(contains('不与您的账号关联')));
+    });
+
+    test('必须写明管理员可按用户查看', () {
+      expect(LegalDocuments.privacyPolicy().plainText, contains('按用户查看'));
     });
 
     test('必须写明不含学习内容（学了哪些词 / 搜索 / 笔记正文）', () {
@@ -137,7 +148,7 @@ void main() {
     });
 
     test('政策版本已提升（正文变了就不能沿用同一版本号）', () {
-      expect(LegalDocuments.policyVersion, '2026-10-14.1');
+      expect(LegalDocuments.policyVersion, '2026-10-14.2');
     });
   });
 
