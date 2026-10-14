@@ -36,35 +36,33 @@ import 'package:word_app/features/account/application/account_authenticator.dart
 import 'package:word_app/features/account/application/password_auth_store.dart';
 
 class MigratingAccountAuthenticator implements AccountAuthenticator {
-  const MigratingAccountAuthenticator({required AccountAuthenticator remote, required PasswordAuthStore localStore})
-    : _remote = remote,
-      _localStore = localStore;
+  const MigratingAccountAuthenticator({required this.remote, required this.localStore});
 
   /// 服务端实现（`SupabaseAccountAuthenticator`）。
-  final AccountAuthenticator _remote;
+  final AccountAuthenticator remote;
 
   /// 阶段一的本机凭据存储。**只读**用于迁移判定，成功后删除。
-  final PasswordAuthStore _localStore;
+  final PasswordAuthStore localStore;
 
   @override
-  AccountScope get scope => _remote.scope;
+  AccountScope get scope => remote.scope;
 
   @override
   Future<AuthOutcome> signIn({required String username, required String password}) async {
-    final outcome = await _remote.signIn(username: username, password: password);
+    final outcome = await remote.signIn(username: username, password: password);
     if (outcome.status != AuthStatus.invalidCredentials) return outcome;
 
     // 服务端拒绝。先确认「用户输入的密码本身是对的」——这是迁移判定的全部依据。
     if (!await _isKnownLocalPassword(username, password)) return outcome;
 
-    final migrated = await _remote.createAccount(username: username, password: password);
+    final migrated = await remote.createAccount(username: username, password: password);
     if (migrated.ok) await _forgetLocalCredential(username);
     return migrated;
   }
 
   @override
   Future<AuthOutcome> createAccount({required String username, required String password}) async {
-    final outcome = await _remote.createAccount(username: username, password: password);
+    final outcome = await remote.createAccount(username: username, password: password);
     if (outcome.ok) await _forgetLocalCredential(username);
     return outcome;
   }
@@ -72,8 +70,8 @@ class MigratingAccountAuthenticator implements AccountAuthenticator {
   /// 本机是否存有该用户名、且 [password] 能通过本机校验。
   Future<bool> _isKnownLocalPassword(String username, String password) async {
     try {
-      if (!await _localStore.hasPassword(username)) return false;
-      return await _localStore.verify(username, password);
+      if (!await localStore.hasPassword(username)) return false;
+      return await localStore.verify(username, password);
     } catch (e, s) {
       // 本机安全存储不可用（系统还原 / Keystore 故障）时**无法证明**密码正确。
       // 保守放弃迁移：此时服务端确实拒绝了这组凭据，如实回报「账号或密码不正确」
@@ -86,7 +84,7 @@ class MigratingAccountAuthenticator implements AccountAuthenticator {
   /// 迁移成功后清掉本机哈希：账号已在服务端，本机不该再留密码（见端口注释）。
   Future<void> _forgetLocalCredential(String username) async {
     try {
-      await _localStore.removePassword(username);
+      await localStore.removePassword(username);
     } catch (e, s) {
       // 登录/建号已经成功，此时报错会把用户引向无效的「重试」。
       // 残留的本机哈希不会让服务端校验失效（服务端才是权威），

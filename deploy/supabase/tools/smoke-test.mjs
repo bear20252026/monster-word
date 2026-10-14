@@ -105,8 +105,15 @@ try {
   const res = await fetch(`https://${domain}/health`);
   check('GET /health 可达（TLS 握手成功）', res.ok, `HTTP ${res.status}`);
 } catch (e) {
-  check('GET /health 可达（TLS 握手成功）', false, String(e.message ?? e));
-  console.error('\n网关不通，后续断言无法进行。先看 caddy 容器日志：docker compose logs caddy');
+  // Node 的 fetch 只抛 "fetch failed"，真正的原因（ENOTFOUND / ECONNREFUSED /
+  // 证书错误）在 e.cause 里。不把它带出来，运维只能靠猜。
+  const cause = e?.cause ? ` — ${e.cause.code ?? e.cause.message ?? e.cause}` : '';
+  check('GET /health 可达（TLS 握手成功）', false, `${e?.message ?? e}${cause}`);
+  console.error('\n网关不通，后续断言无法进行。逐项排查：');
+  console.error('  1. 容器起来了吗：docker compose ps');
+  console.error('  2. AUTH_DOMAIN 能解析到这台机器吗：getent hosts ' + domain);
+  console.error('  3. 网关日志：docker compose logs caddy');
+  console.error('  4. 自签证书要加 --insecure（客户端侧还需信任 Caddy 的根证书）');
   process.exit(1);
 }
 

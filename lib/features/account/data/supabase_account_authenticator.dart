@@ -41,11 +41,10 @@ class SupabaseAccountAuthenticator implements AccountAuthenticator {
   SupabaseAccountAuthenticator({
     required String baseUrl,
     required this.anonKey,
-    required AuthSessionStore sessionStore,
+    required this.sessionStore,
     this.emailDomain = defaultEmailDomain,
     this.postOverride,
-  }) : _sessionStore = sessionStore,
-       // 容忍尾部斜杠：`https://x/` 与 `https://x` 必须拼出同一个 URL，
+  }) : // 容忍尾部斜杠：`https://x/` 与 `https://x` 必须拼出同一个 URL，
        // 否则会请求 `//auth/v1/token`，部分反代会直接 404。
        baseUrl = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
 
@@ -59,7 +58,8 @@ class SupabaseAccountAuthenticator implements AccountAuthenticator {
   /// 用户名映射出的「邮箱」域名。不可投递、也无需邮箱服务器。
   final String emailDomain;
 
-  final AuthSessionStore _sessionStore;
+  /// 会话存储。登录/建号成功后写入；失败一律不外抛（见 `AuthSessionStore`）。
+  final AuthSessionStore sessionStore;
 
   /// 测试注入：绕过真实 HTTP。
   final AuthHttpPost? postOverride;
@@ -157,7 +157,7 @@ class SupabaseAccountAuthenticator implements AccountAuthenticator {
         );
         return const AuthOutcome.serverFailure();
       }
-      await _sessionStore.write(session);
+      await sessionStore.write(session);
       return const AuthOutcome.success();
     }
 
