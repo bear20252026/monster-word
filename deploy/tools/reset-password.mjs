@@ -69,7 +69,9 @@ if (insecure) {
 }
 
 const env = { ...loadDotEnv(), ...process.env };
-const domain = env.AUTH_DOMAIN;
+// 同时认两套变量名：AUTH_DOMAIN（docker 路径）与 MW_AUTH_DOMAIN（原生部署的
+// /opt/mw-auth/.env）。少认一个，脚本放到服务器上就会报「缺少 AUTH_DOMAIN」。
+const domain = env.AUTH_DOMAIN || env.MW_AUTH_DOMAIN;
 if (!domain) {
   console.error('缺少 AUTH_DOMAIN（请设置环境变量，或在 ../.env 里填写）');
   process.exit(1);

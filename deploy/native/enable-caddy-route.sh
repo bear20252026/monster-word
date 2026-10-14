@@ -193,7 +193,9 @@ if verify; then
   echo ""
   echo "=== Caddy 路由已就绪 ==="
   echo "  备份  : $BACKUP_DIR/Caddyfile（要回滚就 cp 回去再 systemctl reload caddy）"
-  echo "  还差一步：在 Cloudflare 控制台把 $DOMAIN 加为隧道的 Public Hostname → http://localhost:8081"
+  echo "  还差一步：在 Cloudflare 控制台把 $DOMAIN 加为隧道的「已发布应用程序路由」"
+  echo "            → 添加路由 → 已发布应用程序 → 服务 URL 填 http://localhost:8081"
+  echo "            ⚠️ 别点「主机名路由」标签，那是需要 WARP 客户端的专用路由，对公网不生效"
   exit 0
 fi
 
