@@ -68,14 +68,25 @@ POST（最多带 31 天，含补传）。失败写退避（2h），本地数据�
 
 ```
 domain/usage_daily_stats.dart          模型 + JSON + 夹紧（纯 Dart）
-application/usage_stats_ports.dart     四个端口：Store / Uploader / Environment / Settings
+application/usage_stats_ports.dart     四个端口 + UsageStatsController 窄接口
 application/usage_stats_collector.dart 累计与上报决策（纯 Dart）
 data/usage_stats_dao.dart              SQLite（表见 user_database.dart 的 _createUsageStatsTables）
 data/http_usage_stats_uploader.dart    HTTP 出口
 data/platform_usage_stats_environment.dart  设备标识 / 版本 / 平台 / 语言
 data/prefs_usage_stats_settings.dart   开关
-presentation/usage_stats_providers.dart     装配 + 设置页开关状态
+presentation/usage_stats_feature_providers.dart  装配
 ```
+
+### 两个架构守卫约束（踩过，别改回去）
+
+1. **文件名必须叫 `*_feature_providers.dart`。** 守卫 R3 禁止 presentation 依赖同功能的
+   data 层，唯一的例外是「装配边界」，而它**按文件名识别**。叫 `usage_stats_providers.dart`
+   会被判违规（实测报 4 条）。
+2. **跨 feature 只能 import 对方的 `application/` 层。** 守卫 R4 禁止
+   `features/settings/presentation` → `features/telemetry/presentation`。所以「更多设置」页
+   依赖的是 `application/usage_stats_ports.dart` 里的 `UsageStatsController` 窄接口
+   （只有 `isEnabled` / `setEnabled` 两个成员），而不是 collector 或 telemetry 的 presentation。
+   收窄接口还带来一个好处：设置页测试给一个几行的假实现就够，不必拼出整套依赖。
 
 `domain` 与 `application` **不 import flutter**，因此能用普通 Dart VM 直接执行：
 

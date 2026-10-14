@@ -13,6 +13,7 @@ import 'package:word_app/features/settings/application/update_check_service.dart
 import 'package:word_app/features/settings/domain/version_compare.dart';
 import 'package:word_app/features/settings/presentation/more_settings_page.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 
 class _FakeMaintenance implements WordBookMaintenanceService {
   _FakeMaintenance({this.result, this.throwOnRebuild = false});
@@ -38,6 +39,20 @@ class _FakeUpdate implements UpdateCheckService {
       const UpdateCheckResult(currentVersion: '9.9.9', latestVersion: '9.9.9', releaseUrl: '', hasUpdate: false);
 }
 
+/// 设置页现在依赖 telemetry 的 application 层窄接口（架构守卫 R4：跨 feature 只能
+/// import 对方的 application 层）。这里给一个几行的假实现即可 —— 不需要拼出
+/// 整套 store/uploader/environment，那正是把接口收窄的收益。
+class _FakeUsageStats implements UsageStatsController {
+  _FakeUsageStats({this.enabled = false});
+  bool enabled;
+
+  @override
+  bool get isEnabled => enabled;
+
+  @override
+  Future<void> setEnabled(bool value) async => enabled = value;
+}
+
 Future<void> _pump(WidgetTester tester, {required _FakeMaintenance maintenance}) async {
   // 放大视口：ListView 惰性构建会让屏幕外分组不在 widget 树中
   tester.view.physicalSize = const Size(1080, 2400);
@@ -45,8 +60,11 @@ Future<void> _pump(WidgetTester tester, {required _FakeMaintenance maintenance})
   addTearDown(tester.view.reset);
 
   await tester.pumpWidget(
-    Provider<WordBookMaintenanceService>.value(
-      value: maintenance,
+    MultiProvider(
+      providers: [
+        Provider<WordBookMaintenanceService>.value(value: maintenance),
+        Provider<UsageStatsController>.value(value: _FakeUsageStats()),
+      ],
       child: MaterialApp(
         home: SkinProvider(
           skin: SkinSystem(),

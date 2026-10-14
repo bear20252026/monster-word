@@ -14,7 +14,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/auth/app_session_controller.dart';
-import 'package:word_app/features/telemetry/presentation/usage_stats_providers.dart';
+// 只依赖 telemetry 的 **application 层**（架构守卫 R4：跨 feature 只能 import
+// 对方的 application 层抽象）。这里要的是 UsageStatsController 这个窄接口，
+// 不是 telemetry 的 presentation 层，也不是它整套 collector。
+import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
@@ -664,14 +667,15 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   ///
   /// 放在协议组**之前**：用户应该在读到隐私协议正文之前就能看到并关掉它。
   Widget _buildPrivacyGroup(SkinSystem skin) {
-    final toggle = context.watch<UsageStatsToggle>();
+    // 不 watch：collector 是普通对象、不发通知，切换后由 setState 刷新。
+    final enabled = context.read<UsageStatsController>().isEnabled;
     return _SettingGroup([
       _Cell(
         icon: Icons.insights_outlined,
         iconColor: skin.colors.text3,
         title: '参与使用统计',
-        subtitle: toggle.enabled ? '已开启' : '已关闭',
-        onTap: () => _toggleUsageStats(toggle),
+        subtitle: enabled ? '已开启' : '已关闭',
+        onTap: () => _toggleUsageStats(context.read<UsageStatsController>()),
       ),
     ]);
   }
@@ -681,10 +685,11 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   ///
   /// 关闭不做确认：关掉是「少收集」，没有需要用户权衡的代价；
   /// 而且关掉会立刻清除本机未上报的统计（见 UsageStatsCollector.setEnabled）。
-  Future<void> _toggleUsageStats(UsageStatsToggle toggle) async {
-    if (toggle.enabled) {
-      await toggle.set(false);
+  Future<void> _toggleUsageStats(UsageStatsController controller) async {
+    if (controller.isEnabled) {
+      await controller.setEnabled(false);
       if (!mounted) return;
+      setState(() {}); // 刷新副标题
       showMwSnackBar(context, const SnackBar(content: Text('已关闭使用统计，本机不再保留未上传的统计')));
       return;
     }
@@ -702,8 +707,9 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       confirmLabel: '开启',
     );
     if (!agreed) return;
-    await toggle.set(true);
+    await controller.setEnabled(true);
     if (!mounted) return;
+    setState(() {});
     showMwSnackBar(context, const SnackBar(content: Text('已开启使用统计，感谢支持')));
   }
 

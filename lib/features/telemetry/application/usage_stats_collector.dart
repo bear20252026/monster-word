@@ -9,7 +9,7 @@
 import 'package:word_app/features/telemetry/domain/usage_daily_stats.dart';
 import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 
-class UsageStatsCollector {
+class UsageStatsCollector implements UsageStatsController {
   UsageStatsCollector({
     required this.store,
     required this.uploader,
@@ -53,6 +53,7 @@ class UsageStatsCollector {
     _enabled = await settings.isEnabled();
   }
 
+  @override
   bool get isEnabled => _enabled;
 
   /// 用户在设置里改开关。
@@ -60,6 +61,7 @@ class UsageStatsCollector {
   /// 关掉时**立即清除本地未上报的统计**：既然承诺「关了就不收集」，就不该把
   /// 关之前攒的数据留着等哪天又被打开。已上报到服务端的历史数据不在此处处理
   /// （那属于保留期策略，见 [retention]）。
+  @override
   Future<void> setEnabled(bool value) async {
     _enabled = value;
     await settings.setEnabled(value);

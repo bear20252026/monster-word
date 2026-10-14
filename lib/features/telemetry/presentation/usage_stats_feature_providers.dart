@@ -18,23 +18,6 @@ import 'package:word_app/features/telemetry/data/platform_usage_stats_environmen
 import 'package:word_app/features/telemetry/data/prefs_usage_stats_settings.dart';
 import 'package:word_app/features/telemetry/data/usage_stats_dao.dart';
 
-/// 更多设置页用的开关状态。
-///
-/// 单独抽一个 ChangeNotifier 而不是让页面直接读 collector：页面需要在切换后立刻
-/// 重绘，而 collector 是普通对象、不发通知。
-class UsageStatsToggle extends ChangeNotifier {
-  UsageStatsToggle(this._collector);
-
-  final UsageStatsCollector _collector;
-
-  bool get enabled => _collector.isEnabled;
-
-  Future<void> set(bool value) async {
-    await _collector.setEnabled(value);
-    notifyListeners();
-  }
-}
-
 Widget buildTelemetryFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
@@ -59,9 +42,9 @@ Widget buildTelemetryFeatureScope({required Widget child}) {
           return collector;
         },
       ),
-      ChangeNotifierProvider<UsageStatsToggle>(
-        create: (context) => UsageStatsToggle(context.read<UsageStatsCollector>()),
-      ),
+      // 设置页只依赖 application 层的窄接口（架构守卫 R4：跨 feature 只能 import
+      // 对方的 application 层）。同一个 collector 实例，两种暴露面。
+      ProxyProvider<UsageStatsCollector, UsageStatsController>(update: (_, c, _) => c),
     ],
     child: child,
   );

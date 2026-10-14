@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/features/telemetry/application/usage_stats_collector.dart';
-import 'package:word_app/features/telemetry/presentation/usage_stats_providers.dart';
+import 'package:word_app/features/telemetry/presentation/usage_stats_feature_providers.dart';
 import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/audio/audio_service.dart';

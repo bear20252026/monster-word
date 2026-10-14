@@ -81,3 +81,21 @@ abstract class UsageStatsSettings {
 
   Future<void> setEnabled(bool value);
 }
+
+/// 「更多设置」页需要的最小面：读开关状态 + 改开关。
+///
+/// 为什么单独抽一个窄接口，而不是让设置页直接读 [UsageStatsCollector]：
+///   1. **架构守卫 R4 禁止跨 feature import 对方的 presentation 层**，只允许
+///      import 对方的 application 层抽象。设置页属 settings feature，所以它只能
+///      依赖这里（本文件即 application 层）。
+///   2. 设置页并不需要 collector 的累计能力，只需要「读开关 / 改开关」两件事。
+///      窄接口让测试可以给一个几行的假实现，不必拼出整套 store/uploader/env。
+///
+/// `UsageStatsCollector` 直接 implements 本接口（它本来就有这两个成员）。
+/// 关掉开关时会连带清除本机未上报的统计 —— 那是 collector 的实现细节，
+/// 调用方（设置页）不需要知道，但用户会看到那句提示。
+abstract class UsageStatsController {
+  bool get isEnabled;
+
+  Future<void> setEnabled(bool value);
+}
