@@ -60,14 +60,14 @@ void main() {
     }
   }
 
-  print('扫描 $files 个文件 / $imports 条 import');
+  stdout.writeln('扫描 $files 个文件 / $imports 条 import');
   if (violations.isEmpty) {
-    print('✅ 无依赖边界违规');
+    stdout.writeln('✅ 无依赖边界违规');
     return;
   }
-  print('❌ 发现 ${violations.length} 条依赖边界违规：');
+  stdout.writeln('❌ 发现 ${violations.length} 条依赖边界违规：');
   for (final v in violations) {
-    print(v);
+    stdout.writeln(v);
   }
   exit(1);
 }

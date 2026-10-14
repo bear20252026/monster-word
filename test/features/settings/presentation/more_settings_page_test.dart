@@ -43,8 +43,9 @@ class _FakeUpdate implements UpdateCheckService {
 /// import 对方的 application 层）。这里给一个几行的假实现即可 —— 不需要拼出
 /// 整套 store/uploader/environment，那正是把接口收窄的收益。
 class _FakeUsageStats implements UsageStatsController {
-  _FakeUsageStats({this.enabled = false});
-  bool enabled;
+  // 不给构造参数：本文件里没人传（unused_element_parameter 会报），
+  // 需要改成开启状态时直接写 `_FakeUsageStats().enabled = true`。
+  bool enabled = false;
 
   @override
   bool get isEnabled => enabled;
