@@ -185,6 +185,23 @@ jobs:
           cp build/app/outputs/flutter-apk/app-release.apk "MonsterWord_v${ver}+${build}${suffix}.apk"
           cp build/app/outputs/bundle/release/app-release.aab "MonsterWord_v${ver}+${build}${suffix}.aab"
 
+      - name: Verify APK signed by release certificate (MW-79)
+        # 发版链里此前**不存在**「产物确由 release keystore 签名」的独立校验
+        # （2026-10-15 审计 R3-E06：scripts/check_apk_signature.py 恒真、且没有被
+        # 任何 workflow 引用）。这里真的解析 v2/v3 签名块、取出签名者证书、
+        # 比对 SHA-256 指纹 —— 拿 debug 密钥签出来的包在这里就红，走不到 Release。
+        # 证书轮换时必须同步改脚本里的 DEFAULT_EXPECTED（故意让它红）。
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="MonsterWord_v${android_version}+${app_build}.apk"
+          if [ "${signed:-}" = "debug" ]; then
+            echo "::warning::本次为 debug 签名产物（缺 KEYSTORE_* secrets），只打印指纹不做比对"
+            python3 scripts/check_apk_signature.py "$apk" --print
+          else
+            python3 scripts/check_apk_signature.py "$apk"
+          fi
+
       - name: Archive Android obfuscation symbols (MW-75)
         shell: bash
         run: |
@@ -371,8 +388,13 @@ jobs:
         shell: bash
         run: |
           cd artifacts
+          # ⚠️ 清单里的路径必须是**扁平 basename**（2026-10-15 审计 R3-E04）。
+          # GitHub Release 不支持目录，资产名就是 basename；而 find 出来的路径带
+          # `android-packages/`、`windows-installer/installer/` 前缀 ⇒
+          # 用户下载全部资产后 `sha256sum -c SHA256SUMS.txt` **每一行都 No such file**，
+          # 这份清单 100% 不可用（v2.13.0+129 实测确认过）。
           find android-packages windows-installer -type f ! -name 'debug-symbols*' | sort \
-            | xargs sha256sum > SHA256SUMS.txt
+            | xargs sha256sum | sed 's#  .*/#  #' > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Create GitHub Release
@@ -388,23 +410,28 @@ jobs:
             artifacts/android-packages/**
             artifacts/windows-installer/**
             artifacts/SHA256SUMS.txt
+          # glob 一条都没匹配上就让 action 失败，别静默少挂产物（审计 R3-E05）。
+          fail_on_unmatched_files: true
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify release assets (MW-77)
         # 防的就是上面那种「Release 建了但少挂产物」的静默故障：产物不齐必须让 job 红，
-        # 而不是等人下载时才发现。三类各查一次（扩展名/文件名片段）。
+        # 而不是等人下载时才发现。四类各查一次 —— **符号包也要查**：
+        # v2.13.0+129 实测就少了 android 的 debug-symbols-android.zip
+        # （它在 artifact 的 build/ 子层，被同一次单层 glob 静默丢弃），
+        # 而当时的校验只查 apk/aab/Setup.exe，所以没人发现（审计 R3-E05）。
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | tee /tmp/assets.txt
-          for pattern in '\.apk$' '\.aab$' 'Setup_v.*\.exe$'; do
+          for pattern in '\.apk$' '\.aab$' 'Setup_v.*\.exe$' 'debug-symbols(-android)?\.zip$'; do
             if ! grep -qE "$pattern" /tmp/assets.txt; then
-              echo "::error::Release 缺少匹配 $pattern 的产物 —— 三件套不齐"
+              echo "::error::Release 缺少匹配 $pattern 的产物 —— 三件套/符号包不齐"
               exit 1
             fi
           done
-          echo "✅ 三件套齐全（apk / aab / Setup.exe）"
+          echo "✅ 产物齐全（apk / aab / Setup.exe / debug-symbols）"
