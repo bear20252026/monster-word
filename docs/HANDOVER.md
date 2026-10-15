@@ -99,13 +99,12 @@ flutter test                                                       # 全量 904 
    **回退方式**：删掉那两行 `--dart-define`（`AUTH_BASE_URL` / `AUTH_ANON_KEY`）重发一版即可，不需要改代码。
    **切换后须知**：已登录用户不受影响（登录态在本机）；存量用户不会升级即迁移，而是在下次**显式登录**时才迁移到服务端（判据见 `docs/auth_server_contract.md` §6）。已用 `workflow_dispatch` 手动跑通整条发版链路，并下载产物确认编译期常量真的进了二进制（三个 ABI 的 `libapp.so` 里各 1 处 `https://auth.cloudbear.cloud`）。
    部署与运维手册：`deploy/README.md`、`deploy/native/README.md`；契约：`docs/auth_server_contract.md`。
-2. **使用统计（遥测）—— 只差一步 Cloudflare 路由**：客户端采集/上报、服务端接收/汇总/管理页
-   （含「按人看」）、发版流水线注入 `STATS_BASE_URL` 均已完成（2026-10-15）。唯一剩余项是
-   在 Cloudflare 控制台给隧道加 `stats.cloudbear.cloud` 的**已发布应用程序路由** → `http://localhost:8081`；
-   隧道是 token 管理的远程配置，服务器与本地都没有 CF API 凭据，**只能由项目所有者操作**。
-   入口一通即全链路生效（URL 已编译进发布件，不需重新发版）。
-   **客户端统计开关默认关闭**（`USAGE_STATS_DEFAULT` 缺省 `off`），所以这些缺口不造成任何数据外发。
-   步骤见 `deploy/telemetry/README.md` §5 ③；埋点落点表见 `lib/features/telemetry/README.md` §6。
+2. **使用统计（遥测）—— 已全链路打通（2026-10-15）**：客户端采集/上报、服务端接收/汇总/管理页
+   （含「按人看」）、发版流水线注入 `STATS_BASE_URL`、Cloudflare 公网入口，全部完成并走过公网验收。
+   入口：`https://stats.cloudbear.cloud`（`/healthz` 探活、`/v1/report` 上报、`/` 管理页 Basic Auth）。
+   客户端统计开关**默认关闭**（`USAGE_STATS_DEFAULT` 缺省 `off`），要收集需用户在设置里主动开启。
+   验收记录与响应码约定见 `deploy/telemetry/README.md` §4/§7；
+   埋点落点表与口径见 `lib/features/telemetry/README.md` §6。
 3. **release keystore 迁出项目目录**：`android/app/*.jks` + `key.properties` 仍在工程内（违反自家 release_pipeline §1.3），建议移至工程外密钥目录 + 高强度密码入管理器 + 仅 CI secrets 签名。
 4. **GitHub 仓库设置**：建议开启分支保护（main 禁直推、PR 必审）——携带签名 secrets 的 job 目前对 main push 开放。
 

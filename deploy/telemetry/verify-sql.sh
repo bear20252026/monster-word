@@ -88,7 +88,40 @@ check "设备 last_seen 被刷新" \
   "$([ "$(q "SELECT CASE WHEN last_seen > first_seen THEN 'yes' ELSE 'no' END FROM devices WHERE device_id='dev-1'")" = "yes" ] && echo 1 || echo 0)" \
   "$(q "SELECT first_seen = last_seen FROM devices WHERE device_id='dev-1'")"
 
+echo "=== 模块打开次数的合并策略（逐键取较大值）==="
+# 2026-10-15 验收时实测发现：早期实现用 EXCLUDED 整对象覆盖，
+# 「先 {"learn":4,"review":2} 再 {"learn":1}」会把 review 整个键丢掉、learn 还被改小。
+run_ingest '{"device_id":"dev-mod","days":[{"day":"2026-10-15","module_open_counts":{"learn":4,"review":2}}]}'
+run_ingest '{"device_id":"dev-mod","days":[{"day":"2026-10-15","module_open_counts":{"learn":1,"dict":7}}]}'
+check "较小的模块计数不覆盖已有较大值" \
+  "$([ "$(q "SELECT (module_open_counts->>'learn')::int FROM usage_daily WHERE device_id='dev-mod'")" = "4" ] && echo 1 || echo 0)" \
+  "$(q "SELECT module_open_counts FROM usage_daily WHERE device_id='dev-mod'")"
+check "本次未带上的模块键不被抹掉" \
+  "$([ "$(q "SELECT (module_open_counts->>'review')::int FROM usage_daily WHERE device_id='dev-mod'")" = "2" ] && echo 1 || echo 0)" \
+  "$(q "SELECT module_open_counts FROM usage_daily WHERE device_id='dev-mod'")"
+check "新增的模块键被并入" \
+  "$([ "$(q "SELECT (module_open_counts->>'dict')::int FROM usage_daily WHERE device_id='dev-mod'")" = "7" ] && echo 1 || echo 0)" \
+  "$(q "SELECT module_open_counts FROM usage_daily WHERE device_id='dev-mod'")"
+# 上面那次幂等上报没带 module_open_counts（被清洗成 {}），合并后不该把已有的键抹掉
+check "整批未带模块计数时已有计数保持不变" \
+  "$([ "$(q "SELECT (module_open_counts->>'listen')::int FROM usage_daily WHERE device_id='dev-1' AND day='2026-10-13'")" = "1" ] && echo 1 || echo 0)" \
+  "$(q "SELECT module_open_counts FROM usage_daily WHERE device_id='dev-1' AND day='2026-10-13'")"
+
 echo "=== 边界与拒绝 ==="
+# 校验失败必须带 mw_invalid_input: 前缀 —— 服务端据此回 400 而不是 500（见 server.mjs）。
+# 没这个前缀时，客户端把请求发错会被记成「服务端故障」，把告警与 Sentry 刷满。
+#
+# ⚠️ 取错误文本必须走这个 helper，不能直接 `psql … | grep -q …`：
+# 本脚本开了 `set -o pipefail`，而「调用必定失败」的场景里 psql 退出码非零，
+# 会让整条管道失败 ⇒ grep 的判定被吃掉，断言恒为假（第一版就是这么误报 3 条的）。
+err_of() { sudo -u postgres psql -tA -d "$SCRATCH" -c "$1" 2>&1 || true; }
+
+check "缺 device_id 被拒且带校验前缀" \
+  "$(err_of "SELECT mw_ingest('{\"days\":[]}'::jsonb);" | grep -q 'mw_invalid_input: device_id 缺失' && echo 1 || echo 0)" ""
+check "days 非数组被拒且带校验前缀" \
+  "$(err_of "SELECT mw_ingest('{\"device_id\":\"d\",\"days\":{}}'::jsonb);" | grep -q 'mw_invalid_input: days 必须是数组' && echo 1 || echo 0)" ""
+check "超过 31 天被拒且带校验前缀" \
+  "$(err_of "SELECT mw_ingest(jsonb_build_object('device_id','d','days',(SELECT jsonb_agg(jsonb_build_object('day','2026-01-01')) FROM generate_series(1,32))));" | grep -q 'mw_invalid_input: days 超过 31 条' && echo 1 || echo 0)" ""
 check "缺 device_id 被拒" \
   "$(sudo -u postgres psql -tA -d "$SCRATCH" -c "SELECT mw_ingest('{\"days\":[]}'::jsonb);" >/dev/null 2>&1 && echo 0 || echo 1)" ""
 check "days 非数组被拒" \
