@@ -50,6 +50,11 @@ const PSQL = process.env.PSQL_BIN || '/usr/bin/psql';
 const MAX_BODY_BYTES = 256 * 1024;   // 31 天 × 十几项，几十 KB 足够；留 4 倍余量
 const RATE_LIMIT_PER_HOUR = 60;      // 每 IP 每小时上报次数（正常客户端每天 1 次）
 
+// 库内校验失败时 RAISE 的消息前缀（见 functions.sql）。
+// 有它才能把「客户端把请求发错了」与「服务端真出故障」分开：
+// 前者回 400，后者回 500。否则脏请求会把「服务故障」的告警与 Sentry 刷满。
+const VALIDATION_MARKER = 'mw_invalid_input:';
+
 // ── 限流：内存计数，够用且不引入 Redis ────────────────────────
 // 重启即清零。对「每天 1 次」的正常流量，它的作用是挡住脚本刷接口，
 // 不是精确计费，所以内存实现完全够。
@@ -171,18 +176,32 @@ async function fetchUserNames() {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let size = 0;
+    let settled = false;
     const chunks = [];
     req.on('data', (c) => {
+      if (settled) return;
       size += c.length;
       if (size > MAX_BODY_BYTES) {
-        reject(new Error('请求体过大'));
-        req.destroy();
+        settled = true;
+        const err = new Error('请求体过大');
+        err.code = 'body_too_large';   // 让上层回 413 而不是 500
+        // ⚠️ 只 pause，**不要** destroy。
+        // 立刻断开连接会让响应发不出去，经 Cloudflare 时表现为 **502**
+        // 而不是 413（2026-10-15 实测踩到：客户端拿到的是「坏网关」，
+        // 既看不出是自己发大了，也会把 Cloudflare 的 5xx 指标打脏）。
+        // pause 之后由上层写完 413，Node 会在响应后自行收尾。
+        req.pause();
+        reject(err);
         return;
       }
       chunks.push(c);
     });
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    req.on('error', reject);
+    req.on('end', () => {
+      if (!settled) resolve(Buffer.concat(chunks).toString('utf8'));
+    });
+    req.on('error', (e) => {
+      if (!settled) reject(e);
+    });
   });
 }
 
@@ -351,15 +370,32 @@ const server = createServer(async (req, res) => {
       const ip = clientIp(req);
       if (rateLimited(ip)) return send(429, JSON.stringify({ ok: false, error: 'rate_limited' }));
 
-      const raw = await readBody(req);
+      let raw;
+      try {
+        raw = await readBody(req);
+      } catch (e) {
+        // 超限是客户端问题 ⇒ 413，不让它落进外层 catch 变成 500。
+        if (e?.code === 'body_too_large') {
+          return send(413, JSON.stringify({ ok: false, error: 'payload_too_large' }));
+        }
+        throw e;
+      }
       let payload;
       try {
         payload = JSON.parse(raw);
       } catch {
         return send(400, JSON.stringify({ ok: false, error: 'invalid_json' }));
       }
-      const result = await ingest(payload);
-      return send(200, JSON.stringify(result));
+      try {
+        const result = await ingest(payload);
+        return send(200, JSON.stringify(result));
+      } catch (e) {
+        // 库内校验失败 → 400。其余（连不上库、SQL 错、权限）仍走 500 —— 那才是真故障。
+        if (String(e?.message ?? e).includes(VALIDATION_MARKER)) {
+          return send(400, JSON.stringify({ ok: false, error: 'invalid_payload' }));
+        }
+        throw e;
+      }
     }
 
     if (url.pathname === '/' && req.method === 'GET') {
