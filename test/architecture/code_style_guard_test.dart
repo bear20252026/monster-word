@@ -34,6 +34,7 @@ void main() {
       64,
       65,
       74,
+      93, // 2026-10-15 埋点接线 +19 行（起始行 74→93），build() 本身仍是 160 行
     }, // 160 行（2026-10-04 签到守卫 +9 行，起始行 64→74）
     'lib/features/settings/presentation/more_settings_page.dart': {494, 495}, // 133 行
   };

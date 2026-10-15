@@ -307,7 +307,9 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     if (_busy || _todayChecked) return;
     final store = context.read<ScareCoinStore>();
     // 埋点端口在 await 前取好：await 之后 context 可能已失效。
-    final usageStats = context.read<UsageStatsRecorder>();
+    // **可空读取**：本页在最小装配的单测里没有 telemetry scope，不该因此抛
+    // ProviderNotFound（与 learn_page 的 ScareCoinStore 同口径）。
+    final usageStats = context.read<UsageStatsRecorder?>();
     setState(() => _busy = true);
     // 进化仪式基线：签到前的累计天数快照。不能用「签到后 length-1」近似——
     // 自动续命回填 k 天时 -1 不等于签到前的天数，跨档仪式会被误吞。
@@ -345,7 +347,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     // 使用统计：签到连击 + 本次获得的尖叫币。
     // 连击用 store.streak() 而不是页面本地的 _streak + 1——权威口径在账本侧，
     // 自动续命回填等边界下两者并不相等。
-    unawaited(_reportCheckInToUsageStats(usageStats, store, reward));
+    if (usageStats != null) unawaited(_reportCheckInToUsageStats(usageStats, store, reward));
     unawaited(_maybeCelebrateMilestone(newBalance: awarded));
     // 进化仪式检测：checkIn() 返回前今日已写入 checkinDates（写日期先于算余额），
     // 故此刻取的天数已含今天；与基线快照 diff，跨阈值才演出。

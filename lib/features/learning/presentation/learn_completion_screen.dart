@@ -73,9 +73,10 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
       if (sessionState.sessionRewardSettled) return;
       sessionState.markSessionRewardSettled();
       // 埋点端口在 await 前取好：await 之后 context 可能已失效。
+      // **可空读取**：最小装配的单测没有 telemetry scope，不该因此抛 ProviderNotFound。
       // 会话数/答题数由 LearningSessionState 在队列走完时上报（那里有唯一的计数口径），
       // 这里只补「本次结算实际发出的尖叫币」。
-      final usageStats = context.read<UsageStatsRecorder>();
+      final usageStats = context.read<UsageStatsRecorder?>();
       final store = context.read<ScareCoinStore>();
       final service = LearningRewardService(store);
       // 形态异步补齐（喂币庆祝的怪兽随真实进化阶段换装；失败降级奶泡态）。
@@ -95,7 +96,7 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
           dailyGoalAchieved: widget.goalAchieved,
         );
         // 使用统计：本次会话实际发出的尖叫币（0 时实现方空转，无需判断）。
-        unawaited(usageStats.recordCoinsEarned(result.totalGranted));
+        if (usageStats != null) unawaited(usageStats.recordCoinsEarned(result.totalGranted));
         if (!mounted || result.totalGranted <= 0) return;
         // W4.5 宠物化：喂到它了（发币成功 = 喂食成功）→ 羁绊 +1/日。
         // 失败要上报（对照抚摸侧口径）：_record 内 SP 写抛错否则进 unhandled。
