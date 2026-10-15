@@ -242,7 +242,12 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
       // 夜息：睡着时呼吸放慢一倍多，不眨眼（闭眼由 painter blink=1 呈现）。
       _idleCtrl.duration = Duration(milliseconds: _isNight ? 7600 : 3200);
       _idleCtrl.repeat();
-      if (!_isNight) _blinkTimer = Timer.periodic(const Duration(milliseconds: 3400), (_) => _runBlink());
+      if (!_isNight) {
+        // 先取消再建（2026-10-15 审计 R3-L03 同族）：这里是直接赋值而不是 `??=`，
+        // 若本方法被重复调用（亮度/情绪变化都会走到），旧 timer 会失去引用且永不取消。
+        _blinkTimer?.cancel();
+        _blinkTimer = Timer.periodic(const Duration(milliseconds: 3400), (_) => _runBlink());
+      }
     }
   }
 

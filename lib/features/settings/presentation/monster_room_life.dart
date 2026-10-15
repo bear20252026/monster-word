@@ -42,7 +42,12 @@ extension _MonsterRoomLife on _MonsterRoomViewState {
         _idleCtrl.repeat();
       }
       if (night) {
+        // cancel 之后必须置 null（2026-10-15 审计 R3-L03）：下面日间分支用的是 `??=`，
+        // 字段非 null 就不会重建 ⇒ 「白天打开 → 跨入夜间 → 跨回白天」之后
+        // 眨眼 timer 永不再被调度，怪兽**永久不眨眼**直到重进页面。
+        // ProfileScreen 是 MainShell 的常驻 tab，桌面端长期不关窗即可命中。
         _blinkTimer?.cancel();
+        _blinkTimer = null;
       } else if (!_reduceMotion) {
         _blinkTimer ??= Timer.periodic(const Duration(milliseconds: 3400), (_) => _runBlink());
       }

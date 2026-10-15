@@ -46,6 +46,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+
+  /// 认证并发闸（2026-10-15 审计 R3-A04）。与 [_isLoading] 分开：后者驱动 UI，
+  /// 在认证成功后才置位；这个闸从进入认证就生效，防止弱网连点造成并发建号。
+  bool _authInFlight = false;
   String? _lastLoginAccountInfo;
 
   late AnimationController _animController;
@@ -92,6 +96,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   Future<void> _loginWithCoolID(String username, String password) async {
+    // 并发闸（2026-10-15 审计 R3-A04）：_isLoading 原本在**认证成功之后**才置位，
+    // 所以认证 await 期间按钮仍可点。弱网（超时 10s）下连点会并发 signIn；
+    // 服务端模式下两个请求都通过本机校验后**并发发起 /auth/signup**，
+    // 第二个拿到 422 后走 onRejected ⇒ 在已跳转主页之后再弹「账号或密码不正确」，
+    // 同时把客户端与 GoTrue 的限流额度双倍消耗。
+    if (_authInFlight) return;
+    _authInFlight = true;
+    try {
+      await _loginWithCoolIDGuarded(username, password);
+    } finally {
+      _authInFlight = false;
+    }
+  }
+
+  Future<void> _loginWithCoolIDGuarded(String username, String password) async {
     // ✅ 输入验证：长度限制
     if (username.isEmpty) {
       _showToast('用户名不能为空');

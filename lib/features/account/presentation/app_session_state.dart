@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/auth/app_session_controller.dart';
 import 'package:word_app/core/application/session_security.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/features/account/application/auth_session_store.dart';
 
 /// 应用账号与首次引导的会话状态。
 ///
@@ -15,9 +17,13 @@ import 'package:word_app/core/application/session_security.dart';
 /// 不得直连 SharedPreferences / infrastructure）。
 class AppSessionState extends ChangeNotifier implements AppSessionController {
   /// 经装配点注入（facade_direct_ctor_guard：非装配文件禁止直建门面）。
-  AppSessionState({required this.prefs});
+  ///
+  /// [sessionStore] 可空：本机模式（未注入 AUTH_BASE_URL）下没有服务端会话可清，
+  /// 测试里也常只关心本机语义。
+  AppSessionState({required this.prefs, this.sessionStore});
 
   final PresentationPrefs prefs;
+  final AuthSessionStore? sessionStore;
 
   bool _isLoggedIn = false;
   bool _hasShownInitGuide = false;
@@ -53,6 +59,17 @@ class AppSessionState extends ChangeNotifier implements AppSessionController {
   Future<void> logout() async {
     await prefs.clearSessionData();
     clearSessionSecrets();
+    // 清服务端会话（2026-10-15 审计 R3-A01）：
+    // 旧实现只清 prefs 与旧 token/secret，`AuthSessionStore.clear()` 在全库**零调用**
+    // ⇒ access/refresh token 永久残留在安全存储里（服务端 30 天有效、客户端从不吊销）；
+    // 更直接的后果是遥测的 SessionUsageStatsIdentity 仍从该 blob 读 userId，
+    // 登出后产生的上报**继续挂在已登出账号名下**，管理端「按人看」的数据被污染。
+    // 清理失败必须上报（否则是静默残留），但**不能阻断登出** —— 登出方向宁可少留态。
+    try {
+      await sessionStore?.clear();
+    } catch (e, s) {
+      reportSwallowedError('登出时清除服务端会话失败（token 可能仍残留在安全存储）', e, s);
+    }
     _isLoggedIn = false;
     notifyListeners();
   }

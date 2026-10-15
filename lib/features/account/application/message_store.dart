@@ -81,20 +81,29 @@ class MessageStore extends ChangeNotifier {
   Future<void> load() => _serialized('消息中心加载失败', _loadLocked);
 
   Future<void> _loadLocked() async {
-    final prefs = await _prefs();
-    _messages = _decode(prefs.getString(_storageKey));
-    // MEM：历史版本无上限，老用户本地可能堆积数千条，加载即截断。
-    const maxMessages = 200;
-    if (_messages.length > maxMessages) {
-      _messages = _messages.take(maxMessages).toList();
-    }
+    // _loaded 必须在 finally 里置位（2026-10-15 审计 R3-L02）：
+    // 旧实现把它放在全部 await **之后**，而 _serialized 会吞掉异常只上报 ⇒
+    // 任一步骤抛错（SP 打不开、签到状态读取失败、落盘失败）都会让 _loaded 永假 ⇒
+    // 消息页停在 CircularProgressIndicator 无限转圈，而 RefreshIndicator 只挂在
+    // loaded 分支 ⇒ **用户没有任何重试入口，只能杀进程重启**。
+    try {
+      final prefs = await _prefs();
+      _messages = _decode(prefs.getString(_storageKey));
+      // MEM：历史版本无上限，老用户本地可能堆积数千条，加载即截断。
+      const maxMessages = 200;
+      if (_messages.length > maxMessages) {
+        _messages = _messages.take(maxMessages).toList();
+      }
 
-    final fresh = await _refreshLearningMessages();
-    if (fresh) {
-      await _persist(prefs);
+      final fresh = await _refreshLearningMessages();
+      if (fresh) {
+        await _persist(prefs);
+      }
+    } finally {
+      // 失败时列表可能是空的，但「能看见空列表 + 能下拉刷新」远好于「永远转圈」。
+      _loaded = true;
+      notifyListeners();
     }
-    _loaded = true;
-    notifyListeners();
   }
 
   /// 全部标记已读。
@@ -221,7 +230,14 @@ class MessageStore extends ChangeNotifier {
   }
 
   Future<void> _persist(SharedPreferences prefs) async {
-    await prefs.setString(_storageKey, jsonEncode(_messages.map((MessageItem m) => m.toJson()).toList()));
+    final ok = await prefs.setString(_storageKey, jsonEncode(_messages.map((MessageItem m) => m.toJson()).toList()));
+    // 必须检查返回值（2026-10-15 审计 R3-L04）：SharedPreferences 写失败是
+    // **返回 false 而不是抛异常**。不检查的话内存里 append/markAllRead 看似成功并
+    // notifyListeners，重启后整批消息静默消失，而且**连上报都没有**（不抛就不进
+    // _serialized 的 onError）。同仓 preferences_scare_coin_store._writeChecked 已是这个口径。
+    if (!ok) {
+      throw StateError('消息落盘失败（SharedPreferences.setString 返回 false）');
+    }
   }
 
   static List<MessageItem> _decode(String? raw) {
