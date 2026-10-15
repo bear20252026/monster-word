@@ -256,8 +256,26 @@ class UsageStatsCollector implements UsageStatsController, UsageStatsRecorder {
 
   Future<void> _mutateToday(UsageDailyStats Function(UsageDailyStats) change) => _mutateDay(dayKey(clock()), change);
 
-  Future<void> _mutateDay(String day, UsageDailyStats Function(UsageDailyStats) change) async {
-    final current = await store.readDay(day) ?? UsageDailyStats(day: day);
-    await store.writeDay(change(current));
+  /// 读-改-写的串行闸。
+  ///
+  /// `_mutateDay` 是「读 → 改 → 写」三步，而调用方**并不是串行的**：
+  /// `UsageModuleObserver` 对每次导航都 `unawaited(recordModuleOpen(...))`，
+  /// `onForeground` / `recordAnswers` / `recordCoinsEarned` 也可能同时落进来。
+  /// 两读两写交错时后写覆盖先写，计数会**静默少记**（数据不丢，是少记 —— 更难发现）。
+  ///
+  /// 端口注释（`usage_stats_ports.dart`）与 DAO 注释都写着「读-改-写由调用方串行发起」，
+  /// 而这里就是那个「调用方」：必须自己保证，不能指望 DAO 有缓存或事务
+  /// （DAO 的 writeDay 只保证单次写是原子的，管不了跨 await 的读改写）。
+  Future<void> _writeGate = Future<void>.value();
+
+  Future<void> _mutateDay(String day, UsageDailyStats Function(UsageDailyStats) change) {
+    final next = _writeGate.then((_) async {
+      final current = await store.readDay(day) ?? UsageDailyStats(day: day);
+      await store.writeDay(change(current));
+    });
+    // 闸链不能因为某次失败就断掉（断了后续写入会全部卡住）；
+    // 但失败仍要原样传给本次的 await 方，不能吞掉。
+    _writeGate = next.then<void>((_) {}, onError: (Object error, StackTrace stack) {});
+    return next;
   }
 }

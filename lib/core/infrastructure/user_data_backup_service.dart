@@ -61,7 +61,7 @@ class UserDataBackupService {
         final stamp = _dateStamp(clock);
         final target = p.join(backupDir.path, '$dbName-$stamp.bak');
         try {
-          await _vacuumInto(source.path, target);
+          await _snapshot(source.path, target);
           backedUp[target] = File(target).lengthSync();
           await _pruneOldBackups(backupDir, dbName);
         } catch (e, s) {
@@ -102,26 +102,88 @@ class UserDataBackupService {
     }
   }
 
-  /// VACUUM INTO 在线一致性快照：只读连接 + SQLite 读穿 WAL，
-  /// 输出的是已完成事务的紧凑完整快照（不是主文件裸复制）。
-  static Future<void> _vacuumInto(String sourcePath, String targetPath) async {
-    Database? ro;
+  /// 在线一致性快照。首选 `VACUUM INTO`，低版本 SQLite 降级为「checkpoint + 复制」。
+  ///
+  /// 为什么必须探测版本（2026-10-15 审计 R3-D01）：
+  /// `VACUUM INTO` 需要 SQLite ≥3.27，而 minSdk 24 覆盖的 Android 7/8/9 系统库是
+  /// 3.9.2 / 3.18 / 3.19 / 3.22 ⇒ 语句直接语法错。而本服务的失败**只上报不抛出**，
+  /// 于是那些设备上备份**永远不会产生**、`listBackups()` 恒空 ——
+  /// `user_data.db` / `review_schedule.db` 损坏时**唯一的自动恢复网完全失效**，
+  /// 平时毫无征兆。
+  ///
+  /// 降级路径的保证弱一档（没有「读穿 WAL 的紧凑快照」），但：
+  ///   - 先 `wal_checkpoint(TRUNCATE)` 把已提交事务并回主文件（否则裸复制会丢掉最近的事务）；
+  ///   - 再 `integrity_check`，坏库不该被当成好备份存下来；
+  ///   - 最后才复制主文件（此时连接已关闭，无并发写）。
+  /// 「保证弱一点的备份」远好于「什么都没有」。
+  static Future<void> _snapshot(String sourcePath, String targetPath) async {
+    final tmp = '$targetPath.partial';
+    final tmpFile = File(tmp);
+    if (tmpFile.existsSync()) tmpFile.deleteSync();
+
+    Database? db;
+    var produced = false;
     try {
-      ro = await openDatabase(sourcePath, readOnly: true);
-      final tmp = '$targetPath.partial';
-      await ro.rawQuery('VACUUM INTO ?', [tmp]);
-      final tmpFile = File(tmp);
-      if (!tmpFile.existsSync() || tmpFile.lengthSync() == 0) {
-        throw StateError('VACUUM INTO 未产出有效快照');
+      // 降级路径要写 WAL 检查点，故不能开只读连接。
+      db = await openDatabase(sourcePath);
+      if (await _supportsVacuumInto(db)) {
+        // 已探过 sqlite_version() ≥3.27 才走到这里（见 _supportsVacuumInto）。
+        await db.rawQuery('VACUUM INTO ?', [tmp]); // sqlite-compat-ok: 上方已做版本探测
+        produced = true;
+      } else {
+        await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+        final check = await db.rawQuery('PRAGMA integrity_check');
+        final verdict = check.isEmpty ? '' : '${check.first.values.first}';
+        if (verdict != 'ok') {
+          throw StateError('备份前完整性检查未通过：$verdict');
+        }
       }
-      final target = File(targetPath);
-      if (target.existsSync()) target.deleteSync();
-      tmpFile.renameSync(targetPath);
     } finally {
       try {
-        await ro?.close();
+        await db?.close();
       } catch (_) {}
     }
+
+    if (!produced) {
+      await File(sourcePath).copy(tmp);
+    }
+    if (!tmpFile.existsSync() || tmpFile.lengthSync() == 0) {
+      throw StateError('备份未产出有效快照');
+    }
+
+    final target = File(targetPath);
+    if (target.existsSync()) target.deleteSync();
+    tmpFile.renameSync(targetPath);
+  }
+
+  /// `VACUUM INTO` 是否可用（SQLite ≥3.27）。进程内只探一次。
+  static bool? _vacuumIntoSupported;
+
+  @visibleForTesting
+  static set vacuumIntoSupportedOverrideForTest(bool? value) => _vacuumIntoSupported = value;
+
+  static Future<bool> _supportsVacuumInto(Database db) async {
+    final cached = _vacuumIntoSupported;
+    if (cached != null) return cached;
+    var ok = false;
+    try {
+      final rows = await db.rawQuery('SELECT sqlite_version() AS v');
+      ok = _versionAtLeast('${rows.isEmpty ? '' : rows.first['v']}', 3, 27);
+    } catch (e, s) {
+      // 读不到版本就按「不支持」处理：降级路径总是能跑，猜错方向也不会丢备份。
+      reportSwallowedError('读取 SQLite 版本失败（按不支持在线快照处理）', e, s);
+    }
+    _vacuumIntoSupported = ok;
+    return ok;
+  }
+
+  static bool _versionAtLeast(String version, int wantMajor, int wantMinor) {
+    final parts = version.split('.');
+    if (parts.isEmpty) return false;
+    final major = int.tryParse(parts[0]) ?? 0;
+    final minor = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+    if (major != wantMajor) return major > wantMajor;
+    return minor >= wantMinor;
   }
 
   /// 每类库只保留最近 [keepCount] 份（按文件名中的日期戳排序）。
