@@ -274,12 +274,23 @@ jobs:
         run: |
           $dir = 'build/installer'
           $build = '${{ env.win_build }}'
+          # ⚠️ 原正则写的是 '_v(\d+\.\d+\.\d+)_'，**要求版本号后面跟下划线** ——
+          # 而 Inno Setup 的产物是 `MonsterWord_Setup_v2.13.0.exe`（版本号后面是 `.exe`），
+          # 于是整个步骤长期**空转**：Windows 安装包始终没有 buildNumber，
+          # 与 Android 侧（`MonsterWord_v2.13.0+129.apk`）不一致，
+          # MW-72「同版本号不同构建可凭文件名区分」在 Windows 侧从未生效。
+          # 现在只锚到版本号本身，`+build` 插在它后面。
           Get-ChildItem $dir -Filter 'MonsterWord_Setup_v*.exe' | ForEach-Object {
             if ($_.Name -notmatch '\+\d+') {
-              $newName = $_.Name -replace '_v(\d+\.\d+\.\d+)_', ('_v$1+' + $build + '_')
+              $newName = $_.Name -replace '_v(\d+\.\d+\.\d+)', ('_v$1+' + $build)
               Rename-Item $_.FullName -NewName $newName
               Write-Host "renamed to $newName"
             }
+          }
+          # 改名失败不该静默：产物名是发版可追溯性的一部分
+          Get-ChildItem $dir -Filter 'MonsterWord_Setup_v*.exe' | ForEach-Object { $_.Name }
+          if (-not (Get-ChildItem $dir -Filter 'MonsterWord_Setup_v*+*.exe')) {
+            Write-Error "安装包改名未生效（找不到带 buildNumber 的产物名）"
           }
 
       # MW-16/73：Windows Authenticode 代码签名（预留步骤位）。
@@ -367,10 +378,33 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
+          # ⚠️ 必须用递归 glob（`**`）。2026-10-15 发 v2.13.0+129 时这里写的是单层
+          # `artifacts/windows-installer/*`：windows job 的上传路径是
+          # `build/installer/MonsterWord_Setup_v*.exe`，artifact 内因此嵌了一层
+          # `installer/` ⇒ 单层 glob 只匹配到**目录**，而目录会被跳过 ⇒
+          # **Windows 安装包没挂上 Release，整条流水线却全绿**。
+          # （SHA256SUMS.txt 里仍有它，所以当时能凭校验和清单确认产物是好的。）
           files: |
-            artifacts/android-packages/*
-            artifacts/windows-installer/*
+            artifacts/android-packages/**
+            artifacts/windows-installer/**
             artifacts/SHA256SUMS.txt
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify release assets (MW-77)
+        # 防的就是上面那种「Release 建了但少挂产物」的静默故障：产物不齐必须让 job 红，
+        # 而不是等人下载时才发现。三类各查一次（扩展名/文件名片段）。
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | tee /tmp/assets.txt
+          for pattern in '\.apk$' '\.aab$' 'Setup_v.*\.exe$'; do
+            if ! grep -qE "$pattern" /tmp/assets.txt; then
+              echo "::error::Release 缺少匹配 $pattern 的产物 —— 三件套不齐"
+              exit 1
+            fi
+          done
+          echo "✅ 三件套齐全（apk / aab / Setup.exe）"
