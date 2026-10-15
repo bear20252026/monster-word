@@ -563,6 +563,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
       try {
         cards.add(FsrsCard.fromJson(entry.value as Map<String, dynamic>));
       } catch (_) {
+        // 吞错豁免: 逐行跳过损坏卡片，循环结束后按 skipped 聚合 reportSwallowedError
         skipped++;
         debugLog('FSRS migration: skip corrupt card "${entry.key}"');
       }
@@ -583,6 +584,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
           final map = entry.value as Map<String, dynamic>;
           dailyStats[entry.key] = {'learn': map['learn'] as int? ?? 0, 'review': map['review'] as int? ?? 0};
         } catch (_) {
+          // 吞错豁免: 同上——逐行跳过，循环后聚合上报
           skipped++;
           debugLog('FSRS migration: skip corrupt daily stat "${entry.key}"');
         }
