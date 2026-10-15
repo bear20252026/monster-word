@@ -28,6 +28,13 @@
 //                                      # 直接打后端（绕过网关）。用于**域名还没接好之前**
 //                                      # 先在服务器上验后端行为 —— 例如在服务器上跑
 //                                      #   node smoke-test.mjs --base-url http://127.0.0.1:9999
+//
+// ⚠️ 这个脚本会**在生产库里建真实账号**，跑完靠 service_role JWT 删掉。
+// 而 JWT 需要 `JWT_SECRET` / `MW_JWT_SECRET`（原生部署在 `/opt/mw-auth/.env`），
+// 本地一般没有 ⇒ 所以脚本会在**建任何账号之前**先确认清理能力，拿不到就直接中止
+// （避免留下孤儿账号；2026-10-15 因为缺这一步，本地跑完在生产留了两条，事后手工删）。
+// 想在本地跑完整断言，就用 `--keep` 明确表示「我接受留下测试账号」，
+// 或者把本目录连同 `/opt/mw-auth/.env` 一起放到服务器上跑。
 //                                      # 注意这样验不到 Caddy 的前缀剥离与 TLS，那两条
 //                                      # 由 enable-caddy-route.sh 的回归验证覆盖。
 
@@ -124,6 +131,34 @@ const userCN = `验收${suffix}`;
 const password = `pw-${randomBytes(9).toString('base64url')}`;
 const created = [];
 
+// ── 清理能力前置检查：在创建任何账号之前 ───────────────────────
+//
+// 为什么放在最前：清理靠 service_role JWT 调 admin API 删账号，而 JWT 需要
+// `JWT_SECRET` / `MW_JWT_SECRET`。本地跑这个脚本时（没有服务器的 .env）密钥通常
+// 不存在 —— 原实现是**跑完全部断言之后**才发现清理不了，于是在**生产库留下孤儿
+// 测试账号**（2026-10-15 实际踩到，事后手工删了两条）。
+// 所以：先确认清理能力，拿不到就一个账号都别建。
+const keepAccounts = args.includes('--keep');
+let serviceJwt = '';
+if (!keepAccounts) {
+  try {
+    serviceJwt = execFileSync(process.execPath, [join(here, 'gen-service-jwt.mjs')], {
+      encoding: 'utf8',
+      env: { ...process.env, ...env },
+    }).trim();
+  } catch (e) {
+    console.error(
+      '\n无法生成 service_role JWT（缺 JWT_SECRET / MW_JWT_SECRET）⇒ 跑完删不掉测试账号。\n' +
+        '为避免在生产库留下孤儿账号，已在创建任何账号之前中止。可选：\n' +
+        '  1. 到服务器上跑（那里有 /opt/mw-auth/.env）：\n' +
+        '     ssh … \'set -a; . /opt/mw-auth/.env; set +a; node smoke-test.mjs\'\n' +
+        '  2. 显式加 --keep，表示「我就是要保留测试账号」\n' +
+        `\n底层错误：${String(e.message ?? e).split('\n')[0]}`,
+    );
+    process.exit(1);
+  }
+}
+
 console.log(`\n目标: ${base}\n`);
 
 // ── 1. TLS 与网关 ──
@@ -215,17 +250,13 @@ check(
 );
 
 // ── 清理 ──
-if (!args.includes('--keep') && created.length > 0) {
+if (!keepAccounts && created.length > 0) {
   console.log('\n[清理] 删除测试账号');
   try {
-    const jwt = execFileSync(process.execPath, [join(here, 'gen-service-jwt.mjs')], {
-      encoding: 'utf8',
-      env: { ...process.env, ...env },
-    }).trim();
     for (const id of created) {
       const res = await fetch(`${base}/admin/users/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${jwt}`, apikey: jwt },
+        headers: { Authorization: `Bearer ${serviceJwt}`, apikey: serviceJwt },
       });
       check(`删除测试账号 ${id}`, res.ok, `HTTP ${res.status}`);
     }
