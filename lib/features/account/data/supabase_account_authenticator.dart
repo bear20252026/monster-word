@@ -152,7 +152,12 @@ class SupabaseAccountAuthenticator implements AccountAuthenticator {
         // （防枚举假成功）。绝不能当登录成功——那会让用户以为登录了其实没有会话。
         reportSwallowedError(
           '认证 200 响应缺少 access_token（疑似 GOTRUE_MAILER_AUTOCONFIRM 未开启）',
-          FormatException('200 响应不是令牌响应', response.body),
+          // ⚠️ 不要把 response.body 放进错误对象（2026-10-15 审计 R3-A06）：
+          // reportSwallowedError 用 '$context: $error' 字符串化，而
+          // FormatException.toString() 会把 source 带出来 ⇒ **access_token 的 JWT
+          // 前缀会进第三方 Sentry**（其隐私政策明确说不含账号资料）。
+          // 只报状态码就够定位了。
+          FormatException('200 响应不是令牌响应（status=${response.statusCode}）'),
           StackTrace.current,
         );
         return const AuthOutcome.serverFailure();
@@ -224,7 +229,10 @@ class SupabaseAccountAuthenticator implements AccountAuthenticator {
       if (decoded is! Map<String, dynamic>) return null;
       json = decoded;
     } catch (e, s) {
-      reportSwallowedError('认证成功响应解析失败', e, s);
+      // 只报类型、不报原文（2026-10-15 审计 R3-A06）：jsonDecode 抛的 FormatException
+      // **自带 source（= 响应体）**，而 reportSwallowedError 会把它字符串化 ⇒
+      // access_token 的 JWT 前缀会进第三方 Sentry。
+      reportSwallowedError('认证成功响应解析失败（${e.runtimeType}；响应体刻意不入日志）', StateError('认证响应不是合法 JSON'), s);
       return null;
     }
 

@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/auth/app_session_controller.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/features/account/data/auth_server_config.dart';
 import 'package:word_app/features/account/data/file_avatar_storage.dart';
@@ -29,14 +30,20 @@ import 'package:word_app/core/application/presentation_prefs.dart';
 Widget buildAccountFeatureScope({required Widget child}) {
   return MultiProvider(
     providers: [
-      ChangeNotifierProvider(create: (_) => AppSessionState(prefs: PresentationPrefs())),
+      // AuthSessionStore 必须在 AppSessionState 之前：登出要清服务端会话
+      // （2026-10-15 审计 R3-A01 —— 此前 clear() 全库零调用，token 永久残留、
+      //  且遥测继续把数据记在已登出账号名下）。
+      Provider<AuthSessionStore>(create: (_) => SecureAuthSessionStore()),
+      ChangeNotifierProvider(
+        create: (context) =>
+            AppSessionState(prefs: PresentationPrefs(), sessionStore: context.read<AuthSessionStore>()),
+      ),
       // 以同实例暴露核心契约，供其它 feature（如 settings）只依赖 AppSessionController，
       // 不再直接 import account 内部（ARCH-FIX-1，去除跨 feature 展示层耦合）。
       ProxyProvider<AppSessionState, AppSessionController>(update: (_, session, _) => session),
       Provider<AccountProfileStore>(create: (_) => AccountProfileRepository(userService: sl<UserService>())),
       Provider<AvatarStorage>(create: (_) => FileAvatarStorage()),
       Provider<PasswordAuthStore>(create: (_) => SecurePasswordAuthStore()),
-      Provider<AuthSessionStore>(create: (_) => SecureAuthSessionStore()),
       // 登录入口。R2-01 阶段二：注入 AUTH_BASE_URL / AUTH_ANON_KEY 即切到服务端
       // 校验；未注入则保持本机模式（CI 与本地开发不注入，见 AuthServerConfig）。
       // 服务端模式下再套一层迁移装饰器：存量用户（本机账号）首次登录时
@@ -45,7 +52,20 @@ Widget buildAccountFeatureScope({required Widget child}) {
         create: (context) {
           final localStore = context.read<PasswordAuthStore>();
           const config = AuthServerConfig.fromEnvironment;
-          if (!config.isConfigured) return LocalAccountAuthenticator(localStore);
+          if (!config.isConfigured) {
+            // 半配置会被静默当成「本机模式」（2026-10-15 审计 R3-A11）：发版漏注入
+            // AUTH_ANON_KEY 时整批用户继续用本机账号体系、密码落在本机，
+            // 上云形同未发，且**没有任何可观测信号**。这里上报一次，
+            // 与遥测「未配置必须可发现」（http_usage_stats_uploader）的口径一致。
+            if (config.hasPartialConfig) {
+              reportSwallowedError(
+                'AUTH_BASE_URL / AUTH_ANON_KEY 只配了一半 ⇒ 已回退本机模式（服务端认证未生效）',
+                StateError('partial auth config'),
+                StackTrace.current,
+              );
+            }
+            return LocalAccountAuthenticator(localStore);
+          }
           return MigratingAccountAuthenticator(
             remote: SupabaseAccountAuthenticator(
               baseUrl: config.baseUrl,

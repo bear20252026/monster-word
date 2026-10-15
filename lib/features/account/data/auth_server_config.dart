@@ -38,4 +38,12 @@ class AuthServerConfig {
   /// 两项都非空才算配置完成——只配一半（比如漏了 key）应视为未配置，
   /// 否则会连上去被 401 挡下，错误信息比「本机模式」更难自诊。
   bool get isConfigured => baseUrl.trim().isNotEmpty && anonKey.trim().isNotEmpty;
+
+  /// 只配了一半（典型：发版时漏了 `--dart-define=AUTH_ANON_KEY`）。
+  ///
+  /// 这种状态会被 [isConfigured] 当成「未配置」⇒ 静默回退本机模式 ⇒
+  /// 整批用户继续用本机账号体系、密码落在本机，上云形同未发，**且没有任何信号**
+  /// （2026-10-15 审计 R3-A11）。装配点据此上报一次，与遥测「未配置必须可发现」
+  /// （http_usage_stats_uploader）的口径一致。
+  bool get hasPartialConfig => baseUrl.trim().isNotEmpty != (anonKey.trim().isNotEmpty);
 }

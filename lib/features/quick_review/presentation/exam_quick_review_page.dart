@@ -77,6 +77,14 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
   }
 
   void _startTimer() {
+    // 先取消已有的计时器（2026-10-15 审计 R3-L01）。
+    // 考试类型的 ChoiceChip 就渲染在答题页内，答题中切换类型是常规操作；
+    // 旧实现直接给 _timer 赋新值，旧 timer 从此**失去引用且永不取消**：
+    //   ① 旧 timer 每秒继续 setState，到点触发 _onSkip → 一次点击跳 2 个词、
+    //      stats 虚增、进度条跳变（它还会 cancel 掉新 timer 并再建一个，越点越乱）；
+    //   ② dispose 只能取消最后一个，页面销毁后旧 timer 继续 setState
+    //      （debug 抛 setState after dispose，release 下闭包长期持有已销毁 State）。
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() => _tick = _tick + 1);
       if (_tick >= _examType.timeLimit) {
