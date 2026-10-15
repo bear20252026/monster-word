@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:word_app/core/utils/debug_log.dart';
 import 'package:flutter/foundation.dart';
 
@@ -8,6 +10,8 @@ import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_selection_writer.dart';
 import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/features/book/domain/book_statistics.dart';
+// 埋点端口（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
+import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 
 /// 词书模块聚合状态。
 ///
@@ -19,16 +23,21 @@ class BookState extends ChangeNotifier {
     required BookSelectionWriter selectionWriter,
     required BookWordListReader wordsReader,
     required LearningProgressReader progressReader,
+    UsageStatsRecorder? usageStats,
   }) : _catalogReader = catalogReader,
        _selectionWriter = selectionWriter,
        _wordsReader = wordsReader,
-       _progressReader = progressReader;
+       _progressReader = progressReader,
+       _usageStats = usageStats;
   // ignore_for_file: prefer_initializing_formals
 
   final BookCatalogReader _catalogReader;
   final BookSelectionWriter _selectionWriter;
   final BookWordListReader _wordsReader;
   final LearningProgressReader _progressReader;
+
+  /// 使用统计埋点端口；未注入（测试/未装配）时为 null，埋点静默跳过。
+  final UsageStatsRecorder? _usageStats;
 
   // ── 词书目录 ──────────────────────────────────────────────
   List<Book> _books = const [];
@@ -157,11 +166,18 @@ class BookState extends ChangeNotifier {
       // 通过 learning 模块提供的契约读取真实已学数（全书口径：单列文本瞬时查询）
       final learned = await _progressReader.countLearnedWords(await _wordsReader.loadWordTexts(bookId));
       if (_stale(generation, bookId)) return;
-      _statistics = BookStatistics(
+      final statistics = BookStatistics(
         // 优先使用词书自身的 wordCount；若缺失则回退到 COUNT 查询总数
         totalWords: expected > 0 ? expected : _totalWords,
         learnedWords: learned,
       );
+      _statistics = statistics;
+      // 使用统计：词书进度是**状态量**，覆盖写（见 UsageStatsRecorder.syncBookProgress）。
+      // 这里是全库唯一算出「该词书已学/总量」的地方，故埋点也放这里，避免第二套口径。
+      final recorder = _usageStats;
+      if (recorder != null) {
+        unawaited(recorder.syncBookProgress(wordCount: statistics.totalWords, learned: statistics.learnedWords));
+      }
       _error = null;
     } catch (e) {
       if (_stale(generation, bookId)) return;

@@ -146,6 +146,9 @@ jobs:
         # AUTH_ANON_KEY 不是密钥：anon key 本就随客户端二进制公开，且自建栈不校验它
         #   （只要求非空 —— 客户端靠「配置完整」判断是否切服务端模式）。
         #   切勿在这里放任何真实密钥：本仓库是公开仓。
+        # 2026-10-15：STATS_BASE_URL 注入使用统计上报地址。与 AUTH_* 不同，**它缺失
+        #   或不可达都不会影响任何用户可见行为**：统计开关默认关闭，且上报通道失败时
+        #   只返回 false（数据留在本地等下轮补传），不会静默丢数据。
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           APP_VERSION: ${{ env.android_version }}
@@ -155,6 +158,7 @@ jobs:
           --dart-define=APP_VERSION=$APP_VERSION --dart-define=APP_BUILD_NUMBER=$APP_BUILD_NUMBER
           --dart-define=AUTH_BASE_URL=https://auth.cloudbear.cloud
           --dart-define=AUTH_ANON_KEY=mw-selfhosted-1
+          --dart-define=STATS_BASE_URL=https://stats.cloudbear.cloud
           --obfuscate --split-debug-info=build/symbols/apk
 
       - name: Build Release AAB
@@ -167,6 +171,7 @@ jobs:
           --dart-define=APP_VERSION=$APP_VERSION --dart-define=APP_BUILD_NUMBER=$APP_BUILD_NUMBER
           --dart-define=AUTH_BASE_URL=https://auth.cloudbear.cloud
           --dart-define=AUTH_ANON_KEY=mw-selfhosted-1
+          --dart-define=STATS_BASE_URL=https://stats.cloudbear.cloud
           --obfuscate --split-debug-info=build/symbols/aab
 
       - name: Rename packages to brand convention
@@ -229,11 +234,13 @@ jobs:
           APP_BUILD_NUMBER: ${{ env.win_build }}
         # 安全审计 P2-6：与 Android 一致开启混淆；MW-14：版本/构建号注入编译期常量
         # R2-01 阶段二：AUTH_BASE_URL 让客户端切到服务端校验（口径同上面的 APK 构建）
+        # 2026-10-15：STATS_BASE_URL 同上（缺失/不可达均不影响用户可见行为）
         run: >-
           flutter build windows --release --dart-define=SENTRY_DSN=$env:SENTRY_DSN
           --dart-define=APP_VERSION=$env:APP_VERSION --dart-define=APP_BUILD_NUMBER=$env:APP_BUILD_NUMBER
           --dart-define=AUTH_BASE_URL=https://auth.cloudbear.cloud
           --dart-define=AUTH_ANON_KEY=mw-selfhosted-1
+          --dart-define=STATS_BASE_URL=https://stats.cloudbear.cloud
           --obfuscate --split-debug-info=build/symbols/windows
 
       - name: Bundle VC++ Redistributable

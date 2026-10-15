@@ -28,6 +28,7 @@ import 'package:word_app/features/learning/application/review_schedule_writer_po
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/favorites_port.dart';
 import 'package:word_app/features/learning/application/mastered_writer_port.dart';
+import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 import 'package:word_app/features/learning/application/new_words_writer_port.dart';
 import 'package:word_app/features/learning/data/learning_progress_reader_impl.dart';
 import 'package:word_app/features/learning/data/learning_progress_repository.dart';
@@ -107,6 +108,10 @@ Widget buildLearningFeatureScope({required Widget child}) {
           choicePort: context.read<ChoiceGeneratorPort>(),
           todayStore: todayProgressStore,
           prefs: presentationPrefs,
+          // 学习行为埋点（新学词数 / 会话完成 / 答题数）。
+          // ⚠️ 本 scope 必须位于 buildTelemetryFeatureScope 内层才能读到它 ——
+          // 见 app.dart 的 scope 链序注释 [3]。
+          usageStats: context.read<UsageStatsRecorder>(),
         ),
       ),
       ProxyProvider<LearningSessionState, LearningSessionStarter>(
@@ -154,10 +159,19 @@ Widget buildLearningFeatureScope({required Widget child}) {
         create: (_) => ReviewRatingWriter(writeRating: sl<ReviewScheduleRepository>().rateWord),
       ),
       ChangeNotifierProxyProvider<ReviewRatingWriter, ReviewSessionState>(
-        create: (context) =>
-            ReviewSessionState(queueReader: sl<ReviewQueueReader>(), ratingWriter: context.read<ReviewRatingWriter>()),
-        update: (_, ratingWriter, session) =>
-            (session ?? ReviewSessionState(queueReader: sl<ReviewQueueReader>(), ratingWriter: ratingWriter))
+        create: (context) => ReviewSessionState(
+          queueReader: sl<ReviewQueueReader>(),
+          ratingWriter: context.read<ReviewRatingWriter>(),
+          // 复习会话完成后的埋点（会话数 / 答题词次 / 答对数）。
+          usageStats: context.read<UsageStatsRecorder>(),
+        ),
+        update: (context, ratingWriter, session) =>
+            (session ??
+                  ReviewSessionState(
+                    queueReader: sl<ReviewQueueReader>(),
+                    ratingWriter: ratingWriter,
+                    usageStats: context.read<UsageStatsRecorder>(),
+                  ))
               ..updateRatingWriter(ratingWriter),
       ),
       ChangeNotifierProvider(

@@ -15,6 +15,10 @@ import 'package:word_app/features/learning/application/learning_progress_port.da
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/domain/definition_formatter.dart';
+// 埋点端口（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
+// 用窄接口 UsageStatsRecorder 而不是 UsageStatsCollector：本类只需要「记一笔」，
+// 不需要上报调度/开关读写；测试传 null 即可（可选参数，既有测试不受影响）。
+import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
@@ -49,6 +53,7 @@ class LearningSessionState extends ChangeNotifier {
     required this._choicePort,
     required TodayProgressStore todayStore,
     required this._prefs,
+    this._usageStats,
     List<Word> Function(List<Word>)? shuffler,
   }) : _today = todayStore,
        _shuffler = shuffler ?? alphabetSpreadShuffle {
@@ -62,6 +67,9 @@ class LearningSessionState extends ChangeNotifier {
   final ChoiceGeneratorPort _choicePort;
   final TodayProgressStore _today;
   final PresentationPrefs _prefs;
+
+  /// 使用统计埋点端口；未注入（测试/未装配）时为 null，全部埋点静默跳过。
+  final UsageStatsRecorder? _usageStats;
   final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
 
   Book? _currentBook;
@@ -128,11 +136,25 @@ class LearningSessionState extends ChangeNotifier {
 
   Future<void> _incrementTodayLearned() async {
     _todayLearned++;
+    // 埋点：新学一个词。开关关闭时实现方空转，这里不需要自己判断。
+    final recorder = _usageStats;
+    if (recorder != null) unawaited(recorder.recordNewWordsLearned(1));
     try {
       await _today.setTodayLearned(_todayLearned, date: _todayLearnedDate);
     } catch (e, s) {
       reportSwallowedError('今日学习数写入失败', e, s);
     }
+  }
+
+  /// 会话完成埋点：会话数 + 本会话答题词次与答对数。
+  ///
+  /// 答对数 = 总词次 − 错词数（与 [accuracy] 同口径，不另立一套算法）。
+  void _reportSessionCompleted() {
+    final recorder = _usageStats;
+    if (recorder == null) return;
+    final reviewed = _totalAnswered;
+    unawaited(recorder.recordStudySession());
+    unawaited(recorder.recordAnswers(reviewed: reviewed, correct: (reviewed - _errorWords.length).clamp(0, reviewed)));
   }
 
   DateTime? _sessionStartTime;
@@ -292,6 +314,8 @@ class LearningSessionState extends ChangeNotifier {
         // 审计 I87：会话完成漏斗（过转变守卫，完成后的重复评分不重复记录）
         if (wasLastWord) {
           unawaited(Sentry.addBreadcrumb(Breadcrumb(message: '学习会话完成: ${_queue.length} 词', category: 'learning')));
+          // 使用统计：与 breadcrumb 同一守卫，保证一次会话只记一次。
+          _reportSessionCompleted();
         }
       }
       _regenerateChoices();

@@ -7,6 +7,7 @@ import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 
 import '../test_helpers/fake_learning_progress_reader.dart';
+import '../../telemetry/test_helpers/spy_usage_stats_recorder.dart';
 
 /// 模拟 BookCatalogReader
 class FakeBookCatalogReader implements BookCatalogReader {
@@ -134,6 +135,25 @@ void main() {
       expect(state.statistics!.learnedWords, 42);
       expect(state.statistics!.totalWords, 3);
       expect(state.statistics!.unlearnWords, 0); // 超过总量时 clamp 为 0
+    });
+
+    test('算出词书进度时同步埋点（状态量，覆盖写）', () async {
+      final spy = SpyUsageStatsRecorder();
+      final stateWithStats = BookState(
+        catalogReader: catalogReader,
+        selectionWriter: selectionWriter,
+        wordsReader: wordsReader,
+        progressReader: FakeLearningProgressReader(learnedCount: 42),
+        usageStats: spy,
+      );
+      selectionWriter.setCurrentBookId(1);
+      await stateWithStats.load();
+      wordsReader.setWords([Word(id: 1, word: 'apple'), Word(id: 2, word: 'banana'), Word(id: 3, word: 'cherry')]);
+
+      await stateWithStats.loadWords();
+
+      expect(spy.bookWordCount, 3);
+      expect(spy.bookLearnedCount, 42);
     });
 
     // XP-FIX-4: loadWords 失败时设置 _error 给用户反馈

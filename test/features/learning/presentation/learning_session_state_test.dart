@@ -21,10 +21,13 @@ import 'package:word_app/features/learning/presentation/learning_mastered_state.
 import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
+import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
 import 'package:word_app/features/learning/data/mastered_repository.dart';
+
+import '../../telemetry/test_helpers/spy_usage_stats_recorder.dart';
 
 void main() {
   setUp(() {
@@ -205,11 +208,71 @@ void main() {
     expect(session.currentWord?.word, 'second');
     expect(session.progress, (2, 3));
   });
+
+  test('队列走完时上报会话/答题/新学词数，未走完不报', () async {
+    final spy = SpyUsageStatsRecorder();
+    final session = _sessionWithWords(
+      words: [
+        Word(id: 1, word: 'first', interpret: '中文释义'),
+        Word(id: 2, word: 'second', interpret: '中文释义'),
+      ],
+      usageStats: spy,
+    );
+    await session.loadBook(_testBook, shuffle: false);
+
+    await session.rate(FsrsRating.good);
+    expect(spy.studySessions, 0, reason: '队列未走完不应记一次会话');
+    expect(spy.newWordsLearned, 1, reason: '每评一个词记一个新学词');
+
+    await session.rate(FsrsRating.good);
+    expect(spy.studySessions, 1, reason: '一次会话只记一次');
+    expect(spy.reviewed, 2);
+    expect(spy.correct, 2);
+    expect(spy.newWordsLearned, 2);
+  });
+
+  test('答错的词不计入答对数（与 accuracy 同口径）', () async {
+    final spy = SpyUsageStatsRecorder();
+    final session = _sessionWithWords(
+      words: [
+        Word(id: 1, word: 'first', interpret: '中文释义'),
+        Word(id: 2, word: 'second', interpret: '中文释义'),
+      ],
+      usageStats: spy,
+    );
+    await session.loadBook(_testBook, shuffle: false);
+
+    await session.rate(FsrsRating.again);
+    await session.rate(FsrsRating.good);
+
+    expect(spy.studySessions, 1);
+    expect(spy.reviewed, 2);
+    expect(spy.correct, 1);
+  });
+
+  test('未注入埋点端口时不抛错（测试与未装配路径）', () async {
+    final session = _sessionWithWords(
+      words: [
+        Word(id: 1, word: 'first', interpret: '中文释义'),
+        Word(id: 2, word: 'second', interpret: '中文释义'),
+      ],
+    );
+    await session.loadBook(_testBook, shuffle: false);
+
+    await session.rate(FsrsRating.good);
+    await session.rate(FsrsRating.good);
+
+    expect(session.currentWord, isNull);
+  });
 }
 
 final _testBook = Book(id: 1, code: 'TEST', name: '测试', wordCount: 2);
 
-LearningSessionState _sessionWithWords({required List<Word> words, ReviewScheduleRepository? schedule}) {
+LearningSessionState _sessionWithWords({
+  required List<Word> words,
+  ReviewScheduleRepository? schedule,
+  UsageStatsRecorder? usageStats,
+}) {
   final effectiveSchedule = schedule ?? ReviewScheduleRepository();
   return LearningSessionState(
     // 确定性顺序（顺序无关断言由其他用例覆盖）
@@ -220,6 +283,7 @@ LearningSessionState _sessionWithWords({required List<Word> words, ReviewSchedul
     choicePort: _FakeChoicePort(),
     todayStore: TodayProgressStore(),
     prefs: PresentationPrefs(),
+    usageStats: usageStats,
   );
 }
 

@@ -13,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
+// 埋点端口（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
+import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
@@ -617,6 +619,11 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       return;
     }
     if (granted <= 0 || !mounted) return;
+    // 使用统计：答对即时奖励也是「获得的尖叫币」。它与会话结算币是两笔独立入账，
+    // 各记各的（累加量），合计才对得上账本。
+    // 用可空读取，与上面 ScareCoinStore 同口径：最小装配的单测不注入也不该抛。
+    final usageStats = context.read<UsageStatsRecorder?>();
+    if (usageStats != null) unawaited(usageStats.recordCoinsEarned(granted));
     CoinFlyOverlay.play(
       context,
       from: from,

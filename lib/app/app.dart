@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/features/telemetry/application/usage_stats_collector.dart';
+import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
+import 'package:word_app/features/telemetry/presentation/usage_module_observer.dart';
 import 'package:word_app/features/telemetry/presentation/usage_stats_feature_providers.dart';
 import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/app/service_locator.dart';
@@ -58,34 +60,35 @@ class WordApp extends StatelessWidget {
       // [1] WordAudio — core/audio 音频会话/播放态。✅ 被全部下游会话页（learn/review/spell/dictation）消费；无上游 provider 依赖，故放最外。
       child: buildAccountFeatureScope(
         // [2] Account — AppSessionState(implements AppSessionController) + AccountProfile。✅ settings(更多设置)经 AppSessionController.logout 消费；Splash 登录检查依赖。无上游依赖。
-        child: buildLearningFeatureScope(
-          // [3] Learning — LearningSession/LearningQueue*/Review*/Favorites/NewWords/LearningProgressReader。✅ 是 book(G3.2)、search(FavoritesAccessor)、词书会话的上游渠道；已核实【不依赖 Account】，置于 Account 内层为 DAG 链序选择，非依赖驱动。
-          child: buildSettingsFeatureScope(
-            // [4] Settings — LearningPreferencesState。✅ 消费 Account(logout)；被 profile/school preference 消费。已核实【不依赖 learning feature】，位于 learning 内层为链序选择，非依赖驱动。
-            child: buildSearchFeatureScope(
-              // [5] Search — WordSearchReader/SearchHistoryStore/ExampleReader/FavoritesAccessor(经 LearningFavoritesStore)。✅ 依赖 learning 祖先(收藏)；无自身上游。
-              child: buildQuickReviewFeatureScope(
-                // [6] QuickReview — QuickReviewWordReader。仅读词；依赖较浅。
-                child: buildBookFeatureScope(
-                  // [7] Book — BookCatalogReader/BookWordListReader/BookState。✅ 必须位于 learning 内层：BookState 消费 learning 祖先的 LearningProgressReader + LearningSessionStarter。
-                  child: buildScareCoinFeatureScope(
-                    // [8] ScareCoin — ScareCoinStore。✅ 是 checkin 的上游渠道；亦被 profile/redemption/日历消费。
-                    child: buildCheckInFeatureScope(
-                      // [9] CheckIn — CheckInHistoryReader/CheckinStatusReader/CheckinWriter。✅ 适配器直接消费 [8] ScareCoinStore（签到单一事实来源），故必须在其内层；[8]→[9] 即渠道方向。
-                      child: buildDictionaryFeatureScope(
-                        // [10] Dictionary — 词典 Reader/Writer。被 word_detail/查词页消费；✅ 已核实【无上游 feature 依赖】。
-                        child: buildWordBrowseFeatureScope(
-                          // [11] WordBrowse — WordNotesStore/SentenceFavoritesStore。被 word_detail/my_fav 消费；无上游 feature 依赖，最内层 feature scope。
-                          child: MultiProvider(
-                            // MultiProvider[SkinSystem, WallpaperState] — 主题皮肤/墙纸。被 MaterialApp(_AppLifecycle) 与所有页面消费；位于所有 feature scope 之后（feature 层无法 context.read<SkinSystem>()，当前无此需求，保留）。
-                            providers: [
-                              ChangeNotifierProvider(create: (_) => SkinSystem()),
-                              ChangeNotifierProvider(create: (_) => WallpaperState()),
-                            ],
-                            child: buildTelemetryFeatureScope(
-                              // 使用统计（使用时长 + 基本情况）。包在 _AppLifecycle 外层：
-                              // 它既提供前台/后台生命周期钩子，又是 MaterialApp 的持有者，
-                              // 所以「更多设置」页的开关也在这层 provider 之下。
+        child: buildTelemetryFeatureScope(
+          // [3] UsageStats — 使用统计（使用时长 + 基本情况）。✅ 必须位于 Account 内层：上报要带当前账号 UUID（经 AuthSessionStore），管理端才能「按人看」。
+          //     2026-10-15 由最内层上提到此处：学习/词书/签到等 feature 的**装配边界**要注入埋点端口
+          //     （UsageStatsRecorder），而 Provider 只能向下查找——留在最内层时那些 scope 读不到它。
+          //     仍满足原约束：_AppLifecycle 与 MaterialApp 都在它之下。
+          child: buildLearningFeatureScope(
+            // [4] Learning — LearningSession/LearningQueue*/Review*/Favorites/NewWords/LearningProgressReader。✅ 是 book(G3.2)、search(FavoritesAccessor)、词书会话的上游渠道；已核实【不依赖 Account】，置于 Account 内层为 DAG 链序选择，非依赖驱动。消费 telemetry 的埋点端口。
+            child: buildSettingsFeatureScope(
+              // [5] Settings — LearningPreferencesState。✅ 消费 Account(logout)；被 profile/school preference 消费。已核实【不依赖 learning feature】，位于 learning 内层为链序选择，非依赖驱动。
+              child: buildSearchFeatureScope(
+                // [6] Search — WordSearchReader/SearchHistoryStore/ExampleReader/FavoritesAccessor(经 LearningFavoritesStore)。✅ 依赖 learning 祖先(收藏)；无自身上游。
+                child: buildQuickReviewFeatureScope(
+                  // [7] QuickReview — QuickReviewWordReader。仅读词；依赖较浅。
+                  child: buildBookFeatureScope(
+                    // [8] Book — BookCatalogReader/BookWordListReader/BookState。✅ 必须位于 learning 内层：BookState 消费 learning 祖先的 LearningProgressReader + LearningSessionStarter。消费 telemetry 的埋点端口。
+                    child: buildScareCoinFeatureScope(
+                      // [9] ScareCoin — ScareCoinStore。✅ 是 checkin 的上游渠道；亦被 profile/redemption/日历消费。
+                      child: buildCheckInFeatureScope(
+                        // [10] CheckIn — CheckInHistoryReader/CheckinStatusReader/CheckinWriter。✅ 适配器直接消费 [9] ScareCoinStore（签到单一事实来源），故必须在其内层；[9]→[10] 即渠道方向。
+                        child: buildDictionaryFeatureScope(
+                          // [11] Dictionary — 词典 Reader/Writer。被 word_detail/查词页消费；✅ 已核实【无上游 feature 依赖】。
+                          child: buildWordBrowseFeatureScope(
+                            // [12] WordBrowse — WordNotesStore/SentenceFavoritesStore。被 word_detail/my_fav 消费；无上游 feature 依赖，最内层 feature scope。
+                            child: MultiProvider(
+                              // [13] MultiProvider[SkinSystem, WallpaperState] — 主题皮肤/墙纸。被 MaterialApp(_AppLifecycle) 与所有页面消费；位于所有 feature scope 之后（feature 层无法 context.read<SkinSystem>()，当前无此需求，保留）。
+                              providers: [
+                                ChangeNotifierProvider(create: (_) => SkinSystem()),
+                                ChangeNotifierProvider(create: (_) => WallpaperState()),
+                              ],
                               child: const _AppLifecycle(),
                             ),
                           ),
@@ -111,11 +114,18 @@ class _AppLifecycle extends StatefulWidget {
 }
 
 class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserver {
+  /// 模块打开次数埋点（路由名 → 模块标识，映射表在 telemetry/application）。
+  late final UsageModuleObserver _usageModuleObserver;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.platformDispatcher.onPlatformBrightnessChanged = _syncSystemBrightness;
+    // 在这里取一次端口会立即创建 collector（Provider 默认惰性），顺带让 initialize()
+    // 更早跑起来——否则首个 record* 会因「开关还没读出来」而空转。
+    final recorder = context.read<UsageStatsRecorder>();
+    _usageModuleObserver = UsageModuleObserver(onModuleOpen: recorder.recordModuleOpen);
   }
 
   @override
@@ -173,7 +183,7 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
           title: 'Monster Word',
           debugShowCheckedModeBanner: false,
           navigatorKey: history.navigatorKey,
-          navigatorObservers: [history.observer],
+          navigatorObservers: [history.observer, _usageModuleObserver],
           theme: _buildTheme(skin),
           builder: (context, child) {
             ScreenUtils.init(context);

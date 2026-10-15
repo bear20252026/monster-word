@@ -135,6 +135,28 @@ void main() {
     });
   });
 
+  group('窄接口暴露面', () {
+    test('同一个 collector 同时满足控制面与埋点面（设置页 / 业务侧各取所需）', () {
+      final c = build();
+      expect(c, isA<UsageStatsController>());
+      expect(c, isA<UsageStatsRecorder>());
+    });
+
+    test('埋点面在开关关闭时同样空转（业务侧不需要自己判断开关）', () async {
+      final c = build(enabled: false);
+
+      await c.recordStudySession();
+      await c.recordAnswers(reviewed: 10, correct: 8);
+      await c.recordNewWordsLearned(5);
+      await c.syncBookProgress(wordCount: 100, learned: 20);
+      await c.syncStreak(7);
+      await c.recordCoinsEarned(30);
+      await c.recordModuleOpen('learn');
+
+      expect(store.days, isEmpty);
+    });
+  });
+
   group('开关关闭时不收集', () {
     test('各类记录都不落盘', () async {
       final c = build(enabled: false);

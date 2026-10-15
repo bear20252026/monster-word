@@ -6,6 +6,8 @@ import 'package:word_app/features/learning/application/review_rating_writer.dart
 import 'package:word_app/features/learning/presentation/review_session_state.dart';
 import 'package:word_app/models/word.dart';
 
+import '../../telemetry/test_helpers/spy_usage_stats_recorder.dart';
+
 void main() {
   group('ReviewSessionState', () {
     test('初始化后生成候选项，并将推进前的实际作答词提交给评分写入端口', () async {
@@ -69,6 +71,43 @@ void main() {
       expect(state.loadError, isA<StateError>());
       expect(state.currentWord, isNull);
       expect(state.done, 0);
+    });
+
+    test('队列走完时上报一次会话与答题口径（同一题反复点错只记一次）', () async {
+      final spy = SpyUsageStatsRecorder();
+      final state = ReviewSessionState(
+        queueReader: const RepositoryReviewQueueReader(),
+        ratingWriter: ReviewRatingWriter(writeRating: ({required word, required rating}) async {}),
+        usageStats: spy,
+      );
+      final words = [
+        Word(id: 1, word: 'first', interpret: '第一'),
+        Word(id: 2, word: 'second', interpret: '第二'),
+        Word(id: 3, word: 'third', interpret: '第三'),
+      ];
+
+      await state.initialize(ReviewQueueSnapshot(dueWords: words, queueWords: const []));
+
+      // 第一题：同一个错误候选点两次（只应记一次错），再看答案继续。
+      final firstWord = state.currentWord!.word;
+      final wrong = state.choices.firstWhere((choice) => choice.word != firstWord);
+      state.selectChoice(wrong.word);
+      state.selectChoice(wrong.word);
+      state.continueWithGoodRating();
+
+      expect(spy.studySessions, 0, reason: '队列没走完不算完成一次会话');
+      expect(spy.reviewed, 0);
+
+      // 余下两题一次答对（正确反馈驻留 600ms 结束后自动按 good 推进）。
+      for (var i = 0; i < 2; i++) {
+        final word = state.currentWord!.word;
+        state.selectChoice(state.choices.firstWhere((choice) => choice.word == word).word);
+        await Future<void>.delayed(const Duration(milliseconds: 700));
+      }
+
+      expect(spy.studySessions, 1, reason: '一次会话只记一次');
+      expect(spy.reviewed, 3);
+      expect(spy.correct, 2, reason: '第一题点错过，只算两题答对');
     });
   });
 }
