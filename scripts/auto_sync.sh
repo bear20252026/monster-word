@@ -17,7 +17,10 @@
 #                    perf/docs/chore/test，scope 为模块名）
 #   5. 推送前必须确认本地领先于 origin/main（防止覆盖他人提交）
 # ============================================================
-set -uo pipefail
+# 2026-10-15 审计 R3-E07：原来只有 `-uo pipefail`，缺 `-e` ——
+# 而下面的每一步都是「防呆/安全校验」，没有 `-e` 意味着中间任何一步失败
+# 都只是返回非零、脚本继续往下走，一路 commit + push origin main。
+set -euo pipefail
 cd "$(dirname "$0")/.."
 
 # ---- 0) 前置校验：仓库状态健康 ----
@@ -76,15 +79,23 @@ fi
 # 规则被误改也不会把签名身份放进暂存区。
 git add lib/ test/ pubspec.yaml pubspec.lock analysis_options.yaml \
   docs/ scripts/ assets/db/ windows/ android/app/ \
-  -- ':!android/app/*.jks' ':!android/app/*.keystore' ':!android/app/key.properties' 2>/dev/null
+  -- ':!android/app/*.jks' ':!android/app/*.keystore' ':!android/app/key.properties' \
+  || { echo "[auto_sync] 错误：暂存失败（上面有 git 的原始报错）。此前用 2>/dev/null 把错误吞掉后照样提交，会推上一个部分暂存的提交"; exit 1; }
 
 # 防呆：staged 里若混入 dist/build/releases/work/logs 路径，立即中止
-if git diff --cached --name-only | grep -qE "^(dist/|build/|releases/|work/|logs/)"; then
+# 断言必须先落盘再 grep（2026-10-15 审计 R3-E07）：`git diff --cached | grep -qE`
+# 在 pipefail 下，当输出超过管道缓冲（约 64KB、约千余文件）时 `grep -q` 会提前退出，
+# git 收到 SIGPIPE(141) ⇒ 整条管道判非 0 ⇒ **断言恒假放行**。
+STAGED="$(mktemp)"
+trap 'rm -f "$STAGED"' EXIT
+git diff --cached --name-only > "$STAGED"
+
+if grep -qE "^(dist/|build/|releases/|work/|logs/)" "$STAGED"; then
   echo "[auto_sync] 错误：staged 中出现构建产物路径，已中止"; exit 1
 fi
 
 # 防呆（审计 I99）：staged 中若出现签名密钥/凭证文件，立即中止
-if git diff --cached --name-only | grep -qE '\.(jks|keystore)$|android/key\.properties$'; then
+if grep -qE '\.(jks|keystore)$|android/key\.properties$' "$STAGED"; then
   echo "[auto_sync] 错误：staged 中出现签名密钥/凭证文件，已中止"; exit 1
 fi
 
