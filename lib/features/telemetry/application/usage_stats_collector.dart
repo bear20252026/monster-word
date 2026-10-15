@@ -126,6 +126,7 @@ class UsageStatsCollector implements UsageStatsController, UsageStatsRecorder {
   // ── 行为计数 ────────────────────────────────────────────────
 
   /// 打开某个模块（`learn` / `listen` / …）。未知模块由模型层白名单丢弃。
+  @override
   Future<void> recordModuleOpen(String module) async {
     if (!_enabled) return;
     await _mutateToday((s) {
@@ -136,12 +137,14 @@ class UsageStatsCollector implements UsageStatsController, UsageStatsRecorder {
   }
 
   /// 完成一个学习会话。
+  @override
   Future<void> recordStudySession() async {
     if (!_enabled) return;
     await _mutateToday((s) => s.copyWith(studySessionCount: s.studySessionCount + 1));
   }
 
   /// 记录一批答题结果。[reviewed] 是词次，[correct] 是其中答对的词次。
+  @override
   Future<void> recordAnswers({required int reviewed, required int correct}) async {
     if (!_enabled || reviewed <= 0) return;
     await _mutateToday(
@@ -153,24 +156,28 @@ class UsageStatsCollector implements UsageStatsController, UsageStatsRecorder {
   }
 
   /// 记录新学词数。
+  @override
   Future<void> recordNewWordsLearned(int count) async {
     if (!_enabled || count <= 0) return;
     await _mutateToday((s) => s.copyWith(newWordsLearned: s.newWordsLearned + count));
   }
 
   /// 同步词书进度（覆盖写，不是累加 —— 它是状态量）。
+  @override
   Future<void> syncBookProgress({required int wordCount, required int learned}) async {
     if (!_enabled) return;
     await _mutateToday((s) => s.copyWith(bookWordCount: wordCount, bookLearnedCount: learned));
   }
 
   /// 同步连续签到天数（状态量）。
+  @override
   Future<void> syncStreak(int days) async {
     if (!_enabled) return;
     await _mutateToday((s) => s.copyWith(streakDays: days));
   }
 
   /// 记录获得的虚拟道具数量（累加）。
+  @override
   Future<void> recordCoinsEarned(int count) async {
     if (!_enabled || count <= 0) return;
     await _mutateToday((s) => s.copyWith(coinsEarned: s.coinsEarned + count));
