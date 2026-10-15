@@ -103,7 +103,7 @@ ssh root@101.133.235.110 'cd /root/telemetry && sed -i "s/\r$//" *.sh && bash in
 > 挂在「服务起来了但 /healthz 全 500」上的）。
 > `.env` 里的 `PG_USER` / `PG_PASSWORD` 就是为此，`server.mjs` 会带上 `-w -h 127.0.0.1 -U …`。
 
-### 还差两步
+### 剩余步骤
 
 **① Caddy 路由 —— 已完成（2026-10-14）**
 
@@ -118,7 +118,47 @@ bash enable-caddy-route.sh --name mwtelemetry --domain stats.cloudbear.cloud \
 
 （同一个脚本也服务认证路由，默认参数即 auth；加 `--verify-only` 只做回归验证不改配置。）
 
-**② Cloudflare 隧道加 Public Hostname —— 待做**
+**② 发版流水线注入 —— 已完成（2026-10-15）**
+
+`release_packages.yml` 的三处构建（APK / AAB / Windows）都已加：
+
+```
+--dart-define=STATS_BASE_URL=https://stats.cloudbear.cloud
+```
+
+与 `AUTH_BASE_URL` 不同，**这一条缺失或不可达都不影响任何用户可见行为**：统计开关默认
+关闭，且上报通道失败时只返回 false（数据留在本地等下轮补传），不会静默丢数据。所以它
+不依赖 ③ 先完成 —— 提前注入反而是对的：③ 一旦通了，**已经发出去的版本无需重新发版**。
+
+未注入时客户端**不会**静默成功 —— `HttpUsageStatsUploader` 会返回 false 并报一次配置
+错误（静默成功会让数据被标成「已上报」而永久丢失）。
+
+`build.yml`（编译门禁，产物非发布件）**刻意不注入**，以便 CI 持续覆盖「未注入」这条
+合法降级路径 —— 那不是疏漏。
+
+**③ Cloudflare 隧道加已发布应用程序路由 —— 只剩这一步（需业主操作）**
+
+> ⚠️ **这一步代码侧无法代劳**：隧道是 token 管理的远程配置，服务器与本地都没有
+> Cloudflare API 凭据（`gh secret list` 只有 keystore 与 Sentry DSN）。
+> 控制台入口与账号信息如下，已备齐，照做即可。
+
+当前隧道的 ingress 配置（`journalctl -u cloudflared` 里可复核，version=5）：
+
+```json
+{"ingress":[
+  {"hostname":"cloudbear.cloud","service":"http://localhost:3000"},
+  {"hostname":"www.cloudbear.cloud","service":"http://localhost:3100"},
+  {"hostname":"aionui.cloudbear.cloud","service":"http://localhost:8081"},
+  {"hostname":"aionui-auth.cloudbear.cloud","service":"http://localhost:9091"},
+  {"hostname":"auth.cloudbear.cloud","service":"http://localhost:8081"},
+  {"service":"http_status:404"}
+]}
+```
+
+`stats.cloudbear.cloud` 不在其中，DNS 也解析不到（实测 NXDOMAIN），所以走公网
+`https://stats.cloudbear.cloud/healthz` 返回 000 —— 服务端本身是好的，缺的只是入口。
+
+操作路径：
 
 Networks → Tunnels → 选中隧道 → **`已发布应用程序路由`** 标签 → 添加路由 →
 `已发布应用程序` → 子域 `stats`、域 `cloudbear.cloud`、服务 URL `http://localhost:8081`。
@@ -126,16 +166,16 @@ Networks → Tunnels → 选中隧道 → **`已发布应用程序路由`** 标�
 > ⚠️ 别点 `主机名路由` 标签（那是需要 WARP 客户端的专用路由，对公网不生效）。
 > 2026-10-14 在这里踩过一次，详见 `deploy/native/README.md` §3。
 
-**③ 发版流水线注入 —— 待做（等 ② 通了再做）**
+加完自检（应得 200 + `{"ok":true}`）：
 
-`release_packages.yml` 的三处构建加：
-
-```
---dart-define=STATS_BASE_URL=https://stats.cloudbear.cloud
+```bash
+curl -s https://stats.cloudbear.cloud/healthz
 ```
 
-未注入时客户端**不会**静默成功 —— `HttpUsageStatsUploader` 会返回 false 并报一次
-配置错误（静默成功会让数据被标成「已上报」而永久丢失）。
+（若要用 API 而不是控制台，账号 ID `52eab2ceafe4c07d54bdea60443ad115`、
+隧道 ID `f7a1a3c6-6aea-4cc3-b7cb-94827a8a0945`，走
+`PUT /accounts/{account_id}/cfd_tunnel/{tunnel_id}/configurations` 重写整份 ingress —— 
+注意是**整份覆盖**，必须把上面 5 条既有路由一起带上，漏一条就会打断现有站点。）
 
 ## 6. 运维
 
@@ -219,11 +259,12 @@ ssh root@101.133.235.110 'cd /tmp/tsql && sed -i "s/\r$//" verify-sql.sh && bash
 | 服务健康 / 管理页鉴权 | ✅ `/healthz` 返回 `{"ok":true}`；无凭据 401，带凭据正常渲染 |
 | **经 Caddy 的完整上报链路** | ✅ POST `Host: stats.cloudbear.cloud` → `{"ok":true,"accepted":1}`；库内落行正确、非法模块键被剔除、汇总视图算出 30 分钟 / 82.5% |
 | Caddy 路由回归（既有 auth / aionui / gallery） | ✅ 均未受影响 |
-| Cloudflare Public Hostname | ⏳ 待做（见 §5 ②） |
+| Cloudflare 已发布应用程序路由 | ⏳ 待做（见 §5 ③；服务端已就绪，缺的只是公网入口） |
 | **账号关联**（user_id 入库、账号台账、按人汇总视图） | ✅ 6 项断言 |
 | **账号关联的幂等细节**（先未登录后登录要补上；已有账号不被空值抹掉） | ✅ |
 | **管理页按人显示真实用户名** | ✅ 建真实账号 → 上报 → 页面显示 `percheck10761`，而不是 UUID 或邮箱前缀 |
 | 服务本体部署 + 安装脚本端到端自检 | ✅ 含 user_id 入库校验 |
-| 客户端 → 服务端 公网端到端 | ⏳ 待 Cloudflare 入口 + `STATS_BASE_URL` 注入 |
+| 发版流水线注入 `STATS_BASE_URL` | ✅ 2026-10-15，三处构建（APK/AAB/Windows） |
+| 客户端 → 服务端 公网端到端 | ⏳ 待 Cloudflare 入口（URL 已编译进发布件，入口一通即生效，无需重发版） |
 
 服务本体已部署：systemd `mw-telemetry`，监听 `127.0.0.1:8080`，库 `mw_telemetry`。

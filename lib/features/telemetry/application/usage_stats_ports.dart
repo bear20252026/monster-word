@@ -115,3 +115,36 @@ abstract class UsageStatsController {
 
   Future<void> setEnabled(bool value);
 }
+
+/// 业务侧埋点入口（窄接口）。
+///
+/// 为什么不让学习/词书/签到直接依赖 [UsageStatsCollector]：
+///   1. 那些 feature 只需要「记一笔」，不需要上报调度、保留期、开关读写的全部能力；
+///      窄接口让它们的测试给几行假实现即可（与 [UsageStatsController] 同一思路）。
+///   2. 埋点契约集中在一处，将来加字段/改语义时改动面可控。
+///
+/// ⚠️ 实现方（`UsageStatsCollector`）在开关关闭时**全部空转**，调用方无需自行判断；
+/// 调用方也不得在这里传任何词文本、搜索词等「学习内容」——那与隐私披露冲突
+/// （见 lib/features/telemetry/README.md 与 legal_documents.dart）。
+abstract class UsageStatsRecorder {
+  /// 完成一个学习会话（学习页 / 正式复习页各算一次）。
+  Future<void> recordStudySession();
+
+  /// 记录一批答题结果。[reviewed] 是词次，[correct] 是其中答对的词次。
+  Future<void> recordAnswers({required int reviewed, required int correct});
+
+  /// 记录新学词数（累加）。
+  Future<void> recordNewWordsLearned(int count);
+
+  /// 同步当前词书的进度（覆盖写：它是状态量，不是累加量）。
+  Future<void> syncBookProgress({required int wordCount, required int learned});
+
+  /// 同步连续签到天数（覆盖写：状态量）。
+  Future<void> syncStreak(int days);
+
+  /// 记录获得的虚拟道具（尖叫币）数量（累加）。
+  Future<void> recordCoinsEarned(int count);
+
+  /// 打开某个模块，[module] 必须是 `UsageDailyStats.knownModules` 里的键。
+  Future<void> recordModuleOpen(String module);
+}

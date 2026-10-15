@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
@@ -9,6 +11,8 @@ import 'package:word_app/features/learning/application/review_rating_writer.dart
 import 'package:word_app/features/learning/application/review_session_question_factory.dart';
 import 'package:word_app/features/learning/application/review_session_rating_executor.dart';
 import 'package:word_app/features/learning/presentation/review_session_answer_state.dart';
+// 埋点端口（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
+import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 
 /// 正式复习队列加载的当前阶段。
 enum ReviewSessionLoadPhase { idle, loading, ready, failed }
@@ -22,6 +26,7 @@ class ReviewSessionState extends ChangeNotifier {
   ReviewSessionState({
     required this._queueReader,
     required ReviewRatingWriter ratingWriter,
+    this._usageStats,
     SuperMemoryEngine? engine,
     ReviewSessionQuestionFactory? questionFactory,
   }) : _engine = engine ?? SuperMemoryEngine(),
@@ -33,6 +38,18 @@ class ReviewSessionState extends ChangeNotifier {
   final SuperMemoryEngine _engine;
   final ReviewSessionQuestionFactory _questionFactory;
   late final ReviewSessionRatingExecutor _ratingExecutor;
+
+  /// 使用统计埋点端口；未注入时为 null，埋点静默跳过。
+  final UsageStatsRecorder? _usageStats;
+
+  /// 本会话中「首次作答即答错」的题数（同一题反复点错只算一次）。
+  ///
+  /// 口径说明：与学习页的错词口径对齐——「答对」指没点错过。用户点错后
+  /// 看答案继续（good 评分）仍计入错题，因为那题他确实没能一次答对。
+  int _wrongCount = 0;
+
+  /// 当前这一题是否已经点错过（用于同一题去重）。
+  bool _currentQuestionWrong = false;
 
   ReviewSessionLoadPhase _loadPhase = ReviewSessionLoadPhase.idle;
   Object? _loadError;
@@ -69,6 +86,8 @@ class ReviewSessionState extends ChangeNotifier {
     _choices = const [];
     _total = 0;
     _done = 0;
+    _wrongCount = 0;
+    _currentQuestionWrong = false;
     notifyListeners();
 
     try {
@@ -94,7 +113,12 @@ class ReviewSessionState extends ChangeNotifier {
 
     // 答对进入反馈驻留，驻留结束经 onCorrectFeedbackElapsed → rate(good) 推进；
     // 此处不再立即评分，避免对勾/彩带未展示即切题。
-    _answerState.selectChoice(selectedWord: selectedWord, correctWord: reviewedWord.word);
+    final selection = _answerState.selectChoice(selectedWord: selectedWord, correctWord: reviewedWord.word);
+    // 埋点口径：同一题只记一次错（反复点错不重复计）。
+    if (selection == ReviewChoiceSelection.wrong && !_currentQuestionWrong) {
+      _currentQuestionWrong = true;
+      _wrongCount++;
+    }
   }
 
   bool isWrongChoiceSelected(String word) => _answerState.isWrongChoiceSelected(word);
@@ -108,8 +132,10 @@ class ReviewSessionState extends ChangeNotifier {
     if (reviewedWord == null) return;
 
     _answerState.reset();
+    _currentQuestionWrong = false;
     _ratingExecutor.rate(reviewedWord: reviewedWord, rating: rating);
     _done++;
+    _reportSessionCompletedIfDone();
     _regenerateChoices();
     notifyListeners();
   }
@@ -128,11 +154,26 @@ class ReviewSessionState extends ChangeNotifier {
   bool markAsKnown() {
     if (currentWord == null) return false;
     _answerState.reset();
+    _currentQuestionWrong = false;
     _ratingExecutor.markAsKnown();
     _done++;
+    _reportSessionCompletedIfDone();
     _regenerateChoices();
     notifyListeners();
     return true;
+  }
+
+  /// 队列走完时上报一次会话（会话数 + 答题词次与答对数）。
+  ///
+  /// 为什么放在这里而不是页面里：`_done`/`_total`/错题数都在本类，
+  /// 页面再算一遍就会有两套口径。`currentWord == null` 之后 [rate] 会提前返回，
+  /// 所以本方法在一次会话里只会命中一次。
+  void _reportSessionCompletedIfDone() {
+    if (_total <= 0 || _done < _total) return;
+    final recorder = _usageStats;
+    if (recorder == null) return;
+    unawaited(recorder.recordStudySession());
+    unawaited(recorder.recordAnswers(reviewed: _done, correct: (_done - _wrongCount).clamp(0, _done)));
   }
 
   void _regenerateChoices() {

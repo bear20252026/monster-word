@@ -52,6 +52,9 @@ Widget buildTelemetryFeatureScope({required Widget child}) {
       // 设置页只依赖 application 层的窄接口（架构守卫 R4：跨 feature 只能 import
       // 对方的 application 层）。同一个 collector 实例，两种暴露面。
       ProxyProvider<UsageStatsCollector, UsageStatsController>(update: (_, c, _) => c),
+      // 业务侧（learning / book / checkin）只依赖「记一笔」的窄接口，
+      // 不需要上报调度与开关读写的全部能力。
+      ProxyProvider<UsageStatsCollector, UsageStatsRecorder>(update: (_, c, _) => c),
     ],
     child: child,
   );

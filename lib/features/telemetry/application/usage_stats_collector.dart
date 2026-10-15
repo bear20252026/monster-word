@@ -9,7 +9,7 @@
 import 'package:word_app/features/telemetry/domain/usage_daily_stats.dart';
 import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 
-class UsageStatsCollector implements UsageStatsController {
+class UsageStatsCollector implements UsageStatsController, UsageStatsRecorder {
   UsageStatsCollector({
     required this.store,
     required this.uploader,

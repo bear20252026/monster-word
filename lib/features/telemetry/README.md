@@ -136,26 +136,67 @@ presentation/usage_stats_feature_providers.dart  装配
 
 - ~~**服务端**：`deploy/telemetry/`~~ —— **已部署并验证**（2026-10-14，含按人视图）。
   见 `deploy/telemetry/README.md`。
-- **学习行为埋点**：`recordStudySession` / `recordAnswers` / `recordNewWordsLearned` /
-  `syncBookProgress` / `syncStreak` / `recordCoinsEarned` 这些 API 已就绪并有测试覆盖，
-  但**尚未接到学习功能里**（需要在学习会话结束、答题批改、签到成功等处调用）。
-  目前只有「使用时长 / 打开次数」由 `app.dart` 的生命周期钩子自动采集。
-- **模块打开次数**：`recordModuleOpen` 已就绪，尚未接到路由/页面入口。
-- **发版流水线**：需要在 `release_packages.yml` 注入 `STATS_BASE_URL`；
-  另外 Cloudflare 隧道还要加 `stats.cloudbear.cloud` 的 Public Hostname（业主操作）。
+- ~~**学习行为埋点**：`recordStudySession` / `recordAnswers` / `recordNewWordsLearned` /
+  `syncBookProgress` / `syncStreak` / `recordCoinsEarned`~~ —— **已接线**（2026-10-15）。
+  见 §6 的落点表。
+- ~~**模块打开次数**：`recordModuleOpen`~~ —— **已接线**（2026-10-15）：
+  `UsageModuleObserver` 挂在 `MaterialApp.navigatorObservers` 上，按路由名单映射模块，
+  一处收口（新增页面不需要记得加埋点）。
+- ~~**发版流水线**：注入 `STATS_BASE_URL`~~ —— **已注入**（2026-10-15，APK/AAB/Windows
+  三处；`build.yml` 编译门禁刻意不注入，以持续覆盖「未注入」的降级路径）。
+- **Cloudflare 已发布应用程序路由（`stats.cloudbear.cloud`）** —— 唯一剩余项，
+  **需业主在控制台操作**（隧道是 token 管理的远程配置，代码侧无 API 凭据）。
+  入口一通即全链路生效：URL 已编译进发布件，**不需要重新发版**。
+  操作步骤见 `deploy/telemetry/README.md` §5 ③。
 
-## 6. 接更多埋点怎么做
+## 6. 埋点落点（2026-10-15 接线）
 
-在业务侧拿到 `UsageStatsCollector` 后调用对应方法即可，例如学习会话结束时：
+业务侧只依赖 `UsageStatsRecorder`（application 层窄接口），不直接碰 `UsageStatsCollector`。
+**开关关闭时实现方全部空转**，调用方不需要自己判断开关。
+
+| 事件 | 落点 | 调用 |
+|---|---|---|
+| 打开模块 | `app.dart` 的 `UsageModuleObserver`（导航事件） | `recordModuleOpen` |
+| 学习会话完成 | `LearningSessionState`（队列走完守卫处） | `recordStudySession` + `recordAnswers` |
+| 复习会话完成 | `ReviewSessionState`（`_done == _total` 时） | `recordStudySession` + `recordAnswers` |
+| 新学一个词 | `LearningSessionState._incrementTodayLearned` | `recordNewWordsLearned(1)` |
+| 词书进度 | `BookState`（全库唯一算出「已学/总量」处） | `syncBookProgress` |
+| 签到成功（聚宝日历） | `TreasureCheckInPage._doCheckIn` | `syncStreak` + `recordCoinsEarned` |
+| 签到成功（金币历史页） | `ScareCoinHistoryPage._onCheckIn` | `syncStreak` + `recordCoinsEarned` |
+| 会话结算发币 | `LearnCompletionScreen`（结算后） | `recordCoinsEarned` |
+| 答对即时奖励（+1） | `LearnPage._rewardFly` | `recordCoinsEarned` |
+
+**两个签到入口都要记**：聚宝日历与金币历史页各自能签到，只接一个会让连击数据漏一半。
+
+口径约定（改之前先看这几条，避免出现第二套算法）：
+
+- **答对数**一律用既有口径：学习页 `_totalAnswered − _errorWords.length`（与 `accuracy`
+  同源），复习页 `_done − _wrongCount`。复习的「答对」指**没点错过**；同一题反复点错
+  只算一次错（`_currentQuestionWrong` 去重）。
+- **`syncBookProgress` / `syncStreak` 是状态量**（覆盖写），其余都是累加量。
+- 埋点端口是**可选注入**（构造参数可空）：测试与未装配路径传 null 即静默跳过，
+  既有测试不受影响。
+
+### 为什么把 telemetry scope 从最内层上提到 `[3]`
+
+`app.dart` 的 scope 链序里，`buildTelemetryFeatureScope` 原先在最内层（紧贴
+`_AppLifecycle`）。埋点要接进 learning/book 的**装配边界**（`*_feature_providers.dart`），
+而 Provider 只能向下查找 —— 留在最内层时那些 scope 读不到它。故上提到 Account 内层、
+所有业务 feature 外层。链序由 `test/architecture/app_structure_test.dart` 的
+REG-ARCH-003 锁定（已把 telemetry 一并纳入该表）。
+
+## 7. 接更多埋点怎么做
+
+在业务侧拿到 `UsageStatsRecorder` 后调用对应方法即可，例如学习会话结束时：
 
 ```dart
-context.read<UsageStatsCollector>().recordStudySession();
+context.read<UsageStatsRecorder>().recordStudySession();
 ```
 
 注意：**不要**在 UI 里直接读 `UsageStatsCollector` 之外的东西，也不要在埋点里传词文本、
 搜索词等任何内容 —— 那是「学习内容」，与披露冲突。
 
-## 7. 构建参数
+## 8. 构建参数
 
 ```bash
 --dart-define=STATS_BASE_URL=https://<统计服务域名>   # 缺省则不上报（并报一次配置错误）

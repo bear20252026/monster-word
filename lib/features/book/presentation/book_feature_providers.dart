@@ -11,6 +11,7 @@ import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/features/book/data/repository_book_catalog_reader.dart';
 import 'package:word_app/features/book/data/repository_book_selection_writer.dart';
 import 'package:word_app/features/book/presentation/book_state.dart';
+import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 
 /// 装配词书功能域的全部依赖。
 ///
@@ -45,6 +46,9 @@ Widget buildBookStateScope({required Widget child}) {
       selectionWriter: context.read<BookSelectionWriter>(),
       wordsReader: context.read<BookWordListReader>(),
       progressReader: context.read<LearningProgressReader>(),
+      // 词书进度埋点。⚠️ 本 scope 必须位于 buildTelemetryFeatureScope 内层
+      // 才能读到它 —— 见 app.dart 的 scope 链序注释 [3]。
+      usageStats: context.read<UsageStatsRecorder>(),
     )..load(),
     child: child,
   );

@@ -7,6 +7,8 @@
 // - 写：通过 ScareCoinStore.checkIn() 端口
 // - 不直接接触偏好存储或任何基础设施
 
+import 'dart:async';
+
 import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +19,8 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
+// 埋点端口（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
+import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 import 'package:word_app/models/scare_coin_entry.dart';
 
 class ScareCoinHistoryPage extends StatefulWidget {
@@ -52,6 +56,8 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
 
   Future<void> _onCheckIn() async {
     final store = context.read<ScareCoinStore>();
+    // 埋点端口在 await 前取好：await 之后 context 可能已失效。
+    final usageStats = context.read<UsageStatsRecorder?>();
     final int? newBalance;
     try {
       newBalance = await store.checkIn();
@@ -66,8 +72,21 @@ class _ScareCoinHistoryPageState extends State<ScareCoinHistoryPage> {
       showMwSnackBar(context, const SnackBar(content: Text('今天已经签到过啦，明天再来～')));
       return;
     }
+    // 使用统计：这是与聚宝日历并列的第二个签到入口，两边都要记，否则连击会漏。
+    if (usageStats != null) unawaited(_reportCheckIn(usageStats, store));
     showMwSnackBar(context, SnackBar(content: Text('签到成功！尖叫币 +${store.checkInReward}')));
     await _refresh();
+  }
+
+  /// 签到成功后的埋点：连击（状态量）+ 本次获得的尖叫币（累加量）。
+  /// 埋点失败绝不影响签到本身 —— 账已经落定了。
+  Future<void> _reportCheckIn(UsageStatsRecorder recorder, ScareCoinStore store) async {
+    try {
+      await recorder.syncStreak(await store.streak());
+      await recorder.recordCoinsEarned(store.checkInReward);
+    } catch (e, s) {
+      reportSwallowedError('签到埋点上报失败', e, s);
+    }
   }
 
   @override
