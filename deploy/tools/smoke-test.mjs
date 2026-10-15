@@ -161,6 +161,34 @@ if (!keepAccounts) {
 
 console.log(`\n目标: ${base}\n`);
 
+// ── 异常路径的清理（2026-10-15 审计 R3-S09）──────────────────────
+// 主流程是顶层 await，任一断言处抛错（网络抖动、502 让 fetch reject）都会
+// 带着**已经创建好的账号**直接退出。旧版只保护了「拿不到 service JWT」这一条路径，
+// 其余路径会在生产库留下孤儿账号 —— 今天刚因同类原因手工删过两条。
+let cleanedUp = false;
+async function cleanupOnFailure(reason) {
+  if (cleanedUp || keepAccounts || created.length === 0) return;
+  cleanedUp = true;
+  console.error(`\n[清理] 异常退出（${reason}）—— 尝试删除本次创建的 ${created.length} 个测试账号`);
+  for (const id of created) {
+    try {
+      const res = await fetch(`${base}/admin/users/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${serviceJwt}`, apikey: serviceJwt },
+      });
+      console.error(`  ${res.ok ? '✓' : '✗'} 删除 ${id}（HTTP ${res.status}）`);
+    } catch (e) {
+      console.error(`  ✗ 删除 ${id} 失败：${e?.message ?? e}`);
+    }
+  }
+}
+process.on('unhandledRejection', (e) => {
+  cleanupOnFailure(e?.message ?? e).finally(() => process.exit(1));
+});
+process.on('uncaughtException', (e) => {
+  cleanupOnFailure(e?.message ?? e).finally(() => process.exit(1));
+});
+
 // ── 1. TLS 与网关 ──
 console.log('[1] TLS 与网关');
 try {
@@ -252,6 +280,7 @@ check(
 // ── 清理 ──
 if (!keepAccounts && created.length > 0) {
   console.log('\n[清理] 删除测试账号');
+  let allDeleted = true;
   try {
     for (const id of created) {
       const res = await fetch(`${base}/admin/users/${id}`, {
@@ -259,9 +288,17 @@ if (!keepAccounts && created.length > 0) {
         headers: { Authorization: `Bearer ${serviceJwt}`, apikey: serviceJwt },
       });
       check(`删除测试账号 ${id}`, res.ok, `HTTP ${res.status}`);
+      if (!res.ok) allDeleted = false;
     }
   } catch (e) {
+    allDeleted = false;
     check('删除测试账号', false, String(e.message ?? e));
+  }
+  if (allDeleted) {
+    cleanedUp = true;
+  } else {
+    // 有没删掉的：再走一遍统一清理（幂等），并把失败如实报出来。
+    await cleanupOnFailure('正常清理未全部成功');
   }
 }
 

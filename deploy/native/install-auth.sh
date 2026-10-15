@@ -158,10 +158,24 @@ if [ -n "$TARBALL" ]; then
   [ -x "$TMP/auth" ] || die "包里没有 auth 可执行文件"
   [ -d "$TMP/migrations" ] || die "包里没有 migrations 目录（GoTrue 启动时要用它建表）"
   install -m 0755 "$TMP/auth" "$AUTH_DIR/auth"
-  rm -rf "$AUTH_DIR/migrations"
-  cp -r "$TMP/migrations" "$AUTH_DIR/migrations"
+  # 迁移目录**原子替换**（2026-10-15 审计 R3-S07）：旧顺序是
+  # 「先 install 新二进制 → rm -rf 旧 migrations → cp -r 新 migrations」，
+  # cp 中途失败（磁盘满、SSH 断开、SIGINT）就留下「新二进制 + 迁移目录缺失/不完整」
+  # 且**旧目录已删**⇒ ExecStartPre=auth migrate 失败 ⇒ 认证服务起不来、所有用户无法登录，
+  # 而且没有回滚路径。
+  # 现在：先复制到临时目录并校验，再用 mv 原子换名；旧目录保留成 .prev 以便回滚。
+  rm -rf "$AUTH_DIR/migrations.new"
+  cp -r "$TMP/migrations" "$AUTH_DIR/migrations.new"
+  [ -d "$AUTH_DIR/migrations.new" ] || die "迁移目录复制失败，未改动现有安装"
+  [ -n "$(ls -A "$AUTH_DIR/migrations.new" 2>/dev/null)" ] || die "迁移目录为空，未改动现有安装"
+  rm -rf "$AUTH_DIR/migrations.prev"
+  if [ -d "$AUTH_DIR/migrations" ]; then
+    mv "$AUTH_DIR/migrations" "$AUTH_DIR/migrations.prev"
+  fi
+  mv "$AUTH_DIR/migrations.new" "$AUTH_DIR/migrations"
   rm -rf "$TMP"
   echo "$AUTH_VERSION" > "$AUTH_DIR/VERSION"
+  log "迁移目录已原子替换（旧目录保留在 $AUTH_DIR/migrations.prev，回滚就换回来）"
 fi
 
 [ -x "$AUTH_DIR/auth" ] || die "$AUTH_DIR/auth 不存在。首次部署请用 --tarball 指定发布包"

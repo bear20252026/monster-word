@@ -22,11 +22,14 @@ DB_NAME=mw_telemetry
 DB_ROLE=mw_telemetry_app
 LISTEN_PORT=8080
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
+# 记录「用户是否显式传了」：没传时优先沿用 .env 里的旧值（见下面的回读）。
+LISTEN_PORT_SET=0
+DB_NAME_SET=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --port) LISTEN_PORT="$2"; shift 2 ;;
-    --db) DB_NAME="$2"; shift 2 ;;
+    --port) LISTEN_PORT="$2"; LISTEN_PORT_SET=1; shift 2 ;;
+    --db) DB_NAME="$2"; DB_NAME_SET=1; shift 2 ;;
     -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
     *) echo "未知参数：$1"; exit 1 ;;
   esac
@@ -50,6 +53,25 @@ if [ -f "$ENV_FILE" ]; then
   ADMIN_PASSWORD="$(grep -E '^ADMIN_PASSWORD=' "$ENV_FILE" | cut -d= -f2- || true)"
   [ -n "$DB_PASSWORD" ] || die ".env 存在但缺 MW_DB_PASSWORD，请人工确认后再跑"
   [ -n "$ADMIN_PASSWORD" ] || die ".env 存在但缺 ADMIN_PASSWORD，请人工确认后再跑"
+
+  # 端口与库名也要回读（2026-10-15 审计 R3-S06）：旧实现只回读密码，
+  # 于是「曾用非默认 --port/--db 部署过，之后按 README 裸跑一次」会把它们
+  # **改回默认值并重写整个 .env** ⇒ 端口变了 Caddy 上游 502、库名变了管理页
+  # 像「数据全丢」，而脚本自带的自检探的是新端口，**仍报绿**。
+  if [ "$LISTEN_PORT_SET" = "0" ]; then
+    OLD_PORT="$(grep -E '^LISTEN_PORT=' "$ENV_FILE" | cut -d= -f2- || true)"
+    if [ -n "$OLD_PORT" ]; then
+      LISTEN_PORT="$OLD_PORT"
+      log "沿用 .env 里的 LISTEN_PORT=$LISTEN_PORT"
+    fi
+  fi
+  if [ "$DB_NAME_SET" = "0" ]; then
+    OLD_DB="$(grep -E '^MW_TELEMETRY_DB=' "$ENV_FILE" | cut -d= -f2- || true)"
+    if [ -n "$OLD_DB" ]; then
+      DB_NAME="$OLD_DB"
+      log "沿用 .env 里的 MW_TELEMETRY_DB=$DB_NAME"
+    fi
+  fi
 else
   # 同认证后端：只取字母数字，避免拼进 URL 时要 URL 编码
   DB_PASSWORD="$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | cut -c1-32)"
@@ -120,6 +142,13 @@ log "安装服务到 $TELEMETRY_DIR…"
 install -m 0644 "$SRC_DIR/server.mjs" "$TELEMETRY_DIR/server.mjs"
 install -m 0644 "$SRC_DIR/schema.sql" "$TELEMETRY_DIR/schema.sql"
 install -m 0644 "$SRC_DIR/functions.sql" "$TELEMETRY_DIR/functions.sql"
+# systemd 单元里 Documentation=file://$TELEMETRY_DIR/README.md 指向这个文件；
+# 不装的话 `systemctl status` 里的文档链接是死链（2026-10-15 审计 R3-S14）。
+if [ -f "$SRC_DIR/README.md" ]; then
+  install -m 0644 "$SRC_DIR/README.md" "$TELEMETRY_DIR/README.md"
+else
+  log "⚠️ 未找到 README.md，systemd 的 Documentation 链接会是死链"
+fi
 
 log "写入 $ENV_FILE"
 cat > "$ENV_FILE" <<EOF
@@ -214,9 +243,24 @@ log "✅ 健康检查通过"
 # 端到端自检：真发一条假数据进去，确认入库函数工作正常，再删掉。
 log "端到端自检（写入一条测试数据再删除）…"
 TEST_DEVICE="__selftest__$(date +%s)"
+
+# 清理挂在 EXIT 上（2026-10-15 审计 R3-S13）：旧实现把 DELETE 放在最后一步，
+# 中途任一 die 都会把 __selftest__ 设备与 selftest-user-1 台账**永久留在生产统计库**，
+# 管理页出现假设备/假用户。现在无论怎么退出都会清。
+cleanup_selftest() {
+  PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U "$DB_ROLE" -d "$DB_NAME" -q -c \
+    "DELETE FROM usage_daily WHERE device_id = '$TEST_DEVICE';
+     DELETE FROM devices WHERE device_id = '$TEST_DEVICE';
+     DELETE FROM telemetry_users WHERE user_id = 'selftest-user-1';" >/dev/null 2>&1 || true
+}
+trap cleanup_selftest EXIT
+
+# 日期用「昨天」而不是写死的常量：入库函数现在会拒绝 400 天前的日期，
+# 写死日期会让这个自检变成定时炸弹（审计 R3-S10）。
+SELFTEST_DAY="$(date -d yesterday +%F)"
 curl -sf -m 10 -X POST "http://127.0.0.1:$LISTEN_PORT/v1/report" \
   -H 'Content-Type: application/json' \
-  -d "{\"schema_version\":2,\"device_id\":\"$TEST_DEVICE\",\"user_id\":\"selftest-user-1\",\"app_version\":\"0.0.0\",\"app_build\":0,\"platform\":\"selftest\",\"os_version\":\"\",\"locale\":\"\",\"days\":[{\"day\":\"2026-01-01\",\"foreground_ms\":60000,\"session_count\":1,\"module_open_counts\":{\"learn\":1,\"随便写的\":9}}]}" \
+  -d "{\"schema_version\":2,\"device_id\":\"$TEST_DEVICE\",\"user_id\":\"11111111-2222-4333-8444-555555555555\",\"app_version\":\"0.0.0\",\"app_build\":0,\"platform\":\"selftest\",\"os_version\":\"\",\"locale\":\"\",\"days\":[{\"day\":\"$SELFTEST_DAY\",\"foreground_ms\":60000,\"session_count\":1,\"module_open_counts\":{\"learn\":1,\"随便写的\":9}}]}" \
   > /dev/null || die "上报自检失败（见 journalctl -u mw-telemetry）"
 
 SELFTEST_ROWS="$(PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U "$DB_ROLE" -d "$DB_NAME" -tAc \
@@ -225,15 +269,14 @@ SELFTEST_ROWS="$(PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U "$DB_ROLE" -d "$
 
 # 顺带验证账号关联真的入库了
 SELFTEST_USER="$(PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U "$DB_ROLE" -d "$DB_NAME" -tAc   "SELECT user_id FROM usage_daily WHERE device_id = '$TEST_DEVICE'")"
-[ "$SELFTEST_USER" = "selftest-user-1" ] || die "user_id 没入库（期望 selftest-user-1，实际 '$SELFTEST_USER'）"
+[ "$SELFTEST_USER" = "11111111-2222-4333-8444-555555555555" ] || die "user_id 没入库（期望合成 UUID，实际 '$SELFTEST_USER'）"
 
 # 顺带验证白名单真的生效：非法模块键不该落库
 BAD_KEY="$(PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U "$DB_ROLE" -d "$DB_NAME" -tAc \
   "SELECT module_open_counts ? '随便写的' FROM usage_daily WHERE device_id = '$TEST_DEVICE'")"
 [ "$BAD_KEY" = "f" ] || die "模块白名单未生效（非法键进了库）"
 
-PGPASSWORD="$DB_PASSWORD" psql -h 127.0.0.1 -U "$DB_ROLE" -d "$DB_NAME" -q -c \
-  "DELETE FROM usage_daily WHERE device_id = '$TEST_DEVICE'; DELETE FROM devices WHERE device_id = '$TEST_DEVICE'; DELETE FROM telemetry_users WHERE user_id = 'selftest-user-1';"
+# 清理由 trap 负责（上面已注册），这里不再手写 DELETE。
 
 echo ""
 echo "=== 完成 ==="
