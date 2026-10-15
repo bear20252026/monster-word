@@ -246,6 +246,7 @@ class NoteRepositoryImpl implements NoteRepository {
             'updated_at': now,
           });
         } catch (e, s) {
+          // 吞错豁免: 这里只是暂存错误，紧接着（同一方法内）就 reportSwallowedError
           lastError = e;
           lastStack = s;
         }
@@ -301,6 +302,7 @@ class NoteRepositoryImpl implements NoteRepository {
             whereArgs: [note.id],
           );
         } catch (e, s) {
+          // 吞错豁免: 这里只是暂存错误，紧接着（同一方法内）就 reportSwallowedError
           lastError = e;
           lastStack = s;
         }
@@ -332,6 +334,7 @@ class NoteRepositoryImpl implements NoteRepository {
         try {
           return await db.delete('word_notes', where: 'id = ?', whereArgs: [noteId]);
         } catch (e, s) {
+          // 吞错豁免: 这里只是暂存错误，紧接着（同一方法内）就 reportSwallowedError
           lastError = e;
           lastStack = s;
         }
