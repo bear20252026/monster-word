@@ -477,4 +477,104 @@ void main() {
       expect(back.moduleOpenCounts, {'learn': 3});
     });
   });
+
+  group('读-改-写的串行闸（2026-10-15 审计 R3-D05）', () {
+    // _mutateDay 是「读 → 改 → 写」三步，而调用方不是串行的：
+    // UsageModuleObserver 对每次导航都 unawaited(recordModuleOpen(...))，
+    // onForeground / recordAnswers 也可能同时落进来。没有串行闸时
+    // 两读两写交错、后写覆盖先写 ⇒ 计数静默少记。
+    test('并发 recordModuleOpen 不丢计数', () async {
+      final c = build();
+      await c.initialize();
+
+      await Future.wait([for (var i = 0; i < 20; i++) c.recordModuleOpen('learn')]);
+
+      final day = await store.readDay(UsageStatsCollector.dayKey(now));
+      expect(day?.moduleOpenCounts['learn'], 20, reason: '并发写入被覆盖了 —— 读-改-写没有串行化');
+    });
+
+    test('并发写不同类型的事件也都不丢', () async {
+      final c = build();
+      await c.initialize();
+
+      await Future.wait([
+        for (var i = 0; i < 5; i++) c.recordModuleOpen('learn'),
+        for (var i = 0; i < 5; i++) c.recordModuleOpen('review'),
+        for (var i = 0; i < 3; i++) c.recordAnswers(reviewed: 2, correct: 1),
+      ]);
+
+      final day = await store.readDay(UsageStatsCollector.dayKey(now));
+      expect(day?.moduleOpenCounts['learn'], 5);
+      expect(day?.moduleOpenCounts['review'], 5);
+      expect(day?.wordsReviewed, 6);
+      expect(day?.wordsCorrect, 3);
+    });
+
+    test('某次写入抛错不会把闸链卡死（后续写入仍能落盘）', () async {
+      build(); // 先建好共用的假实现，下面复用它的 settings/uploader/identity
+      var failNext = true;
+      final flaky = _FlakyStore(store, () {
+        if (failNext) {
+          failNext = false;
+          throw StateError('模拟一次写失败');
+        }
+      });
+      final c = UsageStatsCollector(
+        store: flaky,
+        uploader: uploader,
+        environment: _FakeEnvironment(),
+        settings: settings,
+        identity: identity,
+        clock: () => now,
+      );
+      await c.initialize();
+
+      await expectLater(c.recordModuleOpen('learn'), throwsA(isA<StateError>()));
+      await c.recordModuleOpen('learn');
+
+      final day = await store.readDay(UsageStatsCollector.dayKey(now));
+      expect(day?.moduleOpenCounts['learn'], 1, reason: '闸链断了 —— 失败之后写入再也进不去');
+    });
+  });
+}
+
+/// 包装一个真实假实现，让第 [onWrite] 决定是否抛错。
+class _FlakyStore implements UsageStatsStore {
+  _FlakyStore(this._inner, this._onWrite);
+
+  final UsageStatsStore _inner;
+  final void Function() _onWrite;
+
+  @override
+  Future<UsageDailyStats?> readDay(String day) => _inner.readDay(day);
+
+  @override
+  Future<void> writeDay(UsageDailyStats stats) async {
+    _onWrite();
+    await _inner.writeDay(stats);
+  }
+
+  @override
+  Future<List<UsageDailyStats>> readPending({int limit = 31}) => _inner.readPending(limit: limit);
+
+  @override
+  Future<void> markUploaded(Iterable<String> days) => _inner.markUploaded(days);
+
+  @override
+  Future<void> pruneUploadedBefore(DateTime before) => _inner.pruneUploadedBefore(before);
+
+  @override
+  Future<DateTime?> readLastUploadAt() => _inner.readLastUploadAt();
+
+  @override
+  Future<void> writeLastUploadAt(DateTime at) => _inner.writeLastUploadAt(at);
+
+  @override
+  Future<DateTime?> readNextAttemptAt() => _inner.readNextAttemptAt();
+
+  @override
+  Future<void> writeNextAttemptAt(DateTime? at) => _inner.writeNextAttemptAt(at);
+
+  @override
+  Future<void> clearAll() => _inner.clearAll();
 }

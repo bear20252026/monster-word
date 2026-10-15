@@ -6,7 +6,7 @@
 // （account 的 secure_password_auth_store 同样在 feature data 层。）
 //
 // 实现要点：
-//   - 写用 INSERT OR REPLACE：一天一行，主键是日期，天然幂等；
+//   - 写用「UPDATE 命中 0 行再 INSERT」两步（**不能用 UPSERT**，见 writeDay 的注释）；
 //   - 读-改-写由调用方（collector）串行发起，本层不做缓存 —— 统计写入频率极低
 //     （进前台、切后台、完成一次学习会话），不值得为它引入缓存与失效逻辑；
 //   - **所有方法都不抛**：统计是附加能力，任何失败都不该影响学习主流程。
@@ -64,46 +64,71 @@ class UsageStatsDao implements UsageStatsStore {
     final db = await _dbOrNull();
     if (db == null) return;
     try {
+      // ⚠️ 这里**不能**用 `INSERT … ON CONFLICT(day) DO UPDATE`（UPSERT）：
+      // 它需要 SQLite ≥3.24，而 minSdk 24 覆盖的 Android 7/8/9 系统库是
+      // 3.9.2 / 3.18 / 3.19 / 3.22 ⇒ 语句直接语法错。而本方法**所有失败都被吞掉、
+      // 只上报 Sentry** ⇒ 那些设备上埋点会 100% 静默不落盘（开关开着却一条数据都收不到），
+      // 用户与管理员都看不出异常。
+      // 台账 REG-AUDIT-002 已在 review_schedule_store 踩过同一个坑，那里改成了
+      // 「UPDATE 命中 0 行再 INSERT」—— 这里照同一口径写，并由
+      // test/architecture/sqlite_compat_guard_test.dart 在全库范围挡住复发。
+      //
+      // 两步放在同一事务里：并发写同一天时不会出现「UPDATE 没命中 + INSERT 撞主键」。
       // 保留 uploaded_at：这一天可能已经上报过，重写不该把它变回「未上报」，
       // 否则下一轮会重复上报同一天（服务端要靠 (device_id, day) 去重兜底，
       // 但客户端不该主动制造重复）。
-      await db.rawInsert(
-        '''
-        INSERT INTO $_dailyTable (
-          day, foreground_ms, session_count, study_session_count,
-          words_reviewed, words_correct, new_words_learned,
-          book_word_count, book_learned_count, streak_days, coins_earned,
-          module_open_counts, uploaded_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT uploaded_at FROM $_dailyTable WHERE day = ?))
-        ON CONFLICT(day) DO UPDATE SET
-          foreground_ms = excluded.foreground_ms,
-          session_count = excluded.session_count,
-          study_session_count = excluded.study_session_count,
-          words_reviewed = excluded.words_reviewed,
-          words_correct = excluded.words_correct,
-          new_words_learned = excluded.new_words_learned,
-          book_word_count = excluded.book_word_count,
-          book_learned_count = excluded.book_learned_count,
-          streak_days = excluded.streak_days,
-          coins_earned = excluded.coins_earned,
-          module_open_counts = excluded.module_open_counts
-      ''',
-        [
-          stats.day,
-          stats.foregroundMs,
-          stats.sessionCount,
-          stats.studySessionCount,
-          stats.wordsReviewed,
-          stats.wordsCorrect,
-          stats.newWordsLearned,
-          stats.bookWordCount,
-          stats.bookLearnedCount,
-          stats.streakDays,
-          stats.coinsEarned,
-          jsonEncode(stats.moduleOpenCounts),
-          stats.day,
-        ],
-      );
+      await db.transaction((txn) async {
+        final updated = await txn.rawUpdate(
+          '''
+          UPDATE $_dailyTable SET
+            foreground_ms = ?, session_count = ?, study_session_count = ?,
+            words_reviewed = ?, words_correct = ?, new_words_learned = ?,
+            book_word_count = ?, book_learned_count = ?, streak_days = ?, coins_earned = ?,
+            module_open_counts = ?
+          WHERE day = ?
+        ''',
+          [
+            stats.foregroundMs,
+            stats.sessionCount,
+            stats.studySessionCount,
+            stats.wordsReviewed,
+            stats.wordsCorrect,
+            stats.newWordsLearned,
+            stats.bookWordCount,
+            stats.bookLearnedCount,
+            stats.streakDays,
+            stats.coinsEarned,
+            jsonEncode(stats.moduleOpenCounts),
+            stats.day,
+          ],
+        );
+        if (updated > 0) return;
+
+        await txn.rawInsert(
+          '''
+          INSERT INTO $_dailyTable (
+            day, foreground_ms, session_count, study_session_count,
+            words_reviewed, words_correct, new_words_learned,
+            book_word_count, book_learned_count, streak_days, coins_earned,
+            module_open_counts, uploaded_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
+        ''',
+          [
+            stats.day,
+            stats.foregroundMs,
+            stats.sessionCount,
+            stats.studySessionCount,
+            stats.wordsReviewed,
+            stats.wordsCorrect,
+            stats.newWordsLearned,
+            stats.bookWordCount,
+            stats.bookLearnedCount,
+            stats.streakDays,
+            stats.coinsEarned,
+            jsonEncode(stats.moduleOpenCounts),
+          ],
+        );
+      });
     } catch (e, s) {
       reportSwallowedError('UsageStatsDao.writeDay', e, s);
     }
