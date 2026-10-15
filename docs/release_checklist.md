@@ -20,12 +20,17 @@
 ## 3. 打 tag 与云端出包
 
 - [ ] `git tag vX.Y.Z+NNN && git push origin vX.Y.Z+NNN`
-- [ ] Release Packages workflow：quality-gate（analyze+全量测试）→ android（真签名，缺 KEYSTORE_* secrets 直接熔断）→ windows（含 vc_redist Authenticode 验签、Dart 混淆）
-- [ ] 产物命名核对：`MonsterWord_vX.Y.Z.apk/.aab`（debug 签名产物必带 `-debugsigned` 后缀，不得当正式包分发）、`MonsterWord_Setup_vX.Y.Z.exe`
+      （tag 必须与 `pubspec.yaml` 的 `X.Y.Z+NNN` **完全一致** —— 流水线第一步就会校验，不一致直接熔断）
+- [ ] Release Packages workflow：quality-gate（analyze+全量测试）→ android（真签名，缺 KEYSTORE_* secrets 直接熔断）→ windows（含 vc_redist Authenticode 验签、Dart 混淆）→ release（挂 GitHub Release）
+- [ ] 产物命名核对：`MonsterWord_vX.Y.Z+N.apk/.aab`（debug 签名产物必带 `-debugsigned` 后缀，不得当正式包分发）、`MonsterWord_Setup_vX.Y.Z+N.exe`
+      （两侧都带 buildNumber，同版本号不同构建可凭文件名区分 —— MW-72）
 
 ## 4. Release 收口
 
 - [ ] GitHub Release 自动创建：核对三件套齐全、非 draft/prerelease
+      （**流水线的 `Verify release assets` 步骤会自动校验 apk/aab/Setup.exe 三件套**，
+      不齐就让 job 红。加这一步是因为 2026-10-15 发 v2.13.0+129 时 Windows 安装包
+      因 glob 只匹配到目录而**没挂上 Release，流水线却是全绿**的）
 - [ ] 装机实测（Windows 覆盖安装 + Android 覆盖安装；重点：词库首次解压路径、签到/金币、复习闭环）
 - [ ] 发版记录文档（工作区 `monster-word-发版记录-*.md` 体系）归档
 
