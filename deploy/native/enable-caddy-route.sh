@@ -166,7 +166,15 @@ awk -v matcher="$MATCHER" -v domain="$DOMAIN" -v upstream="$UPSTREAM" -v prefix=
     print ""
     print "\thandle @" matcher " {"
     if (prefix != "") print "\t\turi strip_prefix " prefix
-    print "\t\treverse_proxy " upstream
+    print "\t\treverse_proxy " upstream " {"
+    print "\t\t\t# ⚠️ 必须把 X-Forwarded-For 覆盖成可信值（2026-10-15 审计 R3-S02）。"
+    print "\t\t\t# Caddy 对 XFF 是**追加**语义，客户端自带的 X-Forwarded-For 会成为第一段；"
+    print "\t\t\t# 而下游的 GoTrue（GOTRUE_RATE_LIMIT_HEADER）与统计服务都取**第一段**做"
+    print "\t\t\t# 限流键 ⇒ 限流可被逐请求伪造绕过（实测：70 次带互不相同伪造 XFF 的请求，零 429）。"
+    print "\t\t\t# {http.request.remote.host} 是 Caddy 自己按上面 servers.trusted_proxies 算出的"
+    print "\t\t\t# 真实客户端 IP —— 它会跳过可信代理、取最后一个不可信地址，伪造的前缀被忽略。"
+    print "\t\t\theader_up X-Forwarded-For {http.request.remote.host}"
+    print "\t\t}"
     print "\t}"
     print ""
     done=1
@@ -214,6 +222,13 @@ if verify; then
   exit 0
 fi
 
-echo "❌ 回归验证未通过。配置已写入但存在问题，建议先回滚："
-echo "   cp $BACKUP_DIR/Caddyfile $CADDYFILE && systemctl reload caddy"
+echo "❌ 回归验证未通过 —— 自动回滚（2026-10-15 审计 R3-S08）"
+echo "   旧版这里只打印「建议先回滚」就 exit 1，坏配置留在生产；现在自己回滚。"
+cp -a "$BACKUP_DIR/Caddyfile" "$CADDYFILE"
+if systemctl reload caddy; then
+  echo "   ✅ 已回滚到 $BACKUP_DIR/Caddyfile 并 reload 成功"
+else
+  echo "   ⚠️ 回滚后 reload 失败，请人工介入：journalctl -u caddy -n 50"
+fi
+echo "   失败前的改动预览在 $BACKUP_DIR/（原配置也在这里），排查后可重跑本脚本"
 exit 1

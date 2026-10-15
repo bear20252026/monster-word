@@ -49,6 +49,8 @@ const PSQL = process.env.PSQL_BIN || '/usr/bin/psql';
 
 const MAX_BODY_BYTES = 256 * 1024;   // 31 天 × 十几项，几十 KB 足够；留 4 倍余量
 const RATE_LIMIT_PER_HOUR = 60;      // 每 IP 每小时上报次数（正常客户端每天 1 次）
+const HEALTH_RATE_LIMIT_PER_HOUR = 120; // /healthz 单独一档：探活频率可以高些，但不能无限
+const PSQL_TIMEOUT_MS = 10_000;      // 单次 psql 的硬超时（超时即 SIGKILL 子进程）
 
 // 库内校验失败时 RAISE 的消息前缀（见 functions.sql）。
 // 有它才能把「客户端把请求发错了」与「服务端真出故障」分开：
@@ -58,26 +60,46 @@ const VALIDATION_MARKER = 'mw_invalid_input:';
 // ── 限流：内存计数，够用且不引入 Redis ────────────────────────
 // 重启即清零。对「每天 1 次」的正常流量，它的作用是挡住脚本刷接口，
 // 不是精确计费，所以内存实现完全够。
+const MAX_BUCKETS = 50_000;          // 硬上限：伪造来源不该把内存撑爆（见 rateLimited）
 const buckets = new Map();
-function rateLimited(ip) {
+function rateLimited(ip, limit = RATE_LIMIT_PER_HOUR, scope = 'report') {
+  const key = `${scope}|${ip}`;   // 分端点独立计数：探活不该吃掉上报的额度
   const now = Date.now();
   const hourAgo = now - 3600_000;
-  const hits = (buckets.get(ip) || []).filter((t) => t > hourAgo);
-  if (hits.length >= RATE_LIMIT_PER_HOUR) {
-    buckets.set(ip, hits);
+  const hits = (buckets.get(key) || []).filter((t) => t > hourAgo);
+  if (hits.length >= limit) {
+    buckets.set(key, hits);
     return true;
   }
   hits.push(now);
-  buckets.set(ip, hits);
-  // 顺手清理空桶，避免长期运行后 Map 无限增长
+  buckets.set(key, hits);
+  // 清理：先删已过期的桶；**若仍然超上限，就按插入顺序淘汰最旧的**。
+  // 为什么必须有硬上限（2026-10-15 审计 R3-S03）：旧实现只在 >5000 时删「已过期」的桶，
+  // 而伪造来源产生的都是**新桶**（每个都还没过期）⇒ 桶数只增不减 ⇒
+  // 1.6 GiB 的机器被撑爆，殃及同机的 mw-auth / caddy / cloudflared。
   if (buckets.size > 5000) {
     for (const [k, v] of buckets) if (v.every((t) => t <= hourAgo)) buckets.delete(k);
+  }
+  while (buckets.size > MAX_BUCKETS) {
+    const oldest = buckets.keys().next().value;
+    buckets.delete(oldest);
   }
   return false;
 }
 
+// 客户端 IP：**优先 Cloudflare 写的 CF-Connecting-IP**，它是边缘覆盖写入的、
+// 客户端伪造不了（隧道入口只可能是 cloudflared）。
+//
+// 为什么不能直接用 X-Forwarded-For 的第一段（2026-10-15 审计 R3-S02）：
+// Caddy 的 reverse_proxy 对 XFF 是**追加**语义，客户端自带的
+// `X-Forwarded-For: <任意值>` 会成为第一段并被采信 ⇒ 限流键完全由攻击者决定。
+// 实测：连打 70 次带互不相同伪造 XFF 的请求，**零 429**。
+// 现在 Caddyfile 里加了 `header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}`
+// 把它覆盖成可信值，所以下面的 XFF 回退路径也安全了 —— 两层都留着。
 function clientIp(req) {
   if (TRUST_PROXY) {
+    const cf = req.headers['cf-connecting-ip'];
+    if (typeof cf === 'string' && cf.length > 0) return cf.trim();
     const fwd = req.headers['x-forwarded-for'];
     if (typeof fwd === 'string' && fwd.length > 0) return fwd.split(',')[0].trim();
   }
@@ -101,12 +123,30 @@ function psql(sql) {
     });
     let out = '';
     let err = '';
+    let settled = false;
+    // 超时必须自己兜（2026-10-15 审计 R3-S04）：库内出现锁等待（保留期 DELETE、VACUUM）
+    // 时 psql 会一直挂着，而 socket 与子进程都不会自己消失 ⇒ 请求永久挂起 + 进程堆积，
+    // 最终把 1.6 GiB 的机器拖垮。Node 不会替你杀子进程。
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      try {
+        child.kill('SIGKILL');
+      } catch (_) {}
+      reject(new Error(`psql 超时（${PSQL_TIMEOUT_MS}ms）`));
+    }, PSQL_TIMEOUT_MS);
+    const finish = (fn, arg) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn(arg);
+    };
     child.stdout.on('data', (d) => (out += d));
     child.stderr.on('data', (d) => (err += d));
-    child.on('error', reject);
+    child.on('error', (e) => finish(reject, e));
     child.on('close', (code) => {
-      if (code === 0) resolve(out.trim());
-      else reject(new Error((err || `psql exited ${code}`).slice(0, 500)));
+      if (code === 0) finish(resolve, out.trim());
+      else finish(reject, new Error((err || `psql exited ${code}`).slice(0, 500)));
     });
     child.stdin.end(sql);
   });
@@ -143,28 +183,35 @@ async function fetchUserNames() {
 
   try {
     const token = mintServiceJwt();
-    const res = await fetch(`${AUTH_ADMIN_URL}/admin/users?page=1&per_page=1000`, {
-      headers: { Authorization: `Bearer ${token}`, apikey: token },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) {
-      // 保留上一次成功的缓存：账号服务临时抖动不该让管理页整页显示 UUID
-      nameCache = { ...nameCache, error: `账号服务返回 HTTP ${res.status}` };
-      return nameCache;
-    }
-    const body = await res.json();
-    const list = Array.isArray(body) ? body : (body.users ?? []);
+    // 分页拉全量：只拉第一页（per_page=1000）时，第 1001 个之后的账号会**静默**
+    // 退化成 UUID 前缀、且不会出现告警条（因为解析本身没失败）—— 与页面承诺不符。
+    // 审计 R3-S12；对照 reset-password.mjs 也是分页到 100 页的。
     const map = new Map();
-    for (const u of list) {
-      if (!u?.id) continue;
-      // ⚠️ admin API 返回的键是 **user_metadata**（GoTrue 的 API 层命名），
-      // 不是数据库列名 raw_user_meta_data —— 第一版按列名读，结果一律拿不到，
-      // 全部退化成邮箱前缀（实测：管理页显示 u16cfbeee… 而不是用户名）。
-      // 两个都试一遍，免得将来 GoTrue 改回去。
-      const meta = u.user_metadata ?? u.raw_user_meta_data ?? {};
-      // 客户端注册时把用户名放在 raw_user_meta_data.username；退回邮箱本地部分。
-      const name = meta.username || (typeof u.email === 'string' ? u.email.split('@')[0] : '');
-      map.set(u.id, name || '(未命名)');
+    const perPage = 1000;
+    for (let page = 1; page <= 100; page++) {
+      const res = await fetch(`${AUTH_ADMIN_URL}/admin/users?page=${page}&per_page=${perPage}`, {
+        headers: { Authorization: `Bearer ${token}`, apikey: token },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) {
+        // 保留上一次成功的缓存：账号服务临时抖动不该让管理页整页显示 UUID
+        nameCache = { ...nameCache, error: `账号服务返回 HTTP ${res.status}` };
+        return nameCache;
+      }
+      const body = await res.json();
+      const list = Array.isArray(body) ? body : (body.users ?? []);
+      for (const u of list) {
+        if (!u?.id) continue;
+        // ⚠️ admin API 返回的键是 **user_metadata**（GoTrue 的 API 层命名），
+        // 不是数据库列名 raw_user_meta_data —— 第一版按列名读，结果一律拿不到，
+        // 全部退化成邮箱前缀（实测：管理页显示 u16cfbeee… 而不是用户名）。
+        // 两个都试一遍，免得将来 GoTrue 改回去。
+        const meta = u.user_metadata ?? u.raw_user_meta_data ?? {};
+        // 客户端注册时把用户名放在 raw_user_meta_data.username；退回邮箱本地部分。
+        const name = meta.username || (typeof u.email === 'string' ? u.email.split('@')[0] : '');
+        map.set(u.id, name || '(未命名)');
+      }
+      if (list.length < perPage) break;   // 最后一页
     }
     nameCache = { at: Date.now(), map, error: null };
   } catch (e) {
@@ -362,6 +409,12 @@ const server = createServer(async (req, res) => {
 
   try {
     if (url.pathname === '/healthz') {
+      // 探活也要限流（2026-10-15 审计 R3-S04）：它每次都 spawn 一个 psql，
+      // 匿名并发打它等于让攻击者按请求数生成子进程。
+      const ip = clientIp(req);
+      if (rateLimited(ip, HEALTH_RATE_LIMIT_PER_HOUR, 'health')) {
+        return send(429, JSON.stringify({ ok: false, error: 'rate_limited' }));
+      }
       await psql('SELECT 1;');
       return send(200, JSON.stringify({ ok: true }));
     }

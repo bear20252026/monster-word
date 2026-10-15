@@ -20,7 +20,7 @@ echo "schema + functions 应用成功"
 
 echo "=== 正常上报（含脏数据与非法模块键）==="
 RESULT="$(sudo -u postgres psql -tA -d "$SCRATCH" -c "
-SELECT mw_ingest('{\"schema_version\":2,\"device_id\":\"dev-1\",\"user_id\":\"user-aaa\",\"app_version\":\"2.13.0\",\"app_build\":129,\"platform\":\"windows\",\"os_version\":\"Windows 10\",\"locale\":\"zh_CN\",\"days\":[
+SELECT mw_ingest('{\"schema_version\":2,\"device_id\":\"dev-1\",\"user_id\":\"11111111-1111-4111-8111-111111111111\",\"app_version\":\"2.13.0\",\"app_build\":129,\"platform\":\"windows\",\"os_version\":\"Windows 10\",\"locale\":\"zh_CN\",\"days\":[
   {\"day\":\"2026-10-13\",\"foreground_ms\":1800000,\"session_count\":3,\"study_session_count\":2,\"words_reviewed\":40,\"words_correct\":33,\"new_words_learned\":12,\"book_word_count\":1000,\"book_learned_count\":120,\"streak_days\":5,\"coins_earned\":30,\"module_open_counts\":{\"learn\":3,\"listen\":1,\"随便写的键\":9}},
   {\"day\":\"not-a-date\",\"foreground_ms\":1000},
   {\"day\":\"2026-13-45\",\"foreground_ms\":1000},
@@ -51,9 +51,9 @@ check "设备台账写入" \
   "$([ "$(q "SELECT count(*) FROM devices WHERE device_id='dev-1'")" = "1" ] && echo 1 || echo 0)" ""
 
 echo "=== 账号关联（管理端「按人看」）==="
-check "user_id 入库"   "$([ "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-1' AND day='2026-10-13'")" = "user-aaa" ] && echo 1 || echo 0)"   "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-1' AND day='2026-10-13'")"
-check "账号台账写入"   "$([ "$(q "SELECT count(*) FROM telemetry_users WHERE user_id='user-aaa'")" = "1" ] && echo 1 || echo 0)" ""
-check "按人汇总视图能算"   "$([ "$(q "SELECT active_days::text || '|' || total_minutes::text FROM usage_user_summary WHERE user_id='user-aaa'")" = "2|1470.0" ] && echo 1 || echo 0)"   "$(q "SELECT user_id || '|' || active_days || '|' || total_minutes || '|' || accuracy_pct FROM usage_user_summary")"
+check "user_id 入库"   "$([ "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-1' AND day='2026-10-13'")" = "11111111-1111-4111-8111-111111111111" ] && echo 1 || echo 0)"   "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-1' AND day='2026-10-13'")"
+check "账号台账写入"   "$([ "$(q "SELECT count(*) FROM telemetry_users WHERE user_id='11111111-1111-4111-8111-111111111111'")" = "1" ] && echo 1 || echo 0)" ""
+check "按人汇总视图能算"   "$([ "$(q "SELECT active_days::text || '|' || total_minutes::text FROM usage_user_summary WHERE user_id='11111111-1111-4111-8111-111111111111'")" = "2|1470.0" ] && echo 1 || echo 0)"   "$(q "SELECT user_id || '|' || active_days || '|' || total_minutes || '|' || accuracy_pct FROM usage_user_summary")"
 
 run_ingest() { sudo -u postgres psql -q -tA -d "$SCRATCH" -c "SELECT mw_ingest('$1'::jsonb);" > /dev/null; }
 
@@ -63,15 +63,35 @@ check "无 user_id 的上报不入账号台账"   "$([ "$(q "SELECT count(*) FRO
 
 # 先未登录、后登录：应把账号补上
 run_ingest '{"device_id":"dev-late","days":[{"day":"2026-10-13","session_count":1}]}'
-run_ingest '{"device_id":"dev-late","user_id":"user-bbb","days":[{"day":"2026-10-13","session_count":1}]}'
-check "先未登录后登录 ⇒ 账号被补上"   "$([ "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-late'")" = "user-bbb" ] && echo 1 || echo 0)"   "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-late'")"
+run_ingest '{"device_id":"dev-late","user_id":"22222222-2222-4222-8222-222222222222","days":[{"day":"2026-10-13","session_count":1}]}'
+check "先未登录后登录 ⇒ 账号被补上"   "$([ "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-late'")" = "22222222-2222-4222-8222-222222222222" ] && echo 1 || echo 0)"   "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-late'")"
 
 # 先有账号、后变空：不该把已有关联抹掉
 run_ingest '{"device_id":"dev-late","user_id":"","days":[{"day":"2026-10-13","session_count":1}]}'
-check "已有关联不被空值抹掉"   "$([ "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-late'")" = "user-bbb" ] && echo 1 || echo 0)"   "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-late'")"
+check "已有关联不被空值抹掉"   "$([ "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-late'")" = "22222222-2222-4222-8222-222222222222" ] && echo 1 || echo 0)"   "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-late'")"
 
 # 超长 user_id 应被截断，而不是让整批失败
-check "超长 user_id 被截断而不是让整批失败"   "$(sudo -u postgres psql -tA -d "$SCRATCH" -c "SELECT (mw_ingest(jsonb_build_object('device_id','dev-long','user_id',repeat('x',300),'days',jsonb_build_array(jsonb_build_object('day','2026-10-13','session_count',1))))->>'accepted');" | grep -q '^1$' && echo 1 || echo 0)"   "$(q "SELECT length(user_id) FROM usage_daily WHERE device_id='dev-long'")"
+# 2026-10-15 审计 R3-S10：user_id 现在必须是 UUID 或空串。
+# 超长/非法值**降级为「未绑定账号」**而不是拒整批 —— 当天的使用数据本身是好的。
+check "非法 user_id 被降级为空串而不是让整批失败"   "$(sudo -u postgres psql -tA -d "$SCRATCH" -c "SELECT (mw_ingest(jsonb_build_object('device_id','dev-long','user_id',repeat('x',300),'days',jsonb_build_array(jsonb_build_object('day','2026-10-13','session_count',1))))->>'accepted');" | grep -q '^1$' && echo 1 || echo 0)"   "$(q "SELECT length(user_id) FROM usage_daily WHERE device_id='dev-long'")"
+check "非法 user_id 入库为空串"   "$([ "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-long'")" = "" ] && echo 1 || echo 0)"   "$(q "SELECT user_id FROM usage_daily WHERE device_id='dev-long'")"
+
+echo "=== 状态量只在「报文带了该键」时覆盖（R3-S11）==="
+# 先写入状态量
+run_ingest '{"device_id":"dev-state","days":[{"day":"2026-10-13","book_word_count":4000,"book_learned_count":350}]}'
+check "状态量首次入库"   "$([ "$(q "SELECT book_learned_count FROM usage_daily WHERE device_id='dev-state'")" = "350" ] && echo 1 || echo 0)"   "$(q "SELECT book_learned_count FROM usage_daily WHERE device_id='dev-state'")"
+# 再送一次**不带这两个键**的上报：不该把已有状态清零
+run_ingest '{"device_id":"dev-state","days":[{"day":"2026-10-13","session_count":1}]}'
+check "缺字段的补传不清零状态量"   "$([ "$(q "SELECT book_learned_count FROM usage_daily WHERE device_id='dev-state'")" = "350" ] && echo 1 || echo 0)"   "$(q "SELECT book_learned_count FROM usage_daily WHERE device_id='dev-state'")"
+# 显式送 0 则要真的写成 0（判据是「键在不在」而不是「值大不大」——换本小词书是合法场景）
+run_ingest '{"device_id":"dev-state","days":[{"day":"2026-10-13","book_learned_count":0}]}'
+check "显式送 0 时状态量真的被覆盖"   "$([ "$(q "SELECT book_learned_count FROM usage_daily WHERE device_id='dev-state'")" = "0" ] && echo 1 || echo 0)"   "$(q "SELECT book_learned_count FROM usage_daily WHERE device_id='dev-state'")"
+
+echo "=== 台账只在真的接受了数据时才写（R3-S05）==="
+run_ingest '{"device_id":"dev-nodata","days":[]}'
+check "空 days 不写设备台账"   "$([ "$(q "SELECT count(*) FROM devices WHERE device_id='dev-nodata'")" = "0" ] && echo 1 || echo 0)"   "$(q "SELECT count(*) FROM devices WHERE device_id='dev-nodata'")"
+run_ingest '{"device_id":"dev-futuredate","days":[{"day":"2099-01-01","session_count":1}]}'
+check "未来日期被拒且不写台账"   "$([ "$(q "SELECT count(*) FROM devices WHERE device_id='dev-futuredate'")" = "0" ] && echo 1 || echo 0)"   "$(q "SELECT count(*) FROM devices WHERE device_id='dev-futuredate'")"
 
 echo "=== 幂等：重复送同一天，取较大值 ==="
 sudo -u postgres psql -q -tA -d "$SCRATCH" -c "

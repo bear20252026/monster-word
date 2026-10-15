@@ -133,6 +133,12 @@ BEGIN
   -- 账号标识。空串 = 没有可关联的账号（本机模式/未登录），不是错误。
   -- 只收 UUID 不用户名：用户名由管理页向账号服务解析，避免两处漂移。
   v_user_id  := mw_clamps(payload -> 'user_id', 64);
+  -- user_id 必须是 UUID 或空串（2026-10-15 审计 R3-S10）：只截断不校验的话，
+  -- 任意字符串都能灌进 telemetry_users，把管理页「按人看」列表撑满。
+  -- 非法值**降级为「未绑定账号」**而不是拒掉整批 —— 当天的使用数据本身是好的。
+  IF v_user_id <> '' AND v_user_id !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN
+    v_user_id := '';
+  END IF;
   v_platform := mw_clamps(payload -> 'platform', 32);
   v_app_ver  := mw_clamps(payload -> 'app_version', 32);
   v_schema   := mw_clampi(payload -> 'schema_version', 0, 1000);
@@ -153,6 +159,14 @@ BEGIN
       v_rejected := v_rejected + 1;
       CONTINUE;
     END;
+
+    -- 日期范围（2026-10-15 审计 R3-S10）：未来日期永远不满足保留期清理条件
+    -- （`day < current_date - 400`），会**永久留在库里**并把真实数据挤出管理页
+    -- `LIMIT 60` 的窗口。放 +1 天是因为客户端时区可能比服务端早一天。
+    IF v_day_str::date > current_date + 1 OR v_day_str::date < current_date - 400 THEN
+      v_rejected := v_rejected + 1;
+      CONTINUE;
+    END IF;
 
     INSERT INTO usage_daily (
       device_id, user_id, day,
@@ -185,8 +199,14 @@ BEGIN
     -- 补传/重试会重复送同一天 ⇒ 必须幂等。用「取较大值」而不是「覆盖」：
     -- 同一天两次上报里，数值更全的那次通常是后到的完整数据；但若客户端重装了、
     -- 计数从 0 重新开始，覆盖会把当天已有的时长抹掉。取较大值对两种情形都安全。
-    -- 例外：book_word_count / book_learned_count 是**状态量**（当前词书规模与已学数），
-    -- 不是累加量，所以用覆盖；module_open_counts 虽是对象但属累加量，逐键取较大值。
+    --
+    -- 例外一：book_word_count / book_learned_count 是**状态量**（当前词书规模与已学数），
+    -- 不是累加量，所以用覆盖 —— 但**只在本次真的带了这个字段时**覆盖。
+    -- 无脑 EXCLUDED 覆盖会把「字段缺席被夹成 0」当成「已学数变成 0」写进去，
+    -- 静默清掉真实状态（2026-10-15 审计 R3-S11；module_open_counts 是同类的另一半，
+    -- 那个已改成逐键取较大值）。判据用 `v_day ? 'key'` 查**原始报文有没有这个键**，
+    -- 而不是看值大不大 —— 值 0 也可能是合法的（换了本小词书）。
+    -- 例外二：module_open_counts 虽是对象但属累加量，逐键取较大值。
     ON CONFLICT (device_id, day) DO UPDATE SET
       -- 只在本次带上了账号时覆盖：先未登录后登录要能补上，
       -- 而「先有账号、后来又变空」不该把已有关联抹掉。
@@ -197,33 +217,39 @@ BEGIN
       words_reviewed      = GREATEST(usage_daily.words_reviewed, EXCLUDED.words_reviewed),
       words_correct       = GREATEST(usage_daily.words_correct, EXCLUDED.words_correct),
       new_words_learned   = GREATEST(usage_daily.new_words_learned, EXCLUDED.new_words_learned),
-      book_word_count     = EXCLUDED.book_word_count,
-      book_learned_count  = EXCLUDED.book_learned_count,
+      book_word_count     = CASE WHEN v_day ? 'book_word_count' THEN EXCLUDED.book_word_count ELSE usage_daily.book_word_count END,
+      book_learned_count  = CASE WHEN v_day ? 'book_learned_count' THEN EXCLUDED.book_learned_count ELSE usage_daily.book_learned_count END,
       streak_days         = GREATEST(usage_daily.streak_days, EXCLUDED.streak_days),
       coins_earned        = GREATEST(usage_daily.coins_earned, EXCLUDED.coins_earned),
       module_open_counts  = mw_merge_modules(usage_daily.module_open_counts, EXCLUDED.module_open_counts),
-      app_version         = EXCLUDED.app_version,
-      app_build           = EXCLUDED.app_build,
-      platform            = EXCLUDED.platform,
-      os_version          = EXCLUDED.os_version,
-      locale              = EXCLUDED.locale,
-      schema_version      = EXCLUDED.schema_version,
+      app_version         = CASE WHEN payload ? 'app_version' AND EXCLUDED.app_version <> '' THEN EXCLUDED.app_version ELSE usage_daily.app_version END,
+      app_build           = CASE WHEN payload ? 'app_build' THEN EXCLUDED.app_build ELSE usage_daily.app_build END,
+      platform            = CASE WHEN payload ? 'platform' AND EXCLUDED.platform <> '' THEN EXCLUDED.platform ELSE usage_daily.platform END,
+      os_version          = CASE WHEN payload ? 'os_version' AND EXCLUDED.os_version <> '' THEN EXCLUDED.os_version ELSE usage_daily.os_version END,
+      locale              = CASE WHEN payload ? 'locale' AND EXCLUDED.locale <> '' THEN EXCLUDED.locale ELSE usage_daily.locale END,
+      schema_version      = CASE WHEN payload ? 'schema_version' THEN EXCLUDED.schema_version ELSE usage_daily.schema_version END,
       received_at         = now();
 
     v_accepted := v_accepted + 1;
   END LOOP;
 
-  INSERT INTO devices (device_id, platform, app_version, last_seen)
-  VALUES (v_device_id, v_platform, v_app_ver, now())
-  ON CONFLICT (device_id) DO UPDATE SET
-    last_seen   = now(),
-    platform    = EXCLUDED.platform,
-    app_version = EXCLUDED.app_version;
+  -- 台账只在**真的接受了数据**时写（2026-10-15 审计 R3-S05）：
+  -- 旧实现无条件写，于是 `POST {"device_id":"x","days":[]}` 这种
+  -- 「一条数据都没有」的请求也能无限灌 `devices` 与 `telemetry_users`，
+  -- 把「累计设备 / 活跃设备」与留存分母变成无意义的数字。
+  IF v_accepted > 0 THEN
+    INSERT INTO devices (device_id, platform, app_version, last_seen)
+    VALUES (v_device_id, v_platform, v_app_ver, now())
+    ON CONFLICT (device_id) DO UPDATE SET
+      last_seen   = now(),
+      platform    = EXCLUDED.platform,
+      app_version = EXCLUDED.app_version;
 
-  -- 账号台账：只记 UUID 与时间，不记用户名（名字由管理页向账号服务解析）。
-  IF v_user_id <> '' THEN
-    INSERT INTO telemetry_users (user_id, last_seen) VALUES (v_user_id, now())
-    ON CONFLICT (user_id) DO UPDATE SET last_seen = now();
+    -- 账号台账：只记 UUID 与时间，不记用户名（名字由管理页向账号服务解析）。
+    IF v_user_id <> '' THEN
+      INSERT INTO telemetry_users (user_id, last_seen) VALUES (v_user_id, now())
+      ON CONFLICT (user_id) DO UPDATE SET last_seen = now();
+    END IF;
   END IF;
 
   RETURN jsonb_build_object('ok', true, 'accepted', v_accepted, 'rejected', v_rejected);
