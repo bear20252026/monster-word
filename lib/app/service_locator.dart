@@ -75,6 +75,10 @@ void _reg<T extends Object>(T Function() factory) {
 /// ```
 Future<void> setupServiceLocator() async {
   // ========== Data Layer（数据层）==========
+  // R3-L07：本函数必须**可安全重复调用**（`_reg` 幂等，已注册则跳过）。
+  // 原因见 [ensureServiceLocatorReady]：进程 detach 时 `sl.reset()` 抹空全部
+  // 注册，而平台允许同一次进程存活期内 re-attach（widget 树并未拆除），
+  // 此时 `WordApp.build` 第一行的 `sl<AudioService>()` 会抛 `StateError`。
   // 数据库单例（只注册一次）
   _reg<WordBookDatabase>(() => WordBookDatabase.instance);
   _reg<UserDatabase>(() => UserDatabase.instance);
@@ -148,6 +152,31 @@ Future<void> setupServiceLocator() async {
 
   // UserService（用户）
   _reg<UserService>(() => UserServiceImpl(userRepo: sl<UserRepository>(), noteRepo: sl<NoteRepository>()));
+}
+
+/// R3-L07：在**可能被 reset 过**的时机前确保依赖已注册。
+///
+/// 背景：`disposeServiceLocator()`（进程 detach 时调用）会 `sl.reset()` 掉
+/// **全部**注册，而 `setupServiceLocator()` 只在 bootstrap 跑一次。
+/// Flutter 平台允许同一个 `FlutterEngine` 在 detach 后**再次 attach**
+/// （`FlutterEngineConnectionRegistry` 的 normal attach），此时 widget 树并未
+/// 拆除 —— `WordApp.build` 的第一行就是 `sl<AudioService>()`，会直接抛
+/// `StateError: Object/factory with type AudioService is not registered`。
+/// 更隐蔽的是静态单例（如 `SystemTts`）已被 `disposePlatformSingletons()`
+/// release，即便侥幸不抛错，发音也会**永久失效**。
+///
+/// 本仓的 `_reg` 是幂等的（已注册则跳过），所以「重建」就是再调一次
+/// `setupServiceLocator()`；用 `AudioService` 作探针即可判断注册表是否为空
+/// （它在 `setupServiceLocator` 的 Service 层，且是 `WordApp.build` 的首个依赖）。
+///
+/// ⚠️ 不要改成「无条件每次都调 `setupServiceLocator()`」：那会在**热重载**等
+/// 每次 build 时都走一遍几十个 `isRegistered` 判断，白白增加首帧开销。
+///
+/// 返回 true 表示本次确实重建了（供测试断言，生产可忽略）。
+Future<bool> ensureServiceLocatorReady() async {
+  if (sl.isRegistered<AudioService>()) return false;
+  await setupServiceLocator();
+  return true;
 }
 
 /// 释放所有可释放资源（在应用退出时调用）

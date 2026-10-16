@@ -33,4 +33,17 @@ abstract final class NavUtils {
   static void goHome(BuildContext context) {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
+
+  /// 强制回到登录页并**清空整个路由栈**（R3-A05）。
+  ///
+  /// 与 [goHome] 的区别：登出后栈里那些页面全都是「登录态才该看」的，
+  /// 不能只是压一层登录页——否则用户按返回键又能回到已登出的界面。
+  /// 因此用 `pushAndRemoveUntil` 把栈清到只剩登录页。
+  ///
+  /// 为什么需要它：登出（`AppSessionController.logout()`）原本只改内存态并
+  /// notifyListeners，而 `isLoggedIn` 全库只有 Splash 消费 ⇒ **登出后界面毫无反应**，
+  /// 用户停留在已登录的 App 里继续用，退出登录要等下次冷启动才生效。
+  static void goToLogin(BuildContext context, {required String loginRouteName}) {
+    Navigator.of(context).pushNamedAndRemoveUntil(loginRouteName, (route) => false);
+  }
 }

@@ -55,6 +55,19 @@ class WordApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // R3-L07：`disposeServiceLocator()`（进程 detach）会 `sl.reset()` 掉全部注册，
+    // 而 `setupServiceLocator()` 只在 bootstrap 跑一次。平台允许同一个 engine
+    // detach 后**再次 attach**（此时 widget 树并未拆除、本 build 会重跑），
+    // 若不管，下一行的 `sl<AudioService>()` 就会抛
+    // `StateError: Object/factory with type AudioService is not registered`
+    //（且 TTS 等静态单例已被 release，发音会永久失效）。
+    // `ensureServiceLocatorReady` 内部只在「注册表为空」时才重建，
+    // 已注册时是单次 `isRegistered` 判断，开销可忽略。
+    //
+    // 这里 `unawaited` 是安全的：该函数体内**没有任何 await 点**
+    //（`setupServiceLocator` 全是同步的 `_reg` 调用），同步返回前注册已完成，
+    // 所以下一行的 `sl<AudioService>()` 一定能取到。
+    unawaited(ensureServiceLocatorReady());
     return buildWordAudioScope(
       audioService: sl<AudioService>(),
       // [1] WordAudio — core/audio 音频会话/播放态。✅ 被全部下游会话页（learn/review/spell/dictation）消费；无上游 provider 依赖，故放最外。

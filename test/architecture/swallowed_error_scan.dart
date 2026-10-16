@@ -197,14 +197,41 @@ int _skipWs(String s, int i) {
 bool _reports(String body) =>
     body.contains('reportSwallowedError') || body.contains('rethrow') || body.contains('throwWithStackTrace');
 
-/// 块内、或 catch 所在行的**上一行**，是否有带非空理由的豁免标记。
+/// 「吞错豁免」标记的搜索窗口：从**所属 `try` 之前**到 catch 块结束。
+///
+/// 为什么不能只往前取一行（2026-10-16 审计复核发现）：
+/// 最自然的写法是把标记放在 **try 体内、紧贴 `} catch`**：
+/// ```dart
+/// try {
+///   g();
+///   // 吞错豁免: 有外层兜底
+/// } catch (_) {}
+/// ```
+/// 此时标记与 `catch` **不在同一行**，只往前取一行会漏掉它 ⇒ 明明标了豁免却报违规，
+/// 使用者只能把标记搬到 catch 体内，而那里往往正是「不该塞注释」的位置。
+/// 现改为把窗口起点回溯到 `try` 所在**行首**：标记写在 try 内 / catch 内 /
+/// try 或 catch 的上一行都算。
+///
+/// ⚠️ 起点必须在**原始源码**上按「行」回溯，不能用 `stripped.rawOf()` 映射 ——
+/// 注释已被剥离，映射回来的行首会**落在注释之后**，反而把标记排除在窗口外
+/// （本改动第一版就踩了这个，表现为「标记在 try 上一行」判违规）。
+int _exemptionRawWindowStart(String rawSrc, StrippedSource stripped, int codeCatchStart) {
+  final before = stripped.code.substring(0, codeCatchStart);
+  final tryIdx = before.lastIndexOf(RegExp(r'\btry\b'));
+  // try 的原始偏移作为锚点；再往前取一行以覆盖「标记写在 try 上一行」。
+  final rawAnchor = tryIdx >= 0 ? stripped.rawOf(tryIdx) : stripped.rawOf(codeCatchStart);
+  final prevNl = rawAnchor > 0 ? rawSrc.lastIndexOf('\n', rawAnchor - 1) : -1;
+  if (prevNl < 0) return 0;
+  // 再往前一行，容纳「标记在 try 上一行」的写法。
+  final prevPrevNl = prevNl > 0 ? rawSrc.lastIndexOf('\n', prevNl - 1) : -1;
+  return prevPrevNl < 0 ? 0 : prevPrevNl + 1;
+}
+
+/// try/catch 语句范围内，是否有带非空理由的豁免标记。
 bool _exempt(String rawSrc, StrippedSource stripped, int codeCatchStart, int codeBlockEnd) {
-  final rawStart = stripped.rawOf(codeCatchStart);
-  final rawEnd = stripped.rawOf(codeBlockEnd);
-  // 往前多取一行，覆盖「标记写在 catch 上一行」的写法
-  final prevNl = rawSrc.lastIndexOf('\n', rawStart > 0 ? rawStart - 1 : 0);
-  final from = prevNl < 0 ? 0 : prevNl + 1;
-  final to = rawEnd > rawSrc.length ? rawSrc.length : rawEnd;
+  final rawBlockEnd = stripped.rawOf(codeBlockEnd);
+  final from = _exemptionRawWindowStart(rawSrc, stripped, codeCatchStart);
+  final to = rawBlockEnd > rawSrc.length ? rawSrc.length : rawBlockEnd;
   if (from >= to) return false;
 
   final window = rawSrc.substring(from, to);

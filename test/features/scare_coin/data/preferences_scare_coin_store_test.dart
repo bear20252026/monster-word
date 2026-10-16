@@ -117,6 +117,15 @@ void main() {
         'id INTEGER PRIMARY KEY AUTOINCREMENT, time_ms INTEGER NOT NULL, delta INTEGER NOT NULL, reason TEXT NOT NULL)',
       );
       await db.execute('CREATE TABLE IF NOT EXISTS scare_coin_meta (key TEXT PRIMARY KEY, value INTEGER NOT NULL)');
+      // ⚠️ 这两张表必须一起建：签到走的是「带事件键」的写事务（`applyDeltaWithEvent`
+      // 占 `reward_events` 的 UNIQUE 键），日期落 `checkin_dates`。
+      // 少任何一张，写事务都会抛错 ⇒ R3-D08 的「整体降级纯 SP」语义生效
+      // ⇒ 断言「流水入 SQLite 表」会看到空表（CI 已因此红过一次）。
+      // 本 group 验的是**正常记账路径**，因此必须给足正常路径所需的表。
+      await db.execute('CREATE TABLE IF NOT EXISTS checkin_dates (date TEXT PRIMARY KEY)');
+      await db.execute(
+        'CREATE TABLE IF NOT EXISTS reward_events (event_key TEXT PRIMARY KEY, created_at INTEGER NOT NULL)',
+      );
     });
 
     tearDown(() async {

@@ -23,6 +23,7 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
@@ -31,6 +32,8 @@ import 'package:word_app/widgets/mw_modal.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:word_app/tokens/func_colors.dart';
+
+part 'more_settings_dialogs.dart';
 
 /// 更多设置页
 class MoreSettingsPage extends StatefulWidget {
@@ -64,189 +67,6 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           }
         })
         .catchError((e) => debugLog('读取应用版本失败: $e'));
-  }
-
-  /// 违法不良信息举报：展示官方举报渠道（中央网信办 12377 / 公安 110 / 应用内反馈）。
-  void _showReportDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.skin.colors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
-        title: Column(
-          children: [
-            Icon(Icons.flag_rounded, size: 40, color: context.skin.colors.danger),
-            SizedBox(height: 8),
-            Text('举报渠道', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('如发现违法和不良信息，可通过以下官方渠道举报：', style: MwTypography.bodySm.copyWith(color: context.skin.colors.text2)),
-            SizedBox(height: 12),
-            _reportChannel('中央网信办举报中心', '电话 12377 · 官网 www.12377.cn'),
-            SizedBox(height: 8),
-            _reportChannel('公安报警', '电话 110'),
-            SizedBox(height: 8),
-            _reportChannel('应用内问题反馈', '帮助与反馈入口'),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: context.skin.colors.accent,
-              foregroundColor: context.skin.colors.onGlassAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('知道了'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _reportChannel(String title, String detail) {
-    final skin = context.skin.colors;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('· ', style: TextStyle(fontWeight: FontWeight.bold)),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: MwTypography.bodySm.copyWith(color: skin.text1, fontWeight: FontWeight.w600),
-              ),
-              Text(detail, style: MwTypography.caption.copyWith(color: skin.text3)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 关于我们弹窗（真实版本号 + 官网信息）。
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.skin.colors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
-        title: Column(
-          children: [
-            const MonsterIcon(size: 40, showCircle: true),
-            SizedBox(height: 8),
-            Text('Monster Word', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _appVersion.isEmpty ? '正在读取版本…' : '版本 $_appVersion',
-              style: MwTypography.body.copyWith(color: context.skin.colors.text2),
-            ),
-            SizedBox(height: 8),
-            Text('Monster Word · 科学背单词', style: MwTypography.bodySm.copyWith(color: context.skin.colors.text3)),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: context.skin.colors.accent,
-              foregroundColor: context.skin.colors.onGlassAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('知道了'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 评价应用弹窗（5星评分）
-  void _showRatingDialog(BuildContext context) {
-    int rating = 0;
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: context.skin.colors.cardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
-          title: Column(
-            children: [
-              Icon(Icons.star_rounded, size: 44, color: context.skin.colors.accent),
-              SizedBox(height: 8),
-              Text('给个好评吧！', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('您的支持是我们前进的动力', style: MwTypography.body.copyWith(color: context.skin.colors.text2)),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (i) {
-                  return GestureDetector(
-                    onTap: () => setDialogState(() => rating = i + 1),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
-                      child: Icon(i < rating ? Icons.star : Icons.star_border, color: FuncColors.ratingStar, size: 36),
-                    ),
-                  );
-                }),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('取消', style: TextStyle(color: context.skin.colors.text3)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.skin.colors.accent,
-                foregroundColor: context.skin.colors.onGlassAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
-              ),
-              onPressed: rating == 0
-                  ? null
-                  : () async {
-                      Navigator.pop(ctx);
-                      // 评分走真实动作：好评跳仓库页（可 Star），低分引导到应用内反馈。
-                      if (rating >= 4) {
-                        showMwSnackBar(
-                          context,
-                          SnackBar(
-                            content: Text('感谢您的 $rating 星好评！欢迎去 GitHub 给我们点一个 Star'),
-                            backgroundColor: context.skin.colors.success,
-                          ),
-                        );
-                        await launchUrl(Uri.parse(appGitHubRepoUrl), mode: LaunchMode.externalApplication);
-                      } else {
-                        showMwSnackBar(
-                          context,
-                          SnackBar(
-                            content: Text('感谢反馈！已为您打开意见反馈页，帮我们做得更好'),
-                            backgroundColor: context.skin.colors.success,
-                          ),
-                        );
-                        Navigator.pushNamed(context, RouteNames.feedback);
-                      }
-                    },
-              child: const Text('提交'),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   /// 检查更新：真实请求 GitHub Releases 最新 tag 与当前版本比较。
@@ -578,7 +398,9 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         iconColor: MwColors.warning,
         title: '评价应用',
         subtitle: _appVersion.isEmpty ? null : 'v$_appVersion',
-        onTap: () => _showRatingDialog(context),
+        // 弹窗本身是 async（好评分支要 await launchUrl）⇒ 显式 unawaited，
+        // 避免 unawaited_futures（本仓 lint 全当失败）
+        onTap: () => unawaited(_showRatingDialog(context)),
       ),
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(
@@ -736,7 +558,8 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         iconColor: skin.colors.text3,
         title: '关于我们',
         subtitle: _appVersion.isEmpty ? null : 'v$_appVersion',
-        onTap: () => _showAboutDialog(context),
+        // 版本号由调用方注入：弹窗实现已外移到 part 文件，不再能读本 State 的 _appVersion
+        onTap: () => _showAboutDialog(context, _appVersion),
       ),
     ]);
   }
@@ -799,12 +622,47 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           onTap: () {
             Navigator.pop(context);
             // MW-63：登出等待 durable 清理完成（fire-and-forget 曾有 restore 竞态）
-            unawaited(context.read<AppSessionController>().logout());
+            //
+            // R3-A05（2026-10-16）：登出后必须**离开已登录界面**。
+            // 原实现只 `unawaited(logout())`——而 `isLoggedIn` 全库只有 Splash 消费
+            // ⇒ 界面毫无反应，用户停留在「已登出但照常用」的状态里，
+            // 退出登录要等下次冷启动才生效；与 R3-A01 叠加时，这段「已登出仍在用」
+            // 产生的数据仍记在旧账号名下。
+            //
+            // 现在：await 登出（保证 durable 清理与内存态都落定）→ 再跳登录页并清栈。
+            // 即使登出内部抛错也照样跳转——**不能把用户留在已登录界面**，
+            // 那比「清理不彻底」危险得多（登出方向宁可少留态）。
+            unawaited(_logoutAndReturnToLogin(context));
           },
           fillColor: context.skin.colors.danger,
         ),
       ],
     );
+  }
+
+  /// 登出并返回登录页（清空路由栈）。
+  ///
+  /// 语义要求：**无论登出成功与否都必须跳转**——把用户留在已登录界面比
+  /// 「清理不彻底」危险得多（登出方向宁可少留态）。
+  ///
+  /// 实现上刻意**不用 `finally`**：`control_flow_in_finally` 会报
+  /// 「`return` in a finally clause」（本仓 lint 全当失败），而且吞掉异常会让
+  /// 失败完全不可观测。这里用 `catch` 捕获后上报 + 不重抛，跳转写在 try/catch
+  /// **之外**，既满足「必定跳转」又保留可观测性。
+  Future<void> _logoutAndReturnToLogin(BuildContext context) async {
+    final session = context.read<AppSessionController>();
+    try {
+      await session.logout();
+    } catch (e, s) {
+      // 清理失败仍要登出界面：本地内存态已由 logout 内部尽力复位，
+      // 剩下的交给上报（不重抛——重抛会让下面的跳转被跳过）。
+      reportSwallowedError('退出登录清理失败（仍将跳转登录页）', e, s);
+    }
+    if (!context.mounted) return;
+    // 用 RouteNames.login 而非 LoginPage.routeName：后者需要跨 feature 引
+    // account/presentation，而跨 feature 只允许引 application 层
+    // （见 scripts/check_import_guard.dart）。二者取值相同（都是 '/login'）。
+    NavUtils.goToLogin(context, loginRouteName: RouteNames.login);
   }
 
   Widget _buildNav(SkinSystem skin) {
