@@ -23,6 +23,7 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
@@ -640,17 +641,28 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   }
 
   /// 登出并返回登录页（清空路由栈）。
+  ///
+  /// 语义要求：**无论登出成功与否都必须跳转**——把用户留在已登录界面比
+  /// 「清理不彻底」危险得多（登出方向宁可少留态）。
+  ///
+  /// 实现上刻意**不用 `finally`**：`control_flow_in_finally` 会报
+  /// 「`return` in a finally clause」（本仓 lint 全当失败），而且吞掉异常会让
+  /// 失败完全不可观测。这里用 `catch` 捕获后上报 + 不重抛，跳转写在 try/catch
+  /// **之外**，既满足「必定跳转」又保留可观测性。
   Future<void> _logoutAndReturnToLogin(BuildContext context) async {
     final session = context.read<AppSessionController>();
     try {
       await session.logout();
-    } finally {
-      if (!context.mounted) return;
-      // 用 RouteNames.login 而非 LoginPage.routeName：后者需要跨 feature 引
-      // account/presentation，而跨 feature 只允许引 application 层
-      // （见 scripts/check_import_guard.dart）。二者取值相同（都是 '/login'）。
-      NavUtils.goToLogin(context, loginRouteName: RouteNames.login);
+    } catch (e, s) {
+      // 清理失败仍要登出界面：本地内存态已由 logout 内部尽力复位，
+      // 剩下的交给上报（不重抛——重抛会让下面的跳转被跳过）。
+      reportSwallowedError('退出登录清理失败（仍将跳转登录页）', e, s);
     }
+    if (!context.mounted) return;
+    // 用 RouteNames.login 而非 LoginPage.routeName：后者需要跨 feature 引
+    // account/presentation，而跨 feature 只允许引 application 层
+    // （见 scripts/check_import_guard.dart）。二者取值相同（都是 '/login'）。
+    NavUtils.goToLogin(context, loginRouteName: RouteNames.login);
   }
 
   Widget _buildNav(SkinSystem skin) {
