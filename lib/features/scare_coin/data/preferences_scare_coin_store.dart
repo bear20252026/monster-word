@@ -157,6 +157,13 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     final iso = _iso(now);
     final prefs = await SharedPreferences.getInstance();
 
+    // R3-D08 的两个降级标志：
+    // - sqliteRetryWithEvent：首次事务失败 ⇒ 先「带事件键重试」，保住幂等硬闸；
+    // - usedSqliteFallback：带事件键重试也失败（或账本已不可用）⇒ 才降级纯 SP，
+    //   此时必须把读路径也固定到 SP（否则写 SP 读账本，余额看起来没变）。
+    var sqliteRetryWithEvent = false;
+    var usedSqliteFallback = false;
+
     // ── P1-03：SQLite 模式——「签到事件 + 断签回填 + +10 币 + 流水 + 日历」
     // 同库事务；event_key = checkin:<date> UNIQUE 保证并发 N 个签到只发一次
     // （MW-23），不再依赖 SP 读改写与 UI 防抖。
@@ -184,8 +191,61 @@ class PreferencesScareCoinStore implements ScareCoinStore {
       } on RewardEventDuplicate {
         return null; // 并发重复签到：第二者拿不到事件即无事发生
       } catch (e, s) {
-        reportSwallowedError('SQLite 签到事务失败，回退 SP 路径', e, s);
-        // 落入下方 SP 路径（历史快照仍有幂等双闸）。
+        reportSwallowedError('SQLite 签到事务失败，按 SP 快照口径重试', e, s);
+        // R3-D08（2026-10-16）：事务失败后**不能**天真地「落入下方 SP 路径」。
+        //
+        // 原实现只是不 return，让控制流落到下面的 SP 分支；但那个分支调用的
+        // `_apply` 内部会**重新取一次账本**（`_sqliteLedger()`），而失败发生在
+        // **事务执行期**（开库是好的）⇒ 账本仍可用 ⇒ 它又走
+        // `ledger.applyDelta`，于是「回退」根本没换源，只是**退化成了一条
+        // 不占 `checkin:<date>` 事件键的普通流水**。
+        // 后果：本次 +10 落进了账本，幂等键却没被占；若同期 SP 标记
+        // （`last_checkin`）也写失败，「每日最多一次」的两道闸同时失守
+        // ⇒ 同一自然日可重复领取。
+        //
+        // 另一条**不能走**的岔路：强制写纯 SP 快照。因为 `balance()` 读取时
+        // 同样偏好账本（`if (ledger != null) return ledger.balance()`），
+        // 写 SP 而读账本 ⇒ 用户看到「+10 成功」但余额纹丝不动，比原缺陷更糟。
+        //
+        // 正解（两步降级）：
+        //   ① 先用**带事件键**的写入重试一次 —— 现实中的失败（锁竞争、
+        //      瞬时 IO 错误）在这步就恢复，幂等键被正确占用（见下方 retry 块）；
+        //   ② 重试仍失败才承认降级，但**写与读必须同源**，否则余额看起来没变。
+        sqliteRetryWithEvent = true;
+      }
+    }
+
+    // R3-D08 两步降级之第 ①步：用带事件键的账本写入重试，保住幂等硬闸。
+    if (sqliteRetryWithEvent) {
+      final retryLedger = await _sqliteLedger();
+      if (retryLedger != null) {
+        try {
+          if (await retryLedger.hasRewardEvent('checkin:$iso')) return null;
+          final retryBalance = await retryLedger.applyDeltaWithEvent(
+            delta: checkInReward,
+            entry: ScareCoinEntry(time: DateTime.now(), delta: checkInReward, reason: '每日签到'),
+            eventKey: 'checkin:$iso',
+          );
+          await retryLedger.addCheckinDates({iso});
+          final saved = await prefs.setString(lastCheckInKey, iso);
+          if (!saved) {
+            reportSwallowedError('签到日期标记写入失败', StateError('setString returned false'), StackTrace.current);
+          }
+          await _maybeIssueProtection(prefs, ledger: retryLedger);
+          return retryBalance;
+        } on RewardEventDuplicate {
+          return null;
+        } catch (e, s) {
+          // 带事件键的重试也失败。此时账本**仍可用**（能取到 dao、只是写事务
+          // 一直炸），所以**不能**强制 SP：那会写 SP 而 balance() 读账本
+          // ⇒ 用户看到「+10 成功」但余额不变，比原缺陷更糟。
+          // 这里保持 forceSpSnapshot=false（写读同源），并把这次降级**明显上报**：
+          // 本次入账缺少事件键保护，是已知的可观测残余风险。
+          reportSwallowedError('SQLite 带事件键重试仍失败：本次签到无事件键保护（写读仍同源，余额一致）', e, s);
+        }
+      } else {
+        // 账本此刻不可用 ⇒ SP 路径本来就是正确的源，写读都在 SP，口径一致。
+        usedSqliteFallback = true;
       }
     }
 
@@ -203,9 +263,16 @@ class PreferencesScareCoinStore implements ScareCoinStore {
       // M9：签到日历集合写失败不阻断主流程，但须上报（连签展示可能缺天）。
       reportSwallowedError('scare_coin checkin dates persist', e, s);
     }
-    final newBalance = await _apply(delta: checkInReward, reason: '每日签到', lastCheckInIso: iso);
+    final newBalance = await _apply(
+      delta: checkInReward,
+      reason: '每日签到',
+      lastCheckInIso: iso,
+      // R3-D08：仅当账本真的不可用时才强制 SP；否则 _apply 走账本是**对的**
+      // （与 balance() 的读路径同源），此时事件键已由上面的路径占用。
+      forceSpSnapshot: usedSqliteFallback,
+    );
     // 连签 7 倍数自动发卡（满额跳过发放但仍标记，避免无限囤积）。
-    await _maybeIssueProtection(prefs);
+    await _maybeIssueProtection(prefs, forceSpSnapshot: usedSqliteFallback);
     return newBalance;
   }
 
@@ -388,7 +455,14 @@ class PreferencesScareCoinStore implements ScareCoinStore {
 
   /// 连签 7 倍数发卡（去重标记防重复领，满额只标记不发放）。
   /// [ledger] 非 null 时流水走 SQLite（签到事务同域）；null 走 SP 快照。
-  Future<void> _maybeIssueProtection(SharedPreferences prefs, {ScareCoinLedgerDao? ledger}) async {
+  /// [forceSpSnapshot] 为 true 时无视 [ledger] 强制走 SP 流水（R3-D08：
+  /// SQLite 事务失败后的降级必须一路贯彻，不能只降币不降流水）。
+  Future<void> _maybeIssueProtection(
+    SharedPreferences prefs, {
+    ScareCoinLedgerDao? ledger,
+    bool forceSpSnapshot = false,
+  }) async {
+    final effectiveLedger = forceSpSnapshot ? null : ledger;
     final newStreak = await streak();
     if (newStreak <= 0 || newStreak % 7 != 0) return;
     final issued = (prefs.getStringList(protectionIssuedKey) ?? const <String>[]).toSet();
@@ -401,14 +475,14 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     final count = prefs.getInt(protectionKey) ?? 0;
     if (count >= protectionCapValue) {
       // 满额只标记不发放，但留一条流水：否则审计面上「视为已发」却查无此事。
-      await _recordZeroDelta(ledger, prefs, '连签$newStreak天·发卡满额未发放');
+      await _recordZeroDelta(effectiveLedger, prefs, '连签$newStreak天·发卡满额未发放');
       return;
     }
     if (!await prefs.setInt(protectionKey, count + 1)) {
       reportSwallowedError('连签发卡：库存写失败（卡未到账）', StateError('SP write returned false'), StackTrace.current);
       return;
     }
-    await _recordZeroDelta(ledger, prefs, '连签$newStreak天·保护卡＋1');
+    await _recordZeroDelta(effectiveLedger, prefs, '连签$newStreak天·保护卡＋1');
   }
 
   /// 零变动流水：ledger 在则 SQLite（失败不阻断），否则 SP 快照。
@@ -459,9 +533,24 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   Future<int> grant({required int delta, required String reason}) =>
       _serialized(() => _apply(delta: delta, reason: reason));
 
-  Future<int> _apply({required int delta, required String reason, String? lastCheckInIso}) async {
+  /// [forceSpSnapshot] 为 true 时**强制走纯 SP 分支**（账本可用也不碰）。
+  ///
+  /// 只有一种调用场景需要它（R3-D08）：签到路径的账本**真的取不到**
+  /// （`_sqliteLedger()` 返回 null）。此时 `balance()` 同样读不到账本，
+  /// 写 SP + 读 SP 口径一致。
+  ///
+  /// ⚠️ **不要**在「账本可用、只是写事务失败」时用它：`balance()` 读时偏好账本
+  /// （`if (ledger != null) return ledger.balance()`），写 SP 而读账本会让用户
+  /// 看到「+10 成功」但余额纹丝不动 —— 比漏占幂等键更糟。那种情况应留在账本
+  /// 里（写读同源），靠上层带事件键重试来补幂等。
+  Future<int> _apply({
+    required int delta,
+    required String reason,
+    String? lastCheckInIso,
+    bool forceSpSnapshot = false,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
-    final ledger = await _sqliteLedger();
+    final ledger = forceSpSnapshot ? null : await _sqliteLedger();
     if (ledger != null) {
       // 余额变动与流水追加同事务：负余额拒绝时两者都不落库，
       // 语义与 SP 路径的 TOCTOU 守卫一致。
