@@ -34,12 +34,40 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# ---- 0) 解析参数：--direct 应急直推 ----
+# ---- 0) 解析参数：--help / --direct / 自定义提交信息 ----
 DIRECT_PUSH=0
-if [ "${1:-}" = "--direct" ]; then
-  DIRECT_PUSH=1
-  shift
-fi
+case "${1:-}" in
+  -h|--help)
+    cat <<'USAGE'
+用法：
+  bash scripts/auto_sync.sh ["自定义提交信息"]      # 默认：走 PR（推 auto-sync/<日期> 分支）
+  bash scripts/auto_sync.sh --direct [...]          # 应急：绕过 PR 直推 main
+  bash scripts/auto_sync.sh --help                  # 显示本帮助
+
+默认路径（走 PR）：
+  1) 在 main 上提交本次变更
+  2) 推到 auto-sync/<当天日期> 分支（同日多次运行复用同一分支）
+  3) 用 gh 开/更新 PR，等 CI 绿了在 GitHub 上合并
+  ⚠️ 合并请用 merge commit（本仓惯例，不要 squash）：gh pr merge <n> --merge
+
+应急路径（--direct）：
+  直接推 origin/main，跳过 CI 门禁。仅用于 CI 挂掉/离线等需要抢通的场景。
+  若 main 已开启分支保护，本路径会失败 —— 那是预期行为，请改用默认路径。
+
+安全校验（两条路径都会执行，失败即中止，不会推送）：
+  · 单文件 >90MB 拒绝提交（GitHub 硬限制 100MB）
+  · staged 中出现 dist/ build/ releases/ work/ logs/ 路径拒绝
+  · staged 中出现 *.jks / *.keystore / android/key.properties 拒绝
+
+守卫测试：bash scripts/test_auto_sync_size_guard.sh
+USAGE
+    exit 0
+    ;;
+  --direct)
+    DIRECT_PUSH=1
+    shift
+    ;;
+esac
 
 # ---- 0.1) 前置校验：仓库状态健康 ----
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
