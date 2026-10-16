@@ -41,5 +41,17 @@ jobs:
         # info 已清零（2026-09-26）：默认 fatal-infos / fatal-warnings，0 issue 才放行。
         run: flutter analyze
 
+      - name: Verify deploy/sync shell scripts
+        shell: bash
+        # auto_sync.sh 的守卫（R3-E03 改造 + 大文件拦截修复）。
+        # 为什么必须进 CI：这道 90MB 拦截自 2026-08-31 事故后建立以来
+        # **一直是空转的**（把 `git status --porcelain` 的整行当路径），
+        # 而它是「构建产物/安装包塞进仓库」的唯一防线。
+        # 纯 shell，不依赖 Flutter，在临时仓库里真跑脚本。
+        run: |
+          bash -n scripts/auto_sync.sh
+          bash -n scripts/test_auto_sync_size_guard.sh
+          bash scripts/test_auto_sync_size_guard.sh
+
       - name: Run tests
         run: flutter test --no-pub

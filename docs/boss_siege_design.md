@@ -98,5 +98,5 @@
 
 ## 九、并发提醒
 
-本仓同一工作树可能被多个会话同时占用（`scripts/auto_sync.sh` 每小时只在 main 上提交）。
+本仓同一工作树可能被多个会话同时占用（`scripts/auto_sync.sh` 会在 main 上提交，并把变更推到 `auto-sync/<日期>` 分支开 PR）。
 实施前必须 `git branch --show-current` + `git fetch` 核对基线；checkout 停在他人分支上时不要在此 `git add lib/ test/`。
