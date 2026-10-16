@@ -21,7 +21,31 @@ void main() {
       expect(source.requestedBookId, 11);
       expect(source.requestedLimit, 50);
       expect(source.requestedOffset, 0);
+      expect(source.requestedRandom, isFalse, reason: 'shuffle=false 必须走顺序分页路径');
       expect(queue.map((word) => word.word), ['first', 'second']);
+    });
+
+    test('shuffle=true 走数据层随机取样而非顺序分页（R3-D02）', () async {
+      final source = _FakeWordSource(
+        bookWords: [
+          Word(id: 1, word: 'first'),
+          Word(id: 2, word: 'second'),
+          Word(id: 3, word: 'third'),
+        ],
+      );
+      final repository = LearningQueueRepository(wordSource: source, favRepository: _FakeFavRepository());
+      final book = Book(id: 11, code: 'CET4', name: '四级', wordCount: 3);
+
+      final queue = await repository.loadBook(book, limit: 2, shuffle: true);
+
+      expect(source.requestedRandom, isTrue, reason: 'shuffle=true 必须走随机取样端口');
+      expect(source.requestedBookId, 11);
+      expect(source.requestedLimit, 2);
+      expect(queue.length, 2);
+      // 取到的是全书子集（随机取样只返回 limit 个，而非整本再截断）
+      for (final word in queue) {
+        expect(['first', 'second', 'third'], contains(word.word));
+      }
     });
 
     test('收藏词在全库未解析到词条时回退当前学习队列', () async {
@@ -54,6 +78,7 @@ class _FakeWordSource implements LearningQueueWordSource {
   int? requestedBookId;
   int? requestedLimit;
   int? requestedOffset;
+  bool requestedRandom = false;
   Set<String>? requestedNames;
 
   @override
@@ -67,6 +92,14 @@ class _FakeWordSource implements LearningQueueWordSource {
     requestedLimit = limit;
     requestedOffset = offset;
     return List<Word>.from(_bookWords);
+  }
+
+  @override
+  Future<List<Word>> getRandomWordsByBook(int bookId, {required int limit}) async {
+    requestedBookId = bookId;
+    requestedLimit = limit;
+    requestedRandom = true;
+    return List<Word>.from(_bookWords).take(limit).toList();
   }
 
   @override

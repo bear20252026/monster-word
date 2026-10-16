@@ -7,6 +7,9 @@ import 'package:word_app/core/repositories/fav_repository.dart';
 abstract interface class LearningQueueWordSource {
   Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset, bool randomOrder = false});
 
+  /// 随机取样 [limit] 个词（R3-D02：两步式，取代 SQL `ORDER BY RANDOM()`）。
+  Future<List<Word>> getRandomWordsByBook(int bookId, {required int limit});
+
   Future<List<Word>> getWordsByNames(Iterable<String> words);
 }
 
@@ -19,6 +22,11 @@ class WordBookLearningQueueWordSource implements LearningQueueWordSource {
   @override
   Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset, bool randomOrder = false}) {
     return _database.getWordsByBook(bookId, limit: limit, offset: offset, randomOrder: randomOrder);
+  }
+
+  @override
+  Future<List<Word>> getRandomWordsByBook(int bookId, {required int limit}) {
+    return _database.getRandomWordsByBook(bookId, limit: limit);
   }
 
   @override
@@ -38,8 +46,11 @@ class LearningQueueRepository {
   final FavRepository _favRepository;
 
   Future<List<Word>> loadBook(Book book, {required int limit, required bool shuffle}) async {
-    // shuffle=true 时 SQL 层随机取样（随机取 50 个），再交给上层字母分散洗牌
-    final queue = await _wordSource.getWordsByBook(book.id, limit: limit, offset: 0, randomOrder: shuffle);
+    // shuffle=true 时在数据层等概率随机取样（R3-D02：两步式采样，不再用
+    // SQL `ORDER BY RANDOM()` 把整本书物化进临时 B-tree）。
+    final queue = shuffle
+        ? await _wordSource.getRandomWordsByBook(book.id, limit: limit)
+        : await _wordSource.getWordsByBook(book.id, limit: limit, offset: 0);
     if (shuffle) queue.shuffle();
     return queue;
   }

@@ -2,8 +2,10 @@
 // WordRepositoryImpl — 单词数据仓库实现
 
 import 'dart:async';
+import 'dart:math' show Random;
 
 import 'package:path/path.dart' as p;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart' show Database;
 
 import 'package:word_app/core/infrastructure/cn_search_index.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
@@ -19,6 +21,10 @@ class WordRepositoryImpl implements WordRepository {
 
   @override
   Future<List<Word>> getWordsByBookId(int bookId, {int? limit, int? offset}) async {
+    // query-plan-ok: 本查询按 `ORDER BY wb.rowid`（word_books 的**聚簇序**）驱动，
+    // 与 idx_wb_book 的物理序一致 ⇒ 命中即停、无需排序，不存在 R3-D02 的随机回表。
+    // 真库实测 book 213 LIMIT 50 = 4.3ms（对照：改成子查询的取词路径同口径 ~9ms）。
+    // 保留 JOIN 是因为这里确实要遍历 word_books 的连续区间。
     final maps = await _database.db.rawQuery(
       '''
       SELECT w.* FROM words w
@@ -248,16 +254,57 @@ class WordRepositoryImpl implements WordRepository {
 
   @override
   Future<List<Word>> getRandomWords(int count, {int? excludeBookId}) async {
+    if (count <= 0) return const [];
     final db = _database.db;
     // 安全审计 R4：words 表无 book_id 列（关联在 word_books），用子查询排除。
     // 审计 I21：NOT IN 子查询对大表是 O(N×M) 物化比对，NOT EXISTS 走关联
     // 索引逐行短路，随机取样不再随词书规模劣化。
-    final where = excludeBookId != null
+    final excludeFilter = excludeBookId != null
         ? 'NOT EXISTS (SELECT 1 FROM word_books wb WHERE wb.word_id = words.id AND wb.book_id = ?)'
         : null;
-    final whereArgs = excludeBookId != null ? [excludeBookId] : null;
-    final maps = await db.query('words', where: where, whereArgs: whereArgs, orderBy: 'RANDOM()', limit: count);
-    return maps.map((m) => Word.fromMap(m)).toList();
+    // 性能审计 R3-D02（2026-10-16 复核后改写）：原 `orderBy: 'RANDOM()' LIMIT count`
+    // 让 SQLite 把**整张 words 表**（77 万行 / 232MB）物化进临时 B-tree 才能取
+    // count 行。改为两步式：
+    //   ① 只取通过筛选的 id（纯整数列，不碰大字段）；
+    //   ② Dart 侧部分 Fisher-Yates 抽样后按主键批量取行。
+    // 抽样结果与 ORDER BY RANDOM() 同为无放回等概率（每词被抽中概率 count/N）。
+    final idRows = await db.rawQuery(
+      'SELECT id FROM words'
+      '${excludeFilter != null ? ' WHERE $excludeFilter' : ''}',
+      excludeFilter != null ? [excludeBookId] : null,
+    );
+    if (idRows.isEmpty) return const [];
+    final ids = [for (final row in idRows) row['id'] as int];
+    if (ids.length <= count) {
+      return _wordsByIds(db, ids);
+    }
+    // 部分 Fisher-Yates：只洗出前 count 个位置（O(count)，不洗全表）
+    final rng = Random();
+    for (var i = 0; i < count; i++) {
+      final j = i + rng.nextInt(ids.length - i);
+      final tmp = ids[i];
+      ids[i] = ids[j];
+      ids[j] = tmp;
+    }
+    return _wordsByIds(db, ids.sublist(0, count));
+  }
+
+  /// 按主键批量取词（内部工具；分批规避 SQLite 参数上限）。
+  Future<List<Word>> _wordsByIds(Database db, List<int> ids) async {
+    if (ids.isEmpty) return const [];
+    final result = <Word>[];
+    for (var i = 0; i < ids.length; i += 500) {
+      final batch = ids.sublist(i, (i + 500).clamp(0, ids.length));
+      final placeholders = List.filled(batch.length, '?').join(',');
+      final maps = await db.rawQuery('SELECT * FROM words WHERE id IN ($placeholders)', batch);
+      result.addAll(maps.map(Word.fromMap));
+    }
+    // 保持抽样次序（调用方按返回顺序使用）
+    final byId = {for (final word in result) word.id: word};
+    return [
+      for (final id in ids)
+        if (byId[id] != null) byId[id]!,
+    ];
   }
 
   @override
