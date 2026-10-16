@@ -119,8 +119,41 @@ while IFS= read -r line; do
 done <<< "$CHANGES"
 
 # ---- 2.5) 格式化（与 CI dart.yml 的 --line-length 120 对齐；formatter.page_width 已写入 analysis_options）----
-echo "[auto_sync] dart format ..."
-dart format lib/ test/ >/dev/null 2>&1
+#
+# ⚠️ 2026-10-16 实测：裸 `dart format` 在**本机**会**挂死**（不是失败，是无限等待）。
+# 原因与 memory 里记的 `dart run <file>` 同源：365vpn 让 dartdev 无法创建匿名管道，
+# 而裸 `dart` 正是走 dartdev 的启动器。原实现没有超时 ⇒ 整个脚本卡在格式化这一步，
+# 既不提交也不报错（本轮真踩：卡了 4 分 55 秒，靠手工杀 dart.exe 才继续）。
+#
+# 两重防护：
+#   ① 优先用 **SDK 内的 dart 二进制**（`.../cache/dart-sdk/bin/dart`）—— 它不经
+#      dartdev，本机可用（`dart.exe format --line-length 120` 已被验证可用）；
+#   ② 加 `timeout` 兜底，且**失败/超时都不阻断提交** —— 格式化是便利功能，
+#      真正的格式门禁在 CI（dart.yml 的 `dart format --set-exit-if-changed`）。
+DART_BIN="$(command -v dart 2>/dev/null || true)"
+for cand in \
+  "${FLUTTER_ROOT:-}/bin/cache/dart-sdk/bin/dart" \
+  "${FLUTTER_HOME:-}/bin/cache/dart-sdk/bin/dart" \
+  /d/flutter/bin/cache/dart-sdk/bin/dart.exe \
+  "$HOME/flutter/bin/cache/dart-sdk/bin/dart" \
+  /usr/local/flutter/bin/cache/dart-sdk/bin/dart
+do
+  if [ -n "$cand" ] && [ -x "$cand" ]; then DART_BIN="$cand"; break; fi
+done
+
+# macOS 默认没有 GNU timeout；没有就退回直接调用（CI/Linux 都有）。
+TIMEOUT_CMD=""
+command -v timeout >/dev/null 2>&1 && TIMEOUT_CMD="timeout 180"
+
+if [ -n "$DART_BIN" ]; then
+  echo "[auto_sync] dart format（$DART_BIN）..."
+  if ! $TIMEOUT_CMD "$DART_BIN" format lib/ test/ >/dev/null 2>&1; then
+    echo "[auto_sync] ⚠️ dart format 未完成或失败 —— 跳过格式化，继续提交（不阻断）"
+    echo "[auto_sync]    （本机若因 365vpn 让 dartdev 挂起属已知问题；格式门禁在 CI）"
+  fi
+else
+  echo "[auto_sync] ⚠️ 未找到 dart，跳过格式化（格式门禁在 CI）"
+fi
 CHANGES="$(git status --porcelain -- lib/ test/ pubspec.yaml pubspec.lock \
   analysis_options.yaml docs/ scripts/ assets/db/ windows/ android/app/ \
   2>/dev/null)"
