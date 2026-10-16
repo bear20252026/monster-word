@@ -257,11 +257,28 @@ class WordRepositoryImpl implements WordRepository {
     if (count <= 0) return const [];
     final db = _database.db;
     // 安全审计 R4：words 表无 book_id 列（关联在 word_books），用子查询排除。
-    // 审计 I21：NOT IN 子查询对大表是 O(N×M) 物化比对，NOT EXISTS 走关联
-    // 索引逐行短路，随机取样不再随词书规模劣化。
-    final excludeFilter = excludeBookId != null
-        ? 'NOT EXISTS (SELECT 1 FROM word_books wb WHERE wb.word_id = words.id AND wb.book_id = ?)'
-        : null;
+    //
+    // 审计 I21 订正（2026-10-16 实测）：I21 曾把这里的 `NOT IN` 换成 `NOT EXISTS`，
+    // 理由「NOT EXISTS 走关联索引逐行短路，不随规模劣化」——**这条只对
+    // 「候选集已被 book_id 索引压小」的场景成立**；这里要的是「扫全表排除某本书」，
+    // `words` 全表扫是必然的（77 万个 id 必须逐个判定），此时相关子查询会对
+    // **每一行**都去探一次 word_books。
+    //
+    // 真库实测（771,251 行 / 232MB，排除 book 213）：
+    //   · NOT EXISTS : 1,349,220ms（≈22.5 分钟）
+    //   · NOT IN     :        869ms
+    //   ⇒ NOT IN 快 **1552×**，且两者结果集**逐字节等价**（759,168 行完全一致）。
+    //
+    // EXPLAIN QUERY PLAN 的差异就是机制本身（这才是可复现的判据）：
+    //   NOT EXISTS → `SCAN words` + **CORRELATED SCALAR SUBQUERY** + `SEARCH wb`
+    //   NOT IN     → `SCAN words` + **LIST SUBQUERY** + `CREATE BLOOM FILTER`
+    // 前者是**相关**子查询（每行重算一次、各自一次 B-tree 下降），后者**只算一次**
+    // 并由 bloom filter 把逐行判定降成常数级位测试。故此处改回 NOT IN。
+    //
+    // ⚠️ 不要把这条结论反向套到别处：带 `WHERE wb.book_id = ?` 把候选压小的场景
+    // （如 wordbook_database.getWordsByBook），NOT EXISTS 仍是更优的。
+    final useExclude = excludeBookId != null;
+    final excludeFilter = useExclude ? 'id NOT IN (SELECT word_id FROM word_books WHERE book_id = ?)' : null;
     // 性能审计 R3-D02（2026-10-16 复核后改写）：原 `orderBy: 'RANDOM()' LIMIT count`
     // 让 SQLite 把**整张 words 表**（77 万行 / 232MB）物化进临时 B-tree 才能取
     // count 行。改为两步式：
@@ -271,7 +288,7 @@ class WordRepositoryImpl implements WordRepository {
     final idRows = await db.rawQuery(
       'SELECT id FROM words'
       '${excludeFilter != null ? ' WHERE $excludeFilter' : ''}',
-      excludeFilter != null ? [excludeBookId] : null,
+      useExclude ? [excludeBookId] : null,
     );
     if (idRows.isEmpty) return const [];
     final ids = [for (final row in idRows) row['id'] as int];
