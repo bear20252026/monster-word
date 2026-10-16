@@ -47,7 +47,11 @@ void main() {
   }
 
   Future<void> createEventTable() async {
-    await db.execute('CREATE TABLE IF NOT EXISTS reward_events (event_key TEXT PRIMARY KEY, created_at INTEGER)');
+    // 与 `user_database.dart::_createRewardTables` 的 schema 逐字对齐
+    //（`created_at INTEGER NOT NULL`），否则测的是「另一个库」。
+    await db.execute(
+      'CREATE TABLE IF NOT EXISTS reward_events (event_key TEXT PRIMARY KEY, created_at INTEGER NOT NULL)',
+    );
   }
 
   Future<void> createCheckinDatesTable() async {
@@ -145,7 +149,14 @@ void main() {
 
       // 账本此刻仍**读得到**（余额 0，因为币落在 SP 而非账本）——
       // 用它证明「读确实会偏好账本」这个前提成立，测试不是空跑。
-      expect(await db.query('scare_coin_meta'), isEmpty, reason: '币没进账本（降级期间写落在 SP）');
+      //
+      // ⚠️ 判据只能是 `scare_coin_entries`（账本流水），**不能**用 `scare_coin_meta`：
+      // meta 里除了余额还有 `migrated_from_sp` 这类**一次性迁移标记**，
+      // 它在首次取库时就会被写入，与该次签到是否降级无关。用它断言「币没进账本」
+      // 会把正常的迁移标记误判成账本被写入（本地 CI 已因此红过一次）。
+      expect(await db.query('scare_coin_entries'), isEmpty, reason: '币没进账本（降级期间写落在 SP）');
+      final metaBalance = await db.query('scare_coin_meta', where: 'key = ?', whereArgs: ['balance']);
+      expect(metaBalance, isEmpty, reason: '账本余额未被签到写入（迁移标记不算）');
 
       // 关键断言：连续多次读都必须稳定命中 SP，不得因为探测而翻回账本。
       for (var i = 0; i < 3; i++) {
