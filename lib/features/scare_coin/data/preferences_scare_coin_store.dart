@@ -54,8 +54,46 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   static const String answerRewardCountKey = 'scare_coin.answer_reward.count';
   static const int reward = 10;
 
-  /// SQLite 模式返回就绪的账本 DAO；测试环境未注入 / 开库失败 → null 走 SP。
-  Future<ScareCoinLedgerDao?> _sqliteLedger() async {
+  /// 进程内「整体降级到 SP」粘性标志（R3-D08 收口）。
+  ///
+  /// 为什么必须是**粘性 + 实例级**，而不是 `_apply` 的局部参数：
+  /// 只让写侧换源是不够的 —— `balance()` / `history()` / `checkinDates()`
+  /// 都是**读侧**，它们同样偏好账本。若只把这一次的币写进 SP、读侧仍走账本，
+  /// 用户会看到「签到成功」但余额纹丝不动 —— 比原缺陷更糟。
+  ///
+  /// 因此把「账本写事务失败 ⇒ 账本这个源此刻不可信」记在实例上，
+  /// 由全类唯一的取库入口 [_sqliteLedger] 统一裁决：置位后**读写一起**
+  /// 回退 SP（写读同源）。
+  ///
+  /// 触发场景真实存在：`reward_events` 是 schema v5 建的、账本表是 v4
+  /// （见 user_database.dart `_onUpgrade`），升级到 v5 中途失败（系统杀进程、
+  /// 磁盘满）会留下「账本在、事件表不在」——此时开库正常但写事务必炸。
+  bool _degradeToSp = false;
+
+  /// 降级后**下一次「写操作」**允许放行一次账本探测（用于自愈）。
+  ///
+  /// ⚠️ 只在写路径放行，**绝不在读路径放行**：
+  /// 降级的语义是「账本这个源此刻不可信」，而判据恰恰是「写事务炸了」。
+  /// 读路径若也去探测，会因为**读没炸**（`scare_coin_entries` 存在、
+  /// `reward_events` 缺失只影响写）而成功返回**账本里偏低的余额** ⇒
+  /// 用户刚看到「签到 +10」紧接着看到余额没变 —— 正是本类反复要避免的
+  /// 「写读不同源」。所以读路径在降级期间一律走 SP；账本是否恢复只由
+  /// **一次真实写入成功**来证明（[_markLedgerHealthy]）。
+  bool _degradeProbePending = false;
+
+  /// SQLite 模式返回就绪的账本 DAO；
+  /// 测试环境未注入 / 开库失败 / 已整体降级 → null 走 SP。
+  ///
+  /// [forWrite] 为 true 表示调用方接下来要**写**账本。只有写路径才消费
+  /// [_degradeProbePending] 的自愈探测机会（原因见其注释）。
+  Future<ScareCoinLedgerDao?> _sqliteLedger({bool forWrite = false}) async {
+    // 已整体降级：默认不再取账本，让所有读写一致地落在 SP 上。
+    // 但保留一次**写入**探测机会：账本可能只是暂时不可写（锁竞争），
+    // 写成功即自愈回账本模式，避免一次抖动把整个会话钉在 SP 上。
+    if (_degradeToSp) {
+      if (!forWrite || !_degradeProbePending) return null;
+      _degradeProbePending = false; // 机会只用一次，成功与否都由后续写入定论
+    }
     final dao = _ledgerDao;
     try {
       await dao.ensureLoaded();
@@ -64,6 +102,22 @@ class PreferencesScareCoinStore implements ScareCoinStore {
       return null;
     }
     return dao.usesSqlite ? dao : null;
+  }
+
+  /// 一次成功的账本写入 ⇒ 账本这个源已恢复可靠，清掉降级标志。
+  ///
+  /// 只有**写成功**才算数：读成功不足以证明表齐全（`scare_coin_entries`
+  /// 读得到、`reward_events` 仍可能缺失）。写路径必然同时触及两张表。
+  void _markLedgerHealthy() {
+    if (!_degradeToSp) return;
+    _degradeToSp = false;
+    _degradeProbePending = false;
+  }
+
+  /// 进入整体降级：后续读写都走 SP，并给下一次写入留一次自愈探测机会。
+  void _enterSpDegradation() {
+    _degradeToSp = true;
+    _degradeProbePending = true;
   }
 
   @override
@@ -81,7 +135,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   Future<Set<String>> checkinDates() async {
     // P1-03：签到日期迁入 user_data.db（与 +10 币同事务域，MW-25 收口）；
     // 首次切换时把 SP 历史快照合并入库（幂等 ignore）。SQLite 不可用回退 SP。
-    final ledger = await _sqliteLedger();
+    // forWrite：本方法含一次合并写（addCheckinDates），算写路径。
+    final ledger = await _sqliteLedger(forWrite: true);
     if (ledger != null) {
       try {
         final dbDates = await ledger.loadCheckinDates();
@@ -167,7 +222,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     // ── P1-03：SQLite 模式——「签到事件 + 断签回填 + +10 币 + 流水 + 日历」
     // 同库事务；event_key = checkin:<date> UNIQUE 保证并发 N 个签到只发一次
     // （MW-23），不再依赖 SP 读改写与 UI 防抖。
-    final ledger = await _sqliteLedger();
+    final ledger = await _sqliteLedger(forWrite: true);
     if (ledger != null) {
       try {
         if (await ledger.hasRewardEvent('checkin:$iso')) return null;
@@ -179,6 +234,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
           eventKey: 'checkin:$iso',
         );
         await ledger.addCheckinDates({iso});
+        // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈）。
+        _markLedgerHealthy();
         // SP 侧标记同步写（last_checkin 是低频标量，供旧路径/展示读取）；
         // 写失败仅上报——SQLite 侧已 durable，重开不会再发（事件键已占用）。
         final saved = await prefs.setString(lastCheckInKey, iso);
@@ -217,7 +274,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
 
     // R3-D08 两步降级之第 ①步：用带事件键的账本写入重试，保住幂等硬闸。
     if (sqliteRetryWithEvent) {
-      final retryLedger = await _sqliteLedger();
+      final retryLedger = await _sqliteLedger(forWrite: true);
       if (retryLedger != null) {
         try {
           if (await retryLedger.hasRewardEvent('checkin:$iso')) return null;
@@ -227,6 +284,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
             eventKey: 'checkin:$iso',
           );
           await retryLedger.addCheckinDates({iso});
+          // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈）。
+          _markLedgerHealthy();
           final saved = await prefs.setString(lastCheckInKey, iso);
           if (!saved) {
             reportSwallowedError('签到日期标记写入失败', StateError('setString returned false'), StackTrace.current);
@@ -236,12 +295,21 @@ class PreferencesScareCoinStore implements ScareCoinStore {
         } on RewardEventDuplicate {
           return null;
         } catch (e, s) {
-          // 带事件键的重试也失败。此时账本**仍可用**（能取到 dao、只是写事务
-          // 一直炸），所以**不能**强制 SP：那会写 SP 而 balance() 读账本
-          // ⇒ 用户看到「+10 成功」但余额不变，比原缺陷更糟。
-          // 这里保持 forceSpSnapshot=false（写读同源），并把这次降级**明显上报**：
-          // 本次入账缺少事件键保护，是已知的可观测残余风险。
-          reportSwallowedError('SQLite 带事件键重试仍失败：本次签到无事件键保护（写读仍同源，余额一致）', e, s);
+          // 带事件键的重试也失败 ⇒ **整体降级到 SP**（R3-D08 收口）。
+          //
+          // 为什么不能「只上报、然后让它落到下面的 SP 路径」：
+          // 那个分支调用的 `_apply` 会**重新取一次账本**，而这里失败的形态
+          // 恰恰是「开库正常、写事务炸」⇒ 账本取得到 ⇒ `_apply` 走
+          // `ledger.applyDelta`，**依旧不占事件键**，缺口原样保留。
+          //
+          // 为什么置的是实例级粘性标志而不是局部变量：
+          // `usedSqliteFallback` 只影响这一次的**写**；而 `balance()` 等
+          // 读侧同样偏好账本 ⇒ 写 SP 读账本 ⇒ 用户看到「+10 成功」但余额
+          // 纹丝不动。置 `_degradeToSp` 后 [_sqliteLedger] 对本实例一律
+          // 返回 null，读写**一起**落在 SP 上（写读同源）。
+          reportSwallowedError('SQLite 带事件键重试仍失败：本次起整体降级纯 SP（写读同源）', e, s);
+          _enterSpDegradation();
+          usedSqliteFallback = true;
         }
       } else {
         // 账本此刻不可用 ⇒ SP 路径本来就是正确的源，写读都在 SP，口径一致。
@@ -347,7 +415,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     // ── P1-03：SQLite 模式——「占用名额 + 发币」同事务（MW-24）。
     // event_key = answer:<date>:<count> UNIQUE：并发同读旧计数时只有一个
     // 能插入成功，后继拿递增序号重试，上限由 DB 事件键硬性封顶。
-    final ledger = await _sqliteLedger();
+    final ledger = await _sqliteLedger(forWrite: true);
     if (ledger != null) {
       var seq = count;
       while (seq < answerRewardCapValue) {
@@ -361,9 +429,16 @@ class PreferencesScareCoinStore implements ScareCoinStore {
           seq++; // 该序号已被占用（并发），尝试下一序号
           continue;
         } catch (e, s) {
-          reportSwallowedError('SQLite 答对奖励事务失败，回退 SP 路径', e, s);
-          break; // 落入下方 SP 路径
+          // 与签到同源（R3-D08）：账本写事务失败时**不能**天真落入下方 SP 路径
+          // —— 那个分支的 `_apply` 会重新取到账本、走 `applyDelta`，
+          // **依旧不占 answer:<date>:<seq> 事件键** ⇒ 当日名额可被重复使用。
+          // 所以置实例级降级标志，让下面的 SP 路径**读写都真的落在 SP**。
+          reportSwallowedError('SQLite 答对奖励事务失败，本次起整体降级纯 SP（写读同源）', e, s);
+          _enterSpDegradation();
+          break; // 落入下方 SP 路径（此时 _sqliteLedger 已返回 null）
         }
+        // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈）。
+        _markLedgerHealthy();
         // 名额计数同步 SP（写失败仅上报：SQLite 事件键已封顶当日总额）。
         final okDate = await prefs.setString(answerRewardDateKey, today);
         final okCount = await prefs.setInt(answerRewardCountKey, seq + 1);
@@ -502,7 +577,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   /// 零币变动也记账（发卡／续命审计）。SQLite 模式为追加单行写；
   /// SP 回退路径复用 200 条截断口径，解析失败保留原账本。
   Future<void> _insertHistory(SharedPreferences prefs, ScareCoinEntry entry) async {
-    final ledger = await _sqliteLedger();
+    final ledger = await _sqliteLedger(forWrite: true);
     if (ledger != null) {
       try {
         await ledger.appendEntry(entry);
@@ -550,7 +625,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     bool forceSpSnapshot = false,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final ledger = forceSpSnapshot ? null : await _sqliteLedger();
+    final ledger = forceSpSnapshot ? null : await _sqliteLedger(forWrite: true);
     if (ledger != null) {
       // 余额变动与流水追加同事务：负余额拒绝时两者都不落库，
       // 语义与 SP 路径的 TOCTOU 守卫一致。
@@ -558,6 +633,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
         delta: delta,
         entry: ScareCoinEntry(time: DateTime.now(), delta: delta, reason: reason),
       );
+      // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈）。
+      _markLedgerHealthy();
       if (lastCheckInIso != null) {
         // 标记写失败上报（余额/库存均走 _writeChecked，此处曾漏网；仅靠流水幂等兑底）。
         final saved = await prefs.setString(lastCheckInKey, lastCheckInIso);

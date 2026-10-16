@@ -9,6 +9,8 @@
 #   比容器轻，也和这台机器现有的管理方式（systemd / pm2）一致。
 #
 # 幂等：重复运行只补缺的部分。**已有 .env 里的密钥不会被重置**，数据库不会被清空。
+# **端口与域名也沿用 .env 里的旧值**（除非这次显式传了 --port/--domain）——
+# 否则裸跑一次会把非默认部署静默改回默认值（R3-S06）。
 #
 # 用法（在服务器上以 root 运行）：
 #   bash install-auth.sh --tarball /tmp/auth-v2.197.0-amd64.tar.xz
@@ -17,8 +19,8 @@
 # 参数：
 #   --tarball <path>   GoTrue 发布包（GitHub release 的 auth-v<ver>-amd64.tar.xz）
 #   --version <ver>    版本号，默认 v2.197.0（仅用于校验 tarball 名与日志）
-#   --domain <host>    对外域名，默认 auth.cloudbear.cloud
-#   --port <port>      GoTrue 监听端口，默认 9999（只绑 127.0.0.1）
+#   --domain <host>    对外域名，默认 auth.cloudbear.cloud（.env 已有则沿用）
+#   --port <port>      GoTrue 监听端口，默认 9999（只绑 127.0.0.1；.env 已有则沿用）
 #
 # ⚠️ 本脚本**不改** Caddy 配置。Caddy 路由是独立一步（见 enable-caddy-route.sh），
 #    因为那会动到正在服务 aionui.cloudbear.cloud 的生产配置，需要单独备份+校验+复核。
@@ -33,13 +35,17 @@ AUTH_VERSION=v2.197.0
 AUTH_PORT=9999
 AUTH_DOMAIN=auth.cloudbear.cloud
 TARBALL=""
+# 记录「用户是否显式传了」：没传时优先沿用 .env 里的旧值，而不是回落默认值。
+# 见下面 §2 的回读（R3-S06）。
+AUTH_PORT_SET=0
+AUTH_DOMAIN_SET=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --tarball) TARBALL="$2"; shift 2 ;;
     --version) AUTH_VERSION="$2"; shift 2 ;;
-    --domain) AUTH_DOMAIN="$2"; shift 2 ;;
-    --port) AUTH_PORT="$2"; shift 2 ;;
+    --domain) AUTH_DOMAIN="$2"; AUTH_DOMAIN_SET=1; shift 2 ;;
+    --port) AUTH_PORT="$2"; AUTH_PORT_SET=1; shift 2 ;;
     -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
     *) echo "未知参数：$1"; exit 1 ;;
   esac
@@ -84,15 +90,38 @@ EOF
   systemctl restart postgresql
 fi
 
-# ── 2. 密钥（已存在则沿用，不重置）────────────────────────────
+# ── 2. 参数与密钥（已存在则沿用，不重置）────────────────────
 mkdir -p "$AUTH_DIR"
 ENV_FILE="$AUTH_DIR/.env"
 if [ -f "$ENV_FILE" ]; then
-  log ".env 已存在，沿用其中的密钥（不重置）"
+  log ".env 已存在，沿用其中的参数与密钥（不重置）"
   DB_PASSWORD="$(grep -E '^MW_DB_PASSWORD=' "$ENV_FILE" | cut -d= -f2- || true)"
   JWT_SECRET="$(grep -E '^MW_JWT_SECRET=' "$ENV_FILE" | cut -d= -f2- || true)"
   [ -n "$DB_PASSWORD" ] || die ".env 存在但缺 MW_DB_PASSWORD，请人工确认后再跑"
   [ -n "$JWT_SECRET" ] || die ".env 存在但缺 MW_JWT_SECRET，请人工确认后再跑"
+
+  # 端口与域名也要回读（2026-10-15 审计 R3-S06，与 telemetry 侧同一根因）：
+  # 旧实现只回读两个密钥，于是「曾用非默认 --port/--domain 部署过，之后按
+  # README 裸跑一次」会把它们**改回默认值并重写整个 .env** ⇒
+  #   · 端口变了 ⇒ Caddy 上游仍指向旧端口 ⇒ 502，而脚本自检探的是**新**端口，**仍报绿**；
+  #   · 域名变了 ⇒ 写进 GOTRUE_JWT_ISSUER/对外地址，已签发的 token 全部失效
+  #     （换 issuer 等于换信任域），全体用户被动重新登录。
+  # 判据是「用户这次有没有显式传参」而不是「.env 里有没有值」——
+  # 显式传参永远优先，这样运维仍能有意地改端口/域名。
+  if [ "$AUTH_PORT_SET" = "0" ]; then
+    OLD_PORT="$(grep -E '^GOTRUE_API_PORT=' "$ENV_FILE" | cut -d= -f2- || true)"
+    if [ -n "$OLD_PORT" ]; then
+      AUTH_PORT="$OLD_PORT"
+      log "沿用 .env 里的 GOTRUE_API_PORT=$AUTH_PORT"
+    fi
+  fi
+  if [ "$AUTH_DOMAIN_SET" = "0" ]; then
+    OLD_DOMAIN="$(grep -E '^MW_AUTH_DOMAIN=' "$ENV_FILE" | cut -d= -f2- || true)"
+    if [ -n "$OLD_DOMAIN" ]; then
+      AUTH_DOMAIN="$OLD_DOMAIN"
+      log "沿用 .env 里的 MW_AUTH_DOMAIN=$AUTH_DOMAIN"
+    fi
+  fi
 else
   # 只取字母数字：数据库密码要拼进 postgres:// URL，含特殊字符就得 URL 编码，
   # 那是最容易被漏掉的一类配置事故。32 位字母数字 ≈ 190 bit，足够。
@@ -187,6 +216,16 @@ log "GoTrue 版本：$(cat "$AUTH_DIR/VERSION" 2>/dev/null || echo unknown)"
 if ! id "$AUTH_USER" >/dev/null 2>&1; then
   log "创建系统账户 $AUTH_USER"
   useradd --system --no-create-home --shell /usr/sbin/nologin "$AUTH_USER"
+fi
+
+# systemd 单元里 Documentation=file://$AUTH_DIR/README.md 指向这个文件；
+# 不装的话 `systemctl status mw-auth` 里的文档链接是死链（2026-10-15 审计 R3-S14，
+# 与 telemetry 侧同一根因 —— 那边已修，这边漏了）。
+SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ -f "$SRC_DIR/README.md" ]; then
+  install -m 0644 "$SRC_DIR/README.md" "$AUTH_DIR/README.md"
+else
+  log "⚠️ 未找到 README.md，systemd 的 Documentation 链接会是死链"
 fi
 
 log "写入 $ENV_FILE"
