@@ -13,6 +13,7 @@
 //   客户端不再持有调用凭证，见 R2-01）
 
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -31,6 +32,11 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
   /// PBKDF2 迭代数。基准（本机 Windows/JIT）：6 万次 ≈190ms，AOT 更快，
   /// 低端 Android 约 0.5-1s（仅登录/设密码时执行，可接受）。
   /// 存储格式自带迭代数，后续上调无需迁移。
+  ///
+  /// R3-D04：这个量级的同步计算**不能放在主 isolate**（登录/设密码期间
+  /// 无法出帧，按钮涟漪与 loading 全都不动）。运行期一律走 [deriveInBackground]，
+  /// 主 isolate 只做比较与持久化。下面的纯函数保留同步形态仅供单测与
+  /// 后台 isolate 内部调用。
   static const int pbkdf2Iterations = 60000;
 
   static const _hashPrefix = 'pbkdf2-sha256';
@@ -63,6 +69,18 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
   static String _encodePbkdf2(String salt, String password, int iterations) {
     final derived = pbkdf2Sha256(utf8.encode('mw:$salt:$password'), utf8.encode(salt), iterations, 32);
     return '$_hashPrefix\$$iterations\$${_toHex(derived)}';
+  }
+
+  /// 后台 isolate 版哈希（R3-D04）：把 6 万轮 PBKDF2 移出主 isolate，
+  /// 登录/设密码期间 UI 仍可出帧。跨 isolate 只传三个入参，返回一个
+  /// 64 字符的 hex 串——消息开销可忽略，与计算量完全不成比例。
+  ///
+  /// [Isolate.run] 捕获的闭包必须是**顶层可发送**的；本方法是 static 且
+  /// 只捕获 String/int，满足要求（与 `wordbook_database._extractBytesInBackground`
+  /// 同一口径）。
+  static Future<String> deriveInBackground(String salt, String password, {int? iterations}) async {
+    final rounds = iterations ?? pbkdf2Iterations;
+    return Isolate.run(() => _encodePbkdf2(salt, password, rounds));
   }
 
   /// 旧版单轮哈希（仅用于存量验证与透明升级，新写入不再使用）
@@ -101,7 +119,9 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
       final parts = hash.split(r'$');
       final iterations = int.tryParse(parts[1])!;
       if (iterations < minIterations || iterations > maxIterations) return false;
-      return _constantTimeEquals(_encodePbkdf2(salt, password, iterations), hash);
+      // R3-D04：后台 isolate 派生，主 isolate 只做常量时间比较
+      final derived = await deriveInBackground(salt, password, iterations: iterations);
+      return _constantTimeEquals(derived, hash);
     }
 
     // 存量单轮 SHA-256：验证通过则透明升级为 PBKDF2（同盐，无需用户重设）；
@@ -112,7 +132,7 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
           'v': 2,
           'algorithm': _hashPrefix,
           'salt': salt,
-          'hash': hashPassword(salt, password),
+          'hash': await deriveInBackground(salt, password),
         });
         await _storage.write(key: '$prefix.credential', value: upgraded);
       } catch (e, s) {
@@ -133,7 +153,8 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
     // 仍被 verify 兼容读取；新写入一律走单键。写失败直接抛（旧凭据从未
     // 被触碰，不存在锁死窗口），不再需要回滚路径。
     final salt = _randomSalt();
-    final newHash = hashPassword(salt, password);
+    // R3-D04：后台 isolate 派生（主 isolate 不阻塞出帧）
+    final newHash = await deriveInBackground(salt, password);
     final credential = jsonEncode({'v': 2, 'algorithm': _hashPrefix, 'salt': salt, 'hash': newHash});
     await _storage.write(key: '$prefix.credential', value: credential);
     // 迁移清理：旧的散键一旦新 Blob 写成功即作废（读取优先级低于 Blob），

@@ -9,6 +9,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:isolate';
+import 'dart:math' show Random;
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
@@ -558,20 +559,91 @@ class WordBookDatabase {
     bool randomOrder = false,
   }) async {
     // 数据层审计 P3：轻列补 main_word，与 getWordsByNames 的轻列口径一致（缺列会让 Word.mainWord 静默为空）
-    final columns = lightweight
-        ? 'w.id, w.word, w.main_word, w.interpret, w.uk_pron, w.us_pron, w.confuse, w.word_root'
-        : 'w.*';
+    final columns = lightweight ? 'id, word, main_word, interpret, uk_pron, us_pron, confuse, word_root' : '*';
     // 用户反馈修复（2026-08-31）：学习取样必须随机——字母序取前 N 会得到
     // 一整批同首字母（如全部 A 开头），事后 shuffle 无法弥补。
-    final orderBy = randomOrder ? 'RANDOM()' : 'w.word COLLATE NOCASE ASC';
+    //
+    // 性能审计 R3-D02（复核后改写，2026-10-16）：原断言「ORDER BY RANDOM() 是
+    // 元凶、改两步式提速 85×」经真库复测不成立，真正根因是 **JOIN 驱动方式**：
+    //   · `JOIN word_books wb ON wb.word_id = w.id` 让 SQLite 走
+    //     「SEARCH wb USING INDEX idx_wb_book → SEARCH w USING INTEGER PRIMARY KEY」，
+    //     即按 word_books 的物理顺序逐行回表；而 word_books 的 word_id 是**乱序**的，
+    //     于是回表变成对 words 的**随机 rowid 访问**（book 213 实测 136ms/10 行）。
+    //   · 换成子查询 `w.id IN (SELECT word_id ...)` 后，words 按 rowid 顺序扫描，
+    //     命中即可停（LIMIT），同书同查询 **10.5ms**（13×）。
+    // 这与审计报告测出的「357ms vs 4.1ms」是同一现象的不同侧面；报告把功劳
+    // 记在「去掉 RANDOM()」上，实际去掉 RANDOM() 只让 208ms→161ms（1.3×）。
+    //
+    // 顺序非随机（浏览器/学习页）走子查询改写，对全部 272 本书实测**无退化**
+    // （大书 1.8× 提速，小书持平），且消除了「大书特慢」的长尾。
+    final orderBy = 'word COLLATE NOCASE ASC';
     final rows = await db.rawQuery('''
-      SELECT $columns FROM words w
-      JOIN word_books wb ON wb.word_id = w.id
-      WHERE wb.book_id = ?
+      SELECT $columns FROM words
+      WHERE id IN (SELECT word_id FROM word_books WHERE book_id = ?)
       ORDER BY $orderBy
       ${limit != null ? 'LIMIT ? OFFSET ?' : ''}
     ''', limit != null ? [bookId, limit, offset] : [bookId]);
     return rows.map(Word.fromMap).toList();
+  }
+
+  /// 按词书随机取样 [limit] 个单词。
+  ///
+  /// 性能审计 R3-D02：原实现 `ORDER BY RANDOM() LIMIT ?` 让 SQLite 为取 N 行把
+  /// **整本书**物化进临时 B-tree（EXPLAIN 有 `USE TEMP B-TREE FOR ORDER BY`），
+  /// 且叠加上面所说的随机回表问题。这里改为两步式：
+  ///   ① 只取该书全部 word_id（走 idx_wb_book，12083 个 id 仅 ~9ms，纯整数列表）；
+  ///   ② Dart 侧等概率抽样 k 个，再按主键 IN 批量取行（10 行 ~1.5ms）。
+  /// 抽样在 Dart 侧做还顺带解决了「RANDOM() 无法按调用方种子复现」的问题。
+  ///
+  /// 与 SQL 的 ORDER BY RANDOM() 等概率性一致：每个词被抽中的概率为 k/N。
+  Future<List<Word>> getRandomWordsByBook(
+    int bookId, {
+    required int limit,
+    bool lightweight = false,
+    Random? random,
+    @visibleForTesting double? randomValueForTest,
+  }) async {
+    if (limit <= 0) return const [];
+    // ① 该书全部词 id（覆盖索引查询，不碰 words 表）
+    final idRows = await db.rawQuery('SELECT word_id FROM word_books WHERE book_id = ?', [bookId]);
+    if (idRows.isEmpty) return const [];
+    final ids = [for (final row in idRows) row['word_id'] as int];
+    if (ids.length <= limit) {
+      // 全书不足 limit：退化为整本按字母序返回，避免重复抽样
+      return _wordsByIds(ids, lightweight: lightweight);
+    }
+    // ② 部分 Fisher-Yates：只把前 limit 个位置洗出来（O(limit)，不洗全表）
+    final rng = random ?? Random();
+    for (var i = 0; i < limit; i++) {
+      final j = randomValueForTest != null
+          ? i + (randomValueForTest * (ids.length - i)).floor().clamp(0, ids.length - i - 1)
+          : i + rng.nextInt(ids.length - i);
+      final tmp = ids[i];
+      ids[i] = ids[j];
+      ids[j] = tmp;
+    }
+    return _wordsByIds(ids.sublist(0, limit), lightweight: lightweight);
+  }
+
+  /// 按主键批量取词（内部工具；保持与 [getWordsByBook] 相同的列口径）。
+  Future<List<Word>> _wordsByIds(List<int> ids, {required bool lightweight}) async {
+    if (ids.isEmpty) return const [];
+    // 数据层审计 P3：轻列补 main_word，与 getWordsByNames 的轻列口径一致
+    final columns = lightweight ? 'id, word, main_word, interpret, uk_pron, us_pron, confuse, word_root' : '*';
+    final result = <Word>[];
+    // 分批查询，每批最多 500 个（SQLite 参数上限；与 getWordsByNames 同口径）
+    for (var i = 0; i < ids.length; i += 500) {
+      final batch = ids.sublist(i, (i + 500).clamp(0, ids.length));
+      final placeholders = List.filled(batch.length, '?').join(',');
+      final rows = await db.rawQuery('SELECT $columns FROM words WHERE id IN ($placeholders)', batch);
+      result.addAll(rows.map(Word.fromMap));
+    }
+    // 按抽样次序返回，保持调用方拿到的顺序即随机顺序
+    final byId = {for (final word in result) word.id: word};
+    return [
+      for (final id in ids)
+        if (byId[id] != null) byId[id]!,
+    ];
   }
 
   /// 词书单词总数（SQL COUNT，单值查询，不加载任何词条）。
@@ -586,13 +658,16 @@ class WordBookDatabase {
   ///
   /// MEM/F2：供「已学数按全书口径」等统计瞬时使用——只取单词文本一列
   /// （每条 ~十几字节，统计完即可 GC），调用方不得长期持有返回值。
+  ///
+  /// R3-D02 附带：与 [getWordsByBook] 同口径改用子查询驱动（JOIN 会让 SQLite
+  /// 按 word_books 物理序回表 words ⇒ 随机 rowid 访问）。真库实测最大词书
+  /// 275ms → 157ms（1.8×），其余规模持平。
   Future<List<String>> getWordTextsByBook(int bookId) async {
     final rows = await db.rawQuery(
       '''
-      SELECT w.word FROM words w
-      JOIN word_books wb ON wb.word_id = w.id
-      WHERE wb.book_id = ?
-      ORDER BY w.word COLLATE NOCASE ASC
+      SELECT word FROM words
+      WHERE id IN (SELECT word_id FROM word_books WHERE book_id = ?)
+      ORDER BY word COLLATE NOCASE ASC
     ''',
       [bookId],
     );

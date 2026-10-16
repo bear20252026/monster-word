@@ -70,6 +70,29 @@ void main() {
       );
     });
 
+    test('deriveInBackground：与同步 hashPassword 逐位一致（R3-D04 移出主 isolate）', () async {
+      // 后台 isolate 版必须与同步版产出**完全相同**的哈希，否则存量凭据全部失效
+      final sync = SecurePasswordAuthStore.hashPassword('saltA', 'password123');
+      final asyncHash = await SecurePasswordAuthStore.deriveInBackground('saltA', 'password123');
+      expect(asyncHash, sync, reason: '后台派生不得改变哈希结果');
+
+      // verify 读存量凭据时会传存储里的迭代数（可能是历史值），这条路径也要一致
+      const salt = 'saltA';
+      const password = 'password123';
+      final expected = SecurePasswordAuthStore.pbkdf2Sha256(
+        utf8.encode('mw:$salt:$password'),
+        utf8.encode(salt),
+        1000,
+        32,
+      );
+      final asyncLow = await SecurePasswordAuthStore.deriveInBackground(salt, password, iterations: 1000);
+      expect(
+        asyncLow,
+        'pbkdf2-sha256\$1000\$${expected.map((b) => b.toRadixString(16).padLeft(2, '0')).join()}',
+        reason: '自定义迭代数路径必须与纯函数一致',
+      );
+    });
+
     test('存量单轮 SHA-256 哈希：验证通过并透明升级为 PBKDF2', () async {
       // 预置旧版格式（salt + 单轮 SHA-256）
       const username = 'carol';
