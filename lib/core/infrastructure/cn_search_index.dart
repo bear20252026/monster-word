@@ -278,10 +278,25 @@ class CnSearchIndex {
 
   /// 重建索引内容：分块读词库 → 后台 isolate 生成 bigram 并排序 → 分批插入。
   ///
-  /// 内存口径（MW-32）：主 isolate 全程只持有 [rawRows]（词库原始行，几 MB）
-  /// 与「当前插入批次」；isolate 独立堆上才存在全量 pairs（~160 万条）与排序
-  /// 中间态，isolate 结束即整体释放。此前主 isolate 需要同时持有 pairs、
-  /// Isolate.run 的传输副本与回填列表三份，峰值约 3 倍。
+  /// 内存口径（MW-32 / R3-D03）：
+  /// **R3-D03 订正**——原实现先把全部 77 万行读进主 isolate 的 `rawRows`，
+  /// 再把它交给 `Isolate.run` 生成 pairs。而 Dart 的 isolate 之间**没有共享
+  /// 内存**，`Isolate.run` 捕获 `List<List<Object?>>` 是**逐元素深拷贝**
+  /// （实测 20 万行仅读一次 `.length` 就要 247ms；同数据在主 isolate 遍历只要
+  /// 11ms —— 差值就是序列化/拷贝）。⇒ 主 isolate 常驻一份（≈100MB）、后台
+  /// 拷贝第二份（≈100MB）、中间态再 ≈150MB。
+  ///
+  /// 现改为**每块独立进后台**：CPU 密集段仍是后台 isolate，但**不再传原始行**，
+  /// 只传「这一块的行」并立刻回传结果，主 isolate 只保留「已排序的 (bigram, id)
+  /// 累积列表」——它比原始行**小得多**（只有两个字段，不含 3KB 级 interpret）。
+  /// 峰值从「2 × 整表原文 + pairs」降到「1 × pairs + 1 块原文」。
+  ///
+  /// 为什么不干脆让后台 isolate 自己从路径读词库：测试注入路径用的是**内存库**
+  /// （`_openIndexOverride`），且主 isolate 已持有目标句柄 —— 换成路径驱动会同时
+  /// 破坏这两点，收益（再省一份分块原文）远小于风险。
+  ///
+  /// 排序必须在插入前完成——WITHOUT ROWID 主键表按 PK 序追加可避免随机插入的
+  /// B-tree 页分裂（首版随机插入真库 5 分钟未完，排序后分钟内）。
   Future<void> _rebuildInto(Database db, Database wordsDb, String fingerprint) async {
     await db.execute('DROP TABLE IF EXISTS $table');
     await db.execute(
@@ -289,8 +304,9 @@ class CnSearchIndex {
     );
     await db.execute('DELETE FROM $_metaTable');
 
-    // 读取阶段：分块读词库，每块让出主 isolate（UI 与其他查询可用）
-    final rawRows = <List<Object?>>[];
+    // 读取 + 建对：分块读词库，每块把「行」送进后台 isolate 建对并回传 pairs。
+    // 主 isolate 全程只累积 pairs（已排序），不保留任何原始行块。
+    final sorted = <(String, int)>[];
     var lastId = 0;
     while (true) {
       final rows = await wordsDb.query(
@@ -302,34 +318,20 @@ class CnSearchIndex {
         limit: 400,
       );
       if (rows.isEmpty) break;
+      final chunk = <List<Object?>>[];
       for (final row in rows) {
         final id = row['id']! as int;
         lastId = id;
-        rawRows.add([id, row['word'] as String? ?? '', row['interpret'] as String? ?? '']);
+        chunk.add([id, row['word'] as String? ?? '', row['interpret'] as String? ?? '']);
       }
+      // 每块单独进后台：只传这一块（400 行 × ~7KB ≈ 2.8MB 拷贝，不是整表 100MB）
+      final pairs = await Isolate.run(() => _pairsChunk(chunk));
+      sorted.addAll(pairs);
+      // 让出主 isolate，UI 与其他查询可用
       await Future<void>.delayed(Duration.zero);
     }
-
-    // CPU 密集段整体进后台 isolate：生成 (bigram, word_id) 对 + 全量排序。
-    // 排序必须在插入前完成——WITHOUT ROWID 主键表按 PK 序追加可避免随机插入的
-    // B-tree 页分裂（首版随机插入真库 5 分钟未完，排序后分钟内）。
-    final sorted = await Isolate.run(() {
-      final pairs = <(String, int)>[];
-      for (final row in rawRows) {
-        final id = row[0]! as int;
-        // 词列 + 释义列合并建对（同一词行内去重，PK 无冲突）
-        final bigramSet = <String>{...bigramsOf(row[1]! as String), ...bigramsOf(row[2]! as String)};
-        for (final b in bigramSet) {
-          pairs.add((b, id));
-        }
-      }
-      // record 未实现 Comparable：显式按 (bigram, word_id) 字典序
-      pairs.sort((a, b) {
-        final c = a.$1.compareTo(b.$1);
-        return c != 0 ? c : a.$2.compareTo(b.$2);
-      });
-      return pairs;
-    });
+    // 跨块归并：`Queryable` 语义下 (bigram, id) 全序最后统一排一次
+    _sortPairs(sorted);
 
     // 写入阶段：逐批提交并让出主 isolate
     var pending = 0;
@@ -345,6 +347,29 @@ class CnSearchIndex {
     }
     if (pending % 8000 != 0) await batch.commit(noResult: true);
     await db.insert(_metaTable, {'key': 'fingerprint', 'value': fingerprint});
+  }
+
+  /// 把一块词行转成 (bigram, word_id) 对（跑在后台 isolate，不碰数据库句柄）。
+  static List<(String, int)> _pairsChunk(List<List<Object?>> chunk) {
+    final pairs = <(String, int)>[];
+    for (final row in chunk) {
+      final id = row[0]! as int;
+      // 词列 + 释义列合并建对（同一词行内去重，PK 无冲突）
+      final bigramSet = <String>{...bigramsOf(row[1]! as String), ...bigramsOf(row[2]! as String)};
+      for (final b in bigramSet) {
+        pairs.add((b, id));
+      }
+    }
+    _sortPairs(pairs);
+    return pairs;
+  }
+
+  /// 按 (bigram, word_id) 字典序排序（record 未实现 Comparable）。
+  static void _sortPairs(List<(String, int)> pairs) {
+    pairs.sort((a, b) {
+      final c = a.$1.compareTo(b.$1);
+      return c != 0 ? c : a.$2.compareTo(b.$2);
+    });
   }
 
   void _deleteQuietly(String path) {
