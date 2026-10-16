@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/core/presentation/responsive.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -46,9 +47,14 @@ class SpellingQuizController extends ChangeNotifier {
   bool _showAnswer = false;
   bool _wasCorrect = false;
   bool _finished = false;
+  // R3-L05：区分「装载失败」与「真的没有待学单词」。
+  bool _loadFailed = false;
 
   bool get isLoading => _loading;
   bool get isEmpty => !_loading && _words.isEmpty;
+
+  /// 空表是否由**装载失败**引起（而非真的没有词）。用于给出不同文案与重试入口。
+  bool get loadFailed => _loadFailed;
   bool get showAnswer => _showAnswer;
   bool get wasCorrect => _wasCorrect;
   bool get finished => _finished;
@@ -73,18 +79,35 @@ class SpellingQuizController extends ChangeNotifier {
         );
 
   /// 异步装载词表（失败按空表降级），完成后触发 [onStarted]。
+  ///
+  /// R3-L05（2026-10-16 整改）：原实现是 `catch (_) { words = const []; }`——
+  /// 于是**装载失败与「真的没有待学单词」在 UI 上完全一样**（都显示「暂无待学习单词」），
+  /// 用户以为学完了，实际是一次读取失败，而且**连上报都没有**（不抛就不进任何上报路径）。
+  /// 现在失败时：① 上报（供 Sentry 观测）；② 置 [loadFailed]，让空态文案能区分二者。
+  /// 诚实说明：当时三个调用点的 loader 都是纯字段读、不会抛，所以该分支**当下不可达**；
+  /// 但一旦换成真 IO（远端拉取、库读取）即成为真实缺陷，故提前修正。
   Future<void> load(Future<List<Word>> Function() loader) async {
     _loader = loader;
     _loading = true;
+    _loadFailed = false;
     notifyListeners();
     List<Word> words;
     try {
       words = await loader();
-    } catch (_) {
+    } catch (e, s) {
+      reportSwallowedError('拼写测验词表装载失败', e, s);
+      _loadFailed = true;
       words = const [];
     }
     if (_disposed) return;
     _seed(words);
+  }
+
+  /// 重试装载（供失败态的空态按钮使用）。
+  Future<void> retryLoad() async {
+    final loader = _loader;
+    if (loader == null) return;
+    await load(loader);
   }
 
   /// 同步注入词表（测试与已持词表的调用方）。
@@ -386,14 +409,20 @@ class _SpellingQuizScaffoldState extends State<SpellingQuizScaffold> {
   }
 
   Widget _buildEmpty(SkinSystem skin) {
+    // R3-L05：装载失败与真实空态必须区分——否则用户以为「学完了」，
+    // 实际是一次读取失败，且没有任何重试入口。
+    final failed = widget.controller.loadFailed;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const MonsterIcon(size: 72, showCircle: true),
         const SizedBox(height: 16),
-        Text('暂无待学习单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
+        Text(failed ? '单词加载失败，请重试' : '暂无待学习单词', style: MwTypography.body.copyWith(color: skin.colors.text3)),
         const SizedBox(height: 24),
-        MwButton.outlined(label: '返回首页', onTap: () => NavUtils.goHome(context)),
+        if (failed)
+          MwButton.outlined(label: '重新加载', onTap: () => widget.controller.retryLoad())
+        else
+          MwButton.outlined(label: '返回首页', onTap: () => NavUtils.goHome(context)),
       ],
     );
   }

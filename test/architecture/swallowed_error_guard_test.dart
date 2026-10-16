@@ -72,6 +72,34 @@ void main() {
     expect(findUnreportedCatches('void f() { try { g(); } catch (_) { // 吞错豁免: 故意\n } }'), isEmpty);
     // 豁免但理由为空 → 仍判违规
     expect(findUnreportedCatches('void f() { try { g(); } catch (_) { // 吞错豁免:\n } }'), hasLength(1));
+    // 多 catch：一处上报不得豁免同一语句里的另一个（旧断言的漏洞）
+    expect(
+      findUnreportedCatches(
+        'void f() { try { g(); } catch (e) { reportSwallowedError("a", e, null); } catch (e2) {} }',
+      ),
+      hasLength(1),
+    );
+  });
+
+  test('豁免标记在 try/catch 语句内的任意位置都生效，且不跨语句串用', () {
+    // 2026-10-16 复核发现：旧实现只回看「catch 上一行」，于是最自然的写法
+    // （标记写在 try 体内、紧贴 `} catch`）会被判违规。现窗口回溯到 try 行首。
+    //
+    // ① 标记在 try 体内（最自然写法）
+    expect(findUnreportedCatches('void f() {\n  try {\n    g();\n    // 吞错豁免: 有兜底\n  } catch (_) {}\n}'), isEmpty);
+    // ② 标记在 catch 体内
+    expect(findUnreportedCatches('void f() {\n  try { g(); } catch (_) { // 吞错豁免: 块内\n } }'), isEmpty);
+    // ③ 标记紧贴 try 上一行
+    expect(findUnreportedCatches('void f() {\n  // 吞错豁免: 有兜底\n  try { g(); } catch (_) {}\n}'), isEmpty);
+    // ④ 窗口放宽后**不得**把豁免串到相邻语句：
+    //    紧跟其后的另一个 try/catch（带自己的 try）必须仍被判违规
+    expect(
+      findUnreportedCatches(
+        'void f() {\n  // 吞错豁免: 只针对第一个\n  try { g(); } catch (_) {}\n'
+        '  try { h(); } catch (_) {}\n}',
+      ),
+      hasLength(1),
+    );
   });
 
   test('上报工具不得在 Sentry 未初始化时调用平台通道', () {
