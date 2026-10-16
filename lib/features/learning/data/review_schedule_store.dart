@@ -356,14 +356,11 @@ class ReviewScheduleStore {
     });
   }
 
-  /// 迁移用：单事务批量写入活跃日期。
-  Future<void> insertActiveDatesInTransaction(Set<String> dates) async {
-    await _db.transaction((txn) async {
-      for (final date in dates) {
-        await txn.insert('fsrs_active_dates', {'date': date}, conflictAlgorithm: ConflictAlgorithm.ignore);
-      }
-    });
-  }
+  // R3-D07：此处原有 `insertActiveDatesInTransaction(Set<String>)`，全库零调用已删除。
+  // 它的职责已被下方 `migrateFromSp` 的**单事务**实现覆盖（一并写 cards + dailyStats
+  // + activeDates）—— 后者才是 H1 要求的形态（任一子步失败整体回滚），
+  // 而单独写活跃日期会让「cards 已入、日期失败」这类半成品状态重新可能。
+  // 不要因为「看起来能复用」而把它加回来。
 
   /// H1：SP→SQLite 迁移 **单事务** 落库（cards + dailyStats + activeDates）。
   ///
