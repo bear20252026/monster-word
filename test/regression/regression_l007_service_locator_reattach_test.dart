@@ -17,6 +17,13 @@
 //（`audio_player_core.dart:12`），会在构造期创建 just_audio 平台通道 ——
 // 在无插件的 `flutter test` 里是不必要的副作用。本文件验的是「注册表被恢复」，
 // 不是「实例能造出来」，所以只查注册状态。
+//
+// 对既有测试的影响已核实为零：
+// `WordApp.build` 里新增的 `ensureServiceLocatorReady()` 在「已注册」时直接
+// 返回 false。全仓只有 `test/widget_test.dart` 真的 pump `WordApp`，而它在
+// pump 之前就调了 `setupServiceLocator()` ⇒ 守卫必短路、无副作用；
+// `app_structure_test` 与 `regression_zone001_boot_zone_test` 里出现的
+// `WordApp(` 都只是**读源码文本**做字符串断言，不实例化。
 
 import 'package:flutter_test/flutter_test.dart';
 
