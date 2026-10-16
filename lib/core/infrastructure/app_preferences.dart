@@ -2,9 +2,8 @@
 
 // 由账号4生成
 // 本地存储层
-// AppPreferences（应用配置）+ UserPreferences（用户配置）+ GuidePreference（引导）
-
-import 'dart:convert';
+// AppPreferences（应用配置）+ UserPreferences（用户配置）
+// （GuidePreference 与同名的 UserInfoBean 副本已按审计结论删除，见文件末尾说明）
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -229,6 +228,19 @@ class AppPreferences extends BaseSharedPreferences {
   static const String appNeedMigrateToV3 = 'app_need_migrate_to_v3';
   static const String userToken = 'user_token';
   static const String userSecret = 'user_secret';
+  // R3-D07 待议：本组常量中以下 14 个经全仓核查（Dart/Py/Sh/Mjs/Md）**零代码引用**，
+  // 仅被 `docs/reports/data_layer_audit.md` 等历史报告作为「键清单」记载：
+  //   userId / bookGroupList / uiTheme / extensiveMode / studyRemindText /
+  //   netLineType / lastLoginInfo / historyQuery / appPermissionGrantShow /
+  //   keyAppFirstCheckin / keyUserTrackEnable（+ 上方 appConfig / appLastRunTime /
+  //   appNeedMigrateToV3）
+  // 未随本次一并删除，原因有二：
+  //   ① 它们是 SP 键的**唯一命名出处**，删掉后历史报告里的键清单将无处对照，
+  //      而 SP 里可能仍残留这些键的实际数据（`ui_theme` 被批1 文档证实曾有 int 写入）；
+  //   ② `uiTheme` 是已知的**类型冲突键**（历史文档明确「禁止复用」），
+  //      保留声明反而利于继续对这个坑做静态提醒。
+  // ⇒ 若要清理，建议连同历史报告一起改为「已废弃键清单」，作为独立一次变更做，
+  //   不要在死代码清理里顺手删（那会让报告与代码同时失去锚点）。
   static const String userId = 'key_userId';
   static const String pronounce = 'key_pronounceType';
   static const String uiTheme = 'ui_theme';
@@ -262,23 +274,13 @@ class AppPreferences extends BaseSharedPreferences {
     await super.init();
   }
 
-  /// 词书分组列表
-  String getBookGroupList() => getString(bookGroupList);
-  Future<bool> setBookGroupList(String value) => setString(bookGroupList, value);
-
-  /// 用户 token
-  /// ⚠️ 已废弃：请使用 SecureTokenStorage().getToken() 异步版本
-  @Deprecated('Use SecureTokenStorage().getToken() instead')
-  String getUserToken() => getString(userToken);
-
-  /// 用户 secret
-  /// ⚠️ 已废弃：请使用 SecureTokenStorage().getSecret() 异步版本
-  @Deprecated('Use SecureTokenStorage().getSecret() instead')
-  String getUserSecret() => getString(userSecret);
-
-  /// 用户 ID
-  String getUserId() => getString(userId);
-  Future<bool> setUserId(String value) => setString(userId, value);
+  // R3-D07：此处原有 getBookGroupList/setBookGroupList、getUserToken、getUserSecret、
+  // getUserId/setUserId —— 全部**零调用**，已删除。
+  // 其中 getUserToken/getUserSecret 尤其不能留：它们从**明文 SharedPreferences**
+  // 读凭证，与 S1「token/secret 只入 SecureTokenStorage」的修复直接冲突；
+  // 仅靠 `@Deprecated` 注解挡不住调用（注解不报错、只提示，且本仓 analyzer 的
+  // info 级提示在 CI 里等同失败，反而会诱导后来者「顺手改回去让它编过」）。
+  // 需要凭证一律走 `SecureTokenStorage().getToken()/getSecret()`。
 
   /// 发音类型（0=美音 1=英音）
   int getPronounce() => getInt(pronounce);
@@ -383,84 +385,26 @@ class UserPreferences extends BaseSharedPreferences {
   Future<bool> setRemindTime(String value) => setString(remindTime, value);
 }
 
-// 死代码清理（2026-10 审计）：GuidePreference（guide_learn 等四个引导标记）
-// 全库零引用已删除。SP 中可能残留旧键值，无消费方、无迁移必要。
+// 死代码清理（2026-10 审计）：
+//   · GuidePreference（guide_learn 等四个引导标记）全库零引用，已删除。
+//   · **R3-D06：本文件原先自带一个 `UserInfoBean` + `getUserInfoSync/getUserInfo/
+//     setUserInfo` 扩展，已整体删除。** 理由不是「没人用」，而是它**会撤销安全
+//     修复**：`lib/models/user_info_bean.dart` 才是真正在用的那个，生产路径
+//     `user_service_impl.setUserInfoBean` 会把 `token`/`secret` 先送进
+//     `SecureTokenStorage` 再把两者清空后才写 SP（安全审计 S1）；而本文件这个
+//     副本**少 `signature` 字段且不做任何剥离**，`setUserInfo` 直接把
+//     `toJson()`（含 token/secret 明文）写进 SharedPreferences。
+//     当时它已零调用方，但**后来者顺手一用就会把明文凭证重新落盘**，且因为
+//     同名类存在，`user_service_impl.dart` 一直靠 `hide UserInfoBean` 才没撞上
+//     —— 这种「留着但谁也不许碰」的状态只能靠纪律维持，删掉才是根治。
+//
+//     ⚠️ `kUserInfoPrefsKey`（下方常量）**仍是活的**，别一起删：
+//        `presentation_prefs.sessionUserInfoKey` 与 `user_service_impl._userInfoKey`
+//        都引用它（审计 I62 的 key 单一事实来源）。
+//
+// SP 中可能残留旧键值，无消费方、无迁移必要。
 
-/// 用户信息 Bean
-class UserInfoBean {
-  int userId;
-  String nickname;
-  String avatar;
-  String phone;
-  String token;
-  String secret;
-  String displayId; // 用户自定义 ID（可自由设定）
-  String wechatName; // 微信名
-
-  UserInfoBean({
-    this.userId = 0,
-    this.nickname = '',
-    this.avatar = '',
-    this.phone = '',
-    this.token = '',
-    this.secret = '',
-    this.displayId = '',
-    this.wechatName = '',
-  });
-
-  factory UserInfoBean.fromJson(Map<String, dynamic> json) => UserInfoBean(
-    userId: (json['userId'] as num?)?.toInt() ?? 0,
-    nickname: json['nickname'] ?? '',
-    avatar: json['avatar'] ?? '',
-    phone: json['phone'] ?? '',
-    token: json['token'] ?? '',
-    secret: json['secret'] ?? '',
-    displayId: json['displayId'] ?? '',
-    wechatName: json['wechatName'] ?? '',
-  );
-
-  Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'nickname': nickname,
-    'avatar': avatar,
-    'phone': phone,
-    'token': token,
-    'secret': secret,
-    'displayId': displayId,
-    'wechatName': wechatName,
-  };
-}
-
-// ── 用户信息存取 ──
-
-extension UserInfoPrefs on AppPreferences {
-  /// 同步获取用户信息（返回缓存，可能为空）
-  UserInfoBean getUserInfoSync() {
-    final jsonStr = getString(kUserInfoPrefsKey);
-    if (jsonStr.isEmpty) return UserInfoBean();
-    try {
-      return UserInfoBean.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
-    } catch (e, s) {
-      reportSwallowedError('用户信息解析失败(getUserInfoSync)', e, s);
-      return UserInfoBean();
-    }
-  }
-
-  /// 获取用户信息
-  Future<UserInfoBean> getUserInfo() async {
-    final jsonStr = getString(kUserInfoPrefsKey);
-    if (jsonStr.isEmpty) return UserInfoBean();
-    try {
-      return UserInfoBean.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
-    } catch (e, s) {
-      reportSwallowedError('用户信息解析失败(getUserInfo)', e, s);
-      return UserInfoBean();
-    }
-  }
-
-  /// 保存用户信息
-  Future<bool> setUserInfo(UserInfoBean bean) => setString(kUserInfoPrefsKey, jsonEncode(bean.toJson()));
-}
+// ── 用户信息 SP key ──
 
 /// 用户信息 SP key 单一事实来源（审计 I62：此前在本文件、user_service_impl、
 /// app_session_state 三处平行定义，改 key 必须同步多处）。

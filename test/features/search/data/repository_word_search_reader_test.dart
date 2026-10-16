@@ -49,7 +49,4 @@ class _FakeWordRepository implements WordRepository {
 
   @override
   Future<List<Word>> getRandomWords(int count, {int? excludeBookId}) => throw UnimplementedError();
-
-  @override
-  Future<int> updateWordStatus(int wordId, Map<String, dynamic> status) => throw UnimplementedError();
 }

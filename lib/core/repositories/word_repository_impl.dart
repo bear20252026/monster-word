@@ -280,7 +280,7 @@ class WordRepositoryImpl implements WordRepository {
     final useExclude = excludeBookId != null;
     final excludeFilter = useExclude ? 'id NOT IN (SELECT word_id FROM word_books WHERE book_id = ?)' : null;
     // 性能审计 R3-D02（2026-10-16 复核后改写）：原 `orderBy: 'RANDOM()' LIMIT count`
-    // 让 SQLite 把**整张 words 表**（77 万行 / 232MB）物化进临时 B-tree 才能取
+    // 让 SQLite 把**整张 words 表**（771,251 行 / 232MB，R3-D09 实测）物化进临时 B-tree 才能取
     // count 行。改为两步式：
     //   ① 只取通过筛选的 id（纯整数列，不碰大字段）；
     //   ② Dart 侧部分 Fisher-Yates 抽样后按主键批量取行。
@@ -322,11 +322,5 @@ class WordRepositoryImpl implements WordRepository {
       for (final id in ids)
         if (byId[id] != null) byId[id]!,
     ];
-  }
-
-  @override
-  Future<int> updateWordStatus(int wordId, Map<String, dynamic> status) async {
-    // 此兼容接口尚未实现；学习状态由学习域的专用仓储与状态管理。
-    return 0;
   }
 }

@@ -67,9 +67,6 @@ class _FakeWordRepository implements WordRepository {
 
   @override
   Future<List<Word>> searchWords(String query, {int? limit}) => throw UnimplementedError();
-
-  @override
-  Future<int> updateWordStatus(int wordId, Map<String, dynamic> status) => throw UnimplementedError();
 }
 
 class _FakeNewWordRepository implements NewWordRepository {

@@ -51,7 +51,4 @@ class _FakeWordRepository implements WordRepository {
     lastQuery = query;
     return List<Word>.of(words);
   }
-
-  @override
-  Future<int> updateWordStatus(int wordId, Map<String, dynamic> status) async => 1;
 }

@@ -45,6 +45,9 @@ abstract class WordRepository {
   /// 获取随机单词（用于干扰项生成）
   Future<List<Word>> getRandomWords(int count, {int? excludeBookId});
 
-  /// 更新单词学习状态
-  Future<int> updateWordStatus(int wordId, Map<String, dynamic> status);
+  // R3-D07：原此处有 `updateWordStatus(int, Map)` —— 实现是**空桩**（直接 `return 0`），
+  // 语义上「更新成功」与「什么都没做」无法区分，调用即静默无效、无报错无上报。
+  // 它自述「兼容接口尚未实现」，而学习状态本就不属于词库域（由学习域的
+  // 专用仓储与状态管理），因此该接口**在设计上就不会被实现**，故删除而非补实现。
+  // 词库域本身是只读的（`readOnly: true` 打开），本接口不应出现写方法。
 }
