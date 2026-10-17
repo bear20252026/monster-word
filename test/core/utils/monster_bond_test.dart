@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/utils/monster_bond_prefs.dart';
 import 'package:word_app/core/utils/monster_rhythm.dart';
+import 'package:word_app/core/utils/monster_speech.dart';
 
 void main() {
   setUp(() {
@@ -70,5 +71,41 @@ void main() {
     // mock SP 未初始化场景由共享 setUp 的 mock 兜住；这里锚定正常读取。
     await MonsterBondPrefs.recordPet();
     expect(await MonsterBondPrefs.points(), 1);
+  });
+
+  // 2026-10-17 审计 P2：一次记账原先要写 3 个 SP 键（points / dayKey / countKey），
+  // 三写非原子 ⇒ 崩溃在中间会把当日羁绊点永久吞掉。现在整份状态一次 setString。
+  test('记账只写单一状态键（不再分散写 5 个旧键）', () async {
+    await MonsterBondPrefs.recordPet();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(MonsterBondPrefs.stateKey), isNotNull, reason: '状态必须落在单一键里');
+    // 旧键不得被写入（只允许读来做迁移）：否则又变成两个事实来源。
+    expect(prefs.getInt(MonsterBondPrefs.pointsKey), isNull, reason: '旧 points 键不该再被写');
+    expect(prefs.getString(MonsterBondPrefs.petDayKey), isNull, reason: '旧 pet_day 键不该再被写');
+  });
+
+  test('旧版本分散键可迁移：读出历史点数并在此基础上继续累加', () async {
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      MonsterBondPrefs.pointsKey: 5,
+      MonsterBondPrefs.petDayKey: MonsterSpeech.dayKeyOf(DateTime(2026, 10, 4)),
+      MonsterBondPrefs.petCountKey: 2,
+    });
+
+    expect(await MonsterBondPrefs.points(), 5, reason: '迁移必须读到旧点数，不能归零');
+
+    // 同日再摸：不 +1，但 todayCount 要接着旧值累加
+    final sameDay = await MonsterBondPrefs.recordPet();
+    expect(sameDay.awarded, isFalse);
+    expect(sameDay.todayCount, 3, reason: '旧计数 2 + 本次 = 3');
+    expect(sameDay.pointsAfter, 5);
+
+    // 次日再摸：+1
+    MonsterRhythm.nowOverride = () => DateTime(2026, 10, 5, 10);
+    final nextDay = await MonsterBondPrefs.recordPet();
+    expect(nextDay.awarded, isTrue);
+    expect(nextDay.pointsBefore, 5);
+    expect(nextDay.pointsAfter, 6);
+    expect(await MonsterBondPrefs.points(), 6);
   });
 }

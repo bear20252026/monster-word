@@ -48,7 +48,9 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
   int? _grantedCoins;
 
   /// 会话结算发币（每会话一次）；失败不打断完成页，异常经 reportSwallowedError 上报。
-  Future<void> _settleRewards(BuildContext context, LearningSessionState state, int total) async {
+  ///
+  /// 2026-10-17 审计 P2：会话完成时已把「待发币」登记进 SP，这里只负责结算并演出来。
+  Future<void> _settleRewards(BuildContext context, LearningSessionState state) async {
     try {
       // 队列未重载再次进入（如皮肤页「立即体验」）会重挂载本页；
       // 会话级标记保证只在真正的新会话结算一次
@@ -56,7 +58,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       state.markSessionRewardSettled();
       final store = context.read<ScareCoinStore>();
       final service = LearningRewardService(store);
-      final result = await service.settleSession(wordsLearned: total, dailyGoalAchieved: state.dailyGoalAchieved);
+      final result = await service.settlePendingSessions();
       if (!mounted || result.totalGranted <= 0) return;
       setState(() => _grantedCoins = result.totalGranted);
     } catch (e, s) {
@@ -226,7 +228,7 @@ class _ImmersiveSwipePageState extends State<ImmersiveSwipePage> with TickerProv
       _celebrated = true;
       HapticsGate.play(HapticCue.medium);
       WidgetsBinding.instance.addPostFrameCallback((_) => _confettiController.play());
-      _settleRewards(context, state, total);
+      _settleRewards(context, state);
     }
 
     return Scaffold(

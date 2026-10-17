@@ -116,4 +116,50 @@ void main() {
     expect(store.coins, 25);
     expect(store.reasons, ['学习完成', '今日目标达成']);
   });
+
+  // 2026-10-17 审计 P2：会话完成时只**登记**（不需要账本），发币交给能读到账本的
+  // 页面或下次启动的 drain —— 原先发币只挂在完成页的 post-frame 上，
+  // 完成页没挂载（挂载失败/应用被杀）就静默丢奖。
+  group('待结算队列（P2）', () {
+    test('登记后结算：发币并清空队列', () async {
+      await LearningRewardService.enqueuePendingSession(wordsLearned: 12, dailyGoalAchieved: false);
+      final result = await service.settlePendingSessions();
+
+      expect(result.totalGranted, 5, reason: '>=10 词 = 会话奖励 +5');
+      expect(store.coins, 5);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(LearningRewardService.pendingKey), isNull, reason: '结算成功必须清空队列');
+    });
+
+    test('队列为空时结算返回 0（幂等，不会重复发币）', () async {
+      await LearningRewardService.enqueuePendingSession(wordsLearned: 12, dailyGoalAchieved: false);
+      await service.settlePendingSessions();
+      final again = await service.settlePendingSessions();
+
+      expect(again.totalGranted, 0);
+      expect(store.coins, 5, reason: '第二次不该再发');
+    });
+
+    test('未结算就重启：队列仍在，下次 drain 补发（这就是「不依赖完成页」的意义）', () async {
+      // 模拟：会话完成 → 只登记 → 应用被杀（没有任何结算调用）
+      await LearningRewardService.enqueuePendingSession(wordsLearned: 20, dailyGoalAchieved: true);
+
+      // 模拟下次启动：新的 service 实例 + 同一个 store
+      final restarted = LearningRewardService(store);
+      final result = await restarted.settlePendingSessions();
+
+      expect(result.totalGranted, 25, reason: '会话 +5 + 目标 +20 必须补发');
+      expect(store.coins, 25);
+    });
+
+    test('登记超上限时丢最旧并保留最新的（不无限增长）', () async {
+      for (var i = 0; i < LearningRewardService.pendingCap + 2; i++) {
+        await LearningRewardService.enqueuePendingSession(wordsLearned: 10, dailyGoalAchieved: false);
+      }
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(LearningRewardService.pendingKey)!;
+      // 队列按 JSON 数组存，数一下元素个数
+      expect(RegExp(r'wordsLearned').allMatches(raw).length, LearningRewardService.pendingCap);
+    });
+  });
 }
