@@ -156,12 +156,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     }
 
     if (!mounted) return;
+    // 审计 R3-A09：这次成功若是「本机凭据 → 服务端账号」的迁移，用户此前并不知道
+    // 自己顺带有了云账号，需要一次性告知。取值放在 await 之前，
+    // 免得之后 outcome 被覆盖（本方法后面还会再取一次 session.login 的结果）。
+    final migratedNow = outcome.migrated;
     setState(() => _isLoading = true);
     try {
       if (!mounted) return;
       final session = context.read<AppSessionState>();
       final success = await session.login(username, password);
       if (success && mounted) {
+        if (migratedNow) {
+          // 用 6 秒而非默认 2 秒：紧接着有「欢迎回家」演出 + 900ms 后跳转首页，
+          // 2 秒会被盖掉，而这是**唯一一次**能告诉用户「你已有云账号」的时刻。
+          _showToast('已为你开通云同步，换设备可直接登录', duration: const Duration(seconds: 6));
+        }
         _onLoginSuccess();
       } else if (mounted) {
         _showToast('登录失败，请再次尝试！');
@@ -284,8 +293,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   /// 必须改写成「账号由服务端保存」，否则就是 R2-23 同类的假陈述。
   bool get _serverAccountMode => context.read<AccountAuthenticator>().scope == AccountScope.remote;
 
-  void _showToast(String msg) {
-    showMwSnackBar(context, SnackBar(content: Text(msg), duration: const Duration(seconds: 2)));
+  void _showToast(String msg, {Duration? duration}) {
+    // 默认 2 秒；迁移告知需要更久（见调用点），故开放 duration。
+    showMwSnackBar(context, SnackBar(content: Text(msg), duration: duration ?? const Duration(seconds: 2)));
   }
 
   @override

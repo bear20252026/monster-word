@@ -56,9 +56,9 @@ enum AuthStatus {
 
 /// 认证结果。不可变值对象。
 class AuthOutcome {
-  const AuthOutcome(this.status, {this.message});
+  const AuthOutcome(this.status, {this.message, this.migrated = false});
 
-  const AuthOutcome.success() : this(AuthStatus.success);
+  const AuthOutcome.success({bool migrated = false}) : this(AuthStatus.success, migrated: migrated);
 
   const AuthOutcome.needsAccountCreation() : this(AuthStatus.needsAccountCreation);
 
@@ -77,6 +77,17 @@ class AuthOutcome {
   /// 可直接展示给用户的文案；为 null 时由调用方按 [status] 取默认文案。
   /// 服务端实现可用它回传服务端给出的具体原因（如「账号已被锁定至 14:30」）。
   final String? message;
+
+  /// 本次**成功**其实是「把阶段一的本机凭据迁移成服务端账号」（审计 R3-A09）。
+  ///
+  /// 为什么需要这个标记：迁移路径对用户是**不可见**的 —— 用户输入的是自己一直在用的
+  /// 那组用户名密码，登录成功后并不知道自己顺带拥有了一个云账号
+  ///（此后换设备可直接登录，但在此之前从未有人告诉过他）。
+  /// 调用方据此给一次性告知。
+  ///
+  /// 不需要持久化「已告知」标记：迁移本身只发生一次 —— 成功后本机凭据会被删除，
+  /// 之后再登录走的就是普通的服务端校验，不会再置位本标记。
+  final bool migrated;
 
   bool get ok => status == AuthStatus.success;
 }
