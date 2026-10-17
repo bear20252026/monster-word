@@ -115,4 +115,36 @@ void main() {
     expect(parsed.isUtc, isFalse);
     expect(parsed.toUtc(), utcCard.dueDate, reason: '归一化只转时区不改时刻');
   });
+
+  // 2026-10-17 审计 P1 的回归守卫。
+  //
+  // 缺陷：`open()` 对全新库走 `onCreate`（version 直接是 2，`onUpgrade` 永不
+  // 触发），而建表函数里**没有** `fsrs_rating_log` —— 只有 `forTest` 会额外补建。
+  // 于是「新装用户评分日志写不进去」这件事，测试**永远看不到**（所有测试都走
+  // `forTest`）。这里刻意用**只跑 onCreate 那条路径**的入口来守。
+  test('新装库（仅 onCreate 路径）必须自带 fsrs_rating_log 表', () async {
+    final fresh = await openDatabase(inMemoryDatabasePath);
+    addTearDown(fresh.close);
+
+    // 只跑建表，不做任何补建 —— 等价于生产上 onCreate 触发的那一次。
+    await ReviewScheduleStore.ensureSchemaForTest(fresh);
+
+    final tables = await fresh.query(
+      'sqlite_master',
+      columns: ['name'],
+      where: "type = 'table' AND name = ?",
+      whereArgs: ['fsrs_rating_log'],
+    );
+    expect(tables, hasLength(1), reason: '缺这张表 ⇒ 新装用户 recordRating 的日志写入直接抛错');
+
+    // 真正写一次，确认表结构可用（不是只有个空壳）。
+    final freshStore = await ReviewScheduleStore.forTest(fresh);
+    final ok = await freshStore.recordRating(
+      card: card('grape'),
+      dateKey: '2026-10-17',
+      isLearn: true,
+      ratingId: 'r-new-install-1',
+    );
+    expect(ok, isTrue);
+  });
 }
