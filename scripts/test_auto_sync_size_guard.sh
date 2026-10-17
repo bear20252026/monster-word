@@ -37,7 +37,7 @@ git init -q
 git config user.email "guard@test"
 git config user.name "guard"
 
-mkdir -p lib test docs assets/db windows android/app
+mkdir -p lib test integration_test docs assets/db windows android/app
 echo "base" > lib/a.dart
 echo "t"    > test/t.dart
 touch pubspec.yaml pubspec.lock analysis_options.yaml
