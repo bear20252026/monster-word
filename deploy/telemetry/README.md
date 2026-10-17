@@ -91,19 +91,32 @@
 业主要求管理端能按人看。客户端上报信封里带 `user_id`（当前登录账号的 UUID），
 `usage_daily.user_id` 存下来，`telemetry_users` 记台账。
 
-**统计库里只存 UUID，不存用户名。** 管理页渲染时用 service_role JWT 调账号服务的
-`GET /admin/users`，在内存里做 UUID → 用户名 的映射（结果缓存 5 分钟）。
-理由：用户名的权威来源是账号服务，在统计库再存一份必然漂移（改名后对不上）。
+**统计库里只存 UUID，不存用户名。** 管理页渲染时用**账号库只读角色**直连 `mwauth`
+查 `auth.users`，在内存里做 UUID → 用户名 的映射（结果缓存 5 分钟）。
+理由：用户名的权威来源是账号库，在统计库再存一份必然漂移（改名后对不上）。
 副作用也很好：**统计库万一泄露，里面没有用户名**。
 
-映射失败（账号服务抖动、密钥没配）时退化成显示 UUID 前 8 位，并在页面顶部给出警告 ——
-**不会**因为名字解析不了就让整页显示空白，让人误以为没数据。
+> 🔒 **2026-10-16 审计 P1-4：这里原先走的是「自签 `service_role` JWT + 调 `/admin/users`」。**
+> 那条路径要求统计服务持有账号库的 **JWT 签名密钥**，而同一密钥能签出
+> `DELETE /admin/users/{id}`、改任意用户密码的令牌 —— 等于把**整个账号库的写权限**
+> 交给本机**唯一对公网无鉴权收输入**的进程，而它只需要显示一个用户名。
+>
+> 现在改为**列级只读角色**：`mw_auth_reader` 只被授予
+> `SELECT (id, email, raw_user_meta_data) ON auth.users`，
+> 拿不到 `encrypted_password` 与各种 token 列，也无法写入任何东西。
+> 越权面从「整个账号体系」缩到「只读两个字段」。
+> 建角色与授权见 `install-telemetry.sh` §1.5；连接参数为 `AUTH_PG_DB` / `AUTH_PG_USER` / `AUTH_PG_PASSWORD`。
+>
+> ⚠️ **不能拿 email 当用户名**：客户端为兼容中文/空格用户名，把它派生成了
+> `u<SHA256前24位>@monster-word.internal`（见 `supabase_account_authenticator.accountAddress`），
+> 所以 email 是**哈希**、认不出是谁。真实用户名在 `raw_user_meta_data.username`
+>（客户端注册时写 `data: {'username': ...}`，该列只有这一个键）。
+>
+> 顺带：审计 R3-S12 当年修的是「`/admin/users` 分页只拉第一页 ⇒ 第 1001 个之后的账号
+> 静默退化成 UUID 前缀」。改成一条 SQL 后**不存在分页**，该问题从根上消失。
 
-> ⚠️ **踩过的坑：GoTrue 的 admin API 返回的键是 `user_metadata`，不是数据库列名
-> `raw_user_meta_data`。**
-> 第一版按列名读，结果 `username` 一律取不到，全部退化成邮箱本地部分
-> （实测管理页显示 `u16cfbeee…` 而不是用户名 `percheck2847`）。
-> 代码里两个键都试一遍。
+映射失败（账号库抖动、只读角色没配）时退化成显示 UUID 前 8 位，并在页面顶部给出警告 ——
+**不会**因为名字解析不了就让整页显示空白，让人误以为没数据。
 
 上报格式版本从 v1 升到 **v2**：v1 的数据不可识别到个人，v2 的与账号关联，
 服务端据此能区分历史数据的性质。

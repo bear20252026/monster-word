@@ -79,29 +79,31 @@ else
   log "已生成数据库密码与管理页密码"
 fi
 
-# ── 从认证部署里取「解析用户名」所需的凭据 ──────────────────────
+# ── 解析用户名所需的「账号库只读」凭据 ──────────────────────────
 #
-# 统计库只存 user_id（UUID），用户名在管理页渲染时向账号服务解析 ——
-# 用户名的权威来源是账号服务，在统计库再存一份必然漂移。
-# 所以这里要拿到：账号服务的本地地址 + 一个能调 admin API 的 service JWT 的签名密钥。
+# 统计库只存 user_id（UUID），用户名在管理页渲染时向账号库解析 ——
+# 用户名的权威来源是账号库，在统计库再存一份必然漂移。
 #
-# 这两样都在认证部署的 .env 里（同一台机器，认证后端先装）。
-AUTH_ENV=/opt/mw-auth/.env
-AUTH_ADMIN_URL=http://127.0.0.1:9999
-AUTH_JWT_SECRET=""
-AUTH_ISSUER=""
-if [ -f "$AUTH_ENV" ]; then
-  AUTH_JWT_SECRET="$(grep -E '^MW_JWT_SECRET=' "$AUTH_ENV" | cut -d= -f2- || true)"
-  AUTH_ISSUER="$(grep -E '^GOTRUE_JWT_ISSUER=' "$AUTH_ENV" | cut -d= -f2- || true)"
-  AUTH_PORT="$(grep -E '^GOTRUE_API_PORT=' "$AUTH_ENV" | cut -d= -f2- || true)"
-  [ -n "$AUTH_PORT" ] && AUTH_ADMIN_URL="http://127.0.0.1:$AUTH_PORT"
+# ⚠️ 2026-10-16 审计 P1-4：这里**原先**是从 `/opt/mw-auth/.env` 抄来 JWT 签名密钥
+#（`MW_JWT_SECRET`），让统计服务自签 `service_role` 令牌去调 `/admin/users`。
+# 那等于把「整个账号库的写权限」（改任意人密码、删账号）交给本机**唯一对公网
+# 无鉴权收输入**的进程 —— 而它只需要显示一个用户名。
+#
+# 现在改为**列级只读角色**：`mw_auth_reader` 只被授予
+# `SELECT (id, email, raw_user_meta_data) ON auth.users`，
+# 拿不到 `encrypted_password` 与各种 token 列，也无法写入任何东西。
+# 于是统计服务**不再持有任何能签发管理令牌的密钥**。
+#
+# 密码在这里生成一次，之后从 .env 回读（幂等，不重置）。
+AUTH_DB_NAME=mwauth
+AUTH_READER_ROLE=mw_auth_reader
+AUTH_READER_PASSWORD=""
+if [ -f "$ENV_FILE" ]; then
+  AUTH_READER_PASSWORD="$(grep -E '^AUTH_PG_PASSWORD=' "$ENV_FILE" | cut -d= -f2- || true)"
 fi
-if [ -n "$AUTH_JWT_SECRET" ] && [ -n "$AUTH_ISSUER" ]; then
-  log "已从 $AUTH_ENV 取到账号服务凭据（管理页可按用户名显示）"
-else
-  # 不是致命错误：管理页会退化成显示账号标识前 8 位，其余功能不受影响。
-  log "⚠️ 未能从 $AUTH_ENV 取到 JWT 密钥/issuer —— 管理页将显示账号标识而非用户名"
-  log "   （先把认证后端装好，或用 AUTH_JWT_SECRET / AUTH_ISSUER 环境变量补上）"
+if [ -z "$AUTH_READER_PASSWORD" ]; then
+  AUTH_READER_PASSWORD="$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | cut -c1-32)"
+  log "已生成账号库只读角色 $AUTH_READER_ROLE 的密码"
 fi
 
 log "配置角色 $DB_ROLE 与数据库 $DB_NAME…"
@@ -128,6 +130,47 @@ fi
 # 都是 PG 内置；这里只需要保证角色能在 public 下建表。
 sudo -u postgres psql -v ON_ERROR_STOP=1 -q -d "$DB_NAME" \
   -c "GRANT ALL ON SCHEMA public TO $DB_ROLE;"
+
+# ── 1.5) 账号库的只读角色（2026-10-16 审计 P1-4）────────────────
+#
+# 管理页要把 user_id 显示成用户名，而用户名在账号库的
+# `auth.users.raw_user_meta_data ->> 'username'`。
+# 这里只授予**两列**的 SELECT：
+#   · 拿不到 `encrypted_password` / `confirmation_token` / `recovery_token` 等敏感列；
+#   · 无法 INSERT/UPDATE/DELETE 任何东西。
+# ⚠️ email 列也授权，但它是 `u<SHA256前24位>@内部域名` 的**哈希派生地址**
+#（客户端为兼容中文/空格用户名而设计），认不出是谁 —— 真实用户名在
+# `raw_user_meta_data.username`。服务端取名字时用的是后者。
+if sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='$AUTH_DB_NAME'" | grep -q 1; then
+  if sudo -u postgres psql -tAc "SELECT to_regclass('auth.users') IS NOT NULL" -d "$AUTH_DB_NAME" | grep -q t; then
+    log "配置账号库只读角色 $AUTH_READER_ROLE…"
+    sudo -u postgres psql -v ON_ERROR_STOP=1 -q <<EOF
+DO \$\$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '$AUTH_READER_ROLE') THEN
+    ALTER ROLE $AUTH_READER_ROLE WITH LOGIN PASSWORD '$AUTH_READER_PASSWORD';
+  ELSE
+    CREATE ROLE $AUTH_READER_ROLE WITH LOGIN PASSWORD '$AUTH_READER_PASSWORD';
+  END IF;
+END
+\$\$;
+EOF
+    # 先收回全部再逐项授予：保证**重复运行也不会累积权限**（幂等且收敛到最小集）。
+    sudo -u postgres psql -v ON_ERROR_STOP=1 -q -d "$AUTH_DB_NAME" <<EOF
+REVOKE ALL ON SCHEMA auth FROM $AUTH_READER_ROLE;
+GRANT CONNECT ON DATABASE $AUTH_DB_NAME TO $AUTH_READER_ROLE;
+GRANT USAGE ON SCHEMA auth TO $AUTH_READER_ROLE;
+GRANT SELECT (id, email, raw_user_meta_data) ON auth.users TO $AUTH_READER_ROLE;
+EOF
+  else
+    log "⚠️ 账号库 $AUTH_DB_NAME 里没有 auth.users 表 —— 管理页将显示账号标识而非用户名"
+    log "   （GoTrue 的迁移还没跑？先确认认证后端部署完成）"
+  fi
+else
+  # 不是致命错误：管理页会退化成显示账号标识前 8 位，其余功能不受影响。
+  log "⚠️ 账号库 $AUTH_DB_NAME 不存在 —— 管理页将显示账号标识而非用户名"
+  log "   （先把认证后端装好：deploy/native/install-auth.sh）"
+fi
 
 # ── 2. 表与函数 ──────────────────────────────────────────────
 log "应用 schema.sql 与 functions.sql…"
@@ -169,11 +212,12 @@ TRUST_PROXY=1
 ADMIN_USER=admin
 ADMIN_PASSWORD=$ADMIN_PASSWORD
 
-# 账号服务（把 user_id 解析成用户名，供管理页「按人看」）。
+# 账号库只读连接（P1-4）：管理页把 user_id 解析成用户名时用。
+# 该角色只被授予 auth.users 的 (id, email, raw_user_meta_data) 三列 SELECT —— 无写权限。
 # 留空则该功能降级为显示账号标识前 8 位，不影响上报与入库。
-AUTH_ADMIN_URL=$AUTH_ADMIN_URL
-AUTH_ISSUER=$AUTH_ISSUER
-AUTH_JWT_SECRET=$AUTH_JWT_SECRET
+AUTH_PG_DB=$AUTH_DB_NAME
+AUTH_PG_USER=$AUTH_READER_ROLE
+AUTH_PG_PASSWORD=$AUTH_READER_PASSWORD
 
 # 供运维脚本读取（服务本身不认这个变量）
 MW_DB_PASSWORD=$DB_PASSWORD
