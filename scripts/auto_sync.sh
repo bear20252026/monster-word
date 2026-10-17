@@ -79,7 +79,7 @@ if [ "$CURRENT_BRANCH" != "main" ]; then
 fi
 
 # ---- 1) 检测变更 ----
-CHANGES="$(git status --porcelain -- lib/ test/ pubspec.yaml pubspec.lock \
+CHANGES="$(git status --porcelain -- lib/ test/ integration_test/ pubspec.yaml pubspec.lock \
   analysis_options.yaml docs/ scripts/ assets/db/ windows/ android/app/ \
   2>/dev/null)"
 if [ -z "$CHANGES" ]; then
@@ -147,14 +147,14 @@ command -v timeout >/dev/null 2>&1 && TIMEOUT_CMD="timeout 180"
 
 if [ -n "$DART_BIN" ]; then
   echo "[auto_sync] dart format（$DART_BIN）..."
-  if ! $TIMEOUT_CMD "$DART_BIN" format lib/ test/ >/dev/null 2>&1; then
+  if ! $TIMEOUT_CMD "$DART_BIN" format lib/ test/ integration_test/ >/dev/null 2>&1; then
     echo "[auto_sync] ⚠️ dart format 未完成或失败 —— 跳过格式化，继续提交（不阻断）"
     echo "[auto_sync]    （本机若因 365vpn 让 dartdev 挂起属已知问题；格式门禁在 CI）"
   fi
 else
   echo "[auto_sync] ⚠️ 未找到 dart，跳过格式化（格式门禁在 CI）"
 fi
-CHANGES="$(git status --porcelain -- lib/ test/ pubspec.yaml pubspec.lock \
+CHANGES="$(git status --porcelain -- lib/ test/ integration_test/ pubspec.yaml pubspec.lock \
   analysis_options.yaml docs/ scripts/ assets/db/ windows/ android/app/ \
   2>/dev/null)"
 if [ -z "$CHANGES" ]; then
@@ -174,7 +174,7 @@ fi
 # 审计 I99：android/app/ 内含签名密钥（*.jks）与 key.properties，安全完全
 # 依赖 .gitignore 不被改动——这里在脚本层再加一道显式排除，即使 ignore
 # 规则被误改也不会把签名身份放进暂存区。
-git add lib/ test/ pubspec.yaml pubspec.lock analysis_options.yaml \
+git add lib/ test/ integration_test/ pubspec.yaml pubspec.lock analysis_options.yaml \
   docs/ scripts/ assets/db/ windows/ android/app/ \
   -- ':!android/app/*.jks' ':!android/app/*.keystore' ':!android/app/key.properties' \
   || { echo "[auto_sync] 错误：暂存失败（上面有 git 的原始报错）。此前用 2>/dev/null 把错误吞掉后照样提交，会推上一个部分暂存的提交"; exit 1; }
