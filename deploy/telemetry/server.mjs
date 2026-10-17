@@ -26,7 +26,7 @@
 
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
-import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 
 const PG_DB = process.env.PG_DB || 'mw_telemetry';
 // ⚠️ 必须走 TCP + 显式角色，不能靠 Unix socket 的对等认证：
@@ -40,11 +40,21 @@ const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const TRUST_PROXY = process.env.TRUST_PROXY === '1';
 // 账号服务（用于把 user_id 解析成用户名，供管理页「按人看」）。
-// 只在上报里存 UUID，名字在渲染时向账号服务要 —— 用户名的权威来源是那边，
+// 只在上报里存 UUID，名字在渲染时向账号库要 —— 用户名的权威来源是那边，
 // 在统计库里再存一份必然漂移（改名后对不上）。
-const AUTH_ADMIN_URL = process.env.AUTH_ADMIN_URL || '';
-const AUTH_JWT_SECRET = process.env.AUTH_JWT_SECRET || '';
-const AUTH_ISSUER = process.env.AUTH_ISSUER || '';
+//
+// ⚠️ 2026-10-16 审计 P1-4：这里**原先**是从 `/opt/mw-auth/.env` 抄来 JWT 签名密钥、
+// 自签 `service_role` 令牌去调 `/admin/users`。那条路径让统计服务持有了**能签发
+// 任意管理令牌**的密钥（可改任意用户密码、删账号）—— 而它只需要显示一个用户名。
+// 统计服务是本机**唯一对公网无鉴权收输入**的进程，一旦被攻破，越权面就是整个账号库。
+//
+// 现在改为**列级只读角色直连账号库**：`mw_auth_reader` 只被授予
+// `SELECT (id, email, raw_user_meta_data) ON auth.users`，拿不到密码哈希与各种 token 列，
+// 也无法写任何东西。越权面从「整个账号体系」缩到「只读两个字段」。
+// 建角色与授权见 `install-telemetry.sh`。
+const AUTH_PG_DB = process.env.AUTH_PG_DB || '';
+const AUTH_PG_USER = process.env.AUTH_PG_USER || '';
+const AUTH_PG_PASSWORD = process.env.AUTH_PG_PASSWORD || '';
 const PSQL = process.env.PSQL_BIN || '/usr/bin/psql';
 
 const MAX_BODY_BYTES = 256 * 1024;   // 31 天 × 十几项，几十 KB 足够；留 4 倍余量
@@ -110,16 +120,23 @@ function clientIp(req) {
 // 用 dollar-quoting 传 JSON，而不是字符串拼接：dollar 引号内的内容 PostgreSQL
 // 不做任何转义处理，因此天然免疫 SQL 注入（分隔符本身是随机生成的，
 // payload 里不可能预先包含它）。
-function psql(sql) {
+//
+// `opts` 用于**连另一个库**（账号库 mwauth，见 `fetchUserNames`）：
+// PostgreSQL **不支持跨库查询**，所以必须用独立的连接参数（库名/角色/密码），
+// 不能复用统计库那一套。默认值即统计库。
+function psql(sql, opts = {}) {
+  const db = opts.db ?? PG_DB;
+  const user = opts.user ?? PG_USER;
+  const password = opts.password ?? PG_PASSWORD;
   return new Promise((resolve, reject) => {
     // -w = 绝不交互式要密码。缺凭据时立刻失败，而不是挂住等输入
     //（systemd 下没有 stdin，挂住会变成「服务活着但请求全超时」这种难查的状态）。
     const args = ['-w', '-h', PG_HOST];
-    if (PG_USER) args.push('-U', PG_USER);
-    args.push('-d', PG_DB, '-tA', '-v', 'ON_ERROR_STOP=1', '-f', '-');
+    if (user) args.push('-U', user);
+    args.push('-d', db, '-tA', '-v', 'ON_ERROR_STOP=1', '-f', '-');
     const child = spawn(PSQL, args, {
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, PGPASSWORD: PG_PASSWORD },
+      env: { ...process.env, PGPASSWORD: password },
     });
     let out = '';
     let err = '';
@@ -161,61 +178,46 @@ async function ingest(payload) {
 
 // ── 账号名解析 ────────────────────────────────────────────────
 //
-// 用 service_role JWT 调账号服务的 admin API（签法与 deploy/tools/gen-service-jwt.mjs
-// 一致：HS256，payload 带 role=service_role 与 iss=账号服务的 issuer）。
-// 结果缓存 5 分钟：管理页是低频人工查看，没必要每次刷新都去拉全量用户表。
+// 直连账号库只读两列（2026-10-16 审计 P1-4）。原先走「自签 service_role JWT +
+// `/admin/users` 分页拉取」，那让统计服务持有了整个账号库的写权限，而它只需要一个显示名。
+//
+// ⚠️ **不能拿 email 当用户名**：客户端为兼容中文/空格用户名，把用户名派生成了
+// `u<SHA256前24位>@内部域名`（见 `supabase_account_authenticator.accountAddress`），
+// 所以 email 是**哈希**、认不出是谁。真实用户名在 `raw_user_meta_data.username`
+//（客户端注册时写 `data: {'username': ...}`，该列只有这一个键，不含其他敏感内容）。
+//
+// 结果缓存 5 分钟：管理页是低频人工查看，没必要每次刷新都去查全量。
+//
+// 注：R3-S12 当年修的是「分页只拉第一页 ⇒ 第 1001 个之后的账号静默退化成 UUID 前缀」。
+// 改成一条 SQL 后**不存在分页**，该问题从根上消失（不是被绕开）。
 let nameCache = { at: 0, map: new Map(), error: null };
 
-function mintServiceJwt() {
-  const b64url = (buf) => Buffer.from(buf).toString('base64url');
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: 'HS256', typ: 'JWT' };
-  const payload = { role: 'service_role', iss: AUTH_ISSUER, iat: now, exp: now + 3600 };
-  const signingInput = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`;
-  return `${signingInput}.${createHmac('sha256', AUTH_JWT_SECRET).update(signingInput).digest('base64url')}`;
-}
-
 async function fetchUserNames() {
-  if (!AUTH_ADMIN_URL || !AUTH_JWT_SECRET) {
-    return { map: new Map(), error: '未配置 AUTH_ADMIN_URL / AUTH_JWT_SECRET' };
+  if (!AUTH_PG_DB || !AUTH_PG_USER) {
+    return { map: new Map(), error: '未配置 AUTH_PG_DB / AUTH_PG_USER（账号名解析不可用）' };
   }
   if (Date.now() - nameCache.at < 5 * 60 * 1000) return nameCache;
 
   try {
-    const token = mintServiceJwt();
-    // 分页拉全量：只拉第一页（per_page=1000）时，第 1001 个之后的账号会**静默**
-    // 退化成 UUID 前缀、且不会出现告警条（因为解析本身没失败）—— 与页面承诺不符。
-    // 审计 R3-S12；对照 reset-password.mjs 也是分页到 100 页的。
+    const out = await psql(
+      `SELECT COALESCE(json_agg(row_to_json(t)), '[]'::json) FROM (
+         SELECT id::text AS id,
+                COALESCE(raw_user_meta_data ->> 'username', '') AS username
+         FROM auth.users
+       ) t;`,
+      { db: AUTH_PG_DB, user: AUTH_PG_USER, password: AUTH_PG_PASSWORD },
+    );
+    const list = JSON.parse(out || '[]');
     const map = new Map();
-    const perPage = 1000;
-    for (let page = 1; page <= 100; page++) {
-      const res = await fetch(`${AUTH_ADMIN_URL}/admin/users?page=${page}&per_page=${perPage}`, {
-        headers: { Authorization: `Bearer ${token}`, apikey: token },
-        signal: AbortSignal.timeout(8000),
-      });
-      if (!res.ok) {
-        // 保留上一次成功的缓存：账号服务临时抖动不该让管理页整页显示 UUID
-        nameCache = { ...nameCache, error: `账号服务返回 HTTP ${res.status}` };
-        return nameCache;
-      }
-      const body = await res.json();
-      const list = Array.isArray(body) ? body : (body.users ?? []);
-      for (const u of list) {
-        if (!u?.id) continue;
-        // ⚠️ admin API 返回的键是 **user_metadata**（GoTrue 的 API 层命名），
-        // 不是数据库列名 raw_user_meta_data —— 第一版按列名读，结果一律拿不到，
-        // 全部退化成邮箱前缀（实测：管理页显示 u16cfbeee… 而不是用户名）。
-        // 两个都试一遍，免得将来 GoTrue 改回去。
-        const meta = u.user_metadata ?? u.raw_user_meta_data ?? {};
-        // 客户端注册时把用户名放在 raw_user_meta_data.username；退回邮箱本地部分。
-        const name = meta.username || (typeof u.email === 'string' ? u.email.split('@')[0] : '');
-        map.set(u.id, name || '(未命名)');
-      }
-      if (list.length < perPage) break;   // 最后一页
+    for (const u of list) {
+      if (!u?.id) continue;
+      const name = typeof u.username === 'string' ? u.username.trim() : '';
+      map.set(u.id, name || '(未命名)');
     }
     nameCache = { at: Date.now(), map, error: null };
   } catch (e) {
-    nameCache = { ...nameCache, error: `账号服务不可达：${e?.message ?? e}` };
+    // 保留上一次成功的缓存：账号库临时抖动不该让管理页整页显示 UUID
+    nameCache = { ...nameCache, error: `账号库不可达：${e?.message ?? e}` };
   }
   return nameCache;
 }
