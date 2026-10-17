@@ -425,6 +425,11 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # ⚠️ 本 job **不 checkout**（只下载 artifacts），而 `gh` 默认靠工作目录里的 git
+          # remote 推断仓库 ⇒ 缺了它直接报 `failed to run git: fatal: not a git repository`
+          # ⇒ 校验步骤必红（2026-10-17 v2.13.1+130 实测，此前所有 tag 构建都在这一步红）。
+          # 显式指定仓库，不依赖 checkout。
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | tee /tmp/assets.txt
