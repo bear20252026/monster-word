@@ -127,17 +127,42 @@ class ReviewSessionState extends ChangeNotifier {
   bool get correctRevealed => _answerState.correctRevealed;
 
   /// 记录本题评分，推进本地引擎，并异步提交同一题目的 FSRS 持久化请求。
-  void rate(RecallRating rating) {
+  /// 评分并推进（**先落盘、成功才翻页**，业主 2026-10-17 选定「甲」）。
+  ///
+  /// 返回 `true` = 已保存并进入下一题；`false` = 没保存成功，**本题原地不动**，
+  /// 由 UI 提示用户重试。审计 P1-04：原实现先推进引擎再后台写库，写失败时
+  /// 用户看到的是「复习完成」，记录其实丢了。
+  ///
+  /// 连点处理：写入进行中再次调用会**复用同一次写入**（返回同一个 Future），
+  /// 既不会重复落库，也不会把「正在保存」误报成失败。
+  Future<bool> rate(RecallRating rating) {
+    final inflight = _inflightRating;
+    if (inflight != null) return inflight;
+    final future = _persistThenAdvance(rating).whenComplete(() => _inflightRating = null);
+    _inflightRating = future;
+    return future;
+  }
+
+  Future<bool>? _inflightRating;
+
+  Future<bool> _persistThenAdvance(RecallRating rating) async {
     final reviewedWord = currentWord;
-    if (reviewedWord == null) return;
+    if (reviewedWord == null) return false;
+
+    final ok = await _ratingExecutor.rate(reviewedWord: reviewedWord, rating: rating);
+    if (!ok) {
+      // 不推进、不重置作答态：用户仍停在本题，可以再点一次。
+      notifyListeners();
+      return false;
+    }
 
     _answerState.reset();
     _currentQuestionWrong = false;
-    _ratingExecutor.rate(reviewedWord: reviewedWord, rating: rating);
     _done++;
     _reportSessionCompletedIfDone();
     _regenerateChoices();
     notifyListeners();
+    return true;
   }
 
   void revealAnswer() {
@@ -151,7 +176,7 @@ class ReviewSessionState extends ChangeNotifier {
   /// ⇒ 同一份数据里**报表记的是错题、FSRS 记的是记忆良好**，两边互相矛盾，
   /// 而且 FSRS 会因此高估记忆程度、把该词的下次到期日推远。
   /// 现在按本次作答的真实对错分流：答错记 `again`，答对仍记 `good`。
-  void continueWithGoodRating() => rate(_currentQuestionWrong ? RecallRating.again : RecallRating.good);
+  Future<bool> continueWithGoodRating() => rate(_currentQuestionWrong ? RecallRating.again : RecallRating.good);
 
   /// 「熟」：仅推进会话计数，**有意不提交 FSRS 评分**（产品语义，非遗漏）。
   ///

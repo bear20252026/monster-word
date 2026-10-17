@@ -19,13 +19,24 @@ class ReviewSessionRatingExecutor {
     _ratingWriter = ratingWriter;
   }
 
-  void rate({required MwWordProcess reviewedWord, required RecallRating rating}) {
+  /// 评分：**先落盘，成功后才推进引擎**（业主 2026-10-17 选定「甲」方案）。
+  ///
+  /// 返回 `true` = 已写入且引擎已推进；`false` = 写入失败，**引擎未推进**，
+  /// 调用方应停在本题让用户重试。
+  ///
+  /// 原实现是「先 `_advanceEngine` 再 fire-and-forget 写库」：UI 立刻翻到下一题、
+  /// 计入已复习，而写库失败只留一条 swallowed-error ⇒ 用户看到「复习完成」，
+  /// 记录却没保存（审计 P1-04）。`rateWord` 内部已有两步降级（SQLite → SP 日志），
+  /// 走到这里失败意味着连降级日志都写不进 —— 这种时候假装成功伤害最大。
+  Future<bool> rate({required MwWordProcess reviewedWord, required RecallRating rating}) async {
+    try {
+      await _ratingWriter.rate(word: reviewedWord.word, rating: _toFsrsRating(rating));
+    } catch (error, stack) {
+      reportSwallowedError('FSRS 评分写入失败（本题不推进，等用户重试）', error, stack);
+      return false;
+    }
     _advanceEngine(rating);
-    // 持久化 Future 未接也未处理：引擎已推进而 FSRS 写失败只产生
-    // unhandled async error，评分静默丢失。接住并上报（会话不阻断）。
-    _ratingWriter
-        .rate(word: reviewedWord.word, rating: _toFsrsRating(rating))
-        .then<void>((_) {}, onError: (Object e, StackTrace s) => reportSwallowedError('FSRS 评分写入失败', e, s));
+    return true;
   }
 
   /// 保留“熟”只推进本地会话、不写入 FSRS 评分的既有语义。

@@ -98,7 +98,7 @@ class _ReviewPageState extends State<ReviewPage> {
           onPlayAudio: _playWordAudio,
           onSelectChoice: session.selectChoice,
           onRevealAnswer: session.revealAnswer,
-          onContinueWithGoodRating: session.continueWithGoodRating,
+          onContinueWithGoodRating: () => _continueReview(session),
           audioLoading: reviewAudio.isLoading,
         ),
       ),
@@ -108,6 +108,19 @@ class _ReviewPageState extends State<ReviewPage> {
   Future<void> _toggleFavorite() async {
     final result = await _wordActionCoordinator().toggleFavorite();
     _showWordActionFeedback(result);
+  }
+
+  /// 「看答案后继续」：**先落盘、成功才翻页**（审计 P1-04，业主选定「甲」）。
+  ///
+  /// 写库失败时会话不会推进，这里必须把失败告诉用户 —— 否则他会以为这题
+  /// 已经复习完，实际记录没保存，而复习队列下次还会把它当成没复习过。
+  Future<void> _continueReview(ReviewSessionState session) async {
+    final advanced = await session.continueWithGoodRating();
+    if (advanced || !mounted) return;
+    showMwSnackBar(
+      context,
+      const SnackBar(content: Text('这条复习记录没保存成功，请再点一次（存储空间或数据库异常）'), duration: Duration(seconds: 4)),
+    );
   }
 
   Future<void> _markAsKnown() async {
