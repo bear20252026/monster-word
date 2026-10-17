@@ -15,6 +15,7 @@ import 'package:word_app/features/companion/application/monster_companion_port.d
 import 'package:word_app/core/utils/monster_initiative.dart';
 import 'package:word_app/core/utils/monster_scene.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 
 /// 场景 → 表情参数（纯函数，便于单测锚定）。
@@ -132,13 +133,14 @@ class _SpeechBubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: colors.cardBg,
-          borderRadius: BorderRadius.circular(16),
+          // 用设计 token（R6/字体与圆角卫生守卫按字面量计库存，新增字面量会让 CI 红）。
+          borderRadius: BorderRadius.circular(AppRadius.control),
           border: Border.all(color: colors.divider),
         ),
         child: Text(
           text,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, height: 1.35, color: colors.text1),
+          style: TextStyle(fontSize: AppFontSizes.caption, height: 1.35, color: colors.text1),
         ),
       ),
     );

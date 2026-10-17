@@ -57,12 +57,12 @@ void main() {
 
   test('每日主动预算用尽后不再开口（跨日才重置）', () {
     final state = MonsterCompanionState();
-    // 反复切走再切回，每次都会尝试说话；预算 3 条/日。
+    // 反复「有建议 → 无建议 → 有建议」；每次有建议都会尝试说话，预算 3 条/日。
     final lines = <String?>[];
     for (var i = 0; i < 4; i++) {
       state.refreshInitiative(const MonsterInitiativeInput(dueCount: 25)); // 说话
+      lines.add(state.line); // ← 必须在清空之前记录
       state.refreshInitiative(const MonsterInitiativeInput(dueCount: 0)); // 无建议 → 清空
-      lines.add(state.line);
     }
     expect(lines[0], isNotNull);
     expect(lines[1], isNotNull);
