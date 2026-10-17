@@ -23,7 +23,7 @@ void main() {
       );
       final reviewedWord = engine.currentWord();
 
-      executor.rate(reviewedWord: reviewedWord!, rating: RecallRating.good);
+      await executor.rate(reviewedWord: reviewedWord!, rating: RecallRating.good);
 
       expect(persistedWord, reviewedWord.word);
       expect(persistedRating, FsrsRating.good);
@@ -48,7 +48,7 @@ void main() {
           ),
         );
 
-        executor.rate(reviewedWord: engine.currentWord()!, rating: expectation.recall);
+        await executor.rate(reviewedWord: engine.currentWord()!, rating: expectation.recall);
 
         expect(persistedRating, expectation.fsrs);
       }
@@ -67,10 +67,27 @@ void main() {
         ReviewRatingWriter(writeRating: ({required word, required rating}) async => newWrites++),
       );
       executor.markAsKnown();
-      executor.rate(reviewedWord: engine.currentWord()!, rating: RecallRating.good);
+      await executor.rate(reviewedWord: engine.currentWord()!, rating: RecallRating.good);
 
       expect(oldWrites, 0);
       expect(newWrites, 1);
+    });
+
+    // 审计 P1-04 的回归守卫（业主 2026-10-17 选定「先保存再翻页」）。
+    test('写入失败时不推进引擎并返回 false —— 不许出现「界面说完成、记录却没存」', () async {
+      final engine = SuperMemoryEngine()..init([MwWordProcess(word: 'first'), MwWordProcess(word: 'second')]);
+      final executor = ReviewSessionRatingExecutor(
+        engine: engine,
+        ratingWriter: ReviewRatingWriter(
+          writeRating: ({required word, required rating}) async => throw StateError('磁盘满'),
+        ),
+      );
+      final reviewedWord = engine.currentWord();
+
+      final ok = await executor.rate(reviewedWord: reviewedWord!, rating: RecallRating.good);
+
+      expect(ok, isFalse);
+      expect(engine.currentWord()?.word, reviewedWord.word, reason: '写不进去就必须停在本题；推进了就等于告诉用户「这题复习完了」，而记录其实丢了');
     });
   });
 }

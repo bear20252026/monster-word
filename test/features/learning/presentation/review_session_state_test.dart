@@ -46,7 +46,7 @@ void main() {
 
       state.revealAnswer();
       expect(state.showAnswer, isTrue);
-      state.continueWithGoodRating();
+      await state.continueWithGoodRating();
 
       expect(persistedWord, reviewedWordText);
       // 审计 P1-05：这条用例此前断言的是 `good` —— 也就是**把错误行为写成了
@@ -75,7 +75,7 @@ void main() {
 
       // 不点任何选项，直接看答案再继续 —— 这是「想不起来但没作答」的路径。
       state.revealAnswer();
-      state.continueWithGoodRating();
+      await state.continueWithGoodRating();
 
       expect(persistedRating, FsrsRating.good, reason: '未答错时保持原语义 good');
     });
@@ -118,7 +118,7 @@ void main() {
       final wrong = state.choices.firstWhere((choice) => choice.word != firstWord);
       state.selectChoice(wrong.word);
       state.selectChoice(wrong.word);
-      state.continueWithGoodRating();
+      await state.continueWithGoodRating();
 
       expect(spy.studySessions, 0, reason: '队列没走完不算完成一次会话');
       expect(spy.reviewed, 0);
