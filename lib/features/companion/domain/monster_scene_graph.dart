@@ -11,8 +11,8 @@
 //
 // 时间全部显式传入（[at]），不读系统时钟 —— 纯函数式便于真跑断言。
 
-import 'monster_event.dart';
-import 'monster_scene.dart';
+import 'package:word_app/core/utils/monster_event.dart';
+import 'package:word_app/core/utils/monster_scene.dart';
 
 class MonsterSceneGraph {
   MonsterSceneGraph({DateTime Function()? now, MonsterScene base = MonsterScene.idle})

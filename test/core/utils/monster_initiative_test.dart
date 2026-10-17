@@ -6,7 +6,7 @@
 // - 没有值得说的就闭嘴
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:word_app/features/companion/domain/monster_initiative.dart';
+import 'package:word_app/core/utils/monster_initiative.dart';
 
 void main() {
   test('久别重逢压过一切催办（积压 999 + 签到断 30 天也只欢迎）', () {

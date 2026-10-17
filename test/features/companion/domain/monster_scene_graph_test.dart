@@ -8,8 +8,8 @@
 // 不要长期留探针：两套断言会漂移，flutter_test 是唯一事实来源。
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:word_app/features/companion/domain/monster_event.dart';
-import 'package:word_app/features/companion/domain/monster_scene.dart';
+import 'package:word_app/core/utils/monster_event.dart';
+import 'package:word_app/core/utils/monster_scene.dart';
 import 'package:word_app/features/companion/domain/monster_scene_graph.dart';
 
 void main() {
