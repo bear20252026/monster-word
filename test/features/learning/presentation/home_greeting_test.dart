@@ -10,6 +10,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/core/utils/monster_rhythm.dart';
+import 'package:word_app/core/utils/monster_event.dart';
+import 'package:word_app/core/utils/monster_initiative.dart';
+import 'package:word_app/core/utils/monster_scene.dart';
+import 'package:word_app/features/companion/application/monster_companion_port.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
@@ -41,6 +45,7 @@ void main() {
     WidgetTester tester, {
     FakeScareCoinStore? coinStore,
     CheckinStatusReader reader = const _StubCheckinReader(),
+    _FakeCompanion? companion,
   }) async {
     tester.view.physicalSize = const Size(800, 1600); // 竖屏口径，避免默认 800x600 走横屏布局
     tester.view.devicePixelRatio = 1.0;
@@ -54,6 +59,7 @@ void main() {
           Provider<CheckinStatusReader>.value(value: reader),
           ChangeNotifierProvider<LearningStatisticsState>.value(value: LearningStatisticsState()),
           if (coinStore != null) Provider<ScareCoinStore>.value(value: coinStore),
+          if (companion != null) ListenableProvider<MonsterCompanionController>.value(value: companion),
         ],
         child: MaterialApp(
           onGenerateRoute: (settings) => MaterialPageRoute<void>(
@@ -252,6 +258,57 @@ void main() {
     expect(flameAnimating(), isFalse, reason: '签到后返回首页，_reload 必须 stop 火苗 ticker');
     await tester.pump(const Duration(milliseconds: 2000)); // 收敛 home 其余延时
   });
+
+  // 2026-10-17 companion：首屏怪兽由场景图驱动。
+  // 关键约束是「**唯一一只**」—— 曾出现过另加一只大舞台导致同屏两只的版本。
+  testWidgets('companion 有话要说：不点也冒泡（它会主动找你）', (tester) async {
+    final companion = _FakeCompanion(line: '今天还有 30 个词到期');
+    await pumpHome(tester, companion: companion);
+
+    expect(find.byType(MonsterIcon), findsOneWidget, reason: '首页只能有一只怪兽');
+    expect(find.text('今天还有 30 个词到期'), findsOneWidget, reason: '主动台词必须自己冒出来，不用点');
+
+    final bubble = tester.widget<AnimatedOpacity>(
+      find.ancestor(of: find.byKey(const ValueKey('monster-greeting-bubble')), matching: find.byType(AnimatedOpacity)),
+    );
+    expect(bubble.opacity, 1.0);
+  });
+
+  testWidgets('场景驱动表情：连续困难时怪兽陪着难过（sad=true）', (tester) async {
+    final companion = _FakeCompanion(scene: MonsterScene.regrouping);
+    await pumpHome(tester, companion: companion);
+
+    final icon = tester.widget<MonsterIcon>(find.byType(MonsterIcon));
+    expect(icon.sad, isTrue, reason: 'regrouping 场景要陪着难过，而不是照常卖萌');
+  });
+
+  testWidgets('没有 companion 装配时退回待机表情（最小装配不炸）', (tester) async {
+    await pumpHome(tester);
+
+    final icon = tester.widget<MonsterIcon>(find.byType(MonsterIcon));
+    expect(icon.sad, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+}
+
+/// 测试替身：companion 端口（只读面 + 空实现写面）。
+class _FakeCompanion extends ChangeNotifier implements MonsterCompanionController {
+  _FakeCompanion({this.scene = MonsterScene.idle, this.line});
+
+  @override
+  MonsterScene scene;
+
+  @override
+  String? line;
+
+  @override
+  void refreshInitiative(MonsterInitiativeInput input) {}
+
+  @override
+  bool dispatch(MonsterEvent event, {DateTime? at}) => false;
+
+  @override
+  bool tick({DateTime? at}) => false;
 }
 
 /// 测试替身：CheckinStatusReader（默认未签到口径）。

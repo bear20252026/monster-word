@@ -11,6 +11,10 @@ class _Header extends StatefulWidget {
 }
 
 class _HeaderState extends State<_Header> with TickerProviderStateMixin {
+  /// 首屏主位怪兽直径（2026-10-17 companion）：原 44px 只是「问候语旁边的小头像」，
+  /// 放大到 96 才配得上「陪伴」的主位。它是**唯一一只**，不要再另起一只。
+  static const double _monsterSize = 96;
+
   // 怪兽呼吸 bob 相位（2.8s 一循环，写法参照 profile_screen _idleCtrl：repeat + sin 相位；
   // 档位复用 MotionDurations.splash —— 唯一的 2800ms 档，棘轮口径内）
   late final AnimationController _bobCtrl = AnimationController(vsync: this, duration: MotionDurations.splash);
@@ -182,52 +186,75 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final colors = widget.skin.colors;
     final resp = context.responsive;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(resp.pageMargin, 12, resp.pageMargin, 0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          _monsterGreeting(colors),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _greeting(),
-                  style: TextStyle(
-                    fontSize: AppFontSizes.title * resp.fontScale,
-                    fontWeight: FontWeight.w700,
-                    height: 1.2,
-                    letterSpacing: -0.5,
-                    color: colors.text1,
+    // 可空读取：最小装配的单测没有 companion scope，退回待机表情即可。
+    final companion = context.watch<MonsterCompanionController?>();
+    // 把同步事实喂给它（到期数 / 今天是否已学）—— 决定它要不要主动开口。
+    final today = context.watch<TodayProgressStore>();
+    return MonsterStageWithFacts(
+      dueCount: today.due,
+      studiedToday: today.learned > 0,
+      builder: (context) => Padding(
+        padding: EdgeInsets.fromLTRB(resp.pageMargin, 12, resp.pageMargin, 0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _monsterGreeting(colors, companion),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _greeting(),
+                    style: TextStyle(
+                      fontSize: AppFontSizes.title * resp.fontScale,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                      letterSpacing: -0.5,
+                      color: colors.text1,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 3),
-                Text(_dateLabel(), style: MwTypography.caption.copyWith(color: colors.text3)),
-              ],
+                  const SizedBox(height: 3),
+                  Text(_dateLabel(), style: MwTypography.caption.copyWith(color: colors.text3)),
+                ],
+              ),
             ),
-          ),
-          _HeaderIconButton(
-            icon: Icons.menu_book_rounded,
-            tooltip: '词典查询',
-            colors: colors,
-            onTap: () => Navigator.pushNamed(context, RouteNames.search),
-          ),
-          const SizedBox(width: 10),
-          _HeaderIconButton(
-            icon: Icons.sports_esports_rounded,
-            tooltip: '单词机',
-            colors: colors,
-            onTap: () => Navigator.pushNamed(context, WordMachinePage.routeName),
-          ),
-        ],
+            _HeaderIconButton(
+              icon: Icons.menu_book_rounded,
+              tooltip: '词典查询',
+              colors: colors,
+              onTap: () => Navigator.pushNamed(context, RouteNames.search),
+            ),
+            const SizedBox(width: 10),
+            _HeaderIconButton(
+              icon: Icons.sports_esports_rounded,
+              tooltip: '单词机',
+              colors: colors,
+              onTap: () => Navigator.pushNamed(context, WordMachinePage.routeName),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  /// 怪兽伙伴：2.8s 呼吸 bob；点击张嘴 0.3s 并冒「咕噜~」气泡。
-  Widget _monsterGreeting(ThemeVars colors) {
+  /// 怪兽伙伴：首屏主位（2026-10-17 companion 接管）。
+  ///
+  /// 它是**唯一一只**怪兽 —— 之前有版本在下面另加了一个大舞台，同屏两只，
+  /// 用户会以为不是同一只。这里把「主位」直接做进 header：放大到 [_monsterSize]，
+  /// 表情由 companion 的场景图驱动，点击/气泡/节拍窗/跳转全部保持原行为。
+  ///
+  /// 场景表达与点击表达的优先级：点击的「张嘴」优先（用户刚动手，必须有即时反馈），
+  /// 其余表情参数取场景值。没有 companion 装配（最小装配的单测）时退回待机表情。
+  Widget _monsterGreeting(ThemeVars colors, MonsterCompanionController? companion) {
+    final scene = companion?.scene ?? MonsterScene.idle;
+    final expr = sceneExpression(scene);
+    // 主动台词：companion 有话要说就直接冒出来（这才是「它会找你」）。
+    // 点击冒泡期间以点击文案为准，避免两句话打架。
+    final proactive = companion?.line;
+    final bubbleText = _gurgleVisible ? _greetingText : proactive;
+    final showBubble = _gurgleVisible || proactive != null;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _greet,
@@ -246,18 +273,21 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
               // 形态与成长随真实签到数据（曾不传 evoStage：100 天金冠用户
               // 首页永远奶泡，台词却播「我现在是金冠形态」自相矛盾）。
               builder: (context, _) => MonsterIcon(
-                size: 44,
-                mouthOpen: 0.3 * _mouth.value,
+                size: _monsterSize,
+                // 点击张嘴优先于场景表情：max 取二者较大值。
+                mouthOpen: math.max(0.3 * _mouth.value, expr.mouthOpen),
+                cheekPuff: expr.cheekPuff,
+                sad: expr.sad,
                 evoStage: _checkinDays == null ? 0 : MonsterIcon.stageFor(_checkinDays!),
-                bellyScale: _checkinDays == null ? 1.0 : MonsterIcon.growthFor(_checkinDays!),
+                bellyScale: (_checkinDays == null ? 1.0 : MonsterIcon.growthFor(_checkinDays!)) * expr.bellyScale,
               ),
             ),
-            // 「咕噜~」气泡：悬在怪兽头顶右上，默认隐藏
+            // 气泡：悬在怪兽头顶右上，默认隐藏
             Positioned(
-              top: -14,
-              left: 26,
+              top: -_monsterSize * 0.32,
+              left: _monsterSize * 0.58,
               child: AnimatedOpacity(
-                opacity: _gurgleVisible ? 1 : 0,
+                opacity: showBubble ? 1 : 0,
                 duration: const Duration(milliseconds: 180),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -266,7 +296,7 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
                     shape: StadiumBorder(side: BorderSide(color: colors.divider)),
                   ),
                   child: Text(
-                    _greetingText,
+                    bubbleText ?? '',
                     key: const ValueKey('monster-greeting-bubble'),
                     style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, color: colors.text2),
                   ),
