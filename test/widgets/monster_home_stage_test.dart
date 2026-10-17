@@ -17,10 +17,10 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/monster_home_stage.dart';
 
 class _FakeController extends ChangeNotifier implements MonsterCompanionController {
-  _FakeController({this.scene = MonsterScene.idle, this.line});
+  _FakeController({this.line});
 
   @override
-  MonsterScene scene;
+  MonsterScene scene = MonsterScene.idle;
 
   @override
   String? line;
