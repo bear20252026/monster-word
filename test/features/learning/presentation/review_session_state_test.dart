@@ -49,10 +49,35 @@ void main() {
       state.continueWithGoodRating();
 
       expect(persistedWord, reviewedWordText);
-      expect(persistedRating, FsrsRating.good);
+      // 审计 P1-05：这条用例此前断言的是 `good` —— 也就是**把错误行为写成了
+      // 期望值**。用户刚选错、看了答案再继续，最该记 `again`；记 `good` 会让
+      // 报表（记错题）与 FSRS（记记忆良好）互相矛盾，并把该词到期日推远。
+      expect(persistedRating, FsrsRating.again, reason: '答错后继续必须记 again，不能记 good');
       expect(state.done, 1);
       expect(state.showAnswer, isFalse);
       expect(state.currentWord?.word, isNot(reviewedWordText));
+    });
+
+    test('没答错就继续（只看了答案）仍记 good —— 修复不能把正确路径也一起改坏', () async {
+      FsrsRating? persistedRating;
+      final state = ReviewSessionState(
+        queueReader: const RepositoryReviewQueueReader(),
+        ratingWriter: ReviewRatingWriter(
+          writeRating: ({required word, required rating}) async => persistedRating = rating,
+        ),
+      );
+      await state.initialize(
+        ReviewQueueSnapshot(
+          dueWords: [Word(id: 1, word: 'solo', interpret: '独自')],
+          queueWords: const [],
+        ),
+      );
+
+      // 不点任何选项，直接看答案再继续 —— 这是「想不起来但没作答」的路径。
+      state.revealAnswer();
+      state.continueWithGoodRating();
+
+      expect(persistedRating, FsrsRating.good, reason: '未答错时保持原语义 good');
     });
 
     test('初始化读取失败后保留错误状态而不是把页面当作复习完成', () async {
