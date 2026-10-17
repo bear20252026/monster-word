@@ -135,6 +135,15 @@ class LearningSessionState extends ChangeNotifier {
   }
 
   Future<void> _incrementTodayLearned() async {
+    // ⚠️ 审计 P1-06（2026-10-17）：`_todayLearnedDate` 是**加载时**记下的日期，
+    // 原先写入直接沿用它 ⇒ 应用跨午夜还开着时，今天的进度会被写到**昨天**的键上：
+    // 用户看到的「今日已学」继续在昨天累加，今天的目标进度反而从 0 开始，
+    // 次日启动时又被「跨天清零」抹掉。这里按**写入时刻**重新取日期，一变就归零。
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    if (_todayLearnedDate != today) {
+      _todayLearnedDate = today;
+      _todayLearned = 0;
+    }
     _todayLearned++;
     // 埋点：新学一个词。开关关闭时实现方空转，这里不需要自己判断。
     final recorder = _usageStats;

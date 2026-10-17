@@ -144,8 +144,14 @@ class ReviewSessionState extends ChangeNotifier {
     _answerState.revealAnswer();
   }
 
-  /// 保持“看答案后继续”沿用 good 评分推进正式复习的既有行为。
-  void continueWithGoodRating() => rate(RecallRating.good);
+  /// 「看答案后继续」。
+  ///
+  /// ⚠️ 审计 P1-05（2026-10-17）：原实现**无条件** `rate(RecallRating.good)`，
+  /// 于是「答错 → 看答案 → 继续」这条最需要记 `again` 的路径反而记了 `good`
+  /// ⇒ 同一份数据里**报表记的是错题、FSRS 记的是记忆良好**，两边互相矛盾，
+  /// 而且 FSRS 会因此高估记忆程度、把该词的下次到期日推远。
+  /// 现在按本次作答的真实对错分流：答错记 `again`，答对仍记 `good`。
+  void continueWithGoodRating() => rate(_currentQuestionWrong ? RecallRating.again : RecallRating.good);
 
   /// 「熟」：仅推进会话计数，**有意不提交 FSRS 评分**（产品语义，非遗漏）。
   ///
