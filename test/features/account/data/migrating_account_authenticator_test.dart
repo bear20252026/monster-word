@@ -90,6 +90,9 @@ void main() {
       ).signIn(username: 'alice', password: 'secret123');
 
       expect(result.status, AuthStatus.success);
+      // 反向断言（R3-A09）：普通登录成功**不是**迁移，不得置位 ——
+      // 否则每次登录都会弹「已为你开通云同步」，把一次性的说明变成噪声。
+      expect(result.migrated, isFalse, reason: '普通登录不该被当成迁移');
       expect(remote.createAccountCalls, isEmpty);
       expect(local.removeCalls, isEmpty);
     });
@@ -131,6 +134,9 @@ void main() {
       ).signIn(username: 'alice', password: 'secret123');
 
       expect(result.status, AuthStatus.success);
+      // R3-A09：迁移成功必须置位 —— UI 靠它给「已为你开通云同步」的一次性告知。
+      // 这是用户唯一一次能得知「自己顺带有了云账号」的时刻。
+      expect(result.migrated, isTrue, reason: '迁移成功必须标记 migrated，否则告知永远不会出现');
       expect(remote.createAccountCalls, ['alice']);
       expect(local.removeCalls, ['alice'], reason: '迁到服务端后本机不该再留密码哈希');
     });

@@ -55,9 +55,15 @@ class MigratingAccountAuthenticator implements AccountAuthenticator {
     // 服务端拒绝。先确认「用户输入的密码本身是对的」——这是迁移判定的全部依据。
     if (!await _isKnownLocalPassword(username, password)) return outcome;
 
-    final migrated = await remote.createAccount(username: username, password: password);
-    if (migrated.ok) await _forgetLocalCredential(username);
-    return migrated;
+    final created = await remote.createAccount(username: username, password: password);
+    if (created.ok) {
+      await _forgetLocalCredential(username);
+      // 审计 R3-A09：这次「登录成功」其实是一次**迁移** —— 用户输入的仍是自己一直在用的
+      // 那组用户名密码，登录成功后并不知道自己顺带拥有了一个云账号（此后换设备可直接登录）。
+      // 置位 migrated 让 UI 能给出一次性告知；登录成功的语义本身不变。
+      return const AuthOutcome.success(migrated: true);
+    }
+    return created;
   }
 
   @override
