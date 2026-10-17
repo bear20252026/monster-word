@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
@@ -138,14 +138,9 @@ class LocalStudyReminderService implements StudyReminderService {
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
         ),
-        // iOS 必须给 darwin 详情，否则前台/锁屏都不呈现（与 Android 分支不同，
-        // 这里不是可选项）。
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBanner: true,
-          presentSound: true,
-          presentBadge: true,
-        ),
+        // iOS 必须给 Darwin 详情，否则前台/锁屏都不呈现（与 Android 分支不同，
+        // 这里不是可选项）。注意 v22 的参数位叫 `iOS:`，类名才是 `Darwin*`。
+        iOS: DarwinNotificationDetails(presentAlert: true, presentBanner: true, presentSound: true, presentBadge: true),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
