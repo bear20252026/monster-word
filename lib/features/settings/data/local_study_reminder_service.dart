@@ -7,12 +7,17 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:word_app/features/settings/application/study_reminder_service.dart';
 import 'package:word_app/features/settings/domain/reminder_time.dart';
 
-/// 学习提醒的本地通知真实现（Android + Windows，随主包默认实现分发）。
+/// 学习提醒的本地通知真实现（Android + Windows + iOS，随主包默认实现分发）。
 ///
 /// - Android：AlarmManager 每日提醒（inexactAllowWhileIdle，免精确闹钟权限），
 ///   POST_NOTIFICATIONS 运行时权限在 [requestPermission] 申请。
 /// - Windows：toast 通知；未打包 MSIX 时系统能力受限（取消/查询可能无效），
 ///   调度失败由调用方 try/catch 诚实提示。
+/// - iOS（2026-10-17 补）：UNUserNotificationCenter；初始化时**不**自动申请权限
+///   （交给 [requestPermission]），且 `zonedSchedule` 必须带 darwin 详情才显示。
+///   ⚠️ 仍缺一步：`ios/Runner/AppDelegate.swift` 需设置
+///   `UNUserNotificationCenter.current().delegate`，否则**前台**收到通知不呈现。
+///   那一步只能在 macOS 上改并验证，本机做不到，已记为 iOS 上线前待办。
 class LocalStudyReminderService implements StudyReminderService {
   LocalStudyReminderService({
     @visibleForTesting this.pluginOverride,
@@ -53,6 +58,18 @@ class LocalStudyReminderService implements StudyReminderService {
           guid: '7C1E4F2A-9B6D-4E53-A1C8-52F0B7D9E4A1',
         ),
       ),
+      // iOS（2026-10-17 补）：此前落到 `_ =>` 空设置 ⇒ initialize 不带 darwin
+      // 配置，插件在 iOS 上拿不到 UNUserNotificationCenter 的 delegate，
+      // 调度出去的提醒**不会显示**，而 requestPermission 又对非 Android 直接
+      // 返回 true ⇒ 界面显示「已开启」、实际永远收不到。三个 request*Permission
+      // 一律传 false：授权时机交给 requestPermission()，避免初始化即弹窗。
+      TargetPlatform.iOS => const InitializationSettings(
+        iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
+      ),
       _ => const InitializationSettings(),
     };
     await _client.initialize(settings: settings);
@@ -83,6 +100,16 @@ class LocalStudyReminderService implements StudyReminderService {
 
   @override
   Future<bool> requestPermission() async {
+    // iOS（2026-10-17 补）：必须真的申请一次授权，否则 zonedSchedule 排进去的
+    // 提醒会被系统静默丢弃。此前这里对非 Android 一律 `return true`，
+    // 等于对 iOS 谎报「已授权」。
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await _ensureInitialized();
+      final ios = _client.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      if (ios == null) return false;
+      final granted = await ios.requestPermissions(alert: true, badge: true, sound: true);
+      return granted ?? false;
+    }
     if (defaultTargetPlatform != TargetPlatform.android) return true;
     await _ensureInitialized();
     final android = _client.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
@@ -111,6 +138,9 @@ class LocalStudyReminderService implements StudyReminderService {
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
         ),
+        // iOS 必须给 Darwin 详情，否则前台/锁屏都不呈现（与 Android 分支不同，
+        // 这里不是可选项）。注意 v22 的参数位叫 `iOS:`，类名才是 `Darwin*`。
+        iOS: DarwinNotificationDetails(presentAlert: true, presentBanner: true, presentSound: true, presentBadge: true),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,

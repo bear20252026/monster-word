@@ -1,0 +1,75 @@
+name: iOS Compile Check
+
+# 只证明「iOS 能编译通过」，**不产出可分发的包**。
+#
+# 为什么单独一个 workflow 而不是塞进 build.yml：
+#   macOS runner 单次冷构建十几分钟，没必要每个 PR 都跑。这里只在
+#   ① 手动触发、② PR 改到 ios/ 或 pubspec.yaml（依赖/工程本身变了）时跑。
+#
+# 为什么 `--no-codesign`：
+#   iOS 出包必须有 Apple Developer Program（$99/年）的证书与 Provisioning
+#   Profile。没有账号时**能编译、不能安装**——这个 job 的价值就是把
+#   「代码能不能移植到 iOS」和「有没有签名账号」两件事彻底分开：
+#   前者靠 CI 就能守住，后者只在真要装机时才成为门槛。
+#
+# 已知未覆盖（需 macOS 真机/真机验证，CI 只能编译）：
+#   - 通知在前台呈现需要在 AppDelegate 里设 UNUserNotificationCenter delegate
+#   - 真机行为（权限弹窗、Keychain、SQLite 资产初始化）无法在 CI 断言
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/ios_compile.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 先单独跑一次 pod install：它失败的报错比 build 阶段清楚得多
+      # （典型是某个插件缺 iOS 实现 / 最低部署版本不匹配）。
+      - name: CocoaPods install
+        working-directory: ios
+        run: pod install
+
+      - name: Build iOS (no codesign)
+        # 与正式包同口径注入 dart-define：不注入的话这里编译的是「本机模式」，
+        # 而真机要跑的是服务端模式 —— 编译期常量不同会走不同的代码路径，
+        # 校验意义就打折了。
+        run: >-
+          flutter build ios --release --no-codesign
+          --dart-define=APP_VERSION=0.0.0-ci --dart-define=APP_BUILD_NUMBER=0
+          --dart-define=AUTH_BASE_URL=https://auth.cloudbear.cloud
+          --dart-define=AUTH_ANON_KEY=mw-selfhosted-1
+          --dart-define=STATS_BASE_URL=https://stats.cloudbear.cloud
+
+      - name: Report artifact size
+        # 只报大小，不上传 .app（未签名产物没有任何分发价值，避免被误取）。
+        run: |
+          set -euo pipefail
+          APP="build/ios/iphoneos/Runner.app"
+          if [ ! -d "$APP" ]; then
+            echo "::error::未产出 $APP —— 编译没走到最后"
+            exit 1
+          fi
+          du -sh "$APP"

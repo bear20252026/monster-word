@@ -1,4 +1,5 @@
 // 学习提醒本地通知服务单测：Fake 插件替身，验证调度时刻计算与幂等取消。
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
@@ -110,5 +111,20 @@ void main() {
     final service = _service(plugin, DateTime(2026, 9, 2, 10, 0));
 
     expect(await service.requestPermission(), isTrue);
+  });
+
+  // 2026-10-17 补 iOS：此前 `requestPermission` 对非 Android 一律返回 true，
+  // 而 iOS 上初始化根本没带 darwin 配置、也从没真正申请过授权
+  // ⇒ 界面显示「已开启」，实际永远收不到提醒。
+  test('iOS 平台 requestPermission 不能无脑返回 true（拿不到平台实现时必须报未授权）', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    final plugin = _FakePlugin();
+    final service = _service(plugin, DateTime(2026, 9, 2, 10, 0));
+
+    // 替身不是真的 iOS 插件实现 ⇒ resolvePlatformSpecificImplementation 返回 null。
+    // 关键断言是**不再谎报已授权**：宁可返回 false 让调用方如实提示，也不假装成功。
+    expect(await service.requestPermission(), isFalse);
   });
 }
