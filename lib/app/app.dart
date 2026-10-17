@@ -21,6 +21,7 @@ import 'package:word_app/app/router/navigation_history.dart';
 import 'package:word_app/features/account/presentation/account_feature_providers.dart';
 import 'package:word_app/features/book/presentation/book_feature_providers.dart';
 import 'package:word_app/features/checkin/presentation/check_in_feature_providers.dart';
+import 'package:word_app/features/companion/presentation/companion_feature_providers.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_feature_providers.dart';
 import 'package:word_app/features/learning/presentation/learning_feature_providers.dart';
 import 'package:word_app/features/quick_review/presentation/quick_review_feature_providers.dart';
@@ -103,7 +104,12 @@ class WordApp extends StatelessWidget {
                                 ChangeNotifierProvider(create: (_) => SkinSystem()),
                                 ChangeNotifierProvider(create: (_) => WallpaperState()),
                               ],
-                              child: const _AppLifecycle(),
+                              child: buildCompanionFeatureScope(
+                                // [14] Companion — 怪兽陪伴层（场景图 + 主动性）。**必须最内层**：
+                                // 它要读 ScareCoinStore（[9]）与 learning 的到期数；Provider 只能向下查找。
+                                // 这也是 P2 教训的直接后果（learning 在 scare_coin 外层 ⇒ 状态层拿不到账本）。
+                                child: const _AppLifecycle(),
+                              ),
                             ),
                           ),
                         ),

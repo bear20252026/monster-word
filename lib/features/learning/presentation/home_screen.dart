@@ -30,6 +30,7 @@ import 'package:word_app/tokens/func_colors.dart';
 import 'package:word_app/tokens/star_gold.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/monster_icon.dart';
+import 'package:word_app/widgets/monster_home_stage.dart';
 import 'package:word_app/widgets/app_dock.dart';
 import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/daily_goal_picker.dart';
@@ -87,7 +88,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: [
         _EntranceIn(child: _Header(skin: skin)),
-        const Spacer(flex: 3),
+        const Spacer(flex: 1),
+        // 首屏主位（2026-10-17 companion）：怪兽在这里陪着，而不是只在 profile/小屋里。
+        // 有话才开口（气泡由 companion 的主动性规则决定），没话就只是安静待机
+        // —— 陪伴感来自「它在」，不是「它一直动」。
+        _EntranceIn(delayMs: 40, child: const _HomeMonster(size: 128)),
+        const Spacer(flex: 1),
         // 今日进度主卡（唯一视觉锚点）
         _EntranceIn(
           delayMs: 80,
@@ -138,7 +144,18 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: Padding(padding: EdgeInsets.all(resp.pageMargin), child: const _TodayHeroCard()),
+                child: Padding(
+                  padding: EdgeInsets.all(resp.pageMargin),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 横屏空间紧：怪兽缩小但仍居首屏主位。
+                      const _HomeMonster(size: 92),
+                      const SizedBox(height: 8),
+                      const _TodayHeroCard(),
+                    ],
+                  ),
+                ),
               ),
               Expanded(
                 child: Padding(

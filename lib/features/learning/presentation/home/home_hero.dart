@@ -1,5 +1,29 @@
 part of '../home_screen.dart';
 
+/// 首屏怪兽（2026-10-17 companion）：从 [TodayProgressStore] 取**同步事实**
+/// 喂给陪伴层，再渲染舞台。
+///
+/// 为什么用 Selector：首页主体不该因为进度变化整体重画，重建范围只圈住怪兽。
+/// 为什么事实只喂两项：`daysSinceLastCheckin` / `daysSinceLastVisit` 要异步读 SP，
+/// 后续接入；缺省 0 时主动性规则不会误催。
+class _HomeMonster extends StatelessWidget {
+  const _HomeMonster({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Selector<TodayProgressStore, ({int due, bool studied})>(
+      selector: (_, store) => (due: store.due, studied: store.learned > 0),
+      builder: (context, facts, _) => MonsterStageWithFacts(
+        dueCount: facts.due,
+        studiedToday: facts.studied,
+        builder: (_) => MonsterStage(size: size),
+      ),
+    );
+  }
+}
+
 /// 今日进度主卡：进度环 + 目标文案 + Learn/Review 双 CTA。
 ///
 /// 数据统一来自 [TodayProgressStore]（目标/已学/待复习单一事实源），

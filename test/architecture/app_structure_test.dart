@@ -467,7 +467,7 @@ void main() {
   });
 
   group('Provider scope 嵌套全序锁定（REG-ARCH-003）', () {
-    test('app.dart 13 层 scope 必须保持注释 [1]~[13] 的 DAG 链序', () {
+    test('app.dart 14 层 scope 必须保持注释 [1]~[14] 的 DAG 链序', () {
       // 背景：app.dart 的 scope 嵌套顺序是全库 Provider 可达性的根基（learning 被跨模块
       // 消费 189 处），此前仅 ScareCoin→CheckIn 一对有断言（复审 A4/H3），其余层序靠
       // 注释维护——任何调整都可能编译期静默、运行时 ProviderNotFound。
@@ -490,6 +490,9 @@ void main() {
         'buildDictionaryFeatureScope(', // [11] Dictionary
         'buildWordBrowseFeatureScope(', // [12] WordBrowse
         'ChangeNotifierProvider(create: (_) => SkinSystem())', // [13] MultiProvider（皮肤/墙纸）
+        // [14] Companion（2026-10-17）：怪兽陪伴层。**必须最内层** —— 它要读
+        // ScareCoinStore（[9]）与 learning 的到期数，Provider 只能向下查找。
+        'buildCompanionFeatureScope(', // [14] Companion
       ];
       var prevIdx = -1;
       for (final marker in chainOrder) {

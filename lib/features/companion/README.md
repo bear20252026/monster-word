@@ -21,12 +21,30 @@
 ## 分层
 
 ```
-domain/                     纯 Dart，零依赖（可脱机真跑断言）
-  monster_event.dart        数据层 → 演出层的唯一通道（只报事实）
-  monster_scene.dart        场景 + 调度参数表（优先级/时长/冷却/可打断）
-  monster_scene_graph.dart  场景图：事件 → 场景转移的三条判定规则
-  monster_initiative.dart   主动发起规则（不需要大模型）
+core/utils/                    纯 Dart，零依赖（可脱机真跑断言）
+  monster_event.dart           数据层 → 演出层的唯一通道（只报事实）
+  monster_scene.dart           场景 + 调度参数表（优先级/时长/冷却/可打断）
+  monster_initiative.dart      主动发起规则（不需要大模型）
+
+features/companion/
+  domain/monster_scene_graph.dart   场景图：事件 → 场景转移的三条判定规则
+  application/monster_companion_port.dart  对外只读+窄写端口
+  presentation/monster_companion_state.dart  ChangeNotifier 实现
+  presentation/companion_feature_providers.dart  装配（app.dart [14]）
+
+widgets/
+  monster_home_stage.dart      首屏舞台 + 事实喂食器（只经 application 端口通信）
 ```
+
+### 为什么类型在 `core/utils/` 而不是 `domain/`
+
+架构守卫（R4 / R-widgets）规定：**跨 feature 与 `widgets/` 共享层只能消费对方的
+`application/` 层**。而 `widgets/monster_home_stage.dart` 需要 `MonsterScene` 与
+`MonsterInitiativeInput` 这两个类型 —— 放在 `companion/domain` 会直接被守卫拦下。
+
+本仓已有先例：`monster_speech` / `monster_bond_prefs` / `monster_rhythm` 都在
+`core/utils/`。**怪兽的共享原语统一放 core，feature 里只放本 feature 自己的逻辑**
+（这里只剩场景图）。
 
 **单向数据流**（红线）：`domain` 只**读**事实、只**产**场景建议；
 它不写任何持久化状态。奖励、羁绊、学习记录全部由各自的域负责。
@@ -52,11 +70,8 @@ N.E.K.O 的主动性来自 LLM 驱动器，代价是：联网、延迟、API 费
 
 ## 下一步接入（尚未做）
 
-- `presentation/`：一个 `MonsterStage` widget 订阅场景，做淡入淡出与静音/减动效适配
-- 首页：把怪兽放到首屏主位（当前它只在 profile 与小屋出现）
 - 学习/复习页：接 `dispatch(sessionStarted | answerWrong | hardStreak | sessionCompleted)`
-- 演出调度器：浮层冲突、静音开关、`MediaQuery.disableAnimations` 支持
-
-**接入前必须先做**：`presentation` 层需要能读到 `ScareCoinStore` 等账本，
-而 `learning` scope 在 `scare_coin` 之外（见 `app.dart` 链序注释）——
-新增 feature 的 scope 位置需要先定，不要重演 P2 那个「状态层拿不到账本」的坑。
+  （当前只有首页在演，场景图的 `hinting` / `regrouping` 等还没有事件源）
+- 主动性补两项事实：`daysSinceLastCheckin` / `daysSinceLastVisit`（需异步读 SP）
+- 演出调度器：浮层冲突、静音开关、`MediaQuery.disableAnimations` 已支持
+- 桌面常驻（Windows 桌面伙伴）：需另开一个无边框窗口，属独立工程
