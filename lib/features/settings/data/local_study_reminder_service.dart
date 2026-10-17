@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
@@ -64,7 +64,7 @@ class LocalStudyReminderService implements StudyReminderService {
       // 返回 true ⇒ 界面显示「已开启」、实际永远收不到。三个 request*Permission
       // 一律传 false：授权时机交给 requestPermission()，避免初始化即弹窗。
       TargetPlatform.iOS => const InitializationSettings(
-        darwin: DarwinInitializationSettings(
+        iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,
           requestSoundPermission: false,
@@ -140,7 +140,7 @@ class LocalStudyReminderService implements StudyReminderService {
         ),
         // iOS 必须给 darwin 详情，否则前台/锁屏都不呈现（与 Android 分支不同，
         // 这里不是可选项）。
-        darwin: DarwinNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentAlert: true,
           presentBanner: true,
           presentSound: true,
