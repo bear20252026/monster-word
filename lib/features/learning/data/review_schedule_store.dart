@@ -55,9 +55,18 @@ class ReviewScheduleStore {
   @visibleForTesting
   static Future<ReviewScheduleStore> forTest(Database db) async {
     await _createSchema(db);
-    await _createRatingLogTable(db);
     return ReviewScheduleStore._(db);
   }
+
+  /// 仅供测试：**只**跑 `onCreate` 那条路径（不额外补建任何表）。
+  ///
+  /// 存在的理由：`forTest` 过去会额外调 `_createRatingLogTable`，于是
+  /// 「新建库缺 `fsrs_rating_log`」这个缺陷在测试里**永远看不见** ——
+  /// 2026-10-17 审计实测：全新安装（`version: 2` 直建，`onUpgrade` 不触发）
+  /// 写入评分日志直接失败，而所有测试都是绿的。守这条路径需要一条
+  /// **不补建**的入口。
+  @visibleForTesting
+  static Future<void> ensureSchemaForTest(Database db) => _createSchema(db);
 
   /// 打开默认位置的 review_schedule.db（不存在则建表）。
   ///
@@ -136,6 +145,13 @@ class ReviewScheduleStore {
         date TEXT PRIMARY KEY
       )
     ''');
+    // ⚠️ 必须在这里也建评分日志表（2026-10-17 审计 P1）。
+    // 此前它只在 `onUpgrade` 与 `forTest` 里建 —— 而全新安装走的是
+    // `onCreate`（version 直接就是 2，`onUpgrade` 永不触发）⇒ **新装用户
+    // 的评分日志表压根不存在**，写库必失败；测试因为 `forTest` 会补建，
+    // 所以全绿。`open()` 末尾那句「防御旧文件缺表」调的也是本方法，
+    // 放在这里才能同时覆盖 onCreate / 旧库 / 测试三条路径。
+    await _createRatingLogTable(db);
   }
 
   // ============================================================
