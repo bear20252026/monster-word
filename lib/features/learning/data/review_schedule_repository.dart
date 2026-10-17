@@ -487,7 +487,20 @@ class ReviewScheduleRepository extends ChangeNotifier {
       sqliteReady = true;
       // P1-01：SQLite 恢复后先回放降级期间的评分日志（幂等），再清旧快照——
       // 否则降级期新数据会被 marker=done 跳过迁移而静默消失（MW-22）。
-      await _replayDegradedJournal(store);
+      final replayed = await _replayDegradedJournal(store);
+      // 审计 P1-03：回放写的是**库**，而上面的 `_counts` / `_cards` /
+      // `_dailyStats` / `_activeDates` 是回放**之前**读的快照 ⇒ 不重读的话，
+      // 本次启动全程看到的统计、到期集、连续天数都缺了刚回放的那批评分
+      // （用户会觉得「昨天学的没算进去」），要等下次启动才自愈。
+      // 只在真有写入时重读，避免无日志时白跑四次查询。
+      if (replayed > 0) {
+        final nowAfterReplay = DateTime.now();
+        _counts = await store.loadCounts(nowAfterReplay);
+        final dueAfterReplay = await store.loadDueCards(nowAfterReplay);
+        _cards = {for (final card in dueAfterReplay) card.word: card};
+        _dailyStats = await store.loadDailyStats();
+        _activeDates = await store.loadActiveDates();
+      }
       // E2：SQLite 模式就绪后清除旧 SP 回滚快照（降级模式保留 SP，供重试/旧版）。
       await _clearLegacySpSnapshotIfMigrated();
     } catch (error, stack) {
@@ -658,11 +671,11 @@ class ReviewScheduleRepository extends ChangeNotifier {
 
   /// SQLite 恢复后回放降级日志：按序重算卡片并落库，fsrs_rating_log 主键
   /// 幂等去重（重复回放不会重复计数）；任一条失败保留整个日志下次重试。
-  Future<void> _replayDegradedJournal(ReviewScheduleStore store) async {
+  Future<int> _replayDegradedJournal(ReviewScheduleStore store) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final journal = prefs.getStringList(degradedJournalKey);
-      if (journal == null || journal.isEmpty) return;
+      if (journal == null || journal.isEmpty) return 0;
       var applied = 0;
       var duplicates = 0;
       for (final entry in journal) {
@@ -673,8 +686,17 @@ class ReviewScheduleRepository extends ChangeNotifier {
           final dateKey = map['date'] as String;
           final ratingId = map['ratingId'] as String;
           final isLearn = (map['isLearn'] as bool?) ?? false;
+          // 审计 P1-02：**必须按原答题时间重算**，不能用「回放当天」。
+          // FSRS 的间隔由 elapsedDays（距 lastReview 的天数）决定 —— 若拿
+          // DateTime.now() 当 reviewedAt，三天前那次评分会被当成「刚刚」，
+          // 于是间隔被重新拉长/缩短，卡片到期日与用户实际学习历史脱节。
+          // journal 里一直写着 `savedAt`（评分发生时刻），此前只用于排障，
+          // 没喂给引擎。老条目可能没有该键 ⇒ 退回 dateKey 当日零点。
+          final reviewedAt = _journalReviewedAt(map, dateKey);
           final prior = await store.cardForWord(word);
-          final card = prior == null ? _engine.learn(word, rating) : _engine.review(prior, rating);
+          final card = prior == null
+              ? _engine.learn(word, rating, reviewedAt: reviewedAt)
+              : _engine.review(prior, rating, reviewedAt: reviewedAt);
           final ok = await store.recordRating(
             card: card,
             dateKey: dateKey,
@@ -688,7 +710,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
           }
         } catch (error, stack) {
           reportSwallowedError('FSRS 降级日志回放单条失败（保留日志下次重试）', error, stack);
-          return;
+          return applied;
         }
       }
       await prefs.remove(degradedJournalKey);
@@ -697,9 +719,25 @@ class ReviewScheduleRepository extends ChangeNotifier {
         StateError('degraded journal replayed'),
         StackTrace.current,
       );
+      return applied;
     } catch (error, stack) {
       reportSwallowedError('FSRS 降级日志回放读取失败（保留日志下次重试）', error, stack);
+      return 0;
     }
+  }
+
+  /// 从 journal 条目取出**原答题时刻**（审计 P1-02）。
+  ///
+  /// 优先 `savedAt`（评分发生的那一刻，ISO 串）；老条目没有该键时退回
+  /// `dateKey` 当日零点 —— 精度差一天，但方向正确（至少不把「三天前」
+  /// 当成「刚刚」）。解析失败也退回 dateKey，绝不抛。
+  DateTime? _journalReviewedAt(Map<String, dynamic> map, String dateKey) {
+    final savedAt = map['savedAt'];
+    if (savedAt is String) {
+      final parsed = DateTime.tryParse(savedAt);
+      if (parsed != null) return parsed;
+    }
+    return DateTime.tryParse(dateKey);
   }
 
   Future<void> _clearLegacySpSnapshotIfMigrated() async {
