@@ -13,6 +13,7 @@ import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/features/learning/application/alphabet_spread_shuffle.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
+import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/domain/definition_formatter.dart';
 // 埋点端口（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
@@ -158,12 +159,27 @@ class LearningSessionState extends ChangeNotifier {
   /// 会话完成埋点：会话数 + 本会话答题词次与答对数。
   ///
   /// 答对数 = 总词次 − 错词数（与 [accuracy] 同口径，不另立一套算法）。
+  /// 2026-10-17 审计 P2：会话完成时**先登记待结算**，不直接发币。
+  ///
+  /// 为什么不能在这里直接结算：`learning` 的 scope 在 `scare_coin` **外层**
+  /// （app.dart 的链序 [4] 学习 → [9] 尖叫币，且 `app_structure_test.dart` 对
+  /// 该顺序有断言），状态层读不到账本 `ScareCoinStore`。
+  ///
+  /// 登记走的是 SharedPreferences（不需要账本），于是「答完最后一题」这一刻
+  /// 奖励意图就**落盘**了：之后哪怕完成页挂载失败、应用被杀，下次启动
+  /// 由 [LearningRewardService.settlePendingSessions] 补发，不会静默丢。
   void _reportSessionCompleted() {
     final recorder = _usageStats;
-    if (recorder == null) return;
-    final reviewed = _totalAnswered;
-    unawaited(recorder.recordStudySession());
-    unawaited(recorder.recordAnswers(reviewed: reviewed, correct: (reviewed - _errorWords.length).clamp(0, reviewed)));
+    if (recorder != null) {
+      final reviewed = _totalAnswered;
+      unawaited(recorder.recordStudySession());
+      unawaited(
+        recorder.recordAnswers(reviewed: reviewed, correct: (reviewed - _errorWords.length).clamp(0, reviewed)),
+      );
+    }
+    unawaited(
+      LearningRewardService.enqueuePendingSession(wordsLearned: _totalAnswered, dailyGoalAchieved: dailyGoalAchieved),
+    );
   }
 
   DateTime? _sessionStartTime;

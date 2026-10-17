@@ -91,31 +91,31 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
             }),
       );
       try {
-        final result = await service.settleSession(
-          wordsLearned: widget.totalAnswered,
-          dailyGoalAchieved: widget.goalAchieved,
-        );
+        // 2026-10-17 审计 P2：会话完成时已把「待发币」登记进 SP（不需要账本），
+        // 这里只负责把它结算掉并演出来。若应用在完成页挂载前被杀，
+        // 下次启动的 drain 会补发，不会静默丢奖。
+        final result = await service.settlePendingSessions();
         // 使用统计：本次会话实际发出的尖叫币（0 时实现方空转，无需判断）。
         if (usageStats != null) unawaited(usageStats.recordCoinsEarned(result.totalGranted));
         if (!mounted || result.totalGranted <= 0) return;
         // W4.5 宠物化：喂到它了（发币成功 = 喂食成功）→ 羁绊 +1/日。
         // 失败要上报（对照抚摸侧口径）：_record 内 SP 写抛错否则进 unhandled。
+        // 2026-10-17 审计 P2：recordFeed 现在直接回传记账前后的点数，
+        // 不再需要额外两次 points() 读 —— 原先这里是「读/写/再读」三次独立 SP 往返。
         unawaited(
-          MonsterBondPrefs.points()
-              .then((before) => MonsterBondPrefs.recordFeed().then((_) => before))
-              .then<void>((before) async {
+          MonsterBondPrefs.recordFeed()
+              .then<void>((feed) async {
                 // 喂食跨羁绊阈值：等吞币庆祝先演完（延迟 2.2s）再升羁绊仪式。
-                final after = await MonsterBondPrefs.points();
-                final beforeLevel = BondLevel.levelOf(before);
-                final afterLevel = BondLevel.levelOf(after);
+                final beforeLevel = BondLevel.levelOf(feed.pointsBefore);
+                final afterLevel = BondLevel.levelOf(feed.pointsAfter);
                 if (afterLevel.min > beforeLevel.min) {
                   await Future<void>.delayed(const Duration(milliseconds: 2200));
                   if (!mounted) return;
-                  final next = BondLevel.nextMin(after);
+                  final next = BondLevel.nextMin(feed.pointsAfter);
                   BondLevelUpOverlay.show(
                     context,
                     levelName: afterLevel.name,
-                    pointsToNext: next == null ? null : next - after,
+                    pointsToNext: next == null ? null : next - feed.pointsAfter,
                   );
                 }
               })

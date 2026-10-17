@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/utils/calendar_days.dart';
+import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/telemetry/application/usage_stats_collector.dart';
 import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 import 'package:word_app/features/telemetry/presentation/usage_module_observer.dart';
@@ -429,6 +430,27 @@ class _HomeShellState extends State<_HomeShell> {
     // 蓝图 W4 回家仪式：距上次打开 ≥3 天（有旧访问记录）→ 门缝演出 + 免费送断签保护卡。
     // 仅首帧执行一次；无论是否触发都刷新 last_visit 为今天。
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeReunion());
+    // 2026-10-17 审计 P2：补发「已完成但没结算」的会话奖励。
+    // 会话完成时只登记（写 SP，不需要账本），若应用在完成页结算前被杀，
+    // 这笔奖励就靠这里在下次启动补发 —— 否则会静默丢掉。
+    WidgetsBinding.instance.addPostFrameCallback((_) => _drainPendingRewards());
+  }
+
+  Future<void> _drainPendingRewards() async {
+    if (!mounted) return;
+    // 显式 try：最小装配（单测）里没有账本 scope，读到就会抛 —— 那是预期情况，
+    // 直接跳过（队列留着，真机上下次启动照常补发），不要当故障上报。
+    final ScareCoinStore store;
+    try {
+      store = context.read<ScareCoinStore>();
+    } catch (_) {
+      return;
+    }
+    try {
+      await LearningRewardService(store).settlePendingSessions();
+    } catch (e, s) {
+      reportSwallowedError('启动补发待结算奖励失败（下次启动重试）', e, s);
+    }
   }
 
   Future<void> _maybeReunion() async {
