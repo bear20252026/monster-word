@@ -73,7 +73,11 @@ const double kMonsterPresenceSize = 72;
 /// [navigatorKey] 的意义：浮层位于 Navigator **之上**，`Navigator.of(context)`
 /// 在它这里找不到导航器（导航器是它的子孙）。所以「点击 → 进我的空间」必须经
 /// 外部传进来的 key，否则点了没反应。
-class MonsterPresenceHost extends StatelessWidget {
+///
+/// 拖动：位置由**本组件**持有（不在 `MonsterPresence` 里），因为只有它知道屏幕尺寸。
+/// 宠物自己的 `onTap` 与这里的 `onPan` 走手势竞技场 —— 移动超过 slop 算拖、
+/// 没移动算点，两者不会互相误触（这是把它做成「桌面宠物」而不是「按钮」的关键）。
+class MonsterPresenceHost extends StatefulWidget {
   const MonsterPresenceHost({super.key, required this.child, this.navigatorKey});
 
   final Widget child;
@@ -82,26 +86,75 @@ class MonsterPresenceHost extends StatelessWidget {
   final GlobalKey<NavigatorState>? navigatorKey;
 
   @override
+  State<MonsterPresenceHost> createState() => _MonsterPresenceHostState();
+}
+
+class _MonsterPresenceHostState extends State<MonsterPresenceHost> {
+  /// 宠物左上角坐标；null = 默认锚点（右下角、悬浮 Dock 上方）。
+  ///
+  /// 只存在内存里：重启回到默认角。要记住位置得进 SharedPreferences，
+  /// 那是下一步（见 README 的待办）。
+  Offset? _pos;
+
+  /// 贴边留白：留条缝才像「浮」在屏幕里，而不是被边缘切掉。
+  static const double _edgeInset = 8;
+
+  /// 头顶留给气泡的竖直高度（气泡悬在宠物上方，贴到顶会被裁掉）。
+  static const double _bubbleRoom = 28;
+
+  /// clamp 在 lo > hi 时会抛（极窄屏），退化到 lo。
+  static double _clampAxis(double v, double lo, double hi) => hi <= lo ? lo : v.clamp(lo, hi);
+
+  Offset _clampToScreen(Offset p, Size screen) {
+    const pet = kMonsterPresenceSize;
+    return Offset(
+      _clampAxis(p.dx, _edgeInset, screen.width - pet - _edgeInset),
+      _clampAxis(p.dy, _bubbleRoom, screen.height - pet - _edgeInset),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(child: child),
-        // 停在悬浮 Dock 上方：那一带本就是为 Dock 预留的空白，最不容易压到内容。
-        Positioned(
-          right: 12,
-          bottom: FloatingDock.clearance(context) + 6,
-          child: MonsterPresence(navigatorKey: navigatorKey),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screen = constraints.biggest;
+        const pet = kMonsterPresenceSize;
+        // 默认锚点：右下角、悬浮 Dock 上方（那一带本就是为 Dock 预留的空白）。
+        final anchor = Offset(screen.width - pet - 12, screen.height - FloatingDock.clearance(context) - 6 - pet);
+        final pos = _clampToScreen(_pos ?? anchor, screen);
+        return Stack(
+          children: [
+            Positioned.fill(child: widget.child),
+            Positioned(
+              left: pos.dx,
+              top: pos.dy,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                // 增量累加而不是记起点：_pos 是唯一事实，窗口尺寸变化后仍自洽。
+                onPanUpdate: (d) => setState(() => _pos = _clampToScreen((_pos ?? anchor) + d.delta, screen)),
+                child: MonsterPresence(
+                  navigatorKey: widget.navigatorKey,
+                  // 气泡比宠物宽：停右边就朝左长，否则长台词会被屏幕边缘裁掉。
+                  bubbleAlignsRight: pos.dx + pet / 2 > screen.width / 2,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 /// 怪兽本体（全 app 唯一实例）。
 class MonsterPresence extends StatefulWidget {
-  const MonsterPresence({super.key, this.navigatorKey});
+  const MonsterPresence({super.key, this.navigatorKey, this.bubbleAlignsRight = true});
 
   final GlobalKey<NavigatorState>? navigatorKey;
+
+  /// 气泡朝哪边生长。气泡比宠物宽，居中会让长台词越过屏幕边缘被裁掉：
+  /// 停在屏幕右半边就朝左长（`true`），左半边朝右长。
+  final bool bubbleAlignsRight;
 
   @override
   State<MonsterPresence> createState() => _MonsterPresenceState();
@@ -279,6 +332,7 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
 
     return Semantics(
       label: '小怪兽',
+      hint: '可以拖到别处，点一下跟我说话',
       button: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -307,8 +361,11 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
               ),
             ),
             // 气泡悬在头顶：默认隐藏，有话/被点才出现。
+            // 宽度可达宠物 2.6 倍 ⇒ 贴边一侧对齐，让它只朝屏幕内侧长。
             Positioned(
               bottom: kMonsterPresenceSize * 0.92,
+              right: widget.bubbleAlignsRight ? 0 : null,
+              left: widget.bubbleAlignsRight ? null : 0,
               child: AnimatedOpacity(
                 opacity: showBubble ? 1 : 0,
                 duration: const Duration(milliseconds: 180),

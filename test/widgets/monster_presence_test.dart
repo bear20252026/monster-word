@@ -40,6 +40,10 @@ void main() {
     final navKey = GlobalKey<NavigatorState>();
     final app = MaterialApp(
       navigatorKey: navKey,
+      // 命名路由占位页：断言「点怪兽 → 进我的空间」，也让「拖动不该跳转」可验证。
+      onGenerateRoute: (settings) => MaterialPageRoute<void>(
+        builder: (_) => Scaffold(body: Center(child: Text('page:${settings.name}'))),
+      ),
       // 与 app.dart 的真实装配一致：怪兽挂在 builder 上，位于 Navigator 之上。
       builder: (context, child) => MonsterPresenceHost(navigatorKey: navKey, child: child ?? const SizedBox.shrink()),
       home: home ?? const Scaffold(body: Center(child: Text('页面 A'))),
@@ -92,6 +96,62 @@ void main() {
     final icon = tester.widget<MonsterIcon>(find.byType(MonsterIcon));
     expect(icon.sad, isFalse);
     expect(tester.takeException(), isNull);
+  });
+
+  // ── 拖动：桌面宠物得能被拎走 ──────────────────────────────────────────────
+  testWidgets('拖着走：宠物跟手移动', (tester) async {
+    await tester.pumpWidget(host());
+    final start = tester.getTopLeft(find.byType(MonsterPresence));
+
+    await tester.drag(find.byType(MonsterPresence), const Offset(-120, -100));
+    await tester.pump();
+
+    final moved = tester.getTopLeft(find.byType(MonsterPresence));
+    expect(moved.dx, lessThan(start.dx), reason: '向左拖必须往左走');
+    expect(moved.dy, lessThan(start.dy), reason: '向上拖必须往上走');
+    // 容差留给手势 slop（起手那一段被 DragStartBehavior.start 吃掉），不苛求像素级相等。
+    expect(start.dx - moved.dx, closeTo(120, 40));
+    expect(start.dy - moved.dy, closeTo(100, 40));
+  });
+
+  testWidgets('拖出屏幕会被夹住：宠物始终完整可见', (tester) async {
+    await tester.pumpWidget(host());
+    final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+
+    await tester.drag(find.byType(MonsterPresence), const Offset(-9999, -9999));
+    await tester.pump();
+    // 左上留白 = 8；顶部再让出气泡高度 28（否则长台词被屏幕顶边裁掉）。
+    expect(tester.getTopLeft(find.byType(MonsterPresence)), const Offset(8, 28));
+
+    await tester.drag(find.byType(MonsterPresence), const Offset(9999, 9999));
+    await tester.pump();
+    final tl = tester.getTopLeft(find.byType(MonsterPresence));
+    expect(tl.dx, screen.width - kMonsterPresenceSize - 8);
+    expect(tl.dy, screen.height - kMonsterPresenceSize - 8);
+  });
+
+  testWidgets('拖动不会误触发点击（拖动 ≠ 进我的空间）', (tester) async {
+    await tester.pumpWidget(host());
+
+    await tester.drag(find.byType(MonsterPresence), const Offset(-100, -100));
+    await tester.pump(const Duration(milliseconds: 1200));
+
+    expect(find.text('page:/my_space'), findsNothing);
+  });
+
+  testWidgets('拖到别处后点一下仍然进我的空间', (tester) async {
+    await tester.pumpWidget(host());
+
+    await tester.drag(find.byType(MonsterPresence), const Offset(-200, -200));
+    await tester.pump();
+    await tester.tap(find.byType(MonsterPresence));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 900)); // 800ms 节拍窗
+    await tester.pump(const Duration(milliseconds: 400)); // 路由转场
+
+    expect(find.text('page:/my_space'), findsOneWidget);
+    // 排掉气泡的 1600ms 定时器，否则测试结束时报「Timer still pending」。
+    await tester.pump(const Duration(milliseconds: 2000));
   });
 
   test('场景 → 表情参数：每个场景都有映射，庆祝比待机更夸张', () {
