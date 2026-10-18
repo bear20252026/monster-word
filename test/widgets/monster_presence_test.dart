@@ -73,16 +73,14 @@ void main() {
       builder: (context, child) => MonsterPresenceHost(navigatorKey: navKey, child: child ?? const SizedBox.shrink()),
       home: home ?? const Scaffold(body: Center(child: Text('页面 A'))),
     );
-    return SkinProvider(
-      skin: SkinSystem(),
-      child: MultiProvider(
-        providers: [
-          if (companion != null) ListenableProvider<MonsterCompanionController>.value(value: companion),
-          if (reader != null) Provider<CheckinStatusReader>.value(value: reader),
-        ],
-        child: app,
-      ),
-    );
+    // 按需嵌套而不是 MultiProvider：provider 的 MultiProvider 断言 providers 非空，
+    // 这个文件里多数用例一个 provider 都不需要。
+    Widget wrapped = app;
+    if (reader != null) wrapped = Provider<CheckinStatusReader>.value(value: reader, child: wrapped);
+    if (companion != null) {
+      wrapped = ListenableProvider<MonsterCompanionController>.value(value: companion, child: wrapped);
+    }
+    return SkinProvider(skin: SkinSystem(), child: wrapped);
   }
 
   testWidgets('任何页面都只有一只怪兽', (tester) async {
