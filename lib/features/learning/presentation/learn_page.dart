@@ -30,7 +30,6 @@ import 'package:word_app/widgets/coin_swallow_celebration.dart' show CoinBadge;
 import 'package:word_app/features/learning/presentation/word_lookup_popup.dart';
 import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/confetti.dart';
-import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/monster_peek_overlay.dart';
 import 'package:word_app/widgets/quiz_feedback_fx.dart';
 import 'package:word_app/widgets/rolling_number.dart';
