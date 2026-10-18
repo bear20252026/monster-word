@@ -37,9 +37,11 @@ class _FakeCompanion extends ChangeNotifier implements MonsterCompanionControlle
 
 void main() {
   Widget host({MonsterCompanionController? companion, Widget? home}) {
+    final navKey = GlobalKey<NavigatorState>();
     final app = MaterialApp(
+      navigatorKey: navKey,
       // 与 app.dart 的真实装配一致：怪兽挂在 builder 上，位于 Navigator 之上。
-      builder: (context, child) => MonsterPresenceHost(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => MonsterPresenceHost(navigatorKey: navKey, child: child ?? const SizedBox.shrink()),
       home: home ?? const Scaffold(body: Center(child: Text('页面 A'))),
     );
     return SkinProvider(
@@ -69,7 +71,9 @@ void main() {
         builder: (_) => const Scaffold(body: Center(child: Text('页面 B'))),
       ),
     );
-    await tester.pumpAndSettle();
+    // ⚠️ 不能用 pumpAndSettle：怪兽的呼吸 bob 是无限循环动画，永远 settle 不了。
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('页面 B'), findsOneWidget);
     expect(find.byType(MonsterIcon), findsOneWidget, reason: '换页不该多出一只');

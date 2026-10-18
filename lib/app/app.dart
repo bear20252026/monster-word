@@ -225,6 +225,8 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
             return SkinProvider(
               skin: skin,
               child: MonsterPresenceHost(
+                // 浮层在 Navigator 之上，跳转必须走这个 key（否则点击怪兽没反应）。
+                navigatorKey: history.navigatorKey,
                 child: GlobalNavHistoryBar(history: history, child: withCursor),
               ),
             );

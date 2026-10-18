@@ -69,10 +69,17 @@ const double kMonsterPresenceSize = 72;
 ///
 /// 用 Stack 而不是 Overlay：Overlay 会随路由变化重建，而宠物必须**跨路由不重建**
 /// （重建会重放呼吸相位、丢掉正在演的场景）。
+///
+/// [navigatorKey] 的意义：浮层位于 Navigator **之上**，`Navigator.of(context)`
+/// 在它这里找不到导航器（导航器是它的子孙）。所以「点击 → 进我的空间」必须经
+/// 外部传进来的 key，否则点了没反应。
 class MonsterPresenceHost extends StatelessWidget {
-  const MonsterPresenceHost({super.key, required this.child});
+  const MonsterPresenceHost({super.key, required this.child, this.navigatorKey});
 
   final Widget child;
+
+  /// 用于从浮层发起路由跳转（点击怪兽 → 我的空间）。
+  final GlobalKey<NavigatorState>? navigatorKey;
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +87,11 @@ class MonsterPresenceHost extends StatelessWidget {
       children: [
         Positioned.fill(child: child),
         // 停在悬浮 Dock 上方：那一带本就是为 Dock 预留的空白，最不容易压到内容。
-        Positioned(right: 12, bottom: FloatingDock.clearance(context) + 6, child: const MonsterPresence()),
+        Positioned(
+          right: 12,
+          bottom: FloatingDock.clearance(context) + 6,
+          child: MonsterPresence(navigatorKey: navigatorKey),
+        ),
       ],
     );
   }
@@ -88,7 +99,9 @@ class MonsterPresenceHost extends StatelessWidget {
 
 /// 怪兽本体（全 app 唯一实例）。
 class MonsterPresence extends StatefulWidget {
-  const MonsterPresence({super.key});
+  const MonsterPresence({super.key, this.navigatorKey});
+
+  final GlobalKey<NavigatorState>? navigatorKey;
 
   @override
   State<MonsterPresence> createState() => _MonsterPresenceState();
@@ -224,11 +237,15 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
     await Future<void>.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
     _navigating = false;
-    unawaited(
-      Navigator.pushNamed(context, RouteNames.mySpace).then((_) {
-        if (mounted) unawaited(_refreshSpeechVars());
-      }),
-    );
+    // 浮层在 Navigator 之上 ⇒ 只能用外部传进来的 key 跳转（见 MonsterPresenceHost 注释）。
+    final navigator = widget.navigatorKey?.currentState;
+    if (navigator != null) {
+      unawaited(
+        navigator.pushNamed(RouteNames.mySpace).then((_) {
+          if (mounted) unawaited(_refreshSpeechVars());
+        }),
+      );
+    }
     unawaited(_settleGurgle());
   }
 

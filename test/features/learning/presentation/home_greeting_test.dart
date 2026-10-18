@@ -53,6 +53,8 @@ void main() {
     addTearDown(tester.view.reset);
 
     final store = TodayProgressStore();
+    // 浮层在 Navigator 之上 ⇒ 跳转要经这个 key（与 app.dart 的真实装配一致）。
+    final navKey = GlobalKey<NavigatorState>();
     await tester.pumpWidget(
       MultiProvider(
         providers: [
@@ -63,12 +65,14 @@ void main() {
           if (companion != null) ListenableProvider<MonsterCompanionController>.value(value: companion),
         ],
         child: MaterialApp(
+          navigatorKey: navKey,
           onGenerateRoute: (settings) => MaterialPageRoute<void>(
             builder: (_) => Scaffold(body: Center(child: Text('page:${settings.name}'))),
           ),
           // 2026-10-17：怪兽是全 app 唯一的浮层，挂在 MaterialApp.builder 上
           // （与 app.dart 的真实装配一致）—— 所以这里也必须这样装，否则测不到它。
-          builder: (context, child) => MonsterPresenceHost(child: child ?? const SizedBox.shrink()),
+          builder: (context, child) =>
+              MonsterPresenceHost(navigatorKey: navKey, child: child ?? const SizedBox.shrink()),
           home: const HomeScreen(),
         ),
       ),
