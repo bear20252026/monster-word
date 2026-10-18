@@ -66,6 +66,25 @@ const double kMonsterPresenceSize = 72;
       MonsterScene.celebrating => (mouthOpen: 0.9, cheekPuff: 0.8, sad: false, bellyScale: 1.08),
     };
 
+/// 距最近一次签到的天数（null = 集合里没有可解析的日期 ⇒ 读不到就不猜）。
+///
+/// 纯函数、时钟可注入：这是 `pickInitiative` 的 `daysSinceLastCheckin` 唯一来源，
+/// 不喂它「签到断了 N 天」这条分支永远不会触发。
+int? daysSinceLatestDate(Set<String> dates, {DateTime? at}) {
+  DateTime? latest;
+  for (final raw in dates) {
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) continue;
+    if (latest == null || parsed.isAfter(latest)) latest = parsed;
+  }
+  if (latest == null) return null;
+  final now = at ?? MonsterRhythm.now();
+  // 只按「日」比：时分秒会让同一天差出 -1 天。
+  final gap = DateTime(now.year, now.month, now.day).difference(DateTime(latest.year, latest.month, latest.day)).inDays;
+  // 时钟回拨/未来日期 → 当作今天签过，不产生负数。
+  return gap < 0 ? 0 : gap;
+}
+
 /// 把怪兽叠在整棵路由树之上（放在 `MaterialApp.builder` 里）。
 ///
 /// 用 Stack 而不是 Overlay：Overlay 会随路由变化重建，而宠物必须**跨路由不重建**
@@ -218,6 +237,9 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
   /// 累计签到天数（形态/肚皮的驱动源；null = 读不到 → 默认奶泡态，不猜）。
   int? _checkinDays;
 
+  /// 距上次签到天数（主动性判定的输入；null = 读不到 → 按 0 处理，不催）。
+  int? _daysSinceLastCheckin;
+
   /// 800ms 问候节拍窗内的重入闸（双击会推开两层「我的空间」）；入页后复位。
   bool _navigating = false;
 
@@ -238,7 +260,8 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
     try {
       final prefs = await SharedPreferences.getInstance();
       const lastVisitKey = 'monster_last_home_visit';
-      final today = MonsterSpeech.dayKeyOf(DateTime.now());
+      // 与昼夜节律同一个时钟口径（可注入），不引入第二套时间源。
+      final today = MonsterSpeech.dayKeyOf(MonsterRhythm.now());
       final last = prefs.getString(lastVisitKey);
       if (last == today || !_speech.canSpeak()) return;
       await prefs.setString(lastVisitKey, today);
@@ -279,11 +302,14 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
     int? days;
     int? streak;
     int? balance;
+    int? checkinGap;
     if (reader != null) {
       try {
         final results = await Future.wait([reader.getCheckinDates(), reader.getStreakDays()]);
-        days = (results[0] as Set<String>).length;
+        final dates = results[0] as Set<String>;
+        days = dates.length;
         streak = results[1] as int;
+        checkinGap = daysSinceLatestDate(dates);
       } catch (e, s) {
         reportSwallowedError('怪兽台词签到数据读取失败', e, s);
       }
@@ -300,6 +326,8 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
       'streak': streak,
       'balance': balance,
       'stage': days == null ? null : MonsterIcon.stageName(MonsterIcon.stageFor(days)),
+      // 不是台词占位符，是喂给主动性判定的**事实**（见 build 里的 refreshInitiative）。
+      'checkinGap': checkinGap,
     };
   }
 
@@ -309,6 +337,7 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
     setState(() {
       _speechVars = vars;
       _checkinDays = vars['days'] as int?;
+      _daysSinceLastCheckin = vars['checkinGap'] as int?;
     });
   }
 
@@ -356,7 +385,14 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
     final today = context.watch<TodayProgressStore?>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       companion?.refreshInitiative(
-        MonsterInitiativeInput(dueCount: today?.due ?? 0, studiedToday: (today?.learned ?? 0) > 0),
+        MonsterInitiativeInput(
+          dueCount: today?.due ?? 0,
+          studiedToday: (today?.learned ?? 0) > 0,
+          // 签到断了几天：不喂这条，「签到断了」的建议永远触发不了（死分支）。
+          daysSinceLastCheckin: _daysSinceLastCheckin ?? 0,
+          // daysSinceLastVisit 故意不喂：久别重逢由 _maybeProactiveWelcome 负责
+          // （它管每日一次的门禁 + 念出声）。两边都喂会让同一件事说两遍。
+        ),
       );
     });
     final scene = companion?.scene ?? MonsterScene.idle;
