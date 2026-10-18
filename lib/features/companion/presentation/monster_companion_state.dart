@@ -5,6 +5,8 @@
 //
 // 文案不在这里另造一套：全部走 [MonsterSpeech]（台词单一来源，含每日主动预算
 // ≤3 条/日与组内去重）。没有对应槽位的场景**宁可不说**，也不就地写死文案。
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/core/utils/monster_speech.dart';
@@ -36,11 +38,36 @@ class MonsterCompanionState extends ChangeNotifier implements MonsterCompanionCo
   @override
   String? get line => _line;
 
+  /// 连续答错计数（只在这里维护）。
+  ///
+  /// 页面只报「对/错」两个事实，**升级成「连续困难」由本层判断** —— 否则每个页面
+  /// 都要自己数一遍连续错，迟早有一处数错（这也是「事件只报事实」的用意）。
+  int _consecutiveWrong = 0;
+
+  /// 一次性演出的到期计时器（只在演出期间存在，最长 3s）。
+  Timer? _expiryTimer;
+
   /// 推一个事实事件。返回是否发生了场景切换（调用方可据此决定是否播动效）。
   @override
   bool dispatch(MonsterEvent event, {DateTime? at}) {
-    final next = _graph.dispatch(event, at: at);
-    if (next == null) return false;
+    final now = at ?? DateTime.now();
+    // 先让过期的一次性演出回落，再判本次事件（否则「上一条提示还挂着」会误判优先级）。
+    final rolledBack = _rollIfExpired(now);
+
+    var escalated = false;
+    if (event == MonsterEvent.answerCorrect) {
+      _consecutiveWrong = 0;
+    } else if (event == MonsterEvent.answerWrong) {
+      _consecutiveWrong++;
+      if (_consecutiveWrong == MonsterInitiativeThresholds.hardStreak) {
+        escalated = _graph.dispatch(MonsterEvent.hardStreak, at: now) != null;
+      }
+    }
+
+    final next = _graph.dispatch(event, at: now);
+    final changed = next != null || escalated || rolledBack;
+    if (!changed) return false;
+    _scheduleExpiry(now);
     notifyListeners();
     return true;
   }
@@ -52,6 +79,39 @@ class MonsterCompanionState extends ChangeNotifier implements MonsterCompanionCo
     if (next == null) return false;
     notifyListeners();
     return true;
+  }
+
+  /// 当前场景若是一次性演出且已到点，回落到基础场景。返回是否发生回落。
+  bool _rollIfExpired(DateTime now) {
+    final entered = _graph.enteredAt;
+    if (entered == null) return false;
+    final spec = specOf(_graph.current);
+    if (!spec.isOneShot) return false;
+    if (now.difference(entered) < spec.hold) return false;
+    return _graph.tick(at: now) != null;
+  }
+
+  /// 为当前一次性演出挂一个到期回调（演出结束后自动回落，不必等下一个事件）。
+  void _scheduleExpiry(DateTime now) {
+    _expiryTimer?.cancel();
+    _expiryTimer = null;
+    final spec = specOf(_graph.current);
+    if (!spec.isOneShot) return;
+    final entered = _graph.enteredAt;
+    if (entered == null) return;
+    final remaining = spec.hold - now.difference(entered);
+    if (remaining <= Duration.zero) return;
+    _expiryTimer = Timer(remaining, () {
+      _expiryTimer = null;
+      if (_graph.tick() != null) notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _expiryTimer?.cancel();
+    _expiryTimer = null;
+    super.dispose();
   }
 
   /// 用最新事实刷新「它想说什么」。
