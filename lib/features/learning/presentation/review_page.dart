@@ -3,8 +3,7 @@ import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/utils/monster_event.dart';
-import 'package:word_app/features/companion/application/monster_companion_port.dart';
+import 'package:word_app/widgets/monster_answer_signal.dart';
 import 'package:word_app/features/learning/application/review_session_starter.dart';
 import 'package:word_app/features/learning/application/review_word_details.dart';
 import 'package:word_app/features/learning/presentation/review_audio_state.dart';
@@ -120,10 +119,7 @@ class _ReviewPageState extends State<ReviewPage> {
   void _onSelectChoice(ReviewSessionState session, String choice) {
     session.selectChoice(choice);
     final wrong = session.selectedWrongChoice == choice;
-    // 可空读取：最小装配的单测没有 companion scope。
-    context.read<MonsterCompanionController?>()?.dispatch(
-      wrong ? MonsterEvent.answerWrong : MonsterEvent.answerCorrect,
-    );
+    announceMonsterAnswer(context, correct: !wrong);
   }
 
   /// 「看答案后继续」：**先落盘、成功才翻页**（审计 P1-04，业主选定「甲」）。

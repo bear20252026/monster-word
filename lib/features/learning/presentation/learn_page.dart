@@ -5,8 +5,7 @@
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/utils/milestone_guard.dart';
-import 'package:word_app/core/utils/monster_event.dart';
-import 'package:word_app/features/companion/application/monster_companion_port.dart';
+import 'package:word_app/widgets/monster_answer_signal.dart';
 import 'package:word_app/widgets/common/mw_feedback.dart';
 
 import 'dart:async';
@@ -564,8 +563,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       _rewardFly(i);
       _maybePeekForCombo();
     } else {
-      // 蓝图红线：答错轻提示音（无触觉无惩罚，缺席即信号）；
-      // 连击 ≥3 时叠加 combo_break——连击中断是值得听见的瞬间。
+      // 蓝图红线：答错轻提示音（无触觉无惩罚，缺席即信号）；连击 ≥3 叠加 combo_break。
       SfxPlayer.fire(widget.state.combo >= 3 ? Sfx.comboBreak : Sfx.wrongSoft);
       setState(() {
         _wrongIndex = i;
@@ -578,17 +576,8 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
       widget.state.recordAnswer(false);
       _shakeController.forward(from: 0);
     }
-    // 2026-10-17 companion：把「对/错」这两个事实报给演出层。
-    // 页面只报事实 —— 连续答错要不要升级成「三词小组」由 companion 自己数，
-    // 否则每个页面各数一遍，迟早有一处数错。
-    _announceAnswer(isCorrect);
-  }
-
-  void _announceAnswer(bool correct) {
-    // 可空读取：最小装配的单测没有 companion scope，报事实这件事直接跳过。
-    context.read<MonsterCompanionController?>()?.dispatch(
-      correct ? MonsterEvent.answerCorrect : MonsterEvent.answerWrong,
-    );
+    // 报事实给演出层（连续答错的升级由 companion 自己数，页面不判断演什么）。
+    announceMonsterAnswer(context, correct: isCorrect);
   }
 
   /// 连击里程碑全屏探头（蓝图 W2：5/10/15 三档，每档每会话一次）。
