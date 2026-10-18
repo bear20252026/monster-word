@@ -13,6 +13,8 @@ import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/utils/monster_event.dart';
 import 'package:word_app/core/utils/monster_initiative.dart';
 import 'package:word_app/core/utils/monster_scene.dart';
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
+import 'package:word_app/features/checkin/domain/checkin_status.dart';
 import 'package:word_app/features/companion/application/monster_companion_port.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/monster_icon.dart';
@@ -27,8 +29,11 @@ class _FakeCompanion extends ChangeNotifier implements MonsterCompanionControlle
   @override
   String? line;
 
+  /// 最近一次收到的判定输入：用来断言「事实真的喂进去了」。
+  MonsterInitiativeInput? lastInput;
+
   @override
-  void refreshInitiative(MonsterInitiativeInput input) {}
+  void refreshInitiative(MonsterInitiativeInput input) => lastInput = input;
 
   @override
   bool dispatch(MonsterEvent event, {DateTime? at}) => false;
@@ -37,8 +42,26 @@ class _FakeCompanion extends ChangeNotifier implements MonsterCompanionControlle
   bool tick({DateTime? at}) => false;
 }
 
+class _StubReader implements CheckinStatusReader {
+  const _StubReader(this.dates);
+
+  final Set<String> dates;
+
+  @override
+  Future<CheckinStatus> getStatus() async => const CheckinStatus.empty();
+
+  @override
+  Future<Set<String>> getCheckinDates() async => dates;
+
+  @override
+  Future<int> getStreakDays() async => dates.length;
+
+  @override
+  Future<bool> hasCheckedInToday() async => false;
+}
+
 void main() {
-  Widget host({MonsterCompanionController? companion, Widget? home}) {
+  Widget host({MonsterCompanionController? companion, Widget? home, CheckinStatusReader? reader}) {
     final navKey = GlobalKey<NavigatorState>();
     final app = MaterialApp(
       navigatorKey: navKey,
@@ -52,9 +75,13 @@ void main() {
     );
     return SkinProvider(
       skin: SkinSystem(),
-      child: companion == null
-          ? app
-          : ListenableProvider<MonsterCompanionController>.value(value: companion, child: app),
+      child: MultiProvider(
+        providers: [
+          if (companion != null) ListenableProvider<MonsterCompanionController>.value(value: companion),
+          if (reader != null) Provider<CheckinStatusReader>.value(value: reader),
+        ],
+        child: app,
+      ),
     );
   }
 
@@ -176,6 +203,38 @@ void main() {
     final restored = tester.getTopLeft(find.byType(MonsterPresence));
     expect(restored.dx, closeTo(dragged.dx, 0.01));
     expect(restored.dy, closeTo(dragged.dy, 0.01));
+  });
+
+  testWidgets('签到断了几天会喂进主动性判定（否则「该签到了」永远触发不了）', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await AppPreferences().init();
+    final companion = _FakeCompanion();
+    final threeDaysAgo = DateTime.now().subtract(const Duration(days: 3));
+    final key = [
+      threeDaysAgo.year.toString().padLeft(4, '0'),
+      threeDaysAgo.month.toString().padLeft(2, '0'),
+      threeDaysAgo.day.toString().padLeft(2, '0'),
+    ].join('-');
+
+    await tester.pumpWidget(host(companion: companion, reader: _StubReader({key})));
+    // 三帧：签到数据读完 → setState 重建 → 帧末 post-frame 喂给 companion
+    await tester.pump();
+    await tester.pump();
+    await tester.pump();
+
+    expect(companion.lastInput, isNotNull);
+    expect(companion.lastInput!.daysSinceLastCheckin, greaterThanOrEqualTo(2));
+    expect(companion.lastInput!.daysSinceLastVisit, 0, reason: '久别重逢由 _maybeProactiveWelcome 负责，别喂双份');
+  });
+
+  test('距上次签到天数：按日算、取最近一次、未来日期不产生负数', () {
+    final at = DateTime(2026, 10, 18, 9, 30);
+    expect(daysSinceLatestDate({'2026-10-18'}, at: at), 0);
+    expect(daysSinceLatestDate({'2026-10-15'}, at: at), 3);
+    expect(daysSinceLatestDate({'2026-10-01', '2026-10-15', '2026-10-10'}, at: at), 3, reason: '取最近那次');
+    expect(daysSinceLatestDate({'2026-10-20'}, at: at), 0, reason: '时钟回拨/未来日期当今天，不出负数');
+    expect(daysSinceLatestDate({'不是日期'}, at: at), isNull);
+    expect(daysSinceLatestDate(const <String>{}, at: at), isNull);
   });
 
   test('场景 → 表情参数：每个场景都有映射，庆祝比待机更夸张', () {
