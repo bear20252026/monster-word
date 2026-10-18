@@ -47,12 +47,15 @@ void main() {
     expect(notified, 0, reason: '没有可见变化就不该 notify（省一次重建）');
   });
 
-  test('三词小组没有文案槽 → 有建议但不出气泡', () {
+  test('三词小组有文案槽 → 困难时刻必须说得出话', () {
     final state = MonsterCompanionState();
     state.refreshInitiative(const MonsterInitiativeInput(consecutiveWrong: 3));
 
     expect(state.initiative?.initiative, MonsterInitiative.proposeThreeWordGroup);
-    expect(state.line, isNull, reason: '没有现成文案就闭嘴，不在 companion 里另造一套');
+    expect(state.line, isNotNull, reason: '连续答错正是最需要开口的时刻，闭嘴等于没这个功能');
+    // 文案必须来自那张表，不许在 companion 里另造一套。
+    final allowed = MonsterSpeech.templatesOf(SpeechSlot.suggestThreeWordGroup).toSet();
+    expect(allowed, contains(state.line));
   });
 
   test('每日主动预算用尽后不再开口（跨日才重置）', () {

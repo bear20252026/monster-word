@@ -34,6 +34,10 @@ enum SpeechSlot {
 
   /// 想被签到（W4.5 需求气泡）：≥2 天没签到时小屋头顶的愿望。语气不指责。
   needCheckin,
+
+  /// 连续答错（困难时刻）：提议改成「三词小组」，把门槛降到三个词。
+  /// 红线：不指责、不评价水平——这是**降低阻力**，不是提醒「你不行」。
+  suggestThreeWordGroup,
 }
 
 /// 怪兽台词模板引擎。
@@ -65,7 +69,7 @@ class MonsterSpeech {
   static String _todayKey = '';
   static int _todayCount = 0;
 
-  /// 八槽文案组（每槽 6 条）。语气红线：温暖不指责。
+  /// 九槽文案组（每槽 6 条）。语气红线：温暖不指责。
   static const Map<SpeechSlot, List<String>> _templates = {
     SpeechSlot.dailyGreeting: [
       '今天也一起加油呀~',
@@ -130,6 +134,15 @@ class MonsterSpeech {
       '今天的签到尖叫币还没领呢~',
       '打卡的那一下，我最喜欢了。',
       '今天也从一小格开始吧。',
+    ],
+    // 连续答错时的退路：把门槛降到三个词。六条都不带变量 —— 困难时刻必须说得出话。
+    SpeechSlot.suggestThreeWordGroup: [
+      '我们先把三个词搞定就好啦。',
+      '要不……先来三个？剩下的交给明天。',
+      '（把单词卡分成小堆）三张一小堆，慢慢来。',
+      '就三个词。做完我给你打滚。',
+      '难的时候，一小口一小口吃也很有用。',
+      '我陪你只学三个，学完就休息。',
     ],
   };
 

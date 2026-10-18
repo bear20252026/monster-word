@@ -142,11 +142,10 @@ class MonsterCompanionState extends ChangeNotifier implements MonsterCompanionCo
       MonsterInitiative.proposeReview => SpeechSlot.needReview,
       MonsterInitiative.proposeCheckin => SpeechSlot.needCheckin,
       MonsterInitiative.welcomeBack => SpeechSlot.welcomeBack,
-      // 「三词小组」没有现成文案槽。宁可不说，也不在 companion 里另造一套文案
-      // —— 台词单一来源在 monster_speech，加文案要改那张表并补测试。
-      MonsterInitiative.proposeThreeWordGroup => null,
+      // 连续答错 → 提议只学三个词。文案在 monster_speech 那张表里（单一来源），
+      // 这里只负责把决策翻成槽位。
+      MonsterInitiative.proposeThreeWordGroup => SpeechSlot.suggestThreeWordGroup,
     };
-    if (slot == null) return null;
     if (!_speech.canSpeak()) return null;
     _speech.consumeBudget();
     return _speech.pick(slot, vars: {'due': input.dueCount});
