@@ -3,6 +3,8 @@ import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/utils/monster_event.dart';
+import 'package:word_app/features/companion/application/monster_companion_port.dart';
 import 'package:word_app/features/learning/application/review_session_starter.dart';
 import 'package:word_app/features/learning/application/review_word_details.dart';
 import 'package:word_app/features/learning/presentation/review_audio_state.dart';
@@ -96,7 +98,7 @@ class _ReviewPageState extends State<ReviewPage> {
           onMarkAsKnown: _markAsKnown,
           onShowMore: () => _showMoreOptions(context),
           onPlayAudio: _playWordAudio,
-          onSelectChoice: session.selectChoice,
+          onSelectChoice: (choice) => _onSelectChoice(session, choice),
           onRevealAnswer: session.revealAnswer,
           onContinueWithGoodRating: () => _continueReview(session),
           audioLoading: reviewAudio.isLoading,
@@ -108,6 +110,20 @@ class _ReviewPageState extends State<ReviewPage> {
   Future<void> _toggleFavorite() async {
     final result = await _wordActionCoordinator().toggleFavorite();
     _showWordActionFeedback(result);
+  }
+
+  /// 选项点选：先交会话处理，再把「对/错」这个事实报给演出层。
+  ///
+  /// 2026-10-17 companion：正式复习页原本**完全没有怪兽**，用户在这一屏学得最吃力
+  /// 却看不到任何陪伴。报事实这一层先落地（连续答错的升级由 companion 自己数），
+  /// 复习页内的怪兽呈现留到下一步。
+  void _onSelectChoice(ReviewSessionState session, String choice) {
+    session.selectChoice(choice);
+    final wrong = session.selectedWrongChoice == choice;
+    // 可空读取：最小装配的单测没有 companion scope。
+    context.read<MonsterCompanionController?>()?.dispatch(
+      wrong ? MonsterEvent.answerWrong : MonsterEvent.answerCorrect,
+    );
   }
 
   /// 「看答案后继续」：**先落盘、成功才翻页**（审计 P1-04，业主选定「甲」）。

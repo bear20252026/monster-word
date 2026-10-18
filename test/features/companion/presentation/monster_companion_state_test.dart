@@ -84,4 +84,52 @@ void main() {
     expect(state.scene, MonsterScene.hinting);
     expect(notified, 1);
   });
+
+  group('作答事件（页面只报对错，升级由本层判断）', () {
+    final t0 = DateTime(2026, 10, 17, 10);
+
+    test('连续答错达阈值 → 升级为 regrouping（三词小组）', () {
+      final state = MonsterCompanionState();
+      addTearDown(state.dispose);
+
+      state.dispatch(MonsterEvent.answerWrong, at: t0);
+      expect(state.scene, MonsterScene.hinting, reason: '第一次错只是指提示');
+
+      state.dispatch(MonsterEvent.answerWrong, at: t0.add(const Duration(seconds: 1)));
+      state.dispatch(MonsterEvent.answerWrong, at: t0.add(const Duration(seconds: 2)));
+      expect(state.scene, MonsterScene.regrouping, reason: '第 3 次错要升级，而不是继续提示');
+    });
+
+    test('答对清零：2 错 + 1 对 + 1 错 不升级', () {
+      final state = MonsterCompanionState();
+      addTearDown(state.dispose);
+
+      state.dispatch(MonsterEvent.answerWrong, at: t0);
+      state.dispatch(MonsterEvent.answerWrong, at: t0.add(const Duration(seconds: 1)));
+      state.dispatch(MonsterEvent.answerCorrect, at: t0.add(const Duration(seconds: 2)));
+      state.dispatch(MonsterEvent.answerWrong, at: t0.add(const Duration(seconds: 3)));
+
+      expect(state.scene, isNot(MonsterScene.regrouping), reason: '连击中断后要重新数');
+    });
+
+    test('答对本身不切换场景（页面已有对勾反馈，不抢戏）', () {
+      final state = MonsterCompanionState();
+      addTearDown(state.dispose);
+
+      expect(state.dispatch(MonsterEvent.answerCorrect, at: t0), isFalse);
+      expect(state.scene, MonsterScene.idle);
+    });
+
+    test('一次性演出过期后，下一个事件先回落再判定（提示不会一直挂着）', () {
+      final state = MonsterCompanionState();
+      addTearDown(state.dispose);
+
+      state.dispatch(MonsterEvent.answerWrong, at: t0);
+      expect(state.scene, MonsterScene.hinting);
+
+      // 提示 hold=2s：3s 后再来一个「答对」事件 —— 应先回落 idle。
+      state.dispatch(MonsterEvent.answerCorrect, at: t0.add(const Duration(seconds: 3)));
+      expect(state.scene, MonsterScene.idle, reason: '过期的一次性演出必须自动回落');
+    });
+  });
 }
