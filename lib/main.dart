@@ -11,6 +11,13 @@ import 'package:word_app/core/infrastructure/sentry_bootstrap.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/treasure_palette.dart';
 
+// 桌面宠物窗口的第二个 Dart 入口（Windows 独立顶层窗口）。
+//
+// 必须 export：`windows/runner/pet_host.cpp` 用 `set_dart_entrypoint("petMain")`
+// 按名字找这个函数，而**没有任何代码调用它** —— 只有被 export 出去它才会参与
+// 编译进 app.so。漏了这一行不会编译报错，只会让宠物窗口一片空白（静默失败）。
+export 'package:word_app/pet_main.dart' show petMain;
+
 Future<void> main() async {
   // Zone 契约：runZonedGuarded 必须包住 bootstrapApp + runApp 的全部流程。
   // WidgetsFlutterBinding.ensureInitialized()（bootstrapApp 内）与 runApp 一旦

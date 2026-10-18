@@ -1,8 +1,10 @@
 #include "flutter_window.h"
 
 #include <optional>
+#include <string>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "pet_host.h"
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -27,6 +29,32 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
+  // 桌面宠物窗口：开 / 关，返回操作后是否可见。
+  // 宠物住在**独立的顶层窗口**里（见 pet_host.h 的说明），这里只是开关。
+  pet_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(), "monster_word/pet_window",
+      &flutter::StandardMethodCodec::GetInstance());
+  pet_channel_->SetMethodCallHandler([](const flutter::MethodCall<flutter::EncodableValue>& call,
+                                        std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+    if (call.method_name() == "toggle") {
+      // 可选参数：累计签到天数（宠物窗口跑另一个 engine，读不到主应用状态）。
+      int days = -1;
+      if (const auto* args = std::get_if<flutter::EncodableList>(call.arguments());
+          args != nullptr && !args->empty()) {
+        if (const auto* value = std::get_if<int32_t>(&(*args)[0])) {
+          days = *value;
+        }
+      }
+      result->Success(flutter::EncodableValue(pet_host::Toggle(days)));
+      return;
+    }
+    if (call.method_name() == "isVisible") {
+      result->Success(flutter::EncodableValue(pet_host::IsVisible()));
+      return;
+    }
+    result->NotImplemented();
+  });
+
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
   });
@@ -43,6 +71,7 @@ void FlutterWindow::OnDestroy() {
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
+  pet_channel_ = nullptr;
 
   Win32Window::OnDestroy();
 }
