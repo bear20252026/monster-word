@@ -22,6 +22,7 @@ import 'package:word_app/features/account/presentation/account_feature_providers
 import 'package:word_app/features/book/presentation/book_feature_providers.dart';
 import 'package:word_app/features/checkin/presentation/check_in_feature_providers.dart';
 import 'package:word_app/features/companion/presentation/companion_feature_providers.dart';
+import 'package:word_app/widgets/monster_presence.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_feature_providers.dart';
 import 'package:word_app/features/learning/presentation/learning_feature_providers.dart';
 import 'package:word_app/features/quick_review/presentation/quick_review_feature_providers.dart';
@@ -208,17 +209,23 @@ class _AppLifecycleState extends State<_AppLifecycle> with WidgetsBindingObserve
           builder: (context, child) {
             ScreenUtils.init(context);
             installMwErrorBoundary(); // release 全局兜底（debug 走下方 ErrorBoundary）
+            final content = child ?? const SizedBox.shrink();
             // MEM-03：系统「减少动态效果」时跳过全局流体光标覆盖层，降低常驻绘制与内存。
-            if (WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations) {
-              return child ?? const SizedBox.shrink();
-            }
-            return FluidCursorOverlay(
-              rippleColor: skin.colors.accent.withValues(alpha: AppAlphas.o40),
-              maxRadius: 60,
-              enabled: false,
-              child: SkinProvider(
-                skin: skin,
-                child: GlobalNavHistoryBar(history: history, child: child!),
+            // ⚠️ 但**怪兽仍然显示**（它是宠物，减少动效只是不播 bob 位移，不该整个消失）。
+            final withCursor = WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations
+                ? content
+                : FluidCursorOverlay(
+                    rippleColor: skin.colors.accent.withValues(alpha: AppAlphas.o40),
+                    maxRadius: 60,
+                    enabled: false,
+                    child: content,
+                  );
+            // 怪兽是**全 app 唯一一只**，挂在 Navigator 之上（换页不重建、永远只有一只）。
+            // 结构对应 VPet 的 `Main`（唯一显示面）+ `GameCore`（数据）+ `Graph`（动画）。
+            return SkinProvider(
+              skin: skin,
+              child: MonsterPresenceHost(
+                child: GlobalNavHistoryBar(history: history, child: withCursor),
               ),
             );
           },

@@ -25,6 +25,7 @@ import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/tokens/star_gold.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/monster_icon.dart';
+import 'package:word_app/widgets/monster_presence.dart';
 
 import '../../checkin/data/fake_scare_coin_store.dart';
 
@@ -65,6 +66,9 @@ void main() {
           onGenerateRoute: (settings) => MaterialPageRoute<void>(
             builder: (_) => Scaffold(body: Center(child: Text('page:${settings.name}'))),
           ),
+          // 2026-10-17：怪兽是全 app 唯一的浮层，挂在 MaterialApp.builder 上
+          // （与 app.dart 的真实装配一致）—— 所以这里也必须这样装，否则测不到它。
+          builder: (context, child) => MonsterPresenceHost(child: child ?? const SizedBox.shrink()),
           home: const HomeScreen(),
         ),
       ),

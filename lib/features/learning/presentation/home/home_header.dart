@@ -1,6 +1,10 @@
 part of '../home_screen.dart';
 
-/// 问候头部：左侧怪兽伙伴（呼吸 bob + 点击咕噜进我的空间）+ 时段问候 + 日期；右侧词典/单词机入口。
+/// 问候头部：时段问候 + 日期；右侧词典/单词机入口。
+///
+/// 2026-10-17：怪兽**已从本文件移出**，改为全 app 唯一的浮层
+/// （`lib/widgets/monster_presence.dart`，挂在 MaterialApp.builder 上）。
+/// 原因：怪兽是「一只宠物」，不是每个页面各画一张贴图 —— 页面只管报事件。
 class _Header extends StatefulWidget {
   const _Header({required this.skin});
 
@@ -10,164 +14,7 @@ class _Header extends StatefulWidget {
   State<_Header> createState() => _HeaderState();
 }
 
-class _HeaderState extends State<_Header> with TickerProviderStateMixin {
-  /// 首屏主位怪兽直径（2026-10-17 companion）：原 44px 只是「问候语旁边的小头像」，
-  /// 放大到 96 才配得上「陪伴」的主位。它是**唯一一只**，不要再另起一只。
-  static const double _monsterSize = 96;
-
-  // 怪兽呼吸 bob 相位（2.8s 一循环，写法参照 profile_screen _idleCtrl：repeat + sin 相位；
-  // 档位复用 MotionDurations.splash —— 唯一的 2800ms 档，棘轮口径内）
-  late final AnimationController _bobCtrl = AnimationController(vsync: this, duration: MotionDurations.splash);
-  // 点击问候：张嘴 0→0.3 的 0.3s 过渡
-  late final AnimationController _mouthCtrl = AnimationController(vsync: this, duration: MotionDurations.slow);
-  late final Animation<double> _mouth = CurvedAnimation(parent: _mouthCtrl, curve: Curves.easeInOut);
-  bool _gurgleVisible = false;
-
-  /// 台词引擎（可测注入时间/随机源）。
-  final MonsterSpeech _speech = MonsterSpeech();
-
-  /// 气泡当前文案（点击或今日首见 welcomeBack）。
-  String _greetingText = '咕噜~';
-
-  /// 台词变量：只装真实读到的数据，读不到的槽位为 null（引擎随即跳过含该占位符的模板）。
-  /// 硬编码占位值会让怪兽对金冠用户说「我现在是奶泡形态」「钱包里躺着 0 枚尖叫币」。
-  Map<String, Object?> _speechVars = const {'days': null, 'streak': null, 'balance': null, 'stage': null};
-
-  /// 累计签到天数（形态/肚皮的驱动源；null = 读不到 → 默认奶泡态，不猜）。
-  int? _checkinDays;
-
-  /// 800ms 问候节拍窗内的重入闸（双击会推开两层「我的空间」）；入页后复位，返回仍可再点。
-  bool _navigating = false;
-
-  bool get _reduceMotion => WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
-
-  @override
-  void initState() {
-    super.initState();
-    if (!_reduceMotion) _bobCtrl.repeat();
-    // 台词变量预热：点击气泡用的是缓存值，不等取数（点击反馈不能有延迟）。
-    unawaited(_refreshSpeechVars());
-    // 蓝图 W4：今日首见且距上次打开 ≥1 天 → 主动弹 welcomeBack 气泡（消耗 1 预算，每日 ≤3）。
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeProactiveGreeting());
-  }
-
-  /// 取台词变量：累计签到天数 / 连击 / 尖叫币余额 / 由天数换算的进化形态。
-  ///
-  /// context 一律在 await 之前取（async gap 后禁用 context）。任一路读不到即该槽位为
-  /// null——宁可不提这个数字，也不向用户报假数字。
-  Future<Map<String, Object?>> _loadSpeechVars() async {
-    final reader = context.read<CheckinStatusReader?>();
-    final store = context.read<ScareCoinStore?>();
-    int? days;
-    int? streak;
-    int? balance;
-    if (reader != null) {
-      try {
-        final results = await Future.wait([reader.getCheckinDates(), reader.getStreakDays()]);
-        days = (results[0] as Set<String>).length;
-        streak = results[1] as int;
-      } catch (e, s) {
-        reportSwallowedError('首页台词签到数据读取失败', e, s);
-      }
-    }
-    if (store != null) {
-      try {
-        balance = await store.balance();
-      } catch (e, s) {
-        reportSwallowedError('首页台词余额读取失败', e, s);
-      }
-    }
-    return {
-      'days': days,
-      'streak': streak,
-      'balance': balance,
-      // 形态由累计签到天数换算（与怪兽小屋、探头演出口径一致）。
-      'stage': days == null ? null : MonsterIcon.stageName(MonsterIcon.stageFor(days)),
-    };
-  }
-
-  Future<void> _refreshSpeechVars() async {
-    final vars = await _loadSpeechVars();
-    if (!mounted) return;
-    setState(() {
-      _speechVars = vars;
-      _checkinDays = vars['days'] as int?;
-    });
-  }
-
-  Future<void> _maybeProactiveGreeting() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      const lastHomeVisitKey = 'monster_last_home_visit';
-      final today = MonsterSpeech.dayKeyOf(DateTime.now());
-      final last = prefs.getString(lastHomeVisitKey);
-      if (last == today || !_speech.canSpeak()) return;
-      await prefs.setString(lastHomeVisitKey, today);
-      if (!mounted || last == null) return; // 首次使用无分离可言，不迎接回归
-      // 主动弹是「怪兽开口报数」的场合，等变量取齐再说（取不到就说不带数的台词）。
-      final vars = await _loadSpeechVars();
-      if (!mounted) return;
-      setState(() {
-        _speechVars = vars;
-        _checkinDays = vars['days'] as int?;
-        _greetingText = _speech.pick(SpeechSlot.welcomeBack, vars: vars);
-        _gurgleVisible = true;
-      });
-      _speech.consumeBudget();
-      // 「怪兽开口」第二刻：回归时把这句欢迎念出来。点击气泡不发声——
-      // 主动弹才是它开口说话，否则每点一下都出声就成了噪音。
-      unawaited(MonsterVoice.system.say(_greetingText));
-      unawaited(_settleGurgle());
-    } catch (e, s) {
-      reportSwallowedError('首页主动问候气泡失败', e, s);
-    }
-  }
-
-  @override
-  void dispose() {
-    _bobCtrl.dispose();
-    _mouthCtrl.dispose();
-    super.dispose();
-  }
-
-  /// 点怪兽：张嘴冒气泡，留出可感知节拍后进入「我的空间」。
-  Future<void> _greet() async {
-    if (_navigating) return;
-    _navigating = true;
-    _mouthCtrl.forward(from: 0);
-    // 台词变量只在 initState 预热一次：签到/答题回来后点击怪兽会报陈旧余额。
-    // 点击瞬间先补一次取数（本次气泡仍用缓存保即时反馈，下次即新值），
-    // 跳转返回后再补一次（我的空间内可能改名/进化）。
-    unawaited(_refreshSpeechVars());
-    // 用户主动点击：只 pick 不消耗每日预算（预算只管主动弹）。
-    // 夜息（W4.5）：22:00–6:00 它睡了——点击只得到迷糊睡话（不拦截导航，
-    // 「我的空间」是统计页照常可进）。vars 无 name 通道 → 含 {name} 的睡话自动跳过。
-    final slot = MonsterRhythm.isSleepTime() ? SpeechSlot.sleepyGreeting : SpeechSlot.dailyGreeting;
-    setState(() {
-      _greetingText = _speech.pick(slot, vars: _speechVars);
-      _gurgleVisible = true;
-    });
-    await Future<void>.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    _navigating = false; // 入页后解除：防的是节拍窗内的双击，不是永久关门
-    // 气泡收敛与导航同时起步（跳转期间即开始收敛，返回时不残留）；
-    // 返回后补一次变量取数（我的空间内可能改名/进化）。
-    unawaited(
-      Navigator.pushNamed(context, RouteNames.mySpace).then((_) {
-        if (mounted) unawaited(_refreshSpeechVars());
-      }),
-    );
-    unawaited(_settleGurgle());
-  }
-
-  /// 跳转后首页仍在路由栈下：气泡淡出、嘴闭合，状态收敛。
-  Future<void> _settleGurgle() async {
-    await Future<void>.delayed(const Duration(milliseconds: 1600));
-    if (!mounted) return;
-    setState(() => _gurgleVisible = false);
-    _mouthCtrl.reverse();
-  }
-
+class _HeaderState extends State<_Header> {
   String _greeting() {
     final hour = DateTime.now().hour;
     if (hour >= 5 && hour < 11) return '早上好';
@@ -186,131 +33,49 @@ class _HeaderState extends State<_Header> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final colors = widget.skin.colors;
     final resp = context.responsive;
-    // 可空读取：最小装配的单测没有 companion scope，退回待机表情即可。
-    final companion = context.watch<MonsterCompanionController?>();
-    // 把同步事实喂给它（到期数 / 今天是否已学）—— 决定它要不要主动开口。
-    final today = context.watch<TodayProgressStore>();
-    return MonsterStageWithFacts(
-      dueCount: today.due,
-      studiedToday: today.learned > 0,
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(resp.pageMargin, 12, resp.pageMargin, 0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _monsterGreeting(colors, companion),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _greeting(),
-                    style: TextStyle(
-                      fontSize: AppFontSizes.title * resp.fontScale,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
-                      letterSpacing: -0.5,
-                      color: colors.text1,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(_dateLabel(), style: MwTypography.caption.copyWith(color: colors.text3)),
-                ],
-              ),
-            ),
-            _HeaderIconButton(
-              icon: Icons.menu_book_rounded,
-              tooltip: '词典查询',
-              colors: colors,
-              onTap: () => Navigator.pushNamed(context, RouteNames.search),
-            ),
-            const SizedBox(width: 10),
-            _HeaderIconButton(
-              icon: Icons.sports_esports_rounded,
-              tooltip: '单词机',
-              colors: colors,
-              onTap: () => Navigator.pushNamed(context, WordMachinePage.routeName),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 怪兽伙伴：首屏主位（2026-10-17 companion 接管）。
-  ///
-  /// 它是**唯一一只**怪兽 —— 之前有版本在下面另加了一个大舞台，同屏两只，
-  /// 用户会以为不是同一只。这里把「主位」直接做进 header：放大到 [_monsterSize]，
-  /// 表情由 companion 的场景图驱动，点击/气泡/节拍窗/跳转全部保持原行为。
-  ///
-  /// 场景表达与点击表达的优先级：点击的「张嘴」优先（用户刚动手，必须有即时反馈），
-  /// 其余表情参数取场景值。没有 companion 装配（最小装配的单测）时退回待机表情。
-  Widget _monsterGreeting(ThemeVars colors, MonsterCompanionController? companion) {
-    final scene = companion?.scene ?? MonsterScene.idle;
-    final expr = sceneExpression(scene);
-    // 主动台词：companion 有话要说就直接冒出来（这才是「它会找你」）。
-    // 点击冒泡期间以点击文案为准，避免两句话打架。
-    final proactive = companion?.line;
-    final bubbleText = _gurgleVisible ? _greetingText : proactive;
-    final showBubble = _gurgleVisible || proactive != null;
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _greet,
-      child: AnimatedBuilder(
-        animation: _bobCtrl,
-        builder: (context, child) {
-          // reduce-motion 时静止（不 repeat，不位移）
-          if (_reduceMotion) return child!;
-          return Transform.translate(offset: Offset(0, 2 * math.sin(2 * math.pi * _bobCtrl.value)), child: child);
-        },
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            AnimatedBuilder(
-              animation: _mouth,
-              // 形态与成长随真实签到数据（曾不传 evoStage：100 天金冠用户
-              // 首页永远奶泡，台词却播「我现在是金冠形态」自相矛盾）。
-              builder: (context, _) => MonsterIcon(
-                size: _monsterSize,
-                // 点击张嘴优先于场景表情：max 取二者较大值。
-                mouthOpen: math.max(0.3 * _mouth.value, expr.mouthOpen),
-                cheekPuff: expr.cheekPuff,
-                sad: expr.sad,
-                evoStage: _checkinDays == null ? 0 : MonsterIcon.stageFor(_checkinDays!),
-                bellyScale: (_checkinDays == null ? 1.0 : MonsterIcon.growthFor(_checkinDays!)) * expr.bellyScale,
-              ),
-            ),
-            // 气泡：悬在怪兽头顶右上，默认隐藏
-            Positioned(
-              top: -_monsterSize * 0.32,
-              left: _monsterSize * 0.58,
-              child: AnimatedOpacity(
-                opacity: showBubble ? 1 : 0,
-                duration: const Duration(milliseconds: 180),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: ShapeDecoration(
-                    color: colors.cardBg,
-                    shape: StadiumBorder(side: BorderSide(color: colors.divider)),
-                  ),
-                  child: Text(
-                    bubbleText ?? '',
-                    key: const ValueKey('monster-greeting-bubble'),
-                    style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, color: colors.text2),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(resp.pageMargin, 12, resp.pageMargin, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _greeting(),
+                  style: TextStyle(
+                    fontSize: AppFontSizes.title * resp.fontScale,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                    letterSpacing: -0.5,
+                    color: colors.text1,
                   ),
                 ),
-              ),
+                const SizedBox(height: 3),
+                Text(_dateLabel(), style: MwTypography.caption.copyWith(color: colors.text3)),
+              ],
             ),
-          ],
-        ),
+          ),
+          _HeaderIconButton(
+            icon: Icons.menu_book_rounded,
+            tooltip: '词典查询',
+            colors: colors,
+            onTap: () => Navigator.pushNamed(context, RouteNames.search),
+          ),
+          const SizedBox(width: 10),
+          _HeaderIconButton(
+            icon: Icons.sports_esports_rounded,
+            tooltip: '单词机',
+            colors: colors,
+            onTap: () => Navigator.pushNamed(context, WordMachinePage.routeName),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// 头部圆形入口按钮（与 MwCard 同语言：白底 + 双层细影）
 class _HeaderIconButton extends StatelessWidget {
   const _HeaderIconButton({required this.icon, required this.tooltip, required this.colors, required this.onTap});
 
