@@ -27,6 +27,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/utils/monster_initiative.dart';
 import 'package:word_app/core/utils/monster_rhythm.dart';
 import 'package:word_app/core/utils/monster_scene.dart';
@@ -90,17 +91,42 @@ class MonsterPresenceHost extends StatefulWidget {
 }
 
 class _MonsterPresenceHostState extends State<MonsterPresenceHost> {
-  /// 宠物左上角坐标；null = 默认锚点（右下角、悬浮 Dock 上方）。
-  ///
-  /// 只存在内存里：重启回到默认角。要记住位置得进 SharedPreferences，
-  /// 那是下一步（见 README 的待办）。
+  /// 宠物左上角坐标；null = 还没拖过（用上次存下的比例，或默认锚点）。
   Offset? _pos;
+
+  /// 上次停的位置，**归一化到 0~1**：换分辨率或横竖屏后仍落在同一相对位置。
+  Offset? _savedRatio;
+
+  static const String _posXKey = 'monster_pos_x';
+  static const String _posYKey = 'monster_pos_y';
 
   /// 贴边留白：留条缝才像「浮」在屏幕里，而不是被边缘切掉。
   static const double _edgeInset = 8;
 
   /// 头顶留给气泡的竖直高度（气泡悬在宠物上方，贴到顶会被裁掉）。
   static const double _bubbleRoom = 28;
+
+  @override
+  void initState() {
+    super.initState();
+    // 读操作在未初始化时安全返回默认值（BaseSharedPreferences 保证），首帧不会抛。
+    final prefs = AppPreferences();
+    if (prefs.containsKey(_posXKey) && prefs.containsKey(_posYKey)) {
+      _savedRatio = Offset(prefs.getDouble(_posXKey), prefs.getDouble(_posYKey));
+    }
+  }
+
+  /// 松手才写盘：拖动过程中每帧写 SP 是浪费。
+  Future<void> _persist(Offset pos, Size screen) async {
+    try {
+      final prefs = AppPreferences();
+      await prefs.setDouble(_posXKey, (pos.dx / screen.width).clamp(0.0, 1.0));
+      await prefs.setDouble(_posYKey, (pos.dy / screen.height).clamp(0.0, 1.0));
+    } catch (e, s) {
+      // 存不下位置不影响使用：下次开机回到默认角而已，不值得打断用户。
+      reportSwallowedError('怪兽位置保存失败', e, s);
+    }
+  }
 
   /// clamp 在 lo > hi 时会抛（极窄屏），退化到 lo。
   static double _clampAxis(double v, double lo, double hi) => hi <= lo ? lo : v.clamp(lo, hi);
@@ -121,7 +147,10 @@ class _MonsterPresenceHostState extends State<MonsterPresenceHost> {
         const pet = kMonsterPresenceSize;
         // 默认锚点：右下角、悬浮 Dock 上方（那一带本就是为 Dock 预留的空白）。
         final anchor = Offset(screen.width - pet - 12, screen.height - FloatingDock.clearance(context) - 6 - pet);
-        final pos = _clampToScreen(_pos ?? anchor, screen);
+        final restored = _savedRatio == null
+            ? null
+            : Offset(_savedRatio!.dx * screen.width, _savedRatio!.dy * screen.height);
+        final pos = _clampToScreen(_pos ?? restored ?? anchor, screen);
         return Stack(
           children: [
             Positioned.fill(child: widget.child),
@@ -131,7 +160,15 @@ class _MonsterPresenceHostState extends State<MonsterPresenceHost> {
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 // 增量累加而不是记起点：_pos 是唯一事实，窗口尺寸变化后仍自洽。
-                onPanUpdate: (d) => setState(() => _pos = _clampToScreen((_pos ?? anchor) + d.delta, screen)),
+                onPanUpdate: (d) => setState(() {
+                  _pos = _clampToScreen((_pos ?? restored ?? anchor) + d.delta, screen);
+                  // 手一动就以 _pos 为准：留着旧比例会让下一次计算跳回原位。
+                  _savedRatio = null;
+                }),
+                onPanEnd: (_) {
+                  final current = _pos;
+                  if (current != null) unawaited(_persist(_clampToScreen(current, screen), screen));
+                },
                 child: MonsterPresence(
                   navigatorKey: widget.navigatorKey,
                   // 气泡比宠物宽：停右边就朝左长，否则长台词会被屏幕边缘裁掉。
