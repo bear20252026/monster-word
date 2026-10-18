@@ -64,7 +64,8 @@ void main() {
     await pumpPet(tester);
 
     await tester.drag(find.byType(MonsterIcon), const Offset(-40, -30));
-    await tester.pump();
+    // 注册了 onDoubleTap ⇒ 每次按下都会起一个 40ms 的双击计时器，不排掉会报 pending timer。
+    await tester.pump(const Duration(milliseconds: 400));
 
     final moveCalls = calls.where((c) => c.method == 'moveBy').toList();
     expect(moveCalls, isNotEmpty, reason: '无边框窗口没有标题栏，拖动是唯一能挪它的方式');
@@ -102,7 +103,7 @@ void main() {
 
     final gesture = await tester.startGesture(tester.getCenter(find.byType(MonsterIcon)), buttons: kSecondaryButton);
     await gesture.up();
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
 
     expect(calls.any((c) => c.method == 'close'), isTrue);
   });

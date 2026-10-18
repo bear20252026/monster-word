@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/infrastructure/pet_window_service.dart';
 
 void main() {
+  // 纯 Dart 测试也要初始化 binding：TestDefaultBinaryMessengerBinding.instance 依赖它。
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   final calls = <MethodCall>[];
 
   setUp(() {
