@@ -14,6 +14,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/auth/app_session_controller.dart';
+// 跨 feature 只能 import 对方的 application 层（架构守卫 R4）：这里要的是
+// CheckinStatusReader 这个窄端口，用来把签到天数带给桌面宠物窗口。
+import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 // 只依赖 telemetry 的 **application 层**（架构守卫 R4：跨 feature 只能 import
 // 对方的 application 层抽象）。这里要的是 UsageStatsController 这个窄接口，
 // 不是 telemetry 的 presentation 层，也不是它整套 collector。
@@ -22,6 +25,7 @@ import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
+import 'package:word_app/core/infrastructure/pet_window_service.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -53,11 +57,26 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   /// 真实应用版本号（package_info_plus；替换原硬编码 v5.11.1）。
   String _appVersion = '';
 
+  /// 桌面宠物窗口开关（Windows 独立顶层窗口，见 pet_host.h）。
+  static const PetWindowService _petWindow = PetWindowService();
+  bool _petVisible = false;
+
   UpdateCheckService get _updateService => widget.updateServiceOverride ?? context.read<UpdateCheckService>();
 
   @override
   void initState() {
     super.initState();
+    // 状态在原生：进页面时对齐一次（可能上次开过还没关）。
+    if (_petWindow.isSupported) {
+      unawaited(
+        _petWindow
+            .isVisible()
+            .then((visible) {
+              if (mounted) setState(() => _petVisible = visible);
+            })
+            .catchError((Object e) => debugLog('查询桌面宠物状态失败: $e')),
+      );
+    }
     PackageInfo.fromPlatform()
         .then((info) {
           if (mounted) {
@@ -353,6 +372,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                   _buildFeedbackGroup(skin),
                   SizedBox(height: context.design.spacing.md),
                   _buildSfxGroup(skin),
+                  _buildPetModeGroup(skin),
                   _buildRedeemReportGroup(skin),
                   SizedBox(height: context.design.spacing.md),
                   _buildPrivacyGroup(skin),
@@ -381,6 +401,53 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         onTap: () => Navigator.pushNamed(context, RouteNames.accountInfo),
       ),
     ]);
+  }
+
+  /// 桌面宠物（Windows）：独立顶层窗口 —— 无边框 + 透明 + 置顶 + 不进任务栏。
+  /// 非 Windows 不渲染这一组（Android 上没有「盖在别的应用上」这个概念）。
+  Widget _buildPetModeGroup(SkinSystem skin) {
+    if (!_petWindow.isSupported) return const SizedBox.shrink();
+    return Padding(
+      padding: EdgeInsets.only(top: context.design.spacing.md),
+      child: _SettingGroup([
+        _Cell(
+          icon: Icons.pets_outlined,
+          iconColor: skin.colors.accent,
+          title: '桌面宠物',
+          subtitle: _petVisible ? '已开启 · 双击怪兽回到应用' : '让怪兽浮在其他窗口上面',
+          trailing: Switch.adaptive(value: _petVisible, onChanged: (on) => unawaited(_togglePetWindow(on))),
+          onTap: () => unawaited(_togglePetWindow(!_petVisible)),
+        ),
+      ]),
+    );
+  }
+
+  /// 开关的真实状态在原生（窗口存在与否），所以以**返回值**为准更新 UI，
+  /// 不用传进去的 `on` —— 否则原生开失败时界面会说谎。
+  Future<void> _togglePetWindow(bool on) async {
+    // context 一律在 await 之前取（async gap 后禁用 context）。
+    final reader = context.read<CheckinStatusReader?>();
+    try {
+      // 宠物窗口是第二个 engine，读不到主应用状态 ⇒ 签到天数只能开窗时带过去。
+      int? days;
+      if (on && reader != null) {
+        try {
+          days = (await reader.getCheckinDates()).length;
+        } catch (e, s) {
+          reportSwallowedError('桌面宠物读取签到天数失败', e, s);
+        }
+      }
+      final visible = await _petWindow.toggle(days: days);
+      if (!mounted) return;
+      setState(() => _petVisible = visible);
+      if (visible != on) {
+        showMwSnackBar(context, const SnackBar(content: Text('桌面宠物窗口没能打开，请查看日志')));
+      }
+    } catch (e, s) {
+      reportSwallowedError('桌面宠物窗口开关失败', e, s);
+      if (!mounted) return;
+      showMwSnackBar(context, const SnackBar(content: Text('桌面宠物窗口启动失败')));
+    }
   }
 
   /// 帮助与反馈 / 评价应用 / 检查更新 / 更新词库 / 推荐给好友组
@@ -714,7 +781,7 @@ class _SettingGroup extends StatelessWidget {
   }
 }
 
-/// 普通设置项（图标 + 标题 + 副标题 + 箭头）
+/// 普通设置项（图标 + 标题 + 副标题 + 箭头；`trailing` 给了就替换箭头，用于开关）
 class _Cell extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -722,7 +789,17 @@ class _Cell extends StatelessWidget {
   final String? subtitle;
   final VoidCallback? onTap;
 
-  const _Cell({required this.icon, required this.iconColor, required this.title, this.subtitle, this.onTap});
+  /// 右侧控件（开关等）。给了就不画 chevron —— 开关自己会表达「可操作」。
+  final Widget? trailing;
+
+  const _Cell({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    this.subtitle,
+    this.onTap,
+    this.trailing,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -744,7 +821,7 @@ class _Cell extends StatelessWidget {
                 padding: EdgeInsets.only(right: context.design.spacing.xs),
                 child: Text(subtitle!, style: MwTypography.bodySm.copyWith(color: skin.text3)),
               ),
-            Icon(Icons.chevron_right, size: 18, color: skin.text3),
+            if (trailing != null) trailing! else Icon(Icons.chevron_right, size: 18, color: skin.text3),
           ],
         ),
       ),
