@@ -33,8 +33,24 @@ features/companion/
   presentation/companion_feature_providers.dart  装配（app.dart [14]）
 
 widgets/
-  monster_home_stage.dart      首屏舞台 + 事实喂食器（只经 application 端口通信）
+  monster_presence.dart        全 app 唯一的怪兽浮层（挂在 MaterialApp.builder）
+  monster_answer_signal.dart   页面报事实的唯一入口
 ```
+
+### 怪兽只有一只：对应 VPet 的哪一层
+
+| VPet（C#/WPF） | 本仓（Flutter） |
+|---|---|
+| `Display/Main.xaml`（唯一显示面，住在透明置顶窗口里） | `widgets/monster_presence.dart` 的 `MonsterPresence`，挂在 `MaterialApp.builder`，**位于 Navigator 之上** |
+| `Handle/GameCore`（数据/状态） | `MonsterCompanionState` |
+| `Graph/*`（动画图） | `MonsterSceneGraph` |
+| `TalkBox.xaml`（气泡是独立窗口） | 浮层内的气泡 |
+| 页面（与宠物无关） | 页面只调 `announceMonsterAnswer(context, correct:)` |
+
+**页面一律不画怪兽。** 曾有过「首页 header 一只 96px + 学习页一只 32px + 复习页没有」的版本，
+那不是宠物，是三份互不相干的贴图；换页还会重建、重放呼吸相位。
+现在浮层在 Navigator 之上 ⇒ 换页不重建、任何页面都只有一只。
+`test/widgets/monster_presence_test.dart` 用 `same(before)` 守住「跨路由仍是同一实例」。
 
 ### 为什么类型在 `core/utils/` 而不是 `domain/`
 
@@ -70,8 +86,7 @@ N.E.K.O 的主动性来自 LLM 驱动器，代价是：联网、延迟、API 费
 
 ## 下一步接入（尚未做）
 
-- 学习/复习页：接 `dispatch(sessionStarted | answerWrong | hardStreak | sessionCompleted)`
-  （当前只有首页在演，场景图的 `hinting` / `regrouping` 等还没有事件源）
 - 主动性补两项事实：`daysSinceLastCheckin` / `daysSinceLastVisit`（需异步读 SP）
-- 演出调度器：浮层冲突、静音开关、`MediaQuery.disableAnimations` 已支持
-- 桌面常驻（Windows 桌面伙伴）：需另开一个无边框窗口，属独立工程
+- 浮层位置：现在固定在右下角 Dock 上方，**不可拖动**（VPet 可拖动）；拖动/吸附留待后续
+- 页面对「浮层遮挡」的适配：目前没有页面申请隐藏宠物（VPet 也没有，宠物始终在）
+- 桌面常驻（Windows 真·桌面宠物窗口）：需另开无边框置顶窗口，属独立工程

@@ -30,7 +30,6 @@ import 'package:word_app/widgets/coin_swallow_celebration.dart' show CoinBadge;
 import 'package:word_app/features/learning/presentation/word_lookup_popup.dart';
 import 'package:word_app/widgets/box_reveal.dart';
 import 'package:word_app/widgets/confetti.dart';
-import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/widgets/monster_peek_overlay.dart';
 import 'package:word_app/widgets/quiz_feedback_fx.dart';
 import 'package:word_app/widgets/rolling_number.dart';
@@ -754,15 +753,10 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   Widget _buildComboRow(ThemeVars colors, AppResponsive resp, Color comboTierColor) {
     return Row(
       children: [
-        AnimatedSwitcher(
-          duration: MotionDurations.base,
-          transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-          child: _monsterSad
-              ? const MonsterIcon(key: ValueKey('sad'), size: 32, sad: true)
-              : widget.state.combo >= 5
-              ? const MonsterIcon(key: ValueKey('cheer'), size: 32)
-              : Icon(key: const ValueKey('fire'), Icons.local_fire_department_rounded, size: 28, color: comboTierColor),
-        ),
+        // 2026-10-17：本页不再画怪兽 —— 怪兽是全 app 唯一的一层浮层
+        // （widgets/monster_presence.dart）。答错时的「陪着难过」由那里的场景图演，
+        // 这里只保留火焰图标 + 文字提示。
+        Icon(Icons.local_fire_department_rounded, size: 28, color: comboTierColor),
         const SizedBox(width: 6),
         if (_monsterSad)
           Text(
