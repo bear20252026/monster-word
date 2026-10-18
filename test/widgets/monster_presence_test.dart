@@ -7,7 +7,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/utils/monster_event.dart';
 import 'package:word_app/core/utils/monster_initiative.dart';
 import 'package:word_app/core/utils/monster_scene.dart';
@@ -152,6 +154,28 @@ void main() {
     expect(find.text('page:/my_space'), findsOneWidget);
     // 排掉气泡的 1600ms 定时器，否则测试结束时报「Timer still pending」。
     await tester.pump(const Duration(milliseconds: 2000));
+  });
+
+  testWidgets('拖完的位置会记住：重建整棵树后回到同一处', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await AppPreferences().init();
+    await tester.pumpWidget(host());
+    final start = tester.getTopLeft(find.byType(MonsterPresence));
+
+    await tester.drag(find.byType(MonsterPresence), const Offset(-200, -180));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 10)); // 让写盘完成
+    final dragged = tester.getTopLeft(find.byType(MonsterPresence));
+    expect(dragged, isNot(start), reason: '先得真的拖动过');
+
+    // 拆掉整棵树再装回来 = 模拟重启
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(host());
+    await tester.pump();
+
+    final restored = tester.getTopLeft(find.byType(MonsterPresence));
+    expect(restored.dx, closeTo(dragged.dx, 0.01));
+    expect(restored.dy, closeTo(dragged.dy, 0.01));
   });
 
   test('场景 → 表情参数：每个场景都有映射，庆祝比待机更夸张', () {
