@@ -83,10 +83,23 @@ class FormalReviewLoadErrorView extends StatelessWidget {
 ///
 /// 「Boss 战围城」的守城庆典挂在这里：真的击退过（done>0）才放里程碑音、才让怪兽开口。
 class FormalReviewCompleteView extends StatefulWidget {
-  const FormalReviewCompleteView({super.key, required this.done, required this.onReturnHome});
+  const FormalReviewCompleteView({
+    super.key,
+    required this.done,
+    required this.onReturnHome,
+    this.bossBattle = false,
+    this.celebrationOverride,
+  });
 
   final int done;
   final VoidCallback onReturnHome;
+
+  /// 本局是否以头目战收尾：为 true 且真的答过题时，完成页说头目退场台词。
+  final bool bossBattle;
+
+  /// 测试注入缝：非空时替代真实庆典副作用（音效/触觉/语音），用于验证
+  /// 「一局只播一次」。生产传 null，走既有 [SfxPlayer]/[HapticsGate]/[MonsterVoice]。
+  final VoidCallback? celebrationOverride;
 
   @override
   State<FormalReviewCompleteView> createState() => _FormalReviewCompleteViewState();
@@ -107,12 +120,27 @@ class _FormalReviewCompleteViewState extends State<FormalReviewCompleteView> {
   ///
   /// 一题都没答（今天本来没有到期词）时不进来——没打过仗不能说守住了；
   /// post-frame 而非 build 内触发，避免在构建期发副作用（同族仪式浮层口径）。
+  /// [_celebrated] 是唯一开关：重建/父级重绘都不会让庆典播第二次。
   void _celebrate() {
     if (_celebrated || !mounted) return;
     _celebrated = true;
+    final override = widget.celebrationOverride;
+    if (override != null) {
+      override();
+      return;
+    }
     SfxPlayer.fire(Sfx.milestone);
     HapticsGate.play(HapticCue.heavy);
-    unawaited(MonsterVoice.system.say(siegeVictoryLine));
+    unawaited(MonsterVoice.system.say(_victoryLine));
+  }
+
+  /// 头目战用退场台词；普通复习局沿用 v1 的守城台词。
+  String get _victoryLine => widget.bossBattle ? bossVictoryLine : siegeVictoryLine;
+
+  /// 副标题：头目战（且真的答过题）说头目退场；其余保持既有两分支。
+  String get _subtitle {
+    if (widget.bossBattle && widget.done > 0) return bossVictoryLine;
+    return widget.done > 0 ? '已把今天到期的单词又牢牢记住了一遍' : siegeQuietLine;
   }
 
   @override
@@ -172,7 +200,7 @@ class _FormalReviewCompleteViewState extends State<FormalReviewCompleteView> {
             const SizedBox(height: 8),
             // done==0 时不能说「已把今天到期的单词记住了」——今天根本没有到期词。
             Text(
-              done > 0 ? '已把今天到期的单词又牢牢记住了一遍' : siegeQuietLine,
+              _subtitle,
               style: MwTypography.bodySm.copyWith(color: skin.text3),
             ),
             const SizedBox(height: 28),

@@ -1,9 +1,12 @@
 // 正式复习路由协调层：会话、词条操作和视觉布局各自独立。
+import 'dart:async';
+
 import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/widgets/monster_answer_signal.dart';
+import 'package:word_app/features/learning/application/boss_intro_day_store.dart';
 import 'package:word_app/features/learning/application/review_session_starter.dart';
 import 'package:word_app/features/learning/application/review_word_details.dart';
 import 'package:word_app/features/learning/presentation/review_audio_state.dart';
@@ -19,6 +22,7 @@ import 'package:word_app/theme/wallpaper_state.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/core/application/app_messages.dart';
+import 'package:word_app/core/utils/boss_siege.dart';
 
 class ReviewPage extends StatefulWidget {
   const ReviewPage({super.key});
@@ -30,17 +34,43 @@ class ReviewPage extends StatefulWidget {
 }
 
 class _ReviewPageState extends State<ReviewPage> {
+  final BossIntroDayStore _bossIntroDay = const BossIntroDayStore();
+
+  /// 当日首次入场是否已播（本局内只读一次，进入 pendingIntro 时置位并落盘）。
+  bool _introPlayedToday = false;
+
   @override
   void initState() {
     super.initState();
+    _introPlayedToday = _bossIntroDay.readDay() == bossDayStamp(DateTime.now());
     _initReview();
   }
 
   Future<void> _initReview() async {
-    await ReviewSessionStarter(
+    final result = await ReviewSessionStarter(
       snapshot: context.read<ReviewQueueState>().snapshot,
       initialize: context.read<ReviewSessionState>().initialize,
     ).start();
+    if (result == ReviewSessionStartResult.ready) _markBossIntroIfFirstToday();
+  }
+
+  /// 当日首次、且确实触发头目时，把日期落盘（节流：一天只演一次入场）。
+  ///
+  /// M0 没有入场动画，pendingIntro 会立刻转 active；这里仍然先走一遍状态，
+  /// 让「当日首次」这件事只有一个判定源（[resolveBossPhase]）。
+  void _markBossIntroIfFirstToday() {
+    if (_introPlayedToday || !mounted) return;
+    final session = context.read<ReviewSessionState>();
+    final phase = resolveBossPhase(
+      hadDueAtStart: session.hadDueAtStart,
+      total: session.total,
+      done: session.done,
+      hasWord: session.currentWord != null,
+      introPlayedToday: false,
+    );
+    if (phase != BossBattlePhase.pendingIntro) return;
+    setState(() => _introPlayedToday = true);
+    unawaited(_bossIntroDay.markDay(bossDayStamp(DateTime.now())));
   }
 
   @override
@@ -50,6 +80,16 @@ class _ReviewPageState extends State<ReviewPage> {
     final reviewAudio = context.watch<ReviewAudioState>();
 
     final word = session.currentWord;
+    // 触发口径只认会话开局冻结的 hadDueAtStart/total：中途 done 涨落、剩余
+    // 跌破 40 都不会让已出现的头目消失（闩锁），唯一退场是 currentWord == null。
+    final bossPhase = resolveBossPhase(
+      hadDueAtStart: session.hadDueAtStart,
+      total: session.total,
+      done: session.done,
+      hasWord: word != null,
+      introPlayedToday: _introPlayedToday,
+    );
+    final bossActive = bossPhase == BossBattlePhase.pendingIntro || bossPhase == BossBattlePhase.active;
     return FormalReviewPageContent(
       phase: formalReviewPagePhase(
         isLoading: session.isLoading,
@@ -59,6 +99,7 @@ class _ReviewPageState extends State<ReviewPage> {
       loadError: session.loadError,
       done: session.done,
       word: word,
+      bossBattle: bossPhase == BossBattlePhase.victory,
       onRetry: _initReview,
       onReturnHome: () => NavUtils.goHome(context),
       reviewingBuilder: (contentContext, reviewingWord) => _buildReviewingContent(
@@ -67,6 +108,7 @@ class _ReviewPageState extends State<ReviewPage> {
         session: session,
         wordActions: wordActions,
         reviewAudio: reviewAudio,
+        bossActive: bossActive,
       ),
     );
   }
@@ -77,6 +119,7 @@ class _ReviewPageState extends State<ReviewPage> {
     required ReviewSessionState session,
     required ReviewWordActionsState wordActions,
     required ReviewAudioState reviewAudio,
+    required bool bossActive,
   }) {
     return SessionExitGuard(
       subject: '本次复习',
@@ -87,6 +130,8 @@ class _ReviewPageState extends State<ReviewPage> {
           choices: session.choices,
           done: session.done,
           total: session.total,
+          bossActive: bossActive,
+          bossStepLabel: bossStepLabel(session.done, session.total),
           selectedWrongChoice: session.selectedWrongChoice,
           correctRevealed: session.correctRevealed,
           showAnswer: session.showAnswer,

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/engine/srs_engine.dart' show RecallRating;
 import 'package:word_app/core/engine/super_memory_engine.dart';
+import 'package:word_app/core/utils/boss_siege.dart';
 import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
@@ -62,6 +63,12 @@ class ReviewSessionState extends ChangeNotifier {
   int _total = 0;
   int _done = 0;
 
+  /// 开局快照里是否真的有到期词（false = 读到的可能是「整本队列」兜底）。
+  ///
+  /// 头目战触发口径的一半：没有到期词时绝不能让兜底队列冒充「大军压境」。
+  /// 该值只在 [initialize] 里按开局快照定一次，会话中途不变。
+  bool _hadDueAtStart = false;
+
   ReviewSessionLoadPhase get loadPhase => _loadPhase;
   bool get isLoading => _loadPhase == ReviewSessionLoadPhase.idle || _loadPhase == ReviewSessionLoadPhase.loading;
   bool get isReady => _loadPhase == ReviewSessionLoadPhase.ready;
@@ -72,6 +79,10 @@ class ReviewSessionState extends ChangeNotifier {
   List<WordChoicePair> get choices => _choices;
   int get total => _total;
   int get done => _done;
+
+  /// 开局是否有到期词（供头目战判定用；语义见 [_hadDueAtStart]）。
+  bool get hadDueAtStart => _hadDueAtStart;
+
   MwWordProcess? get currentWord => _engine.currentWord();
 
   void updateRatingWriter(ReviewRatingWriter ratingWriter) {
@@ -86,12 +97,20 @@ class ReviewSessionState extends ChangeNotifier {
     _choices = const [];
     _total = 0;
     _done = 0;
+    // 开局事实先冻结：判定只认这一刻，中途不再重算。
+    _hadDueAtStart = snapshot.dueWords.isNotEmpty;
     _wrongCount = 0;
     _currentQuestionWrong = false;
     notifyListeners();
 
     try {
-      final pool = await _queueReader.loadWords(snapshot);
+      final loaded = await _queueReader.loadWords(snapshot);
+      // 单局上限（reviewSessionCap）：只截「到期词」，让一局有界、可预期。
+      // 注意 reader 在 due 为空时会回退整本队列——那不是到期词，不属于头目战
+      // 口径，必须原样放过（保持该适配器的既有行为，其他调用方依赖它）。
+      final pool = _hadDueAtStart && loaded.length > reviewSessionCap
+          ? loaded.take(reviewSessionCap).toList(growable: false)
+          : loaded;
       final processes = _questionFactory.createProcesses(pool);
       _engine.init(processes);
       _total = _engine.totalNum;

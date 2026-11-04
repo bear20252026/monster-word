@@ -21,6 +21,8 @@ class FormalReviewSessionLayout extends StatelessWidget {
     required this.choices,
     required this.done,
     required this.total,
+    this.bossActive = false,
+    this.bossStepLabel = '',
     required this.selectedWrongChoice,
     required this.correctRevealed,
     required this.showAnswer,
@@ -41,6 +43,12 @@ class FormalReviewSessionLayout extends StatelessWidget {
   final List<WordChoicePair> choices;
   final int done;
   final int total;
+
+  /// 头目是否登场（协调层由开局冻结的到期数判定，展示层只吃结果）。
+  final bool bossActive;
+
+  /// 「第 x / N 步 · 还剩 M 步」；协调层算好传入，展示层不自造口径。
+  final String bossStepLabel;
   final String? selectedWrongChoice;
 
   /// 本题已答对（反馈驻留窗口内）：卡片变绿 + 对勾 + 彩带。
@@ -90,7 +98,12 @@ class FormalReviewSessionLayout extends StatelessWidget {
                     onShowMore: onShowMore,
                   ),
                   // 围城条带：把「还剩几只捣蛋兽」画在进度条下面，答掉一题少一只。
-                  BossSiegeHeader(done: done, total: total),
+                  BossSiegeHeader(
+                    done: done,
+                    total: total,
+                    bossActive: bossActive,
+                    stepLabel: bossStepLabel,
+                  ),
                   Expanded(
                     child: isLandscape
                         ? Row(

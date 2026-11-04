@@ -17,6 +17,7 @@ class FormalReviewPageContent extends StatelessWidget {
     required this.loadError,
     required this.done,
     required this.word,
+    this.bossBattle = false,
     required this.onRetry,
     required this.onReturnHome,
     required this.reviewingBuilder,
@@ -26,6 +27,9 @@ class FormalReviewPageContent extends StatelessWidget {
   final Object? loadError;
   final int done;
   final MwWordProcess? word;
+
+  /// 本局是否以头目战收尾（完成页换退场台词；普通复习局保持原样）。
+  final bool bossBattle;
   final VoidCallback onRetry;
   final VoidCallback onReturnHome;
   final FormalReviewContentBuilder reviewingBuilder;
@@ -34,10 +38,18 @@ class FormalReviewPageContent extends StatelessWidget {
   Widget build(BuildContext context) => switch (phase) {
     FormalReviewPagePhase.loading => const FormalReviewLoadingView(),
     FormalReviewPagePhase.failed => FormalReviewLoadErrorView(error: loadError, onRetry: onRetry),
-    FormalReviewPagePhase.complete => FormalReviewCompleteView(done: done, onReturnHome: onReturnHome),
+    FormalReviewPagePhase.complete => FormalReviewCompleteView(
+      done: done,
+      onReturnHome: onReturnHome,
+      bossBattle: bossBattle,
+    ),
     FormalReviewPagePhase.reviewing when word != null => reviewingBuilder(context, word!),
     // 防御性兜底：会话尚无题目时不渲染一个空的答题布局。
-    FormalReviewPagePhase.reviewing => FormalReviewCompleteView(done: done, onReturnHome: onReturnHome),
+    FormalReviewPagePhase.reviewing => FormalReviewCompleteView(
+      done: done,
+      onReturnHome: onReturnHome,
+      bossBattle: bossBattle,
+    ),
   };
 }
 

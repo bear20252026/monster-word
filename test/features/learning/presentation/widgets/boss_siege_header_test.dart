@@ -59,4 +59,44 @@ void main() {
     expect(find.byType(MonsterIcon), findsNothing);
     expect(find.textContaining('捣蛋兽'), findsNothing);
   });
+
+  testWidgets('bossActive=false：只有 v1 喽啰行，不出现头目行与细进度条', (tester) async {
+    await tester.pumpWidget(_wrap(const BossSiegeHeader(done: 0, total: legionDueThreshold)));
+
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+    expect(find.text(bossNarrative(remaining: legionDueThreshold)), findsNothing);
+  });
+
+  testWidgets('bossActive：头目行 + 步数标签 + 2px 细进度条一起出现', (tester) async {
+    const label = '第 1 / 40 步 · 还剩 40 步';
+    await tester.pumpWidget(
+      _wrap(
+        const BossSiegeHeader(
+          done: 0,
+          total: legionDueThreshold,
+          bossActive: true,
+          stepLabel: label,
+        ),
+      ),
+    );
+
+    // 1 只头目 + 12 只喽啰（40 只时敌列封顶）。
+    expect(find.byType(MonsterIcon), findsNWidgets(1 + maxVisibleMarauders));
+    expect(find.text(bossNarrative(remaining: legionDueThreshold)), findsOneWidget);
+    expect(find.text(label), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.text('大军压境：40 只捣蛋兽堵在门口'), findsOneWidget);
+  });
+
+  testWidgets('头目行随 done 推进：步数文案与细进度条同步', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        const BossSiegeHeader(done: 39, total: legionDueThreshold, bossActive: true, stepLabel: '第 40 / 40 步 · 还剩 1 步'),
+      ),
+    );
+
+    expect(find.text('第 40 / 40 步 · 还剩 1 步'), findsOneWidget);
+    final bar = tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator));
+    expect(bar.value, closeTo(39 / legionDueThreshold, 1e-9));
+  });
 }

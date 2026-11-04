@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
+import 'package:word_app/core/utils/boss_siege.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_queue_reader.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
@@ -134,8 +135,83 @@ void main() {
       expect(spy.reviewed, 3);
       expect(spy.correct, 2, reason: '第一题点错过，只算两题答对');
     });
+
+    test('开局到期词超过 120 时只装前 120 个（单局有界），并冻结 hadDueAtStart', () async {
+      final due = List.generate(200, (i) => Word(id: i + 1, word: 'w$i', interpret: '释$i'));
+      final state = ReviewSessionState(
+        queueReader: const RepositoryReviewQueueReader(),
+        ratingWriter: ReviewRatingWriter(writeRating: ({required word, required rating}) async {}),
+      );
+
+      await state.initialize(ReviewQueueSnapshot(dueWords: due, queueWords: const []));
+
+      expect(state.hadDueAtStart, isTrue);
+      expect(state.total, reviewSessionCap, reason: '一局最多 120 词，超出部分留到下一局');
+      expect(state.done, 0);
+    });
+
+    test('到期为空走整本队列兜底时既不裁切也不误判成头目战（reader 行为不动）', () async {
+      final queue = List.generate(200, (i) => Word(id: i + 1, word: 'w$i', interpret: '释$i'));
+      final state = ReviewSessionState(
+        queueReader: const RepositoryReviewQueueReader(),
+        ratingWriter: ReviewRatingWriter(writeRating: ({required word, required rating}) async {}),
+      );
+
+      await state.initialize(ReviewQueueSnapshot(dueWords: const [], queueWords: queue));
+
+      // 兜底队列不是「到期词」：保持 reader 的既有语义（整本可练），
+      // 但头目战触发口径必须挡在 hadDueAtStart 这一关。
+      expect(state.total, 200);
+      expect(state.hadDueAtStart, isFalse);
+      expect(
+        resolveBossPhase(
+          hadDueAtStart: state.hadDueAtStart,
+          total: state.total,
+          done: state.done,
+          hasWord: state.currentWord != null,
+          introPlayedToday: true,
+        ),
+        BossBattlePhase.absent,
+      );
+    });
+
+    test('rate() 与 markAsKnown() 两条路径都推进头目计数（done）', () async {
+      final due = List.generate(40, (i) => Word(id: i + 1, word: 'w$i', interpret: '释$i'));
+      final state = ReviewSessionState(
+        queueReader: const RepositoryReviewQueueReader(),
+        ratingWriter: ReviewRatingWriter(writeRating: ({required word, required rating}) async {}),
+      );
+
+      await state.initialize(ReviewQueueSnapshot(dueWords: due, queueWords: const []));
+      expect(state.total, legionDueThreshold);
+      expect(state.done, 0);
+      expect(_bossPhaseOf(state), BossBattlePhase.active, reason: '40 词开局即触发');
+
+      // 路径一：看答案后「继续」（rate）→ done 推进。
+      state.revealAnswer();
+      expect(await state.continueWithGoodRating(), isTrue);
+      expect(state.done, 1, reason: 'rate() 路径必须推进头目计数');
+      expect(state.currentWord, isNotNull);
+
+      // 路径二：标记「熟」（markAsKnown）→ done 同样推进。
+      expect(state.markAsKnown(), isTrue);
+      expect(state.done, 2, reason: 'markAsKnown() 路径必须推进头目计数');
+      expect(state.currentWord, isNotNull);
+
+      // 闩锁：答掉两题后仍 active，不因剩余数变化重算阈值。
+      expect(_bossPhaseOf(state), BossBattlePhase.active);
+    });
   });
 }
+
+/// 用当前会话事实求头目阶段（口径与页面协调层一致）。
+BossBattlePhase _bossPhaseOf(ReviewSessionState state) => resolveBossPhase(
+  hadDueAtStart: state.hadDueAtStart,
+  total: state.total,
+  done: state.done,
+  hasWord: state.currentWord != null,
+  introPlayedToday: true,
+);
 
 class _ThrowingQueueReader implements ReviewQueueReader {
   const _ThrowingQueueReader();

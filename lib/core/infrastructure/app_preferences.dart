@@ -179,6 +179,15 @@ class AppPreferences extends BaseSharedPreferences {
   /// 已存日期（用于跨天判断）
   String getTodayLearnedDate() => getString(todayLearnedDateKey);
 
+  // ── Boss 战「当日首次入场」标记（sp 单键，值形如 2026-11-05）──
+
+  /// 当日是否已播过头目入场。key 缺失 / 值损坏都按「今天还没播」处理。
+  static const String bossSiegeIntroDayKey = 'boss_siege_intro_day';
+
+  String getBossIntroDay() => getString(bossSiegeIntroDayKey);
+
+  Future<bool> setBossIntroDay(String day) => setString(bossSiegeIntroDayKey, day);
+
   /// 「旧 daily_new_words_v1 → daily_learn_goal」一次性迁移完成标记。
   static const todayGoalMigratedKey = 'today_goal_migrated_v1';
   bool get isTodayGoalMigrated => getBool(todayGoalMigratedKey, defaultValue: false);
