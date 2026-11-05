@@ -15,6 +15,8 @@ import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/features/checkin/application/streak_milestones.dart';
 import 'package:word_app/features/learning/application/home_next_step.dart';
+import 'package:word_app/features/learning/application/home_path.dart';
+import 'package:word_app/features/learning/presentation/home_path_map.dart';
 import 'package:word_app/features/learning/presentation/learn_page.dart';
 import 'package:word_app/features/learning/presentation/word_machine_page.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
@@ -33,6 +35,7 @@ import 'package:word_app/widgets/testimonial_slider.dart' show TestimonialData;
 
 part 'home/home_header.dart';
 part 'home/home_hero.dart';
+part 'home/home_path.dart';
 part 'home/home_strips.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -81,6 +84,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: [
         _EntranceIn(child: _Header(skin: skin)),
+        // 今日路线（灰度）：默认关闭；关闭时与旧版逐像素一致。
+        if (kPathHome)
+          _EntranceIn(
+            delayMs: 60,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 12),
+              child: const _HomePathSection(),
+            ),
+          ),
         const Spacer(flex: 3),
         // 今日进度主卡（唯一视觉锚点）
         _EntranceIn(

@@ -68,7 +68,7 @@ class _TodayHeroCard extends StatelessWidget {
                         foregroundColor: AppColors.white100,
                         onTap: step.primaryIsReview
                             ? () => showReviewDialog(context)
-                            : () => _startLearning(context),
+                            : () => startHomeLearning(context),
                       ),
                     ),
                     // 次入口降为文字链：有到期时留「继续学新词」，没有就只剩主按钮。
@@ -76,7 +76,7 @@ class _TodayHeroCard extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: TextButton(
-                          onPressed: () => _startLearning(context),
+                          onPressed: () => startHomeLearning(context),
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
                             minimumSize: const Size(0, 32),
@@ -103,79 +103,80 @@ class _TodayHeroCard extends StatelessWidget {
       },
     );
   }
+}
 
-  /// 直接开始背单词（加载第一本书并跳转到学习页），行为与旧版一致。
-  Future<void> _startLearning(BuildContext context) async {
-    final state = context.read<LearningSessionState>();
-    if (state.queue.isNotEmpty) {
-      if (context.mounted) {
-        Navigator.pushNamed(context, LearnPage.routeName);
-      }
-      return;
-    }
-    final books = await context.read<BookCatalogReader>().listBooks();
-    if (books.isEmpty) {
-      if (context.mounted) {
-        showMwSnackBar(
-          context,
-          SnackBar(
-            content: const Text('还没有词书，先去选一本吧'),
-            action: SnackBarAction(
-              label: '去选词书',
-              onPressed: () {
-                if (context.mounted) {
-                  Navigator.pushNamed(context, RouteNames.libSelect);
-                }
-              },
-            ),
-          ),
-        );
-      }
-      return;
-    }
-    if (state.currentBook == null && context.mounted) {
-      final goPick = await showModalBottomSheet<bool>(
-        context: context,
-        builder: (sheetCtx) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('开始今天的学习', style: Theme.of(sheetCtx).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Text('选择一本词书，或直接从第一本开始', style: Theme.of(sheetCtx).textTheme.bodyMedium),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () => Navigator.pop(sheetCtx, true),
-                    icon: const Icon(Icons.menu_book_rounded, size: 18),
-                    label: const Text('去选词书'),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(onPressed: () => Navigator.pop(sheetCtx, false), child: const Text('随便学一本')),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-      if (goPick == true) {
-        if (context.mounted) {
-          Navigator.pushNamed(context, RouteNames.libSelect);
-        }
-        return;
-      }
-    }
-    await state.loadBook(books.first, shuffle: true);
+/// 直接开始背单词（加载第一本书并跳转到学习页），行为与旧版一致。
+/// 首页主卡与路线弹层共用。
+Future<void> startHomeLearning(BuildContext context) async {
+  final state = context.read<LearningSessionState>();
+  if (state.queue.isNotEmpty) {
     if (context.mounted) {
       Navigator.pushNamed(context, LearnPage.routeName);
     }
+    return;
+  }
+  final books = await context.read<BookCatalogReader>().listBooks();
+  if (books.isEmpty) {
+    if (context.mounted) {
+      showMwSnackBar(
+        context,
+        SnackBar(
+          content: const Text('还没有词书，先去选一本吧'),
+          action: SnackBarAction(
+            label: '去选词书',
+            onPressed: () {
+              if (context.mounted) {
+                Navigator.pushNamed(context, RouteNames.libSelect);
+              }
+            },
+          ),
+        ),
+      );
+    }
+    return;
+  }
+  if (state.currentBook == null && context.mounted) {
+    final goPick = await showModalBottomSheet<bool>(
+      context: context,
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('开始今天的学习', style: Theme.of(sheetCtx).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              Text('选择一本词书，或直接从第一本开始', style: Theme.of(sheetCtx).textTheme.bodyMedium),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.pop(sheetCtx, true),
+                  icon: const Icon(Icons.menu_book_rounded, size: 18),
+                  label: const Text('去选词书'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(onPressed: () => Navigator.pop(sheetCtx, false), child: const Text('随便学一本')),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (goPick == true) {
+      if (context.mounted) {
+        Navigator.pushNamed(context, RouteNames.libSelect);
+      }
+      return;
+    }
+  }
+  await state.loadBook(books.first, shuffle: true);
+  if (context.mounted) {
+    Navigator.pushNamed(context, LearnPage.routeName);
   }
 }
 
