@@ -269,14 +269,37 @@ class LearningSessionState extends ChangeNotifier {
       notifyListeners();
     }
     // 新会话开始，重置完成页数据
+    _resetSessionProgress();
+    unawaited(_saveProgress());
+  }
+
+  /// 结算页「再来一组」：沿用同一词书（收藏会话则重载收藏）开新的一局。
+  ///
+  /// 返回是否真的装载了新词；装载失败（如收藏为空）时什么都不清，
+  /// 调用方的结算页保持原数据，不会闪成 0。
+  Future<bool> startAnotherGroup() async {
+    final book = _currentBook;
+    if (book != null) {
+      await loadBook(book);
+      return currentWord != null;
+    }
+    await loadFavorites();
+    if (currentWord == null) return false;
+    // loadFavorites 历史上不重置本局统计；「再来一组」是新的一局，需要清账。
+    _resetSessionProgress();
+    notifyListeners();
+    return true;
+  }
+
+  /// 本局统计与发币标记归零（loadBook / 收藏会话开新局共用）。
+  /// 尖叫币会话奖励每会话只结算一次；复习错题（relearn）不重置此标记。
+  void _resetSessionProgress() {
     _errorWords.clear();
     _totalAnswered = 0;
     _combo = 0;
     _bestCombo = 0;
     _sessionStartTime = DateTime.now();
-    // 尖叫币会话奖励每会话只结算一次；复习错题（relearn）不重置此标记
     _sessionRewardSettled = false;
-    unawaited(_saveProgress());
   }
 
   /// 本会话尖叫币奖励是否已结算（防复习错题后二次完成页重复发币）

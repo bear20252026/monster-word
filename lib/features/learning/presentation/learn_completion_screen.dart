@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/features/learning/application/completion_cards.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/learning/presentation/share_image_service.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
@@ -31,6 +32,9 @@ class LearnCompletionScreen extends StatefulWidget {
   final double? accuracy;
   final VoidCallback? onReviewErrors;
 
+  /// 「再来一组」：开一局新学习。返回是否真的装载了新词（false → 页面保持）。
+  final Future<bool> Function()? onPlayAgain;
+
   /// 本次会话最佳连击（连击条口径）。
   final int bestCombo;
   const LearnCompletionScreen({
@@ -40,6 +44,7 @@ class LearnCompletionScreen extends StatefulWidget {
     this.durationSeconds,
     this.accuracy,
     this.onReviewErrors,
+    this.onPlayAgain,
     this.goalAchieved = false,
     this.todayLearned = 0,
     this.dailyGoal = 0,
@@ -59,6 +64,9 @@ class LearnCompletionScreen extends StatefulWidget {
 class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
   int? _grantedCoins;
   bool _sharing = false;
+
+  /// 「再来一组」装载中：禁用按钮，避免连点叠出两局。
+  bool _startingAgain = false;
 
   /// 怪兽进化阶段（签到天数换算；喂币庆祝用它——进化不该只在探头页可见）。
   int _evoStage = 0;
@@ -134,111 +142,154 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = widget.skin.colors;
-    final goalAchieved = widget.goalAchieved;
-    final todayLearned = widget.todayLearned;
-    final dailyGoal = widget.dailyGoal;
-    final errorCount = widget.errorCount;
-    final totalAnswered = widget.totalAnswered;
-    final durationSeconds = widget.durationSeconds;
-    final accuracy = widget.accuracy;
-    final onReviewErrors = widget.onReviewErrors;
     return SafeArea(
       child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xxl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // 结算成功（totalGranted > 0）→ 怪兽吃币庆祝主视觉；0/失败态保留图标现状。
-              if (_grantedCoins != null && _grantedCoins! > 0)
-                MonsterFeedCelebration(coinCount: _grantedCoins!, evoStage: _evoStage)
-              else
-                Icon(Icons.celebration, size: 80, color: colors.accent),
-              const SizedBox(height: 24),
-              Text(
-                '今日学习完成！',
-                style: MwTypography.displaySm.copyWith(fontWeight: FontWeight.bold, color: colors.text1),
-              ),
-              const SizedBox(height: 12),
-              // 尖叫币奖励横幅（本次会话结算所得）
-              if (_grantedCoins != null && _grantedCoins! > 0) ...[
-                _buildCoinBanner(colors),
-                const SizedBox(height: 12),
-              ],
-              // 今日目标达成庆祝横幅
-              if (goalAchieved) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: colors.accent.withValues(alpha: AppAlphas.o12),
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                    border: Border.all(color: colors.accent.withValues(alpha: AppAlphas.o40)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.emoji_events_rounded, size: 16, color: colors.accent),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          '今日目标达成！已学 $todayLearned / 目标 $dailyGoal',
-                          style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w700, color: colors.accent),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
-              Text(
-                onReviewErrors != null && errorCount > 0
-                    ? '本次学习了 $totalAnswered 个单词，错了 $errorCount 个'
-                    : '你已经完成了今天的所有单词，太棒了！',
-                style: MwTypography.bodyMd.copyWith(color: colors.text2),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              _buildStatsCard(colors, accuracy: accuracy, durationSeconds: durationSeconds, errorCount: errorCount),
-              const SizedBox(height: 16),
-              // 战报分享：今日战绩海报，自带传播。
-              OutlinedButton.icon(
-                onPressed: _sharing ? null : _shareReport,
-                icon: _sharing
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.ios_share_rounded, size: 18),
-                label: Text(_sharing ? '正在生成海报…' : '分享今日战报'),
-              ),
-              if (onReviewErrors != null && errorCount > 0) ...[
-                const SizedBox(height: 16),
-                TextButton.icon(
-                  onPressed: onReviewErrors,
-                  icon: const Icon(Icons.refresh, size: 18),
-                  label: const Text('复习错题'),
-                ),
-              ],
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.accent,
-                    foregroundColor: colors.onGlassAccent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
-                  ),
-                  onPressed: () => NavUtils.goHome(context),
-                  child: const Text(
-                    '返回首页',
-                    style: TextStyle(fontSize: AppFontSizes.bodyMd, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        child: Padding(padding: const EdgeInsets.all(AppSpacing.xxl), child: _buildContent(widget.skin.colors)),
       ),
     );
+  }
+
+  /// 结算主体：主视觉 → 标题 → 横幅 → 三卡 → 小字 → 次入口 → 主 CTA。
+  ///
+  /// 主按钮是「再来一组」（直接开新局），「返回首页」降为文字链——
+  /// 完成一局不该只能退出，闭环要能继续。
+  Widget _buildContent(dynamic colors) {
+    final cards = buildCompletionCards(
+      totalAnswered: widget.totalAnswered,
+      errorCount: widget.errorCount,
+      accuracy: widget.accuracy,
+      durationSeconds: widget.durationSeconds,
+      bestCombo: widget.bestCombo,
+    );
+    final onReviewErrors = widget.onReviewErrors;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // 结算成功（totalGranted > 0）→ 怪兽吃币庆祝主视觉；0/失败态保留图标现状。
+        if (_grantedCoins != null && _grantedCoins! > 0)
+          MonsterFeedCelebration(coinCount: _grantedCoins!, evoStage: _evoStage)
+        else
+          Icon(Icons.celebration, size: 80, color: colors.accent),
+        const SizedBox(height: 24),
+        Text(
+          '今日学习完成！',
+          style: MwTypography.displaySm.copyWith(fontWeight: FontWeight.bold, color: colors.text1),
+        ),
+        const SizedBox(height: 12),
+        // 尖叫币奖励横幅（本次会话结算所得）
+        if (_grantedCoins != null && _grantedCoins! > 0) ...[_buildCoinBanner(colors), const SizedBox(height: 12)],
+        // 今日目标达成庆祝横幅
+        if (widget.goalAchieved) ...[_buildGoalBanner(colors), const SizedBox(height: 12)],
+        Text(
+          onReviewErrors != null && widget.errorCount > 0
+              ? '本次学习了 ${widget.totalAnswered} 个单词，错了 ${widget.errorCount} 个'
+              : '你已经完成了今天的所有单词，太棒了！',
+          style: MwTypography.bodyMd.copyWith(color: colors.text2),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
+        // 三卡：本次词数 / 正确率（≥90% 带称号）/ 用时；答错与连击降为一行小字。
+        _buildCards(colors, cards),
+        if (cards.note != null) ...[
+          const SizedBox(height: 10),
+          Text(cards.note!, style: MwTypography.micro.copyWith(color: colors.text3)),
+        ],
+        const SizedBox(height: 20),
+        // 战报分享：今日战绩海报，自带传播。
+        OutlinedButton.icon(
+          onPressed: _sharing ? null : _shareReport,
+          icon: _sharing
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.ios_share_rounded, size: 18),
+          label: Text(_sharing ? '正在生成海报…' : '分享今日战报'),
+        ),
+        if (onReviewErrors != null && widget.errorCount > 0) ...[
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: onReviewErrors,
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text('复习错题'),
+          ),
+        ],
+        const SizedBox(height: 32),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colors.accent,
+              foregroundColor: colors.onGlassAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+            ),
+            // 装载中禁用，避免连点叠出两局
+            onPressed: widget.onPlayAgain == null || _startingAgain ? null : _startAnotherGroup,
+            child: Text(
+              _startingAgain ? '正在准备…' : '再来一组',
+              style: const TextStyle(fontSize: AppFontSizes.bodyMd, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        TextButton(
+          onPressed: () => NavUtils.goHome(context),
+          style: TextButton.styleFrom(foregroundColor: colors.text3),
+          child: const Text('返回首页', style: TextStyle(fontSize: AppFontSizes.caption)),
+        ),
+      ],
+    );
+  }
+
+  /// 今日目标达成横幅。
+  Widget _buildGoalBanner(dynamic colors) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: colors.accent.withValues(alpha: AppAlphas.o12),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: colors.accent.withValues(alpha: AppAlphas.o40)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.emoji_events_rounded, size: 16, color: colors.accent),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              '今日目标达成！已学 ${widget.todayLearned} / 目标 ${widget.dailyGoal}',
+              style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w700, color: colors.accent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 三卡横排（等高）。
+  Widget _buildCards(dynamic colors, CompletionCards data) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < data.cards.length; i++) ...[
+            if (i > 0) const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: _CompletionCardView(card: data.cards[i], colors: colors),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 「再来一组」：交给会话开新局；装载失败则解锁并提示，结算页数据不变。
+  Future<void> _startAnotherGroup() async {
+    final onPlayAgain = widget.onPlayAgain;
+    if (onPlayAgain == null || _startingAgain) return;
+    setState(() => _startingAgain = true);
+    final started = await onPlayAgain();
+    if (!mounted || started) return; // 新局已接管页面（本页被替换）
+    setState(() => _startingAgain = false);
+    showMwSnackBar(context, const SnackBar(content: Text('暂时没有可以继续的词')));
   }
 
   /// 分享今日战报（无账本语境连签记 0，不抛错）。
@@ -272,36 +323,6 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
     }
   }
 
-  /// 四项统计卡（答对率/用时/答错/最高连击）。
-  Widget _buildStatsCard(
-    dynamic colors, {
-    required double? accuracy,
-    required int? durationSeconds,
-    required int errorCount,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: colors.cardBg,
-        borderRadius: BorderRadius.circular(context.design.radius.control),
-        border: Border.all(color: colors.divider),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _StatItem(label: '答对率', value: accuracy == null ? '--' : '${(accuracy * 100).round()}%', colors: colors),
-          _StatItem(
-            label: '用时',
-            value: durationSeconds == null ? '--' : _formatDuration(durationSeconds),
-            colors: colors,
-          ),
-          _StatItem(label: '答错', value: '$errorCount', colors: colors),
-          _StatItem(label: '最高连击', value: widget.bestCombo > 0 ? '×${widget.bestCombo}' : '--', colors: colors),
-        ],
-      ),
-    );
-  }
-
   /// 尖叫币奖励横幅（本次会话结算所得）
   Widget _buildCoinBanner(dynamic colors) {
     return Container(
@@ -324,40 +345,51 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
       ),
     );
   }
-
-  static String _formatDuration(int seconds) {
-    if (seconds < 60) return '$seconds秒';
-    final minutes = seconds ~/ 60;
-    final remainingSeconds = seconds % 60;
-    if (minutes < 60) {
-      return remainingSeconds > 0 ? '$minutes分$remainingSeconds秒' : '$minutes分钟';
-    }
-    final hours = minutes ~/ 60;
-    final remainingMinutes = minutes % 60;
-    return remainingMinutes > 0 ? '$hours时$remainingMinutes分' : '$hours小时';
-  }
 }
 
-class _StatItem extends StatelessWidget {
-  final String label;
-  final String value;
+/// 单张结算卡：大数值 + 可选称号 + 标签，底色按语义色调淡染。
+class _CompletionCardView extends StatelessWidget {
+  const _CompletionCardView({required this.card, required this.colors});
+
+  final CompletionCard card;
   final dynamic colors;
-  const _StatItem({required this.label, required this.value, required this.colors});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: MwTypography.titleLg.copyWith(fontWeight: FontWeight.bold, color: colors.text1),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: MwTypography.micro.copyWith(fontWeight: FontWeight.w400, color: colors.text3),
-        ),
-      ],
+    final Color tint = switch (card.tone) {
+      CompletionCardTone.primary => colors.accent as Color,
+      CompletionCardTone.achievement => colors.success as Color,
+      CompletionCardTone.neutral => colors.text1 as Color,
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: tint.withValues(alpha: AppAlphas.o10),
+        borderRadius: BorderRadius.circular(context.design.radius.control),
+        border: Border.all(color: tint.withValues(alpha: AppAlphas.o20)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            card.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: MwTypography.titleLg.copyWith(fontWeight: FontWeight.bold, color: tint),
+          ),
+          if (card.title != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              card.title!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: tint),
+            ),
+          ],
+          const SizedBox(height: 4),
+          Text(card.label, style: MwTypography.micro.copyWith(color: colors.text3)),
+        ],
+      ),
     );
   }
 }

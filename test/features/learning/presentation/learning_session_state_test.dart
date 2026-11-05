@@ -250,6 +250,29 @@ void main() {
     expect(spy.correct, 1);
   });
 
+  test('「再来一组」重载同一词书并清零本局统计与发币标记', () async {
+    final session = _sessionWithWords(
+      words: [
+        Word(id: 1, word: 'first', interpret: '中文释义'),
+        Word(id: 2, word: 'second', interpret: '中文释义'),
+      ],
+    );
+    await session.loadBook(_testBook, shuffle: false);
+    await session.rate(FsrsRating.good);
+    await session.rate(FsrsRating.good);
+    expect(session.currentWord, isNull);
+    expect(session.progress, (2, 2));
+    session.markSessionRewardSettled();
+
+    final started = await session.startAnotherGroup();
+
+    expect(started, isTrue);
+    expect(session.currentWord?.word, 'first');
+    expect(session.progress, (1, 2));
+    expect(session.accuracy, isNull, reason: '新一局的正确率从零开始');
+    expect(session.sessionRewardSettled, isFalse, reason: '新一局应重新结算，不能被上一局标记吞掉');
+  });
+
   test('未注入埋点端口时不抛错（测试与未装配路径）', () async {
     final session = _sessionWithWords(
       words: [

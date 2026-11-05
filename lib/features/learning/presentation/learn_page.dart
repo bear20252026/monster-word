@@ -121,6 +121,8 @@ class _LearnPageState extends State<LearnPage> {
                         : () {
                             session.loadFromWords(session.errorWords, book: session.currentBook);
                           },
+                    // 结算页主按钮「再来一组」：同一词书/收藏立刻开新局。
+                    onPlayAgain: session.startAnotherGroup,
                   ),
                 )
               : SafeArea(
