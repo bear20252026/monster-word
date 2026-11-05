@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
+import 'package:word_app/features/learning/application/onboarding_gate_store.dart';
+import 'package:word_app/features/learning/presentation/onboarding_promise_dialog.dart';
 import 'package:word_app/features/telemetry/application/usage_stats_collector.dart';
 import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 import 'package:word_app/features/telemetry/presentation/usage_module_observer.dart';
@@ -474,7 +476,12 @@ class _HomeShellState extends State<_HomeShell> {
       final today = MonsterSpeech.dayKeyOf(DateTime.now());
       final last = prefs.getString(ReunionOverlay.lastVisitPrefKey);
       await prefs.setString(ReunionOverlay.lastVisitPrefKey, today);
-      if (!mounted || last == null) return; // 首次使用不迎接
+      if (!mounted) return;
+      if (last == null) {
+        // 首次使用：先讲三步与一句承诺（只此一次，可跳过；老用户升级不打扰）。
+        await _maybeShowOnboarding();
+        return;
+      }
       final lastDate = DateTime.tryParse(last);
       if (lastDate == null) return;
       final now = DateTime.now();
@@ -492,6 +499,21 @@ class _HomeShellState extends State<_HomeShell> {
       }
     } catch (e, s) {
       reportSwallowedError('回家仪式判定失败', e, s);
+    }
+  }
+
+  /// 首启三步角色对话 + 一句承诺：只出现一次，关闭/跳过都落标。
+  Future<void> _maybeShowOnboarding() async {
+    try {
+      const gate = OnboardingGateStore();
+      if (gate.done) return;
+      if (!mounted) return;
+      await showOnboardingPromiseDialog(context);
+      if (!await gate.markDone()) {
+        reportSwallowedError('首启引导标记写入失败', StateError('setOnboardingDone returned false'), StackTrace.current);
+      }
+    } catch (e, s) {
+      reportSwallowedError('首启引导展示失败', e, s);
     }
   }
 

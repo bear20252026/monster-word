@@ -198,6 +198,14 @@ class AppPreferences extends BaseSharedPreferences {
 
   Future<bool> removeReviewSessionSnapshot() => remove(reviewSessionSnapshotKey);
 
+  // ── 首启三步对话 + 一句承诺（只出现一次的闸门）──
+
+  static const String onboardingDoneKey = 'onboarding_promise_done_v1';
+
+  bool getOnboardingDone() => getBool(onboardingDoneKey);
+
+  Future<bool> setOnboardingDone() => setBool(onboardingDoneKey, true);
+
   /// 「旧 daily_new_words_v1 → daily_learn_goal」一次性迁移完成标记。
   static const todayGoalMigratedKey = 'today_goal_migrated_v1';
   bool get isTodayGoalMigrated => getBool(todayGoalMigratedKey, defaultValue: false);
