@@ -13,6 +13,7 @@ import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
+import 'package:word_app/features/learning/application/home_next_step.dart';
 import 'package:word_app/features/learning/presentation/learn_page.dart';
 import 'package:word_app/features/learning/presentation/word_machine_page.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
@@ -20,7 +21,6 @@ import 'package:word_app/features/learning/presentation/learning_statistics_stat
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
-import 'package:word_app/tokens/func_colors.dart';
 import 'package:word_app/tokens/star_gold.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/app_dock.dart';

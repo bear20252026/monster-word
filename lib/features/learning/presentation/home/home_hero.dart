@@ -19,6 +19,9 @@ class _TodayHeroCard extends StatelessWidget {
         final dueCount = p.due;
         final progress = goal > 0 ? (learned / goal).clamp(0.0, 1.0) : 0.0;
         final done = goal > 0 && learned >= goal;
+        // 主卡只回答一个问题：「现在点哪里」。时长与动作口径收在纯函数里，
+        // 三态（未学 / 有到期 / 已达标）各只有一句下一步 + 一个主按钮。
+        final step = resolveHomeNextStep(goal: goal, learned: learned, due: dueCount);
 
         final heroCard = MwCard(
           padding: EdgeInsets.all(24 * resp.scale),
@@ -40,7 +43,7 @@ class _TodayHeroCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      done ? '今日目标已完成' : '还差 ${goal - learned} 个单词',
+                      step.title,
                       style: TextStyle(
                         fontSize: AppFontSizes.titleSm * resp.fontScale,
                         fontWeight: FontWeight.w700,
@@ -54,58 +57,41 @@ class _TodayHeroCard extends StatelessWidget {
                       '已学 $learned / $goal · 待复习 $dueCount',
                       style: TextStyle(fontSize: AppFontSizes.caption * resp.fontScale, color: skin.colors.text3),
                     ),
-                    // 遗忘临界预警：due>0 即现身，点之直达复习 dialog（与“复习 N”同入口）。
-                    // 用时口径：单次复习约 14 秒／词，向上取整分钟。
-                    if (dueCount > 0) ...[
-                      SizedBox(height: 8 * resp.scale),
-                      GestureDetector(
-                        onTap: () => showReviewDialog(context),
-                        behavior: HitTestBehavior.opaque,
-                        child: Row(
-                          children: [
-                            Icon(Icons.warning_amber_rounded, size: 14 * resp.fontScale, color: FuncColors.warning),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                '今晚有 $dueCount 个词进入遗忘临界，约 ${math.max(1, (dueCount * 14 / 60).ceil())} 分钟能救回来',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: AppFontSizes.caption * resp.fontScale,
-                                  fontWeight: FontWeight.w600,
-                                  color: skin.colors.text2,
-                                ),
-                              ),
+                    SizedBox(height: 16 * resp.scale),
+                    // 一键开始：主按钮只指一个方向（到期优先复习，其余开学）。
+                    SizedBox(
+                      width: double.infinity,
+                      child: _HeroCta(
+                        label: step.ctaLabel,
+                        icon: step.primaryIsReview ? Icons.history_rounded : Icons.play_arrow_rounded,
+                        backgroundColor: skin.colors.accent,
+                        foregroundColor: AppColors.white100,
+                        onTap: step.primaryIsReview
+                            ? () => showReviewDialog(context)
+                            : () => _startLearning(context),
+                      ),
+                    ),
+                    // 次入口降为文字链：有到期时留「继续学新词」，没有就只剩主按钮。
+                    if (step.secondaryLabel != null)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: () => _startLearning(context),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 32),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            foregroundColor: skin.colors.accent,
+                          ),
+                          child: Text(
+                            step.secondaryLabel!,
+                            style: TextStyle(
+                              fontSize: AppFontSizes.caption * resp.fontScale,
+                              fontWeight: FontWeight.w600,
                             ),
-                            Icon(Icons.chevron_right_rounded, size: 16, color: skin.colors.text3),
-                          ],
+                          ),
                         ),
                       ),
-                    ],
-                    SizedBox(height: 16 * resp.scale),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _HeroCta(
-                            label: done ? '再加一组' : '开始学习',
-                            icon: done ? Icons.add_rounded : Icons.play_arrow_rounded,
-                            backgroundColor: skin.colors.accent,
-                            foregroundColor: AppColors.white100,
-                            onTap: () => _startLearning(context),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _HeroCta(
-                            label: '复习 $dueCount',
-                            icon: Icons.history_rounded,
-                            backgroundColor: skin.colors.accent.withValues(alpha: AppAlphas.o10),
-                            foregroundColor: skin.colors.accent,
-                            onTap: () => showReviewDialog(context),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),

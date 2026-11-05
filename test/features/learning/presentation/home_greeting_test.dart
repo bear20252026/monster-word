@@ -179,7 +179,7 @@ void main() {
     final store = await pumpHome(tester);
 
     // 未达标：文案与环色为主题 accent（非金）
-    expect(find.text('还差 10 个单词'), findsOneWidget);
+    expect(find.textContaining('还差 10 个词'), findsOneWidget);
     expect((ringPaint(tester).painter! as dynamic).progressColor, isNot(StarGold.gold));
 
     // 写入今日已学 ≥ 目标并通知（done 沿触发）
@@ -188,7 +188,7 @@ void main() {
     store.sync(due: 0);
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('今日目标已完成'), findsOneWidget);
+    expect(find.textContaining('今日目标已完成'), findsOneWidget);
     expect((ringPaint(tester).painter! as dynamic).progressColor, StarGold.gold);
     final confetti = tester.widget<ConfettiOverlay>(find.byType(ConfettiOverlay));
     expect(confetti.particleCount, 30);
