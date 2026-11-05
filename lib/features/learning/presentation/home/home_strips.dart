@@ -57,6 +57,13 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
     }
   }
 
+  /// 已签到的连签文案：加一句「距下一档还差几天」，封顶后只鼓励保持。
+  String _checkedStreakLabel() {
+    final daysToNext = daysToNextStreakMilestone(_streakDays);
+    if (daysToNext == null) return '已连续签到 $_streakDays 天，保持住';
+    return '已连续签到 $_streakDays 天，再坚持 $daysToNext 天解锁下一档';
+  }
+
   /// 火苗图标：未签到时 alpha 呼吸（o40↔o90 lerp，easeInOut 反复）；已签或 reduce-motion 时静态。
   Widget _flameIcon(ThemeVars colors) {
     if (_checkedToday != false || _reduceMotion) {
@@ -111,7 +118,7 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                checked ? '已连续签到 $_streakDays 天，保持下去' : '今天还没签到，别断啦',
+                checked ? _checkedStreakLabel() : '今天还没签到，别断啦',
                 style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: skin.colors.text1),
               ),
             ),

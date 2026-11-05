@@ -32,6 +32,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/features/checkin/application/streak_milestones.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 // 埋点端口（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
 import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
@@ -291,6 +292,32 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     }
   }
 
+  /// 连胜里程碑（7/14/30/50）：跨档只演一次，存量基线化不补演。
+  ///
+  /// 只做庆祝：不发币、不做断签惩罚；与金币里程碑共用探头串行防重入，
+  /// 被拦下时不落标记，这一档留待下个签到机会补演。
+  Future<void> _maybeCelebrateStreakMilestone(ScareCoinStore store) async {
+    try {
+      final streak = await store.streak();
+      final prefs = await SharedPreferences.getInstance();
+      final celebrated = await MilestoneGuard.readBaselineFor(prefs, streakMilestonePrefKey, streak);
+      if (celebrated == null) return; // 首次基线化：不为存量天数补庆祝
+      final crossed = crossedStreakMilestone(celebrated, streak);
+      if (crossed == null) return;
+      if (!mounted) return;
+      SfxPlayer.fire(Sfx.milestone);
+      HapticsGate.play(HapticCue.heavy);
+      if (!MonsterPeekOverlay.show(context, phrase: streakMilestonePhrase(crossed))) return;
+      final saved = await prefs.setInt(streakMilestonePrefKey, crossed);
+      if (!saved) {
+        reportSwallowedError('连胜里程碑标记写入失败', StateError('setInt($crossed) returned false'), StackTrace.current);
+      }
+    } catch (e, s) {
+      // 庆祝失败不阻断签到主流程。
+      reportSwallowedError('连胜里程碑庆祝失败', e, s);
+    }
+  }
+
   /// 签到成功后的使用统计上报。
   ///
   /// 全部包在 try 里：埋点失败绝不能影响签到本身（账已经落定了）。
@@ -349,6 +376,8 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     // 自动续命回填等边界下两者并不相等。
     if (usageStats != null) unawaited(_reportCheckInToUsageStats(usageStats, store, reward));
     unawaited(_maybeCelebrateMilestone(newBalance: awarded));
+    // 连胜里程碑（7/14/30/50）：只正向庆祝，不发币（奖励额度待产品拍板）。
+    unawaited(_maybeCelebrateStreakMilestone(store));
     // 进化仪式检测：checkIn() 返回前今日已写入 checkinDates（写日期先于算余额），
     // 故此刻取的天数已含今天；与基线快照 diff，跨阈值才演出。
     // 读失败只降级为「不演跨档仪式」——账已在上一步落定，绝不因此卡死结算 UI。

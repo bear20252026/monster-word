@@ -27,4 +27,18 @@ void main() {
       expect(MilestoneGuard.crossedMilestone(100, 50), isNull);
     });
   });
+
+  group('MilestoneGuard.crossedThreshold（通用档位）', () {
+    test('连胜档位可复用同一判定', () {
+      expect(MilestoneGuard.crossedThreshold(6, 7, MilestoneGuard.streakThresholds), 7);
+      expect(MilestoneGuard.crossedThreshold(6, 60, MilestoneGuard.streakThresholds), 50);
+      expect(MilestoneGuard.crossedThreshold(50, 80, MilestoneGuard.streakThresholds), isNull);
+      expect(MilestoneGuard.crossedThreshold(14, 1, MilestoneGuard.streakThresholds), isNull);
+    });
+
+    test('空档位表与未跨档均返回 null', () {
+      expect(MilestoneGuard.crossedThreshold(0, 999, const []), isNull);
+      expect(MilestoneGuard.crossedThreshold(0, 5, MilestoneGuard.streakThresholds), isNull);
+    });
+  });
 }
