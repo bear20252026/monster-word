@@ -1,9 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
+import 'package:word_app/core/engine/srs_engine.dart';
 import 'package:word_app/core/utils/boss_siege.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_queue_reader.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
+import 'package:word_app/features/learning/application/review_session_snapshot.dart';
+import 'package:word_app/features/learning/application/review_session_snapshot_store.dart';
 import 'package:word_app/features/learning/presentation/review_session_state.dart';
 import 'package:word_app/models/word.dart';
 
@@ -202,6 +205,186 @@ void main() {
       expect(_bossPhaseOf(state), BossBattlePhase.active);
     });
   });
+
+  group('ReviewSessionState 会话恢复（v2.1）', () {
+    List<Word> words(int count) =>
+        List.generate(count, (i) => Word(id: i + 1, word: 'w${i + 1}', interpret: '释${i + 1}'));
+
+    ReviewSessionState newState({ReviewSessionSnapshotStore? store}) => ReviewSessionState(
+      queueReader: const RepositoryReviewQueueReader(),
+      ratingWriter: ReviewRatingWriter(writeRating: ({required word, required rating}) async {}),
+      snapshotStore: store,
+    );
+
+    test('恢复保留词序与步数；已不再到期的词按已完成计，不会重答一次', () async {
+      final state = newState();
+      final restore = _snapshot(
+        wordIds: List<int>.generate(40, (i) => i + 1),
+        index: 2,
+        ratedIds: const [1, 2],
+        dueAtStart: 40,
+      );
+
+      await state.initialize(
+        ReviewQueueSnapshot(dueWords: words(40).sublist(2), queueWords: const []),
+        restore: restore,
+      );
+
+      expect(state.wasRestored, isTrue);
+      expect(state.total, 40, reason: '总数沿用存档，不因重启缩水');
+      expect(state.done, 2, reason: '已评分的词不会被恢复成第 0 步');
+      expect(state.currentWord?.word, 'w3', reason: '按存档词序接着走');
+    });
+
+    test('重复恢复幂等：同一快照恢复两次，done 不会累加成 4', () async {
+      final state = newState();
+      final restore = _snapshot(
+        wordIds: List<int>.generate(40, (i) => i + 1),
+        index: 2,
+        ratedIds: const [1, 2],
+        dueAtStart: 40,
+      );
+
+      await state.initialize(
+        ReviewQueueSnapshot(dueWords: words(40), queueWords: const []),
+        restore: restore,
+      );
+      expect(state.done, 2);
+      await state.initialize(
+        ReviewQueueSnapshot(dueWords: words(40), queueWords: const []),
+        restore: restore,
+      );
+      expect(state.done, 2, reason: '恢复是重建，不是在旧步数上再 +1');
+      expect(state.currentWord?.word, 'w3');
+    });
+
+    test('pending 不丢：答过但未提交的词仍留在队列里，等用户重答', () async {
+      final state = newState();
+      final restore = _snapshot(
+        wordIds: List<int>.generate(40, (i) => i + 1),
+        index: 1,
+        ratedIds: const [1],
+        pending: const ReviewSessionPending(wordId: 2, correct: true),
+        dueAtStart: 40,
+      );
+
+      await state.initialize(
+        ReviewQueueSnapshot(dueWords: words(40).sublist(1), queueWords: const []),
+        restore: restore,
+      );
+
+      expect(state.done, 1, reason: 'pending 不能算已完成');
+      expect(state.currentWord?.word, 'w2', reason: '未提交的那题必须还在');
+    });
+
+    test('评分落库后重启：快照没来得及记步数也不会双计', () async {
+      final store = _SpySnapshotStore();
+      final state = newState(store: store);
+      final all = words(40);
+
+      await state.initialize(ReviewQueueSnapshot(dueWords: all, queueWords: const []));
+      expect(store.last?.index, 0);
+
+      await state.rate(RecallRating.good);
+      final ratedId = store.last!.wordIds.first;
+      expect(store.last?.index, 1);
+      expect(store.last?.ratedIds, contains(ratedId));
+
+      // 模拟进程重启：该词评分已落库，因此不再出现在新的 due 集合里。
+      final restarted = newState();
+      await restarted.initialize(
+        ReviewQueueSnapshot(
+          dueWords: all.where((word) => word.id != ratedId).toList(growable: false),
+          queueWords: const [],
+        ),
+        restore: store.last,
+      );
+
+      expect(restarted.wasRestored, isTrue);
+      expect(restarted.done, 1, reason: '已落库的词只算一次');
+      expect(restarted.total, 40);
+      expect(restarted.currentWord?.id, isNot(ratedId));
+    });
+
+    test('快照指向的词都不在当前队列：降级为新局，不半截恢复', () async {
+      final state = newState();
+      final restore = _snapshot(wordIds: const [999], index: 0, dueAtStart: 40);
+
+      await state.initialize(
+        ReviewQueueSnapshot(dueWords: words(40), queueWords: const []),
+        restore: restore,
+      );
+
+      expect(state.wasRestored, isFalse);
+      expect(state.done, 0);
+      expect(state.total, 40);
+      expect(state.currentWord, isNotNull);
+    });
+
+    test('没有到期词时不做恢复（不拿整本兜底冒充一局）', () async {
+      final state = newState();
+      final restore = _snapshot(
+        wordIds: List<int>.generate(40, (i) => i + 1),
+        index: 2,
+        ratedIds: const [1, 2],
+        dueAtStart: 40,
+      );
+
+      await state.initialize(
+        ReviewQueueSnapshot(dueWords: const [], queueWords: words(40)),
+        restore: restore,
+      );
+
+      expect(state.wasRestored, isFalse);
+      expect(state.total, 40);
+    });
+
+    test('走完一局清掉快照：下一次进入不会把已完成的一局又恢复出来', () async {
+      final store = _SpySnapshotStore();
+      final state = newState(store: store);
+
+      await state.initialize(
+        ReviewQueueSnapshot(
+          dueWords: [Word(id: 1, word: 'solo', interpret: '独自')],
+          queueWords: const [],
+        ),
+      );
+      expect(store.last, isNotNull);
+
+      expect(await state.rate(RecallRating.good), isTrue);
+      expect(store.last, isNull);
+      expect(state.currentWord, isNull);
+    });
+  });
+}
+
+ReviewSessionSnapshot _snapshot({
+  required List<int> wordIds,
+  int index = 0,
+  List<int> ratedIds = const [],
+  ReviewSessionPending? pending,
+  bool hadDueAtStart = true,
+  int? dueAtStart,
+}) => ReviewSessionSnapshot(
+  sessionId: 's1',
+  wordIds: wordIds,
+  index: index,
+  ratedIds: ratedIds,
+  pending: pending,
+  hadDueAtStart: hadDueAtStart,
+  dueAtStart: dueAtStart ?? wordIds.length,
+  updatedAt: DateTime(2026, 11, 5, 12).millisecondsSinceEpoch,
+);
+
+/// 记录最近一次写入的快照，用来验证「评一题就落一步」与「走完即清」。
+class _SpySnapshotStore extends ReviewSessionSnapshotStore {
+  ReviewSessionSnapshot? last;
+
+  @override
+  Future<void> write(ReviewSessionSnapshot snapshot) async => last = snapshot;
+
+  @override
+  Future<void> clear() async => last = null;
 }
 
 /// 用当前会话事实求头目阶段（口径与页面协调层一致）。

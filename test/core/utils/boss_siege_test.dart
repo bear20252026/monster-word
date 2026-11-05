@@ -164,6 +164,40 @@ void main() {
     });
   });
 
+  group('Boss v2 护盾分段', () {
+    test('每 10 只裂一段：0/9/10/49/50 边界', () {
+      expect(bossShieldSegments(0), 0);
+      expect(bossShieldSegments(-3), 0);
+      expect(bossShieldSegments(9), 0);
+      expect(bossShieldSegments(10), 1);
+      expect(bossShieldSegments(11), 1);
+      expect(bossShieldSegments(49), 4);
+      expect(bossShieldSegments(50), 5);
+    });
+
+    test('封顶 5 段：长局不会把 HUD 挤爆', () {
+      expect(bossShieldSegments(90), bossMaxShieldSegments);
+      expect(bossShieldSegments(200), bossMaxShieldSegments);
+      expect(bossShieldSegments(reviewSessionCap), bossMaxShieldSegments);
+    });
+
+    test('本局护盾总段数按 total 折算（1..5）', () {
+      expect(bossShieldCapacity(0), 0);
+      expect(bossShieldCapacity(9), 1);
+      expect(bossShieldCapacity(40), 4);
+      expect(bossShieldCapacity(49), 4);
+      expect(bossShieldCapacity(50), 5);
+      expect(bossShieldCapacity(reviewSessionCap), 5);
+    });
+
+    test('护盾只挂 done：rate 与 markAsKnown 都推进同一计数', () {
+      // 40 步的一局：第 10 / 20 / 30 / 40 步各裂一段；第 40 步裂满 4 段。
+      for (final (done, expected) in [(0, 0), (10, 1), (20, 2), (30, 3), (40, 4)]) {
+        expect(bossShieldSegments(done), expected, reason: 'done=$done');
+      }
+    });
+  });
+
   group('Boss v2 文案底线', () {
     test('零 emoji；不写「进度已保存 / 随时接着走」这类承诺', () {
       final lines = [bossVictoryLine, bossNarrative(remaining: 5), bossNarrative(remaining: 0)];

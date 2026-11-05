@@ -70,14 +70,7 @@ void main() {
   testWidgets('bossActive：头目行 + 步数标签 + 2px 细进度条一起出现', (tester) async {
     const label = '第 1 / 40 步 · 还剩 40 步';
     await tester.pumpWidget(
-      _wrap(
-        const BossSiegeHeader(
-          done: 0,
-          total: legionDueThreshold,
-          bossActive: true,
-          stepLabel: label,
-        ),
-      ),
+      _wrap(const BossSiegeHeader(done: 0, total: legionDueThreshold, bossActive: true, stepLabel: label)),
     );
 
     // 1 只头目 + 12 只喽啰（40 只时敌列封顶）。
@@ -99,4 +92,95 @@ void main() {
     final bar = tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator));
     expect(bar.value, closeTo(39 / legionDueThreshold, 1e-9));
   });
+
+  testWidgets('护盾段：容量 4 段；done 跨 10 后第一段变灰，其余保持强调色', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        const BossSiegeHeader(
+          done: 9,
+          total: legionDueThreshold,
+          bossActive: true,
+          shieldSegments: 0,
+          shieldCapacity: 4,
+        ),
+      ),
+    );
+    expect(find.byKey(const ValueKey('boss-shield-0')), findsOneWidget);
+    expect(find.byKey(const ValueKey('boss-shield-3')), findsOneWidget);
+    expect(find.byKey(const ValueKey('boss-shield-4')), findsNothing);
+    expect(_segmentColor(tester, 0), _segmentColor(tester, 1), reason: '未裂开时四段同色');
+
+    await tester.pumpWidget(
+      _wrap(
+        const BossSiegeHeader(
+          done: 10,
+          total: legionDueThreshold,
+          bossActive: true,
+          shieldSegments: 1,
+          shieldCapacity: 4,
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(_segmentColor(tester, 0), isNot(_segmentColor(tester, 1)), reason: '第一段裂开变灰');
+  });
+
+  testWidgets('当日首次入场：pendingIntro 保持冻结，450ms 后交回协调层转 active', (tester) async {
+    var finished = 0;
+    await tester.pumpWidget(
+      _wrap(
+        BossSiegeHeader(
+          done: 0,
+          total: legionDueThreshold,
+          bossActive: true,
+          bossIntroPending: true,
+          shieldSegments: 0,
+          shieldCapacity: 4,
+          stepLabel: '第 1 / 40 步 · 还剩 40 步',
+          onIntroFinished: () => finished++,
+        ),
+      ),
+    );
+
+    final fade = tester.widget<FadeTransition>(find.byKey(const ValueKey('boss-intro-fade')));
+    expect(fade.opacity.value, 0, reason: '入场从透明开始');
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(finished, 0, reason: '450ms 未到，仍在入场');
+    expect(fade.opacity.value, greaterThan(0));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(finished, 1, reason: '入场演完只回调一次');
+  });
+
+  testWidgets('reduce-motion：跳过 450ms 动画，立即交回 active', (tester) async {
+    tester.binding.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(
+      disableAnimations: true,
+    );
+    addTearDown(tester.binding.platformDispatcher.clearAccessibilityFeaturesTestValue);
+
+    var finished = 0;
+    await tester.pumpWidget(
+      _wrap(
+        BossSiegeHeader(
+          done: 0,
+          total: legionDueThreshold,
+          bossActive: true,
+          bossIntroPending: true,
+          shieldSegments: 0,
+          shieldCapacity: 4,
+          onIntroFinished: () => finished++,
+        ),
+      ),
+    );
+
+    await tester.pump();
+    expect(finished, 1);
+    final fade = tester.widget<FadeTransition>(find.byKey(const ValueKey('boss-intro-fade')));
+    expect(fade.opacity.value, 1, reason: '降级为直接显示');
+  });
+}
+
+Color? _segmentColor(WidgetTester tester, int index) {
+  final box = tester.widget<AnimatedContainer>(find.byKey(ValueKey('boss-shield-$index')));
+  final decoration = box.decoration;
+  return decoration is BoxDecoration ? decoration.color : null;
 }

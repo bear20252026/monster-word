@@ -22,6 +22,7 @@ import 'package:word_app/features/learning/application/review_audio_player.dart'
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
+import 'package:word_app/features/learning/application/review_session_snapshot_store.dart';
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
@@ -164,6 +165,8 @@ Widget buildLearningFeatureScope({required Widget child}) {
           ratingWriter: context.read<ReviewRatingWriter>(),
           // 复习会话完成后的埋点（会话数 / 答题词次 / 答对数）。
           usageStats: context.read<UsageStatsRecorder>(),
+          // 中断后能接着走（v2.1）：一局一段 SP JSON，走完即清。
+          snapshotStore: const ReviewSessionSnapshotStore(),
         ),
         update: (context, ratingWriter, session) =>
             (session ??
@@ -171,6 +174,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
                     queueReader: sl<ReviewQueueReader>(),
                     ratingWriter: ratingWriter,
                     usageStats: context.read<UsageStatsRecorder>(),
+                    snapshotStore: const ReviewSessionSnapshotStore(),
                   ))
               ..updateRatingWriter(ratingWriter),
       ),

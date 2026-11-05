@@ -57,15 +57,18 @@ class SuperMemoryEngine extends MwCoreEngine {
 
   SuperMemoryEngine({super.eventLabel = 'review'});
 
-  /// 初始化复习列表（arrayForReviewWords 逻辑）+ 随机打乱
-  void init(List<MwWordProcess> dueWords) {
+  /// 初始化复习列表（arrayForReviewWords 逻辑）+ 随机打乱。
+  ///
+  /// [shuffle] 为 false 时保留传入顺序：会话恢复必须按存档词序重建，
+  /// 否则「上次做到第 3 个词」这件事在恢复后会错位。
+  void init(List<MwWordProcess> dueWords, {bool shuffle = true}) {
     reviewList = List.from(dueWords);
     tooEasyList = [];
     alreadyReviewed = [];
     _currentIndex = 0;
     _totalNum = reviewList.length;
-    // 随机打乱复习顺序
-    reviewList.shuffle();
+    // 随机打乱复习顺序（恢复局除外）
+    if (shuffle) reviewList.shuffle();
     // 为每个单词分配测试模式（reviewTestModeForWord）
     for (final w in reviewList) {
       w.testMode = _reviewTestModeForWord(w);

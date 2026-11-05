@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/widgets/monster_answer_signal.dart';
 import 'package:word_app/features/learning/application/boss_intro_day_store.dart';
+import 'package:word_app/features/learning/application/review_session_snapshot_store.dart';
 import 'package:word_app/features/learning/application/review_session_starter.dart';
 import 'package:word_app/features/learning/application/review_word_details.dart';
 import 'package:word_app/features/learning/presentation/review_audio_state.dart';
@@ -35,9 +36,14 @@ class ReviewPage extends StatefulWidget {
 
 class _ReviewPageState extends State<ReviewPage> {
   final BossIntroDayStore _bossIntroDay = const BossIntroDayStore();
+  final ReviewSessionSnapshotStore _snapshotStore = const ReviewSessionSnapshotStore();
 
-  /// 当日首次入场是否已播（本局内只读一次，进入 pendingIntro 时置位并落盘）。
+  /// 当日首次入场是否已被消费（本局内只读一次，进入 pendingIntro 时置位并落盘）。
   bool _introPlayedToday = false;
+
+  /// 入场动画是否正在播：true 期间保持 pendingIntro，动画结束（或 reduce-motion
+  /// 直接跳过）后转 active 并解除答题冻结。
+  bool _introPlaying = false;
 
   @override
   void initState() {
@@ -47,18 +53,17 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   Future<void> _initReview() async {
+    // 上次中断的一局：只有通过 sanitize 且词仍在当前到期集合里才会被恢复。
+    final restore = _snapshotStore.read();
     final result = await ReviewSessionStarter(
       snapshot: context.read<ReviewQueueState>().snapshot,
-      initialize: context.read<ReviewSessionState>().initialize,
+      initialize: (snapshot) => context.read<ReviewSessionState>().initialize(snapshot, restore: restore),
     ).start();
-    if (result == ReviewSessionStartResult.ready) _markBossIntroIfFirstToday();
+    if (result == ReviewSessionStartResult.ready) _beginBossIntroIfFirstToday();
   }
 
-  /// 当日首次、且确实触发头目时，把日期落盘（节流：一天只演一次入场）。
-  ///
-  /// M0 没有入场动画，pendingIntro 会立刻转 active；这里仍然先走一遍状态，
-  /// 让「当日首次」这件事只有一个判定源（[resolveBossPhase]）。
-  void _markBossIntroIfFirstToday() {
+  /// 当日首次、且确实触发头目时，进入入场动画并落盘日期（一天只演一次）。
+  void _beginBossIntroIfFirstToday() {
     if (_introPlayedToday || !mounted) return;
     final session = context.read<ReviewSessionState>();
     final phase = resolveBossPhase(
@@ -69,8 +74,16 @@ class _ReviewPageState extends State<ReviewPage> {
       introPlayedToday: false,
     );
     if (phase != BossBattlePhase.pendingIntro) return;
-    setState(() => _introPlayedToday = true);
+    setState(() {
+      _introPlayedToday = true;
+      _introPlaying = true;
+    });
     unawaited(_bossIntroDay.markDay(bossDayStamp(DateTime.now())));
+  }
+
+  void _onBossIntroFinished() {
+    if (!mounted || !_introPlaying) return;
+    setState(() => _introPlaying = false);
   }
 
   @override
@@ -82,12 +95,13 @@ class _ReviewPageState extends State<ReviewPage> {
     final word = session.currentWord;
     // 触发口径只认会话开局冻结的 hadDueAtStart/total：中途 done 涨落、剩余
     // 跌破 40 都不会让已出现的头目消失（闩锁），唯一退场是 currentWord == null。
+    // 当日首次入场在动画播完前仍算 pendingIntro（_introPlaying），播完才转 active。
     final bossPhase = resolveBossPhase(
       hadDueAtStart: session.hadDueAtStart,
       total: session.total,
       done: session.done,
       hasWord: word != null,
-      introPlayedToday: _introPlayedToday,
+      introPlayedToday: _introPlayedToday && !_introPlaying,
     );
     final bossActive = bossPhase == BossBattlePhase.pendingIntro || bossPhase == BossBattlePhase.active;
     return FormalReviewPageContent(
@@ -109,6 +123,7 @@ class _ReviewPageState extends State<ReviewPage> {
         wordActions: wordActions,
         reviewAudio: reviewAudio,
         bossActive: bossActive,
+        bossIntroPending: bossPhase == BossBattlePhase.pendingIntro,
       ),
     );
   }
@@ -120,6 +135,7 @@ class _ReviewPageState extends State<ReviewPage> {
     required ReviewWordActionsState wordActions,
     required ReviewAudioState reviewAudio,
     required bool bossActive,
+    required bool bossIntroPending,
   }) {
     return SessionExitGuard(
       subject: '本次复习',
@@ -131,6 +147,10 @@ class _ReviewPageState extends State<ReviewPage> {
           done: session.done,
           total: session.total,
           bossActive: bossActive,
+          bossIntroPending: bossIntroPending,
+          bossShieldSegments: bossShieldSegments(session.done),
+          bossShieldCapacity: bossShieldCapacity(session.total),
+          onBossIntroFinished: _onBossIntroFinished,
           bossStepLabel: bossStepLabel(session.done, session.total),
           selectedWrongChoice: session.selectedWrongChoice,
           correctRevealed: session.correctRevealed,

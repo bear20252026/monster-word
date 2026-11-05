@@ -188,6 +188,16 @@ class AppPreferences extends BaseSharedPreferences {
 
   Future<bool> setBossIntroDay(String day) => setString(bossSiegeIntroDayKey, day);
 
+  // ── 复习会话快照（v2.1 会话恢复；一段 JSON，值损坏由 application 层整段丢弃）──
+
+  static const String reviewSessionSnapshotKey = 'review_session_snapshot_v1';
+
+  String getReviewSessionSnapshot() => getString(reviewSessionSnapshotKey);
+
+  Future<bool> setReviewSessionSnapshot(String json) => setString(reviewSessionSnapshotKey, json);
+
+  Future<bool> removeReviewSessionSnapshot() => remove(reviewSessionSnapshotKey);
+
   /// 「旧 daily_new_words_v1 → daily_learn_goal」一次性迁移完成标记。
   static const todayGoalMigratedKey = 'today_goal_migrated_v1';
   bool get isTodayGoalMigrated => getBool(todayGoalMigratedKey, defaultValue: false);

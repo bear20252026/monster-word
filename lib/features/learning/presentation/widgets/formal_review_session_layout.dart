@@ -22,7 +22,11 @@ class FormalReviewSessionLayout extends StatelessWidget {
     required this.done,
     required this.total,
     this.bossActive = false,
+    this.bossIntroPending = false,
+    this.bossShieldSegments = 0,
+    this.bossShieldCapacity = 0,
     this.bossStepLabel = '',
+    this.onBossIntroFinished,
     required this.selectedWrongChoice,
     required this.correctRevealed,
     required this.showAnswer,
@@ -47,8 +51,18 @@ class FormalReviewSessionLayout extends StatelessWidget {
   /// 头目是否登场（协调层由开局冻结的到期数判定，展示层只吃结果）。
   final bool bossActive;
 
+  /// 当日首次入场动画播完前冻结答题（约 450ms；reduce-motion 下立即结束）。
+  final bool bossIntroPending;
+
+  /// 已裂开的护盾段数 / 本局护盾总段数；协调层用纯函数算好传入。
+  final int bossShieldSegments;
+  final int bossShieldCapacity;
+
   /// 「第 x / N 步 · 还剩 M 步」；协调层算好传入，展示层不自造口径。
   final String bossStepLabel;
+
+  /// 入场动画结束回调（协调层据此解除答题冻结）。
+  final VoidCallback? onBossIntroFinished;
   final String? selectedWrongChoice;
 
   /// 本题已答对（反馈驻留窗口内）：卡片变绿 + 对勾 + 彩带。
@@ -102,59 +116,70 @@ class FormalReviewSessionLayout extends StatelessWidget {
                     done: done,
                     total: total,
                     bossActive: bossActive,
+                    bossIntroPending: bossIntroPending,
+                    shieldSegments: bossShieldSegments,
+                    shieldCapacity: bossShieldCapacity,
                     stepLabel: bossStepLabel,
+                    onIntroFinished: onBossIntroFinished,
                   ),
+                  // 入场动画期间冻结答题（约 450ms），避免用户在头目还没站好时就作答。
                   Expanded(
-                    child: isLandscape
-                        ? Row(
-                            children: [
-                              Expanded(
-                                child: FormalReviewWordPrompt(
-                                  word: word,
-                                  audioLoading: audioLoading,
-                                  onPlayAudio: onPlayAudio,
+                    child: IgnorePointer(
+                      ignoring: bossIntroPending,
+                      child: isLandscape
+                          ? Row(
+                              children: [
+                                Expanded(
+                                  child: FormalReviewWordPrompt(
+                                    word: word,
+                                    audioLoading: audioLoading,
+                                    onPlayAudio: onPlayAudio,
+                                  ),
                                 ),
-                              ),
-                              Expanded(
-                                child: FormalReviewChoiceGrid(
-                                  word: word,
-                                  choices: choices,
-                                  selectedWrongChoice: selectedWrongChoice,
-                                  correctRevealed: correctRevealed,
-                                  showAnswer: showAnswer,
-                                  onSelectChoice: onSelectChoice,
+                                Expanded(
+                                  child: FormalReviewChoiceGrid(
+                                    word: word,
+                                    choices: choices,
+                                    selectedWrongChoice: selectedWrongChoice,
+                                    correctRevealed: correctRevealed,
+                                    showAnswer: showAnswer,
+                                    onSelectChoice: onSelectChoice,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              Expanded(
-                                flex: 4,
-                                child: FormalReviewWordPrompt(
-                                  word: word,
-                                  audioLoading: audioLoading,
-                                  onPlayAudio: onPlayAudio,
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                Expanded(
+                                  flex: 4,
+                                  child: FormalReviewWordPrompt(
+                                    word: word,
+                                    audioLoading: audioLoading,
+                                    onPlayAudio: onPlayAudio,
+                                  ),
                                 ),
-                              ),
-                              Expanded(
-                                flex: 6,
-                                child: FormalReviewChoiceGrid(
-                                  word: word,
-                                  choices: choices,
-                                  selectedWrongChoice: selectedWrongChoice,
-                                  correctRevealed: correctRevealed,
-                                  showAnswer: showAnswer,
-                                  onSelectChoice: onSelectChoice,
+                                Expanded(
+                                  flex: 6,
+                                  child: FormalReviewChoiceGrid(
+                                    word: word,
+                                    choices: choices,
+                                    selectedWrongChoice: selectedWrongChoice,
+                                    correctRevealed: correctRevealed,
+                                    showAnswer: showAnswer,
+                                    onSelectChoice: onSelectChoice,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
+                    ),
                   ),
-                  FormalReviewAnswerAction(
-                    showAnswer: showAnswer,
-                    onRevealAnswer: onRevealAnswer,
-                    onContinueWithGoodRating: onContinueWithGoodRating,
+                  IgnorePointer(
+                    ignoring: bossIntroPending,
+                    child: FormalReviewAnswerAction(
+                      showAnswer: showAnswer,
+                      onRevealAnswer: onRevealAnswer,
+                      onContinueWithGoodRating: onContinueWithGoodRating,
+                    ),
                   ),
                 ],
               ),

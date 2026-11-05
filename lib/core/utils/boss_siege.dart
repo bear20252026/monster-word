@@ -152,9 +152,32 @@ String bossStepLabel(int done, int total) {
   return '第 $step / $total 步 · 还剩 $remaining 步';
 }
 
-/// 头目行的静态叙述（M0 不做动画，只报事实）。
-String bossNarrative({required int remaining}) =>
-    remaining > 0 ? '头目亲自堵在门口' : '头目退回雾岭了';
+/// 护盾每裂一段所需的击退数（每 10 只裂一段）。
+const int bossShieldSegmentSize = 10;
+
+/// 单局护盾最多 5 段（长局也封顶，避免把 HUD 挤爆）。
+const int bossMaxShieldSegments = 5;
+
+/// 已裂开的护盾段数 = `done ~/ 10`，封顶 5。
+///
+/// 只挂会话 `done`（`rate()` 与 `markAsKnown()` 都会推进它），
+/// 不另设第二个计数器。护盾是辅助进度，主进度仍是「第 x / N 步」。
+int bossShieldSegments(int done) {
+  if (done <= 0) return 0;
+  final cracked = done ~/ bossShieldSegmentSize;
+  return cracked > bossMaxShieldSegments ? bossMaxShieldSegments : cracked;
+}
+
+/// 本局护盾总段数（1..5）：按 `total` 折算，未满 10 步的一局也留一段可画。
+int bossShieldCapacity(int total) {
+  if (total <= 0) return 0;
+  final capacity = total ~/ bossShieldSegmentSize;
+  if (capacity < 1) return 1;
+  return capacity > bossMaxShieldSegments ? bossMaxShieldSegments : capacity;
+}
+
+/// 头目行的静态叙述。
+String bossNarrative({required int remaining}) => remaining > 0 ? '头目亲自堵在门口' : '头目退回雾岭了';
 
 /// 清完一局时头目的退场台词（完成页文案与语音共用）。
 ///
