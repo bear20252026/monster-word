@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/features/checkin/application/streak_milestones.dart';
 import 'package:word_app/features/learning/application/completion_cards.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/learning/presentation/share_image_service.dart';
@@ -71,9 +72,13 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
   /// 怪兽进化阶段（签到天数换算；喂币庆祝用它——进化不该只在探头页可见）。
   int _evoStage = 0;
 
+  /// 连胜一行（无连胜/读取失败为 null → 不显示）。
+  String? _streakLine;
+
   @override
   void initState() {
     super.initState();
+    unawaited(_loadStreakLine());
     // 会话结算（发币）只在完成页首次展示时执行一次；失败不打断——奖励不应阻塞完成页，异常已上报。
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 复习错题后再次完成会重挂载本页；每会话只结算一次
@@ -140,6 +145,21 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
     });
   }
 
+  /// 连胜一行：读连签与今日签到状态；失败降级为不显示（C 级豁免）。
+  Future<void> _loadStreakLine() async {
+    try {
+      final store = context.read<ScareCoinStore?>();
+      if (store == null) return;
+      final streak = await store.streak();
+      final last = await store.lastCheckInDate();
+      if (!mounted) return;
+      final checkedToday = last.isNotEmpty && store.isSameDay(last, DateTime.now());
+      setState(() => _streakLine = completionStreakLine(streakDays: streak, checkedToday: checkedToday));
+    } catch (e, s) {
+      reportSwallowedError('结算页连胜读取失败', e, s);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -193,6 +213,11 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
         if (cards.note != null) ...[
           const SizedBox(height: 10),
           Text(cards.note!, style: MwTypography.micro.copyWith(color: colors.text3)),
+        ],
+        // 连胜一行：把连胜当作本局结果的一部分（无连胜不占位）。
+        if (_streakLine != null) ...[
+          const SizedBox(height: 8),
+          Text(_streakLine!, style: MwTypography.micro.copyWith(color: colors.text3)),
         ],
         const SizedBox(height: 20),
         // 战报分享：今日战绩海报，自带传播。

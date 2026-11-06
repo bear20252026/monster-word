@@ -32,3 +32,16 @@ int? daysToNextStreakMilestone(int streak) {
 
 /// 庆祝文案（自建，简短正向）。
 String streakMilestonePhrase(int milestoneDays) => '连续签到 $milestoneDays 天！';
+
+/// 结算页连胜一行（把连胜当作本局结果的一部分）。
+///
+/// [streakDays] 为当前连胜；[checkedToday] 为今天是否已签到。
+/// 无连胜返回 null（不显示）；未签到时只陈述现状，不催、不吓唬。
+String? completionStreakLine({required int streakDays, required bool checkedToday}) {
+  if (streakDays <= 0) return null;
+  if (!checkedToday) return '连胜 $streakDays 天 · 今天签到可续上';
+  final toNext = daysToNextStreakMilestone(streakDays);
+  if (toNext == null) return '连胜 $streakDays 天 · 保持住';
+  if (toNext == 1) return '连胜 $streakDays 天 · 明天就是第 ${streakDays + 1} 天';
+  return '连胜 $streakDays 天 · 再坚持 $toNext 天解锁下一档';
+}

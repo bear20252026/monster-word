@@ -55,4 +55,31 @@ void main() {
       expect(streakMilestonePhrase(14), '连续签到 14 天！');
     });
   });
+
+  group('completionStreakLine（结算页连胜一行）', () {
+    test('无连胜不显示', () {
+      expect(completionStreakLine(streakDays: 0, checkedToday: true), isNull);
+      expect(completionStreakLine(streakDays: 0, checkedToday: false), isNull);
+    });
+
+    test('未签到：只陈述现状，不催不吓唬', () {
+      expect(completionStreakLine(streakDays: 6, checkedToday: false), '连胜 6 天 · 今天签到可续上');
+      expect(completionStreakLine(streakDays: 50, checkedToday: false), '连胜 50 天 · 今天签到可续上');
+    });
+
+    test('已签到且明天正好跨档', () {
+      expect(completionStreakLine(streakDays: 6, checkedToday: true), '连胜 6 天 · 明天就是第 7 天');
+      expect(completionStreakLine(streakDays: 29, checkedToday: true), '连胜 29 天 · 明天就是第 30 天');
+    });
+
+    test('已签到且距离下一档不止一天', () {
+      expect(completionStreakLine(streakDays: 1, checkedToday: true), '连胜 1 天 · 再坚持 6 天解锁下一档');
+      expect(completionStreakLine(streakDays: 8, checkedToday: true), '连胜 8 天 · 再坚持 6 天解锁下一档');
+    });
+
+    test('已封顶只鼓励保持', () {
+      expect(completionStreakLine(streakDays: 50, checkedToday: true), '连胜 50 天 · 保持住');
+      expect(completionStreakLine(streakDays: 80, checkedToday: true), '连胜 80 天 · 保持住');
+    });
+  });
 }
