@@ -29,7 +29,17 @@ class SessionExitGuard extends StatelessWidget {
   /// 为 null 时保持旧行为（始终拦截）。
   final bool Function()? shouldIntercept;
 
-  const SessionExitGuard({super.key, required this.child, this.subject = '当前练习', this.shouldIntercept});
+  /// 确认框正文的自定义来源（弹框时求值，可读到最新进度）；
+  /// 为 null 时使用默认的「进度会保存」文案。
+  final String Function()? contentBuilder;
+
+  const SessionExitGuard({
+    super.key,
+    required this.child,
+    this.subject = '当前练习',
+    this.shouldIntercept,
+    this.contentBuilder,
+  });
 
   Future<bool> _confirmExit(BuildContext context) async {
     final result = await showDialog<bool>(
@@ -37,7 +47,7 @@ class SessionExitGuard extends StatelessWidget {
       barrierDismissible: false, // 明确选择，避免误触
       builder: (ctx) => AlertDialog(
         title: Text('退出$subject？'),
-        content: const Text('学习进度将保存到下次，确定要暂停吗？'),
+        content: Text(contentBuilder?.call() ?? '学习进度将保存到下次，确定要暂停吗？'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('继续学习')),
           FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('暂停并保存')),

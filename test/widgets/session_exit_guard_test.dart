@@ -46,6 +46,25 @@ void main() {
       expect(find.text('暂停并保存'), findsOneWidget);
     });
 
+    testWidgets('contentBuilder 可自定义正文（学习页「还差 N 个词」）', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SessionExitGuard(
+            subject: '测试',
+            shouldIntercept: () => true,
+            contentBuilder: () => '这局还差 3 个词，现在暂停会保存进度，下次接着答。',
+            child: const Scaffold(body: Text('内容')),
+          ),
+        ),
+      );
+
+      final dynamic widgetsBinding = tester.binding;
+      await widgetsBinding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.text('这局还差 3 个词，现在暂停会保存进度，下次接着答。'), findsOneWidget);
+    });
+
     testWidgets('shouldIntercept 为 null 时始终拦截（向后兼容）', (tester) async {
       await tester.pumpWidget(
         MaterialApp(

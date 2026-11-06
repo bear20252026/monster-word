@@ -196,6 +196,9 @@ class LearningSessionState extends ChangeNotifier {
   int get total => _queue.length;
   bool get hasMoreWords => _currentIndex < _queue.length - 1;
 
+  /// 本局还差多少个词没答（退出确认框用它说明后果，不改完成判定）。
+  int get remainingWords => _queue.isEmpty ? 0 : (_queue.length - _currentIndex).clamp(0, _queue.length);
+
   /// 是否有未保存的学习进度（已翻过至少 1 张卡且未完成全部）。
   /// 用于 SessionExitGuard 智能拦截：无进度时不打扰用户。
   bool get hasProgress => _queue.isNotEmpty && _currentIndex > 0 && _currentIndex < _queue.length;

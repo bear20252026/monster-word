@@ -98,6 +98,10 @@ class _LearnPageState extends State<LearnPage> {
     return SessionExitGuard(
       subject: '本次学习',
       shouldIntercept: () => context.read<LearningSessionState>().hasProgress,
+      contentBuilder: () {
+        final n = context.read<LearningSessionState>().remainingWords;
+        return n <= 0 ? '学习进度将保存到下次，确定要暂停吗？' : '这局还差 $n 个词，现在暂停会保存进度，下次接着答。';
+      },
       child: Scaffold(
         backgroundColor: skin.colors.pageBg,
         // 整页只订阅 currentWord：答题记录/连击/音频加载等高频 notify

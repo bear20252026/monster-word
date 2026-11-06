@@ -83,6 +83,27 @@ void main() {
     expect(session.progress, (0, 0));
   });
 
+  test('remainingWords 随答题递减（退出确认说明后果用）', () async {
+    final session = _sessionWithWords(
+      words: [
+        Word(id: 1, word: 'first', interpret: '中文释义'),
+        Word(id: 2, word: 'second', interpret: '中文释义'),
+        Word(id: 3, word: 'third', interpret: '中文释义'),
+      ],
+    );
+    await session.loadBook(_testBook, shuffle: false);
+
+    expect(session.remainingWords, 3);
+    session.next();
+    expect(session.remainingWords, 2);
+    session.next();
+    expect(session.remainingWords, 1);
+    session.next();
+    expect(session.remainingWords, 1, reason: 'next() 停在最后一个词，不越过队尾');
+    session.exitLearning();
+    expect(session.remainingWords, 0);
+  });
+
   test('专用收藏状态刷新并切换收藏时更新可订阅计数', () async {
     final repository = _FakeFavRepository();
     await repository.addFavorite('saved');
