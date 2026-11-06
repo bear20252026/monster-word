@@ -181,6 +181,31 @@ void main() {
     await tester.pump(const Duration(milliseconds: 2000));
   });
 
+  // REG-SPEECH-002b：浮层跨路由常驻，进入「我的空间」后闸门若已提前复位，
+  // 在这一页再点怪兽会又压一层同一个页面 —— 返回一次仍停在该页。
+  testWidgets('进入我的空间后再点怪兽不再叠一层', (tester) async {
+    await tester.pumpWidget(host());
+
+    await tester.tap(find.byType(MonsterPresence));
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pump();
+    expect(find.text('page:/my_space', skipOffstage: false), findsOneWidget);
+
+    // 此时怪兽仍在「我的空间」之上（Navigator 之上的常驻浮层），再点一下。
+    await tester.tap(find.byType(MonsterPresence));
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pump();
+    expect(find.text('page:/my_space', skipOffstage: false), findsOneWidget, reason: '同一页面不得叠两层，否则返回一次仍落在同一页');
+
+    // 返回一次应回到起始页，证明栈里只有一层「我的空间」。
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('页面 A'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 2000)); // 排掉气泡定时器
+  });
+
   testWidgets('拖完的位置会记住：重建整棵树后回到同一处', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await AppPreferences().init();

@@ -240,7 +240,8 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
   /// 距上次签到天数（主动性判定的输入；null = 读不到 → 按 0 处理，不催）。
   int? _daysSinceLastCheckin;
 
-  /// 800ms 问候节拍窗内的重入闸（双击会推开两层「我的空间」）；入页后复位。
+  /// 问候/跳转期间的重入闸。浮层跨路由常驻，若 800ms 后就放开，
+  /// 在「我的空间」上再点一下会再压一层同一个页面；因此覆盖到出栈为止。
   bool _navigating = false;
 
   bool get _reduceMotion => WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
@@ -355,13 +356,18 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
     });
     await Future<void>.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
-    _navigating = false;
     // 浮层在 Navigator 之上 ⇒ 只能用外部传进来的 key 跳转（见 MonsterPresenceHost 注释）。
     final navigator = widget.navigatorKey?.currentState;
-    if (navigator != null) {
+    if (navigator == null) {
+      // 没有导航器就放开闸门，下次点击还能重试。
+      _navigating = false;
+    } else {
+      // 复位必须等到「我的空间」出栈：复位早了，在这一页上再点怪兽会再推一层同页。
       unawaited(
-        navigator.pushNamed(RouteNames.mySpace).then((_) {
-          if (mounted) unawaited(_refreshSpeechVars());
+        navigator.pushNamed(RouteNames.mySpace).whenComplete(() {
+          if (!mounted) return;
+          _navigating = false;
+          unawaited(_refreshSpeechVars());
         }),
       );
     }
