@@ -16,6 +16,8 @@ import 'package:word_app/features/learning/application/learning_queue_port.dart'
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/domain/definition_formatter.dart';
+// M2：每日任务进度（跨 feature 只 import application 层，架构守卫 R4 允许）。
+import 'package:word_app/features/missions/application/daily_mission_store.dart';
 // 埋点端口（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
 // 用窄接口 UsageStatsRecorder 而不是 UsageStatsCollector：本类只需要「记一笔」，
 // 不需要上报调度/开关读写；测试传 null 即可（可选参数，既有测试不受影响）。
@@ -55,6 +57,7 @@ class LearningSessionState extends ChangeNotifier {
     required TodayProgressStore todayStore,
     required this._prefs,
     this._usageStats,
+    this._dailyMissions,
     List<Word> Function(List<Word>)? shuffler,
   }) : _today = todayStore,
        _shuffler = shuffler ?? alphabetSpreadShuffle {
@@ -71,6 +74,9 @@ class LearningSessionState extends ChangeNotifier {
 
   /// 使用统计埋点端口；未注入（测试/未装配）时为 null，全部埋点静默跳过。
   final UsageStatsRecorder? _usageStats;
+
+  /// 每日任务（D1）进度端口；未注入时静默跳过。
+  final DailyMissionStore? _dailyMissions;
   final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
 
   Book? _currentBook;
@@ -149,6 +155,9 @@ class LearningSessionState extends ChangeNotifier {
     // 埋点：新学一个词。开关关闭时实现方空转，这里不需要自己判断。
     final recorder = _usageStats;
     if (recorder != null) unawaited(recorder.recordNewWordsLearned(1));
+    // M2/D1：新学 10 词任务。今日已学口径与 TodayProgressStore 一致（只算新词）。
+    final missions = _dailyMissions;
+    if (missions != null) unawaited(missions.recordNewWordLearned());
     try {
       await _today.setTodayLearned(_todayLearned, date: _todayLearnedDate);
     } catch (e, s) {
@@ -180,6 +189,13 @@ class LearningSessionState extends ChangeNotifier {
     unawaited(
       LearningRewardService.enqueuePendingSession(wordsLearned: _totalAnswered, dailyGoalAchieved: dailyGoalAchieved),
     );
+    // M2/D1：一局正确率 ≥80%（与 accuracy 同口径：答对 / 总词次）。
+    final missions = _dailyMissions;
+    final percent = sessionAccuracyPercent(
+      answered: _totalAnswered,
+      correct: (_totalAnswered - _errorWords.length).clamp(0, _totalAnswered),
+    );
+    if (missions != null && percent != null) unawaited(missions.recordSessionAccuracyPercent(percent));
   }
 
   DateTime? _sessionStartTime;

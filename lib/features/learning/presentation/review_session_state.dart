@@ -15,7 +15,8 @@ import 'package:word_app/features/learning/application/review_session_rating_exe
 import 'package:word_app/features/learning/application/review_session_snapshot.dart';
 import 'package:word_app/features/learning/application/review_session_snapshot_store.dart';
 import 'package:word_app/features/learning/presentation/review_session_answer_state.dart';
-// 埋点端口（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
+// M2：每日任务进度 + 埋点端口（跨 feature 只 import application 层，R4 允许）。
+import 'package:word_app/features/missions/application/daily_mission_store.dart';
 import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
 
 /// 正式复习队列加载的当前阶段。
@@ -32,6 +33,7 @@ class ReviewSessionState extends ChangeNotifier {
     required ReviewRatingWriter ratingWriter,
     this._usageStats,
     this._snapshotStore,
+    this._dailyMissions,
     SuperMemoryEngine? engine,
     ReviewSessionQuestionFactory? questionFactory,
   }) : _engine = engine ?? SuperMemoryEngine(),
@@ -46,6 +48,9 @@ class ReviewSessionState extends ChangeNotifier {
 
   /// 使用统计埋点端口；未注入时为 null，埋点静默跳过。
   final UsageStatsRecorder? _usageStats;
+
+  /// 每日任务（D1）进度端口；未注入时静默跳过。
+  final DailyMissionStore? _dailyMissions;
 
   /// 会话快照门面；未注入时不持久化（单元测试默认如此）。
   final ReviewSessionSnapshotStore? _snapshotStore;
@@ -305,6 +310,10 @@ class ReviewSessionState extends ChangeNotifier {
     _ratedIds.add(reviewedWord.wordId);
     _pending = null;
     _persistSnapshot();
+    // M2/D1：复习到期词任务。只有「开局确实有到期词」的正式复习队列才计数；
+    // 无到期词时的兜底队列不算复习，避免把新学/兜底词混进复习口径。
+    final missions = _dailyMissions;
+    if (missions != null && _hadDueAtStart) unawaited(missions.recordReviewedWord());
     _reportSessionCompletedIfDone();
   }
 
@@ -343,9 +352,14 @@ class ReviewSessionState extends ChangeNotifier {
   void _reportSessionCompletedIfDone() {
     if (_total <= 0 || _done < _total) return;
     final recorder = _usageStats;
-    if (recorder == null) return;
-    unawaited(recorder.recordStudySession());
-    unawaited(recorder.recordAnswers(reviewed: _done, correct: (_done - _wrongCount).clamp(0, _done)));
+    if (recorder != null) {
+      unawaited(recorder.recordStudySession());
+      unawaited(recorder.recordAnswers(reviewed: _done, correct: (_done - _wrongCount).clamp(0, _done)));
+    }
+    // M2/D1：一局正确率 ≥80%（复习同计；错题口径与上方 usageStats 一致）。
+    final missions = _dailyMissions;
+    final percent = sessionAccuracyPercent(answered: _done, correct: (_done - _wrongCount).clamp(0, _done));
+    if (missions != null && percent != null) unawaited(missions.recordSessionAccuracyPercent(percent));
   }
 
   void _regenerateChoices() {

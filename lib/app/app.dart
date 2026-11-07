@@ -27,6 +27,7 @@ import 'package:word_app/features/companion/presentation/companion_feature_provi
 import 'package:word_app/widgets/monster_presence.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_feature_providers.dart';
 import 'package:word_app/features/learning/presentation/learning_feature_providers.dart';
+import 'package:word_app/features/missions/presentation/daily_mission_feature_providers.dart';
 import 'package:word_app/features/quick_review/presentation/quick_review_feature_providers.dart';
 import 'package:word_app/features/settings/presentation/settings_feature_providers.dart';
 import 'package:word_app/features/search/presentation/search_feature_providers.dart';
@@ -83,35 +84,40 @@ class WordApp extends StatelessWidget {
           //     2026-10-15 由最内层上提到此处：学习/词书/签到等 feature 的**装配边界**要注入埋点端口
           //     （UsageStatsRecorder），而 Provider 只能向下查找——留在最内层时那些 scope 读不到它。
           //     仍满足原约束：_AppLifecycle 与 MaterialApp 都在它之下。
-          child: buildLearningFeatureScope(
-            // [4] Learning — LearningSession/LearningQueue*/Review*/Favorites/NewWords/LearningProgressReader。✅ 是 book(G3.2)、search(FavoritesAccessor)、词书会话的上游渠道；已核实【不依赖 Account】，置于 Account 内层为 DAG 链序选择，非依赖驱动。消费 telemetry 的埋点端口。
-            child: buildSettingsFeatureScope(
-              // [5] Settings — LearningPreferencesState。✅ 消费 Account(logout)；被 profile/school preference 消费。已核实【不依赖 learning feature】，位于 learning 内层为链序选择，非依赖驱动。
-              child: buildSearchFeatureScope(
-                // [6] Search — WordSearchReader/SearchHistoryStore/ExampleReader/FavoritesAccessor(经 LearningFavoritesStore)。✅ 依赖 learning 祖先(收藏)；无自身上游。
-                child: buildQuickReviewFeatureScope(
-                  // [7] QuickReview — QuickReviewWordReader。仅读词；依赖较浅。
-                  child: buildBookFeatureScope(
-                    // [8] Book — BookCatalogReader/BookWordListReader/BookState。✅ 必须位于 learning 内层：BookState 消费 learning 祖先的 LearningProgressReader + LearningSessionStarter。消费 telemetry 的埋点端口。
-                    child: buildScareCoinFeatureScope(
-                      // [9] ScareCoin — ScareCoinStore。✅ 是 checkin 的上游渠道；亦被 profile/redemption/日历消费。
-                      child: buildCheckInFeatureScope(
-                        // [10] CheckIn — CheckInHistoryReader/CheckinStatusReader/CheckinWriter。✅ 适配器直接消费 [9] ScareCoinStore（签到单一事实来源），故必须在其内层；[9]→[10] 即渠道方向。
-                        child: buildDictionaryFeatureScope(
-                          // [11] Dictionary — 词典 Reader/Writer。被 word_detail/查词页消费；✅ 已核实【无上游 feature 依赖】。
-                          child: buildWordBrowseFeatureScope(
-                            // [12] WordBrowse — WordNotesStore/SentenceFavoritesStore。被 word_detail/my_fav 消费；无上游 feature 依赖，最内层 feature scope。
-                            child: MultiProvider(
-                              // [13] MultiProvider[SkinSystem, WallpaperState] — 主题皮肤/墙纸。被 MaterialApp(_AppLifecycle) 与所有页面消费；位于所有 feature scope 之后（feature 层无法 context.read<SkinSystem>()，当前无此需求，保留）。
-                              providers: [
-                                ChangeNotifierProvider(create: (_) => SkinSystem()),
-                                ChangeNotifierProvider(create: (_) => WallpaperState()),
-                              ],
-                              child: buildCompanionFeatureScope(
-                                // [14] Companion — 怪兽陪伴层（场景图 + 主动性）。**必须最内层**：
-                                // 它要读 ScareCoinStore（[9]）与 learning 的到期数；Provider 只能向下查找。
-                                // 这也是 P2 教训的直接后果（learning 在 scare_coin 外层 ⇒ 状态层拿不到账本）。
-                                child: const _AppLifecycle(),
+          child: buildDailyMissionFeatureScope(
+            // [3.5] DailyMission — 每日任务（D1/D2）。✅ 必须位于 Learning 外层：
+            // 学习/复习会话状态在 learning scope 内创建，需要 context.read 本 Store
+            // 记录进度（Provider 只能向下查找）；首页任务条与结算页消费同一实例。
+            child: buildLearningFeatureScope(
+              // [4] Learning — LearningSession/LearningQueue*/Review*/Favorites/NewWords/LearningProgressReader。✅ 是 book(G3.2)、search(FavoritesAccessor)、词书会话的上游渠道；已核实【不依赖 Account】，置于 Account 内层为 DAG 链序选择，非依赖驱动。消费 telemetry 的埋点端口。
+              child: buildSettingsFeatureScope(
+                // [5] Settings — LearningPreferencesState。✅ 消费 Account(logout)；被 profile/school preference 消费。已核实【不依赖 learning feature】，位于 learning 内层为链序选择，非依赖驱动。
+                child: buildSearchFeatureScope(
+                  // [6] Search — WordSearchReader/SearchHistoryStore/ExampleReader/FavoritesAccessor(经 LearningFavoritesStore)。✅ 依赖 learning 祖先(收藏)；无自身上游。
+                  child: buildQuickReviewFeatureScope(
+                    // [7] QuickReview — QuickReviewWordReader。仅读词；依赖较浅。
+                    child: buildBookFeatureScope(
+                      // [8] Book — BookCatalogReader/BookWordListReader/BookState。✅ 必须位于 learning 内层：BookState 消费 learning 祖先的 LearningProgressReader + LearningSessionStarter。消费 telemetry 的埋点端口。
+                      child: buildScareCoinFeatureScope(
+                        // [9] ScareCoin — ScareCoinStore。✅ 是 checkin 的上游渠道；亦被 profile/redemption/日历消费。
+                        child: buildCheckInFeatureScope(
+                          // [10] CheckIn — CheckInHistoryReader/CheckinStatusReader/CheckinWriter。✅ 适配器直接消费 [9] ScareCoinStore（签到单一事实来源），故必须在其内层；[9]→[10] 即渠道方向。
+                          child: buildDictionaryFeatureScope(
+                            // [11] Dictionary — 词典 Reader/Writer。被 word_detail/查词页消费；✅ 已核实【无上游 feature 依赖】。
+                            child: buildWordBrowseFeatureScope(
+                              // [12] WordBrowse — WordNotesStore/SentenceFavoritesStore。被 word_detail/my_fav 消费；无上游 feature 依赖，最内层 feature scope。
+                              child: MultiProvider(
+                                // [13] MultiProvider[SkinSystem, WallpaperState] — 主题皮肤/墙纸。被 MaterialApp(_AppLifecycle) 与所有页面消费；位于所有 feature scope 之后（feature 层无法 context.read<SkinSystem>()，当前无此需求，保留）。
+                                providers: [
+                                  ChangeNotifierProvider(create: (_) => SkinSystem()),
+                                  ChangeNotifierProvider(create: (_) => WallpaperState()),
+                                ],
+                                child: buildCompanionFeatureScope(
+                                  // [14] Companion — 怪兽陪伴层（场景图 + 主动性）。**必须最内层**：
+                                  // 它要读 ScareCoinStore（[9]）与 learning 的到期数；Provider 只能向下查找。
+                                  // 这也是 P2 教训的直接后果（learning 在 scare_coin 外层 ⇒ 状态层拿不到账本）。
+                                  child: const _AppLifecycle(),
+                                ),
                               ),
                             ),
                           ),

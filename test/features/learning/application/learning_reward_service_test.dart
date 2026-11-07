@@ -32,6 +32,16 @@ class _FakeStore implements ScareCoinStore {
     return coins;
   }
 
+  final Set<String> rewardEvents = {};
+
+  @override
+  Future<int?> grantOnce({required int delta, required String reason, required String eventKey}) async {
+    if (!rewardEvents.add(eventKey)) return null;
+    coins += delta;
+    reasons.add(reason);
+    return coins;
+  }
+
   @override
   Future<Set<String>> checkinDates() async => {};
 

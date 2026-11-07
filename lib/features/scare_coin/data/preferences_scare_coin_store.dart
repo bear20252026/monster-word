@@ -608,6 +608,61 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   Future<int> grant({required int delta, required String reason}) =>
       _serialized(() => _apply(delta: delta, reason: reason));
 
+  /// M2（D2）：每日任务发币的幂等入口。
+  ///
+  /// SQLite 路径与签到共用 `reward_events` 事务闸（事件键插入 + 余额 + 流水
+  /// 同一事务），并发/重入只会有一次成功；已发过返回 null。
+  /// 账本不可用时退到 SP：先用事件键清单判重再写余额，失败则回滚事件键，
+  /// 确保「宁可漏发一次，也不重复发」。
+  @override
+  Future<int?> grantOnce({required int delta, required String reason, required String eventKey}) =>
+      _serialized(() => _grantOnceLocked(delta: delta, reason: reason, eventKey: eventKey));
+
+  static const String _spRewardEventsKey = 'scare_coin.reward_events';
+
+  Future<int?> _grantOnceLocked({required int delta, required String reason, required String eventKey}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final ledger = await _sqliteLedger(forWrite: true);
+    if (ledger != null) {
+      try {
+        final newBalance = await ledger.applyDeltaWithEvent(
+          delta: delta,
+          entry: ScareCoinEntry(time: DateTime.now(), delta: delta, reason: reason),
+          eventKey: eventKey,
+        );
+        _markLedgerHealthy();
+        return newBalance;
+      } on RewardEventDuplicate {
+        // 事件键已存在 = 这笔奖励发过，调用方视为成功领取（只是不再加币）。
+        return null;
+      } catch (e, s) {
+        reportSwallowedError('每日任务发币失败，回退 SP', e, s);
+        _enterSpDegradation();
+      }
+    }
+
+    // SP 回退：事件键清单只保留最近 200 条（每日任务键按天递增，足够覆盖）。
+    final events = prefs.getStringList(_spRewardEventsKey) ?? <String>[];
+    if (events.contains(eventKey)) return null;
+    final nextEvents = [...events, eventKey];
+    await _writeChecked(
+      prefs.setStringList(
+        _spRewardEventsKey,
+        nextEvents.length > 200 ? nextEvents.sublist(nextEvents.length - 200) : nextEvents,
+      ),
+      '奖励事件幂等键（SP 回退路径）',
+    );
+    try {
+      final newBalance = await _apply(delta: delta, reason: reason, forceSpSnapshot: true);
+      return newBalance;
+    } catch (_) {
+      // 发币失败：释放事件键，下次结算可重试（不允许「占了键但没发币」）。
+      final rollback = [...nextEvents]..remove(eventKey);
+      await prefs.setStringList(_spRewardEventsKey, rollback);
+      rethrow;
+    }
+  }
+
   /// [forceSpSnapshot] 为 true 时**强制走纯 SP 分支**（账本可用也不碰）。
   ///
   /// 只有一种调用场景需要它（R3-D08）：签到路径的账本**真的取不到**

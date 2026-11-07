@@ -21,6 +21,8 @@ import 'package:word_app/features/checkin/domain/checkin_status.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/features/learning/presentation/home_screen.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
+import 'package:word_app/features/missions/application/daily_mission_store.dart';
+import 'package:word_app/features/missions/data/daily_mission_dao.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/tokens/star_gold.dart';
 import 'package:word_app/widgets/confetti.dart';
@@ -61,6 +63,10 @@ void main() {
           ChangeNotifierProvider<TodayProgressStore>.value(value: store),
           Provider<CheckinStatusReader>.value(value: reader),
           ChangeNotifierProvider<LearningStatisticsState>.value(value: LearningStatisticsState()),
+          // M2：首页任务条需要每日任务 Store（无 DB 时 DAO 走内存回退）。
+          ChangeNotifierProvider<DailyMissionStore>(
+            create: (_) => DailyMissionStore(repository: DailyMissionDao.instance),
+          ),
           if (coinStore != null) Provider<ScareCoinStore>.value(value: coinStore),
           if (companion != null) ListenableProvider<MonsterCompanionController>.value(value: companion),
         ],

@@ -25,6 +25,12 @@ abstract interface class ScareCoinStore {
 
   Future<int> grant({required int delta, required String reason});
 
+  /// 幂等发币：同一 [eventKey] 全局只发一次（返回新余额；已发过返回 null）。
+  ///
+  /// 走 `reward_events` 的 UNIQUE 约束，供每日任务等「可重入结算」使用；
+  /// 与 [grant] 的区别只有幂等键，余额/流水语义完全一致。
+  Future<int?> grantOnce({required int delta, required String reason, required String eventKey});
+
   /// 断签保护卡持有上限（囤积贬值，连击才有含金量）。
   int get protectionCap;
 

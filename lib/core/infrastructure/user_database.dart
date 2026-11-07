@@ -20,7 +20,7 @@ class UserDatabase {
   UserDatabase._();
 
   /// 应用当前支持的 schema 版本（与 [_onUpgrade] 步进保持同步）。
-  static const int _schemaVersion = 7;
+  static const int _schemaVersion = 8;
 
   Database? _db;
   bool _initialized = false;
@@ -278,6 +278,7 @@ class UserDatabase {
     await _createRewardTables(db);
     await _createWordNotesTable(db);
     await _createUsageStatsTables(db);
+    await _createDailyMissionsTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -307,6 +308,31 @@ class UserDatabase {
     if (oldVersion < 7) {
       await _createUsageStatsTables(db);
     }
+    // M2（D1/D2）：每日任务按天记录进度/完成/领奖时间。
+    // 纯新增表，旧库升级只建空表、不回填历史（老用户从今天起算，符合决策单）。
+    if (oldVersion < 8) {
+      await _createDailyMissionsTable(db);
+    }
+  }
+
+  /// M2（D1/D2）：每日任务表。
+  ///
+  /// 一行 = 一天 × 一条任务。`day` 为本地时区日期键（yyyy-MM-dd）；
+  /// `progress` 记录当日累计（正确率任务存当日最高百分比）；
+  /// `completed_at` / `reward_claimed_at` 为毫秒时间戳，后者兼作发币的
+  /// 本地幂等标记（真正的发币幂等仍由 `reward_events` 的 event_key 保证）。
+  /// 不建额外索引：`day` 是复合主键前缀，按天查询天然走主键索引。
+  Future<void> _createDailyMissionsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS daily_missions (
+        day TEXT NOT NULL,
+        task_id TEXT NOT NULL,
+        progress INTEGER NOT NULL DEFAULT 0,
+        completed_at INTEGER,
+        reward_claimed_at INTEGER,
+        PRIMARY KEY (day, task_id)
+      )
+    ''');
   }
 
   /// 使用统计的本地累计表（R2-01 之后新增）。

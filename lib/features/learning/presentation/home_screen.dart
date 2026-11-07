@@ -21,6 +21,10 @@ import 'package:word_app/features/learning/presentation/learn_page.dart';
 import 'package:word_app/features/learning/presentation/word_machine_page.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
+// M2：每日任务（只 import 对方的 application 层，架构守卫 R4 允许）。
+import 'package:word_app/features/missions/application/daily_mission_reward_service.dart';
+import 'package:word_app/features/missions/application/daily_mission_store.dart';
+import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
@@ -110,6 +114,14 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const _CheckInStrip(),
           ),
         ),
+        // 每日任务条（M2）：一行摘要，点开看三条任务
+        _EntranceIn(
+          delayMs: 220,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 12),
+            child: const _MissionStrip(),
+          ),
+        ),
         // 当前词书条
         _EntranceIn(
           delayMs: 260,
@@ -153,6 +165,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _EntranceIn(delayMs: 180, child: const _CheckInStrip()),
+                      const SizedBox(height: 12),
+                      _EntranceIn(delayMs: 220, child: const _MissionStrip()),
                       const SizedBox(height: 12),
                       _EntranceIn(delayMs: 260, child: const _BookStrip()),
                       const SizedBox(height: 12),

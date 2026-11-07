@@ -58,6 +58,7 @@ import 'package:word_app/features/learning/presentation/review_audio_state.dart'
 import 'package:word_app/features/learning/presentation/review_queue_state.dart';
 import 'package:word_app/features/learning/presentation/review_session_state.dart';
 import 'package:word_app/features/learning/presentation/review_word_actions_state.dart';
+import 'package:word_app/features/missions/application/daily_mission_store.dart';
 
 /// 学习功能域的根 Provider 装配。
 ///
@@ -113,6 +114,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
           // ⚠️ 本 scope 必须位于 buildTelemetryFeatureScope 内层才能读到它 ——
           // 见 app.dart 的 scope 链序注释 [3]。
           usageStats: context.read<UsageStatsRecorder>(),
+          // M2/D1：每日任务进度。本 scope 外层是 buildDailyMissionFeatureScope
+          // （app.dart [3.5]），所以这里能向下读到同一实例。
+          dailyMissions: context.read<DailyMissionStore>(),
         ),
       ),
       ProxyProvider<LearningSessionState, LearningSessionStarter>(
@@ -165,6 +169,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
           ratingWriter: context.read<ReviewRatingWriter>(),
           // 复习会话完成后的埋点（会话数 / 答题词次 / 答对数）。
           usageStats: context.read<UsageStatsRecorder>(),
+          dailyMissions: context.read<DailyMissionStore>(),
           // 中断后能接着走（v2.1）：一局一段 SP JSON，走完即清。
           snapshotStore: const ReviewSessionSnapshotStore(),
         ),
@@ -174,6 +179,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
                     queueReader: sl<ReviewQueueReader>(),
                     ratingWriter: ratingWriter,
                     usageStats: context.read<UsageStatsRecorder>(),
+                    dailyMissions: context.read<DailyMissionStore>(),
                     snapshotStore: const ReviewSessionSnapshotStore(),
                   ))
               ..updateRatingWriter(ratingWriter),

@@ -140,6 +140,286 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
   }
 }
 
+/// 每日任务条（M2 / D1+D2）：一行摘要，点击展开三条任务的详情与宝箱。
+///
+/// 发币在 [DailyMissionRewardService] 里幂等结算（`event_key=mission:<day>:<taskId>`），
+/// 这里只负责进度展示与「开箱演出」——宝箱不产出随机奖励，三条任务全部完成
+/// 固定 +15（每条 5），与决策单一致。
+class _MissionStrip extends StatefulWidget {
+  const _MissionStrip();
+
+  @override
+  State<_MissionStrip> createState() => _MissionStripState();
+}
+
+class _MissionStripState extends State<_MissionStrip> {
+  final ConfettiController _chest = ConfettiController();
+
+  late final DailyMissionStore _store;
+  bool _settling = false;
+  int? _lastDue;
+
+  @override
+  void initState() {
+    super.initState();
+    _store = context.read<DailyMissionStore>();
+    _store.addListener(_onStoreChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_refresh());
+    });
+  }
+
+  @override
+  void dispose() {
+    _store.removeListener(_onStoreChanged);
+    _chest.dispose();
+    super.dispose();
+  }
+
+  void _onStoreChanged() {
+    if (!mounted) return;
+    unawaited(_settle());
+  }
+
+  Future<void> _refresh({int? dueNow}) async {
+    await _store.ensureLoaded(dueNow: dueNow ?? context.read<TodayProgressStore>().due);
+    await _settle();
+  }
+
+  Future<void> _settle() async {
+    if (_settling || !mounted) return;
+    // 没有待结算任务时完全不碰币账本（测试里可以没有 ScareCoinStore）。
+    if (_store.completedUnclaimed.isEmpty) return;
+    _settling = true;
+    try {
+      await DailyMissionRewardService(store: _store, coins: context.read<ScareCoinStore>()).settle();
+    } finally {
+      _settling = false;
+    }
+  }
+
+  Future<void> _openSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _MissionSheet(chest: _chest),
+    );
+    if (mounted) unawaited(_refresh());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.skin;
+    // 到期数变化 → 复习任务目标变化；build 内只登记，postFrame 再写 Store，
+    // 避免在 build 期间触发 notifyListeners。
+    final due = context.select<TodayProgressStore, int>((s) => s.due);
+    if (_lastDue != due) {
+      _lastDue = due;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _lastDue == due) unawaited(_store.refreshDue(dueNow: due));
+      });
+    }
+
+    return ListenableBuilder(
+      listenable: _store,
+      builder: (context, _) {
+        final done = _store.completedCount;
+        final total = DailyMissionId.values.length;
+        return ScaleDownOnPress(
+          onTap: _openSheet,
+          child: MwCard(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: skin.colors.accent.withValues(alpha: AppAlphas.o10),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.checklist_rounded, size: 18, color: skin.colors.accent),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '今日任务 $done/$total',
+                    style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: skin.colors.text1),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: ShapeDecoration(
+                    color: skin.colors.cardBg,
+                    shape: StadiumBorder(side: BorderSide(color: skin.colors.divider)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.card_giftcard_rounded, size: 16, color: skin.colors.accent),
+                      const SizedBox(width: 4),
+                      Text(
+                        _store.claimedCount >= total ? '已开' : '+$dailyMissionDailyCoinCap',
+                        style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: skin.colors.text2),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 任务详情 + 宝箱演出（宝箱不随机，纯视觉；发币已由条带结算）。
+class _MissionSheet extends StatelessWidget {
+  const _MissionSheet({required this.chest});
+
+  final ConfettiController chest;
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.skin;
+    final store = context.watch<DailyMissionStore>();
+    final missions = store.missions;
+    final allDone = store.allCompleted;
+    return ConfettiOverlay(
+      controller: chest,
+      direction: ConfettiDirection.up,
+      particleCount: 40,
+      duration: const Duration(seconds: 2),
+      child: Container(
+        decoration: BoxDecoration(
+          color: skin.colors.cardBg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(context.design.radius.xl)),
+        ),
+        padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: skin.colors.divider,
+                    borderRadius: BorderRadius.circular(context.design.radius.xs),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(
+                    '今日任务',
+                    style: MwTypography.titleLg.copyWith(fontWeight: FontWeight.w700, color: skin.colors.text1),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '每条 +$dailyMissionCoinReward · 每日上限 $dailyMissionDailyCoinCap',
+                    style: MwTypography.micro.copyWith(color: skin.colors.text3),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              for (final mission in missions) _MissionRow(mission: mission),
+              const SizedBox(height: 8),
+              ScaleDownOnPress(
+                onTap: allDone ? chest.play : null,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: ShapeDecoration(
+                    color: allDone ? skin.colors.accent.withValues(alpha: AppAlphas.o10) : skin.colors.cardBg,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(context.design.radius.control),
+                      side: BorderSide(color: allDone ? skin.colors.accent : skin.colors.divider),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        allDone ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                        size: 22,
+                        color: allDone ? skin.colors.accent : skin.colors.text3,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          allDone
+                              ? (store.claimedCount == missions.length
+                                    ? '宝箱已开启，明天再来'
+                                    : '宝箱已开启 +$dailyMissionDailyCoinCap')
+                              : '宝箱还差 ${missions.length - store.completedCount} 条任务',
+                          style: MwTypography.bodySm.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: allDone ? skin.colors.text1 : skin.colors.text3,
+                          ),
+                        ),
+                      ),
+                      if (allDone) Icon(Icons.celebration_rounded, size: 20, color: skin.colors.accent),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MissionRow extends StatelessWidget {
+  const _MissionRow({required this.mission});
+
+  final DailyMissionView mission;
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = context.skin;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        children: [
+          Icon(
+            mission.completed ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+            size: 20,
+            color: mission.completed ? skin.colors.accent : skin.colors.text3,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              mission.definition.title,
+              style: MwTypography.bodySm.copyWith(
+                color: mission.completed ? skin.colors.text1 : skin.colors.text2,
+                decoration: mission.completed ? TextDecoration.lineThrough : null,
+                decorationColor: skin.colors.text3,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            mission.progressLabel,
+            style: MwTypography.micro.copyWith(
+              fontWeight: FontWeight.w600,
+              color: mission.completed ? skin.colors.accent : skin.colors.text3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// 当前词书条：显示在学词书，点击进入词书选择。
 class _BookStrip extends StatelessWidget {
   const _BookStrip();
