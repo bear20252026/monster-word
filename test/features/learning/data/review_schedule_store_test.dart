@@ -69,6 +69,19 @@ void main() {
     expect(await store.loadActiveDates(), {'2026-09-04'});
   });
 
+  test('recordRating 记录答对词次：答错不计入', () async {
+    await store.recordRating(card: card('apple'), dateKey: '2026-09-04', isLearn: false, correct: true);
+    await store.recordRating(card: card('bee'), dateKey: '2026-09-04', isLearn: false, correct: false);
+    await store.recordRating(card: card('cat'), dateKey: '2026-09-05', isLearn: true, correct: true);
+
+    expect(await store.loadDailyCorrect(), {'2026-09-04': 1, '2026-09-05': 1});
+    // 原有 learn/review 统计口径不变（周报正确率单独一列）。
+    expect(await store.loadDailyStats(), {
+      '2026-09-04': {'learn': 0, 'review': 2},
+      '2026-09-05': {'learn': 1, 'review': 0},
+    });
+  });
+
   test('deleteCard 删除单行且不影响其他卡片', () async {
     await store.recordRating(card: card('apple'), dateKey: '2026-09-04', isLearn: true);
     await store.recordRating(card: card('bee'), dateKey: '2026-09-04', isLearn: true);

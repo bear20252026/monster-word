@@ -37,6 +37,9 @@ class RepositoryReviewScheduleReader extends ReviewScheduleReader {
   Map<String, int> dailyStatsFor(String day) => _repository.dailyStatsFor(day);
 
   @override
+  int dailyCorrectFor(String day) => _repository.dailyCorrectFor(day);
+
+  @override
   Map<String, int> get memoryStats => _repository.memoryStats;
 
   @override

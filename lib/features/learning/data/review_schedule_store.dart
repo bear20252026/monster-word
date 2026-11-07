@@ -89,13 +89,19 @@ class ReviewScheduleStore {
     final dirPath = directoryPath ?? (await getApplicationSupportDirectory()).path;
     final db = await openDatabase(
       p.join(dirPath, defaultDbFileName),
-      version: 2,
+      version: 3,
       onCreate: (db, _) => _createSchema(db),
       onUpgrade: (db, oldV, newV) async {
         // P1-02：v1→v2 新增 fsrs_rating_log（评分幂等日志）。失败会上抛，
         // 上层按 SQLite 不可用降级 SP 模式，下次启动重试迁移。
         if (oldV < 2) {
           await _createRatingLogTable(db);
+        }
+        // L1（v2→v3）：fsrs_daily_stats 补 correct（答对词次）列，供周报正确率。
+        // 回退考虑：旧版代码查询/写入该表时忽略多余列，降级安装不会损坏数据；
+        // 新列默认 0，历史周正确率按 0 计（不回填，避免臆造数据）。
+        if (oldV < 3) {
+          await _addDailyStatsCorrectColumn(db);
         }
       },
     );
@@ -114,6 +120,17 @@ class ReviewScheduleStore {
         applied_at TEXT NOT NULL
       )
     ''');
+  }
+
+  /// L1：v3 新增 daily stats 的 correct 列。
+  ///
+  /// 幂等：先查 `PRAGMA table_info`，列已存在则跳过（避免“版本回退后又升级”
+  /// 时 ALTER 抛 duplicate column 导致整个初始化降级）。
+  static Future<void> _addDailyStatsCorrectColumn(Database db) async {
+    final columns = await db.rawQuery('PRAGMA table_info(fsrs_daily_stats)');
+    final hasCorrect = columns.any((row) => row['name'] == 'correct');
+    if (hasCorrect) return;
+    await db.execute('ALTER TABLE fsrs_daily_stats ADD COLUMN correct INTEGER NOT NULL DEFAULT 0');
   }
 
   static Future<void> _createSchema(Database db) async {
@@ -137,7 +154,8 @@ class ReviewScheduleStore {
       CREATE TABLE IF NOT EXISTS fsrs_daily_stats (
         date TEXT PRIMARY KEY,
         learn INTEGER NOT NULL DEFAULT 0,
-        review INTEGER NOT NULL DEFAULT 0
+        review INTEGER NOT NULL DEFAULT 0,
+        correct INTEGER NOT NULL DEFAULT 0
       )
     ''');
     await db.execute('''
@@ -152,6 +170,8 @@ class ReviewScheduleStore {
     // 所以全绿。`open()` 末尾那句「防御旧文件缺表」调的也是本方法，
     // 放在这里才能同时覆盖 onCreate / 旧库 / 测试三条路径。
     await _createRatingLogTable(db);
+    // 防御旧库/旧文件缺映射列：与评分日志同理，覆盖 onCreate / 旧库 / 测试三条路径。
+    await _addDailyStatsCorrectColumn(db);
   }
 
   // ============================================================
@@ -251,6 +271,12 @@ class ReviewScheduleStore {
     };
   }
 
+  Future<Map<String, int>> loadDailyCorrect() async {
+    // 与 loadDailyStats 同窗口（近 365 天），供周报正确率聚合。
+    final rows = await _db.query('fsrs_daily_stats', columns: ['date', 'correct'], orderBy: 'date DESC', limit: 365);
+    return {for (final row in rows) row['date']! as String: (row['correct'] as int?) ?? 0};
+  }
+
   Future<Set<String>> loadActiveDates() async {
     // MEM：活跃日期只保留近 365 天（连签最长有效窗口远小于此）。
     final rows = await _db.query('fsrs_active_dates', orderBy: 'date DESC', limit: 365);
@@ -303,6 +329,7 @@ class ReviewScheduleStore {
     required FsrsCard card,
     required String dateKey,
     required bool isLearn,
+    bool correct = true,
     String? ratingId,
   }) async {
     return await _db.transaction((txn) async {
@@ -315,7 +342,7 @@ class ReviewScheduleStore {
         if (logged == 0) return false; // 幂等命中：该评分已应用过
       }
       await txn.insert('fsrs_cards', _cardToRow(card), conflictAlgorithm: ConflictAlgorithm.replace);
-      await _upsertDailyStats(txn, dateKey, isLearn ? 1 : 0, isLearn ? 0 : 1);
+      await _upsertDailyStats(txn, dateKey, isLearn ? 1 : 0, isLearn ? 0 : 1, correct ? 1 : 0);
       await txn.insert('fsrs_active_dates', {'date': dateKey}, conflictAlgorithm: ConflictAlgorithm.ignore);
       return true;
     });
@@ -325,16 +352,23 @@ class ReviewScheduleStore {
   /// Android ≤9（API 28-）系统 SQLite 为 3.22-，该语法会抛错且被上层
   /// 吞掉——旧 Android 上每次评分的学习记录静默不落盘，重启全部回退。
   /// 改为 UPDATE + 条件 INSERT 两步等价写法，兼容全部支持版本。
-  Future<void> _upsertDailyStats(DatabaseExecutor txn, String date, int learnDelta, int reviewDelta) async {
+  Future<void> _upsertDailyStats(
+    DatabaseExecutor txn,
+    String date,
+    int learnDelta,
+    int reviewDelta,
+    int correctDelta,
+  ) async {
     final changed = await txn.rawUpdate(
-      'UPDATE fsrs_daily_stats SET learn = learn + ?, review = review + ? WHERE date = ?',
-      [learnDelta, reviewDelta, date],
+      'UPDATE fsrs_daily_stats SET learn = learn + ?, review = review + ?, correct = correct + ? WHERE date = ?',
+      [learnDelta, reviewDelta, correctDelta, date],
     );
     if (changed == 0) {
-      await txn.rawInsert('INSERT INTO fsrs_daily_stats(date, learn, review) VALUES(?, ?, ?)', [
+      await txn.rawInsert('INSERT INTO fsrs_daily_stats(date, learn, review, correct) VALUES(?, ?, ?, ?)', [
         date,
         learnDelta,
         reviewDelta,
+        correctDelta,
       ]);
     }
   }
@@ -367,7 +401,7 @@ class ReviewScheduleStore {
       for (final entry in stats.entries) {
         final learn = entry.value['learn'] ?? 0;
         final review = entry.value['review'] ?? 0;
-        await _upsertDailyStats(txn, entry.key, learn, review);
+        await _upsertDailyStats(txn, entry.key, learn, review, entry.value['correct'] ?? 0);
       }
     });
   }
@@ -385,6 +419,7 @@ class ReviewScheduleStore {
   Future<void> migrateFromSp({
     required List<FsrsCard> cards,
     required Map<String, Map<String, int>> dailyStats,
+    Map<String, int> dailyCorrect = const {},
     required Set<String> activeDates,
   }) async {
     await _db.transaction((txn) async {
@@ -401,7 +436,7 @@ class ReviewScheduleStore {
       for (final entry in dailyStats.entries) {
         final learn = entry.value['learn'] ?? 0;
         final review = entry.value['review'] ?? 0;
-        await _upsertDailyStats(txn, entry.key, learn, review);
+        await _upsertDailyStats(txn, entry.key, learn, review, dailyCorrect[entry.key] ?? 0);
       }
       for (final date in activeDates) {
         await txn.insert('fsrs_active_dates', {'date': date}, conflictAlgorithm: ConflictAlgorithm.ignore);

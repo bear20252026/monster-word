@@ -103,6 +103,9 @@ class LearningStatisticsState extends ChangeNotifier implements LearningStatisti
   /// 某天的本地学习统计（`learn` / `review` 词次）；供「上周的我」对比。
   Map<String, int> dailyStatsFor(String day) => _schedule?.dailyStatsFor(day) ?? const {};
 
+  /// 某天答对的词次；供「本周成长」周报算正确率。
+  int dailyCorrectFor(String day) => _schedule?.dailyCorrectFor(day) ?? 0;
+
   void synchronize({required LearningQueueSnapshot queue, required ReviewScheduleReader schedule}) {
     _schedule = schedule;
     _snapshot = LearningStatisticsSnapshot.fromSources(queue: queue, schedule: schedule);

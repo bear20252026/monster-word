@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/models/word.dart';
@@ -27,6 +27,9 @@ abstract class ReviewScheduleReader extends ChangeNotifier {
   /// 供仪表盘「上周的我」做纵向对比：数据始终在本地，不依赖遥测开关。
   /// 默认返回空 Map，测试替身无需实现。
   Map<String, int> dailyStatsFor(String day) => const {};
+
+  /// 某天答对的词次（L1 周报正确率）；默认 0，测试替身无需实现。
+  int dailyCorrectFor(String day) => 0;
 
   Map<String, int> get memoryStats;
 

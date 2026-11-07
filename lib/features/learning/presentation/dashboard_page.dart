@@ -17,6 +17,7 @@ import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
 import 'package:word_app/features/learning/domain/weekly_comparison.dart';
+import 'package:word_app/features/learning/domain/weekly_report.dart';
 import 'package:word_app/widgets/mw_section_header.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -55,6 +56,10 @@ class DashboardPage extends StatelessWidget {
                         MwSectionHeader(title: '记忆图谱'),
                         const SizedBox(height: 6),
                         _buildMemoryMap(context, state, skin),
+                        const SizedBox(height: 32),
+                        MwSectionHeader(title: '本周成长'),
+                        const SizedBox(height: 6),
+                        _buildWeeklyReportCard(context, state, skin),
                         const SizedBox(height: 32),
                         MwSectionHeader(title: '上周的我'),
                         const SizedBox(height: 6),
@@ -274,6 +279,94 @@ class DashboardPage extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  /// L1「本周成长」：近 7 天学习天数 / 词次 / 正确率 + 一键生成周报海报。
+  ///
+  /// 空数据周显示「本周还没开始」而非 0 值图表；数据全部来自本地统计。
+  Widget _buildWeeklyReportCard(BuildContext context, LearningStatisticsState state, ThemeVars skin) {
+    final report = WeeklyReport.compute(
+      statsFor: state.dailyStatsFor,
+      correctFor: state.dailyCorrectFor,
+      today: DateTime.now(),
+    );
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: skin.cardBg,
+        borderRadius: BorderRadius.circular(context.design.radius.lg),
+        border: Border.all(color: skin.divider),
+      ),
+      child: report.isEmpty
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '本周还没开始',
+                  style: MwTypography.heading5.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 6),
+                Text('学一组，就能在这里看到成长。', style: MwTypography.bodySm.copyWith(color: skin.text3)),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: _buildWeeklyStat(skin, '学习', '${report.studyDays} 天')),
+                    Expanded(child: _buildWeeklyStat(skin, '词次', '${report.words} 个')),
+                    Expanded(child: _buildWeeklyStat(skin, '正确率', report.accuracyText)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => _shareWeeklyReport(context, report),
+                    icon: Icon(Icons.ios_share_rounded, size: 16, color: skin.accent),
+                    label: Text('生成周报海报', style: MwTypography.bodySm.copyWith(color: skin.accent)),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                      minimumSize: const Size(0, 32),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildWeeklyStat(ThemeVars skin, String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: MwTypography.heading5.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 2),
+        Text(label, style: MwTypography.bodySm.copyWith(color: skin.text3)),
+      ],
+    );
+  }
+
+  Future<void> _shareWeeklyReport(BuildContext context, WeeklyReport report) async {
+    try {
+      showMwSnackBar(context, const SnackBar(content: Text('正在生成周报海报...'), duration: Duration(seconds: 1)));
+      final streakDays = await context.read<ScareCoinStore>().streak();
+      await ShareImageService.generateAndShareWeeklyReport(
+        studyDays: report.studyDays,
+        words: report.words,
+        accuracyText: report.accuracyText,
+        streakDays: streakDays,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        showMwSnackBar(context, SnackBar(content: Text('分享失败: $e')));
+      }
+    }
   }
 
   /// 「上周的我」：与过去 7 天的自己纵向对比（零账号、纯本地数据）。

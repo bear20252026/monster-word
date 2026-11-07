@@ -41,6 +41,9 @@ enum _PersistPhase { saved, pendingRetry, failed }
 class ReviewScheduleRepository extends ChangeNotifier {
   static const cardsPrefKey = 'fsrs6_cards_v1';
   static const dailyStatsPrefKey = 'daily_stats_v1';
+
+  /// L1：每日答对词次（与 dailyStats 分开存，旧数据缺该键时按 0 计）。
+  static const dailyCorrectPrefKey = 'daily_correct_v1';
   static const activeDatesPrefKey = 'active_learn_dates_v1';
   static const migratedMarkerKey = 'fsrs6_migrated_v1';
 
@@ -49,6 +52,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
   ReviewScheduleStore? _store;
   Map<String, FsrsCard> _cards = {};
   Map<String, Map<String, int>> _dailyStats = {};
+  Map<String, int> _dailyCorrect = {};
   Set<String> _activeDates = {};
   Future<void>? _initialization;
   bool _useSqlite = false;
@@ -92,6 +96,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
     _writeGate = Future<void>.value();
     _cards = {};
     _dailyStats = {};
+    _dailyCorrect = {};
     _activeDates = {};
     _initializedReset();
     await store?.close();
@@ -170,6 +175,9 @@ class ReviewScheduleRepository extends ChangeNotifier {
 
   /// 某天（`YYYY-MM-DD`）的 `learn` / `review` 词次；没有记录返回空 Map。
   Map<String, int> dailyStatsFor(String day) => _dailyStats[day] ?? const {};
+
+  /// 某天答对的词次（L1 周报正确率用）；没有记录返回 0。
+  int dailyCorrectFor(String day) => _dailyCorrect[day] ?? 0;
 
   FsrsCard? cardFor(String word) {
     final cached = _cards[word];
@@ -355,16 +363,26 @@ class ReviewScheduleRepository extends ChangeNotifier {
     }
 
     // ── 提交内存（仅在持久化成功或已安全入日志后）──
-    _commitRatingToMemory(word, prior, card, date, isLearn);
+    _commitRatingToMemory(word, prior, card, date, isLearn, rating);
     notifyListeners();
     return stored == _PersistPhase.saved ? FsrsRatingOutcome.saved : FsrsRatingOutcome.pendingRetry;
   }
 
-  void _commitRatingToMemory(String word, FsrsCard? prior, FsrsCard card, String date, bool isLearn) {
+  void _commitRatingToMemory(
+    String word,
+    FsrsCard? prior,
+    FsrsCard card,
+    String date,
+    bool isLearn,
+    FsrsRating rating,
+  ) {
     _cachePut(word, card);
     _applyCountsDelta(prior, card);
     final counts = _dailyStats.putIfAbsent(date, () => {'learn': 0, 'review': 0});
     counts[isLearn ? 'learn' : 'review'] = (counts[isLearn ? 'learn' : 'review'] ?? 0) + 1;
+    if (rating != FsrsRating.again) {
+      _dailyCorrect[date] = (_dailyCorrect[date] ?? 0) + 1;
+    }
     _activeDates.add(date);
   }
 
@@ -381,7 +399,13 @@ class ReviewScheduleRepository extends ChangeNotifier {
     if (_useSqlite && _store != null) {
       for (var attempt = 0; attempt < 2; attempt++) {
         try {
-          await _store!.recordRating(card: card, dateKey: date, isLearn: isLearn, ratingId: ratingId);
+          await _store!.recordRating(
+            card: card,
+            dateKey: date,
+            isLearn: isLearn,
+            correct: rating != FsrsRating.again,
+            ratingId: ratingId,
+          );
           return _PersistPhase.saved;
         } catch (error, stack) {
           reportSwallowedError('FSRS rateWord persist (sqlite, attempt ${attempt + 1})', error, stack);
@@ -409,8 +433,13 @@ class ReviewScheduleRepository extends ChangeNotifier {
       final dayCounts = prospectiveStats.putIfAbsent(date, () => {'learn': 0, 'review': 0});
       dayCounts[isLearn ? 'learn' : 'review'] = (dayCounts[isLearn ? 'learn' : 'review'] ?? 0) + 1;
       final prospectiveDates = Set<String>.from(_activeDates)..add(date);
+      final prospectiveCorrect = <String, int>{..._dailyCorrect};
+      if (rating != FsrsRating.again) {
+        prospectiveCorrect[date] = (prospectiveCorrect[date] ?? 0) + 1;
+      }
       await prefs.setString(cardsPrefKey, jsonEncode(prospectiveCards.map((w, c) => MapEntry(w, c.toJson()))));
       await prefs.setString(dailyStatsPrefKey, jsonEncode(prospectiveStats));
+      await prefs.setString(dailyCorrectPrefKey, jsonEncode(prospectiveCorrect));
       await prefs.setStringList(activeDatesPrefKey, prospectiveDates.toList());
       return _PersistPhase.saved;
     } catch (error, stack) {
@@ -484,6 +513,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
       final dueCards = await store.loadDueCards(now);
       _cards = {for (final card in dueCards) card.word: card};
       _dailyStats = await store.loadDailyStats();
+      _dailyCorrect = await store.loadDailyCorrect();
       _activeDates = await store.loadActiveDates();
       _store = store;
       _useSqlite = true;
@@ -502,6 +532,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
         final dueAfterReplay = await store.loadDueCards(nowAfterReplay);
         _cards = {for (final card in dueAfterReplay) card.word: card};
         _dailyStats = await store.loadDailyStats();
+        _dailyCorrect = await store.loadDailyCorrect();
         _activeDates = await store.loadActiveDates();
       }
       // E2：SQLite 模式就绪后清除旧 SP 回滚快照（降级模式保留 SP，供重试/旧版）。
@@ -519,6 +550,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         var cardsRaw = prefs.getString(cardsPrefKey);
         var statsRaw = prefs.getString(dailyStatsPrefKey);
+        var correctRaw = prefs.getString(dailyCorrectPrefKey);
         var datesList = prefs.getStringList(activeDatesPrefKey);
         if (cardsRaw == null || cardsRaw.isEmpty) {
           final backup = prefs.getString(emergencyBackupKey);
@@ -526,6 +558,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
             final map = jsonDecode(backup) as Map<String, dynamic>;
             cardsRaw = map[cardsPrefKey] as String?;
             statsRaw = (map[dailyStatsPrefKey] as String?) ?? statsRaw;
+            correctRaw = (map[dailyCorrectPrefKey] as String?) ?? correctRaw;
             final dates = map[activeDatesPrefKey];
             if (dates is List) datesList = dates.cast<String>();
             debugLog('[FSRS] degraded load restored from $emergencyBackupKey');
@@ -533,12 +566,14 @@ class ReviewScheduleRepository extends ChangeNotifier {
         }
         _cards = _readCards(cardsRaw);
         _dailyStats = _readDailyStats(statsRaw);
+        _dailyCorrect = _readDailyCorrect(correctRaw);
         _activeDates = (datesList ?? const <String>[]).toSet();
       } catch (error, stack) {
         debugLog('Review schedule loading error: $error');
         reportSwallowedError('ReviewScheduleSP degraded load', error, stack);
         _cards = {};
         _dailyStats = {};
+        _dailyCorrect = {};
         _activeDates = {};
       }
     }
@@ -610,7 +645,12 @@ class ReviewScheduleRepository extends ChangeNotifier {
     final activeDates = (prefs.getStringList(activeDatesPrefKey) ?? const <String>[]).toSet();
 
     // H1：三表单事务；失败整体回滚且不写标记 → 下次启动从 SP 重试。
-    await store.migrateFromSp(cards: cards, dailyStats: dailyStats, activeDates: activeDates);
+    await store.migrateFromSp(
+      cards: cards,
+      dailyStats: dailyStats,
+      dailyCorrect: _readDailyCorrect(prefs.getString(dailyCorrectPrefKey)),
+      activeDates: activeDates,
+    );
 
     if (skipped > 0) {
       reportSwallowedError(
@@ -704,6 +744,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
             card: card,
             dateKey: dateKey,
             isLearn: isLearn || prior == null,
+            correct: rating != FsrsRating.again,
             ratingId: ratingId,
           );
           if (ok) {
@@ -759,6 +800,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
             'savedAt': DateTime.now().toIso8601String(),
             cardsPrefKey: cardsRaw,
             dailyStatsPrefKey: prefs.getString(dailyStatsPrefKey),
+            dailyCorrectPrefKey: prefs.getString(dailyCorrectPrefKey),
             activeDatesPrefKey: prefs.getStringList(activeDatesPrefKey),
           }),
         );
@@ -773,6 +815,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
       }
       await prefs.remove(cardsPrefKey);
       await prefs.remove(dailyStatsPrefKey);
+      await prefs.remove(dailyCorrectPrefKey);
       await prefs.remove(activeDatesPrefKey);
     } catch (error, stack) {
       reportSwallowedError('FSRS E2 clear legacy SP snapshot', error, stack);
@@ -824,6 +867,17 @@ class ReviewScheduleRepository extends ChangeNotifier {
       }
     }
     return stats;
+  }
+
+  Map<String, int> _readDailyCorrect(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      return {for (final entry in decoded.entries) entry.key: (entry.value as num?)?.toInt() ?? 0};
+    } catch (error, stack) {
+      reportSwallowedError('FSRS degraded _readDailyCorrect: blob corrupt', error, stack);
+      return {};
+    }
   }
 
   Future<void> _saveCards() async {

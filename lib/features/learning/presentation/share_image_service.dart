@@ -249,6 +249,124 @@ class ShareImageService {
     }
   }
 
+  /// L1：生成本周成长周报海报并直接分享（周维度数据来自本地统计）。
+  static Future<void> generateAndShareWeeklyReport({
+    required int studyDays,
+    required int words,
+    required String accuracyText,
+    required int streakDays,
+  }) async {
+    final bytes = await _generateWeeklyReportImage(
+      studyDays: studyDays,
+      words: words,
+      accuracyText: accuracyText,
+      streakDays: streakDays,
+    );
+    final dir = await getTemporaryDirectory();
+    final filePath = '${dir.path}/monster_word_weekly_${DateTime.now().millisecondsSinceEpoch}.png';
+    final file = File(filePath);
+    await file.writeAsBytes(bytes);
+    try {
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        subject: 'Monster Word 本周成长',
+        text: '本周在 Monster Word 学习 $studyDays 天、$words 个词，答对率 $accuracyText，连续签到 $streakDays 天！一起来背单词吧！',
+      );
+    } finally {
+      _deleteQuietly(filePath);
+    }
+  }
+
+  static Future<Uint8List> _generateWeeklyReportImage({
+    required int studyDays,
+    required int words,
+    required String accuracyText,
+    required int streakDays,
+  }) async {
+    const double width = 1080;
+    const double height = 1920;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, width, height));
+
+    final bgGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [StarbucksCreamColors.greenHouse, StarbucksCreamColors.greenBanner],
+    );
+    final bgPaint = Paint()..shader = bgGradient.createShader(Rect.fromLTWH(0, 0, width, height));
+    canvas.drawRect(Rect.fromLTWH(0, 0, width, height), bgPaint);
+
+    final circlePaint = Paint()
+      ..color = AppColors.white100.withValues(alpha: AppAlphas.o05)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(width * 0.8, height * 0.15), 200, circlePaint);
+    canvas.drawCircle(Offset(width * 0.2, height * 0.7), 300, circlePaint);
+    canvas.drawCircle(Offset(width * 0.9, height * 0.85), 250, circlePaint);
+
+    final linePaint = Paint()
+      ..color = StarbucksCreamColors.vipGoldBg
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(width * 0.1, height * 0.25), Offset(width * 0.9, height * 0.25), linePaint);
+
+    _drawText(
+      canvas,
+      '本周成长',
+      width / 2,
+      height * 0.12,
+      fontSize: 84,
+      color: AppColors.white100,
+      fontWeight: FontWeight.bold,
+    );
+    _drawText(
+      canvas,
+      'Monster Word · 背单词有态度',
+      width / 2,
+      height * 0.18,
+      fontSize: 34,
+      color: StarbucksCreamColors.vipGoldBg,
+    );
+
+    const cardHeight = 200.0;
+    const cardGap = 24.0;
+    final cardTop = height * 0.30;
+    final stats = [
+      ('学习天数', '$studyDays 天', Icons.calendar_today),
+      ('学习词次', '$words 个', Icons.menu_book),
+      ('答对率', accuracyText, Icons.percent),
+      ('连续签到', '$streakDays 天', Icons.local_fire_department),
+    ];
+    for (var i = 0; i < stats.length; i++) {
+      _drawStatCard(
+        canvas,
+        width * 0.1,
+        cardTop + i * (cardHeight + cardGap),
+        width * 0.8,
+        cardHeight,
+        stats[i].$1,
+        stats[i].$2,
+        stats[i].$3,
+      );
+    }
+
+    final bottomY = height * 0.88;
+    _drawText(
+      canvas,
+      '这一周，也在稳稳前进',
+      width / 2,
+      bottomY,
+      fontSize: 32,
+      color: AppColors.white100.withValues(alpha: AppAlphas.o85),
+    );
+    _drawText(canvas, '— Monster Word —', width / 2, bottomY + 60, fontSize: 24, color: StarbucksCreamColors.vipGoldBg);
+
+    final picture = recorder.endRecording();
+    final img = await picture.toImage(width.toInt(), height.toInt());
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+    return byteData!.buffer.asUint8List();
+  }
+
   /// 静默删除临时分享文件。
   static void _deleteQuietly(String path) {
     try {
