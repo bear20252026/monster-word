@@ -99,6 +99,10 @@ int? homePathCurrentStep(List<HomePathNode> nodes) {
   return index < 0 ? null : index + 1;
 }
 
+/// 点节点后启动会话的取词上限：热身固定 [homePathWarmupWords] 词，
+/// 其余节点返回 null（沿用每日目标）。避免「热身 3 词」的节点实际开出一整局。
+int? homePathSessionLimit(HomePathNodeKind kind) => kind == HomePathNodeKind.warmup ? homePathWarmupWords : null;
+
 int _minutesFor(int words, int secondsPerWord) {
   if (words <= 0) return 1;
   return math.max(1, (words * secondsPerWord + 59) ~/ 60);

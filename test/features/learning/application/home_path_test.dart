@@ -57,6 +57,15 @@ void main() {
     });
   });
 
+  group('homePathSessionLimit', () {
+    test('热身节点只取 3 词，其余节点沿用每日目标', () {
+      expect(homePathSessionLimit(HomePathNodeKind.warmup), homePathWarmupWords);
+      expect(homePathSessionLimit(HomePathNodeKind.newWords), isNull);
+      expect(homePathSessionLimit(HomePathNodeKind.review), isNull);
+      expect(homePathSessionLimit(HomePathNodeKind.chest), isNull);
+    });
+  });
+
   group('开关默认值', () {
     test('kPathHome 默认关闭（灰度）', () {
       expect(kPathHome, isFalse);

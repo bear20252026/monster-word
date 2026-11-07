@@ -106,8 +106,9 @@ class _TodayHeroCard extends StatelessWidget {
 }
 
 /// 直接开始背单词（加载第一本书并跳转到学习页），行为与旧版一致。
-/// 首页主卡与路线弹层共用。
-Future<void> startHomeLearning(BuildContext context) async {
+/// 首页主卡与路线弹层共用。[limit] 只对新建会话生效（热身节点传 3 词）；
+/// 已有队列时直接续上，不重置用户进度。
+Future<void> startHomeLearning(BuildContext context, {int? limit}) async {
   final state = context.read<LearningSessionState>();
   if (state.queue.isNotEmpty) {
     if (context.mounted) {
@@ -174,7 +175,7 @@ Future<void> startHomeLearning(BuildContext context) async {
       return;
     }
   }
-  await state.loadBook(books.first, shuffle: true);
+  await state.loadBook(books.first, limit: limit, shuffle: true);
   if (context.mounted) {
     Navigator.pushNamed(context, LearnPage.routeName);
   }

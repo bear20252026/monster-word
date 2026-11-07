@@ -30,7 +30,7 @@ class _HomePathSection extends StatelessWidget {
           if (kind == HomePathNodeKind.review) {
             showReviewDialog(context);
           } else {
-            startHomeLearning(context);
+            startHomeLearning(context, limit: homePathSessionLimit(kind));
           }
         },
       ),
