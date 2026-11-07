@@ -22,6 +22,12 @@ abstract class ReviewScheduleReader extends ChangeNotifier {
 
   int get activeDateCount;
 
+  /// 本地每日学习统计（`learn` / `review` 词次）的只读视图。
+  ///
+  /// 供仪表盘「上周的我」做纵向对比：数据始终在本地，不依赖遥测开关。
+  /// 默认返回空 Map，测试替身无需实现。
+  Map<String, int> dailyStatsFor(String day) => const {};
+
   Map<String, int> get memoryStats;
 
   List<Word> dueWordsFor(Iterable<Word> words);

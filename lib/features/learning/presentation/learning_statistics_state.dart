@@ -75,6 +75,7 @@ class LearningStatisticsSnapshot {
 /// 页面无需再次依赖遗留状态。
 class LearningStatisticsState extends ChangeNotifier implements LearningStatisticsReader {
   LearningStatisticsSnapshot _snapshot = LearningStatisticsSnapshot.empty();
+  ReviewScheduleReader? _schedule;
 
   LearningStatisticsSnapshot get snapshot => _snapshot;
 
@@ -99,7 +100,11 @@ class LearningStatisticsState extends ChangeNotifier implements LearningStatisti
 
   Map<String, int> get todayStats => _snapshot.todayStats;
 
+  /// 某天的本地学习统计（`learn` / `review` 词次）；供「上周的我」对比。
+  Map<String, int> dailyStatsFor(String day) => _schedule?.dailyStatsFor(day) ?? const {};
+
   void synchronize({required LearningQueueSnapshot queue, required ReviewScheduleReader schedule}) {
+    _schedule = schedule;
     _snapshot = LearningStatisticsSnapshot.fromSources(queue: queue, schedule: schedule);
     notifyListeners();
   }

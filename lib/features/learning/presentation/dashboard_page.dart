@@ -16,6 +16,7 @@ import 'package:word_app/features/learning/presentation/share_image_service.dart
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
+import 'package:word_app/features/learning/domain/weekly_comparison.dart';
 import 'package:word_app/widgets/mw_section_header.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -54,6 +55,10 @@ class DashboardPage extends StatelessWidget {
                         MwSectionHeader(title: '记忆图谱'),
                         const SizedBox(height: 6),
                         _buildMemoryMap(context, state, skin),
+                        const SizedBox(height: 32),
+                        MwSectionHeader(title: '上周的我'),
+                        const SizedBox(height: 6),
+                        _buildGhostCard(context, state, skin),
                       ],
                     ),
                   ),
@@ -267,6 +272,62 @@ class DashboardPage extends StatelessWidget {
           const SizedBox(height: 14),
           Text('开始学习后，这里会呈现你的记忆构成变化。', style: MwTypography.bodySm.copyWith(color: skin.text3)),
         ],
+      ],
+    );
+  }
+
+  /// 「上周的我」：与过去 7 天的自己纵向对比（零账号、纯本地数据）。
+  ///
+  /// 数据来自本地每日学习统计，不依赖遥测开关；不足两周时显示引导文案。
+  Widget _buildGhostCard(BuildContext context, LearningStatisticsState state, ThemeVars skin) {
+    final cmp = WeeklyComparison.compute(statsFor: state.dailyStatsFor, today: DateTime.now());
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: skin.cardBg,
+        borderRadius: BorderRadius.circular(context.design.radius.lg),
+        border: Border.all(color: skin.divider),
+      ),
+      child: cmp.hasLastWeekData ? _buildComparisonBody(cmp, skin) : _buildGhostEmptyBody(cmp, skin),
+    );
+  }
+
+  Widget _buildComparisonBody(WeeklyComparison cmp, ThemeVars skin) {
+    final delta = cmp.wordsDelta;
+    final headline = delta > 0 ? '比上周多学了 $delta 个词' : (delta < 0 ? '比上周少学了 ${-delta} 个词' : '和上周打平');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          headline,
+          style: MwTypography.heading5.copyWith(
+            color: delta > 0 ? skin.accent : skin.text1,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '本周 ${cmp.thisWeekWords} 个词 · ${cmp.thisWeekStudyDays} 天　'
+          '上周 ${cmp.lastWeekWords} 个词 · ${cmp.lastWeekStudyDays} 天',
+          style: MwTypography.bodySm.copyWith(color: skin.text3),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGhostEmptyBody(WeeklyComparison cmp, ThemeVars skin) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '再练一周就能对比',
+          style: MwTypography.heading5.copyWith(color: skin.text1, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '本周已学 ${cmp.thisWeekWords} 个词、${cmp.thisWeekStudyDays} 天',
+          style: MwTypography.bodySm.copyWith(color: skin.text3),
+        ),
       ],
     );
   }

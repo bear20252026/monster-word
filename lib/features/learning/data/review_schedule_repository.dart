@@ -168,6 +168,9 @@ class ReviewScheduleRepository extends ChangeNotifier {
   int get todayLearnCount => _dailyStats[_todayKey()]?['learn'] ?? 0;
   int get todayReviewCount => _dailyStats[_todayKey()]?['review'] ?? 0;
 
+  /// 某天（`YYYY-MM-DD`）的 `learn` / `review` 词次；没有记录返回空 Map。
+  Map<String, int> dailyStatsFor(String day) => _dailyStats[day] ?? const {};
+
   FsrsCard? cardFor(String word) {
     final cached = _cards[word];
     if (cached != null) {
