@@ -178,6 +178,9 @@ class LearningSessionState extends ChangeNotifier {
   /// 奖励意图就**落盘**了：之后哪怕完成页挂载失败、应用被杀，下次启动
   /// 由 [LearningRewardService.settlePendingSessions] 补发，不会静默丢。
   void _reportSessionCompleted() {
+    // 幂等闸：走完队列与「今天到这儿」都可能触发，本局只上报一次。
+    if (_sessionCompletionReported) return;
+    _sessionCompletionReported = true;
     final recorder = _usageStats;
     if (recorder != null) {
       final reviewed = _totalAnswered;
@@ -225,6 +228,41 @@ class LearningSessionState extends ChangeNotifier {
 
   /// 本局还差多少个词没答（退出确认框用它说明后果，不改完成判定）。
   int get remainingWords => _queue.isEmpty ? 0 : (_queue.length - _currentIndex).clamp(0, _queue.length);
+
+  /// M4 中途收工检查点：答满这个词数后给一次「继续 / 今天到这儿」的选择。
+  static const int midSessionCheckpointWords = 5;
+
+  /// 本局是否已给过中途收工提示（每局只提示一次）。
+  bool _midSessionPromptShown = false;
+
+  /// 是否该显示中途收工提示：答满检查点、且本局还有词没答。
+  /// 提示非阻塞（页面画一条可关闭的轻量提示条），点「继续」即收起。
+  bool get shouldOfferMidSessionBreak =>
+      !_midSessionPromptShown && _totalAnswered >= midSessionCheckpointWords && _currentIndex < _queue.length;
+
+  /// 收起中途收工提示（本局不再出现）。
+  void markMidSessionPromptShown() {
+    if (_midSessionPromptShown) return;
+    _midSessionPromptShown = true;
+    notifyListeners();
+  }
+
+  /// M4「今天到这儿」：不等走完队列，按本局已答数据直接进完成页。
+  ///
+  /// 会话统计/奖励只结算一次（见 [_reportSessionCompleted] 的幂等闸）；
+  /// 退出本身不扣币、不扣连胜。
+  void finishSessionEarly() {
+    if (_queue.isEmpty || _currentIndex >= _queue.length) return;
+    _currentIndex = _queue.length;
+    _showAnswer = false;
+    _midSessionPromptShown = true;
+    _reportSessionCompleted();
+    notifyListeners();
+    unawaited(_saveProgress());
+  }
+
+  /// 本局是否已上报「会话完成」（rate 走完队列与中途收工共用，防重复结算）。
+  bool _sessionCompletionReported = false;
 
   /// 是否有未保存的学习进度（已翻过至少 1 张卡且未完成全部）。
   /// 用于 SessionExitGuard 智能拦截：无进度时不打扰用户。
@@ -331,6 +369,8 @@ class LearningSessionState extends ChangeNotifier {
     _sessionStartTime = DateTime.now();
     _sessionId = _newSessionId();
     _sessionRewardSettled = false;
+    _midSessionPromptShown = false;
+    _sessionCompletionReported = false;
   }
 
   /// 本会话尖叫币奖励是否已结算（防复习错题后二次完成页重复发币）
@@ -354,6 +394,8 @@ class LearningSessionState extends ChangeNotifier {
     _errorWords.clear();
     _totalAnswered = 0;
     _sessionStartTime = null;
+    _midSessionPromptShown = false;
+    _sessionCompletionReported = false;
     notifyListeners();
   }
 
@@ -420,6 +462,8 @@ class LearningSessionState extends ChangeNotifier {
     _totalAnswered = 0;
     _sessionStartTime = DateTime.now();
     _sessionId = _newSessionId();
+    _midSessionPromptShown = false;
+    _sessionCompletionReported = false;
     notifyListeners();
   }
 

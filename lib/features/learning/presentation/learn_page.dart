@@ -1,7 +1,6 @@
 // 由 Claude 团队生成 | Monster Word App
 
-// 由账号4生成
-// 学习页：明亮简约设计风格
+// 由账号4生成；学习页：明亮简约设计风格
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/utils/milestone_guard.dart';
@@ -39,6 +38,7 @@ import 'package:word_app/widgets/session_exit_guard.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/features/learning/presentation/learn_completion_screen.dart';
+import 'package:word_app/features/learning/presentation/mid_session_break_banner.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
@@ -135,8 +135,8 @@ class _LearnPageState extends State<LearnPage> {
                       constraints: BoxConstraints(maxWidth: isLandscape ? double.infinity : resp.contentMaxWidth),
                       child: Column(
                         children: [
-                          // 会话进度栏：竖屏/横屏共用（此前横屏分支缺失，无进度/返回/收藏）
                           _TopBar(skin: skin, state: state, pillKey: _pillKey, balanceTick: _balanceTick),
+                          MidSessionBreakBanner(state: state),
                           Expanded(
                             child: isLandscape
                                 ? Row(

@@ -294,6 +294,52 @@ void main() {
     expect(session.sessionRewardSettled, isFalse, reason: '新一局应重新结算，不能被上一局标记吞掉');
   });
 
+  test('中途收工提示在答满检查点后出现一次，新一局重新计时', () async {
+    final session = _sessionWithWords(
+      words: [for (int i = 1; i <= 6; i++) Word(id: i, word: 'w$i', interpret: '中文释义')],
+    );
+    await session.loadBook(_testBook, shuffle: false);
+
+    for (int i = 0; i < LearningSessionState.midSessionCheckpointWords - 1; i++) {
+      await session.rate(FsrsRating.good);
+    }
+    expect(session.shouldOfferMidSessionBreak, isFalse, reason: '未答满检查点不打扰');
+
+    await session.rate(FsrsRating.good);
+    expect(session.shouldOfferMidSessionBreak, isTrue, reason: '答满检查点且还有词 → 提示一次');
+
+    session.markMidSessionPromptShown();
+    expect(session.shouldOfferMidSessionBreak, isFalse, reason: '「继续」后本局不再提示');
+
+    await session.startAnotherGroup();
+    expect(session.shouldOfferMidSessionBreak, isFalse, reason: '新一局检查点重新计时');
+  });
+
+  test('「今天到这儿」按已答数据收局，会话只结算一次', () async {
+    final spy = SpyUsageStatsRecorder();
+    final session = _sessionWithWords(
+      words: [for (int i = 1; i <= 6; i++) Word(id: i, word: 'w$i', interpret: '中文释义')],
+      usageStats: spy,
+    );
+    await session.loadBook(_testBook, shuffle: false);
+
+    for (int i = 0; i < 5; i++) {
+      await session.rate(FsrsRating.again);
+    }
+    expect(session.currentWord, isNotNull);
+
+    session.finishSessionEarly();
+
+    expect(session.currentWord, isNull, reason: '提前收局直接进完成页');
+    expect(session.totalAnswered, 5, reason: '结算数据 = 本局已答数据');
+    expect(session.errorWords.length, 5);
+    expect(spy.studySessions, 1);
+    expect(spy.reviewed, 5);
+
+    session.finishSessionEarly();
+    expect(spy.studySessions, 1, reason: '重复收局不重复结算');
+  });
+
   test('未注入埋点端口时不抛错（测试与未装配路径）', () async {
     final session = _sessionWithWords(
       words: [
