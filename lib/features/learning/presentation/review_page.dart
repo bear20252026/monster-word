@@ -113,6 +113,8 @@ class _ReviewPageState extends State<ReviewPage> {
       loadError: session.loadError,
       done: session.done,
       word: word,
+      correct: (session.done - session.wrongCount).clamp(0, session.done),
+      xpEventKey: 'xp:review:${session.sessionId}',
       bossBattle: bossPhase == BossBattlePhase.victory,
       onRetry: _initReview,
       onReturnHome: () => NavUtils.goHome(context),

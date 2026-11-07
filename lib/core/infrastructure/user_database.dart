@@ -20,7 +20,7 @@ class UserDatabase {
   UserDatabase._();
 
   /// 应用当前支持的 schema 版本（与 [_onUpgrade] 步进保持同步）。
-  static const int _schemaVersion = 8;
+  static const int _schemaVersion = 9;
 
   Database? _db;
   bool _initialized = false;
@@ -279,6 +279,7 @@ class UserDatabase {
     await _createWordNotesTable(db);
     await _createUsageStatsTables(db);
     await _createDailyMissionsTable(db);
+    await _createXpStateTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -313,6 +314,10 @@ class UserDatabase {
     if (oldVersion < 8) {
       await _createDailyMissionsTable(db);
     }
+    // M3：XP / 等级单行状态。纯新增表，老用户从 0 起算（不回填）。
+    if (oldVersion < 9) {
+      await _createXpStateTable(db);
+    }
   }
 
   /// M2（D1/D2）：每日任务表。
@@ -331,6 +336,20 @@ class UserDatabase {
         completed_at INTEGER,
         reward_claimed_at INTEGER,
         PRIMARY KEY (day, task_id)
+      )
+    ''');
+  }
+
+  /// M3：XP 与等级的单行状态表。
+  ///
+  /// `id` 固定为 1（单用户单设备）。只存累计 XP，等级由 `xp_curve` 纯函数派生，
+  /// 避免缓存列与曲线不一致。老库升级只建空表，不含任何回填（老用户从 0 起算）；
+  /// 发经验的幂等仍由 `reward_events.event_key` 保证。
+  Future<void> _createXpStateTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS xp_state (
+        id INTEGER PRIMARY KEY,
+        total_xp INTEGER NOT NULL DEFAULT 0
       )
     ''');
   }

@@ -53,7 +53,13 @@ class _HeaderState extends State<_Header> {
                   ),
                 ),
                 const SizedBox(height: 3),
-                Text(_dateLabel(), style: MwTypography.caption.copyWith(color: colors.text3)),
+                Row(
+                  children: [
+                    Text(_dateLabel(), style: MwTypography.caption.copyWith(color: colors.text3)),
+                    // M3/D3：等级只在首页与结算页出现（不进商店）。
+                    const _XpLevelChip(),
+                  ],
+                ),
               ],
             ),
           ),
@@ -72,6 +78,40 @@ class _HeaderState extends State<_Header> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 首页等级角标（M3/D3）：只显示 Lv.N，不显示经验条，不进入商店/兑换。
+///
+/// 读不到 XpStore（最小装配/单测）时静默不占位。
+class _XpLevelChip extends StatelessWidget {
+  const _XpLevelChip();
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.read<XpStore?>();
+    if (store == null) return const SizedBox.shrink();
+    final colors = context.skin.colors;
+    return ListenableBuilder(
+      listenable: store,
+      builder: (context, _) {
+        if (!store.loaded) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(left: AppSpacing.xs),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.auto_awesome_rounded, size: 12, color: colors.accent),
+              const SizedBox(width: 3),
+              Text(
+                'Lv.${store.level}',
+                style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: colors.accent),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

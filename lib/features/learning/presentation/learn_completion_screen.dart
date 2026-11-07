@@ -16,6 +16,8 @@ import 'package:word_app/features/learning/application/completion_cards.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/learning/presentation/share_image_service.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+// M3：XP / 等级（只 import 对方的 application 层，架构守卫 R4 允许）。
+import 'package:word_app/features/progress/application/xp_store.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 // 埋点端口（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
 import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
@@ -66,6 +68,11 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
   int? _grantedCoins;
   bool _sharing = false;
 
+  /// M3/D4：本局 XP 与升级信息（只在本页展示，不进商店）。
+  int? _grantedXp;
+  int? _xpToNextLevel;
+  int? _levelUpLevel;
+
   /// 「再来一组」装载中：禁用按钮，避免连点叠出两局。
   bool _startingAgain = false;
 
@@ -83,6 +90,10 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // 复习错题后再次完成会重挂载本页；每会话只结算一次
       final sessionState = context.read<LearningSessionState>();
+      // M3：XP 与币分开结算（先发经验，币的闸不影响经验重试）。XP 幂等靠本局
+      // sessionId 事件键，重复挂载/重复结算都不会重复加经验。
+      final xpStore = context.read<XpStore?>();
+      if (xpStore != null) unawaited(_grantXp(xpStore, sessionState.sessionId));
       if (sessionState.sessionRewardSettled) return;
       sessionState.markSessionRewardSettled();
       // 埋点端口在 await 前取好：await 之后 context 可能已失效。
@@ -145,6 +156,34 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
     });
   }
 
+  /// M3：答对 1 词 +2 XP、完成一局 +10（复习同计）；升级只庆祝一次。
+  ///
+  /// [sessionId] 是本局幂等键：同一局重复结算不会重复加经验。
+  Future<void> _grantXp(XpStore store, String sessionId) async {
+    try {
+      final correct = (widget.totalAnswered - widget.errorCount).clamp(0, widget.totalAnswered);
+      final result = await store.grantSession(
+        eventKey: 'xp:learn:$sessionId',
+        answered: widget.totalAnswered,
+        correct: correct,
+        completed: widget.totalAnswered > 0,
+      );
+      if (!mounted || result.awarded <= 0) return;
+      setState(() {
+        _grantedXp = result.awarded;
+        _xpToNextLevel = result.snapshot.xpToNextLevel;
+      });
+      final newLevel = result.newLevel;
+      if (newLevel == null) return;
+      if (!await store.claimLevelUpCelebration(newLevel)) return;
+      if (!mounted) return;
+      setState(() => _levelUpLevel = newLevel);
+      SfxPlayer.fire(Sfx.milestone);
+    } catch (e, s) {
+      reportSwallowedError('会话 XP 结算失败', e, s);
+    }
+  }
+
   /// 连胜一行：读连签与今日签到状态；失败降级为不显示（C 级豁免）。
   Future<void> _loadStreakLine() async {
     try {
@@ -198,6 +237,8 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
         const SizedBox(height: 12),
         // 尖叫币奖励横幅（本次会话结算所得）
         if (_grantedCoins != null && _grantedCoins! > 0) ...[_buildCoinBanner(colors), const SizedBox(height: 12)],
+        // M3/D4：经验横幅（+N 经验 / 升级还需 M / 升级到 Lv.N）
+        if (_grantedXp != null) ...[_buildXpBanner(colors), const SizedBox(height: 12)],
         // 今日目标达成庆祝横幅
         if (widget.goalAchieved) ...[_buildGoalBanner(colors), const SizedBox(height: 12)],
         Text(
@@ -346,6 +387,36 @@ class _LearnCompletionScreenState extends State<LearnCompletionScreen> {
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
+  }
+
+  /// 经验横幅（M3/D4）：+N 经验 · 升级还需 M；升级时文案切成「升级到 Lv.N」。
+  Widget _buildXpBanner(dynamic colors) {
+    final levelUp = _levelUpLevel;
+    final toNext = _xpToNextLevel;
+    final text = levelUp != null ? '升级到 Lv.$levelUp！' : '经验 +$_grantedXp · 升级还需 $toNext';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: colors.accent.withValues(alpha: AppAlphas.o12),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: colors.accent.withValues(alpha: AppAlphas.o40)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            levelUp != null ? Icons.arrow_upward_rounded : Icons.auto_awesome_rounded,
+            size: 16,
+            color: colors.accent,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w700, color: colors.accent),
+          ),
+        ],
+      ),
+    );
   }
 
   /// 尖叫币奖励横幅（本次会话结算所得）

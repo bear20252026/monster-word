@@ -107,6 +107,12 @@ class ReviewSessionState extends ChangeNotifier {
   int get total => _total;
   int get done => _done;
 
+  /// 本局答错词次数（M3：复习结算 XP 用它折算答对数）。
+  int get wrongCount => _wrongCount;
+
+  /// 本局唯一标识（M3：复习 XP 的幂等事件键用；恢复存档时沿用原 id）。
+  String get sessionId => _sessionId;
+
   /// 开局是否有到期词（供头目战判定用；语义见 [_hadDueAtStart]）。
   bool get hadDueAtStart => _hadDueAtStart;
 

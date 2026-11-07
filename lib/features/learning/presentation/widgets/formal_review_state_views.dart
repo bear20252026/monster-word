@@ -1,12 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/utils/boss_siege.dart';
 import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx.dart';
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+// M3：XP / 等级（跨 feature 只 import application 层，架构守卫 R4 允许）。
+import 'package:word_app/features/progress/application/xp_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/widgets/mw_button.dart';
@@ -79,6 +83,50 @@ class FormalReviewLoadErrorView extends StatelessWidget {
   }
 }
 
+/// 经验结算胶囊（M3/D4）：只在复习完成页出现。
+class _XpResultPill extends StatelessWidget {
+  const _XpResultPill({
+    required this.awarded,
+    required this.toNextLevel,
+    required this.levelUpLevel,
+    required this.colors,
+  });
+
+  final int awarded;
+  final int? toNextLevel;
+  final int? levelUpLevel;
+  final ThemeVars colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final levelUp = levelUpLevel;
+    final text = levelUp != null ? '升级到 Lv.$levelUp！' : '经验 +$awarded · 升级还需 $toNextLevel';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: colors.accent.withValues(alpha: AppAlphas.o12),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: colors.accent.withValues(alpha: AppAlphas.o40)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            levelUp != null ? Icons.arrow_upward_rounded : Icons.auto_awesome_rounded,
+            size: 15,
+            color: colors.accent,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: colors.accent),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// 正式复习完成页面：情绪收尾瞬间——绿色完成环 + 衬线大数字 + 胶囊返回。
 ///
 /// 「Boss 战围城」的守城庆典挂在这里：真的击退过（done>0）才放里程碑音、才让怪兽开口。
@@ -87,11 +135,19 @@ class FormalReviewCompleteView extends StatefulWidget {
     super.key,
     required this.done,
     required this.onReturnHome,
+    this.correct,
+    this.xpEventKey,
     this.bossBattle = false,
     this.celebrationOverride,
   });
 
   final int done;
+
+  /// 本局答对数（M3 复习同计 XP）；未传时按全对处理。
+  final int? correct;
+
+  /// 本局 XP 的幂等事件键（M3）；为空时不结算经验，避免重复发放。
+  final String? xpEventKey;
   final VoidCallback onReturnHome;
 
   /// 本局是否以头目战收尾：为 true 且真的答过题时，完成页说头目退场台词。
@@ -108,11 +164,50 @@ class FormalReviewCompleteView extends StatefulWidget {
 class _FormalReviewCompleteViewState extends State<FormalReviewCompleteView> {
   bool _celebrated = false;
 
+  /// M3/D4：本局 XP 展示（复习同计；不进商店）。
+  int? _xpAwarded;
+  int? _xpToNextLevel;
+  int? _levelUpLevel;
+
   @override
   void initState() {
     super.initState();
     if (widget.done > 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _celebrate());
+      WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_grantXp()));
+    }
+  }
+
+  /// 复习一局同样结算 XP：答对 ×2 + 完成 10；升级只庆祝一次（无额外音效，避免与守城庆典重叠）。
+  ///
+  /// [FormalReviewCompleteView.xpEventKey] 是本局幂等键：重建/重挂载不会重复加经验。
+  Future<void> _grantXp() async {
+    if (!mounted) return;
+    final store = context.read<XpStore?>();
+    if (store == null) return;
+    final eventKey = widget.xpEventKey;
+    // 没有本局标识就不结算：宁可这次不显示经验，也不能重复发。
+    if (eventKey == null || eventKey.isEmpty) return;
+    try {
+      final correct = (widget.correct ?? widget.done).clamp(0, widget.done);
+      final result = await store.grantSession(
+        eventKey: eventKey,
+        answered: widget.done,
+        correct: correct,
+        completed: true,
+      );
+      if (!mounted || result.awarded <= 0) return;
+      setState(() {
+        _xpAwarded = result.awarded;
+        _xpToNextLevel = result.snapshot.xpToNextLevel;
+      });
+      final newLevel = result.newLevel;
+      if (newLevel == null) return;
+      if (!await store.claimLevelUpCelebration(newLevel)) return;
+      if (!mounted) return;
+      setState(() => _levelUpLevel = newLevel);
+    } catch (e, s) {
+      reportSwallowedError('复习会话 XP 结算失败', e, s);
     }
   }
 
@@ -199,10 +294,16 @@ class _FormalReviewCompleteViewState extends State<FormalReviewCompleteView> {
             ),
             const SizedBox(height: 8),
             // done==0 时不能说「已把今天到期的单词记住了」——今天根本没有到期词。
-            Text(
-              _subtitle,
-              style: MwTypography.bodySm.copyWith(color: skin.text3),
-            ),
+            Text(_subtitle, style: MwTypography.bodySm.copyWith(color: skin.text3)),
+            if (_xpAwarded != null) ...[
+              const SizedBox(height: 12),
+              _XpResultPill(
+                awarded: _xpAwarded!,
+                toNextLevel: _xpToNextLevel,
+                levelUpLevel: _levelUpLevel,
+                colors: skin,
+              ),
+            ],
             const SizedBox(height: 28),
             MwButton(label: '返回首页', onTap: widget.onReturnHome, minWidth: 180),
           ],

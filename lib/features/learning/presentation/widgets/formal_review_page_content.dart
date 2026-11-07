@@ -17,6 +17,8 @@ class FormalReviewPageContent extends StatelessWidget {
     required this.loadError,
     required this.done,
     required this.word,
+    this.correct,
+    this.xpEventKey,
     this.bossBattle = false,
     required this.onRetry,
     required this.onReturnHome,
@@ -27,6 +29,12 @@ class FormalReviewPageContent extends StatelessWidget {
   final Object? loadError;
   final int done;
   final MwWordProcess? word;
+
+  /// 本局答对数（M3 复习同计 XP）。
+  final int? correct;
+
+  /// 本局 XP 的幂等事件键（M3）。
+  final String? xpEventKey;
 
   /// 本局是否以头目战收尾（完成页换退场台词；普通复习局保持原样）。
   final bool bossBattle;
@@ -40,6 +48,8 @@ class FormalReviewPageContent extends StatelessWidget {
     FormalReviewPagePhase.failed => FormalReviewLoadErrorView(error: loadError, onRetry: onRetry),
     FormalReviewPagePhase.complete => FormalReviewCompleteView(
       done: done,
+      correct: correct,
+      xpEventKey: xpEventKey,
       onReturnHome: onReturnHome,
       bossBattle: bossBattle,
     ),
@@ -47,6 +57,8 @@ class FormalReviewPageContent extends StatelessWidget {
     // 防御性兜底：会话尚无题目时不渲染一个空的答题布局。
     FormalReviewPagePhase.reviewing => FormalReviewCompleteView(
       done: done,
+      correct: correct,
+      xpEventKey: xpEventKey,
       onReturnHome: onReturnHome,
       bossBattle: bossBattle,
     ),

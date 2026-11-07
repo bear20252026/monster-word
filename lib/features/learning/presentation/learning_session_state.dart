@@ -200,6 +200,17 @@ class LearningSessionState extends ChangeNotifier {
 
   DateTime? _sessionStartTime;
 
+  /// 本局唯一标识（M3：学习 XP 的幂等事件键）。
+  ///
+  /// 每开一局重新生成（loadBook「再来一组」/收藏新局/错题复习都会重置）；
+  /// 同一局内重复挂载完成页拿到的是同一个键 ⇒ XP 不会重复发。
+  String _sessionId = _newSessionId();
+
+  static String _newSessionId() => '${DateTime.now().microsecondsSinceEpoch}';
+
+  /// 本局唯一标识（M3：XP 幂等事件键用）。
+  String get sessionId => _sessionId;
+
   /// 队列代际计数：每当用户主动加载新的词库/收藏（`_replaceQueue`）时自增，
   /// 用于防止 `_loadProgress()` 异步返回的过期索引覆盖新会话的当前索引。
 
@@ -318,6 +329,7 @@ class LearningSessionState extends ChangeNotifier {
     _combo = 0;
     _bestCombo = 0;
     _sessionStartTime = DateTime.now();
+    _sessionId = _newSessionId();
     _sessionRewardSettled = false;
   }
 
@@ -407,6 +419,7 @@ class LearningSessionState extends ChangeNotifier {
     _errorWords.clear();
     _totalAnswered = 0;
     _sessionStartTime = DateTime.now();
+    _sessionId = _newSessionId();
     notifyListeners();
   }
 

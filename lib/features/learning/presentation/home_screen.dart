@@ -24,6 +24,8 @@ import 'package:word_app/features/learning/presentation/learning_statistics_stat
 // M2：每日任务（只 import 对方的 application 层，架构守卫 R4 允许）。
 import 'package:word_app/features/missions/application/daily_mission_reward_service.dart';
 import 'package:word_app/features/missions/application/daily_mission_store.dart';
+// M3：等级角标（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
+import 'package:word_app/features/progress/application/xp_store.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
