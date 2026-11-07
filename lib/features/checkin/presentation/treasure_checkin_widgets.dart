@@ -284,8 +284,35 @@ extension _TreasureCheckInUi on _TreasureCheckInPageState {
           ),
           const SizedBox(height: 8),
           _buildCta(),
+          if (_canMakeupYesterday) ...[
+            const SizedBox(height: 8),
+            _buildMakeupYesterday(),
+          ],
           const SizedBox(height: 12),
         ],
+      ),
+    );
+  }
+
+  /// D5：手动「补昨天」入口——只在昨天缺签时出现，消耗 1 张保护卡。
+  Widget _buildMakeupYesterday() {
+    final enabled = _protectionCount > 0 && !_busy;
+    return GestureDetector(
+      onTap: enabled ? _doMakeupYesterday : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+        decoration: BoxDecoration(
+          color: TreasurePalette.cream.withValues(alpha: enabled ? 0.16 : 0.08),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(color: TreasurePalette.cream.withValues(alpha: enabled ? 0.38 : 0.18)),
+        ),
+        child: Text(
+          _protectionCount > 0 ? '补昨天 · 保护卡 ×$_protectionCount' : '补昨天 · 暂无保护卡',
+          style: MwTypography.caption.copyWith(
+            color: TreasurePalette.cream.withValues(alpha: enabled ? 1 : 0.55),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }

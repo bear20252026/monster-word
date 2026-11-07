@@ -123,14 +123,30 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
 
   Set<String> _checkedDates = {};
 
+  /// D5：保护卡库存（补昨天入口用）。
+  int _protectionCount = 0;
+
+  /// D5：昨天还没签且已有签到史时，才在日历里露出「补昨天」入口。
+  bool get _canMakeupYesterday {
+    if (_checkedDates.isEmpty) return false;
+    final now = DateTime.now();
+    return !_checkedDates.contains(_iso(DateTime(now.year, now.month, now.day - 1)));
+  }
+
   Future<void> _reload({bool replay = false}) async {
     final store = context.read<ScareCoinStore>();
-    final results = await Future.wait([store.checkinDates(), store.streak(), store.balance()]);
+    final results = await Future.wait([
+      store.checkinDates(),
+      store.streak(),
+      store.balance(),
+      store.protectionCount(),
+    ]);
     if (!mounted) return;
     setState(() {
       _checkedDates = results[0] as Set<String>;
       _streak = results[1] as int;
       _balance = results[2] as int;
+      _protectionCount = results[3] as int;
       _reward = store.checkInReward;
       _todayChecked = _checkedDates.contains(_iso(DateTime.now()));
       _bellyTarget = _pctFor(_streak);
@@ -292,6 +308,32 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     }
   }
 
+  /// D5/D6：手动补「昨天」——消耗 1 张保护卡，把昨天补进日历并接回连胜。
+  ///
+  /// 断签不再静默自动补，是否接回由用户在这里决定；补完立刻用补签后的天数
+  /// 跑一次 7/14/30/50 里程碑判定（[MilestoneGuard] 只正向、不重复庆祝）。
+  Future<void> _doMakeupYesterday() async {
+    if (_busy) return;
+    final store = context.read<ScareCoinStore>();
+    setState(() => _busy = true);
+    int? newStreak;
+    try {
+      newStreak = await store.makeupYesterday();
+    } catch (e, s) {
+      reportSwallowedError('补签失败', e, s);
+    }
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (newStreak == null) {
+      showMwSnackBar(context, const SnackBar(content: Text('没补成：昨天已签到，或保护卡不足')));
+      return;
+    }
+    widget.onChecked?.call();
+    await _reload();
+    if (!mounted) return;
+    unawaited(_maybeCelebrateStreakMilestone(store));
+  }
+
   /// 连胜里程碑（7/14/30/50）：跨档只演一次，存量基线化不补演。
   ///
   /// 只做庆祝：不发币、不做断签惩罚；与金币里程碑共用探头串行防重入，
@@ -339,7 +381,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     final usageStats = context.read<UsageStatsRecorder?>();
     setState(() => _busy = true);
     // 进化仪式基线：签到前的累计天数快照。不能用「签到后 length-1」近似——
-    // 自动续命回填 k 天时 -1 不等于签到前的天数，跨档仪式会被误吞。
+    // 手动补签会补进 1 天历史，-1 不等于签到前的天数，跨档仪式会被误吞。
     var stageBefore = 0;
     try {
       stageBefore = MonsterIcon.stageFor((await store.checkinDates()).length);
@@ -373,7 +415,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     final reward = store.checkInReward;
     // 使用统计：签到连击 + 本次获得的尖叫币。
     // 连击用 store.streak() 而不是页面本地的 _streak + 1——权威口径在账本侧，
-    // 自动续命回填等边界下两者并不相等。
+    // 手动补签接回的连胜等边界下两者并不相等。
     if (usageStats != null) unawaited(_reportCheckInToUsageStats(usageStats, store, reward));
     unawaited(_maybeCelebrateMilestone(newBalance: awarded));
     // 连胜里程碑（7/14/30/50）：只正向庆祝，不发币（奖励额度待产品拍板）。

@@ -39,6 +39,21 @@ class FakeScareCoinStore implements ScareCoinStore {
     return checkInResult;
   }
 
+  /// D5：手动补昨天（测试替身按日集合模拟，不动余额）。
+  int protectionValue = 0;
+
+  @override
+  Future<int?> makeupYesterday() async {
+    if (protectionValue <= 0) return null;
+    final now = DateTime.now();
+    final yesterday = isoOf(DateTime(now.year, now.month, now.day - 1));
+    if (dates.contains(yesterday)) return null;
+    protectionValue -= 1;
+    dates = {...dates, yesterday};
+    streakDays = dates.length;
+    return streakDays;
+  }
+
   @override
   Future<int> grant({required int delta, required String reason}) async => 0;
 
@@ -55,7 +70,7 @@ class FakeScareCoinStore implements ScareCoinStore {
   int get protectionCap => 3;
 
   @override
-  Future<int> protectionCount() async => 0;
+  Future<int> protectionCount() async => protectionValue;
 
   @override
   Future<int> addProtection({required int count, required String reason}) async => 0;

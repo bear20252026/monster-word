@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/infrastructure/scare_coin_ledger_dao.dart';
-import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/models/scare_coin_entry.dart';
@@ -219,15 +218,13 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     var sqliteRetryWithEvent = false;
     var usedSqliteFallback = false;
 
-    // ── P1-03：SQLite 模式——「签到事件 + 断签回填 + +10 币 + 流水 + 日历」
+    // ── P1-03：SQLite 模式——「签到事件 + +10 币 + 流水 + 日历」
     // 同库事务；event_key = checkin:<date> UNIQUE 保证并发 N 个签到只发一次
     // （MW-23），不再依赖 SP 读改写与 UI 防抖。
     final ledger = await _sqliteLedger(forWrite: true);
     if (ledger != null) {
       try {
         if (await ledger.hasRewardEvent('checkin:$iso')) return null;
-        // 断签自动续命：有卡则回填最近的缺勤日（先近后远），不断连击。
-        await _autoProtectSqlite(ledger, now);
         final newBalance = await ledger.applyDeltaWithEvent(
           delta: checkInReward,
           entry: ScareCoinEntry(time: DateTime.now(), delta: checkInReward, reason: '每日签到'),
@@ -242,8 +239,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
         if (!saved) {
           reportSwallowedError('签到日期标记写入失败', StateError('setString returned false'), StackTrace.current);
         }
-        // 连签 7 倍数自动发卡（满额跳过发放但仍标记，避免无限囤积）。
-        await _maybeIssueProtection(prefs, ledger: ledger);
+        // 每个自然月免费 1 张保护卡（满额当月不再发放）。
+        await _maybeIssueProtection(prefs);
         return newBalance;
       } on RewardEventDuplicate {
         return null; // 并发重复签到：第二者拿不到事件即无事发生
@@ -290,7 +287,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
           if (!saved) {
             reportSwallowedError('签到日期标记写入失败', StateError('setString returned false'), StackTrace.current);
           }
-          await _maybeIssueProtection(prefs, ledger: retryLedger);
+          await _maybeIssueProtection(prefs);
           return retryBalance;
         } on RewardEventDuplicate {
           return null;
@@ -322,8 +319,6 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     // （币已 +10、标记未落），仅凭日期标记会重复入账——账本里已有当日
     // 「每日签到」流水则视为已签到，宁可少发一次也不重复发。
     if (await _checkinAlreadyGranted(iso)) return null;
-    // 断签自动续命（SP 快照口径）。
-    await _autoProtect(prefs, now);
     try {
       final dates = (prefs.getStringList(checkinDatesKey) ?? const <String>[]).toSet()..add(iso);
       await prefs.setStringList(checkinDatesKey, dates.toList()..sort());
@@ -339,41 +334,9 @@ class PreferencesScareCoinStore implements ScareCoinStore {
       // （与 balance() 的读路径同源），此时事件键已由上面的路径占用。
       forceSpSnapshot: usedSqliteFallback,
     );
-    // 连签 7 倍数自动发卡（满额跳过发放但仍标记，避免无限囤积）。
-    await _maybeIssueProtection(prefs, forceSpSnapshot: usedSqliteFallback);
+    // 每个自然月免费 1 张保护卡（满额当月不再发放）。
+    await _maybeIssueProtection(prefs);
     return newBalance;
-  }
-
-  /// SQLite 侧断签回填：保护卡库存仍在 SP（低频标量），回填日期入本库。
-  Future<void> _autoProtectSqlite(ScareCoinLedgerDao ledger, DateTime now) async {
-    final last = await lastCheckInDate();
-    if (last.isEmpty) return;
-    final lastDay = DateTime.tryParse(last);
-    if (lastDay == null) return;
-    final gap = calendarDaysBetween(lastDay, now);
-    if (gap <= 1) return;
-    final prefs = await SharedPreferences.getInstance();
-    var count = prefs.getInt(protectionKey) ?? 0;
-    if (count <= 0) return;
-    final backfill = <String>{};
-    for (var i = 1; i < gap && backfill.length < count; i++) {
-      backfill.add(_iso(DateTime(now.year, now.month, now.day - i)));
-    }
-    if (backfill.isEmpty) return;
-    final dbDates = await ledger.loadCheckinDates();
-    final fresh = backfill.difference(dbDates);
-    if (fresh.isEmpty) return;
-    await ledger.addCheckinDates(fresh);
-    count -= fresh.length;
-    if (!await prefs.setInt(protectionKey, count)) {
-      reportSwallowedError('断签保护回填：库存写失败（保护卡可能多计）', StateError('SP write returned false'), StackTrace.current);
-      return;
-    }
-    try {
-      await ledger.appendEntry(ScareCoinEntry(time: DateTime.now(), delta: 0, reason: '断签保护·自动续命×${fresh.length}'));
-    } catch (e, s) {
-      reportSwallowedError('断签保护流水追加失败（SQLite）', e, s);
-    }
   }
 
   /// 账本（SQLite/SP 同口径）里是否已有当日的签到入账流水。
@@ -499,68 +462,72 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     return next;
   }
 
-  /// 断签自动续命：last 与 today 之间差 gap>1 天且有库存时，
-  /// 从近到远回填 min(库存, 缺勤) 天并记账，streak() 自然续上。
-  Future<void> _autoProtect(SharedPreferences prefs, DateTime now) async {
-    final last = prefs.getString(lastCheckInKey) ?? '';
-    if (last.isEmpty) return;
-    final lastDay = DateTime.tryParse(last);
-    if (lastDay == null) return;
-    // 日历日差（DST 安全，与 _dayBefore 同族口径）：
-    // 绝对时长差在夏令时周少算 1 天→该回填的断签日不回填。
-    final gap = calendarDaysBetween(lastDay, now);
-    if (gap <= 1) return;
-    var count = prefs.getInt(protectionKey) ?? 0;
-    if (count <= 0) return;
-    final backfill = <String>[];
-    for (var i = 1; i < gap && backfill.length < count; i++) {
-      backfill.add(_iso(DateTime(now.year, now.month, now.day - i)));
+  /// 断签不再静默自动补：断几天就是断几天，是否接回由用户在日历里手动决定。
+  @override
+  Future<int?> makeupYesterday() => _serialized(_makeupYesterdayLocked);
+
+  /// D5：手动补签只补「昨天」一天，消耗 1 张保护卡。
+  ///
+  /// 只写签到日历（不补发签到币、不伪造签到流水），streak() 读日历自然接回；
+  /// 日期写成功才扣卡，失败返回 null 且库存不变。
+  Future<int?> _makeupYesterdayLocked() async {
+    final now = DateTime.now();
+    final yesterdayIso = _iso(DateTime(now.year, now.month, now.day - 1));
+    final prefs = await SharedPreferences.getInstance();
+    final count = prefs.getInt(protectionKey) ?? 0;
+    if (count <= 0) return null;
+    final dates = await checkinDates();
+    if (dates.contains(yesterdayIso)) return null;
+
+    final ledger = await _sqliteLedger(forWrite: true);
+    if (ledger != null) {
+      try {
+        await ledger.addCheckinDates({yesterdayIso});
+        _markLedgerHealthy();
+      } catch (e, s) {
+        reportSwallowedError('补签：日期写入失败（不扣卡）', e, s);
+        return null;
+      }
+    } else {
+      final next = {...dates, yesterdayIso}.toList()..sort();
+      try {
+        await _writeChecked(prefs.setStringList(checkinDatesKey, next), '补签日期');
+      } catch (e, s) {
+        reportSwallowedError('补签：日期写入失败（不扣卡）', e, s);
+        return null;
+      }
     }
-    if (backfill.isEmpty) return;
-    final dates = (prefs.getStringList(checkinDatesKey) ?? const <String>[]).toSet()..addAll(backfill);
-    await prefs.setStringList(checkinDatesKey, dates.toList()..sort());
-    count -= backfill.length;
-    if (!await prefs.setInt(protectionKey, count)) {
-      // 回填已入日历但库存未扣：上报对账（比静默多一张卡诚实）。
-      reportSwallowedError('断签保护回填：库存写失败（保护卡可能多计）', StateError('SP write returned false'), StackTrace.current);
-      return;
+    if (!await prefs.setInt(protectionKey, count - 1)) {
+      // 日期已补、卡没扣：上报对账（宁可比静默多一张诚实）。
+      reportSwallowedError('补签：保护卡扣减失败（卡可能多计）', StateError('SP write returned false'), StackTrace.current);
     }
-    await _insertHistory(prefs, ScareCoinEntry(time: now, delta: 0, reason: '断签保护·自动续命×${backfill.length}'));
+    await _recordZeroDelta(ledger, prefs, '补签·昨天（保护卡×1）');
+    return streak();
   }
 
-  /// 连签 7 倍数发卡（去重标记防重复领，满额只标记不发放）。
-  /// [ledger] 非 null 时流水走 SQLite（签到事务同域）；null 走 SP 快照。
-  /// [forceSpSnapshot] 为 true 时无视 [ledger] 强制走 SP 流水（R3-D08：
-  /// SQLite 事务失败后的降级必须一路贯彻，不能只降币不降流水）。
-  Future<void> _maybeIssueProtection(
-    SharedPreferences prefs, {
-    ScareCoinLedgerDao? ledger,
-    bool forceSpSnapshot = false,
-  }) async {
-    final effectiveLedger = forceSpSnapshot ? null : ledger;
-    final newStreak = await streak();
-    if (newStreak <= 0 || newStreak % 7 != 0) return;
+  /// D5：每个自然月免费 1 张保护卡；满额时当月不再发放（当月只标记不重试）。
+  /// 去重标记沿用 [protectionIssuedKey]，值从「连签天数」换成「yyyy-MM」；
+  /// 老库里的纯数字标记与月份键互不相交，无需迁移（旧标记自然失效）。
+  /// 只动库存、不写金币流水：发卡不是币的变动，避免污染签到流水断言。
+  Future<void> _maybeIssueProtection(SharedPreferences prefs) async {
+    final now = DateTime.now();
+    final monthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
     final issued = (prefs.getStringList(protectionIssuedKey) ?? const <String>[]).toSet();
-    if (!issued.add('$newStreak')) return;
+    if (!issued.add(monthKey)) return;
     if (!await prefs.setStringList(protectionIssuedKey, issued.toList()..sort())) {
-      // 去重标记未落盘：上报（次日若 streak 仍为同档 7 倍数有重复发卡窗口）。
-      reportSwallowedError('连签发卡：去重标记写失败', StateError('SP write returned false'), StackTrace.current);
+      // 去重标记未落盘：上报（当月可能重复发一次）。
+      reportSwallowedError('月度发卡：去重标记写失败', StateError('SP write returned false'), StackTrace.current);
       return;
     }
     final count = prefs.getInt(protectionKey) ?? 0;
-    if (count >= protectionCapValue) {
-      // 满额只标记不发放，但留一条流水：否则审计面上「视为已发」却查无此事。
-      await _recordZeroDelta(effectiveLedger, prefs, '连签$newStreak天·发卡满额未发放');
-      return;
-    }
+    if (count >= protectionCapValue) return; // 满额只标记不发放（当月不重试）
     if (!await prefs.setInt(protectionKey, count + 1)) {
-      reportSwallowedError('连签发卡：库存写失败（卡未到账）', StateError('SP write returned false'), StackTrace.current);
-      return;
+      reportSwallowedError('月度发卡：库存写失败（卡未到账）', StateError('SP write returned false'), StackTrace.current);
     }
-    await _recordZeroDelta(effectiveLedger, prefs, '连签$newStreak天·保护卡＋1');
   }
 
-  /// 零变动流水：ledger 在则 SQLite（失败不阻断），否则 SP 快照。
+  /// 零变动流水：ledger 在则 SQLite（失败不阻断），否则**只**写 SP 快照
+  /// （不再二次探测账本：降级期间探测会写账本读 SP，破坏写读同源）。
   Future<void> _recordZeroDelta(ScareCoinLedgerDao? ledger, SharedPreferences prefs, String reason) async {
     final entry = ScareCoinEntry(time: DateTime.now(), delta: 0, reason: reason);
     if (ledger != null) {
@@ -571,13 +538,14 @@ class PreferencesScareCoinStore implements ScareCoinStore {
       }
       return;
     }
-    await _insertHistory(prefs, entry);
+    await _insertHistory(prefs, entry, spOnly: true);
   }
 
   /// 零币变动也记账（发卡／续命审计）。SQLite 模式为追加单行写；
   /// SP 回退路径复用 200 条截断口径，解析失败保留原账本。
-  Future<void> _insertHistory(SharedPreferences prefs, ScareCoinEntry entry) async {
-    final ledger = await _sqliteLedger(forWrite: true);
+  /// [spOnly] 为 true 时**只**写 SP（降级期间不再探测账本，保写读同源）。
+  Future<void> _insertHistory(SharedPreferences prefs, ScareCoinEntry entry, {bool spOnly = false}) async {
+    final ledger = spOnly ? null : await _sqliteLedger(forWrite: true);
     if (ledger != null) {
       try {
         await ledger.appendEntry(entry);

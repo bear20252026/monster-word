@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:word_app/features/checkin/application/streak_milestones.dart';
 import 'package:word_app/features/scare_coin/data/preferences_scare_coin_store.dart';
 import 'package:word_app/core/infrastructure/scare_coin_ledger_dao.dart';
 
@@ -19,6 +20,7 @@ void main() {
     expect(secondBalance, isNull);
     expect(await store.balance(), store.checkInReward);
     expect(await store.checkinDates(), hasLength(1));
+    // 月度发卡只动库存，不写金币流水（D5）。
     expect(await store.history(), hasLength(1));
   });
 
@@ -143,7 +145,8 @@ void main() {
       final firstBalance = await store.checkIn();
       expect(firstBalance, store.checkInReward);
       expect(await store.balance(), store.checkInReward);
-      expect((await store.history()).single.reason, '每日签到');
+      expect((await store.history()).map((e) => e.reason), contains('每日签到'));
+      // 签到流水一条（月度发卡只动库存，不写流水）。
       expect(await db.query('scare_coin_entries'), hasLength(1), reason: '流水入 SQLite 表');
       expect(await store.checkinDates(), hasLength(1), reason: '签到日期保持 SP');
 
@@ -158,6 +161,127 @@ void main() {
       await expectLater(store.grant(delta: -5, reason: '超额兑换'), throwsStateError);
       expect(await store.balance(), 2, reason: 'SP 损坏余额经迁移后同样受负余额守卫');
       expect((await store.history()), isEmpty, reason: '损坏流水不上表、不阻断启用（宁丢存量不清快照）');
+    });
+
+    test('手动补昨天走 SQLite 日期表：补上昨天并扣 1 张卡', () async {
+      final now = DateTime.now();
+      String isoOf(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      final yesterday = isoOf(DateTime(now.year, now.month, now.day - 1));
+      final twoDaysAgo = isoOf(DateTime(now.year, now.month, now.day - 2));
+      final threeDaysAgo = isoOf(DateTime(now.year, now.month, now.day - 3));
+      await db.insert('checkin_dates', {'date': twoDaysAgo});
+      await db.insert('checkin_dates', {'date': threeDaysAgo});
+      final store = sqliteStore(spSeed: {PreferencesScareCoinStore.protectionKey: 1});
+
+      expect(await store.streak(), 0);
+      expect(await store.makeupYesterday(), 3);
+      expect(await store.protectionCount(), 0);
+      final rows = await db.query('checkin_dates', where: 'date = ?', whereArgs: [yesterday]);
+      expect(rows, hasLength(1), reason: '补签日期落 SQLite 日期表');
+    });
+  });
+
+  group('M5-D5 补签卡：按月发放 / 手动补昨天 / 不再静默自动补', () {
+    String iso(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    DateTime today() {
+      final n = DateTime.now();
+      return DateTime(n.year, n.month, n.day);
+    }
+
+    DateTime daysAgo(int n) {
+      final t = today();
+      return DateTime(t.year, t.month, t.day - n);
+    }
+
+    String monthKey() => '${today().year}-${today().month.toString().padLeft(2, '0')}';
+
+    test('每月免费 1 张：当月首次签到发放，当月第二次不再发', () async {
+      final store = PreferencesScareCoinStore();
+      await store.checkIn();
+      expect(await store.protectionCount(), 1);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getStringList(PreferencesScareCoinStore.protectionIssuedKey), contains(monthKey()));
+
+      SharedPreferences.setMockInitialValues({
+        PreferencesScareCoinStore.lastCheckInKey: iso(daysAgo(1)),
+        PreferencesScareCoinStore.checkinDatesKey: [iso(daysAgo(1))],
+        PreferencesScareCoinStore.protectionKey: 1,
+        PreferencesScareCoinStore.protectionIssuedKey: [monthKey()],
+      });
+      final sameMonth = PreferencesScareCoinStore();
+      await sameMonth.checkIn();
+      expect(await sameMonth.protectionCount(), 1, reason: '当月只发 1 张');
+    });
+
+    test('持有上限 3 张：满额当月不再发放（但记为当月已发）', () async {
+      SharedPreferences.setMockInitialValues({
+        PreferencesScareCoinStore.protectionKey: PreferencesScareCoinStore.protectionCapValue,
+      });
+      final store = PreferencesScareCoinStore();
+
+      await store.checkIn();
+
+      expect(await store.protectionCount(), PreferencesScareCoinStore.protectionCapValue, reason: '满额不超发');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getStringList(PreferencesScareCoinStore.protectionIssuedKey), contains(monthKey()));
+    });
+
+    test('去掉静默自动补：断签后签到不回填缺口、不扣卡', () async {
+      SharedPreferences.setMockInitialValues({
+        PreferencesScareCoinStore.lastCheckInKey: iso(daysAgo(3)),
+        PreferencesScareCoinStore.checkinDatesKey: [iso(daysAgo(3)), iso(daysAgo(4))],
+        PreferencesScareCoinStore.protectionKey: 2,
+        PreferencesScareCoinStore.protectionIssuedKey: [monthKey()],
+      });
+      final store = PreferencesScareCoinStore();
+
+      await store.checkIn();
+
+      final dates = await store.checkinDates();
+      expect(dates.contains(iso(daysAgo(1))), isFalse, reason: '不再静默回填昨天');
+      expect(dates.contains(iso(daysAgo(2))), isFalse, reason: '不再静默回填更早的缺口');
+      expect(await store.protectionCount(), 2, reason: '不再静默扣卡');
+      expect(await store.streak(), 1, reason: '断签就断了，今天单独算 1 天');
+    });
+
+    test('手动补昨天：扣 1 张并接回连胜，连点只扣一次', () async {
+      SharedPreferences.setMockInitialValues({
+        PreferencesScareCoinStore.checkinDatesKey: [iso(daysAgo(2)), iso(daysAgo(3))],
+        PreferencesScareCoinStore.lastCheckInKey: iso(daysAgo(2)),
+        PreferencesScareCoinStore.protectionKey: 2,
+      });
+      final store = PreferencesScareCoinStore();
+
+      expect(await store.streak(), 0, reason: '昨天缺签时连胜为 0');
+      expect(await store.makeupYesterday(), 3, reason: '补上昨天后连回第 3 天');
+      expect(await store.protectionCount(), 1);
+      expect(await store.makeupYesterday(), isNull, reason: '昨天已补，不重复扣卡');
+      expect(await store.protectionCount(), 1);
+    });
+
+    test('手动补昨天：没卡不发，日期不写', () async {
+      SharedPreferences.setMockInitialValues({
+        PreferencesScareCoinStore.checkinDatesKey: [iso(daysAgo(2))],
+        PreferencesScareCoinStore.protectionKey: 0,
+      });
+      final store = PreferencesScareCoinStore();
+
+      expect(await store.makeupYesterday(), isNull);
+      expect((await store.checkinDates()).contains(iso(daysAgo(1))), isFalse);
+    });
+
+    test('D6：补签接回 7 天连胜，里程碑按补签后的天数判定', () async {
+      final sixDays = List<String>.generate(6, (i) => iso(daysAgo(i + 2)));
+      SharedPreferences.setMockInitialValues({
+        PreferencesScareCoinStore.checkinDatesKey: sixDays,
+        PreferencesScareCoinStore.lastCheckInKey: iso(daysAgo(2)),
+        PreferencesScareCoinStore.protectionKey: 1,
+      });
+      final store = PreferencesScareCoinStore();
+
+      expect(await store.streak(), 0, reason: '昨天缺签，连胜先归零');
+      expect(await store.makeupYesterday(), 7);
+      expect(crossedStreakMilestone(0, await store.streak()), 7, reason: '里程碑输入是补签后的天数');
     });
   });
 }

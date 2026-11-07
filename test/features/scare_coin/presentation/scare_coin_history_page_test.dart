@@ -40,6 +40,9 @@ class FakeScareCoinStore implements ScareCoinStore {
   }
 
   @override
+  Future<int?> makeupYesterday() async => null;
+
+  @override
   Future<int> grant({required int delta, required String reason}) async {
     _balance += delta;
     _entries.insert(0, ScareCoinEntry(time: DateTime.now(), delta: delta, reason: reason));

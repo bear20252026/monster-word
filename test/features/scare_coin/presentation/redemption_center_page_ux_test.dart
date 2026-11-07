@@ -29,6 +29,9 @@ class _FakeScareCoinStore implements ScareCoinStore {
   Future<int?> checkIn() async => null;
 
   @override
+  Future<int?> makeupYesterday() async => null;
+
+  @override
   Future<int> grant({required int delta, required String reason}) async {
     grantCalls++;
     _balance += delta;

@@ -23,7 +23,7 @@ import 'package:word_app/widgets/redeem_swallow_sheet.dart';
 /// - 商品一经兑换永久持有（按 id 记录在本地，不提供退换）。
 ///
 /// 修订（断签保护卡，需求方确认）：保护卡是唯一的耗材型功能商品——
-/// 断签自动续命一张，不占装备架（owned/3 口径不变）、不计收藏章；
+/// 补签昨天一天，不占装备架（owned/3 口径不变）、不计收藏章；
 /// 其余徽章仍为纯收集。库存走 ScareCoinStore 账本，可重复兑换。
 class RedemptionCenterPage extends StatefulWidget {
   static const String routeName = RouteNames.redemption;
@@ -51,7 +51,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
     _RedeemItem(
       id: 'protection_card',
       title: '断签保护卡',
-      description: '断签自动续命一张 · 耗材不占装备架',
+      description: '补签昨天一天 · 耗材不占装备架',
       cost: 200,
       icon: Icons.shield_rounded,
       color: 0xFFD9A62E,

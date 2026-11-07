@@ -23,6 +23,12 @@ abstract interface class ScareCoinStore {
 
   Future<int?> checkIn();
 
+  /// 手动补签「昨天」：消耗 1 张保护卡，把昨天写进签到日历（只补一天）。
+  ///
+  /// 返回补签后的连胜天数；昨天已签到、无保护卡或写入失败时返回 null
+  /// （失败不扣卡）。与 [checkIn] 共用串行闸，连点不会多扣。
+  Future<int?> makeupYesterday();
+
   Future<int> grant({required int delta, required String reason});
 
   /// 幂等发币：同一 [eventKey] 全局只发一次（返回新余额；已发过返回 null）。
@@ -37,7 +43,7 @@ abstract interface class ScareCoinStore {
   /// 断签保护卡库存（耗材；不占装备架、不计 redeemedBadge）。
   Future<int> protectionCount();
 
-  /// 发放保护卡（连签奖励／兑换），返回发放后的当前库存；
+  /// 发放保护卡（每月免费 1 张／兑换），返回发放后的当前库存；
   /// 库存已满时抛 StateError——调用方（兑换扣币路径）依赖该抛错触发补偿退款。
   Future<int> addProtection({required int count, required String reason});
 
