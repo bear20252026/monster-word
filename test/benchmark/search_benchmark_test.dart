@@ -8,7 +8,7 @@
 //   2. P95 性能对比打印——不设性能阈值断言（CI 机性能噪声大），只报告数据。
 //
 // 真库：assets/db/wordbook.db.gz（241.8MB / words 32,154 词），
-// 解压缓存到系统临时目录，二次运行免解压。
+// 临时解压到系统临时目录，跑完由 tearDownAll 按 PID 清理，不留残留。
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -37,9 +37,13 @@ const _queries = [
 
 const _rounds = 3;
 
+String get _dbPath => '${Directory.systemTemp.path}/wordbook_bench_$pid.db';
+
+String get _indexPath => '${Directory.systemTemp.path}/wordbook_cn_idx_bench_$pid.db';
+
 Future<File> _prepareDb() async {
   // pid 隔离：并发 suite / 上次被 kill 的截断残留会互相污染固定名缓存。
-  final out = File('${Directory.systemTemp.path}/wordbook_bench_$pid.db');
+  final out = File(_dbPath);
   if (out.existsSync() && out.lengthSync() > 100 * 1024 * 1024) return out;
   final gz = File('assets/db/wordbook.db.gz');
   final t0 = DateTime.now();
@@ -50,6 +54,35 @@ Future<File> _prepareDb() async {
     '${DateTime.now().difference(t0).inMilliseconds}ms）',
   );
   return out;
+}
+
+/// 删除指定进程的基准临时库（含 SQLite 的 -wal / -shm / -journal 与索引 staging 文件），
+/// 并断言目录中不再有同名残留。只按 PID 匹配，避免误删并发运行的其它进程数据。
+Future<void> _cleanupBenchArtifacts([int? targetPid]) async {
+  final id = targetPid ?? pid;
+  final names = ['wordbook_bench_$id.db', 'wordbook_cn_idx_bench_$id.db'];
+  // 只比对文件名前缀：list() 返回的 path 分隔符与手拼的 path 可能不一致（Windows 上 \ 与 /）。
+  bool matches(String path) {
+    final name = path.split(RegExp(r'[\\/]')).last;
+    return names.any(name.startsWith);
+  }
+
+  final matched = <File>[];
+  await for (final entity in Directory.systemTemp.list()) {
+    if (entity is File && matches(entity.path)) matched.add(entity);
+  }
+  for (final file in matched) {
+    try {
+      if (await file.exists()) await file.delete();
+    } catch (error) {
+      stdout.writeln('基准临时文件删除失败 ${file.path}：$error');
+    }
+  }
+  final remaining = [
+    for (final file in matched)
+      if (file.existsSync()) file.path,
+  ];
+  expect(remaining, isEmpty, reason: '基准临时文件未清理干净：$remaining');
 }
 
 /// 旧实现快照（2026-09-28 改造前的单条全表 LIKE），仅基准使用。
@@ -93,9 +126,15 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
+  // 真库解压与索引构建很重，统一在全部用例结束后按 PID 清理，跑完不留文件。
+  tearDownAll(() async {
+    await _cleanupBenchArtifacts();
+  });
+
   test('搜索三层化：新旧结果一致 + P95 对比', () async {
     final dbFile = await _prepareDb();
     final db = await databaseFactory.openDatabase(dbFile.path);
+    addTearDown(db.close);
     final database = WordBookDatabase.instance;
     database.debugInjectDbForTest(db);
     final repo = WordRepositoryImpl(database);
@@ -135,16 +174,17 @@ void main() {
     stdout.writeln(report.join('\n'));
     stdout.writeln('P95：old ${p95(legacyAll)}ms / new ${p95(newAll)}ms');
     stdout.writeln('new 占优查询数：$newWins / ${_queries.length}');
-    await db.close();
   }, timeout: const Timeout(Duration(minutes: 5)));
 
   test('P0-1 中文二元组索引：与全表一致 + 构建耗时 + P95 对比', () async {
     final dbFile = await _prepareDb();
     final db = await databaseFactory.openDatabase(dbFile.path);
+    addTearDown(db.close);
     final database = WordBookDatabase.instance;
     database.debugInjectDbForTest(db);
     final index = CnSearchIndex();
-    final indexPath = '${Directory.systemTemp.path}/wordbook_cn_idx_bench_$pid.db';
+    addTearDown(index.close);
+    final indexPath = _indexPath;
 
     final t0 = DateTime.now();
     await index.ensureBuilt(wordsDb: db, wordsPath: dbFile.path, indexPath: indexPath);
@@ -184,6 +224,25 @@ void main() {
     stdout.writeln('索引构建：${buildMs}ms（一次性，懒加载后台构建）；索引库 ${indexSize}MB');
     stdout.writeln(report.join('\n'));
     stdout.writeln('P95：全表 ${p95(fullScanAll)}ms / 索引 ${p95(indexedAll)}ms');
-    await db.close();
   }, timeout: const Timeout(Duration(minutes: 10)));
+
+  // 不依赖真库：用合成 PID 造出与基准同名的临时文件，验证清理后确实不残留。
+  test('基准临时词库与索引库清理后不残留', () async {
+    final otherPid = pid + 1000000;
+    final files = [
+      File('${Directory.systemTemp.path}/wordbook_bench_$otherPid.db'),
+      File('${Directory.systemTemp.path}/wordbook_bench_$otherPid.db-wal'),
+      File('${Directory.systemTemp.path}/wordbook_cn_idx_bench_$otherPid.db'),
+      File('${Directory.systemTemp.path}/wordbook_cn_idx_bench_$otherPid.db-shm'),
+    ];
+    for (final file in files) {
+      await file.writeAsString('bench');
+      expect(file.existsSync(), isTrue);
+    }
+
+    await _cleanupBenchArtifacts(otherPid);
+
+    expect(files.where((file) => file.existsSync()), isEmpty);
+    expect(File(_dbPath).parent.path, equals(Directory.systemTemp.path), reason: '基准临时库必须落在系统临时目录内');
+  });
 }
