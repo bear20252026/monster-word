@@ -397,6 +397,17 @@ class _FxPainter extends CustomPainter {
       _burstPaint.color = TreasurePalette.coinColors[c.color].withValues(alpha: 1 - u * u * 0.4);
       canvas.drawCircle(Offset(x, y), c.size * (1 - u * 0.35), _burstPaint);
     }
+
+    // 反向喷币（离线计息结算）：罐口向上抛撒，先快后慢 + 尾段淡出。
+    for (final c in st._spray) {
+      final u = ((st._now - c.t0) / c.dur).clamp(0.0, 1.0);
+      if (u <= 0) continue;
+      final e = 1 - (1 - u) * (1 - u); // easeOut：抛撒先快后慢
+      final x = c.sx + (c.ex - c.sx) * e;
+      final y = c.sy + (c.ey - c.sy) * e;
+      _burstPaint.color = TreasurePalette.coinColors[c.color].withValues(alpha: 1 - u * u * 0.7);
+      canvas.drawCircle(Offset(x, y), c.size * (1 - u * 0.25), _burstPaint);
+    }
   }
 
   double _stageOriginX(_TreasureCheckInPageState st) => st._stageOrigin.dx;
@@ -501,6 +512,23 @@ class _BurstCoin {
   });
 
   final double sx, sy, cx, cy, t0, dur, size;
+  final int color;
+}
+
+/// 反向喷币粒子（离线计息结算：罐口 → 上方散开，easeOut + 淡出）。
+class _SprayCoin {
+  _SprayCoin({
+    required this.sx,
+    required this.sy,
+    required this.ex,
+    required this.ey,
+    required this.t0,
+    required this.dur,
+    required this.size,
+    required this.color,
+  });
+
+  final double sx, sy, ex, ey, t0, dur, size;
   final int color;
 }
 
