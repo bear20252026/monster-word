@@ -284,10 +284,7 @@ extension _TreasureCheckInUi on _TreasureCheckInPageState {
           ),
           const SizedBox(height: 8),
           _buildCta(),
-          if (_canMakeupYesterday) ...[
-            const SizedBox(height: 8),
-            _buildMakeupYesterday(),
-          ],
+          if (_canMakeupYesterday) ...[const SizedBox(height: 8), _buildMakeupYesterday()],
           const SizedBox(height: 12),
         ],
       ),

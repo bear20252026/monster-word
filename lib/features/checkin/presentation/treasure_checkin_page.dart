@@ -135,12 +135,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
 
   Future<void> _reload({bool replay = false}) async {
     final store = context.read<ScareCoinStore>();
-    final results = await Future.wait([
-      store.checkinDates(),
-      store.streak(),
-      store.balance(),
-      store.protectionCount(),
-    ]);
+    final results = await Future.wait([store.checkinDates(), store.streak(), store.balance(), store.protectionCount()]);
     if (!mounted) return;
     setState(() {
       _checkedDates = results[0] as Set<String>;
