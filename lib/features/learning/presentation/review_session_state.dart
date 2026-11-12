@@ -157,9 +157,9 @@ class ReviewSessionState extends ChangeNotifier {
         // 单局上限（reviewSessionCap）：只截「到期词」，让一局有界、可预期。
         // 注意 reader 在 due 为空时会回退整本队列——那不是到期词，不属于头目战
         // 口径，必须原样放过（保持该适配器的既有行为，其他调用方依赖它）。
-        final pool = _hadDueAtStart && loaded.length > reviewSessionCap
-            ? loaded.take(reviewSessionCap).toList(growable: false)
-            : loaded;
+        // 截断口径统一走 sessionDueCount 单源（v2 收尾：消除内联双写）。
+        final cap = sessionDueCount(dueAtStart: loaded.length);
+        final pool = _hadDueAtStart && loaded.length > cap ? loaded.take(cap).toList(growable: false) : loaded;
         _engine.init(_questionFactory.createProcesses(pool));
         _total = _engine.totalNum;
         _sessionWordIds = List<int>.unmodifiable(_engine.reviewList.map((word) => word.wordId));

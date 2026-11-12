@@ -42,6 +42,10 @@ class MonsterPalette {
 
   /// 进化金（7天尖角金角／30天飞翼描边／100天光环，吉祥物进化专用）
   static const Color evoGold = Color(0xFFD9A62E);
+
+  /// 头目雾岭紫（Boss 战 v2：大头目来自雾岭，与喽啰的主题绿区分；
+  /// 只是颜色不同，不表达「更强/更坏」的评价）。
+  static const Color bossMist = Color(0xFF8A7BB8);
 }
 
 /// 记忆兽图鉴配色（蓝图 T3 demo：难度定配色稀有度，固定装饰色不随主题）。
