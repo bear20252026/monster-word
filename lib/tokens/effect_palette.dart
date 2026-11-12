@@ -44,6 +44,19 @@ class MonsterPalette {
   static const Color evoGold = Color(0xFFD9A62E);
 }
 
+/// 记忆兽图鉴配色（蓝图 T3 demo：难度定配色稀有度，固定装饰色不随主题）。
+/// 稀有不是抽奖，是啃下了难词——三档只是颜色不同，无数值高低。
+class MemoryBeastPalette {
+  /// 常见（短词）：苔绿
+  static const Color common = Color(0xFF7FB069);
+
+  /// 少见（中长词）：雾蓝
+  static const Color uncommon = Color(0xFF6D9DC5);
+
+  /// 稀有（长词）：星紫
+  static const Color rare = Color(0xFFB08BC9);
+}
+
 /// 品牌渐变组合（多处双写已收口为共享常量）
 class GradientEffects {
   /// 启动屏品牌渐变（splash_page：绿→金→彩纸蓝）
