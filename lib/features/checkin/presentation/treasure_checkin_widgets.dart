@@ -208,6 +208,26 @@ extension _TreasureCheckInUi on _TreasureCheckInPageState {
       top: false,
       child: Column(
         children: [
+          // 离线计息提示：只在有待结算时出现，点击即收罐（不催促、不倒计时）。
+          if (_bellyPending > 0)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: GestureDetector(
+                onTap: _busy ? null : _settleBellyInterest,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                  decoration: BoxDecoration(
+                    color: TreasurePalette.card,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    border: Border.all(color: TreasurePalette.gold),
+                  ),
+                  child: Text(
+                    bellyInterestHint(_bellyPending),
+                    style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: TreasurePalette.goldDeep),
+                  ),
+                ),
+              ),
+            ),
           SizedBox(
             width: 220,
             height: 128,
@@ -233,16 +253,21 @@ extension _TreasureCheckInUi on _TreasureCheckInPageState {
                         sy = 1.10 - 0.10 * u;
                       }
                     }
-                    return Transform.scale(
-                      scale: sx,
-                      alignment: const Alignment(0, 0.5), // 原点 (110,96)
+                    return GestureDetector(
+                      key: const Key('belly_jar'),
+                      // 肚皮罐点击：有待结算则收罐入账，空罐给陪伴台词（蓝图 T2）。
+                      onTap: _busy ? null : _settleBellyInterest,
                       child: Transform.scale(
-                        scale: sy,
-                        alignment: const Alignment(0, 0.5),
-                        child: CustomPaint(
-                          key: _piggyKey,
-                          size: const Size(220, 128),
-                          painter: _PiggyPainter(bellyPct: _bellyPct),
+                        scale: sx,
+                        alignment: const Alignment(0, 0.5), // 原点 (110,96)
+                        child: Transform.scale(
+                          scale: sy,
+                          alignment: const Alignment(0, 0.5),
+                          child: CustomPaint(
+                            key: _piggyKey,
+                            size: const Size(220, 128),
+                            painter: _PiggyPainter(bellyPct: _bellyPct),
+                          ),
                         ),
                       ),
                     );

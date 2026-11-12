@@ -32,7 +32,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/utils/calendar_days.dart';
+import 'package:word_app/core/utils/monster_event.dart';
+import 'package:word_app/features/checkin/application/belly_interest_store.dart';
 import 'package:word_app/features/checkin/application/streak_milestones.dart';
+import 'package:word_app/features/checkin/domain/belly_interest.dart';
+import 'package:word_app/features/companion/application/monster_companion_port.dart';
+import 'package:word_app/features/learning/application/review_schedule_reader.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 // 埋点端口（跨 feature 只 import 对方的 application 层，架构守卫 R4 允许）。
 import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
@@ -126,6 +132,141 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
   /// D5：保护卡库存（补昨天入口用）。
   int _protectionCount = 0;
 
+  // ── 肚皮储蓄罐离线计息（蓝图 T2「离开的回报」） ──
+  /// 计息存储（application 门面；可空 Provider 注入仅供测试替换时钟，
+  /// 生产无注入走默认实例——与 OnboardingGateStore 同口径）。
+  late final BellyInterestStore _bellyStore = context.read<BellyInterestStore?>() ?? BellyInterestStore();
+
+  /// 当前可结算币数；0 = 空罐（点击只给陪伴台词，不入账）。
+  int _bellyPending = 0;
+
+  /// 反向喷币粒子（罐口 → 上方散开，与签到吸入同坐标系）。
+  final List<_SprayCoin> _spray = [];
+
+  /// 计息刷新：读在场时刻与昨日学习量，算出待结算额；首次进页只落标。
+  ///
+  /// 全段容错：计息是锦上添花，任何读取失败都不得影响签到主流程。
+  Future<void> _refreshBellyInterest() async {
+    try {
+      final lastSeen = _bellyStore.lastSeen();
+      if (lastSeen == null) {
+        await _bellyStore.markSeen();
+        return;
+      }
+      if (_bellyStore.settledToday()) {
+        if (mounted && _bellyPending != 0) setState(() => _bellyPending = 0);
+        return;
+      }
+      // 昨日学习量：learning 域 application 端口（R4 允许）；最小装配单测
+      // 没有该 scope，可空读取按 0 词（保底费率）处理。
+      final schedule = context.read<ReviewScheduleReader?>();
+      final yesterday = calendarDayBefore(DateTime.now());
+      final stats = schedule?.dailyStatsFor(_iso(yesterday)) ?? const {};
+      final words = (stats['learn'] ?? 0) + (stats['review'] ?? 0);
+      final awayMinutes = DateTime.now().difference(lastSeen).inMinutes;
+      final interest = bellyInterestFor(awayMinutes: awayMinutes, yesterdayWords: words);
+      if (!mounted) return;
+      setState(() => _bellyPending = interest.coins);
+      // 刷新在场时刻：本次进页起重新计时（同日闸门仍由 settledDay 把守）。
+      await _bellyStore.markSeen();
+    } catch (e, s) {
+      reportSwallowedError('离线计息刷新失败', e, s);
+    }
+  }
+
+  /// 点罐结算：幂等入账 → 喷币 + 肚皮 bump → 怪兽探头台词 + 全局喂食反应。
+  ///
+  /// 空罐点击只给陪伴台词（不入账、不落结算标）；入账失败不软锁。
+  Future<void> _settleBellyInterest() async {
+    if (_busy) return;
+    if (_bellyPending <= 0) {
+      MonsterPeekOverlay.show(context, phrase: bellyInterestEmptyLine);
+      return;
+    }
+    final store = context.read<ScareCoinStore>();
+    final companion = context.read<MonsterCompanionController?>();
+    final usageStats = context.read<UsageStatsRecorder?>();
+    final coins = _bellyPending;
+    setState(() => _busy = true);
+    final int? newBalance;
+    try {
+      newBalance = await store.grantOnce(delta: coins, reason: '肚皮罐离线计息', eventKey: _bellyStore.eventKeyForToday());
+    } catch (e, s) {
+      reportSwallowedError('离线计息入账失败', e, s);
+      if (mounted) {
+        setState(() => _busy = false);
+        showMwSnackBar(context, const SnackBar(content: Text('收罐失败了，稍后再点一次吧')));
+      }
+      return;
+    }
+    if (!mounted) return;
+    if (newBalance == null) {
+      // 并发已结算：同步状态收尾，不重复演出。
+      await _bellyStore.markSettled();
+      if (!mounted) return;
+      setState(() {
+        _bellyPending = 0;
+        _busy = false;
+      });
+      return;
+    }
+    await _bellyStore.markSettled();
+    if (!mounted) return;
+    widget.onChecked?.call();
+    if (usageStats != null) {
+      unawaited(() async {
+        try {
+          await usageStats.recordCoinsEarned(coins);
+        } catch (e, s) {
+          reportSwallowedError('离线计息埋点上报失败', e, s);
+        }
+      }());
+    }
+    // 全局怪兽反应：只报「被喂食」事实，演出由 companion 场景图决定。
+    companion?.dispatch(MonsterEvent.fed);
+    setState(() {
+      _balance = newBalance!;
+      _bellyPending = 0;
+      _gainAt = _now;
+      _gainValue = coins;
+    });
+    SfxPlayer.fire(Sfx.coinTick);
+    HapticsGate.play(HapticCue.medium);
+    if (_reduceMotion) {
+      setState(() => _busy = false);
+      MonsterPeekOverlay.show(context, phrase: bellyInterestSettledLine);
+      return;
+    }
+    _sprayFromBelly(coins);
+    setState(() => _bumpT = 0);
+    MonsterPeekOverlay.show(context, phrase: bellyInterestSettledLine);
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _busy = false);
+    });
+  }
+
+  /// 反向喷币：自罐口向上散开（数量随结算额，封顶 22 枚同签到粒子预算）。
+  void _sprayFromBelly(int coins) {
+    final count = coins.clamp(6, 22);
+    final sx0 = _bellyPoint.dx;
+    final sy0 = _bellyPoint.dy - 30;
+    for (var i = 0; i < count; i++) {
+      final spread = (_rnd.nextDouble() - 0.5) * 180;
+      _spray.add(
+        _SprayCoin(
+          sx: sx0 + (_rnd.nextDouble() - 0.5) * 24,
+          sy: sy0 + (_rnd.nextDouble() - 0.5) * 12,
+          ex: sx0 + spread,
+          ey: sy0 - 60 - _rnd.nextDouble() * 90,
+          t0: _now + i * 0.02,
+          dur: 0.5 + _rnd.nextDouble() * 0.3,
+          size: 2 + _rnd.nextDouble() * 2.6,
+          color: _rnd.nextInt(3),
+        ),
+      );
+    }
+  }
+
   /// D5：昨天还没签且已有签到史时，才在日历里露出「补昨天」入口。
   bool get _canMakeupYesterday {
     if (_checkedDates.isEmpty) return false;
@@ -149,6 +290,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     });
     _buildMonth();
     if (replay) _replay();
+    unawaited(_refreshBellyInterest());
   }
 
   /// 连击 → 肚皮充盈度（原型标定：(streak+12)/30）。
@@ -588,6 +730,11 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
     }
     _bumpT += dt;
 
+    // 反向喷币推进（离线计息结算）：到点即移除，bump 由结算时一次性触发。
+    for (var i = _spray.length - 1; i >= 0; i--) {
+      if (now >= _spray[i].t0 + _spray[i].dur) _spray.removeAt(i);
+    }
+
     // 全页重建只在「有 UI 在动」时发生：busy（签到结算）/散落模式/金币弹道/
     // 肚皮趋近/+N 浮字/罐体 bump/徽章弹簧。全部收敛后仅重绘粒子层
     // （_fxSignal + RepaintBoundary），页面停留期间不再 60fps 整页 setState。
@@ -595,6 +742,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
         _busy ||
         _mode != 'grid' ||
         _burst.isNotEmpty ||
+        _spray.isNotEmpty ||
         (_bellyTarget - _bellyPct).abs() > 0.001 ||
         (_now - _gainAt) < 1.0 ||
         _bumpT < 0.7 ||
