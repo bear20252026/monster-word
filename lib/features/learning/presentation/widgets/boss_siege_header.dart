@@ -8,6 +8,7 @@ import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/effect_palette.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:word_app/widgets/monster_icon.dart';
 
@@ -218,7 +219,9 @@ class _BossRowState extends State<_BossRow> with TickerProviderStateMixin {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const MonsterIcon(size: 44),
+                // 头目与喽啰的视觉区分：雾岭紫 + 飞翼形态（v2 收尾）。
+                // 只是「来自雾岭的大个子」，不表达更强/更坏的评价。
+                const MonsterIcon(size: 44, bodyColor: MonsterPalette.bossMist, evoStage: 2),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(

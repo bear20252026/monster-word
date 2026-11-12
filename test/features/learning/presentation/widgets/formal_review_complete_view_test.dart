@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/utils/boss_siege.dart';
 import 'package:word_app/features/learning/presentation/widgets/formal_review_state_views.dart';
 import 'package:word_app/theme/skin_system.dart';
+import 'package:word_app/widgets/confetti.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
   home: SkinProvider(skin: SkinSystem(), child: child),
@@ -63,5 +64,15 @@ void main() {
     expect(find.text('已把今天到期的单词又牢牢记住了一遍'), findsOneWidget);
     expect(find.text(bossVictoryLine), findsNothing);
     expect(celebrations, 1);
+  });
+
+  testWidgets('守城庆典挂爆炸式彩带（设计稿第五节口径）', (tester) async {
+    await tester.pumpWidget(_wrap(const FormalReviewCompleteView(done: 40, onReturnHome: _noop, bossBattle: true)));
+    await tester.pump();
+
+    final overlay = tester.widget<ConfettiOverlay>(find.byType(ConfettiOverlay));
+    expect(overlay.direction, ConfettiDirection.explosion);
+    // 彩带层包住了完成环与返回按钮（整个 body）。
+    expect(find.descendant(of: find.byType(ConfettiOverlay), matching: find.text('今日复习完成！')), findsOneWidget);
   });
 }

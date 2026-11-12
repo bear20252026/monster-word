@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/utils/boss_siege.dart';
 import 'package:word_app/core/utils/haptics_gate.dart';
+import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
@@ -13,6 +14,7 @@ import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/progress/application/xp_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/mw_button.dart';
 
 /// 正式复习加载中的统一页面：品牌话术 + 主题化加载环。
@@ -164,6 +166,16 @@ class FormalReviewCompleteView extends StatefulWidget {
 class _FormalReviewCompleteViewState extends State<FormalReviewCompleteView> {
   bool _celebrated = false;
 
+  /// 守城庆典彩带（设计稿第五节：explosion 爆炸式）。与 [_celebrated] 同开关，
+  /// 一局只播一次；测试注入 celebrationOverride 时不触发。
+  final ConfettiController _confetti = ConfettiController();
+
+  @override
+  void dispose() {
+    _confetti.dispose();
+    super.dispose();
+  }
+
   /// M3/D4：本局 XP 展示（复习同计；不进商店）。
   int? _xpAwarded;
   int? _xpToNextLevel;
@@ -226,11 +238,14 @@ class _FormalReviewCompleteViewState extends State<FormalReviewCompleteView> {
     }
     SfxPlayer.fire(Sfx.milestone);
     HapticsGate.play(HapticCue.heavy);
-    unawaited(MonsterVoice.system.say(_victoryLine));
+    _confetti.play();
+    // 设计稿第五节：发声走 SpeechSlot.milestone 槽（不新增槽）。完成页是纯入参
+    // 组件，拿不到 days/streak 等事实 ⇒ vars 全空，引擎自动只挑无占位符的保底条
+    // （「新纪录达成！咕噜——撒花庆祝！」），绝不渲染假数字。屏幕副标题仍用
+    // bossVictoryLine/siegeVictoryLine 陈述守城事实，两者分工：屏幕说事实，怪兽说庆祝。
+    final line = MonsterSpeech().pick(SpeechSlot.milestone, vars: const {});
+    unawaited(MonsterVoice.system.say(line));
   }
-
-  /// 头目战用退场台词；普通复习局沿用 v1 的守城台词。
-  String get _victoryLine => widget.bossBattle ? bossVictoryLine : siegeVictoryLine;
 
   /// 副标题：头目战（且真的答过题）说头目退场；其余保持既有两分支。
   String get _subtitle {
@@ -245,68 +260,74 @@ class _FormalReviewCompleteViewState extends State<FormalReviewCompleteView> {
     final resp = context.responsive;
     return Scaffold(
       backgroundColor: skin.pageBg,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 完成环 + 衬线完成数
-            SizedBox(
-              width: 128,
-              height: 128,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: 116,
-                    height: 116,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: skin.success.withValues(alpha: AppAlphas.o08),
-                      border: Border.all(color: skin.success.withValues(alpha: AppAlphas.o35), width: 1),
-                    ),
-                  ),
-                  Icon(Icons.check_rounded, color: skin.success, size: 40),
-                  Positioned(
-                    bottom: 18,
-                    child: Text(
-                      '$done',
-                      style: TextStyle(
-                        fontFamily: 'Charter',
-                        fontSize: AppFontSizes.displaySm,
-                        fontStyle: FontStyle.italic,
-                        color: skin.success,
+      body: ConfettiOverlay(
+        controller: _confetti,
+        particleCount: 60,
+        direction: ConfettiDirection.explosion,
+        duration: const Duration(seconds: 3),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 完成环 + 衬线完成数
+              SizedBox(
+                width: 128,
+                height: 128,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 116,
+                      height: 116,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: skin.success.withValues(alpha: AppAlphas.o08),
+                        border: Border.all(color: skin.success.withValues(alpha: AppAlphas.o35), width: 1),
                       ),
                     ),
-                  ),
-                ],
+                    Icon(Icons.check_rounded, color: skin.success, size: 40),
+                    Positioned(
+                      bottom: 18,
+                      child: Text(
+                        '$done',
+                        style: TextStyle(
+                          fontFamily: 'Charter',
+                          fontSize: AppFontSizes.displaySm,
+                          fontStyle: FontStyle.italic,
+                          color: skin.success,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              '今日复习完成！',
-              style: TextStyle(
-                fontFamily: 'Charter',
-                fontSize: AppFontSizes.statSm * resp.fontScale,
-                fontWeight: FontWeight.w400,
-                letterSpacing: -0.5,
-                color: skin.text1,
+              const SizedBox(height: 20),
+              Text(
+                '今日复习完成！',
+                style: TextStyle(
+                  fontFamily: 'Charter',
+                  fontSize: AppFontSizes.statSm * resp.fontScale,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: -0.5,
+                  color: skin.text1,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            // done==0 时不能说「已把今天到期的单词记住了」——今天根本没有到期词。
-            Text(_subtitle, style: MwTypography.bodySm.copyWith(color: skin.text3)),
-            if (_xpAwarded != null) ...[
-              const SizedBox(height: 12),
-              _XpResultPill(
-                awarded: _xpAwarded!,
-                toNextLevel: _xpToNextLevel,
-                levelUpLevel: _levelUpLevel,
-                colors: skin,
-              ),
+              const SizedBox(height: 8),
+              // done==0 时不能说「已把今天到期的单词记住了」——今天根本没有到期词。
+              Text(_subtitle, style: MwTypography.bodySm.copyWith(color: skin.text3)),
+              if (_xpAwarded != null) ...[
+                const SizedBox(height: 12),
+                _XpResultPill(
+                  awarded: _xpAwarded!,
+                  toNextLevel: _xpToNextLevel,
+                  levelUpLevel: _levelUpLevel,
+                  colors: skin,
+                ),
+              ],
+              const SizedBox(height: 28),
+              MwButton(label: '返回首页', onTap: widget.onReturnHome, minWidth: 180),
             ],
-            const SizedBox(height: 28),
-            MwButton(label: '返回首页', onTap: widget.onReturnHome, minWidth: 180),
-          ],
+          ),
         ),
       ),
     );
