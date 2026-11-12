@@ -19,6 +19,15 @@ extension _MonsterRoomLife on _MonsterRoomViewState {
     }
   }
 
+  /// 性格同步：命名仪式改过性格后回到小屋，台词即刻按新脾气说。
+  void _syncRoomPersonality() {
+    final p = MonsterSpeech.currentPersonality;
+    if (p != _roomPersonality) {
+      _roomPersonality = p;
+      _roomSpeech = MonsterSpeech(personality: p);
+    }
+  }
+
   /// initState 接线：判定昼夜并调整待机节奏（夜间呼吸放慢一倍多）。
   void _initRoomLife() {
     _isNight = MonsterRhythm.isSleepTime();

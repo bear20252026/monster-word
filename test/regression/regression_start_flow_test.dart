@@ -7,8 +7,11 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/widgets/monster_icon.dart';
+import 'package:word_app/app/router/route_names.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/account/presentation/app_session_state.dart';
 import 'package:word_app/features/account/presentation/splash_page.dart';
+import 'package:word_app/features/learning/presentation/onboarding_promise_dialog.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/core/utils/monster_identity_prefs.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
@@ -30,6 +33,8 @@ Widget _host(AppSessionState session) {
           builder: (_) => switch (name) {
             '/splash' => const SplashPage(),
             '/login' => const Text('LOGIN_PAGE'),
+            // 命名仪式后经路由契约串演首启引导（蓝图 W4 闸门合并）。
+            RouteNames.onboardingPromise => const OnboardingPromiseDialog(),
             _ => const Text('MAIN_PAGE'),
           },
         );
@@ -39,8 +44,9 @@ Widget _host(AppSessionState session) {
 }
 
 void main() {
-  setUp(() {
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await AppPreferences().init();
   });
 
   tearDown(MonsterIdentityPrefs.resetForTest);
@@ -82,17 +88,25 @@ void main() {
     // 2026-10-03 命名仪式插入引导与主页之间（蓝图 W4）：首启未破壳 → 先进开局仪式。
     expect(find.text('台灯下，有一颗蛋在等你。'), findsOneWidget, reason: '引导完成后先进开局命名仪式页');
 
-    // 敲三下破壳 → 开始冒险 → 主页。
-    await tester.tap(find.text('敲三下（0/3）'));
-    await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('敲三下（1/3）'));
-    await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('敲三下（2/3）'));
-    await tester.pump(const Duration(milliseconds: 300));
+    // 敲三下破壳 → 开始冒险 → 串演首启引导 → 主页。
+    // 仪式页整体可滚动（性格卡让小屏一屏放不下）：点击前先滚到可见。
+    Future<void> tapVisible(Finder finder) async {
+      await tester.ensureVisible(finder);
+      await tester.pumpAndSettle();
+      await tester.tap(finder);
+      await tester.pumpAndSettle();
+    }
+
+    await tapVisible(find.text('敲三下（0/3）'));
+    await tapVisible(find.text('敲三下（1/3）'));
+    await tapVisible(find.text('敲三下（2/3）'));
     expect(find.byType(MonsterIcon), findsOneWidget, reason: '第三下破壳');
-    await tester.tap(find.text('开始冒险！'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 600));
+    await tapVisible(find.text('开始冒险！'));
+    // 闸门合并：破壳后串演三步承诺对话（跳过也落标），随后进入主页。
+    await tester.pumpAndSettle();
+    expect(find.text('跳过'), findsOneWidget, reason: '命名仪式后应串演首启引导');
+    await tester.tap(find.text('跳过'));
+    await tester.pumpAndSettle();
     expect(find.text('MAIN_PAGE'), findsOneWidget, reason: '点「开始冒险」后必须进入主页，不得卡在仪式页');
   });
 

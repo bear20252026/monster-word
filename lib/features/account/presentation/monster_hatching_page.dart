@@ -10,10 +10,15 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/core/utils/monster_identity_prefs.dart';
+import 'package:word_app/core/utils/monster_personality.dart';
+import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/app/router/route_names.dart';
+import 'package:word_app/features/learning/application/onboarding_gate_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
@@ -43,6 +48,12 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
   /// 保存进行中（防重复点击与重复落库）。
   bool _saving = false;
 
+  /// 选定的性格（蓝图 W4：三性格 = 三组待机动画 + 三套台词组）。
+  MonsterPersonality _personality = MonsterPersonality.lively;
+
+  /// 破壳后按所选性格说第一句话（让用户当场听见性格差异）。
+  String? _firstLine;
+
   late final AnimationController _shakeCtrl = AnimationController(vsync: this, duration: MotionDurations.base);
   late final AnimationController _popCtrl = AnimationController(vsync: this, duration: MotionDurations.expressive);
   late final Animation<double> _pop = CurvedAnimation(parent: _popCtrl, curve: MotionCurves.springPop);
@@ -61,9 +72,10 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
     if (_hatched) return;
     _taps += 1;
     if (_taps >= 3) {
-      // 第三下：白闪 + 怪兽破壳 pop。
+      // 第三下：白闪 + 怪兽破壳 pop + 按性格说第一句话。
       SfxPlayer.fire(Sfx.hatchFlash);
       _popCtrl.forward(from: 0);
+      _firstLine = MonsterSpeech(personality: _personality).pick(SpeechSlot.dailyGreeting, vars: const {});
     } else {
       SfxPlayer.fire(Sfx.eggKnock);
       _shakeCtrl.forward(from: 0);
@@ -71,12 +83,24 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
     setState(() {});
   }
 
+  /// 选性格：破壳前后都可换；破壳后换性格即时重挑第一句话（当场听见差异）。
+  void _selectPersonality(MonsterPersonality p) {
+    if (_personality == p) return;
+    HapticsGate.play(HapticCue.tap);
+    setState(() {
+      _personality = p;
+      if (_hatched) {
+        _firstLine = MonsterSpeech(personality: p).pick(SpeechSlot.dailyGreeting, vars: const {});
+      }
+    });
+  }
+
   Future<void> _startAdventure() async {
     if (_saving) return;
     setState(() => _saving = true);
     String stored;
     try {
-      stored = await MonsterIdentityPrefs.save(name: _nameCtrl.text);
+      stored = await MonsterIdentityPrefs.save(name: _nameCtrl.text, personality: _personality);
     } catch (e, s) {
       // 三段 SP 写失败：不静默、不假装成功——留原态让用户再敲一次即可（save 可重入）。
       reportSwallowedError('命名仪式保存失败', e, s);
@@ -85,9 +109,31 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
       showMwSnackBar(context, const SnackBar(content: Text('名字没记上，再点一次「开始冒险」试试')));
       return;
     }
+    // 性格落库成功 → 同步进程级缓存：此后全 app 的台词与待机即刻按新性格演。
+    MonsterPersonalitySettings.set(_personality);
     // 「怪兽开口」第一刻：破壳后自报家门（一生一次，最该出声的一句）。
-    // 不等本页——发声走进程级 TTS 单例，页面换路由后照样说完；闸门拦下则静默。
-    unawaited(MonsterVoice.system.say('我叫$stored！以后单词就交给我们俩啦~'));
+    // 按性格各有一句开场白；不等本页——发声走进程级 TTS 单例，页面换路由后照样说完。
+    final intro = switch (_personality) {
+      MonsterPersonality.lively => '我叫$stored！以后单词就交给我们俩啦~',
+      MonsterPersonality.calm => '我叫$stored。以后的单词，我们慢慢学。',
+      MonsterPersonality.stubborn => '我叫$stored。说好了每天学，你可别偷懒。',
+    };
+    unawaited(MonsterVoice.system.say(intro));
+    if (!mounted) return;
+    // 闸门合并（蓝图 W4）：三步承诺对话并进破壳仪式串行演出，不再等首页二道闸。
+    // 演出/落标失败都不阻断进入应用——引导是锦上添花，不是门槛。
+    try {
+      const gate = OnboardingGateStore();
+      if (!gate.done) {
+        // 跨域演出走路由契约（R4）：引导对话归 learning 域，经命名路由串演。
+        await Navigator.of(context).pushNamed(RouteNames.onboardingPromise);
+        if (!await gate.markDone()) {
+          reportSwallowedError('首启引导标记写入失败', StateError('setOnboardingDone returned false'), StackTrace.current);
+        }
+      }
+    } catch (e, s) {
+      reportSwallowedError('破壳后首启引导失败', e, s);
+    }
     if (!mounted) return;
     if (widget.onFinished != null) {
       widget.onFinished!();
@@ -102,22 +148,29 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
     return Scaffold(
       backgroundColor: colors.pageBg,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xxl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                _hatched ? '破壳了！它认识你了。' : '台灯下，有一颗蛋在等你。',
-                textAlign: TextAlign.center,
-                style: MwTypography.heading3.copyWith(fontWeight: FontWeight.w700, color: colors.text1),
+        // 性格卡 + 台词预览让内容超过一屏（尤其小屏手机）：整体可滚动，
+        // 大屏仍居中呈现（ConstrainedBox 撑满视口高度）。
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.xxl),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.xxl * 2),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    _hatched ? '破壳了！它认识你了。' : '台灯下，有一颗蛋在等你。',
+                    textAlign: TextAlign.center,
+                    style: MwTypography.heading3.copyWith(fontWeight: FontWeight.w700, color: colors.text1),
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  _buildEggStage(colors),
+                  const SizedBox(height: AppSpacing.xl),
+                  ..._buildControls(colors),
+                ],
               ),
-              const SizedBox(height: AppSpacing.xxl),
-              _buildEggStage(colors),
-              const SizedBox(height: AppSpacing.xl),
-              ..._buildControls(colors),
-            ],
+            ),
           ),
         ),
       ),
@@ -199,7 +252,90 @@ class _MonsterHatchingPageState extends State<MonsterHatchingPage> with TickerPr
         ),
       ),
     );
-    return [field, const SizedBox(height: AppSpacing.lg), button];
+    return [
+      field,
+      const SizedBox(height: AppSpacing.lg),
+      _buildPersonalityPicker(colors),
+      if (_hatched && _firstLine != null) ...[
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          _firstLine!,
+          textAlign: TextAlign.center,
+          style: MwTypography.bodySm.copyWith(color: colors.text2),
+        ),
+      ],
+      const SizedBox(height: AppSpacing.lg),
+      button,
+    ];
+  }
+
+  /// 性格选择卡（三选一）：只描述脾气，不承诺任何数值差异。
+  Widget _buildPersonalityPicker(ThemeVars colors) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          '它是什么脾气？',
+          textAlign: TextAlign.center,
+          style: MwTypography.bodyBold.copyWith(color: colors.text1),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        for (final p in MonsterPersonality.values) ...[
+          _PersonalityCard(
+            personality: p,
+            selected: _personality == p,
+            colors: colors,
+            onTap: () => _selectPersonality(p),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+      ],
+    );
+  }
+}
+
+/// 单张性格卡：选中描边 + 对勾，副标题一句话简介。
+class _PersonalityCard extends StatelessWidget {
+  const _PersonalityCard({
+    required this.personality,
+    required this.selected,
+    required this.colors,
+    required this.onTap,
+  });
+
+  final MonsterPersonality personality;
+  final bool selected;
+  final ThemeVars colors;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      key: Key('personality_${personality.name}'),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: selected ? colors.accent.withValues(alpha: AppAlphas.o12) : colors.cardBg,
+          borderRadius: BorderRadius.circular(context.design.radius.md),
+          border: Border.all(color: selected ? colors.accent : colors.divider, width: selected ? 2 : 1),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(personalityLabels[personality]!, style: MwTypography.bodyBold.copyWith(color: colors.text1)),
+                  Text(personalityDescriptions[personality]!, style: MwTypography.micro.copyWith(color: colors.text2)),
+                ],
+              ),
+            ),
+            if (selected) Icon(Icons.check_circle, color: colors.accent, size: 20),
+          ],
+        ),
+      ),
+    );
   }
 }
 

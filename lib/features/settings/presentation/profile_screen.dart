@@ -29,6 +29,7 @@ import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/core/utils/monster_bond_prefs.dart';
 import 'package:word_app/core/utils/monster_identity_prefs.dart';
+import 'package:word_app/core/utils/monster_personality.dart';
 import 'package:word_app/core/utils/monster_rhythm.dart';
 import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/core/utils/sfx.dart';
@@ -175,7 +176,8 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   String? _roomBubble;
   Timer? _roomBubbleTimer;
   String? _bondLevelName;
-  final MonsterSpeech _roomSpeech = MonsterSpeech();
+  MonsterSpeech _roomSpeech = MonsterSpeech();
+  MonsterPersonality _roomPersonality = MonsterSpeech.currentPersonality;
 
   /// 上次读到的羁终等级阈值（null = 首次载入不办仪式；
   /// 跨阈值时触发 BondLevelUpOverlay）。
@@ -254,6 +256,7 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _syncRoomPersonality();
     // W4.5「它会找你」：本 tab 首次可见（TickerMode 翻 true）才弹需求气泡。
     // 主壳 IndexedStack 常驻构建全部 tab，以前不可见也会弹掉并超时消失。
     _tryFireNeedBubble();

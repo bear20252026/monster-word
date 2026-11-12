@@ -42,6 +42,7 @@ import 'package:word_app/features/learning/presentation/home_screen.dart';
 import 'package:word_app/features/settings/presentation/profile_screen.dart';
 import 'package:word_app/app/main_shell.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:word_app/core/utils/monster_identity_prefs.dart';
 import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
@@ -514,10 +515,13 @@ class _HomeShellState extends State<_HomeShell> {
   }
 
   /// 首启三步角色对话 + 一句承诺：只出现一次，关闭/跳过都落标。
+  /// 已破壳的用户在命名仪式里已串演过（闸门合并），这里不再二弹；
+  /// 本分支只兜底「已破壳但引导标丢失」与老版本升级路径。
   Future<void> _maybeShowOnboarding() async {
     try {
       const gate = OnboardingGateStore();
       if (gate.done) return;
+      if (await MonsterIdentityPrefs.hatched) return;
       if (!mounted) return;
       await showOnboardingPromiseDialog(context);
       if (!await gate.markDone()) {
