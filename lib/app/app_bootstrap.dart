@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:word_app/core/utils/monster_personality.dart';
 import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx_settings.dart';
 import 'package:word_app/core/utils/debug_log.dart';
@@ -70,8 +71,10 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
   try {
     await SfxSettings.load();
     await MonsterVoiceSettings.load();
+    // 蓝图 W4：怪兽性格预热（台词引擎与待机动画的进程级单源）。
+    await MonsterPersonalitySettings.load();
   } catch (e, s) {
-    reportSwallowedError('音效/语音偏好加载失败，按默认值继续', e, s);
+    reportSwallowedError('音效/语音/性格偏好加载失败，按默认值继续', e, s);
   }
   final total = steps.length;
   for (var i = 0; i < total; i++) {

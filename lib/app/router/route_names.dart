@@ -64,4 +64,7 @@ class RouteNames {
 
   /// 聚宝日历签到页（审计 I10：此前经裸 MaterialPageRoute 直推，绕过路由契约）
   static const String treasureCheckIn = '/treasure_check_in';
+
+  /// 首启三步对话 + 一句承诺（命名仪式后经路由契约串演，跨域不直 import）。
+  static const String onboardingPromise = '/onboarding_promise';
 }

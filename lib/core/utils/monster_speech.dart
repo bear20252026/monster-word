@@ -6,6 +6,7 @@
 import 'dart:math' show Random;
 
 import 'package:word_app/core/utils/debug_log.dart';
+import 'package:word_app/core/utils/monster_personality.dart';
 
 /// 台词槽位。
 enum SpeechSlot {
@@ -48,13 +49,24 @@ enum SpeechSlot {
 ///   用户主动交互（点击怪兽冒 dailyGreeting）由调用方只 [pick] 不 [consumeBudget]。
 /// - 可测性：构造参数注入 `now`（时间源）与 `random`（随机源）。
 class MonsterSpeech {
-  MonsterSpeech({DateTime Function()? now, Random? random}) : _now = now ?? DateTime.now, _random = random ?? Random();
+  MonsterSpeech({DateTime Function()? now, Random? random, MonsterPersonality? personality})
+    : _now = now ?? DateTime.now,
+      _random = random ?? Random(),
+      _personality = personality ?? currentPersonality;
 
   /// 时间源（默认 DateTime.now；测试注入固定/可控时间）。
   final DateTime Function() _now;
 
   /// 随机源（组内选条；测试注入固定种子）。
   final Random _random;
+
+  /// 本实例的性格（构造时快照；改性格后新建实例生效）。
+  final MonsterPersonality _personality;
+
+  /// 进程级当前性格（启动时由 MonsterPersonalitySettings.load 从 SP 预热；
+  /// 命名仪式保存后经 set 同步）。所有默认构造的台词实例共享这一份，
+  /// 避免五个消费点各读一遍 SP。
+  static MonsterPersonality currentPersonality = MonsterPersonality.lively;
 
   /// 每日主动台词上限。
   static const int _maxProactivePerDay = 3;
@@ -147,7 +159,11 @@ class MonsterSpeech {
   };
 
   /// 全部模板（测试断言用：气泡文案 ∈ 槽位模板的渲染结果集）。
-  static Iterable<String> templatesOf(SpeechSlot slot) => _templates[slot]!;
+  /// [personality] 缺省取进程级当前性格；性格组未覆盖的槽位回退主表。
+  static Iterable<String> templatesOf(SpeechSlot slot, {MonsterPersonality? personality}) {
+    final p = personality ?? currentPersonality;
+    return personalityTemplates[p]?[slot] ?? _templates[slot]!;
+  }
 
   // 每槽最近选中记录（内存即可，不持久化）。
   // 去重窗口为进程级共享：调用方各持 MonsterSpeech() 实例（首页/进化仪式），
@@ -173,6 +189,7 @@ class MonsterSpeech {
     _todayKey = '';
     _todayCount = 0;
     _recent.clear();
+    currentPersonality = MonsterPersonality.lively;
   }
 
   /// 记一次主动弹（调用方应先用 [canSpeak] 把门再消耗）。
@@ -192,7 +209,10 @@ class MonsterSpeech {
       for (final key in _varKeys)
         if (vars[key] == null) key,
     ];
-    final group = _templates[slot]!.where((t) => !unknown.any((key) => t.contains('{$key}'))).toList();
+    final group = templatesOf(
+      slot,
+      personality: _personality,
+    ).where((t) => !unknown.any((key) => t.contains('{$key}'))).toList();
     final recent = _recent.putIfAbsent(slot, () => <String>[]);
     final candidates = group.where((t) => !recent.contains(t)).toList();
     if (candidates.isEmpty) {

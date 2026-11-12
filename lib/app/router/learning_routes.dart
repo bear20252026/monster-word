@@ -14,6 +14,7 @@ import 'package:word_app/features/learning/presentation/mastered_words_page.dart
 import 'package:word_app/features/learning/presentation/my_words_page.dart';
 import 'package:word_app/features/learning/presentation/new_words_page.dart';
 import 'package:word_app/features/learning/presentation/not_learned_words_page.dart';
+import 'package:word_app/features/learning/presentation/onboarding_promise_dialog.dart';
 import 'package:word_app/features/learning/presentation/quick_spell_page.dart';
 import 'package:word_app/features/learning/presentation/review_page.dart';
 import 'package:word_app/features/learning/presentation/reviewing_words_page.dart';
@@ -81,6 +82,8 @@ abstract final class LearningRoutes {
         return const ExamQuickReviewPage();
       case RouteNames.treasureCheckIn:
         return const TreasureCheckInPage();
+      case RouteNames.onboardingPromise:
+        return const OnboardingPromiseDialog();
       default:
         return null;
     }

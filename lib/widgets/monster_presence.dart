@@ -29,6 +29,7 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/utils/monster_initiative.dart';
+import 'package:word_app/core/utils/monster_personality.dart';
 import 'package:word_app/core/utils/monster_rhythm.dart';
 import 'package:word_app/core/utils/monster_scene.dart';
 import 'package:word_app/core/utils/monster_speech.dart';
@@ -217,16 +218,22 @@ class MonsterPresence extends StatefulWidget {
 }
 
 class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderStateMixin {
-  // 呼吸 bob（2.8s 一循环；档位复用 MotionDurations.splash）。
-  late final AnimationController _bobCtrl = AnimationController(vsync: this, duration: MotionDurations.splash);
+  /// 当前性格（启动预热缓存；命名仪式保存后随路由返回刷新）。
+  MonsterPersonality _personality = MonsterSpeech.currentPersonality;
+
+  // 呼吸 bob：三性格三组参数（蓝图 W4），周期/幅度取自 idleMotions 单源。
+  late final AnimationController _bobCtrl = AnimationController(
+    vsync: this,
+    duration: Duration(milliseconds: idleMotions[_personality]!.periodMs),
+  );
   // 点击问候：张嘴 0→0.3 的 0.3s 过渡。
   late final AnimationController _mouthCtrl = AnimationController(vsync: this, duration: MotionDurations.slow);
   late final Animation<double> _mouth = CurvedAnimation(parent: _mouthCtrl, curve: Curves.easeInOut);
 
   bool _gurgleVisible = false;
 
-  /// 台词引擎（可测注入时间/随机源）。
-  final MonsterSpeech _speech = MonsterSpeech();
+  /// 台词引擎（可测注入时间/随机源）；性格切换时随 _syncPersonality 重建。
+  late MonsterSpeech _speech = MonsterSpeech(personality: _personality);
 
   String _greetingText = '咕噜~';
 
@@ -367,6 +374,7 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
         navigator.pushNamed(RouteNames.mySpace).whenComplete(() {
           if (!mounted) return;
           _navigating = false;
+          _syncPersonality();
           unawaited(_refreshSpeechVars());
         }),
       );
@@ -379,6 +387,18 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
     if (!mounted) return;
     setState(() => _gurgleVisible = false);
     _mouthCtrl.reverse();
+  }
+
+  /// 性格可能刚在命名仪式/小屋里改过：缓存变了就换待机周期并重建台词实例。
+  void _syncPersonality() {
+    final p = MonsterSpeech.currentPersonality;
+    if (p == _personality) return;
+    setState(() => _personality = p);
+    _speech = MonsterSpeech(personality: p);
+    _bobCtrl.duration = Duration(milliseconds: idleMotions[p]!.periodMs);
+    if (!_reduceMotion) {
+      _bobCtrl.repeat();
+    }
   }
 
   @override
@@ -424,7 +444,13 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
               animation: _bobCtrl,
               builder: (context, child) {
                 if (_reduceMotion) return child!;
-                return Transform.translate(offset: Offset(0, 2 * math.sin(2 * math.pi * _bobCtrl.value)), child: child);
+                // 三组待机（蓝图 W4）：活泼蹦、安静轻晃、倔强带倾摆顿挫。
+                final motion = idleMotions[_personality]!;
+                final phase = 2 * math.pi * _bobCtrl.value;
+                return Transform.rotate(
+                  angle: motion.tiltAmplitude * math.sin(phase),
+                  child: Transform.translate(offset: Offset(0, motion.amplitude * math.sin(phase)), child: child),
+                );
               },
               child: AnimatedBuilder(
                 animation: _mouth,
