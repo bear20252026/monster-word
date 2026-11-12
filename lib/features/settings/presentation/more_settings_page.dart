@@ -373,6 +373,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                   SizedBox(height: context.design.spacing.md),
                   _buildSfxGroup(skin),
                   _buildPetModeGroup(skin),
+                  _buildBeastGalleryGroup(skin),
                   _buildRedeemReportGroup(skin),
                   SizedBox(height: context.design.spacing.md),
                   _buildPrivacyGroup(skin),
@@ -531,6 +532,22 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         },
       ),
     ]);
+  }
+
+  /// 词书图鉴 demo（蓝图 T3：20 词程序化记忆兽，先验证观感）。
+  Widget _buildBeastGalleryGroup(SkinSystem skin) {
+    return Padding(
+      padding: EdgeInsets.only(top: context.design.spacing.md),
+      child: _SettingGroup([
+        _Cell(
+          icon: Icons.auto_awesome_outlined,
+          iconColor: skin.colors.accent,
+          title: '词书图鉴',
+          subtitle: '每个词都有一只小记忆兽 · demo',
+          onTap: () => Navigator.pushNamed(context, RouteNames.memoryBeastGallery),
+        ),
+      ]),
+    );
   }
 
   /// 兑换中心 / 举报组

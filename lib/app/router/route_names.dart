@@ -67,4 +67,7 @@ class RouteNames {
 
   /// 首启三步对话 + 一句承诺（命名仪式后经路由契约串演，跨域不直 import）。
   static const String onboardingPromise = '/onboarding_promise';
+
+  /// 词书图鉴 demo（蓝图 T3：20 词程序化记忆兽生成器观感验证）。
+  static const String memoryBeastGallery = '/memory_beast_gallery';
 }

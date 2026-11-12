@@ -10,6 +10,7 @@ import 'package:word_app/features/account/presentation/message_page.dart';
 import 'package:word_app/features/account/presentation/my_equip_page.dart';
 import 'package:word_app/features/account/presentation/my_space_page.dart';
 import 'package:word_app/features/account/presentation/user_info_manage_page.dart';
+import 'package:word_app/features/book/presentation/memory_beast_gallery_page.dart';
 import 'package:word_app/features/checkin/presentation/check_in_history_page.dart';
 import 'package:word_app/features/learning/presentation/dashboard_page.dart';
 import 'package:word_app/features/learning/presentation/personal_stereo_page.dart';
@@ -70,6 +71,8 @@ abstract final class AccountRoutes {
         return const RedemptionCenterPage();
       case RouteNames.checkInHistory:
         return const CheckInHistoryPage();
+      case RouteNames.memoryBeastGallery:
+        return const MemoryBeastGalleryPage();
       case RouteNames.linkedMe:
         return _buildLinkedMePage(args);
       default:
