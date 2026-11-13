@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:word_app/features/checkin/application/streak_milestones.dart';
@@ -282,6 +285,123 @@ void main() {
       expect(await store.streak(), 0, reason: '昨天缺签，连胜先归零');
       expect(await store.makeupYesterday(), 7);
       expect(crossedStreakMilestone(0, await store.streak()), 7, reason: '里程碑输入是补签后的天数');
+    });
+  });
+
+  group('P1-1 降级期 SP 入账回灌（架构审计 2026-11-12）', () {
+    late Database db;
+    late Directory tmpDir;
+
+    // 建表拆成两步：先只建 entries+meta（缺 reward_events/checkin_dates），
+    // 让「带事件键」的写事务真实失败 ⇒ 触发整体降级纯 SP；之后补建缺失表，
+    // 下一次写入探测成功 ⇒ 自愈并回灌。这是生产降级场景的最小复刻。
+    Future<void> createBaseTables() async {
+      await db.execute(
+        'CREATE TABLE IF NOT EXISTS scare_coin_entries ('
+        'id INTEGER PRIMARY KEY AUTOINCREMENT, time_ms INTEGER NOT NULL, delta INTEGER NOT NULL, reason TEXT NOT NULL)',
+      );
+      await db.execute('CREATE TABLE IF NOT EXISTS scare_coin_meta (key TEXT PRIMARY KEY, value INTEGER NOT NULL)');
+    }
+
+    Future<void> createEventTables() async {
+      await db.execute('CREATE TABLE IF NOT EXISTS checkin_dates (date TEXT PRIMARY KEY)');
+      await db.execute(
+        'CREATE TABLE IF NOT EXISTS reward_events (event_key TEXT PRIMARY KEY, created_at INTEGER NOT NULL)',
+      );
+    }
+
+    // 用独立临时文件库而非 inMemoryDatabasePath：内存库经全局 databaseFactoryFfi
+    // 在多 isolate 并行下会与其他 SQLite 测试竞争（全量偶发红、单跑绿）。
+    // 文件库各占独立路径，与 cn_search_index_test 同款稳定口径。
+    setUp(() async {
+      databaseFactory = databaseFactoryFfi;
+      tmpDir = await Directory.systemTemp.createTemp('scare_coin_replay_test');
+      db = await openDatabase(p.join(tmpDir.path, 'ledger.db'));
+      await createBaseTables();
+    });
+
+    tearDown(() async {
+      await db.close();
+      try {
+        tmpDir.deleteSync(recursive: true);
+      } catch (_) {
+        // Windows 句柄释放有时序延迟，残留临时目录无碍
+      }
+    });
+
+    PreferencesScareCoinStore storeWith({Map<String, Object> spSeed = const {}}) {
+      SharedPreferences.setMockInitialValues(spSeed);
+      return PreferencesScareCoinStore(ledgerDao: ScareCoinLedgerDao(openDatabase: () async => db));
+    }
+
+    test('降级期挣的币：自愈后余额/流水/事件键全部回灌账本', () async {
+      final store = storeWith();
+
+      // 缺事件表 ⇒ grantOnce 写事务失败 ⇒ 整体降级纯 SP，入账落 SP。
+      final degradedBalance = await store.grantOnce(delta: 30, reason: '降级期奖励', eventKey: 'degrade:k1');
+      expect(degradedBalance, 30);
+      expect(await store.balance(), 30, reason: '降级期写读同源，余额在 SP');
+      expect(await db.query('scare_coin_entries'), isEmpty, reason: '降级期流水不在账本');
+
+      // 补建缺失表 ⇒ 下一次写入探测成功 ⇒ 自愈 + 回灌。
+      await createEventTables();
+      final healedBalance = await store.grantOnce(delta: 5, reason: '自愈后奖励', eventKey: 'heal:k2');
+      expect(healedBalance, 35, reason: '自愈后的新账叠加在回灌后的余额上');
+
+      // 回灌断言：降级期的 30 币与流水都回到了账本。
+      expect(await store.balance(), 35);
+      final entries = await store.history();
+      expect(entries.map((e) => e.reason), containsAll(['降级期奖励', '自愈后奖励']));
+      final rows = await db.query('scare_coin_entries');
+      expect(rows, hasLength(2), reason: '降级期流水 + 自愈后流水都在账本');
+      final eventRows = await db.query('reward_events');
+      expect(eventRows.map((r) => r['event_key']), containsAll(['degrade:k1', 'heal:k2']), reason: '降级期事件键回灌防重发');
+    });
+
+    test('回灌幂等：重复自愈不重复加币、不重复流水', () async {
+      final store = storeWith();
+      await store.grantOnce(delta: 30, reason: '降级期奖励', eventKey: 'degrade:k1');
+      await createEventTables();
+      await store.grantOnce(delta: 5, reason: '自愈后奖励', eventKey: 'heal:k2');
+      expect(await store.balance(), 35);
+
+      // 再次触发降级→自愈（删事件表→降级入账→补表→自愈），验证不重复回灌旧账。
+      await db.execute('DROP TABLE reward_events');
+      await store.grantOnce(delta: 7, reason: '二次降级奖励', eventKey: 'degrade:k3');
+      expect(await store.balance(), 42, reason: '二次降级期写读同源');
+      await createEventTables();
+      await store.grantOnce(delta: 1, reason: '二次自愈奖励', eventKey: 'heal:k4');
+
+      expect(await store.balance(), 43, reason: '35+7+1，旧账不被重复回灌');
+      final rows = await db.query('scare_coin_entries');
+      expect(rows, hasLength(4), reason: '四笔流水各一条，无重复');
+    });
+
+    test('降级期签到：自愈后签到币与日期都回灌', () async {
+      final store = storeWith();
+      // 缺事件表 ⇒ 签到两步降级 ⇒ 纯 SP 入账。
+      final balance = await store.checkIn();
+      expect(balance, store.checkInReward);
+      expect(await store.balance(), store.checkInReward);
+
+      await createEventTables();
+      // 自愈触发点：答对奖励（带事件键写）成功 ⇒ 回灌签到币。
+      await store.grantAnswerReward();
+      expect(await store.balance(), store.checkInReward + 1, reason: '降级期签到币回灌后叠加答对奖励');
+      final entries = await store.history();
+      expect(entries.map((e) => e.reason), contains('每日签到'), reason: '签到流水回灌');
+    });
+
+    test('SP 流水损坏：只回灌余额与事件键，不阻断自愈', () async {
+      final store = storeWith();
+      await store.grantOnce(delta: 30, reason: '降级期奖励', eventKey: 'degrade:k1');
+      // 损坏 SP 流水（余额与事件键仍在）。
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('scare_coin.history', '[{"broken":');
+      await createEventTables();
+      final healed = await store.grantOnce(delta: 5, reason: '自愈后奖励', eventKey: 'heal:k2');
+      expect(healed, 35, reason: '余额回灌不受流水损坏影响');
+      expect(await store.balance(), 35);
     });
   });
 }

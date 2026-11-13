@@ -59,8 +59,28 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # P1-5（架构审计 2026-11-12）：发布门禁与日常 CI（dart.yml）完全对齐。
+      # 此前 quality-gate 只有 analyze + test，缺词库资产校验、format 检查、
+      # shell 脚本守卫——日常 CI 拦得住的问题，正式发版反而放行。补齐后
+      # 发版链与 PR 门禁同口径，任一失败即熔断。
+      - name: Verify wordbook asset
+        run: test -s assets/db/wordbook.db.gz
+
+      - name: Verify Dart formatting
+        shell: bash
+        run: |
+          find lib test integration_test test_driver -type f -name '*.dart' -print0 \
+            | xargs -0 dart format --output=none --set-exit-if-changed --line-length 120
+
       - name: Analyze project source
         run: flutter analyze
+
+      - name: Verify deploy/sync shell scripts
+        shell: bash
+        run: |
+          bash -n scripts/auto_sync.sh
+          bash -n scripts/test_auto_sync_size_guard.sh
+          bash scripts/test_auto_sync_size_guard.sh
 
       - name: Run tests
         run: flutter test --no-pub

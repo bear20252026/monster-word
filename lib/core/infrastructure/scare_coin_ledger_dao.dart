@@ -219,6 +219,54 @@ class ScareCoinLedgerDao {
     });
   }
 
+  /// P1-1（架构审计 2026-11-12）：降级期 SP 快照回灌。
+  ///
+  /// 背景：账本写事务失败会整体降级纯 SP（写读同源），降级期间挣的币只落在
+  /// SP 快照里；自愈回 SQLite 后若不回灌，那部分币就丢了（签到日历有合并、
+  /// 余额/流水此前没有）。本方法把降级窗口内的 SP 状态合并回账本：
+  /// - 余额：取 max(账本余额, SP 余额)。降级期 SP 是事实源，SP 余额 =
+  ///   冻结快照 + 降级期净变动，必然 ≥ 账本冻结值；取 max 既找回丢失的币，
+  ///   又不会在重复回灌时把余额写低。
+  /// - 流水：只补「严格晚于水位」的 SP 条目。水位 = 账本现有最新流水时间，
+  ///   首次回灌后水位即推进到 SP 最新条目，重复回灌不再补任何条目（幂等）。
+  /// - 事件键：SP 降级期 grantOnce 占用的幂等键一并入库（ignore 冲突），
+  ///   防止自愈后同一事件键被再次发币。
+  ///
+  /// 单事务落库；任何失败原样抛出，由调用方上报并保持降级（下次写再试）。
+  Future<void> mergeSpDegradationSnapshot({
+    required int spBalance,
+    required List<ScareCoinEntry> spEntries,
+    required List<String> spEventKeys,
+  }) {
+    return _runGuarded<void>((db) {
+      return db.transaction((txn) async {
+        final balanceRows = await txn.query(_metaTable, where: 'key = ?', whereArgs: [_kBalance]);
+        final dbBalance = balanceRows.isEmpty ? 0 : balanceRows.first['value']! as int;
+        if (spBalance > dbBalance) {
+          await txn.insert(_metaTable, {
+            'key': _kBalance,
+            'value': spBalance,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+        }
+        final newestRows = await txn.query(_entriesTable, orderBy: 'time_ms DESC', limit: 1);
+        final watermark = newestRows.isEmpty ? -1 : newestRows.first['time_ms']! as int;
+        // spEntries 为新→旧；倒序遍历使插入序与时间序一致（同毫秒展示口径不变）。
+        for (var i = spEntries.length - 1; i >= 0; i--) {
+          final entry = spEntries[i];
+          if (entry.time.millisecondsSinceEpoch > watermark) {
+            await txn.insert(_entriesTable, _entryRow(entry));
+          }
+        }
+        for (final key in spEventKeys) {
+          await txn.insert('reward_events', {
+            'event_key': key,
+            'created_at': DateTime.now().millisecondsSinceEpoch,
+          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+      });
+    });
+  }
+
   /// 最新 [limit] 条流水，时间倒序（同毫秒按插入序倒序），与旧排序口径一致。
   Future<List<ScareCoinEntry>> history({int limit = historyLimit}) {
     return _runGuarded<List<ScareCoinEntry>>((db) async {

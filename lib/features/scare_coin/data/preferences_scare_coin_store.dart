@@ -92,6 +92,22 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     if (_degradeToSp) {
       if (!forWrite || !_degradeProbePending) return null;
       _degradeProbePending = false; // 机会只用一次，成功与否都由后续写入定论
+      // P1-1（架构审计 2026-11-12）：自愈探测必须**先回灌降级期 SP 入账，
+      // 再放行本次写入**。否则本次写入会以账本里的旧余额为基数计算新余额，
+      // 回灌虽把余额合并上去，读回的却是本次写入的旧基数结果 ⇒ 降级期挣的
+      // 币看起来还是丢了。回灌成功才清降级标志（写读一起切回账本）；回灌
+      // 失败则保持降级、本次走 SP，降级期入账原样留在 SP 等下次探测。
+      final dao = _ledgerDao;
+      try {
+        await dao.ensureLoaded();
+        if (!dao.usesSqlite) return null;
+        await _replaySpDegradation(dao);
+      } catch (e, s) {
+        reportSwallowedError('降级自愈探测失败（保持降级，本次走 SP）', e, s);
+        return null;
+      }
+      _degradeToSp = false;
+      return dao;
     }
     final dao = _ledgerDao;
     try {
@@ -107,14 +123,54 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   ///
   /// 只有**写成功**才算数：读成功不足以证明表齐全（`scare_coin_entries`
   /// 读得到、`reward_events` 仍可能缺失）。写路径必然同时触及两张表。
+  ///
+  /// P1-1（架构审计 2026-11-12）：降级期 SP 入账的回灌在 [_sqliteLedger]
+  /// 的自愈探测点完成（先回灌再放行写入，保证新账以正确余额为基数）；
+  /// 走到这里时降级标志通常已被探测清掉，本方法仅作兜底清理。
   void _markLedgerHealthy() {
     if (!_degradeToSp) return;
     _degradeToSp = false;
     _degradeProbePending = false;
   }
 
+  /// 把降级窗口内的 SP 快照（余额/流水/事件键）合并回账本。
+  ///
+  /// 幂等由 DAO 侧保证：余额取 max、流水按时间水位去重、事件键 ignore 冲突。
+  /// SP 流水解析失败时只回灌余额与事件键（宁丢存量流水不清账本，同迁移口径）。
+  Future<void> _replaySpDegradation(ScareCoinLedgerDao ledger) async {
+    final prefs = await SharedPreferences.getInstance();
+    final spBalance = prefs.getInt(balanceKey) ?? 0;
+    var spEntries = <ScareCoinEntry>[];
+    final raw = prefs.getString(historyKey);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        spEntries = (jsonDecode(raw) as List)
+            .map((entry) => ScareCoinEntry.fromJson(entry as Map<String, dynamic>))
+            .toList();
+      } catch (e, s) {
+        reportSwallowedError('降级回灌：SP 流水解析失败，只回灌余额与事件键', e, s);
+      }
+    }
+    final spEventKeys = prefs.getStringList(_spRewardEventsKey) ?? const <String>[];
+    await ledger.mergeSpDegradationSnapshot(spBalance: spBalance, spEntries: spEntries, spEventKeys: spEventKeys);
+  }
+
   /// 进入整体降级：后续读写都走 SP，并给下一次写入留一次自愈探测机会。
-  void _enterSpDegradation() {
+  ///
+  /// P1-1（架构审计 2026-11-12）：降级前先把账本当前余额同步到 SP 快照。
+  /// SP 余额是上次迁移/回灌时的冻结值，可能落后于账本（例：上一次降级已
+  /// 自愈回灌，账本余额涨了、SP 快照还停在旧值）。不同步就直接降级，降级期
+  /// 的入账会以旧 SP 余额为基数，自愈回灌时 max() 虽能兜住总额，但降级窗口
+  /// 内用户看到的余额是错的。同步失败只上报（账本此刻本就可读不可写，读余额
+  /// 通常仍可用）；读不到就沿用 SP 现值，不阻断降级。
+  Future<void> _enterSpDegradation() async {
+    try {
+      final current = await _ledgerDao.balance();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(balanceKey, current);
+    } catch (e, s) {
+      reportSwallowedError('降级前同步账本余额到 SP 快照失败（沿用 SP 现值）', e, s);
+    }
     _degradeToSp = true;
     _degradeProbePending = true;
   }
@@ -231,7 +287,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
           eventKey: 'checkin:$iso',
         );
         await ledger.addCheckinDates({iso});
-        // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈）。
+        // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈；回灌在取库探测点完成）。
         _markLedgerHealthy();
         // SP 侧标记同步写（last_checkin 是低频标量，供旧路径/展示读取）；
         // 写失败仅上报——SQLite 侧已 durable，重开不会再发（事件键已占用）。
@@ -281,7 +337,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
             eventKey: 'checkin:$iso',
           );
           await retryLedger.addCheckinDates({iso});
-          // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈）。
+          // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈；回灌在取库探测点完成）。
           _markLedgerHealthy();
           final saved = await prefs.setString(lastCheckInKey, iso);
           if (!saved) {
@@ -305,7 +361,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
           // 纹丝不动。置 `_degradeToSp` 后 [_sqliteLedger] 对本实例一律
           // 返回 null，读写**一起**落在 SP 上（写读同源）。
           reportSwallowedError('SQLite 带事件键重试仍失败：本次起整体降级纯 SP（写读同源）', e, s);
-          _enterSpDegradation();
+          await _enterSpDegradation();
           usedSqliteFallback = true;
         }
       } else {
@@ -396,11 +452,11 @@ class PreferencesScareCoinStore implements ScareCoinStore {
           // —— 那个分支的 `_apply` 会重新取到账本、走 `applyDelta`，
           // **依旧不占 answer:<date>:<seq> 事件键** ⇒ 当日名额可被重复使用。
           // 所以置实例级降级标志，让下面的 SP 路径**读写都真的落在 SP**。
-          reportSwallowedError('SQLite 答对奖励事务失败，本次起整体降级纯 SP（写读同源）', e, s);
-          _enterSpDegradation();
+          reportSwallowedError('SQLite 答对奖励事务失败：本次起整体降级纯 SP（写读同源）', e, s);
+          await _enterSpDegradation();
           break; // 落入下方 SP 路径（此时 _sqliteLedger 已返回 null）
         }
-        // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈）。
+        // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈；回灌在取库探测点完成）。
         _markLedgerHealthy();
         // 名额计数同步 SP（写失败仅上报：SQLite 事件键已封顶当日总额）。
         final okDate = await prefs.setString(answerRewardDateKey, today);
@@ -605,7 +661,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
         return null;
       } catch (e, s) {
         reportSwallowedError('每日任务发币失败，回退 SP', e, s);
-        _enterSpDegradation();
+        await _enterSpDegradation();
       }
     }
 
@@ -656,7 +712,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
         delta: delta,
         entry: ScareCoinEntry(time: DateTime.now(), delta: delta, reason: reason),
       );
-      // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈）。
+      // 写成功 ⇒ 账本可用，清掉可能的降级标志（自愈；回灌在取库探测点完成）。
       _markLedgerHealthy();
       if (lastCheckInIso != null) {
         // 标记写失败上报（余额/库存均走 _writeChecked，此处曾漏网；仅靠流水幂等兑底）。
