@@ -28,6 +28,13 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Dependency health report (non-blocking)
+        # P3-9（架构审计 2026-11-12）：依赖健康可见性——列出落后/停更包（如 archive 3.x）。
+        # 纯信息性，continue-on-error 保证网络抖动或 pub 服务异常不阻断质量门禁；
+        # 升级决策仍由人工评估（破坏性变更需单独 PR），此处只防「无人察觉地停更」。
+        continue-on-error: true
+        run: flutter pub outdated --no-dev-dependencies || true
+
       - name: Verify wordbook asset
         run: test -s assets/db/wordbook.db.gz
 
