@@ -102,6 +102,80 @@ class UserDataBackupService {
     }
   }
 
+  /// P2-12（架构审计 2026-11-12）：校验备份文件是否为有效 SQLite 库。
+  ///
+  /// 恢复前的安全闸门——只读打开 + quick_check，确证完好才允许替换现库。
+  /// 任何异常（文件不存在/不是库/损坏）都返回 false，绝不把坏备份盖到现库上。
+  static Future<bool> validateBackup(String backupPath) async {
+    final file = File(backupPath);
+    if (!file.existsSync() || file.lengthSync() == 0) return false;
+    Database? db;
+    try {
+      db = await openDatabase(backupPath, readOnly: true);
+      final check = await db.rawQuery('PRAGMA quick_check');
+      final verdict = check.isEmpty ? '' : '${check.first.values.first}';
+      return verdict == 'ok';
+    } catch (e, s) {
+      reportSwallowedError('备份校验失败（$backupPath）', e, s);
+      return false;
+    } finally {
+      try {
+        await db?.close();
+      } catch (_) {}
+    }
+  }
+
+  /// P2-12：把校验通过的备份暂存恢复为目标库（调用方须先关闭对应库句柄）。
+  ///
+  /// 安全口径对齐 user_database._backupAndRebuild：
+  /// 1. 先再校验一次备份（防调用方漏校验）；
+  /// 2. 现库改名为 `.pre-restore.<时间戳>.bak` 留档（永不覆盖历史），改名失败则
+  ///    复制+字节校验，校验通过才移除原文件——唯一副本绝不消失；
+  /// 3. 边车（-wal/-shm/-journal）随现库一并移走（残留会让恢复库打开失败）；
+  /// 4. 备份复制为目标库；复制失败时现库已在留档处，可人工回退。
+  ///
+  /// 本方法只做文件替换，不重新打开库——DAO 缓存的句柄需应用重启刷新，
+  /// 故恢复成功后由 UI 引导用户重启（见 MoreSettingsPage 恢复入口）。
+  static Future<void> restoreBackupFile({required String backupPath, required String targetDbPath}) async {
+    if (!await validateBackup(backupPath)) {
+      throw StateError('备份未通过完整性校验，拒绝恢复：$backupPath');
+    }
+    final target = File(targetDbPath);
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final preserved = '$targetDbPath.pre-restore.$stamp.bak';
+
+    if (target.existsSync()) {
+      try {
+        target.renameSync(preserved);
+      } catch (e, s) {
+        reportSwallowedError('恢复前现库改名留档失败，尝试复制+校验', e, s);
+        target.copySync(preserved);
+        if (File(preserved).lengthSync() != target.lengthSync()) {
+          throw StateError('恢复前现库留档字节数不一致，放弃恢复以防数据丢失');
+        }
+        target.deleteSync();
+      }
+    }
+    // 边车随现库移走：孤立边车不含可独立恢复的数据，残留会让恢复库打开失败。
+    for (final suffix in const ['-journal', '-wal', '-shm']) {
+      final sidecar = File('$targetDbPath$suffix');
+      if (!sidecar.existsSync()) continue;
+      try {
+        sidecar.renameSync('$preserved$suffix');
+      } catch (e, s) {
+        reportSwallowedError('恢复前边车随留档改名失败，删除（$suffix）', e, s);
+        try {
+          sidecar.deleteSync();
+        } catch (_) {}
+      }
+    }
+
+    await File(backupPath).copy(targetDbPath);
+    if (!target.existsSync() || target.lengthSync() == 0) {
+      throw StateError('恢复复制未产出有效库文件（现库已留档：$preserved）');
+    }
+  }
+
   /// 在线一致性快照。首选 `VACUUM INTO`，低版本 SQLite 降级为「checkpoint + 复制」。
   ///
   /// 为什么必须探测版本（2026-10-15 审计 R3-D01）：

@@ -21,7 +21,8 @@ const Map<String, int> _kPartFamilyRatchet = {
   'lib/features/checkin/presentation/treasure_checkin_page.dart': 1790,
   'lib/features/learning/presentation/home_screen.dart': 1462,
   // 1051：批次 2 冻结 1047，批次 3 P2-3 性格传参 +4（导入/传参/注释），合理新增。
-  'lib/features/settings/presentation/more_settings_page.dart': 1051,
+  // 1060：批次 6 P2-12 恢复入口 cell +9（对话框主体已抽 restore_backup_dialog.dart 独立文件）。
+  'lib/features/settings/presentation/more_settings_page.dart': 1060,
   'lib/features/settings/presentation/profile_screen.dart': 1890,
 };
 

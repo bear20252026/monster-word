@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/application/user_data_maintenance_service.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
+import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/features/settings/application/network_diagnosis_service.dart';
 import 'package:word_app/features/settings/application/study_reminder_service.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
@@ -30,6 +32,8 @@ Widget buildSettingsFeatureScope({required Widget child}) {
       Provider<UpdateCheckService>(create: (_) => GithubUpdateCheckService()),
       // 词库维护（诊断/重建）：presentation 不直连数据库单例（REG-ARCH-005）
       Provider<WordBookMaintenanceService>(create: (_) => const WordBookMaintenanceService()),
+      // P2-12：用户数据维护（备份恢复）：presentation 经应用层端口消费，不直连备份服务/数据库
+      Provider<UserDataMaintenanceService>(create: (_) => sl<UserDataMaintenanceService>()),
       ChangeNotifierProvider<LearningPreferencesState>(
         create: (_) => LearningPreferencesState(reader: repository, writer: repository),
       ),

@@ -6,8 +6,11 @@ import 'package:word_app/widgets/transition_widgets.dart';
 import 'package:word_app/app/router/account_routes.dart';
 import 'package:word_app/app/router/content_routes.dart';
 import 'package:word_app/app/router/learning_routes.dart';
+import 'package:word_app/app/router/misc_routes.dart';
 import 'package:word_app/app/router/route_error_page.dart';
 import 'package:word_app/app/router/route_names.dart';
+import 'package:word_app/app/router/settings_routes.dart';
+import 'package:word_app/app/router/wallet_routes.dart';
 
 export 'package:word_app/app/router/route_names.dart';
 
@@ -23,6 +26,9 @@ abstract final class AppRouter {
     return LearningRoutes.build(name, args) ??
         ContentRoutes.build(name, args) ??
         AccountRoutes.build(name, args) ??
+        SettingsRoutes.build(name, args) ??
+        WalletRoutes.build(name, args) ??
+        MiscRoutes.build(name, args) ??
         RouteErrorPage(routeName: name ?? 'unknown', message: '页面不存在');
   }
 
