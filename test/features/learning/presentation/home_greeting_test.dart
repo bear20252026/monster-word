@@ -20,8 +20,11 @@ import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/features/checkin/domain/checkin_status.dart';
 import 'package:word_app/app/router/route_names.dart';
-import 'package:word_app/features/learning/presentation/home_screen.dart';
+import 'package:word_app/features/home/presentation/home_screen.dart';
+import 'package:word_app/features/learning/application/learning_session_reader.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
+import 'package:word_app/models/book.dart';
+import 'package:word_app/models/word.dart';
 import 'package:word_app/features/missions/application/daily_mission_store.dart';
 import 'package:word_app/features/missions/data/daily_mission_dao.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
@@ -31,6 +34,24 @@ import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/features/companion/presentation/monster_presence.dart';
 
 import '../../checkin/data/fake_scare_coin_store.dart';
+
+/// P2-6：最小装配的空会话只读视图（home 词书条经端口订阅，几何/问候断言不依赖会话内容）。
+class _FakeSessionReader implements LearningSessionReader {
+  @override
+  Book? get currentBook => null;
+  @override
+  Word? get currentWord => null;
+  @override
+  List<Word> get queue => const [];
+  @override
+  int get total => 0;
+  @override
+  int get learnedNum => 0;
+  @override
+  void addListener(VoidCallback listener) {}
+  @override
+  void removeListener(VoidCallback listener) {}
+}
 
 void main() {
   setUp(() async {
@@ -64,6 +85,8 @@ void main() {
           ChangeNotifierProvider<TodayProgressStore>.value(value: store),
           Provider<CheckinStatusReader>.value(value: reader),
           ChangeNotifierProvider<LearningStatisticsState>.value(value: LearningStatisticsState()),
+          // P2-6：home 词书条经 LearningSessionReader 端口订阅会话（最小装配用空 fake）。
+          ListenableProvider<LearningSessionReader>.value(value: _FakeSessionReader()),
           // M2：首页任务条需要每日任务 Store（无 DB 时 DAO 走内存回退）。
           ChangeNotifierProvider<DailyMissionStore>(
             create: (_) => DailyMissionStore(repository: DailyMissionDao.instance),

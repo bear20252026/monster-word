@@ -109,10 +109,11 @@ class _TodayHeroCard extends StatelessWidget {
 /// 首页主卡与路线弹层共用。[limit] 只对新建会话生效（热身节点传 3 词）；
 /// 已有队列时直接续上，不重置用户进度。
 Future<void> startHomeLearning(BuildContext context, {int? limit}) async {
-  final state = context.read<LearningSessionState>();
-  if (state.queue.isNotEmpty) {
+  final reader = context.read<LearningSessionReader>();
+  final starter = context.read<LearningSessionStarter>();
+  if (reader.queue.isNotEmpty) {
     if (context.mounted) {
-      Navigator.pushNamed(context, LearnPage.routeName);
+      Navigator.pushNamed(context, RouteNames.learn);
     }
     return;
   }
@@ -136,7 +137,7 @@ Future<void> startHomeLearning(BuildContext context, {int? limit}) async {
     }
     return;
   }
-  if (state.currentBook == null && context.mounted) {
+  if (reader.currentBook == null && context.mounted) {
     final goPick = await showModalBottomSheet<bool>(
       context: context,
       builder: (sheetCtx) => SafeArea(
@@ -175,9 +176,9 @@ Future<void> startHomeLearning(BuildContext context, {int? limit}) async {
       return;
     }
   }
-  await state.loadBook(books.first, limit: limit, shuffle: true);
+  await starter.startBookSession(books.first, limit: limit, shuffle: true);
   if (context.mounted) {
-    Navigator.pushNamed(context, LearnPage.routeName);
+    Navigator.pushNamed(context, RouteNames.learn);
   }
 }
 

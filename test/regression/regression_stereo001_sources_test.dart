@@ -81,6 +81,12 @@ class _FakeSessionReader implements LearningSessionReader {
 
   @override
   int get learnedNum => 0;
+
+  @override
+  void addListener(VoidCallback listener) {}
+
+  @override
+  void removeListener(VoidCallback listener) {}
 }
 
 Word _word(String w) => Word(
@@ -113,7 +119,7 @@ void main() {
         ChangeNotifierProvider<ReviewQueueState>.value(value: ReviewQueueState()),
         Provider<NewWordsReader>.value(value: _FakeNewWordsReader()),
         ChangeNotifierProvider<LearningFavoritesStore>.value(value: _FakeFavoritesStore()),
-        Provider<LearningSessionReader>.value(value: _FakeSessionReader()),
+        ListenableProvider<LearningSessionReader>.value(value: _FakeSessionReader()),
       ],
       child: MaterialApp(
         onGenerateRoute: (settings) => MaterialPageRoute(

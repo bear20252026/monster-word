@@ -74,7 +74,7 @@ class _HeaderState extends State<_Header> {
             icon: Icons.sports_esports_rounded,
             tooltip: '单词机',
             colors: colors,
-            onTap: () => Navigator.pushNamed(context, WordMachinePage.routeName),
+            onTap: () => Navigator.pushNamed(context, RouteNames.wordMachine),
           ),
         ],
       ),

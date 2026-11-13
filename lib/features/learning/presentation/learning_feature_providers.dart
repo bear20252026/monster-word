@@ -122,8 +122,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
       ProxyProvider<LearningSessionState, LearningSessionStarter>(
         update: (_, session, _) => LearningSessionStarterImpl(session),
       ),
-      ProxyProvider<LearningSessionState, LearningSessionReader>(
-        update: (_, session, _) => LearningSessionStarterImpl(session),
+      // P2-6：Reader 经 ListenableProxyProvider 暴露（ReaderView 转发会话通知），home 域可响应式订阅。
+      ListenableProxyProvider<LearningSessionState, LearningSessionReader>(
+        update: (_, session, _) => LearningSessionReaderView(session),
       ),
       ChangeNotifierProxyProvider<LearningSessionState, LearningQueueState>(
         create: (_) => LearningQueueState(),

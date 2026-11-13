@@ -8,7 +8,7 @@
 lib/
   app/                 # 组合根：service_locator + app.dart Provider scope + app/router/
   core/                # 基础设施 + application 端口门面（WordLookupReader/PresentationPrefs 等）
-  features/            # 15 个业务特性（domain/application/data/presentation）
+  features/            # 16 个业务特性（domain/application/data/presentation）
   widgets/             # 跨 feature 纯展示组件；只可消费 application 端口（R-widgets）
   models/              # 跨 feature 共享域模型（§1.1）
   tokens/              # 设计令牌唯一定义处（色彩/阴影/字号/圆角；排版 token 不烘焙皮肤色）

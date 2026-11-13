@@ -58,7 +58,8 @@ void main() {
         'lib/features/learning/presentation/session/learn_page.dart',
         'lib/features/learning/presentation/session/spell_session_page.dart',
         'lib/features/learning/presentation/session/word_machine_page.dart',
-        'lib/features/learning/presentation/home_screen.dart',
+        // P2-6：home 独立成域，经 learning application 端口消费会话。
+        'lib/features/home/presentation/home_screen.dart',
       ];
       final sessionSource = File('lib/features/learning/presentation/learning_session_state.dart').readAsStringSync();
 
@@ -69,12 +70,18 @@ void main() {
       for (final path in migratedPages) {
         var source = File(path).readAsStringSync();
         // home 页族含 part 文件
-        final homePartsDir = Directory('lib/features/learning/presentation/home');
-        if (path.endsWith('home_screen.dart') && homePartsDir.existsSync()) {
+        final homePartsDir = Directory('lib/features/home/presentation/home');
+        final isHome = path.endsWith('home_screen.dart');
+        if (isHome && homePartsDir.existsSync()) {
           final partSources = homePartsDir.listSync().whereType<File>().map((f) => f.readAsStringSync()).join('\n');
           source += partSources;
         }
-        expect(source, contains('LearningSessionState'), reason: '$path 应使用专用学习会话');
+        // home 域经端口（LearningSessionReader/Starter）消费会话；会话页直用 LearningSessionState。
+        expect(
+          source,
+          contains(isHome ? 'LearningSessionReader' : 'LearningSessionState'),
+          reason: '$path 应使用专用学习会话（home 经端口）',
+        );
         expect(source, isNot(contains('LearnState')), reason: '$path 不应回流旧练习状态');
       }
       expect(sessionSource, contains('List<Word> get queue => _queue'));
@@ -347,12 +354,12 @@ void main() {
       final extensiveModeSource = File('lib/features/book/presentation/extensive_model_select_page.dart')
           .readAsStringSync();
       // home 页族 = 主文件 + part 文件（B3 拆分后 _startLearning 等在 part 内）
-      final homeParts = Directory('lib/features/learning/presentation/home')
+      final homeParts = Directory('lib/features/home/presentation/home')
           .listSync()
           .whereType<File>()
           .map((f) => f.readAsStringSync())
           .join();
-      final homeSource = File('lib/features/learning/presentation/home_screen.dart').readAsStringSync() + homeParts;
+      final homeSource = File('lib/features/home/presentation/home_screen.dart').readAsStringSync() + homeParts;
       final providersSource = File('lib/features/book/presentation/book_feature_providers.dart').readAsStringSync();
 
       expect(appSource, contains('buildBookFeatureScope('));
@@ -528,7 +535,7 @@ void main() {
       final providerSource = File('lib/features/learning/presentation/learning_feature_providers.dart')
           .readAsStringSync();
       final wordDetailSource = File('lib/features/dictionary/presentation/word_detail_page.dart').readAsStringSync();
-      final dialogSource = File('lib/features/learning/presentation/review_dialog.dart').readAsStringSync();
+      final dialogSource = File('lib/features/home/presentation/review_dialog.dart').readAsStringSync();
       final statisticsSource = File('lib/features/learning/presentation/learning_statistics_state.dart')
           .readAsStringSync();
       final wordListsSource = File('lib/features/learning/presentation/learning_queue_word_lists_state.dart')

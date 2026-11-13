@@ -16,11 +16,13 @@ import 'package:word_app/features/checkin/application/checkin_status_reader.dart
 import 'package:word_app/features/checkin/application/streak_milestones.dart';
 import 'package:word_app/features/learning/application/home_next_step.dart';
 import 'package:word_app/features/learning/application/home_path.dart';
-import 'package:word_app/features/learning/presentation/home_path_map.dart';
-import 'package:word_app/features/learning/presentation/session/learn_page.dart';
-import 'package:word_app/features/learning/presentation/session/word_machine_page.dart';
-import 'package:word_app/features/learning/presentation/learning_session_state.dart';
-import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
+// P2-6：home 独立成域后，会话经 learning 的 application 端口消费（R4），
+// 不再 import learning/presentation 的可变状态对象。
+import 'package:word_app/features/learning/application/learning_session_reader.dart';
+import 'package:word_app/features/learning/application/learning_session_starter.dart';
+
+import 'home_path_map.dart';
+
 // M2：每日任务（只 import 对方的 application 层，架构守卫 R4 允许）。
 import 'package:word_app/features/missions/application/daily_mission_reward_service.dart';
 import 'package:word_app/features/missions/application/daily_mission_store.dart';
@@ -35,7 +37,9 @@ import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/app_dock.dart';
 import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/daily_goal_picker.dart';
-import 'package:word_app/features/learning/presentation/review_dialog.dart';
+
+import 'review_dialog.dart';
+
 import 'package:word_app/widgets/scale_down_on_press.dart';
 import 'package:word_app/widgets/testimonial_slider.dart' show TestimonialData;
 
