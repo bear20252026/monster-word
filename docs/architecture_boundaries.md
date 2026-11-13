@@ -8,7 +8,7 @@
 lib/
   app/                 # 组合根：service_locator + app.dart Provider scope + app/router/
   core/                # 基础设施 + application 端口门面（WordLookupReader/PresentationPrefs 等）
-  features/            # 11 个业务特性（domain/application/data/presentation）
+  features/            # 15 个业务特性（domain/application/data/presentation）
   widgets/             # 跨 feature 纯展示组件；只可消费 application 端口（R-widgets）
   models/              # 跨 feature 共享域模型（§1.1）
   tokens/              # 设计令牌唯一定义处（色彩/阴影/字号/圆角；排版 token 不烘焙皮肤色）
@@ -60,6 +60,33 @@ lib/
 `GetIt` 仅允许在组合根及 Provider 工厂使用：`app/service_locator.dart`、`*_feature_providers.dart` 或测试初始化代码。页面、Widget、domain 代码不得新增 `sl<T>()` 或 `package:get_it`（R6-DI）。页面应通过 `Provider` 获取明确的 State/Controller。
 
 **偏好与仓储（R-prefs / R-core-repo，2026-09-19）**：presentation 不得 import `core/infrastructure/app_preferences.dart` 或 `core/repositories/**`；统一经 `core/application/presentation_prefs.dart`、`word_lookup_reader.dart` 等端口 + Provider 消费。
+
+### 3.1 Provider scope 装配顺序（P3-2，架构审计 2026-11-12 固化）
+
+`app.dart` 的 Provider 嵌套顺序是全库可达性的根基（Provider 只能向下查找）。完整链序由
+`test/architecture/app_structure_test.dart` 的 REG-ARCH-003 全序锁定（含 [3.5]/[3.6]），
+**调整任何一层都必须连同该守卫与 app.dart 注释一起改，并逐页面验证 context.read 依赖方向**。
+
+外 → 内：
+
+| # | scope | 关键约束 |
+|---|---|---|
+| 1 | WordAudio | 无上游依赖，最外 |
+| 2 | Account | 无上游依赖；settings/logout、Splash 登录检查消费 |
+| 3 | Telemetry(UsageStats) | 须在 Account 内（上报带账号 UUID）；learning/book 装配边界注入埋点端口 |
+| 3.5 | DailyMission | 须在 Learning 外（会话状态在 learning 内创建，要 read 本 Store 记进度） |
+| 3.6 | Progress(XP) | 须在 Learning 外（首页头部与结算页读同一 XpStore） |
+| 4 | Learning | book/search/词书会话的上游渠道；不依赖 Account（链序选择非依赖驱动） |
+| 5 | Settings | 消费 Account(logout)；不依赖 learning（链序选择） |
+| 6 | Search | 依赖 learning 祖先（收藏） |
+| 7 | QuickReview | 仅读词，依赖浅 |
+| 8 | Book | 须在 learning 内（BookState 消费 LearningProgressReader + SessionStarter） |
+| 9 | ScareCoin | checkin 的上游渠道 |
+| 10 | CheckIn | 须在 ScareCoin 内（适配器消费 ScareCoinStore，签到单一事实来源） |
+| 11 | Dictionary | 无上游 feature 依赖 |
+| 12 | WordBrowse | 无上游 feature 依赖 |
+| 13 | MultiProvider(SkinSystem/WallpaperState) | 所有 feature scope 之后 |
+| 14 | Companion | **必须最内**：读 ScareCoinStore([9]) 与 learning 到期数 |
 
 ## 4. 迁移顺序与完成定义
 

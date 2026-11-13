@@ -45,7 +45,7 @@ scripts/          词库构建/数据修补（Python；archive/ 为一次性历�
 assets/db/        wordbook.db.gz（只读词库，CI 有基线校验）
 ```
 
-规模：lib 470 文件 / 6.2 万行；test 264 文件 / 2.7 万行（1610 例全过）。features 15 域。
+规模：lib 475 文件 / 6.3 万行；test 265 文件 / 2.7 万行（1619 例全过）。features 15 域。
 
 ## 3. 关键机制（改代码前必读）
 
@@ -64,7 +64,7 @@ assets/db/        wordbook.db.gz（只读词库，CI 有基线校验）
 dart format --line-length 120 --set-exit-if-changed --output=none .  # 必须 0 changed（CI 同款）
 flutter analyze                                                    # 必须 No issues found（CI 裸 analyze，info 级等同失败）
 flutter test test/architecture/                                    # 105 例守卫必须全过
-flutter test                                                       # 全量 1610 例必须全过
+flutter test                                                       # 全量 1619 例必须全过
 ```
 
 > P2-16（架构审计 2026-11-12）：本地口径已与 CI `dart.yml` 对齐——`analyze` 不再带

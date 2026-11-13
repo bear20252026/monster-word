@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:get_it/get_it.dart';
 
+import 'package:word_app/core/application/user_data_maintenance_service.dart';
 import 'package:word_app/core/infrastructure/user_database.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
@@ -130,6 +131,12 @@ Future<void> setupServiceLocator() async {
 
   // ReviewScheduleRepository（正式复习 FSRS 调度与评分事实来源）
   _reg<ReviewScheduleRepository>(() => ReviewScheduleRepository());
+
+  // P2-12（架构审计 2026-11-12）：用户数据维护服务（备份恢复入口的应用层编排）。
+  // 复习库关闭经回调注入——core 层不依赖 features（R-core）。
+  _reg<UserDataMaintenanceService>(
+    () => UserDataMaintenanceService(closeReviewStore: () => sl<ReviewScheduleRepository>().close()),
+  );
 
   // 审计 I6：字典/词书列表端口在此显式注入——组合根（presentation）受 R-DB
   // 约束不得 import infrastructure，改为从本处取端口接口（同 BookRepository 家法）

@@ -27,6 +27,7 @@ import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
 import 'package:word_app/core/infrastructure/pet_window_service.dart';
+import 'package:word_app/features/settings/presentation/restore_backup_dialog.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -488,6 +489,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         title: '更新词库数据',
         subtitle: '全量覆盖重建本地词库（含全部词条与索引）',
         onTap: () => _showRebuildWordbookDialog(context),
+      ),
+      Divider(height: 1, color: skin.colors.divider, indent: 52),
+      _Cell(
+        icon: Icons.restore_outlined,
+        iconColor: context.skin.colors.accent,
+        title: '从备份恢复数据',
+        subtitle: '用自动备份还原学习进度与收藏（恢复后需重启）',
+        onTap: () => unawaited(showRestoreBackupDialog(context)),
       ),
       Divider(height: 1, color: skin.colors.divider, indent: 52),
       _Cell(

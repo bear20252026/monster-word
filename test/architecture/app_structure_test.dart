@@ -480,6 +480,8 @@ void main() {
         'buildWordAudioScope(', // [1] WordAudio
         'buildAccountFeatureScope(', // [2] Account
         'buildTelemetryFeatureScope(', // [3] UsageStats
+        'buildDailyMissionFeatureScope(', // [3.5] DailyMission（P3-2 补锁：须在 Learning 外）
+        'buildProgressFeatureScope(', // [3.6] Progress（P3-2 补锁：须在 Learning 外）
         'buildLearningFeatureScope(', // [4] Learning
         'buildSettingsFeatureScope(', // [5] Settings
         'buildSearchFeatureScope(', // [6] Search
@@ -501,7 +503,7 @@ void main() {
         expect(
           idx,
           greaterThan(prevIdx),
-          reason: 'scope 嵌套顺序被调整：$marker 必须保持 app.dart 注释 [1]~[13] 的 DAG 链序（详见 app.dart ScopeOrder 注释）',
+          reason: 'scope 嵌套顺序被调整：$marker 必须保持 app.dart 注释 [1]~[14] 的 DAG 链序（详见 app.dart ScopeOrder 注释）',
         );
         prevIdx = idx;
       }
