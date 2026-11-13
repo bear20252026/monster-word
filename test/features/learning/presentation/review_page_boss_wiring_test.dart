@@ -22,7 +22,7 @@ import 'package:word_app/features/learning/data/repository_review_queue_reader.d
 import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 import 'package:word_app/features/learning/application/review_audio_player.dart';
 import 'package:word_app/features/learning/presentation/review_audio_state.dart';
-import 'package:word_app/features/learning/presentation/review_page.dart';
+import 'package:word_app/features/learning/presentation/session/review_page.dart';
 import 'package:word_app/features/learning/presentation/review_queue_state.dart';
 import 'package:word_app/features/learning/presentation/review_session_state.dart';
 import 'package:word_app/features/learning/presentation/review_word_actions_state.dart';

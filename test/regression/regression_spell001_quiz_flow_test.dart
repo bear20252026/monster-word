@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:word_app/features/learning/presentation/spelling_quiz_flow.dart';
+import 'package:word_app/features/learning/presentation/session/spelling_quiz_flow.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
 

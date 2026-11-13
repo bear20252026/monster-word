@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
-import 'package:word_app/features/learning/presentation/spelling_quiz_flow.dart';
+import 'package:word_app/features/learning/presentation/session/spelling_quiz_flow.dart';
 
 class SpellSessionPage extends StatefulWidget {
   const SpellSessionPage({super.key});

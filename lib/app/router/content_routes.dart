@@ -6,7 +6,7 @@ import 'package:word_app/features/content/presentation/my_fav_page.dart';
 import 'package:word_app/features/content/presentation/my_fav_sentence_page.dart';
 import 'package:word_app/features/content/presentation/sentence_detail_page.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail_page.dart';
-import 'package:word_app/features/learning/presentation/immersive_swipe_page.dart';
+import 'package:word_app/features/learning/presentation/session/immersive_swipe_page.dart';
 import 'package:word_app/features/search/presentation/search_page.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_by_name_page.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_page.dart';

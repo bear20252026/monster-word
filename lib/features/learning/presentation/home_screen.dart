@@ -17,8 +17,8 @@ import 'package:word_app/features/checkin/application/streak_milestones.dart';
 import 'package:word_app/features/learning/application/home_next_step.dart';
 import 'package:word_app/features/learning/application/home_path.dart';
 import 'package:word_app/features/learning/presentation/home_path_map.dart';
-import 'package:word_app/features/learning/presentation/learn_page.dart';
-import 'package:word_app/features/learning/presentation/word_machine_page.dart';
+import 'package:word_app/features/learning/presentation/session/learn_page.dart';
+import 'package:word_app/features/learning/presentation/session/word_machine_page.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/features/learning/presentation/learning_statistics_state.dart';
 // M2：每日任务（只 import 对方的 application 层，架构守卫 R4 允许）。

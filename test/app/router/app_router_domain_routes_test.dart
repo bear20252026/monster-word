@@ -6,12 +6,12 @@ import 'package:word_app/features/account/presentation/my_space_page.dart';
 import 'package:word_app/features/book/presentation/memory_beast_gallery_page.dart';
 import 'package:word_app/features/checkin/presentation/check_in_history_page.dart';
 import 'package:word_app/features/learning/presentation/dashboard_page.dart';
-import 'package:word_app/features/learning/presentation/learn_page.dart';
+import 'package:word_app/features/learning/presentation/session/learn_page.dart';
 import 'package:word_app/features/scare_coin/presentation/redemption_center_page.dart';
 import 'package:word_app/features/search/presentation/search_page.dart';
 import 'package:word_app/features/settings/presentation/more_settings_page.dart';
 import 'package:word_app/features/settings/presentation/settings_page.dart';
-import 'package:word_app/features/learning/presentation/review_page.dart';
+import 'package:word_app/features/learning/presentation/session/review_page.dart';
 import 'package:word_app/features/word_browse/presentation/foot_mark_page.dart';
 
 void main() {
