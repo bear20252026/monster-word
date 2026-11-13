@@ -4,28 +4,14 @@
 import 'package:word_app/models/user_info_bean.dart';
 
 /// 用户服务接口
+///
+/// P3-7（架构审计 2026-11-12）：原 Map 版 getUserInfo/updateUserInfo、getLearningStats
+/// 与笔记三方法全仓零调用，已删除（笔记的活路径在 word_browse 域经 NoteRepository）。
+/// 用户信息单一事实来源 = Bean 方法（键 monster_word_user_info，凭证剥离后落 SP）。
 abstract class UserService {
-  /// 获取用户信息（Map 格式）
-  Future<Map<String, dynamic>?> getUserInfo();
-
-  /// 更新用户信息（Map 格式）
-  Future<void> updateUserInfo(Map<String, dynamic> info);
-
   /// 获取用户信息（UserInfoBean 格式）
   Future<UserInfoBean> getUserInfoBean();
 
   /// 更新用户信息（UserInfoBean 格式）
   Future<bool> setUserInfoBean(UserInfoBean bean);
-
-  /// 获取学习统计
-  Future<Map<String, dynamic>> getLearningStats();
-
-  /// 获取笔记列表
-  Future<List<Map<String, dynamic>>> getNotes(int wordId);
-
-  /// 添加笔记
-  Future<void> addNote(int wordId, String content);
-
-  /// 删除笔记
-  Future<void> deleteNote(int noteId);
 }

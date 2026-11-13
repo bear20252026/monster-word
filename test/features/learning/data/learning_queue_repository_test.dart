@@ -82,12 +82,7 @@ class _FakeWordSource implements LearningQueueWordSource {
   Set<String>? requestedNames;
 
   @override
-  Future<List<Word>> getWordsByBook(
-    int bookId, {
-    required int limit,
-    required int offset,
-    bool randomOrder = false,
-  }) async {
+  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset}) async {
     requestedBookId = bookId;
     requestedLimit = limit;
     requestedOffset = offset;

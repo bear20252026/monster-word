@@ -11,29 +11,16 @@ import 'package:word_app/models/user_info_bean.dart';
 // R3-D06：原先此处是 `hide UserInfoBean`——因为 app_preferences 里有个**同名副本**
 // （不做凭证剥离就直接写 SP）。该副本已按审计结论整体删除，hide 随之取消。
 import 'package:word_app/core/infrastructure/app_preferences.dart';
-import 'package:word_app/core/repositories/user_repository.dart';
-import 'package:word_app/core/repositories/note_repository.dart';
 import 'package:word_app/features/account/data/user_service.dart';
 
 /// 用户服务实现
+///
+/// P3-7（架构审计 2026-11-12）：原经 UserRepository 的 Map 版用户信息（键 user_info_v1）
+/// 与统计/笔记方法全仓零调用，已连同 UserRepository 层一并删除。本服务只保留
+/// Bean 读写——用户信息单一事实来源（键 monster_word_user_info）。
 class UserServiceImpl implements UserService {
-  final UserRepository _userRepo;
-  final NoteRepository _noteRepo;
-
   // 审计 I62：key 单一事实来源（app_preferences.dart）
   static const _userInfoKey = kUserInfoPrefsKey;
-
-  UserServiceImpl({required this._userRepo, required this._noteRepo});
-
-  @override
-  Future<Map<String, dynamic>?> getUserInfo() async {
-    return await _userRepo.getUserInfo();
-  }
-
-  @override
-  Future<void> updateUserInfo(Map<String, dynamic> info) async {
-    await _userRepo.updateUserInfo(info);
-  }
 
   @override
   Future<UserInfoBean> getUserInfoBean() async {
@@ -62,26 +49,5 @@ class UserServiceImpl implements UserService {
       ..secret = '';
     final prefs = await SharedPreferences.getInstance();
     return prefs.setString(_userInfoKey, jsonEncode(sanitized.toJson()));
-  }
-
-  @override
-  Future<Map<String, dynamic>> getLearningStats() async {
-    return await _userRepo.getLearningStats();
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> getNotes(int wordId) async {
-    final notes = await _noteRepo.getNotesByWord(wordId);
-    return notes.map((n) => n.toMap()).toList();
-  }
-
-  @override
-  Future<void> addNote(int wordId, String content) async {
-    await _noteRepo.addNote(wordId, content);
-  }
-
-  @override
-  Future<void> deleteNote(int noteId) async {
-    await _noteRepo.deleteNote(noteId);
   }
 }

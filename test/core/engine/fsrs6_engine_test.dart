@@ -236,4 +236,42 @@ void main() {
       expect(card.stability, 0);
     });
   });
+
+  group('P3-6 到期边界一致性与时间注入（架构审计 2026-11-12）', () {
+    final engine = Fsrs6Engine();
+    // 固定时钟：dueDate 恰好等于 now 的边界卡片。
+    final t0 = DateTime(2026, 11, 13, 12);
+    FsrsCard boundaryCard({bool isNew = false}) =>
+        FsrsCard(word: 'w', lastReview: t0, dueDate: t0, isNew: isNew, stability: 2.3065);
+
+    test('isDue 与 getDueCards 同口径：到期时刻即到期（dueDate==now）', () {
+      final card = boundaryCard();
+      expect(card.isDueAt(t0), isTrue, reason: '到期时刻即到期，与 getDueCards 一致');
+      expect(engine.getDueCards([card], now: t0), [card]);
+    });
+
+    test('未到期（dueDate 在 now 之后）两处都判不到期', () {
+      final card = FsrsCard(word: 'w', lastReview: t0, dueDate: t0.add(const Duration(days: 1)), stability: 2.3065);
+      expect(card.isDueAt(t0), isFalse);
+      expect(engine.getDueCards([card], now: t0), isEmpty);
+    });
+
+    test('新词永不到期（isDue 与 getDueCards 一致）', () {
+      final card = boundaryCard(isNew: true);
+      expect(card.isDueAt(t0), isFalse);
+      expect(engine.getDueCards([card], now: t0), isEmpty);
+    });
+
+    test('getRetrievability 时间注入：固定时钟下结果确定', () {
+      final card = FsrsCard(
+        word: 'w',
+        lastReview: t0.subtract(const Duration(days: 5)),
+        dueDate: t0,
+        stability: 2.3065,
+        isNew: false,
+      );
+      final r = engine.getRetrievability(card, now: t0);
+      expect(r, closeTo(0.8388614268145294, 1e-9), reason: 't=5/S=2.3065 官方值，固定时钟可复现');
+    });
+  });
 }

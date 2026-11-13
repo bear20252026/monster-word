@@ -15,15 +15,10 @@ import 'package:word_app/models/word.dart';
 
 import '../data/fake_scare_coin_store.dart';
 
-/// 页面内部用 DateTime.now() 算离开时长，种子时间必须相对真实当前时刻
-/// （固定时钟只注入给存储的「结算日」口径，两者同日即可）。
-DateTime get _realNow => DateTime.now();
-
-/// 注入存储的固定时钟：取真实今天 9 点，保证与页面同日。
-DateTime get _kNow {
-  final n = _realNow;
-  return DateTime(n.year, n.month, n.day, 9);
-}
+/// P2-15（架构审计 2026-11-12）：页面与存储统一注入固定时钟，不再依赖真实
+/// DateTime.now()——跨零点/任意日期跑都恒定。固定「今天 12 点」，种子默认 9 点
+/// （= 3 小时前），与页面同日，计息 3 小时口径不变。
+DateTime get _kNow => DateTime(2026, 11, 12, 12);
 
 /// 昨日学习量替身：只覆写 dailyStatsFor，其余走端口默认。
 class _StatsReader extends ReviewScheduleReader {
@@ -62,15 +57,15 @@ class _StatsReader extends ReviewScheduleReader {
   List<Word> dueWordsFor(Iterable<Word> words) => const [];
 }
 
-/// 今日日历日键（与存储/页面同口径）。
+/// 今日日历日键（与存储/页面同口径，固定时钟）。
 String get _todayKey {
-  final n = _realNow;
+  final n = _kNow;
   return '${n.year}-${n.month.toString().padLeft(2, '0')}-${n.day.toString().padLeft(2, '0')}';
 }
 
-/// 预置「3 小时前在场、今日未结算」的 SP 初值。
+/// 预置「3 小时前在场、今日未结算」的 SP 初值（相对固定时钟）。
 Map<String, Object> _seedSeen({DateTime? lastSeen, String? settledDay}) {
-  final seen = lastSeen ?? _realNow.subtract(const Duration(hours: 3));
+  final seen = lastSeen ?? _kNow.subtract(const Duration(hours: 3));
   return {
     BellyInterestStore.stateKey:
         '{"lastSeenMs":${seen.millisecondsSinceEpoch}${settledDay != null ? ',"settledDay":"$settledDay"' : ''}}',
@@ -85,7 +80,7 @@ Widget _wrap({required FakeScareCoinStore store, int yesterdayWords = 5, Map<Str
       // ReviewScheduleReader 是 ChangeNotifier，须用对应 Provider（生产同款）。
       ChangeNotifierProvider<ReviewScheduleReader>.value(value: _StatsReader(yesterdayWords)),
     ],
-    child: const MaterialApp(home: TreasureCheckInPage()),
+    child: MaterialApp(home: TreasureCheckInPage(clock: () => _kNow)),
   );
 }
 

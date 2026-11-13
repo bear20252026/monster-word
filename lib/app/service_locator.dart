@@ -12,8 +12,6 @@ import 'package:word_app/features/book/data/book_repository.dart';
 import 'package:word_app/features/book/data/book_repository_impl.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/core/repositories/word_repository_impl.dart';
-import 'package:word_app/core/repositories/user_repository.dart';
-import 'package:word_app/core/repositories/user_repository_impl.dart';
 import 'package:word_app/core/repositories/note_repository.dart';
 import 'package:word_app/core/repositories/note_repository_impl.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
@@ -90,10 +88,7 @@ Future<void> setupServiceLocator() async {
   // WordRepository
   _reg<WordRepository>(() => WordRepositoryImpl(sl<WordBookDatabase>()));
 
-  // UserRepository
-  _reg<UserRepository>(() => UserRepositoryImpl());
-
-  // NoteRepository
+  // NoteRepository（word_browse 域笔记的持久化事实来源；P3-7 后不再经 UserService）
   _reg<NoteRepository>(() => NoteRepositoryImpl());
 
   // FavRepository
@@ -151,8 +146,8 @@ Future<void> setupServiceLocator() async {
   // ReviewAudioPlayer / ReviewAudioState（正式复习发音边界）
   _reg<ReviewAudioPlayer>(() => ReviewAudioPlayer(playAudio: (word) => sl<AudioService>().playWordAudio(word)));
 
-  // UserService（用户）
-  _reg<UserService>(() => UserServiceImpl(userRepo: sl<UserRepository>(), noteRepo: sl<NoteRepository>()));
+  // UserService（用户信息 Bean 读写；P3-7 后无仓储依赖）
+  _reg<UserService>(() => UserServiceImpl());
 }
 
 /// R3-L07：在**可能被 reset 过**的时机前确保依赖已注册。

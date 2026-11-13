@@ -58,18 +58,25 @@ part 'treasure_checkin_widgets.dart';
 /// Navigator.push(context, MaterialPageRoute<void>(builder: (_) => TreasureCheckInPage()));
 /// ```
 class TreasureCheckInPage extends StatefulWidget {
-  const TreasureCheckInPage({super.key, this.onChecked});
+  const TreasureCheckInPage({super.key, this.onChecked, this.clock});
 
   /// 签到成功回调（供外部刷新余额等）。
   final VoidCallback? onChecked;
+
+  /// 页面时钟（P2-15，架构审计 2026-11-12）：默认 DateTime.now，测试可注入固定时刻，
+  /// 让离线计息/日历/补昨天判定不再依赖真实当前时间（跨零点不再翻红）。
+  final DateTime Function()? clock;
 
   @override
   State<TreasureCheckInPage> createState() => _TreasureCheckInPageState();
 }
 
 class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTickerProviderStateMixin {
+  /// 统一时钟入口（P2-15）：全页时间判定都走这里，测试经 widget.clock 注入固定时刻。
+  DateTime get _nowClock => (widget.clock ?? DateTime.now)();
+
   // ── 数据 ──
-  DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
+  late DateTime _month = DateTime(_nowClock.year, _nowClock.month);
   bool _todayChecked = false;
   bool _busy = false;
   int _streak = 0;
@@ -160,10 +167,10 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
       // 昨日学习量：learning 域 application 端口（R4 允许）；最小装配单测
       // 没有该 scope，可空读取按 0 词（保底费率）处理。
       final schedule = context.read<ReviewScheduleReader?>();
-      final yesterday = calendarDayBefore(DateTime.now());
+      final yesterday = calendarDayBefore(_nowClock);
       final stats = schedule?.dailyStatsFor(_iso(yesterday)) ?? const {};
       final words = (stats['learn'] ?? 0) + (stats['review'] ?? 0);
-      final awayMinutes = DateTime.now().difference(lastSeen).inMinutes;
+      final awayMinutes = _nowClock.difference(lastSeen).inMinutes;
       final interest = bellyInterestFor(awayMinutes: awayMinutes, yesterdayWords: words);
       if (!mounted) return;
       setState(() => _bellyPending = interest.coins);
@@ -270,7 +277,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
   /// D5：昨天还没签且已有签到史时，才在日历里露出「补昨天」入口。
   bool get _canMakeupYesterday {
     if (_checkedDates.isEmpty) return false;
-    final now = DateTime.now();
+    final now = _nowClock;
     return !_checkedDates.contains(_iso(DateTime(now.year, now.month, now.day - 1)));
   }
 
@@ -284,7 +291,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
       _balance = results[2] as int;
       _protectionCount = results[3] as int;
       _reward = store.checkInReward;
-      _todayChecked = _checkedDates.contains(_iso(DateTime.now()));
+      _todayChecked = _checkedDates.contains(_iso(_nowClock));
       _bellyTarget = _pctFor(_streak);
       _bellyPct = _bellyTarget;
     });
@@ -298,7 +305,7 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
 
   // ── 月份构建 ──
   void _buildMonth() {
-    final today = DateTime.now();
+    final today = _nowClock;
     final todayIso = _iso(today);
     final count = DateTime(_month.year, _month.month + 1, 0).day;
     final rand = math.Random(_month.year * 12 + _month.month);
