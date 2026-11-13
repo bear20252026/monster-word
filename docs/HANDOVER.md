@@ -45,7 +45,7 @@ scripts/          词库构建/数据修补（Python；archive/ 为一次性历�
 assets/db/        wordbook.db.gz（只读词库，CI 有基线校验）
 ```
 
-规模：lib 477 文件 / 6.3 万行；test 266 文件 / 2.7 万行（1627 例全过）。features 15 域。
+规模：lib 480 文件 / 6.3 万行；test 266 文件 / 2.7 万行（1627 例全过）。features 15 域。
 
 ## 3. 关键机制（改代码前必读）
 

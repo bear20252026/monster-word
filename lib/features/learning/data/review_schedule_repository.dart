@@ -13,6 +13,9 @@ import 'package:word_app/models/word.dart';
 
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart'
     show FsrsRatingOutcome, FsrsRatingPersistException;
+import 'package:word_app/features/learning/data/review_schedule_journal.dart';
+import 'package:word_app/features/learning/data/review_schedule_migration.dart';
+import 'package:word_app/features/learning/data/review_schedule_sp_codec.dart';
 import 'package:word_app/features/learning/data/review_schedule_store.dart';
 
 /// 正式复习的 FSRS 调度与统计事实来源。
@@ -78,6 +81,12 @@ class ReviewScheduleRepository extends ChangeNotifier {
   ReviewScheduleRepository({Fsrs6Engine? engine, ReviewScheduleStore? store})
     : _engine = engine ?? Fsrs6Engine(),
       _injectedStore = store;
+
+  // P3-4：三职责拆出的协作类（SP 编解码/迁移/降级日志）。仓储保留编排与
+  // writeGate/wordLock/LRU/计数，委托它们做纯 SP/迁移/回放，锁与门不外泄。
+  static const ReviewScheduleSpCodec _codec = ReviewScheduleSpCodec();
+  late final ReviewScheduleMigration _migration = const ReviewScheduleMigration(_codec);
+  late final ReviewScheduleJournal _journal = ReviewScheduleJournal(_engine);
 
   Future<void> initialize() => _initialization ??= _load();
 
@@ -412,35 +421,29 @@ class ReviewScheduleRepository extends ChangeNotifier {
         }
       }
       // 有界重试耗尽 → 降级日志兜底。
-      final journaled = await _appendDegradedJournal(word, rating, date, ratingId, isLearn);
+      final journaled = await _journal.append(word, rating, date, ratingId, isLearn);
       return journaled ? _PersistPhase.pendingRetry : _PersistPhase.failed;
     }
 
     // ── SP 降级模式：日志先行（评分意图先落 SP），再写「前瞻 blob 快照」──
     // 快照临时并入本次评分（内存正式提交在上层），保证旧版装回时能从旧 key
     // 读到含本次评分的完整历史（回归契约：SP 降级评分仍写旧 key）。
-    final journaled = await _appendDegradedJournal(word, rating, date, ratingId, isLearn);
+    final journaled = await _journal.append(word, rating, date, ratingId, isLearn);
     if (!journaled) {
       return _PersistPhase.failed;
     }
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final prospectiveCards = <String, FsrsCard>{};
-      _cards.forEach((k, v) => prospectiveCards[k] = v);
-      prospectiveCards[word] = card;
-      final prospectiveStats = <String, Map<String, int>>{};
-      _dailyStats.forEach((k, v) => prospectiveStats[k] = Map<String, int>.from(v));
-      final dayCounts = prospectiveStats.putIfAbsent(date, () => {'learn': 0, 'review': 0});
-      dayCounts[isLearn ? 'learn' : 'review'] = (dayCounts[isLearn ? 'learn' : 'review'] ?? 0) + 1;
-      final prospectiveDates = Set<String>.from(_activeDates)..add(date);
-      final prospectiveCorrect = <String, int>{..._dailyCorrect};
-      if (rating != FsrsRating.again) {
-        prospectiveCorrect[date] = (prospectiveCorrect[date] ?? 0) + 1;
-      }
-      await prefs.setString(cardsPrefKey, jsonEncode(prospectiveCards.map((w, c) => MapEntry(w, c.toJson()))));
-      await prefs.setString(dailyStatsPrefKey, jsonEncode(prospectiveStats));
-      await prefs.setString(dailyCorrectPrefKey, jsonEncode(prospectiveCorrect));
-      await prefs.setStringList(activeDatesPrefKey, prospectiveDates.toList());
+      await _codec.writeProspectiveSnapshot(
+        cards: _cards,
+        dailyStats: _dailyStats,
+        dailyCorrect: _dailyCorrect,
+        activeDates: _activeDates,
+        word: word,
+        card: card,
+        date: date,
+        isLearn: isLearn,
+        rating: rating,
+      );
       return _PersistPhase.saved;
     } catch (error, stack) {
       reportSwallowedError('FSRS rateWord persist (sp blob；日志已保底)', error, stack);
@@ -475,7 +478,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
       if (_useSqlite && _store != null) {
         await _store!.deleteCard(word);
       } else {
-        await _saveCards();
+        await _codec.saveCards(_cards);
       }
     });
     _writeGate = persist.then<void>((_) {}, onError: (Object _, StackTrace _) {});
@@ -504,7 +507,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
     var sqliteReady = false;
     try {
       final store = _injectedStore ?? await ReviewScheduleStore.open();
-      await _migrateFromSpIfNeeded(store);
+      await _migration.migrateFromSpIfNeeded(store);
       // MEM/F3+异步化：启动不再全表物化卡片——计数走 SQL 聚合，内存只装
       // 到期子集（LRU 有界）；其余词由 [cardFor] 读穿填充或 [cardsForWords]
       // 批量按需取库。
@@ -520,7 +523,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
       sqliteReady = true;
       // P1-01：SQLite 恢复后先回放降级期间的评分日志（幂等），再清旧快照——
       // 否则降级期新数据会被 marker=done 跳过迁移而静默消失（MW-22）。
-      final replayed = await _replayDegradedJournal(store);
+      final replayed = await _journal.replay(store);
       // 审计 P1-03：回放写的是**库**，而上面的 `_counts` / `_cards` /
       // `_dailyStats` / `_activeDates` 是回放**之前**读的快照 ⇒ 不重读的话，
       // 本次启动全程看到的统计、到期集、连续天数都缺了刚回放的那批评分
@@ -536,7 +539,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
         _activeDates = await store.loadActiveDates();
       }
       // E2：SQLite 模式就绪后清除旧 SP 回滚快照（降级模式保留 SP，供重试/旧版）。
-      await _clearLegacySpSnapshotIfMigrated();
+      await _migration.clearLegacySpSnapshotIfMigrated();
     } catch (error, stack) {
       debugLog('Review schedule SQLite init error: $error');
       reportSwallowedError('ReviewScheduleSQLite init', error, stack);
@@ -564,9 +567,9 @@ class ReviewScheduleRepository extends ChangeNotifier {
             debugLog('[FSRS] degraded load restored from $emergencyBackupKey');
           }
         }
-        _cards = _readCards(cardsRaw);
-        _dailyStats = _readDailyStats(statsRaw);
-        _dailyCorrect = _readDailyCorrect(correctRaw);
+        _cards = _codec.readCards(cardsRaw);
+        _dailyStats = _codec.readDailyStats(statsRaw);
+        _dailyCorrect = _codec.readDailyCorrect(correctRaw);
         _activeDates = (datesList ?? const <String>[]).toSet();
       } catch (error, stack) {
         debugLog('Review schedule loading error: $error');
@@ -580,88 +583,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 首启迁移：marker 未写完时从 SP **单事务** 导入 cards+stats+dates。
-  ///
-  /// H1：不再以 `cardCount()>0` 提前 return——那会在 cards 成功、stats 失败后
-  /// 永久跳过迁移。仅 `migratedMarkerKey==done` 视为完成；未完成则从 SP 重放
-  /// （E2 清 SP 前置条件是 marker=done，故未完成时 SP 仍在）。
-  Future<void> _migrateFromSpIfNeeded(ReviewScheduleStore store) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.getString(migratedMarkerKey) == 'done') return;
-
-    final rawCards = prefs.getString(cardsPrefKey);
-    if (rawCards == null || rawCards.isEmpty) {
-      // 无历史数据可迁：直接写标记，避免每次启动空转检查。
-      await prefs.setString(migratedMarkerKey, 'done');
-      return;
-    }
-
-    // 顶层 jsonDecode 先兑一层：SP blob 整体损坏时抛出会让每次启动重复失败并永久卡在 SP 降级模式
-    //（降级路径同样解不动→空表→下一次评分用近空 map 覆写）。改为：记录为空迁入并写标记，
-    // 原 blob 由 E2 应急备份保留（供人工恢复）——损坏数据本就不可读，不能拿它阻塞启动。
-    Map<String, dynamic> decodedCards;
-    try {
-      decodedCards = jsonDecode(rawCards) as Map<String, dynamic>;
-    } catch (error, stack) {
-      reportSwallowedError('FSRS migration: SP cards blob corrupt; migrate as empty', error, stack);
-      decodedCards = const <String, dynamic>{};
-    }
-
-    // 逐行解析，损坏行跳过（学习记录不可再生产，能救一行是一行）。
-    final cards = <FsrsCard>[];
-    var skipped = 0;
-    for (final entry in decodedCards.entries) {
-      try {
-        cards.add(FsrsCard.fromJson(entry.value as Map<String, dynamic>));
-      } catch (_) {
-        // 吞错豁免: 逐行跳过损坏卡片，循环结束后按 skipped 聚合 reportSwallowedError
-        skipped++;
-        debugLog('FSRS migration: skip corrupt card "${entry.key}"');
-      }
-    }
-
-    final dailyStats = <String, Map<String, int>>{};
-    final rawStats = prefs.getString(dailyStatsPrefKey);
-    if (rawStats != null && rawStats.isNotEmpty) {
-      Map<String, dynamic> decodedStats;
-      try {
-        decodedStats = jsonDecode(rawStats) as Map<String, dynamic>;
-      } catch (error, stack) {
-        reportSwallowedError('FSRS migration: SP stats blob corrupt; skip', error, stack);
-        decodedStats = const <String, dynamic>{};
-      }
-      for (final entry in decodedStats.entries) {
-        try {
-          final map = entry.value as Map<String, dynamic>;
-          dailyStats[entry.key] = {'learn': map['learn'] as int? ?? 0, 'review': map['review'] as int? ?? 0};
-        } catch (_) {
-          // 吞错豁免: 同上——逐行跳过，循环后聚合上报
-          skipped++;
-          debugLog('FSRS migration: skip corrupt daily stat "${entry.key}"');
-        }
-      }
-    }
-
-    final activeDates = (prefs.getStringList(activeDatesPrefKey) ?? const <String>[]).toSet();
-
-    // H1：三表单事务；失败整体回滚且不写标记 → 下次启动从 SP 重试。
-    await store.migrateFromSp(
-      cards: cards,
-      dailyStats: dailyStats,
-      dailyCorrect: _readDailyCorrect(prefs.getString(dailyCorrectPrefKey)),
-      activeDates: activeDates,
-    );
-
-    if (skipped > 0) {
-      reportSwallowedError(
-        'FSRS migration skipped corrupt rows',
-        StateError('$skipped corrupt entries skipped during SP->SQLite migration'),
-        StackTrace.current,
-      );
-    }
-
-    await prefs.setString(migratedMarkerKey, 'done');
-  }
+  // P3-4：首启迁移逻辑已抽至 ReviewScheduleMigration（migrateFromSpIfNeeded）。
 
   /// H2：E2 清 SP 前把快照挪到应急备份 key（不清除），供库损坏时人工恢复。
   ///
@@ -673,217 +595,9 @@ class ReviewScheduleRepository extends ChangeNotifier {
   static const degradedJournalKey = 'fsrs6_degraded_journal_v1';
   static const int degradedJournalCap = 5000;
 
-  /// 把一次评分意图追加进 SP 降级日志（P1-01）。
-  /// 返回 false = 日志都写不进（磁盘满/SP 不可用）——上层按硬失败处理。
-  Future<bool> _appendDegradedJournal(
-    String word,
-    FsrsRating rating,
-    String date,
-    String ratingId,
-    bool isLearn,
-  ) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final journal = prefs.getStringList(degradedJournalKey) ?? <String>[];
-      journal.add(
-        jsonEncode({
-          'ratingId': ratingId,
-          'word': word,
-          'rating': rating.value,
-          'date': date,
-          'isLearn': isLearn,
-          'savedAt': DateTime.now().toIso8601String(),
-        }),
-      );
-      // 容量上限：极端积压时丢最旧（上报可见），保护 SP 体积。
-      var kept = journal;
-      if (kept.length > degradedJournalCap) {
-        kept = kept.sublist(kept.length - degradedJournalCap);
-        reportSwallowedError(
-          'FSRS 降级日志超上限，丢弃最旧 ${journal.length - kept.length} 条',
-          StateError('degraded journal overflow'),
-          StackTrace.current,
-        );
-      }
-      return await prefs.setStringList(degradedJournalKey, kept);
-    } catch (error, stack) {
-      reportSwallowedError('FSRS 降级日志写入失败（评分硬失败）', error, stack);
-      return false;
-    }
-  }
+  // P3-4：降级日志 append/replay/journalReviewedAt 已抽至 ReviewScheduleJournal。
 
-  /// SQLite 恢复后回放降级日志：按序重算卡片并落库，fsrs_rating_log 主键
-  /// 幂等去重（重复回放不会重复计数）；任一条失败保留整个日志下次重试。
-  Future<int> _replayDegradedJournal(ReviewScheduleStore store) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final journal = prefs.getStringList(degradedJournalKey);
-      if (journal == null || journal.isEmpty) return 0;
-      var applied = 0;
-      var duplicates = 0;
-      for (final entry in journal) {
-        try {
-          final map = jsonDecode(entry) as Map<String, dynamic>;
-          final word = map['word'] as String;
-          final rating = FsrsRating.values[(map['rating'] as num).toInt() - 1];
-          final dateKey = map['date'] as String;
-          final ratingId = map['ratingId'] as String;
-          final isLearn = (map['isLearn'] as bool?) ?? false;
-          // 审计 P1-02：**必须按原答题时间重算**，不能用「回放当天」。
-          // FSRS 的间隔由 elapsedDays（距 lastReview 的天数）决定 —— 若拿
-          // DateTime.now() 当 reviewedAt，三天前那次评分会被当成「刚刚」，
-          // 于是间隔被重新拉长/缩短，卡片到期日与用户实际学习历史脱节。
-          // journal 里一直写着 `savedAt`（评分发生时刻），此前只用于排障，
-          // 没喂给引擎。老条目可能没有该键 ⇒ 退回 dateKey 当日零点。
-          final reviewedAt = _journalReviewedAt(map, dateKey);
-          final prior = await store.cardForWord(word);
-          final card = prior == null
-              ? _engine.learn(word, rating, reviewedAt: reviewedAt)
-              : _engine.review(prior, rating, reviewedAt: reviewedAt);
-          final ok = await store.recordRating(
-            card: card,
-            dateKey: dateKey,
-            isLearn: isLearn || prior == null,
-            correct: rating != FsrsRating.again,
-            ratingId: ratingId,
-          );
-          if (ok) {
-            applied++;
-          } else {
-            duplicates++;
-          }
-        } catch (error, stack) {
-          reportSwallowedError('FSRS 降级日志回放单条失败（保留日志下次重试）', error, stack);
-          return applied;
-        }
-      }
-      await prefs.remove(degradedJournalKey);
-      reportSwallowedError(
-        'FSRS 降级日志回放完成（applied=$applied duplicate=$duplicates）',
-        StateError('degraded journal replayed'),
-        StackTrace.current,
-      );
-      return applied;
-    } catch (error, stack) {
-      reportSwallowedError('FSRS 降级日志回放读取失败（保留日志下次重试）', error, stack);
-      return 0;
-    }
-  }
-
-  /// 从 journal 条目取出**原答题时刻**（审计 P1-02）。
-  ///
-  /// 优先 `savedAt`（评分发生的那一刻，ISO 串）；老条目没有该键时退回
-  /// `dateKey` 当日零点 —— 精度差一天，但方向正确（至少不把「三天前」
-  /// 当成「刚刚」）。解析失败也退回 dateKey，绝不抛。
-  DateTime? _journalReviewedAt(Map<String, dynamic> map, String dateKey) {
-    final savedAt = map['savedAt'];
-    if (savedAt is String) {
-      final parsed = DateTime.tryParse(savedAt);
-      if (parsed != null) return parsed;
-    }
-    return DateTime.tryParse(dateKey);
-  }
-
-  Future<void> _clearLegacySpSnapshotIfMigrated() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (prefs.getString(migratedMarkerKey) != 'done') return;
-      // H2：若尚无应急备份且 SP 仍有数据，先打包到 emergencyBackupKey。
-      final cardsRaw = prefs.getString(cardsPrefKey);
-      final hasBackup = (prefs.getString(emergencyBackupKey) ?? '').isNotEmpty;
-      if (!hasBackup && cardsRaw != null && cardsRaw.isNotEmpty) {
-        // 写返回 false（磁盘满等）不抛错：此时绝不能删主键——唯一可恢复
-        // 快照还不存在，删了学习记录就永久丢失。留原键，下次启动重试打包。
-        final saved = await prefs.setString(
-          emergencyBackupKey,
-          jsonEncode({
-            'savedAt': DateTime.now().toIso8601String(),
-            cardsPrefKey: cardsRaw,
-            dailyStatsPrefKey: prefs.getString(dailyStatsPrefKey),
-            dailyCorrectPrefKey: prefs.getString(dailyCorrectPrefKey),
-            activeDatesPrefKey: prefs.getStringList(activeDatesPrefKey),
-          }),
-        );
-        if (!saved) {
-          reportSwallowedError(
-            'FSRS E2 emergency backup write returned false; keep legacy keys',
-            StateError('setString($emergencyBackupKey) returned false'),
-            StackTrace.current,
-          );
-          return;
-        }
-      }
-      await prefs.remove(cardsPrefKey);
-      await prefs.remove(dailyStatsPrefKey);
-      await prefs.remove(dailyCorrectPrefKey);
-      await prefs.remove(activeDatesPrefKey);
-    } catch (error, stack) {
-      reportSwallowedError('FSRS E2 clear legacy SP snapshot', error, stack);
-    }
-  }
-
-  // ============================================================
-  // 旧 SP blob 解析（降级模式专用）
-  // ============================================================
-
-  /// 降级路径逐行解析：单行损坏只丢该行，不再整表清空
-  ///（整表清空后任意评分会用近空 map 覆写 SP blob，把可救的行也葬掉）。
-  Map<String, FsrsCard> _readCards(String? raw) {
-    if (raw == null || raw.isEmpty) return {};
-    Map<String, dynamic> decoded;
-    try {
-      decoded = jsonDecode(raw) as Map<String, dynamic>;
-    } catch (error, stack) {
-      reportSwallowedError('FSRS degraded _readCards: blob corrupt', error, stack);
-      return {};
-    }
-    final cards = <String, FsrsCard>{};
-    for (final entry in decoded.entries) {
-      try {
-        cards[entry.key] = FsrsCard.fromJson(entry.value as Map<String, dynamic>);
-      } catch (error, stack) {
-        reportSwallowedError('FSRS degraded _readCards: skip corrupt "${entry.key}"', error, stack);
-      }
-    }
-    return cards;
-  }
-
-  Map<String, Map<String, int>> _readDailyStats(String? raw) {
-    if (raw == null || raw.isEmpty) return {};
-    Map<String, dynamic> decoded;
-    try {
-      decoded = jsonDecode(raw) as Map<String, dynamic>;
-    } catch (error, stack) {
-      reportSwallowedError('FSRS degraded _readDailyStats: blob corrupt', error, stack);
-      return {};
-    }
-    final stats = <String, Map<String, int>>{};
-    for (final entry in decoded.entries) {
-      try {
-        final map = entry.value as Map<String, dynamic>;
-        stats[entry.key] = {'learn': map['learn'] as int? ?? 0, 'review': map['review'] as int? ?? 0};
-      } catch (error, stack) {
-        reportSwallowedError('FSRS degraded _readDailyStats: skip corrupt "${entry.key}"', error, stack);
-      }
-    }
-    return stats;
-  }
-
-  Map<String, int> _readDailyCorrect(String? raw) {
-    if (raw == null || raw.isEmpty) return {};
-    try {
-      final decoded = jsonDecode(raw) as Map<String, dynamic>;
-      return {for (final entry in decoded.entries) entry.key: (entry.value as num?)?.toInt() ?? 0};
-    } catch (error, stack) {
-      reportSwallowedError('FSRS degraded _readDailyCorrect: blob corrupt', error, stack);
-      return {};
-    }
-  }
-
-  Future<void> _saveCards() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(cardsPrefKey, jsonEncode(_cards.map((word, card) => MapEntry(word, card.toJson()))));
-  }
+  // P3-4：清旧快照已抽至 ReviewScheduleMigration；SP blob 编解码已抽至 ReviewScheduleSpCodec。
 
   String _todayKey() => _dateKey(DateTime.now());
 
