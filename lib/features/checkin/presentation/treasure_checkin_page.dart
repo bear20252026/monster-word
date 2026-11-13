@@ -133,9 +133,9 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
   int _protectionCount = 0;
 
   // ── 肚皮储蓄罐离线计息（蓝图 T2「离开的回报」） ──
-  /// 计息存储（application 门面；可空 Provider 注入仅供测试替换时钟，
-  /// 生产无注入走默认实例——与 OnboardingGateStore 同口径）。
-  late final BellyInterestStore _bellyStore = context.read<BellyInterestStore?>() ?? BellyInterestStore();
+  /// 计息存储（application 门面）：经 Provider 注入（check_in_feature_providers
+  /// 注册），不兜底直建——直建绕过装配、时钟不可换（P2-1，架构审计 2026-11-12）。
+  late final BellyInterestStore _bellyStore = context.read<BellyInterestStore>();
 
   /// 当前可结算币数；0 = 空罐（点击只给陪伴台词，不入账）。
   int _bellyPending = 0;

@@ -7,24 +7,89 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// 存量豁免清单：健康评估（2026-08-30）已记录、待按 Top5 清单逐步拆分的文件。
-/// 新增违规不允许进入此清单；每拆完一个，从此处删除对应条目。
-/// 2026-08-31 清空（class_checkin_page 已拆分为 part 文件，全库 ≤900 行达标）。
-const Set<String> _kFileAllowlist = {};
+/// P1-4（架构审计 2026-11-12）：900 行上限按 **part 家族聚合**计数。
+///
+/// 旧口径按物理文件计数，`part of` 拆分可以绕过上限（profile_screen 900 +
+/// monster_room_life 329 ≈ 1229、treasure_checkin_page 843 + painters 563 ≈ 1406
+/// 都「单文件合规」）。现把主文件与其全部 part 的行数加总判定。
+///
+/// 存量超限家族入棘轮清单：**只许缩小、不许增大**（与 radius/font 棘轮同机制）。
+/// 每拆小一个家族就更新对应上限；新增家族或存量增大一律红灯。
+const Map<String, int> _kPartFamilyRatchet = {
+  'lib/core/audio/audio_players.dart': 1100,
+  'lib/features/checkin/presentation/treasure_checkin_page.dart': 1783,
+  'lib/features/learning/presentation/home_screen.dart': 1462,
+  'lib/features/settings/presentation/more_settings_page.dart': 1047,
+  'lib/features/settings/presentation/profile_screen.dart': 1890,
+};
 
-void main() {
-  test('lib/ 下 dart 文件不超过 900 行', () {
-    final offenders = <String, int>{};
-    for (final entity in Directory('lib').listSync(recursive: true)) {
-      if (entity is! File || !entity.path.endsWith('.dart')) continue;
-      final lines = entity.readAsLinesSync();
-      if (lines.length > 900) {
-        final normalized = entity.path.replaceAll(Platform.pathSeparator, '/');
-        if (_kFileAllowlist.contains(normalized)) continue;
-        offenders[entity.path] = lines.length;
+/// 解析 part 家族：主文件 -> 家族总行数（主文件 + 全部 `part 'x.dart'`）。
+/// `part of` 文件不单独成族，归入其主文件。
+Map<String, int> _partFamilySizes() {
+  final files = <String, List<String>>{};
+  for (final entity in Directory('lib').listSync(recursive: true)) {
+    if (entity is! File || !entity.path.endsWith('.dart')) continue;
+    final normalized = entity.path.replaceAll(Platform.pathSeparator, '/');
+    files[normalized] = entity.readAsLinesSync();
+  }
+
+  final partOf = <String>{}; // 所有 `part of` 文件（归入主文件，不单独成族）
+  final partsByOwner = <String, List<String>>{};
+  final partDirective = RegExp(r'''^\s*part\s+['"]([^'"]+)['"]\s*;''');
+  final partOfDirective = RegExp(r'''^\s*part\s+of\s+''');
+  for (final entry in files.entries) {
+    final dir = entry.key.substring(0, entry.key.lastIndexOf('/'));
+    for (final line in entry.value) {
+      if (partOfDirective.hasMatch(line)) {
+        partOf.add(entry.key);
+        break;
+      }
+      final m = partDirective.firstMatch(line);
+      if (m != null) {
+        final partPath = '$dir/${m.group(1)}';
+        (partsByOwner[entry.key] ??= <String>[]).add(partPath);
       }
     }
-    expect(offenders, isEmpty, reason: '以下文件超过 900 行，必须拆分：$offenders');
+  }
+
+  final sizes = <String, int>{};
+  for (final entry in files.entries) {
+    if (partOf.contains(entry.key)) continue; // part 文件归入主文件
+    var total = entry.value.length;
+    for (final partPath in partsByOwner[entry.key] ?? const <String>[]) {
+      total += files[partPath]?.length ?? 0;
+    }
+    sizes[entry.key] = total;
+  }
+  return sizes;
+}
+
+void main() {
+  test('lib/ 下 dart 文件（含 part 家族聚合）不超过 900 行', () {
+    final offenders = <String, int>{};
+    for (final entry in _partFamilySizes().entries) {
+      if (entry.value <= 900) continue;
+      final ceiling = _kPartFamilyRatchet[entry.key];
+      if (ceiling != null && entry.value <= ceiling) continue; // 存量棘轮内
+      offenders[entry.key] = entry.value;
+    }
+    expect(offenders, isEmpty, reason: '以下文件/家族超过 900 行（或超出棘轮上限），必须拆分：$offenders');
+  });
+
+  test('part 家族棘轮清单不得存在失效或可收紧条目', () {
+    final sizes = _partFamilySizes();
+    final problems = <String>[];
+    for (final entry in _kPartFamilyRatchet.entries) {
+      final actual = sizes[entry.key];
+      if (actual == null) {
+        problems.add('${entry.key}：文件不存在（死豁免，请删除）');
+      } else if (actual <= 900) {
+        problems.add('${entry.key}：已合规（$actual 行），请从棘轮清单删除');
+      } else if (actual < entry.value) {
+        problems.add('${entry.key}：已缩小到 $actual 行，请把棘轮上限从 ${entry.value} 收紧到 $actual');
+      }
+    }
+    expect(problems, isEmpty, reason: '棘轮清单需更新（只许收紧）：$problems');
   });
 
   /// build() 超长存量豁免：文件名 -> 豁免的 build 起始行号集合
