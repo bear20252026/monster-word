@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show Listenable;
+
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 
@@ -7,7 +9,10 @@ import 'package:word_app/models/word.dart';
 /// 当前词书与当前单词，而无需接触可变、承载大量状态的学习会话对象
 /// [LearningSessionState]。规则与 [LearningSessionStarter] / [LearningFavoritesStore] /
 /// [NewWordsStore] 一致：features 只依赖本契约，由 learning 功能域暴露同一实现。
-abstract class LearningSessionReader {
+///
+/// P2-6：继承 [Listenable]（纯 Dart 抽象，不违反 R5），让 home 等域可经
+/// ListenableProvider/Selector 响应式订阅会话变化，而无需 import presentation 状态。
+abstract class LearningSessionReader implements Listenable {
   /// 当前会话选中的词书；尚未启动会话时为 null。
   Book? get currentBook;
 

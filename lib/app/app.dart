@@ -38,7 +38,7 @@ import 'package:word_app/features/account/presentation/splash_page.dart';
 import 'package:word_app/widgets/common/mw_error_boundary.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/features/book/presentation/lib_select_page.dart';
-import 'package:word_app/features/learning/presentation/home_screen.dart';
+import 'package:word_app/features/home/presentation/home_screen.dart';
 import 'package:word_app/features/settings/presentation/profile_screen.dart';
 import 'package:word_app/app/main_shell.dart';
 import 'package:shared_preferences/shared_preferences.dart';

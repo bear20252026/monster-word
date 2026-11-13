@@ -427,7 +427,7 @@ class _BookStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
-    return Selector<LearningStatisticsState, String?>(
+    return Selector<LearningSessionReader, String?>(
       selector: (_, s) => s.currentBook?.name,
       builder: (context, bookName, _) => ScaleDownOnPress(
         onTap: () => Navigator.pushNamed(context, RouteNames.libSelect),

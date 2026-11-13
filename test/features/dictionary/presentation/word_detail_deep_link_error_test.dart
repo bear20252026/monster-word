@@ -192,8 +192,8 @@ void main() {
             prefs: PresentationPrefs(),
           ),
         ),
-        ProxyProvider<LearningSessionState, LearningSessionReader>(
-          update: (_, session, _) => LearningSessionStarterImpl(session),
+        ListenableProxyProvider<LearningSessionState, LearningSessionReader>(
+          update: (_, session, _) => LearningSessionReaderView(session),
         ),
         ProxyProvider<LearningSessionState, LearningSessionStarter>(
           update: (_, session, _) => LearningSessionStarterImpl(session),

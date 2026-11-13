@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:word_app/features/learning/application/home_path.dart';
-import 'package:word_app/features/learning/presentation/home_path_map.dart';
+import 'package:word_app/features/home/presentation/home_path_map.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 Widget _host(List<HomePathNode> nodes, {ValueChanged<int>? onTap}) => MaterialApp(

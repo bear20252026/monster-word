@@ -17,10 +17,12 @@ import 'package:word_app/features/learning/application/learning_progress_port.da
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
+import 'package:word_app/features/learning/application/learning_session_reader.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
+import 'package:word_app/features/learning/presentation/learning_session_starter_impl.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/features/learning/presentation/review_dialog.dart';
+import 'package:word_app/features/home/presentation/review_dialog.dart';
 
 void main() {
   setUp(() {
@@ -35,6 +37,10 @@ void main() {
             ChangeNotifierProvider<TodayProgressStore>(create: (_) => TodayProgressStore()),
             ChangeNotifierProvider<ReviewScheduleReader>.value(value: _StubScheduleReader(dueCount: 0)),
             ChangeNotifierProvider<LearningSessionState>.value(value: _StubSessionState()),
+            // P2-6：弹窗经 LearningSessionReader 端口订阅会话（ReaderView 包装 stub）。
+            ListenableProxyProvider<LearningSessionState, LearningSessionReader>(
+              update: (_, session, _) => LearningSessionReaderView(session),
+            ),
           ],
           child: const MaterialApp(home: Scaffold(body: SizedBox.shrink())),
         ),
@@ -60,6 +66,10 @@ void main() {
             ChangeNotifierProvider<TodayProgressStore>(create: (_) => TodayProgressStore()),
             ChangeNotifierProvider<ReviewScheduleReader>.value(value: _StubScheduleReader(dueCount: 5)),
             ChangeNotifierProvider<LearningSessionState>.value(value: _StubSessionState()),
+            // P2-6：弹窗经 LearningSessionReader 端口订阅会话（ReaderView 包装 stub）。
+            ListenableProxyProvider<LearningSessionState, LearningSessionReader>(
+              update: (_, session, _) => LearningSessionReaderView(session),
+            ),
           ],
           child: const MaterialApp(home: Scaffold(body: SizedBox.shrink())),
         ),

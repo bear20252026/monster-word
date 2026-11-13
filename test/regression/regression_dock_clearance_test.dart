@@ -52,6 +52,12 @@ class _FakeSessionReader implements LearningSessionReader {
 
   @override
   int get learnedNum => 3;
+
+  @override
+  void addListener(VoidCallback listener) {}
+
+  @override
+  void removeListener(VoidCallback listener) {}
 }
 
 void main() {
@@ -64,7 +70,7 @@ void main() {
       MultiProvider(
         providers: [
           Provider<BookCatalogReader>.value(value: _FakeCatalogReader()),
-          Provider<LearningSessionReader>.value(value: _FakeSessionReader()),
+          ListenableProvider<LearningSessionReader>.value(value: _FakeSessionReader()),
         ],
         child: MaterialApp(
           home: SkinProvider(

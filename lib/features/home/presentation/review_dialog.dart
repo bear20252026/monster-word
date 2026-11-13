@@ -1,11 +1,11 @@
-// 回顾弹窗：今日已学 + 今日复习统计（learning feature 内部组件，仅被 home_screen 消费）
+// 回顾弹窗：今日已学 + 今日复习统计（P2-6 随 home 域迁出，经 learning application 端口消费会话）
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
+import 'package:word_app/features/learning/application/learning_session_reader.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
-import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 
@@ -25,7 +25,7 @@ class _ReviewDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
-    final session = context.watch<LearningSessionState>();
+    final session = context.watch<LearningSessionReader>();
     final schedule = context.watch<ReviewScheduleReader>();
 
     return Container(
@@ -111,7 +111,7 @@ class _ReviewDialog extends StatelessWidget {
   Widget _buildStatsAndActions(
     BuildContext context,
     dynamic skin,
-    LearningSessionState session,
+    LearningSessionReader session,
     ReviewScheduleReader schedule,
   ) {
     return Column(
