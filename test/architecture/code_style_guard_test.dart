@@ -17,8 +17,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// 每拆小一个家族就更新对应上限；新增家族或存量增大一律红灯。
 const Map<String, int> _kPartFamilyRatchet = {
   'lib/core/audio/audio_players.dart': 1100,
-  // 1790：批次 3 冻结 1783，批次 4 P2-15 页面时钟注入 +7（构造参数/getter/注释），合理新增。
-  'lib/features/checkin/presentation/treasure_checkin_page.dart': 1790,
+  // 1760：批次 7 P2-8 里程碑庆祝编排收口于 MilestoneCelebration，两份重复方法删减 -30。
+  'lib/features/checkin/presentation/treasure_checkin_page.dart': 1760,
   'lib/features/learning/presentation/home_screen.dart': 1462,
   // 1051：批次 2 冻结 1047，批次 3 P2-3 性格传参 +4（导入/传参/注释），合理新增。
   // 1060：批次 6 P2-12 恢复入口 cell +9（对话框主体已抽 restore_backup_dialog.dart 独立文件）。

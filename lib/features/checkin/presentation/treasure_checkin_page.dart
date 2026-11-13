@@ -17,10 +17,10 @@
 // 无障碍：系统「减少动态效果」时跳过散落与粒子，控件立即可用。
 // 位置说明：审计 I11 归位 features/checkin/presentation——业务页面不再
 // 借住 widgets 层（跨 feature 经 scare_coin application 端口，现行规则放行）。
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/widgets/monster_peek_overlay.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/core/utils/haptics_gate.dart';
+import 'package:word_app/core/utils/milestone_celebration.dart';
 import 'package:word_app/core/utils/milestone_guard.dart';
 import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
@@ -427,30 +427,9 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
   }
 
   // ── 签到（同原型 doCheckin 时序） ──
-  /// 里程碑跨档庆祝（守卫 + SP 持久化防重复，探头复用 MonsterPeekOverlay）。
-  Future<void> _maybeCelebrateMilestone({required int newBalance}) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final celebrated = await MilestoneGuard.readBaseline(prefs, newBalance);
-      if (celebrated == null) return; // 首次基线化：不为存量余额补庆祝
-      final crossed = MilestoneGuard.crossedMilestone(celebrated, newBalance);
-      if (crossed == null) return;
-      if (!mounted) return;
-      SfxPlayer.fire(Sfx.milestone);
-      HapticsGate.play(HapticCue.heavy);
-      // 探头被串行防重入拦下时不落「已庆祝」：这一档留待下个机会补演。
-      if (!MonsterPeekOverlay.show(context, phrase: '第 $crossed 枚尖叫币！钱包鼓鼓的！')) return;
-      // 演出排定后再落「已庆祝」：页面中途销毁则标记未写，下个机会补演
-      //（宁可重复庆祝也不永久吞掉一次跨档）。
-      final saved = await prefs.setInt(MilestoneGuard.lastCelebratedKey, crossed);
-      if (!saved) {
-        reportSwallowedError('里程碑庆祝标记写入失败', StateError('setInt($crossed) returned false'), StackTrace.current);
-      }
-    } catch (e, s) {
-      // 庆祝失败不阻断签到主流程。
-      reportSwallowedError('里程碑庆祝失败', e, s);
-    }
-  }
+  /// 里程碑跨档庆祝：编排收口于 MilestoneCelebration（P2-8），本页只传余额。
+  Future<void> _maybeCelebrateMilestone({required int newBalance}) =>
+      MilestoneCelebration.celebrateCoin(context: context, newBalance: newBalance, isMounted: () => mounted);
 
   /// D5/D6：手动补「昨天」——消耗 1 张保护卡，把昨天补进日历并接回连胜。
   ///
@@ -483,25 +462,16 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
   /// 只做庆祝：不发币、不做断签惩罚；与金币里程碑共用探头串行防重入，
   /// 被拦下时不落标记，这一档留待下个签到机会补演。
   Future<void> _maybeCelebrateStreakMilestone(ScareCoinStore store) async {
-    try {
-      final streak = await store.streak();
-      final prefs = await SharedPreferences.getInstance();
-      final celebrated = await MilestoneGuard.readBaselineFor(prefs, streakMilestonePrefKey, streak);
-      if (celebrated == null) return; // 首次基线化：不为存量天数补庆祝
-      final crossed = crossedStreakMilestone(celebrated, streak);
-      if (crossed == null) return;
-      if (!mounted) return;
-      SfxPlayer.fire(Sfx.milestone);
-      HapticsGate.play(HapticCue.heavy);
-      if (!MonsterPeekOverlay.show(context, phrase: streakMilestonePhrase(crossed))) return;
-      final saved = await prefs.setInt(streakMilestonePrefKey, crossed);
-      if (!saved) {
-        reportSwallowedError('连胜里程碑标记写入失败', StateError('setInt($crossed) returned false'), StackTrace.current);
-      }
-    } catch (e, s) {
-      // 庆祝失败不阻断签到主流程。
-      reportSwallowedError('连胜里程碑庆祝失败', e, s);
-    }
+    final streak = await store.streak();
+    if (!mounted) return;
+    await MilestoneCelebration.celebrateStreak(
+      context: context,
+      newStreak: streak,
+      key: streakMilestonePrefKey,
+      thresholds: streakMilestoneDays,
+      phraseFor: streakMilestonePhrase,
+      isMounted: () => mounted,
+    );
   }
 
   /// 签到成功后的使用统计上报。

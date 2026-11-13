@@ -42,8 +42,11 @@ class _MemoryBeastPainter extends CustomPainter {
 
   final MemoryBeastSpec spec;
 
-  static final Paint _fill = Paint()..style = PaintingStyle.fill;
-  static final Paint _line = Paint()
+  // P3-3（架构审计 2026-11-12）：Paint 改实例字段——原 static 可变 Paint 被多个
+  // painter 实例共享，改色会理论串色（单线程绘制实际无碍，但多实例并发即隐患）。
+  // 每次 build 新建 painter，实例 Paint 开销可忽略。
+  final Paint _fill = Paint()..style = PaintingStyle.fill;
+  final Paint _line = Paint()
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round;
 

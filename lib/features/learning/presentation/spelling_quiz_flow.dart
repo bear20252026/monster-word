@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/features/learning/domain/spelling_grader.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
@@ -126,10 +127,10 @@ class SpellingQuizController extends ChangeNotifier {
     if (_words.isNotEmpty) onStarted?.call();
   }
 
-  /// 判分（忽略大小写与首尾空白），返回是否正确。
+  /// 判分（忽略大小写与首尾空白），返回是否正确。规则见 domain/spelling_grader.dart。
   bool checkAnswer(String input) {
     if (_showAnswer || _finished || _words.isEmpty) return false;
-    _wasCorrect = input.trim().toLowerCase() == answer.toLowerCase();
+    _wasCorrect = gradeSpelling(input, answer);
     _showAnswer = true;
     _wasCorrect ? _correct++ : _wrong++;
     notifyListeners();

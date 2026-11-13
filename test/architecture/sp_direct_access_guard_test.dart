@@ -17,8 +17,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// 存量直触 SP 的 presentation/widgets 主文件（含其 part）。只许缩小。
 const Set<String> _kSpDirectAccessAllowlist = {
-  'lib/features/checkin/presentation/treasure_checkin_page.dart',
-  'lib/features/learning/presentation/learn_page.dart',
+  // 批次 7 P2-8：treasure_checkin_page / learn_page 里程碑庆祝收口于 MilestoneCelebration，
+  // 两页不再直触 SP，已从清单移除（只许收紧）。
   'lib/features/scare_coin/presentation/redemption_center_page.dart',
   'lib/features/settings/presentation/profile_screen.dart', // part: monster_room_life
   'lib/widgets/monster_presence.dart',
