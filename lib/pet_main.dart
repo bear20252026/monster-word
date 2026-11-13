@@ -21,6 +21,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:word_app/core/utils/monster_personality.dart';
 import 'package:word_app/core/utils/monster_rhythm.dart';
 import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/widgets/monster_icon.dart';
@@ -30,21 +31,31 @@ const MethodChannel petWindowChannel = MethodChannel('monster_word/pet_window');
 
 /// 启动参数解析：原生侧 `set_dart_entrypoint_arguments` 传 `days=12` 这种键值对。
 class PetLaunchArgs {
-  const PetLaunchArgs({this.days});
+  const PetLaunchArgs({this.days, this.personality});
 
   /// 累计签到天数（决定形态与肚皮；null = 不知道，用默认奶泡态）。
   final int? days;
 
+  /// 性格枚举名（lively/calm/stubborn）：宠物窗口跑另一个 engine，读不到主应用
+  /// 的 MonsterSpeech.currentPersonality，只能靠启动参数带过去（P2-3，架构审计
+  /// 2026-11-12）。null/未知 = 用默认活泼。
+  final String? personality;
+
   static PetLaunchArgs parse(List<String> args) {
     int? days;
+    String? personality;
     for (final arg in args) {
       final eq = arg.indexOf('=');
       if (eq <= 0) continue;
-      if (arg.substring(0, eq) == 'days') {
-        days = int.tryParse(arg.substring(eq + 1));
+      final key = arg.substring(0, eq);
+      final value = arg.substring(eq + 1);
+      if (key == 'days') {
+        days = int.tryParse(value);
+      } else if (key == 'personality') {
+        personality = value;
       }
     }
-    return PetLaunchArgs(days: days);
+    return PetLaunchArgs(days: days, personality: personality);
   }
 }
 
@@ -88,7 +99,9 @@ class _PetWindowPageState extends State<PetWindowPage> with SingleTickerProvider
     vsync: this,
     duration: const Duration(milliseconds: 2800),
   );
-  final MonsterSpeech _speech = MonsterSpeech();
+  // P2-3（架构审计 2026-11-12）：性格随启动参数传入（另一 engine 读不到主应用
+  // 的 currentPersonality）；null/未知回退活泼。
+  late final MonsterSpeech _speech = MonsterSpeech(personality: parsePersonality(widget.launch.personality));
 
   String? _line;
   Timer? _lineTimer;

@@ -132,15 +132,9 @@ Future<void> _pumpPage(
       ),
     ),
   );
-  // 页面 initState 直接调异步 initialize，其首段 notifyListeners（loading 态）
-  // 必然落在首帧构建期——真实运行无碍（首帧后即落定），但测试框架会捕获这条
-  // 「setState during build」。它是该页既有初始化模式的已知产物，这里显式消费；
-  // 其余任何异常仍会照常让用例失败。
-  final duringBuild = tester.takeException();
-  if (duringBuild != null) {
-    expect(duringBuild.toString(), contains('called during build'), reason: '只豁免构建期同步通知，其余异常照常失败');
-  }
   // 无时长 pump 走完 starter → initialize → ready 的微任务链。
+  // P2-5（架构审计 2026-11-12）已把 initialize 首段通知移到首个 await 之后，
+  // 不再有构建期同步通知，无需 takeException 豁免——任何异常都照常失败。
   await tester.pump();
   await tester.pump();
 }

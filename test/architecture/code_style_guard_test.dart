@@ -19,7 +19,8 @@ const Map<String, int> _kPartFamilyRatchet = {
   'lib/core/audio/audio_players.dart': 1100,
   'lib/features/checkin/presentation/treasure_checkin_page.dart': 1783,
   'lib/features/learning/presentation/home_screen.dart': 1462,
-  'lib/features/settings/presentation/more_settings_page.dart': 1047,
+  // 1051：批次 2 冻结 1047，批次 3 P2-3 性格传参 +4（导入/传参/注释），合理新增。
+  'lib/features/settings/presentation/more_settings_page.dart': 1051,
   'lib/features/settings/presentation/profile_screen.dart': 1890,
 };
 

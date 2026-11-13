@@ -59,7 +59,18 @@ void main() {
     await service.toggle(days: 12);
     await service.toggle();
 
+    // 参数按位置：[0]=days（缺省占位 -1）、[1]=personality（可选）。
     expect(calls[0].arguments, [12]);
-    expect(calls[1].arguments, isNull, reason: '不知道天数就别传，宠物用默认形态');
+    expect(calls[1].arguments, [-1], reason: '不知道天数用 -1 占位，宠物用默认形态');
+  });
+
+  test('toggle 把性格带过去（P2-3：宠物台词与主应用同性格）', () async {
+    const service = PetWindowService(supported: true);
+
+    await service.toggle(days: 12, personality: 'calm');
+    await service.toggle(personality: 'stubborn');
+
+    expect(calls[0].arguments, [12, 'calm']);
+    expect(calls[1].arguments, [-1, 'stubborn'], reason: '天数缺省占位 -1，性格照常带过去');
   });
 }

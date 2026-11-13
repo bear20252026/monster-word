@@ -146,10 +146,13 @@ class ReviewSessionState extends ChangeNotifier {
     _restored = false;
     _wrongCount = 0;
     _currentQuestionWrong = false;
-    notifyListeners();
 
     try {
       final loaded = await _queueReader.loadWords(snapshot);
+      // P2-5（架构审计 2026-11-12）：loading 态通知放在首个 await 之后。
+      // 页面在 initState 里调本方法，首段同步 notifyListeners 会落在首帧构建期
+      // （setState during build）；移到 await 后，通知在微任务里发出，避开构建期。
+      notifyListeners();
       final plan = restore == null ? null : _planRestore(restore, loaded);
       if (plan != null && restore != null) {
         _applyRestore(restore, plan);

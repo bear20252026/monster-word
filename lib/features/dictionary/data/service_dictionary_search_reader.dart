@@ -1,59 +1,42 @@
-import 'package:word_app/core/infrastructure/wordbook_database.dart';
+import 'package:word_app/core/repositories/word_repository.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
+import 'package:word_app/models/word.dart';
 
-/// 基于 WordBookDatabase 的词典搜索适配器。
+/// 基于 [WordRepository] 的词典搜索适配器。
 ///
-/// 实现 [DictionarySearchReader] 端口，封装数据库查询逻辑。
-/// 使用 [WordBookDatabase.searchWords] 做前缀匹配，
-/// 名称子串匹配通过 SQL LIKE 实现模糊搜索。
+/// P1-6（架构审计 2026-11-12）：此前本适配器自带一套「前缀 + 全表 LIKE」实现，
+/// 与搜索域的 [WordRepository.searchWords]（三层索引 + 中文二元组预筛）构成
+/// **同库双栈**——两套语义、两套性能，中文查询在词典侧恒走全表扫描。
+/// 现统一委托 [WordRepository.searchWords] 单栈：英文吃 BINARY 索引、中文吃
+/// 二元组倒排，词典与搜索域结果口径一致。
+///
+/// 端口三方法保留（消费方契约不变），语义统一为「智能搜索」：
+/// - [searchSmart]：索引路径完整结果（英文优先、中文兜底）。
+/// - [searchByPrefix] / [searchFuzzy]：同走索引路径（索引内部已含前缀层与
+///   中缀/中文层），不再各自维护一套 SQL。
 class ServiceDictionarySearchReader implements DictionarySearchReader {
-  ServiceDictionarySearchReader({required this.database});
+  ServiceDictionarySearchReader({required this.repository});
 
-  final WordBookDatabase database;
-
-  @override
-  Future<List<Word>> searchByPrefix(String prefix) async {
-    if (prefix.trim().isEmpty) return [];
-    return database.searchWords(prefix.trim(), limit: 20);
-  }
+  final WordRepository repository;
 
   @override
-  Future<List<Word>> searchFuzzy(String query) async {
+  Future<List<Word>> searchByPrefix(String prefix) => _search(prefix, limit: 20);
+
+  @override
+  Future<List<Word>> searchFuzzy(String query) => _search(query, limit: 40);
+
+  @override
+  Future<List<Word>> searchSmart(String query) => _search(query, limit: 40);
+
+  Future<List<Word>> _search(String query, {required int limit}) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return [];
     try {
-      // 子串匹配：%query%（LIKE 元字符转义 \ → % → _，与
-      // word_repository_impl._escapeLike 同款：输入 % 曾匹配全库）
-      final escaped = trimmed.replaceAll(r'\', r'\\').replaceAll('%', r'\%').replaceAll('_', r'\_');
-      final rows = await database.db.query(
-        'words',
-        where: "word LIKE ? ESCAPE '\\'",
-        whereArgs: ['%$escaped%'],
-        orderBy: 'word',
-        limit: 40,
-      );
-      return rows.map(Word.fromMap).toList();
+      return await repository.searchWords(trimmed, limit: limit);
     } catch (e, s) {
-      reportSwallowedError('DictionarySearchReader.searchFuzzy failed', e, s);
+      reportSwallowedError('DictionarySearchReader 搜索失败', e, s);
       return [];
     }
-  }
-
-  @override
-  Future<List<Word>> searchSmart(String query) async {
-    if (query.trim().isEmpty) return [];
-    final prefixResults = await searchByPrefix(query);
-    if (prefixResults.length >= 20) return prefixResults;
-    final existingWords = prefixResults.map((w) => w.word).toSet();
-    final fuzzyResults = await searchFuzzy(query);
-    final merged = List<Word>.from(prefixResults);
-    for (final w in fuzzyResults) {
-      if (!existingWords.contains(w.word)) {
-        merged.add(w);
-        if (merged.length >= 40) break;
-      }
-    }
-    return merged;
   }
 }

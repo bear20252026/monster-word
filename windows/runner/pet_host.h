@@ -3,6 +3,8 @@
 
 #include <windows.h>
 
+#include <string>
+
 // 桌面宠物窗口（Windows 独有）。
 //
 // ## 为什么必须是「另开一个顶层窗口」
@@ -35,7 +37,9 @@ void SetMainWindow(HWND hwnd);
 //
 // |days| 是累计签到天数：宠物窗口跑在**另一个 engine** 上，读不到主应用的状态，
 // 只能靠启动参数带过去（决定形态与肚皮）。< 0 表示不知道。
-bool Toggle(int days);
+// |personality| 是性格枚举名（P2-3，架构审计 2026-11-12）：同理靠启动参数带过去，
+// 让宠物台词与主应用同性格。空串表示不知道（宠物用默认活泼）。
+bool Toggle(int days, const std::string& personality);
 
 // 当前是否已有宠物窗口。
 bool IsVisible();

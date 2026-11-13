@@ -235,7 +235,7 @@ bool IsVisible() {
   return g_pet_window != nullptr;
 }
 
-bool Toggle(int days) {
+bool Toggle(int days, const std::string& personality) {
   if (g_pet_window != nullptr) {
     // Destroy 会走 OnDestroy → 释放 engine；析构里再 Destroy 一次是安全的空操作。
     g_pet_window->Destroy();
@@ -249,8 +249,16 @@ bool Toggle(int days) {
   // 与主窗口一致：Impeller(OpenGLES) 在部分 GPU 上首帧挂起，回退 Skia。
   project.set_impeller_switch(flutter::ImpellerSwitch::Disabled);
   // 两个 engine 不共享内存：宠物需要的状态只能这样带过去。
+  // P2-3（架构审计 2026-11-12）：性格也随启动参数带过去（personality=<枚举名>）。
+  std::vector<std::string> dart_args;
   if (days >= 0) {
-    project.set_dart_entrypoint_arguments({"days=" + std::to_string(days)});
+    dart_args.push_back("days=" + std::to_string(days));
+  }
+  if (!personality.empty()) {
+    dart_args.push_back("personality=" + personality);
+  }
+  if (!dart_args.empty()) {
+    project.set_dart_entrypoint_arguments(dart_args);
   }
 
   auto window = std::make_unique<PetWindow>(project);

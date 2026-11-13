@@ -37,15 +37,22 @@ bool FlutterWindow::OnCreate() {
   pet_channel_->SetMethodCallHandler([](const flutter::MethodCall<flutter::EncodableValue>& call,
                                         std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
     if (call.method_name() == "toggle") {
-      // 可选参数：累计签到天数（宠物窗口跑另一个 engine，读不到主应用状态）。
+      // 可选参数：[0]=累计签到天数、[1]=性格枚举名（宠物窗口跑另一个 engine，
+      // 读不到主应用状态）。P2-3（架构审计 2026-11-12）新增性格传参。
       int days = -1;
+      std::string personality;
       if (const auto* args = std::get_if<flutter::EncodableList>(call.arguments());
           args != nullptr && !args->empty()) {
         if (const auto* value = std::get_if<int32_t>(&(*args)[0])) {
           days = *value;
         }
+        if (args->size() > 1) {
+          if (const auto* p = std::get_if<std::string>(&(*args)[1])) {
+            personality = *p;
+          }
+        }
       }
-      result->Success(flutter::EncodableValue(pet_host::Toggle(days)));
+      result->Success(flutter::EncodableValue(pet_host::Toggle(days, personality)));
       return;
     }
     if (call.method_name() == "isVisible") {

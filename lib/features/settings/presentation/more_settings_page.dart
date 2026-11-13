@@ -1,6 +1,7 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
+import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/core/utils/sfx_settings.dart';
@@ -438,7 +439,10 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           reportSwallowedError('桌面宠物读取签到天数失败', e, s);
         }
       }
-      final visible = await _petWindow.toggle(days: days);
+      final visible = await _petWindow.toggle(
+        days: days,
+        personality: MonsterSpeech.currentPersonality.name,
+      ); // P2-3 性格随开窗带过去
       if (!mounted) return;
       setState(() => _petVisible = visible);
       if (visible != on) {
