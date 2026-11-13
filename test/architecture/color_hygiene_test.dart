@@ -104,8 +104,8 @@ void main() {
     });
 
     test('庆祝渐变/彩纸调色板消费方必须引共享常量（防双写复发）', () {
-      final learn = File('lib/features/learning/presentation/learn_page.dart').readAsStringSync();
-      final immersive = File('lib/features/learning/presentation/immersive_swipe_page.dart').readAsStringSync();
+      final learn = File('lib/features/learning/presentation/session/learn_page.dart').readAsStringSync();
+      final immersive = File('lib/features/learning/presentation/session/immersive_swipe_page.dart').readAsStringSync();
       final confetti = File('lib/widgets/confetti.dart').readAsStringSync();
 
       // learn_page 与 immersive_swipe 曾双写同一庆祝渐变（石山，A5 同类问题）

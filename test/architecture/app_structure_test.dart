@@ -54,10 +54,10 @@ void main() {
 
     test('旧练习会话栈已删除，学习页面只依赖专用会话与各自的事实状态', () {
       const migratedPages = [
-        'lib/features/learning/presentation/immersive_swipe_page.dart',
-        'lib/features/learning/presentation/learn_page.dart',
-        'lib/features/learning/presentation/spell_session_page.dart',
-        'lib/features/learning/presentation/word_machine_page.dart',
+        'lib/features/learning/presentation/session/immersive_swipe_page.dart',
+        'lib/features/learning/presentation/session/learn_page.dart',
+        'lib/features/learning/presentation/session/spell_session_page.dart',
+        'lib/features/learning/presentation/session/word_machine_page.dart',
         'lib/features/learning/presentation/home_screen.dart',
       ];
       final sessionSource = File('lib/features/learning/presentation/learning_session_state.dart').readAsStringSync();
@@ -114,10 +114,10 @@ void main() {
     test('单词音频为应用级共享能力（core），各功能经共享状态消费、不直连音频服务', () {
       const audioConsumers = [
         'lib/features/dictionary/presentation/dictionary_page.dart',
-        'lib/features/learning/presentation/learn_page.dart',
+        'lib/features/learning/presentation/session/learn_page.dart',
         'lib/features/search/presentation/search_page.dart',
-        'lib/features/learning/presentation/spell_check_page.dart',
-        'lib/features/learning/presentation/spell_session_page.dart',
+        'lib/features/learning/presentation/session/spell_check_page.dart',
+        'lib/features/learning/presentation/session/spell_session_page.dart',
         'lib/features/dictionary/presentation/word_detail_page.dart',
       ];
       final appSource = File('lib/app/app.dart').readAsStringSync();
@@ -512,7 +512,7 @@ void main() {
 
   group('正式复习禁止依赖', () {
     test('路由页面不回流会话算法、遗留聚合状态或服务定位器', () {
-      final pageSource = File('lib/features/learning/presentation/review_page.dart').readAsStringSync();
+      final pageSource = File('lib/features/learning/presentation/session/review_page.dart').readAsStringSync();
 
       expect(pageSource, isNot(contains('LearningState')));
       expect(pageSource, isNot(contains('SuperMemoryEngine')));

@@ -21,7 +21,7 @@ const Set<String> _kStaticFacadeAllowlist = {
   'lib/features/account/presentation/login_page.dart',
   'lib/features/account/presentation/monster_hatching_page.dart',
   'lib/features/account/presentation/splash_page.dart',
-  'lib/features/learning/presentation/learn_completion_screen.dart',
+  'lib/features/learning/presentation/session/learn_completion_screen.dart',
   'lib/features/settings/presentation/more_settings_page.dart',
   'lib/features/settings/presentation/profile_screen.dart', // part: monster_room_life
 };

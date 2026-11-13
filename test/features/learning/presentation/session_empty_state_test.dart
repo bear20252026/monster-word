@@ -25,9 +25,9 @@ import 'package:word_app/features/learning/application/learning_progress_port.da
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
-import 'package:word_app/features/learning/presentation/dictation_session_page.dart';
+import 'package:word_app/features/learning/presentation/session/dictation_session_page.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
-import 'package:word_app/features/learning/presentation/quick_spell_page.dart';
+import 'package:word_app/features/learning/presentation/session/quick_spell_page.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/widgets/session_exit_guard.dart';

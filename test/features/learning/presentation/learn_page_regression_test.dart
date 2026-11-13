@@ -19,7 +19,7 @@ import 'package:word_app/features/learning/presentation/learning_favorites_state
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/features/learning/presentation/learn_page.dart';
+import 'package:word_app/features/learning/presentation/session/learn_page.dart';
 import 'package:word_app/widgets/scratch_to_reveal.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/theme/skin_system.dart';
