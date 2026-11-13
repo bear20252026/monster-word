@@ -23,11 +23,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/app/router/route_names.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
-import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/utils/monster_initiative.dart';
 import 'package:word_app/core/utils/monster_personality.dart';
 import 'package:word_app/core/utils/monster_rhythm.dart';
@@ -99,12 +98,15 @@ int? daysSinceLatestDate(Set<String> dates, {DateTime? at}) {
 /// 宠物自己的 `onTap` 与这里的 `onPan` 走手势竞技场 —— 移动超过 slop 算拖、
 /// 没移动算点，两者不会互相误触（这是把它做成「桌面宠物」而不是「按钮」的关键）。
 class MonsterPresenceHost extends StatefulWidget {
-  const MonsterPresenceHost({super.key, required this.child, this.navigatorKey});
+  const MonsterPresenceHost({super.key, required this.child, this.navigatorKey, this.prefs});
 
   final Widget child;
 
   /// 用于从浮层发起路由跳转（点击怪兽 → 我的空间）。
   final GlobalKey<NavigatorState>? navigatorKey;
+
+  /// 偏好端口（P3-3 SP 收口）：生产经 Provider 注入（companion 装配转发），测试可直传。
+  final PresentationPrefs? prefs;
 
   @override
   State<MonsterPresenceHost> createState() => _MonsterPresenceHostState();
@@ -117,8 +119,8 @@ class _MonsterPresenceHostState extends State<MonsterPresenceHost> {
   /// 上次停的位置，**归一化到 0~1**：换分辨率或横竖屏后仍落在同一相对位置。
   Offset? _savedRatio;
 
-  static const String _posXKey = 'monster_pos_x';
-  static const String _posYKey = 'monster_pos_y';
+  /// 偏好端口：生产经 Provider 注入（companion 装配转发 learning 实例），测试直传（P3-3）。
+  late final PresentationPrefs _prefs = widget.prefs ?? context.read<PresentationPrefs>();
 
   /// 贴边留白：留条缝才像「浮」在屏幕里，而不是被边缘切掉。
   static const double _edgeInset = 8;
@@ -130,18 +132,17 @@ class _MonsterPresenceHostState extends State<MonsterPresenceHost> {
   void initState() {
     super.initState();
     // 读操作在未初始化时安全返回默认值（BaseSharedPreferences 保证），首帧不会抛。
-    final prefs = AppPreferences();
-    if (prefs.containsKey(_posXKey) && prefs.containsKey(_posYKey)) {
-      _savedRatio = Offset(prefs.getDouble(_posXKey), prefs.getDouble(_posYKey));
-    }
+    final saved = _prefs.monsterPosition();
+    if (saved != null) _savedRatio = Offset(saved.x, saved.y);
   }
 
   /// 松手才写盘：拖动过程中每帧写 SP 是浪费。
   Future<void> _persist(Offset pos, Size screen) async {
     try {
-      final prefs = AppPreferences();
-      await prefs.setDouble(_posXKey, (pos.dx / screen.width).clamp(0.0, 1.0));
-      await prefs.setDouble(_posYKey, (pos.dy / screen.height).clamp(0.0, 1.0));
+      await _prefs.setMonsterPosition(
+        (pos.dx / screen.width).clamp(0.0, 1.0),
+        (pos.dy / screen.height).clamp(0.0, 1.0),
+      );
     } catch (e, s) {
       // 存不下位置不影响使用：下次开机回到默认角而已，不值得打断用户。
       reportSwallowedError('怪兽位置保存失败', e, s);
@@ -193,6 +194,7 @@ class _MonsterPresenceHostState extends State<MonsterPresenceHost> {
                   navigatorKey: widget.navigatorKey,
                   // 气泡比宠物宽：停右边就朝左长，否则长台词会被屏幕边缘裁掉。
                   bubbleAlignsRight: pos.dx + pet / 2 > screen.width / 2,
+                  prefs: _prefs,
                 ),
               ),
             ),
@@ -205,7 +207,7 @@ class _MonsterPresenceHostState extends State<MonsterPresenceHost> {
 
 /// 怪兽本体（全 app 唯一实例）。
 class MonsterPresence extends StatefulWidget {
-  const MonsterPresence({super.key, this.navigatorKey, this.bubbleAlignsRight = true});
+  const MonsterPresence({super.key, this.navigatorKey, this.bubbleAlignsRight = true, this.prefs});
 
   final GlobalKey<NavigatorState>? navigatorKey;
 
@@ -213,11 +215,17 @@ class MonsterPresence extends StatefulWidget {
   /// 停在屏幕右半边就朝左长（`true`），左半边朝右长。
   final bool bubbleAlignsRight;
 
+  /// 偏好端口（P3-3 SP 收口）：由 Host 传入，缺省回退新建。
+  final PresentationPrefs? prefs;
+
   @override
   State<MonsterPresence> createState() => _MonsterPresenceState();
 }
 
 class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderStateMixin {
+  /// 偏好端口（P3-3 SP 收口）：Host 传入，缺省经 Provider 读取。
+  late final PresentationPrefs _prefs = widget.prefs ?? context.read<PresentationPrefs>();
+
   /// 当前性格（启动预热缓存；命名仪式保存后随路由返回刷新）。
   MonsterPersonality _personality = MonsterSpeech.currentPersonality;
 
@@ -266,13 +274,11 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
 
   Future<void> _maybeProactiveWelcome() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      const lastVisitKey = 'monster_last_home_visit';
       // 与昼夜节律同一个时钟口径（可注入），不引入第二套时间源。
       final today = MonsterSpeech.dayKeyOf(MonsterRhythm.now());
-      final last = prefs.getString(lastVisitKey);
+      final last = _prefs.monsterLastHomeVisit();
       if (last == today || !_speech.canSpeak()) return;
-      await prefs.setString(lastVisitKey, today);
+      await _prefs.setMonsterLastHomeVisit(today);
       if (!mounted || last == null) return; // 首次使用无分离可言，不迎接回归
       // 主动弹是「怪兽开口报数」的场合，等变量取齐再说（取不到就说不带数的台词）。
       final vars = await _loadSpeechVars();

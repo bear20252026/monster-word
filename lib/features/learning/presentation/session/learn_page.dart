@@ -741,7 +741,7 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
     return Row(
       children: [
         // 2026-10-17：本页不再画怪兽 —— 怪兽是全 app 唯一的一层浮层
-        // （widgets/monster_presence.dart）。答错时的「陪着难过」由那里的场景图演，
+        // （features/companion/presentation/monster_presence.dart）。答错时的「陪着难过」由那里的场景图演，
         // 这里只保留火焰图标 + 文字提示。
         Icon(Icons.local_fire_department_rounded, size: 28, color: comboTierColor),
         const SizedBox(width: 6),

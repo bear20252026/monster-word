@@ -81,4 +81,30 @@ class PresentationPrefs {
   String getPlayOrder() => _p.getString('stereo.play_order');
 
   Future<void> setPlayOrder(String name) => _p.setString('stereo.play_order', name);
+
+  // ── 怪兽桌面宠物（P3-3：monster_presence 移 companion 前的 SP 收口，R-prefs）──
+
+  static const String _monsterPosXKey = 'monster_pos_x';
+  static const String _monsterPosYKey = 'monster_pos_y';
+  static const String _monsterLastVisitKey = 'monster_last_home_visit';
+
+  /// 怪兽上次停靠位置（归一化 0~1）；从未拖过返回 null。
+  ({double x, double y})? monsterPosition() {
+    if (!_p.containsKey(_monsterPosXKey) || !_p.containsKey(_monsterPosYKey)) return null;
+    return (x: _p.getDouble(_monsterPosXKey), y: _p.getDouble(_monsterPosYKey));
+  }
+
+  /// 松手才写盘（归一化比例，换分辨率仍落同一相对位置）。
+  Future<void> setMonsterPosition(double xRatio, double yRatio) async {
+    await _p.setDouble(_monsterPosXKey, xRatio);
+    await _p.setDouble(_monsterPosYKey, yRatio);
+  }
+
+  /// 怪兽上次「回家」的日键（welcomeBack 主动迎接用）；从未记录返回 null。
+  String? monsterLastHomeVisit() {
+    final v = _p.getString(_monsterLastVisitKey);
+    return v.isEmpty ? null : v;
+  }
+
+  Future<void> setMonsterLastHomeVisit(String dayKey) => _p.setString(_monsterLastVisitKey, dayKey);
 }

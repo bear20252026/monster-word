@@ -3,7 +3,7 @@ part of '../home_screen.dart';
 /// 问候头部：时段问候 + 日期；右侧词典/单词机入口。
 ///
 /// 2026-10-17：怪兽**已从本文件移出**，改为全 app 唯一的浮层
-/// （`lib/widgets/monster_presence.dart`，挂在 MaterialApp.builder 上）。
+/// （`lib/features/companion/presentation/monster_presence.dart`，挂在 MaterialApp.builder 上）。
 /// 原因：怪兽是「一只宠物」，不是每个页面各画一张贴图 —— 页面只管报事件。
 class _Header extends StatefulWidget {
   const _Header({required this.skin});

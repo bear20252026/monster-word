@@ -12,6 +12,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/features/companion/application/monster_companion_port.dart';
 import 'package:word_app/features/companion/presentation/monster_companion_state.dart';
 
@@ -24,7 +25,9 @@ Widget buildCompanionFeatureScope({required Widget child}) {
     // 同一实例两副面孔：feature 内部用具体类，外部只认 application 端口。
     child: ListenableProvider<MonsterCompanionController>(
       create: (context) => context.read<MonsterCompanionState>(),
-      child: child,
+      // P3-3：怪兽桌面宠物移入 companion 后经此端口读偏好（R-prefs/N1：
+      // 转发外层 learning 的 PresentationPrefs 实例，不直建、不直触 SP）。
+      child: ProxyProvider0<PresentationPrefs>(update: (context, _) => context.read<PresentationPrefs>(), child: child),
     ),
   );
 }

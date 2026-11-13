@@ -21,7 +21,7 @@ const Set<String> _kSpDirectAccessAllowlist = {
   // 两页不再直触 SP，已从清单移除（只许收紧）。
   'lib/features/scare_coin/presentation/redemption_center_page.dart',
   'lib/features/settings/presentation/profile_screen.dart', // part: monster_room_life
-  'lib/widgets/monster_presence.dart',
+  // 批次 9 P3-3：monster_presence 收口于 PresentationPrefs 并移入 companion，不再直触 SP。
 };
 
 /// 返回 presentation/widgets 层直触 SP 的主文件集合（part 归主文件）。

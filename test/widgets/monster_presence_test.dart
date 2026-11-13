@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/utils/monster_event.dart';
 import 'package:word_app/core/utils/monster_initiative.dart';
@@ -18,7 +19,7 @@ import 'package:word_app/features/checkin/domain/checkin_status.dart';
 import 'package:word_app/features/companion/application/monster_companion_port.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/monster_icon.dart';
-import 'package:word_app/widgets/monster_presence.dart';
+import 'package:word_app/features/companion/presentation/monster_presence.dart';
 
 class _FakeCompanion extends ChangeNotifier implements MonsterCompanionController {
   _FakeCompanion({this.line});
@@ -70,7 +71,12 @@ void main() {
         builder: (_) => Scaffold(body: Center(child: Text('page:${settings.name}'))),
       ),
       // 与 app.dart 的真实装配一致：怪兽挂在 builder 上，位于 Navigator 之上。
-      builder: (context, child) => MonsterPresenceHost(navigatorKey: navKey, child: child ?? const SizedBox.shrink()),
+      // P3-3：偏好经端口注入（生产由 companion 装配转发 learning 实例）。
+      builder: (context, child) => MonsterPresenceHost(
+        navigatorKey: navKey,
+        prefs: PresentationPrefs(),
+        child: child ?? const SizedBox.shrink(),
+      ),
       home: home ?? const Scaffold(body: Center(child: Text('页面 A'))),
     );
     // 按需嵌套而不是 MultiProvider：provider 的 MultiProvider 断言 providers 非空，
