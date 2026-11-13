@@ -39,17 +39,17 @@ lib/
   tokens/ theme/  设计 token 单真相（星巴克 preset == token，守卫测试锁定）
   widgets/        共享组件（金币、庆祝、骨架屏等；无业务页面）
 test/
-  architecture/   13 套守卫测试（67 例）——本项目最有价值的资产，见 §5
+  architecture/   27 套守卫测试（105 例）——本项目最有价值的资产，见 §5
   features/ core/ regression/ unit/ data/   回归台账 REG-ID 对应的守护测试
 scripts/          词库构建/数据修补（Python；archive/ 为一次性历史脚本）
 assets/db/        wordbook.db.gz（只读词库，CI 有基线校验）
 ```
 
-规模：lib 约 370 文件 / 5 万行；test 约 170 文件 / 1.8 万行（904 例全过）。
+规模：lib 469 文件 / 6.1 万行；test 261 文件 / 2.6 万行（1593 例全过）。features 15 域。
 
 ## 3. 关键机制（改代码前必读）
 
-1. **词库库是只读资产**：`wordbook.db.gz` 随包分发，首启/升级解压（内存解压 + 临时文件原子替换），版本指纹命中即跳过。任何"给词库建索引/建 FTS"的想法都意味着重建资产发版（搜索 FTS5 改进正卡在这，见 §7）。
+1. **词库库是只读资产**：`wordbook.db.gz` 随包分发，首启/升级解压（内存解压 + 临时文件原子替换），版本指纹命中即跳过。任何"给词库建索引/建 FTS"的想法都意味着重建资产发版。搜索已改 bigram 倒排索引单栈（`cn_search_index.dart`，P1-6 收口），FTS5 方案已废弃。
 2. **用户库写兼容**：Android ≤9 系统 SQLite 为 3.22，**禁用 `INSERT…ON CONFLICT…DO UPDATE`**，累加写用 UPDATE+条件 INSERT（`review_schedule_store._upsertDailyStats`）。
 3. **数据完整性口径**：持久化失败必须 `reportSwallowedError`（A/B/C 分级见 `lib/core/utils/swallowed_error_report.dart` 头注释，守卫测试锁定 A 级文件）；账本/存档类"解析失败保留原档，宁丢一条新账不清历史"；收藏 DAO 写路径有串行闸门 + 失败回滚内存索引。
 4. **释义解析单一真相**：interpret JSON → 文本只存在于 `lib/models/definition_text.dart`；四选一干扰项只在 `lib/core/engine/distractor_generator.dart`。新增消费方禁止复制逻辑。
@@ -61,11 +61,16 @@ assets/db/        wordbook.db.gz（只读词库，CI 有基线校验）
 ## 4. 质量门禁（每次提交前必跑）
 
 ```bash
-flutter analyze --no-fatal-infos                                   # 必须 No issues found
-dart format --line-length 120 --set-exit-if-changed --output=none .  # 必须 0 changed
-flutter test test/architecture/                                    # 67 例守卫必须全过
-flutter test                                                       # 全量 904 例必须全过
+dart format --line-length 120 --set-exit-if-changed --output=none .  # 必须 0 changed（CI 同款）
+flutter analyze                                                    # 必须 No issues found（CI 裸 analyze，info 级等同失败）
+flutter test test/architecture/                                    # 105 例守卫必须全过
+flutter test                                                       # 全量 1593 例必须全过
 ```
+
+> P2-16（架构审计 2026-11-12）：本地口径已与 CI `dart.yml` 对齐——`analyze` 不再带
+> `--no-fatal-infos`（CI 是裸 `flutter analyze`，info 级提示等同失败）；format 用
+> `--set-exit-if-changed` 硬门禁。`scripts/auto_sync.sh` 的格式化是便利步骤（本机
+> dartdev 可能挂起，失败不阻断提交），**真正的格式门禁在 CI**，勿以本地脚本跳过为准。
 
 守卫测试（`test/architecture/`）是本仓库的核心资产：import 分层全库扫描、路由名单单源、颜色/字号/圆角/emoji 卫生、fontScale 与 radius 棘轮、TickerProvider、门面直建、吞错分级、词库指纹等——**它们曾连续拦截贡献者（含本审计）的不规范首版方案**，红灯时先读守卫的 reason 文案，不要绕过。回归台账 `docs/regression_ledger.md` 记录每个已修 bug 的 REG-ID 与守护测试位置。
 
@@ -106,11 +111,11 @@ flutter test                                                       # 全量 904 
    验收记录与响应码约定见 `deploy/telemetry/README.md` §4/§7；
    埋点落点表与口径见 `lib/features/telemetry/README.md` §6。
 3. **release keystore 迁出项目目录**：`android/app/*.jks` + `key.properties` 仍在工程内（违反自家 release_pipeline §1.3），建议移至工程外密钥目录 + 高强度密码入管理器 + 仅 CI secrets 签名。
-4. **GitHub 仓库设置**：建议开启分支保护（main 禁直推、PR 必审）——携带签名 secrets 的 job 目前对 main push 开放。
+4. **GitHub 仓库设置**：分支保护**已开启**（main 禁直推、PR 必审，required check = analyze-and-test）。注意 `enforce_admins=false`——管理员仍可绕过直推（2026-11-12 审计 P1-5 指出）；推送一律走 PR。携带签名 secrets 的 job 仅 tag 触发。
 
 **排期中的工程项（`monster-word-全面审计报告-2026-09-27.md` 提升点清单 I1–I105，余 ~66 项）**：
 
-- **与下次词库发版合并**：FTS5 搜索索引（剩余项中对体验影响最大，搜索全表扫根治，必须重建随包资产）+ 搜索基准测试。
+- **与下次词库发版合并**：~~FTS5 搜索索引~~ 已废弃——搜索改 bigram 倒排索引单栈（P1-6，2026-11-12 收口），基准测试见 `test/benchmark/search_benchmark_test.dart`。词库 `ORDER BY word COLLATE NOCASE` 仍缺对应索引（P3-5），加索引须重建随包资产发版。
 - **独立 PR**：MwNavBar 组件化（28 处复制 ~420 行）、统一反馈出口（showMwConfirm 重建 + 56 处迁移）、金币账本 SQLite 化（接口契约变更波及 11 个测试假实现）。
 - **需真机/profiler**：动画粒度优化 6 项（拖拽 setState、常驻 ticker 等，先 DevTools 基线后改）。
 - **观察项**：new_words 软删行清理（待云同步设计定型）；旧 Android 评分落盘真机验证。

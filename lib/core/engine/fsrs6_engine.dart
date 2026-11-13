@@ -51,7 +51,12 @@ class FsrsCard {
     this.shortTermStability = 0,
   });
 
-  bool get isDue => !isNew && dueDate.isBefore(DateTime.now());
+  // P3-6（架构审计 2026-11-12）：到期边界统一为「到期时刻即到期」（!isAfter），
+  // 与 getDueCards 同口径——此前 isDue 用 isBefore，dueDate==now 时两者判定相反。
+  bool get isDue => isDueAt(DateTime.now());
+
+  /// 可注入时钟的到期判定（测试用固定时钟）；[isDue] 即当前时刻的特例。
+  bool isDueAt(DateTime now) => !isNew && !dueDate.isAfter(now);
 
   Map<String, dynamic> toJson() => {
     'word': word,
@@ -259,10 +264,11 @@ class Fsrs6Engine {
     return review(card, rating, reviewedAt: now);
   }
 
-  /// 获取到期的卡片
-  List<FsrsCard> getDueCards(List<FsrsCard> cards) {
-    final now = DateTime.now();
-    return cards.where((c) => !c.isNew && !c.dueDate.isAfter(now)).toList();
+  /// 获取到期的卡片。[now] 可注入（测试用固定时钟）；缺省当前时刻。
+  /// 到期边界与 [FsrsCard.isDue] 同口径：到期时刻即到期（!isAfter）。
+  List<FsrsCard> getDueCards(List<FsrsCard> cards, {DateTime? now}) {
+    final at = now ?? DateTime.now();
+    return cards.where((c) => !c.isNew && !c.dueDate.isAfter(at)).toList();
   }
 
   /// 记忆预测快照（review_schedule_repository.predictionFor 消费）
@@ -278,10 +284,10 @@ class Fsrs6Engine {
     };
   }
 
-  /// 获取记忆提取概率（0.0-1.0）
-  double getRetrievability(FsrsCard card) {
+  /// 获取记忆提取概率（0.0-1.0）。[now] 可注入（测试用固定时钟）；缺省当前时刻。
+  double getRetrievability(FsrsCard card, {DateTime? now}) {
     if (card.isNew || card.stability <= 0) return 1.0;
-    final elapsed = DateTime.now().difference(card.lastReview).inDays;
+    final elapsed = (now ?? DateTime.now()).difference(card.lastReview).inDays;
     return _retrievability(elapsed, card.stability);
   }
 

@@ -344,14 +344,19 @@ class WordBookDatabase {
     // 另有处写「3.2 万」，均已订正），COUNT 每次冷启动全表扫，EXISTS 查询 O(1)。
     if (!reopened) {
       var c = 0, w = 0, l = 0;
+      var queryFailed = false;
       try {
         c = (await db.rawQuery('SELECT 1 AS c FROM books LIMIT 1')).isEmpty ? 0 : 1;
         w = (await db.rawQuery('SELECT 1 AS c FROM words LIMIT 1')).isEmpty ? 0 : 1;
         l = (await db.rawQuery('SELECT 1 AS c FROM word_books LIMIT 1')).isEmpty ? 0 : 1;
-      } catch (_) {
-        // C 级豁免：自检查询失败按 0 处理走强制重建兜底
+      } catch (e, s) {
+        // P2-13（架构审计 2026-11-12）：查询失败 ≠ 空库。原实现按 0 处理会误触发
+        // 全量重建（词库只读，后果是性能浪费而非丢数据，但仍应避免）。改为置标志、
+        // 上报并保留现库——只有「查询成功且确证为空」才走重建兜底。
+        queryFailed = true;
+        reportSwallowedError('词库完整性自检查询失败（保留现库，不触发重建）', e, s);
       }
-      if (c == 0 || w == 0 || l == 0) {
+      if (!queryFailed && (c == 0 || w == 0 || l == 0)) {
         debugLog('[WordBookDatabase] 检测到空库/坏库(books=$c words=$w links=$l)，强制重建');
         await _db!.close();
         _db = null;
@@ -552,13 +557,9 @@ class WordBookDatabase {
   /// [lightweight] 列表浏览模式：不含 example/audio_urls/image_urls/phrase
   /// 大字段（实测省 ~95% 内存：example 均值 3KB）。性能审计 P1。
   /// 点进词典详情时由详情页按需重查完整词。
-  Future<List<Word>> getWordsByBook(
-    int bookId, {
-    int? limit,
-    int offset = 0,
-    bool lightweight = false,
-    bool randomOrder = false,
-  }) async {
+  // P3-5（架构审计 2026-11-12）：移除从未使用的 randomOrder 死参数——随机取样
+  // 已由 getRandomWordsByBook（两步式）承担，本方法恒按 word NOCASE 序。
+  Future<List<Word>> getWordsByBook(int bookId, {int? limit, int offset = 0, bool lightweight = false}) async {
     // 数据层审计 P3：轻列补 main_word，与 getWordsByNames 的轻列口径一致（缺列会让 Word.mainWord 静默为空）
     final columns = lightweight ? 'id, word, main_word, interpret, uk_pron, us_pron, confuse, word_root' : '*';
     // 用户反馈修复（2026-08-31）：学习取样必须随机——字母序取前 N 会得到

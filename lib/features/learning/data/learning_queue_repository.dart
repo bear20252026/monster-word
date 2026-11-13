@@ -5,7 +5,8 @@ import 'package:word_app/core/repositories/fav_repository.dart';
 
 /// 学习队列所需的词库读取端口。
 abstract interface class LearningQueueWordSource {
-  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset, bool randomOrder = false});
+  // P3-5（架构审计 2026-11-12）：移除从未使用的 randomOrder 死参数（随机取样走 getRandomWordsByBook）。
+  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset});
 
   /// 随机取样 [limit] 个词（R3-D02：两步式，取代 SQL `ORDER BY RANDOM()`）。
   Future<List<Word>> getRandomWordsByBook(int bookId, {required int limit});
@@ -20,8 +21,8 @@ class WordBookLearningQueueWordSource implements LearningQueueWordSource {
   final WordBookDatabase _database;
 
   @override
-  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset, bool randomOrder = false}) {
-    return _database.getWordsByBook(bookId, limit: limit, offset: offset, randomOrder: randomOrder);
+  Future<List<Word>> getWordsByBook(int bookId, {required int limit, required int offset}) {
+    return _database.getWordsByBook(bookId, limit: limit, offset: offset);
   }
 
   @override
