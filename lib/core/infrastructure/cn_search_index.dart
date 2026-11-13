@@ -226,18 +226,33 @@ class CnSearchIndex {
 
       final stagingPath = '$indexPath.building';
       _deleteQuietly(stagingPath);
-      final staging = await _openIndexDefault(stagingPath);
+      // P2-11（架构审计 2026-11-12）：构建整体移后台 isolate——读词库/建对/排序/插入
+      // 全在后台，主 isolate 不再常驻 426 万对（R3-D09 实测）、也不再同步全排（原 _sortPairs 秒级卡顿）。
+      // 用独立 staging 路径（.isolate-building）与主 isolate 回退路径隔离。
+      // ⚠️ Android 后台 isolate 开库尚未真机验证：失败即回退现有主 isolate 分块路径，
+      // 最坏情况 == 现状（搜索仍回退全表，行为不变）。
+      var builtInIsolate = false;
       try {
-        await _ensureSchema(staging);
-        await _rebuildInto(staging, wordsDb, fingerprint);
-      } catch (_) {
-        try {
-          await staging.close();
-        } catch (_) {}
+        await _rebuildInIsolate(wordsPath, stagingPath, fingerprint);
+        builtInIsolate = true;
+      } catch (e, s) {
+        reportSwallowedError('中文索引后台 isolate 构建失败，回退主 isolate 分块构建', e, s);
         _deleteQuietly(stagingPath);
-        rethrow;
       }
-      await staging.close();
+      if (!builtInIsolate) {
+        final staging = await _openIndexDefault(stagingPath);
+        try {
+          await _ensureSchema(staging);
+          await _rebuildInto(staging, wordsDb, fingerprint);
+        } catch (_) {
+          try {
+            await staging.close();
+          } catch (_) {}
+          _deleteQuietly(stagingPath);
+          rethrow;
+        }
+        await staging.close();
+      }
 
       try {
         _deleteQuietly(indexPath);
@@ -289,7 +304,9 @@ class CnSearchIndex {
     return rowCount > 0;
   }
 
-  /// 重建索引内容：分块读词库 → 后台 isolate 生成 bigram 并排序 → 分批插入。
+  /// 重建索引内容（**主 isolate 回退路径**）：分块读词库 → 后台 isolate 生成 bigram
+  /// 并排序 → 分批插入。P2-11 后生产首选 [_rebuildInIsolate]（整段构建移后台 isolate）；
+  /// 本路径仅在 isolate 构建失败（如 Android 后台开库未验证）或测试注入内存库时使用。
   ///
   /// 内存口径（MW-32 / R3-D03）：
   /// **R3-D03 订正**——原实现先把全部词行读进主 isolate 的 `rawRows`，
@@ -366,6 +383,79 @@ class CnSearchIndex {
     }
     if (pending % 8000 != 0) await batch.commit(noResult: true);
     await db.insert(_metaTable, {'key': 'fingerprint', 'value': fingerprint});
+  }
+
+  /// P2-11：把整段构建（读词库 → 建对 → 全量排序 → 分批插入 → 写指纹）交给一个
+  /// 后台 isolate。主 isolate 不再累积 426 万对（R3-D09 实测）、也不再同步全排——内存下限与卡顿点
+  /// 一并移出主线程。isolate 自开只读词库连接与 staging 索引库（桌面走 FFI）。
+  ///
+  /// 失败由调用方回退主 isolate 分块路径（_rebuildInto），最坏情况 == 现状。
+  /// ⚠️ Android 后台 isolate 经原生 sqflite 开库尚未真机验证（见调用点注释）。
+  static Future<void> _rebuildInIsolate(String wordsPath, String stagingPath, String fingerprint) {
+    return Isolate.run(() => _isolateBuild(wordsPath, stagingPath, fingerprint));
+  }
+
+  /// 后台 isolate 入口：自包含（不捕获主 isolate 句柄），仅用静态常量与纯函数。
+  static Future<void> _isolateBuild(String wordsPath, String stagingPath, String fingerprint) async {
+    if (Platform.isWindows || Platform.isLinux) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+    final wordsDb = await databaseFactory.openDatabase(wordsPath, options: OpenDatabaseOptions(readOnly: true));
+    final staging = await databaseFactory.openDatabase(stagingPath);
+    try {
+      await staging.execute(
+        'CREATE TABLE IF NOT EXISTS $table (bigram TEXT NOT NULL, word_id INTEGER NOT NULL, PRIMARY KEY (bigram, word_id)) WITHOUT ROWID',
+      );
+      await staging.execute('CREATE TABLE IF NOT EXISTS $_metaTable (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+      await staging.execute('DROP TABLE IF EXISTS $table');
+      await staging.execute(
+        'CREATE TABLE $table (bigram TEXT NOT NULL, word_id INTEGER NOT NULL, PRIMARY KEY (bigram, word_id)) WITHOUT ROWID',
+      );
+      await staging.execute('DELETE FROM $_metaTable');
+
+      final sorted = <(String, int)>[];
+      var lastId = 0;
+      while (true) {
+        final rows = await wordsDb.query(
+          'words',
+          columns: ['id', 'word', 'interpret'],
+          where: 'id > ?',
+          whereArgs: [lastId],
+          orderBy: 'id',
+          limit: 400,
+        );
+        if (rows.isEmpty) break;
+        final chunk = <List<Object?>>[];
+        for (final row in rows) {
+          final id = row['id']! as int;
+          lastId = id;
+          chunk.add([id, row['word'] as String? ?? '', row['interpret'] as String? ?? '']);
+        }
+        sorted.addAll(_pairsChunk(chunk));
+      }
+      _sortPairs(sorted);
+
+      var pending = 0;
+      var batch = staging.batch();
+      for (final (bigram, wordId) in sorted) {
+        batch.insert(table, {'bigram': bigram, 'word_id': wordId});
+        pending++;
+        if (pending % 8000 == 0) {
+          await batch.commit(noResult: true);
+          batch = staging.batch();
+        }
+      }
+      if (pending % 8000 != 0) await batch.commit(noResult: true);
+      await staging.insert(_metaTable, {'key': 'fingerprint', 'value': fingerprint});
+    } finally {
+      try {
+        await staging.close();
+      } catch (_) {}
+      try {
+        await wordsDb.close();
+      } catch (_) {}
+    }
   }
 
   /// 把一块词行转成 (bigram, word_id) 对（跑在后台 isolate，不碰数据库句柄）。
