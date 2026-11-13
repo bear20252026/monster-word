@@ -7,7 +7,7 @@
 //      索引路径依赖「子串命中 ⊇ 全部相邻二元组」的超集性质保证等价，见 cn_search_index 注释）。
 //   2. P95 性能对比打印——不设性能阈值断言（CI 机性能噪声大），只报告数据。
 //
-// 真库：assets/db/wordbook.db.gz（241.8MB / words 32,154 词），
+// 真库：assets/db/wordbook.db.gz（words 771,251 行，R3-D09 实测；曾写「32,154 词」为陈旧低估），
 // 临时解压到系统临时目录，跑完由 tearDownAll 按 PID 清理，不留残留。
 import 'dart:io';
 
