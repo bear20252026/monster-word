@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/features/checkin/application/belly_interest_store.dart';
 import 'package:word_app/features/checkin/presentation/treasure_checkin_page.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 
@@ -24,8 +25,11 @@ class _BalanceFake extends FakeScareCoinStore {
   }
 }
 
-Widget _wrap(_BalanceFake store) => Provider<ScareCoinStore>.value(
-  value: store,
+Widget _wrap(_BalanceFake store) => MultiProvider(
+  providers: [
+    Provider<ScareCoinStore>.value(value: store),
+    Provider<BellyInterestStore>(create: (_) => BellyInterestStore()),
+  ],
   child: const MaterialApp(home: TreasureCheckInPage()),
 );
 

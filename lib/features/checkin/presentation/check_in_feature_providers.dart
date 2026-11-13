@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/features/checkin/application/belly_interest_store.dart';
 import 'package:word_app/features/checkin/application/check_in_history_reader.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
 import 'package:word_app/features/checkin/application/checkin_writer.dart';
@@ -24,6 +25,8 @@ Widget buildCheckInFeatureScope({required Widget child}) {
         create: (context) => ScareCoinCheckinStatusReader(store: context.read<ScareCoinStore>()),
       ),
       Provider<CheckinWriter>(create: (context) => ScareCoinCheckinWriter(store: context.read<ScareCoinStore>())),
+      // P2-1（架构审计 2026-11-12）：计息存储经 Provider 注入，页面不再兜底直建。
+      Provider<BellyInterestStore>(create: (_) => BellyInterestStore()),
     ],
     child: child,
   );
