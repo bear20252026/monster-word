@@ -24,7 +24,7 @@ import 'package:word_app/features/account/presentation/account_feature_providers
 import 'package:word_app/features/book/presentation/book_feature_providers.dart';
 import 'package:word_app/features/checkin/presentation/check_in_feature_providers.dart';
 import 'package:word_app/features/companion/presentation/companion_feature_providers.dart';
-import 'package:word_app/widgets/monster_presence.dart';
+import 'package:word_app/features/companion/presentation/monster_presence.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_feature_providers.dart';
 import 'package:word_app/features/learning/presentation/learning_feature_providers.dart';
 import 'package:word_app/features/missions/presentation/daily_mission_feature_providers.dart';

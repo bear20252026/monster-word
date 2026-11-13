@@ -14,6 +14,7 @@ import 'package:word_app/core/utils/monster_event.dart';
 import 'package:word_app/core/utils/monster_initiative.dart';
 import 'package:word_app/core/utils/monster_scene.dart';
 import 'package:word_app/features/companion/application/monster_companion_port.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/checkin/application/checkin_status_reader.dart';
@@ -27,7 +28,7 @@ import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/tokens/star_gold.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/monster_icon.dart';
-import 'package:word_app/widgets/monster_presence.dart';
+import 'package:word_app/features/companion/presentation/monster_presence.dart';
 
 import '../../checkin/data/fake_scare_coin_store.dart';
 
@@ -77,8 +78,11 @@ void main() {
           ),
           // 2026-10-17：怪兽是全 app 唯一的浮层，挂在 MaterialApp.builder 上
           // （与 app.dart 的真实装配一致）—— 所以这里也必须这样装，否则测不到它。
-          builder: (context, child) =>
-              MonsterPresenceHost(navigatorKey: navKey, child: child ?? const SizedBox.shrink()),
+          builder: (context, child) => MonsterPresenceHost(
+            navigatorKey: navKey,
+            prefs: PresentationPrefs(),
+            child: child ?? const SizedBox.shrink(),
+          ),
           home: const HomeScreen(),
         ),
       ),
