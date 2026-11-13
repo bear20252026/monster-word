@@ -140,7 +140,8 @@ Future<void> setupServiceLocator() async {
   // 约束不得 import infrastructure，改为从本处取端口接口（同 BookRepository 家法）
   _reg<BookWordListReader>(() => RepositoryBookWordListReader(database: sl<WordBookDatabase>()));
   _reg<DictionaryContentReader>(() => ServiceDictionaryContentReader(database: sl<WordBookDatabase>()));
-  _reg<DictionarySearchReader>(() => ServiceDictionarySearchReader(database: sl<WordBookDatabase>()));
+  // P1-6（架构审计 2026-11-12）：词典搜索统一走 WordRepository 索引单栈。
+  _reg<DictionarySearchReader>(() => ServiceDictionarySearchReader(repository: sl<WordRepository>()));
   _reg<DictionaryNewWordWriter>(() => ServiceDictionaryNewWordWriter(userDatabase: sl<UserDatabase>()));
 
   // ========== Service Layer（服务层）==========

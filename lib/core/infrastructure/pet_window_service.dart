@@ -22,9 +22,13 @@ class PetWindowService {
   ///
   /// [days] = 累计签到天数：宠物窗口跑在**另一个 engine** 上，读不到主应用状态，
   /// 只能靠启动参数带过去（决定形态与肚皮）。null = 不知道，宠物用默认奶泡态。
-  Future<bool> toggle({int? days}) async {
+  /// [personality] = 性格枚举名（P2-3，架构审计 2026-11-12）：同理靠启动参数带过去，
+  /// 让宠物台词与主应用同性格。null = 宠物用默认活泼。
+  Future<bool> toggle({int? days, String? personality}) async {
     if (!isSupported) return false;
-    final visible = await channel.invokeMethod<bool>('toggle', days == null ? null : <int>[days]);
+    // 原生侧按位置读：[0]=days(int)、[1]=personality(String)。days 缺省占位 -1。
+    final args = <Object>[days ?? -1, ?personality];
+    final visible = await channel.invokeMethod<bool>('toggle', args);
     return visible ?? false;
   }
 

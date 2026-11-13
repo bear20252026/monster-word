@@ -40,6 +40,14 @@ void main() {
     expect(PetLaunchArgs.parse(['other=3']).days, isNull);
   });
 
+  test('启动参数：personality=<枚举名> 解析（P2-3，缺失即 null 用默认活泼）', () {
+    expect(PetLaunchArgs.parse(['personality=calm']).personality, 'calm');
+    expect(PetLaunchArgs.parse(['days=12', 'personality=stubborn']).personality, 'stubborn');
+    expect(PetLaunchArgs.parse(['days=12', 'personality=stubborn']).days, 12);
+    expect(PetLaunchArgs.parse(const []).personality, isNull);
+    expect(PetLaunchArgs.parse(['days=12']).personality, isNull);
+  });
+
   testWidgets('窗口里没有 Scaffold —— 有它窗口就不透明了', (tester) async {
     await pumpPet(tester);
 
