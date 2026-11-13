@@ -19,6 +19,7 @@
 // 借住 widgets 层（跨 feature 经 scare_coin application 端口，现行规则放行）。
 import 'package:word_app/widgets/monster_peek_overlay.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
+import 'package:word_app/core/utils/celebration_math.dart';
 import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/core/utils/milestone_celebration.dart';
 import 'package:word_app/core/utils/milestone_guard.dart';

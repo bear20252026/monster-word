@@ -4,6 +4,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:word_app/core/utils/celebration_math.dart';
 import 'package:word_app/tokens/effect_palette.dart';
 
 class ConfettiParticle {
@@ -216,20 +217,25 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
     final now = DateTime.now();
     final dt = _lastTick == null ? 1 / 60 : (now.difference(_lastTick!).inMicroseconds / 1e6).clamp(1 / 240, 1 / 20);
     _lastTick = now;
+    final fading = _controller.value > 0.7;
     for (final p in _particles) {
-      // 更新位置
-      p.position = Offset(p.position.dx + p.velocity.dx * dt, p.position.dy + p.velocity.dy * dt);
-
-      // 应用重力
-      p.velocity = Offset(p.velocity.dx, p.velocity.dy + widget.gravity * dt);
-
-      // 更新旋转
-      p.rotation += p.rotationSpeed * dt;
-
-      // 更新透明度（逐渐消失）
-      if (_controller.value > 0.7) {
-        p.opacity = math.max(0, p.opacity - dt * 3);
-      }
+      // P2-8：位置/重力/旋转/淡出积分收口于共享 stepParticle（纯数学单测锚定）。
+      final k = stepParticle(
+        ParticleKinematics(
+          position: p.position,
+          velocity: p.velocity,
+          rotation: p.rotation,
+          rotationSpeed: p.rotationSpeed,
+          opacity: p.opacity,
+        ),
+        dt,
+        gravity: widget.gravity,
+        fading: fading,
+      );
+      p.position = k.position;
+      p.velocity = k.velocity;
+      p.rotation = k.rotation;
+      p.opacity = k.opacity;
     }
   }
 

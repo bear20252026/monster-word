@@ -6,6 +6,7 @@
 // 落袋后父级刷新余额（AnimatedSwitcher 数字 pop）。
 import 'package:flutter/material.dart';
 
+import 'package:word_app/core/utils/celebration_math.dart';
 import 'package:word_app/widgets/coin_swallow_celebration.dart' show CoinBadge;
 
 class CoinFlyOverlay {
@@ -70,11 +71,6 @@ class _FlyCoinState extends State<_FlyCoin> with SingleTickerProviderStateMixin 
     super.dispose();
   }
 
-  static Offset _bezier(Offset p0, Offset p1, Offset p2, double t) {
-    final u = 1 - t;
-    return Offset(u * u * p0.dx + 2 * u * t * p1.dx + t * t * p2.dx, u * u * p0.dy + 2 * u * t * p1.dy + t * t * p2.dy);
-  }
-
   @override
   Widget build(BuildContext context) {
     final control = Offset(
@@ -85,7 +81,7 @@ class _FlyCoinState extends State<_FlyCoin> with SingleTickerProviderStateMixin 
       animation: _ease,
       builder: (context, _) {
         final t = _ease.value;
-        final pos = _bezier(widget.from, control, widget.to, t);
+        final pos = quadraticBezier(widget.from, control, widget.to, t);
         final scale = 1.0 - 0.45 * t;
         final opacity = t > 0.85 ? (1 - (t - 0.85) / 0.15).clamp(0.0, 1.0) : 1.0;
         return Positioned(

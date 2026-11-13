@@ -392,10 +392,9 @@ class _FxPainter extends CustomPainter {
       final u = ((st._now - c.t0) / c.dur).clamp(0.0, 1.0);
       if (u <= 0) continue;
       final e = u * u * (3 - 2 * u);
-      final x = (1 - e) * (1 - e) * c.sx + 2 * (1 - e) * e * c.cx + e * e * st._bellyPoint.dx;
-      final y = (1 - e) * (1 - e) * c.sy + 2 * (1 - e) * e * c.cy + e * e * st._bellyPoint.dy;
+      final pos = quadraticBezier(Offset(c.sx, c.sy), Offset(c.cx, c.cy), st._bellyPoint, e);
       _burstPaint.color = TreasurePalette.coinColors[c.color].withValues(alpha: 1 - u * u * 0.4);
-      canvas.drawCircle(Offset(x, y), c.size * (1 - u * 0.35), _burstPaint);
+      canvas.drawCircle(pos, c.size * (1 - u * 0.35), _burstPaint);
     }
 
     // 反向喷币（离线计息结算）：罐口向上抛撒，先快后慢 + 尾段淡出。
