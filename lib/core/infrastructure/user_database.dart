@@ -20,7 +20,7 @@ class UserDatabase {
   UserDatabase._();
 
   /// 应用当前支持的 schema 版本（与 [_onUpgrade] 步进保持同步）。
-  static const int _schemaVersion = 9;
+  static const int _schemaVersion = 10;
 
   Database? _db;
   bool _initialized = false;
@@ -280,6 +280,7 @@ class UserDatabase {
     await _createUsageStatsTables(db);
     await _createDailyMissionsTable(db);
     await _createXpStateTable(db);
+    await _createMasteredWordsTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -318,6 +319,23 @@ class UserDatabase {
     if (oldVersion < 9) {
       await _createXpStateTable(db);
     }
+    // P2-10（架构审计 2026-11-12）：掌握词表迁 SQLite（MasteredWordsDao 的事实来源），
+    // 对齐收藏/笔记口径。纯新增表，存量 SP 数据由 DAO 首启幂等迁移（marker + INSERT OR IGNORE）。
+    if (oldVersion < 10) {
+      await _createMasteredWordsTable(db);
+    }
+  }
+
+  /// P2-10：掌握词表。单词文本主键——与 favorite_words 同口径，
+  /// 文本身份在词库重建/资产更新后仍稳定（自增 word_id 不保证跨版本稳定）。
+  Future<void> _createMasteredWordsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS mastered_words (
+        word TEXT PRIMARY KEY,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_mastered_words_created ON mastered_words(created_at)');
   }
 
   /// M2（D1/D2）：每日任务表。
