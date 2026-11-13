@@ -2,8 +2,7 @@
 
 // 由账号4生成；学习页：明亮简约设计风格
 // 流程：4选1 → 选错标红重选 → 选对标绿 → 进字典详情页 → 下一词
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:word_app/core/utils/milestone_guard.dart';
+import 'package:word_app/core/utils/milestone_celebration.dart';
 import 'package:word_app/widgets/monster_answer_signal.dart';
 import 'package:word_app/widgets/common/mw_feedback.dart';
 
@@ -649,29 +648,11 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
   Future<void> _maybeCelebrateMilestone() async {
     // await 前先取 store（async gap 后禁用 context，lint 口径）。
     final store = context.read<ScareCoinStore?>();
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (store == null) return;
-      final balance = await store.balance();
-      final celebrated = await MilestoneGuard.readBaseline(prefs, balance);
-      if (celebrated == null) return; // 首次基线化：不为存量余额补庆祝
-      final crossed = MilestoneGuard.crossedMilestone(celebrated, balance);
-      if (crossed == null) return;
-      if (!mounted) return;
-      SfxPlayer.fire(Sfx.milestone);
-      HapticsGate.play(HapticCue.heavy);
-      // 探头被串行防重入拦下时不落「已庆祝」：这一档留待下个机会补演
-      //（曾把它标记成已庆祝，导致该次里程碑庆祝被永久吞掉）。
-      if (!MonsterPeekOverlay.show(context, phrase: '第 $crossed 枚尖叫币！钱包鼓鼓的！')) return;
-      // 演出排定后再落「已庆祝」：页面中途销毁则标记未写，下个机会补演。
-      final saved = await prefs.setInt(MilestoneGuard.lastCelebratedKey, crossed);
-      if (!saved) {
-        // 标记写失败不阻断答题，但要让这次异常可见（下次跨额会重复庆祝）。
-        reportSwallowedError('里程碑庆祝标记写入失败', StateError('setInt($crossed) returned false'), StackTrace.current);
-      }
-    } catch (e, s) {
-      reportSwallowedError('里程碑庆祝失败', e, s);
-    }
+    if (store == null) return;
+    final balance = await store.balance();
+    if (!mounted) return;
+    // 编排收口于 MilestoneCelebration（P2-8，与签到页同源）。
+    await MilestoneCelebration.celebrateCoin(context: context, newBalance: balance, isMounted: () => mounted);
   }
 
   @override
