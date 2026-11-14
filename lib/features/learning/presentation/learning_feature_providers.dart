@@ -79,7 +79,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
         create: (_) => RepositoryReviewScheduleReader(repository: sl<ReviewScheduleRepository>()),
       ),
       Provider<LearningQueuePort>.value(value: RepositoryLearningQueuePort(sl<LearningQueueRepository>())),
-      Provider<LearningProgressPort>.value(value: RepositoryLearningProgressPort(sl<LearningProgressRepository>())),
+      Provider<LearningProgressPort>.value(
+        value: RepositoryLearningProgressPort(sl<LearningProgressRepository>(), sl<WordRepository>()),
+      ),
       Provider<ReviewScheduleWriterPort>.value(
         value: RepositoryReviewScheduleWriterPort(sl<ReviewScheduleRepository>()),
       ),

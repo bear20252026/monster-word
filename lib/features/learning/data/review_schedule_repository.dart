@@ -74,6 +74,11 @@ class ReviewScheduleRepository extends ChangeNotifier {
   FsrsCardCounts? _counts;
   final Map<String, Future<void>> _fillingWords = <String, Future<void>>{};
 
+  /// 用户反馈修复（2026-11-14）：_counts 原先只在启动 _load() 算一次，App 运行中
+  /// 跨过 dueDate 的卡不进 due 桶 ⇒ 首页徽章「0 待复习」点进去却有一堆。
+  /// 这里每分钟重算一次 SQL 聚合，值变化才通知（reader 已监听本仓储）。
+  Timer? _countsRefreshTimer;
+
   /// 卡片缓存上限（LRU）：到期积压 + 会话工作集之上留足余量；
   /// 触顶后淘汰最久未访问项，常驻内存有界。
   static const int cardsCacheLimit = 4096;
@@ -88,7 +93,34 @@ class ReviewScheduleRepository extends ChangeNotifier {
   late final ReviewScheduleMigration _migration = const ReviewScheduleMigration(_codec);
   late final ReviewScheduleJournal _journal = ReviewScheduleJournal(_engine);
 
-  Future<void> initialize() => _initialization ??= _load();
+  Future<void> initialize() {
+    final init = _initialization ??= _load();
+    _startCountsRefresh();
+    return init;
+  }
+
+  void _startCountsRefresh() {
+    _countsRefreshTimer ??= Timer.periodic(const Duration(minutes: 1), (_) => _refreshCounts());
+  }
+
+  Future<void> _refreshCounts() async {
+    final store = _store;
+    if (!_useSqlite || store == null) return;
+    try {
+      final fresh = await store.loadCounts(DateTime.now());
+      final old = _counts;
+      _counts = fresh;
+      if (old == null ||
+          old.due != fresh.due ||
+          old.learning != fresh.learning ||
+          old.mature != fresh.mature ||
+          old.newCount != fresh.newCount) {
+        notifyListeners();
+      }
+    } catch (e, s) {
+      reportSwallowedError('到期计数定时重算失败（沿用旧值）', e, s);
+    }
+  }
 
   bool get isInitialized => _initialization != null;
 
@@ -98,6 +130,8 @@ class ReviewScheduleRepository extends ChangeNotifier {
   /// 与 _writeGate——同实例 initialize→close→initialize 必须能重新加载，
   /// 不再进入「store 已关但 _initialization 仍完成态」的半关闭状态。
   Future<void> close() async {
+    _countsRefreshTimer?.cancel();
+    _countsRefreshTimer = null;
     await _writeGate;
     final store = _store;
     _store = null;

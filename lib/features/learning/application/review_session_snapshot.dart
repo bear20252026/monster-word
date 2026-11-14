@@ -42,6 +42,7 @@ class ReviewSessionSnapshot {
     required this.hadDueAtStart,
     required this.dueAtStart,
     required this.updatedAt,
+    this.wrongCount = 0,
   });
 
   /// 一局唯一 id（首次初始化时生成，恢复后原样保留）。
@@ -68,6 +69,10 @@ class ReviewSessionSnapshot {
   /// 最近一次写入的毫秒时间戳。
   final int updatedAt;
 
+  /// 本局「首次作答即答错」的题数（用户反馈修复 2026-11-14：恢复后正确率/XP 不虚高）。
+  /// 旧存档无此字段时按 0（向后兼容）。
+  final int wrongCount;
+
   int get total => wordIds.length;
 
   Map<String, Object?> toJson() => {
@@ -80,6 +85,7 @@ class ReviewSessionSnapshot {
     'had_due_at_start': hadDueAtStart,
     'due_at_start': dueAtStart,
     'updated_at': updatedAt,
+    'wrong_count': wrongCount,
   };
 
   String encode() => jsonEncode(toJson());
@@ -140,6 +146,10 @@ ReviewSessionSnapshot? _sanitize(Map<String, dynamic> raw, DateTime now) {
     pending = ReviewSessionPending(wordId: wordId, correct: correct);
   }
 
+  // 旧存档无 wrong_count 按 0；非法值 clamp 到 [0, index]。
+  final rawWrong = raw['wrong_count'];
+  final wrongCount = rawWrong is int ? rawWrong.clamp(0, index) : 0;
+
   return ReviewSessionSnapshot(
     sessionId: sessionId,
     wordIds: List<int>.unmodifiable(wordIds),
@@ -149,6 +159,7 @@ ReviewSessionSnapshot? _sanitize(Map<String, dynamic> raw, DateTime now) {
     hadDueAtStart: hadDueAtStart,
     dueAtStart: dueAtStart,
     updatedAt: updatedAt,
+    wrongCount: wrongCount,
   );
 }
 

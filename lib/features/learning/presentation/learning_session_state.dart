@@ -309,6 +309,9 @@ class LearningSessionState extends ChangeNotifier {
 
     _currentBook = null;
     _replaceQueue(favorites.take(limit).toList(growable: false));
+    // 用户反馈修复（2026-11-14）：收藏局是新的一局，清上局错词/正确率/连击/
+    // 发币标记，避免沿用上一局统计与漏发本局奖励。
+    _resetSessionProgress();
   }
 
   Future<void> loadBook(Book book, {int? limit, bool shuffle = true}) async {
