@@ -33,4 +33,7 @@ abstract class LearningSessionReader implements Listenable {
   ///
   /// 供 foot_mark、学习进度条等只用读值的消费方使用。
   int get learnedNum;
+
+  /// 本题是否已点错过（用户反馈修复 2026-11-14：详解页据此分流 again/good）。
+  bool get currentWordWrong;
 }

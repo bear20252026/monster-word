@@ -64,6 +64,19 @@ void main() {
       expect(roundTrip.dueAtStart, original.dueAtStart);
     });
 
+    test('wrong_count 往返一致；旧存档缺省按 0（2026-11-14）', () {
+      final base = _validJson(index: 2, ratedIds: const [1, 2], pending: null);
+      final withWrong = _decode(base..['wrong_count'] = 2)!;
+      expect(withWrong.wrongCount, 2);
+      final roundTrip = decodeReviewSessionSnapshot(withWrong.encode(), now: _now)!;
+      expect(roundTrip.wrongCount, 2);
+
+      // 旧存档无 wrong_count 字段 → 0（向后兼容）。
+      expect(_decode(_validJson())!.wrongCount, 0);
+      // 非法值 clamp 到 [0, index]。
+      expect(_decode(base..['wrong_count'] = 99)!.wrongCount, 2);
+    });
+
     test('空串 / 非 JSON / 非对象 一律返回 null', () {
       expect(decodeReviewSessionSnapshot('', now: _now), isNull);
       expect(decodeReviewSessionSnapshot('{not json', now: _now), isNull);

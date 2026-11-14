@@ -69,6 +69,9 @@ class LearningSessionReaderView implements LearningSessionReader {
   int get learnedNum => _session.learnedNum;
 
   @override
+  bool get currentWordWrong => _session.currentWordWrong;
+
+  @override
   void addListener(VoidCallback listener) => _session.addListener(listener);
 
   @override

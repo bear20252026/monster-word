@@ -227,8 +227,12 @@ class _WordDetailPageState extends State<WordDetailPage> {
           child: ElevatedButton.icon(
             onPressed: () {
               if (fromLearnPage) {
-                // 从学习流程进入：记录评分并推进到下一个单词
-                session.rate(FsrsRating.good);
+                // 从学习流程进入：记录评分并推进到下一个单词。
+                // 用户反馈修复（2026-11-14）：本题点错过记 again（与复习页 P1-05
+                // 口径一致），不再一律 good 把答错词记成记忆良好。
+                final reader = context.read<LearningSessionReader?>();
+                final wasWrong = reader?.currentWordWrong ?? false;
+                session.rate(wasWrong ? FsrsRating.again : FsrsRating.good);
                 // 无论是否最后一词，均返回上一层（学习完成页 / 搜索列表等）；
                 // goHome 仅在无上层路由时由 safePop 的 canPop 守卫自动降级
                 NavUtils.safePop(context);

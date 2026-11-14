@@ -229,6 +229,8 @@ class ReviewSessionState extends ChangeNotifier {
     _engine.init(_questionFactory.createProcesses(plan.remaining), shuffle: false);
     _total = saved.wordIds.length;
     _done = plan.doneIds.length;
+    // 用户反馈修复（2026-11-14）：恢复错题数，避免续答后正确率/XP 虚高。
+    _wrongCount = saved.wrongCount;
     _restored = true;
   }
 
@@ -249,6 +251,7 @@ class ReviewSessionState extends ChangeNotifier {
       hadDueAtStart: true,
       dueAtStart: _dueAtStart,
       updatedAt: DateTime.now().millisecondsSinceEpoch,
+      wrongCount: _wrongCount,
     );
     unawaited(store.write(snapshot));
   }

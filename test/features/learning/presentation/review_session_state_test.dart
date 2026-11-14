@@ -240,6 +240,25 @@ void main() {
       expect(state.currentWord?.word, 'w3', reason: '按存档词序接着走');
     });
 
+    test('恢复回填错题数：续答后正确率/XP 不虚高（2026-11-14）', () async {
+      final state = newState();
+      final restore = _snapshot(
+        wordIds: List<int>.generate(40, (i) => i + 1),
+        index: 2,
+        ratedIds: const [1, 2],
+        dueAtStart: 40,
+        wrongCount: 2,
+      );
+
+      await state.initialize(
+        ReviewQueueSnapshot(dueWords: words(40).sublist(2), queueWords: const []),
+        restore: restore,
+      );
+
+      expect(state.wasRestored, isTrue);
+      expect(state.wrongCount, 2, reason: '错题数必须随快照恢复，不能归零');
+    });
+
     test('重复恢复幂等：同一快照恢复两次，done 不会累加成 4', () async {
       final state = newState();
       final restore = _snapshot(
@@ -369,6 +388,7 @@ ReviewSessionSnapshot _snapshot({
   ReviewSessionPending? pending,
   bool hadDueAtStart = true,
   int? dueAtStart,
+  int wrongCount = 0,
 }) => ReviewSessionSnapshot(
   sessionId: 's1',
   wordIds: wordIds,
@@ -378,6 +398,7 @@ ReviewSessionSnapshot _snapshot({
   hadDueAtStart: hadDueAtStart,
   dueAtStart: dueAtStart ?? wordIds.length,
   updatedAt: DateTime(2026, 11, 5, 12).millisecondsSinceEpoch,
+  wrongCount: wrongCount,
 );
 
 /// 记录最近一次写入的快照，用来验证「评一题就落一步」与「走完即清」。
