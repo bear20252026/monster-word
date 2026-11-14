@@ -4,7 +4,7 @@ import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
 
 void main() {
-  test('loads quick-review words using the existing repository ordering contract', () async {
+  test('速刷词源走全库随机取样，不再字母序头部（2026-11-14）', () async {
     final repository = _FakeWordRepository([
       Word(id: 2, word: 'second'),
       Word(id: 9, word: 'ninth'),
@@ -14,8 +14,8 @@ void main() {
     final reader = RepositoryQuickReviewWordReader(repository);
     final words = await reader.loadWords(limit: 2);
 
-    expect(repository.lastQuery, '');
-    expect(words.map((word) => word.id), [9, 5]);
+    expect(repository.lastRandomCount, 2);
+    expect(words.map((word) => word.id), [2, 9]);
   });
 }
 
@@ -24,6 +24,7 @@ class _FakeWordRepository implements WordRepository {
 
   final List<Word> words;
   String? lastQuery;
+  int? lastRandomCount;
 
   @override
   Future<Word?> getWordById(int id) async => null;
@@ -44,7 +45,10 @@ class _FakeWordRepository implements WordRepository {
   Future<Map<String, dynamic>?> getWordDetails(int wordId) async => null;
 
   @override
-  Future<List<Word>> getRandomWords(int count, {int? excludeBookId}) async => const [];
+  Future<List<Word>> getRandomWords(int count, {int? excludeBookId}) async {
+    lastRandomCount = count;
+    return words.take(count).toList();
+  }
 
   @override
   Future<List<Word>> searchWords(String query, {int? limit}) async {

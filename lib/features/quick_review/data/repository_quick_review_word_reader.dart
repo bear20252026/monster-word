@@ -11,8 +11,8 @@ class RepositoryQuickReviewWordReader implements QuickReviewWordReader {
 
   @override
   Future<List<Word>> loadWords({int limit = 50}) async {
-    final words = await _repository.searchWords('');
-    words.sort((a, b) => b.id.compareTo(a.id));
-    return words.take(limit).toList();
+    // 用户反馈修复（2026-11-14）：旧实现 searchWords('') 返回字母序头部再按 id
+    // 倒序，导致「考试速刷」永远刷同一批字母序头部词。改为全库随机取样。
+    return _repository.getRandomWords(limit);
   }
 }

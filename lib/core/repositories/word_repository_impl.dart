@@ -10,6 +10,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart' show Database;
 import 'package:word_app/core/infrastructure/cn_search_index.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
 import 'package:word_app/core/repositories/word_repository.dart';
+import 'package:word_app/core/utils/query_normalize.dart';
 
 /// 单词数据仓库的具体实现
 class WordRepositoryImpl implements WordRepository {
@@ -51,7 +52,11 @@ class WordRepositoryImpl implements WordRepository {
   @override
   Future<Word?> getWordByText(String text) async {
     final db = _database.db;
-    final maps = await db.query('words', where: 'word = ?', whereArgs: [text], limit: 1);
+    // 用户反馈修复（2026-11-14）：归一（全角/trim/折小写）+ NOCASE 点查，
+    // 与搜索同口径，深链大写/全角不再「未找到」。
+    final q = normalizeQuery(text);
+    if (q.isEmpty) return null;
+    final maps = await db.query('words', where: 'word = ? COLLATE NOCASE', whereArgs: [q], limit: 1);
     if (maps.isEmpty) return null;
     return Word.fromMap(maps.first);
   }
@@ -121,6 +126,8 @@ class WordRepositoryImpl implements WordRepository {
   Future<List<Word>> searchWords(String query, {int? limit}) async {
     final db = _database.db;
     final cap = limit ?? 50;
+    // 用户反馈修复（2026-11-14）：全角→半角 + trim + 折小写，全角输入不再静默空。
+    query = normalizeQuery(query);
 
     // 搜索范围（2026-09-01）：英文单词 + 中文释义（搜索框提示"英文或中文"，
     // 此前只匹配 word 列导致中文查询恒为空）。英文命中优先于中文命中。
