@@ -196,19 +196,19 @@ void main() {
 
   group('间隔公式 I = round(S/FACTOR·(r^(1/DECAY)-1))，钳制 [1, 36500]', () {
     test('新卡 Good：S=2.3065 → I=2 天', () {
-      final engine = Fsrs6Engine();
+      final engine = Fsrs6Engine(enableFuzzing: false);
       final card = FsrsCard(word: 'w', lastReview: DateTime.now(), dueDate: DateTime.now());
       expect(engine.review(card, FsrsRating.good).scheduledDays, 2);
     });
 
     test('新卡 Easy：S=8.2956 → I=8 天', () {
-      final engine = Fsrs6Engine();
+      final engine = Fsrs6Engine(enableFuzzing: false);
       final card = FsrsCard(word: 'w', lastReview: DateTime.now(), dueDate: DateTime.now());
       expect(engine.review(card, FsrsRating.easy).scheduledDays, 8);
     });
 
     test('间隔不变量：按 I 天后检索率应回到目标 0.9（±轮数误差）', () {
-      final engine = Fsrs6Engine();
+      final engine = Fsrs6Engine(enableFuzzing: false);
       final card = FsrsCard(word: 'w', lastReview: DateTime.now(), dueDate: DateTime.now());
       final updated = engine.review(card, FsrsRating.good);
       final r = pow(1.0 + engine.factor * updated.scheduledDays / updated.stability, engine.decay).toDouble();
@@ -276,6 +276,50 @@ void main() {
       );
       final r = engine.getRetrievability(card, now: t0);
       expect(r, closeTo(0.8388614268145294, 1e-9), reason: 't=5/S=2.3065 官方值，固定时钟可复现');
+    });
+  });
+
+  group('#23 间隔 fuzz 与 Again 重学步（对齐官方 py-fsrs，2026-11-14）', () {
+    test('Again → 当日 10 分钟重学步：scheduledDays=0、dueDate=now+10min（官方 relearning_steps）', () {
+      final engine = Fsrs6Engine(enableFuzzing: false);
+      final now = DateTime(2026, 11, 14, 9);
+      final card = FsrsCard(word: 'w', lastReview: now, dueDate: now, stability: 2.3065, isNew: false);
+      final updated = engine.review(card, FsrsRating.again, reviewedAt: now);
+      expect(updated.scheduledDays, 0, reason: 'Again 进重学态，当日重出而非排 ≥1 天');
+      expect(updated.dueDate, now.add(const Duration(minutes: 10)));
+      expect(updated.repetitions, 0);
+    });
+
+    test('enableFuzzing=false 锁定精确间隔（回归网口径）', () {
+      final engine = Fsrs6Engine(enableFuzzing: false);
+      final card = FsrsCard(word: 'w', lastReview: DateTime.now(), dueDate: DateTime.now());
+      expect(engine.review(card, FsrsRating.easy).scheduledDays, 8);
+    });
+
+    test('fuzz 对 <2.5 天间隔不生效（官方阈值）', () {
+      // Good 新卡 I=2 天 < 2.5，fuzz 开关都不改变结果。
+      final on = Fsrs6Engine(enableFuzzing: true, random: Random(1));
+      final off = Fsrs6Engine(enableFuzzing: false);
+      final card = FsrsCard(word: 'w', lastReview: DateTime.now(), dueDate: DateTime.now());
+      expect(on.review(card, FsrsRating.good).scheduledDays, 2);
+      expect(off.review(card, FsrsRating.good).scheduledDays, 2);
+    });
+
+    test('fuzz 对 ≥2.5 天间隔在官方区间内抖动且可复现', () {
+      // Easy 新卡 I=8 天：FUZZ_RANGES 第一段 delta=1+0.15*(7-2.5)+0.1*(8-7)=1.775
+      // → min=round(8-1.775)=6, max=round(8+1.775)=10，结果落在 [6,10]。
+      final card = FsrsCard(word: 'w', lastReview: DateTime.now(), dueDate: DateTime.now());
+      final a = Fsrs6Engine(enableFuzzing: true, random: Random(42)).review(card, FsrsRating.easy).scheduledDays;
+      final b = Fsrs6Engine(enableFuzzing: true, random: Random(42)).review(card, FsrsRating.easy).scheduledDays;
+      expect(a, inInclusiveRange(6, 10));
+      expect(a, b, reason: '同种子可复现');
+      // 不同种子应能取到区间内不同值（打散到期尖峰）。
+      final values = <int>{
+        for (var seed = 0; seed < 40; seed++)
+          Fsrs6Engine(enableFuzzing: true, random: Random(seed)).review(card, FsrsRating.easy).scheduledDays,
+      };
+      expect(values.length, greaterThan(1), reason: 'fuzz 应产生间隔抖动而非恒定值');
+      expect(values.every((v) => v >= 6 && v <= 10), isTrue);
     });
   });
 }
