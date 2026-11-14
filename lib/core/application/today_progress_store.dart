@@ -54,6 +54,11 @@ class TodayProgressStore extends ChangeNotifier {
   Future<void> setTodayLearned(int value, {required String date}) =>
       AppPreferences().setTodayLearned(value, date: date);
 
+  /// 今日已学去重词集（用户反馈修复 2026-11-14）。
+  Set<String> get todayLearnedWords => AppPreferences().getTodayLearnedWords();
+
+  Future<void> setTodayLearnedWords(Set<String> words) => AppPreferences().setTodayLearnedWords(words);
+
   /// 剩余待学（目标 − 已学，钳到 ≥0）。
   int get remaining => goal > 0 ? (goal - learned).clamp(0, goal).toInt() : 0;
 

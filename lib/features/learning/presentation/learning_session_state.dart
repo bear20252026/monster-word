@@ -149,7 +149,7 @@ class LearningSessionState extends ChangeNotifier {
     }
   }
 
-  Future<void> _incrementTodayLearned() async {
+  Future<void> _incrementTodayLearned(String word) async {
     // ⚠️ 审计 P1-06（2026-10-17）：`_todayLearnedDate` 是**加载时**记下的日期，
     // 原先写入直接沿用它 ⇒ 应用跨午夜还开着时，今天的进度会被写到**昨天**的键上：
     // 用户看到的「今日已学」继续在昨天累加，今天的目标进度反而从 0 开始，
@@ -159,6 +159,11 @@ class LearningSessionState extends ChangeNotifier {
       _todayLearnedDate = today;
       _todayLearned = 0;
     }
+    // 用户反馈修复（2026-11-14）：同一词当天只计一次（重答/复习不重复刷目标）。
+    final words = _today.todayLearnedWords;
+    if (words.contains(word)) return;
+    words.add(word);
+    unawaited(_today.setTodayLearnedWords(words));
     _todayLearned++;
     // 埋点：新学一个词。开关关闭时实现方空转，这里不需要自己判断。
     final recorder = _usageStats;
@@ -431,7 +436,11 @@ class LearningSessionState extends ChangeNotifier {
           _leitnerEngine.tooEasy();
       }
       _totalAnswered++;
-      unawaited(_incrementTodayLearned());
+      // 用户反馈修复（2026-11-14）：跳过/答错(again)不计「今日已学」，
+      // 防止空手刷每日目标/任务/会话奖；按词去重防重答重复计数。
+      if (rating != FsrsRating.again) {
+        unawaited(_incrementTodayLearned(word.word));
+      }
 
       // MW-40：wasLastWord 判定修正——原 `_currentIndex < _queue.length` 恒真、
       // `> _queue.length` 永不触发，最后一词的会话完成 breadcrumb 从未记录。

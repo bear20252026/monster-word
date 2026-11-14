@@ -135,7 +135,7 @@ class PreferencesScareCoinStore implements ScareCoinStore {
 
   /// 把降级窗口内的 SP 快照（余额/流水/事件键）合并回账本。
   ///
-  /// 幂等由 DAO 侧保证：余额取 max、流水按时间水位去重、事件键 ignore 冲突。
+  /// 幂等由 DAO 侧保证：余额以 SP 覆盖（重复回灌写同值）、流水按时间水位去重、事件键 ignore 冲突。
   /// SP 流水解析失败时只回灌余额与事件键（宁丢存量流水不清账本，同迁移口径）。
   Future<void> _replaySpDegradation(ScareCoinLedgerDao ledger) async {
     final prefs = await SharedPreferences.getInstance();

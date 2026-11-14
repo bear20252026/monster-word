@@ -32,6 +32,18 @@ void main() {
       ScareCoinEntry(time: at ?? DateTime(2026, 10, 1, 12), delta: delta, reason: reason);
 
   group('ScareCoinLedgerDao（SQLite 模式）', () {
+    test('回灌余额以 SP 覆盖：降级期净支出不得复活已消费余额（2026-11-14）', () async {
+      final dao = ScareCoinLedgerDao(openDatabase: () async => db);
+      await dao.ensureLoaded();
+      await dao.applyDelta(delta: 100, entry: entry(100, '种子'));
+      // 降级期兑换扣 40 ⇒ SP=60 < 账本冻结 100。
+      await dao.mergeSpDegradationSnapshot(spBalance: 60, spEntries: const [], spEventKeys: const []);
+      expect(await dao.balance(), 60, reason: '旧 max() 会保留 100 复活已花的 40');
+      // 重复回灌写同值，幂等。
+      await dao.mergeSpDegradationSnapshot(spBalance: 60, spEntries: const [], spEventKeys: const []);
+      expect(await dao.balance(), 60);
+    });
+
     test('SP → SQLite 首启迁移：余额+流水入表、SP 快照保留、重放不重复入账', () async {
       SharedPreferences.setMockInitialValues({
         'scare_coin.balance': 42,

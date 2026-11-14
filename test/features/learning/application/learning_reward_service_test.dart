@@ -5,6 +5,8 @@
 // R2 会话奖励每自然日上限 3 次（15 币）
 // R3 目标达成奖励 +20，每自然日仅一次
 // R4 组合：首次结算可同时拿会话+目标奖励
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -77,6 +79,21 @@ class _FakeStore implements ScareCoinStore {
     coins += 1;
     reasons.add('答对＋1');
     return 1;
+  }
+}
+
+/// 前 N 次 grant 抛错的假件，模拟发币偶发失败。
+class _FlakyStore extends _FakeStore {
+  _FlakyStore({required this.failNext});
+  int failNext;
+
+  @override
+  Future<int> grant({required int delta, required String reason}) async {
+    if (failNext > 0) {
+      failNext--;
+      throw StateError('injected grant failure');
+    }
+    return super.grant(delta: delta, reason: reason);
   }
 }
 
@@ -163,6 +180,41 @@ void main() {
 
       expect(result.totalGranted, 25, reason: '会话 +5 + 目标 +20 必须补发');
       expect(store.coins, 25);
+    });
+
+    test('部分失败重试：已成功条目不重复发币（2026-11-14）', () async {
+      final flaky = _FlakyStore(failNext: 1);
+      final svc = LearningRewardService(flaky);
+      await LearningRewardService.enqueuePendingSession(wordsLearned: 10, dailyGoalAchieved: false);
+      await LearningRewardService.enqueuePendingSession(wordsLearned: 10, dailyGoalAchieved: false);
+
+      final first = await svc.settlePendingSessions();
+      expect(first.totalGranted, 5, reason: 'A 成功 B 失败');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(LearningRewardService.pendingKey), isNotNull, reason: '失败条保留');
+
+      final second = await svc.settlePendingSessions();
+      expect(second.totalGranted, 5, reason: '只补发 B，A 不重发');
+      expect(flaky.coins, 10, reason: '旧整队重试会发 15');
+      expect(prefs.getString(LearningRewardService.pendingKey), isNull);
+    });
+
+    test('跨天补发：昨日目标奖作废、不占今日标记（2026-11-14）', () async {
+      await LearningRewardService.enqueuePendingSession(wordsLearned: 10, dailyGoalAchieved: true);
+      // 把归属日改成「昨天」，模拟跨天补发。
+      final prefs = await SharedPreferences.getInstance();
+      final raw = jsonDecode(prefs.getString(LearningRewardService.pendingKey)!) as List;
+      final entry = jsonDecode(raw.first as String) as Map<String, dynamic>;
+      entry['date'] = '2000-01-01';
+      await prefs.setString(LearningRewardService.pendingKey, jsonEncode([jsonEncode(entry)]));
+
+      final result = await service.settlePendingSessions();
+      expect(result.totalGranted, 5, reason: '会话奖照发，昨日目标奖作废');
+      expect(store.reasons, ['学习完成']);
+
+      // 今日真实达标仍可领 +20（标记未被昨日补发占用）。
+      final today = await service.settleSession(wordsLearned: 3, dailyGoalAchieved: true);
+      expect(today.totalGranted, 20);
     });
 
     test('登记超上限时丢最旧并保留最新的（不无限增长）', () async {
