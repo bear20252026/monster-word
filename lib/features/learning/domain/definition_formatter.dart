@@ -20,9 +20,17 @@ class DefinitionFormatter {
       return '';
     }
 
-    final jsonChinese = _extractFromJson(text);
-    if (jsonChinese.isNotEmpty) {
-      return jsonChinese;
+    // 用户反馈修复（2026-11-14）：先判定是否为合法 JSON。是 JSON 就只走结构化
+    // 提取（遍历全部 entry/def），绝不回退到「含 CJK 即取第一行」——否则首 def
+    // 无 cn 时会把原始 JSON 文本当中文释义泄漏到选项/队列。
+    Object? decoded;
+    try {
+      decoded = jsonDecode(text);
+    } on FormatException {
+      decoded = null;
+    }
+    if (decoded is List) {
+      return _extractFromJsonList(decoded);
     }
 
     // 回退：纯文本释义——含中文字符即有效，取第一行含中文的部分。
@@ -32,35 +40,22 @@ class DefinitionFormatter {
     return '';
   }
 
-  static String _extractFromJson(String text) {
-    try {
-      final decoded = jsonDecode(text);
-      if (decoded is! List || decoded.isEmpty) {
-        return '';
+  /// 遍历全部 entry 与 def，返回首个非空 cn/cndef（用户反馈修复 2026-11-14：
+  /// 旧实现只读首 entry 首 def，后续 def 有 cn 的词被误判无中文而滤掉）。
+  static String _extractFromJsonList(List decoded) {
+    for (final entry in decoded) {
+      if (entry is! Map) continue;
+      final definitions = entry['def'];
+      if (definitions is! List) continue;
+      for (final definition in definitions) {
+        if (definition is! Map) continue;
+        final chinese = definition['cn'] ?? definition['cndef'] ?? '';
+        if (chinese is String && chinese.trim().isNotEmpty) {
+          return chinese.trim();
+        }
       }
-
-      final firstEntry = decoded.first;
-      if (firstEntry is! Map) {
-        return '';
-      }
-
-      final definitions = firstEntry['def'];
-      if (definitions is! List || definitions.isEmpty) {
-        return '';
-      }
-
-      final firstDefinition = definitions.first;
-      if (firstDefinition is! Map) {
-        return '';
-      }
-
-      final chinese = firstDefinition['cn'] ?? firstDefinition['cndef'] ?? '';
-      return chinese is String ? chinese.trim() : '';
-    } on FormatException {
-      return '';
-    } on TypeError {
-      return '';
     }
+    return '';
   }
 
   static final RegExp _duplicatedPosDots = RegExp(

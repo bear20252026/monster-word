@@ -254,6 +254,8 @@ class _TopBar extends StatelessWidget {
             onSelected: (value) {
               switch (value) {
                 case 'skip':
+                  // 用户反馈修复（2026-11-14）：跳过也算中断连击，不能靠跳过保 bestCombo。
+                  state.recordAnswer(false);
                   state.rate(FsrsRating.again);
                   break;
                 case 'favorite':
@@ -578,6 +580,8 @@ class _QuizAreaState extends State<_QuizArea> with TickerProviderStateMixin {
         if (mounted) setState(() => _monsterSad = false);
       });
       widget.state.recordAnswer(false);
+      // 用户反馈修复（2026-11-14）：点错即入错词簿，正确率不再恒≈100%。
+      widget.state.noteChoiceWrong();
       _shakeController.forward(from: 0);
     }
     // 报事实给演出层（连续答错的升级由 companion 自己数，页面不判断演什么）。

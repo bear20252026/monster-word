@@ -23,6 +23,16 @@ void main() {
       expect(DefinitionFormatter.extractChinese('not-json'), isEmpty);
       expect(DefinitionFormatter.extractChinese('[{"def":[]}]'), isEmpty);
     });
+
+    test('extractChinese 遍历后续 def 取首个非空 cn（2026-11-14）', () {
+      const interpret = '[{"def":[{"en":"valid"},{"cn":"有效的"}]}]';
+      expect(DefinitionFormatter.extractChinese(interpret), '有效的');
+    });
+
+    test('extractChinese 合法 JSON 无 cn 不泄漏裸 JSON（2026-11-14）', () {
+      const interpret = '[{"def":[{"en":"only english"}]}]';
+      expect(DefinitionFormatter.extractChinese(interpret), isEmpty);
+    });
   });
 
   group('ChoiceGenerator', () {

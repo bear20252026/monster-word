@@ -114,15 +114,34 @@ class LearningSessionState extends ChangeNotifier {
   int get combo => _combo;
   int get bestCombo => _bestCombo;
 
-  /// 记录一次选项作答（首选语义）：对→连击+1，错→清零，并通知。
+  /// 本题是否已点错过（用户反馈修复 2026-11-14：错后重选不续杯、答错入错词簿）。
+  bool _currentWordWrong = false;
+  int? _lastWrongWordId;
+
+  /// 本题是否已点错过（详解页据此分流 again/good）。
+  bool get currentWordWrong => _currentWordWrong;
+
+  /// 记录一次选项作答（首选语义）：对→连击+1（本题点错过则不续杯），错→清零。
   void recordAnswer(bool correct) {
     if (correct) {
-      _combo++;
-      if (_combo > _bestCombo) _bestCombo = _combo;
+      if (!_currentWordWrong) {
+        _combo++;
+        if (_combo > _bestCombo) _bestCombo = _combo;
+      }
     } else {
       _combo = 0;
+      _currentWordWrong = true;
     }
     notifyListeners();
+  }
+
+  /// 学习页点错候选时登记：当前词入错词簿（去重），供完成页回顾与正确率口径。
+  void noteChoiceWrong() {
+    final word = currentWord;
+    if (word == null || _lastWrongWordId == word.id) return;
+    _lastWrongWordId = word.id;
+    _errorWords.add(word);
+    _currentWordWrong = true;
   }
 
   /// 今日已学计数（跨会话持久化，跨天自动清零）——Learning 卡剩余联动
@@ -309,6 +328,9 @@ class LearningSessionState extends ChangeNotifier {
 
     _currentBook = null;
     _replaceQueue(favorites.take(limit).toList(growable: false));
+    // 用户反馈修复（2026-11-14）：收藏局是新的一局，清上局错词/正确率/连击/
+    // 发币标记，避免沿用上一局统计与漏发本局奖励。
+    _resetSessionProgress();
   }
 
   Future<void> loadBook(Book book, {int? limit, bool shuffle = true}) async {
@@ -446,6 +468,8 @@ class LearningSessionState extends ChangeNotifier {
       // `> _queue.length` 永不触发，最后一词的会话完成 breadcrumb 从未记录。
       final wasLastWord = _currentIndex == _queue.length - 1;
       _currentIndex++;
+      _currentWordWrong = false;
+      _lastWrongWordId = null;
       // 完成整个队列：让 currentWord 变为 null，触发学习完成界面，而不是永远停在最后一个词。
       if (_currentIndex >= _queue.length) {
         _currentIndex = _queue.length;
@@ -553,6 +577,10 @@ class LearningSessionState extends ChangeNotifier {
   }
 
   void _replaceQueue(List<Word> rawQueue, {bool shuffle = true}) {
+    // 用户反馈修复（2026-11-14）：扩池原先每 App 生命周期只取一次，整天共用
+    // 同一批 24 干扰词。换书/换收藏时重置，下一题重新随机取样。
+    _extraChoicePool = const [];
+    _extraChoicePoolLoad = null;
     // 过滤无中文释义的空壳词：词库约 55% 词条缺 interpret（数据源如此），
     // 空词进队列会导致四选一残缺、详情页空白。宁少勿缺。
     final filtered = rawQueue

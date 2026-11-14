@@ -74,6 +74,13 @@ class ReviewScheduleRepository extends ChangeNotifier {
   FsrsCardCounts? _counts;
   final Map<String, Future<void>> _fillingWords = <String, Future<void>>{};
 
+  /// 用户反馈修复（2026-11-14）：_counts 原先只在启动 _load() 算一次，App 运行中
+  /// 跨过 dueDate 的卡不进 due 桶 ⇒ 首页徽章「0 待复习」点进去却有一堆。
+  /// 改为读时惰性重算：dueCount 被读取且距上次聚合超 60s 才异步重算 SQL 聚合，
+  /// 值变化才通知（reader 已监听本仓储）。不建常驻 Timer，widget 测试无 pending timer。
+  DateTime? _lastCountsLoad;
+  bool _countsRefreshing = false;
+
   /// 卡片缓存上限（LRU）：到期积压 + 会话工作集之上留足余量；
   /// 触顶后淘汰最久未访问项，常驻内存有界。
   static const int cardsCacheLimit = 4096;
@@ -90,6 +97,40 @@ class ReviewScheduleRepository extends ChangeNotifier {
 
   Future<void> initialize() => _initialization ??= _load();
 
+  void _maybeRefreshCounts() {
+    if (!_useSqlite || _countsRefreshing) return;
+    final last = _lastCountsLoad;
+    final now = DateTime.now();
+    if (last != null && now.difference(last) < const Duration(seconds: 60)) return;
+    _countsRefreshing = true;
+    unawaited(_refreshCounts());
+  }
+
+  Future<void> _refreshCounts() async {
+    final store = _store;
+    if (store == null) {
+      _countsRefreshing = false;
+      return;
+    }
+    try {
+      final fresh = await store.loadCounts(DateTime.now());
+      _lastCountsLoad = DateTime.now();
+      final old = _counts;
+      _counts = fresh;
+      if (old == null ||
+          old.due != fresh.due ||
+          old.learning != fresh.learning ||
+          old.mature != fresh.mature ||
+          old.newCount != fresh.newCount) {
+        notifyListeners();
+      }
+    } catch (e, s) {
+      reportSwallowedError('到期计数重算失败（沿用旧值）', e, s);
+    } finally {
+      _countsRefreshing = false;
+    }
+  }
+
   bool get isInitialized => _initialization != null;
 
   /// MEM：释放 SQLite 应用与句柄（由 DI disposeServiceLocator 调用）。
@@ -98,6 +139,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
   /// 与 _writeGate——同实例 initialize→close→initialize 必须能重新加载，
   /// 不再进入「store 已关但 _initialization 仍完成态」的半关闭状态。
   Future<void> close() async {
+    _lastCountsLoad = null;
     await _writeGate;
     final store = _store;
     _store = null;
@@ -164,7 +206,11 @@ class ReviewScheduleRepository extends ChangeNotifier {
   @visibleForTesting
   Future<void> debugFlushFills() => Future.wait(_fillingWords.values.toList());
 
-  int get dueCount => _counts?.due ?? _engine.getDueCards(_cards.values.toList()).length;
+  int get dueCount {
+    _maybeRefreshCounts();
+    return _counts?.due ?? _engine.getDueCards(_cards.values.toList()).length;
+  }
+
   int get activeDateCount => _activeDates.length;
 
   /// 从今天向前连续有学习活动的天数。
@@ -513,6 +559,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
       // 批量按需取库。
       final now = DateTime.now();
       _counts = await store.loadCounts(now);
+      _lastCountsLoad = now;
       final dueCards = await store.loadDueCards(now);
       _cards = {for (final card in dueCards) card.word: card};
       _dailyStats = await store.loadDailyStats();
@@ -532,6 +579,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
       if (replayed > 0) {
         final nowAfterReplay = DateTime.now();
         _counts = await store.loadCounts(nowAfterReplay);
+        _lastCountsLoad = nowAfterReplay;
         final dueAfterReplay = await store.loadDueCards(nowAfterReplay);
         _cards = {for (final card in dueAfterReplay) card.word: card};
         _dailyStats = await store.loadDailyStats();
