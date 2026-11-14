@@ -20,7 +20,7 @@ class UserDatabase {
   UserDatabase._();
 
   /// 应用当前支持的 schema 版本（与 [_onUpgrade] 步进保持同步）。
-  static const int _schemaVersion = 10;
+  static const int _schemaVersion = 11;
 
   Database? _db;
   bool _initialized = false;
@@ -281,6 +281,7 @@ class UserDatabase {
     await _createDailyMissionsTable(db);
     await _createXpStateTable(db);
     await _createMasteredWordsTable(db);
+    await _createCompanionMemoryTable(db);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -324,6 +325,11 @@ class UserDatabase {
     if (oldVersion < 10) {
       await _createMasteredWordsTable(db);
     }
+    // 学习伴侣 AI 化：小怪兽长期记忆表（CompanionMemoryDao 的事实来源）。
+    // 纯新增表，旧库升级只建空表（记忆从今天起沉淀，不回填）。
+    if (oldVersion < 11) {
+      await _createCompanionMemoryTable(db);
+    }
   }
 
   /// P2-10：掌握词表。单词文本主键——与 favorite_words 同口径，
@@ -336,6 +342,24 @@ class UserDatabase {
       )
     ''');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_mastered_words_created ON mastered_words(created_at)');
+  }
+
+  /// 学习伴侣 AI 化：小怪兽长期记忆表。
+  ///
+  /// 一行 = 一条记忆。`kind` 分层（fact 事实 / recent 近期 / persona 人格）；
+  /// (kind,key) 唯一——同层同键 upsert 覆盖，幂等沉淀。`content` 为记忆正文，
+  /// `updated_at` 毫秒时间戳（近期层按此淘汰旧记忆）。
+  Future<void> _createCompanionMemoryTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS companion_memory (
+        kind TEXT NOT NULL,
+        key TEXT NOT NULL,
+        content TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        PRIMARY KEY (kind, key)
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_companion_memory_updated ON companion_memory(updated_at)');
   }
 
   /// M2（D1/D2）：每日任务表。
