@@ -22,9 +22,12 @@ class OpenAiLlmClient implements LlmClient {
 
   final String _baseUrl;
   final String model;
-  final String apiKey;
+  String apiKey;
   final http.Client _http;
   final Duration timeout;
+
+  /// 后台补入密钥（解析器异步从安全存储读入；未就绪前调用按失败回退）。
+  void setApiKey(String value) => apiKey = value;
 
   @override
   bool get isLive => true;

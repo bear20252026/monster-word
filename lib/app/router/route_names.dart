@@ -70,4 +70,7 @@ class RouteNames {
 
   /// 词书图鉴 demo（蓝图 T3：20 词程序化记忆兽生成器观感验证）。
   static const String memoryBeastGallery = '/memory_beast_gallery';
+
+  /// 学习伴侣 AI 化：和小怪兽聊天（companion 域）。
+  static const String monsterChat = '/monster_chat';
 }

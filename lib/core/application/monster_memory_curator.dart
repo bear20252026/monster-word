@@ -56,6 +56,9 @@ class MonsterMemoryCurator {
     await _memory.put(MemoryKind.persona, key, content);
   }
 
+  /// 近期层容量控制（委托端口）：只保留最新 [limit] 条。
+  Future<void> trimRecent(int limit) => _memory.trimRecent(limit);
+
   /// 组装供 LLM 的记忆上下文（事实 + 近期 + 人格，中性文本）。
   Future<String> buildContext({int recentLimit = 5}) async {
     final facts = await _memory.read(MemoryKind.fact);
