@@ -12,13 +12,21 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
+import 'package:word_app/core/application/monster_memory_curator.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/infrastructure/companion_memory_dao.dart';
+import 'package:word_app/core/infrastructure/llm_resolver.dart';
 import 'package:word_app/features/companion/application/monster_companion_port.dart';
 import 'package:word_app/features/companion/presentation/monster_companion_state.dart';
 
 Widget buildCompanionFeatureScope({required Widget child}) {
   return ChangeNotifierProvider<MonsterCompanionState>(
-    create: (_) => MonsterCompanionState(),
+    // 学习伴侣 AI 化：注入 LLM（按配置解析，未配置规则兜底）+ 记忆 curator，
+    // 主动台词已配置时异步 LLM 增强、未配置完全走原模板（行为等同现状）。
+    create: (context) => MonsterCompanionState(
+      llm: resolveLlmClient(context.read<PresentationPrefs>().llmConfig),
+      memory: MonsterMemoryCurator(CompanionMemoryDao.instance),
+    ),
     // 用 ListenableProvider（不是 ChangeNotifierProvider）：端口是抽象接口，
     // 不满足 ChangeNotifierProvider 的 `T extends ChangeNotifier` 约束，
     // 但它实现的 Listenable 足够让 widgets/ 里的舞台收到更新。
