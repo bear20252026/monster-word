@@ -211,6 +211,26 @@ class AppPreferences extends BaseSharedPreferences {
   bool get isTodayGoalMigrated => getBool(todayGoalMigratedKey, defaultValue: false);
   Future<void> markTodayGoalMigrated() => setBool(todayGoalMigratedKey, true);
 
+  // ── 学习伴侣 AI 化 · LLM 配置（key 走 LlmCredentials 安全存储，不在此明文）──
+
+  /// AI 伙伴开关（默认关：未开启时小怪兽行为等同现状）。
+  static const String llmEnabledKey = 'llm_enabled_v1';
+
+  /// OpenAI 兼容端点 base URL（如 https://dashscope.aliyuncs.com/compatible-mode/v1）。
+  static const String llmBaseUrlKey = 'llm_base_url_v1';
+
+  /// 模型名（如 qwen-plus）。
+  static const String llmModelKey = 'llm_model_v1';
+
+  bool getLlmEnabled() => getBool(llmEnabledKey, defaultValue: false);
+  Future<bool> setLlmEnabled(bool value) => setBool(llmEnabledKey, value);
+
+  String getLlmBaseUrl() => getString(llmBaseUrlKey);
+  Future<bool> setLlmBaseUrl(String value) => setString(llmBaseUrlKey, value);
+
+  String getLlmModel() => getString(llmModelKey);
+  Future<bool> setLlmModel(String value) => setString(llmModelKey, value);
+
   // ── 助记展示偏好（settings 与 dictionary 共享 key，架构审计后上提）──
 
   /// 助记段落顺序键（逗号分隔段落名，单词详情页按此排序消费）。
