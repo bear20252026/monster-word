@@ -31,17 +31,26 @@ class ReviewSessionQuestionFactory {
   List<WordChoicePair> createChoices({
     required MwWordProcess? currentWord,
     required Iterable<MwWordProcess> reviewWords,
+    Iterable<Word> extraCandidates = const [],
   }) {
     if (currentWord == null) return const [];
 
+    // 用户反馈修复（2026-11-14）：reviewList 随答题收缩，末题只剩正确项，
+    // 旧实现会补「非标准用法」等假占位。extraCandidates 由会话状态从词库
+    // 随机取样注入，保证干扰项始终是真实释义。
     final choices = ChoiceGenerator.generate(
       correct: ChoiceCandidate(
         word: currentWord.word,
         interpret: DefinitionFormatter.normalizeDisplay(currentWord.interpret),
       ),
-      candidates: reviewWords.map(
-        (word) => ChoiceCandidate(word: word.word, interpret: DefinitionFormatter.normalizeDisplay(word.interpret)),
-      ),
+      candidates: [
+        ...reviewWords.map(
+          (word) => ChoiceCandidate(word: word.word, interpret: DefinitionFormatter.normalizeDisplay(word.interpret)),
+        ),
+        ...extraCandidates.map(
+          (word) => ChoiceCandidate(word: word.word, interpret: DefinitionFormatter.normalizeDisplay(word.interpret)),
+        ),
+      ],
     );
     return choices.map((choice) => WordChoicePair(choice.word, choice.interpret)).toList();
   }

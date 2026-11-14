@@ -84,6 +84,9 @@ Widget buildLearningFeatureScope({required Widget child}) {
         value: RepositoryReviewScheduleWriterPort(sl<ReviewScheduleRepository>()),
       ),
       Provider<ChoiceGeneratorPort>.value(value: const RepositoryChoiceGeneratorPort()),
+      // N10：查词/随机取样经 application 端口（R-core-repo）。先于会话状态注册，
+      // 供干扰项候选池扩充注入（用户反馈修复 2026-11-14）。
+      Provider<WordLookupReader>(create: (_) => RepositoryWordLookupReader(sl<WordRepository>())),
       Provider<FavoritesPort>.value(value: RepositoryFavoritesPort(sl<FavRepository>())),
       Provider<MasteredWriterPort>.value(value: RepositoryMasteredWriterPort(sl<MasteredRepository>())),
       Provider<NewWordsWriterPort>.value(value: RepositoryNewWordsWriterPort(sl<NewWordRepository>())),
@@ -110,6 +113,8 @@ Widget buildLearningFeatureScope({required Widget child}) {
           choicePort: context.read<ChoiceGeneratorPort>(),
           todayStore: todayProgressStore,
           prefs: presentationPrefs,
+          // 用户反馈修复（2026-11-14）：词库随机真实词扩充干扰项候选池。
+          wordRepository: context.read<WordLookupReader>(),
           // 学习行为埋点（新学词数 / 会话完成 / 答题数）。
           // ⚠️ 本 scope 必须位于 buildTelemetryFeatureScope 内层才能读到它 ——
           // 见 app.dart 的 scope 链序注释 [3]。
@@ -168,6 +173,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
         create: (context) => ReviewSessionState(
           queueReader: sl<ReviewQueueReader>(),
           ratingWriter: context.read<ReviewRatingWriter>(),
+          wordRepository: context.read<WordLookupReader>(),
           // 复习会话完成后的埋点（会话数 / 答题词次 / 答对数）。
           usageStats: context.read<UsageStatsRecorder>(),
           dailyMissions: context.read<DailyMissionStore>(),
@@ -179,6 +185,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
                   ReviewSessionState(
                     queueReader: sl<ReviewQueueReader>(),
                     ratingWriter: ratingWriter,
+                    wordRepository: context.read<WordLookupReader>(),
                     usageStats: context.read<UsageStatsRecorder>(),
                     dailyMissions: context.read<DailyMissionStore>(),
                     snapshotStore: const ReviewSessionSnapshotStore(),
@@ -198,8 +205,7 @@ Widget buildLearningFeatureScope({required Widget child}) {
       Provider<ReviewQueueReader>.value(value: sl<ReviewQueueReader>()),
       // core 基础设施转发（页面经 Provider 通道消费，禁止直取 sl<>——A3 收口）
       Provider<AudioService>.value(value: sl<AudioService>()),
-      // N10：查词/偏好经 application 端口（R-core-repo / R-prefs）
-      Provider<WordLookupReader>(create: (_) => RepositoryWordLookupReader(sl<WordRepository>())),
+      // N10：偏好经 application 端口（R-prefs）；查词端口已前移注册。
       Provider<LearningProgressReader>.value(
         value: LearningProgressReaderImpl(masteredRepository: sl<MasteredRepository>()),
       ),

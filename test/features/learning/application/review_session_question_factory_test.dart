@@ -51,5 +51,25 @@ void main() {
 
       expect(choices, isEmpty);
     });
+
+    test('余池仅当前题时用词库额外候选补足真实四选一（不造占位）', () {
+      // 用户反馈修复（2026-11-14）：reviewList 末题只剩正确项，
+      // 旧实现补「非标准用法」假占位；现在由 extraCandidates 补真实释义。
+      final current = MwWordProcess(word: 'irrelevant', interpret: 'adj. 不相关的');
+      final choices = factory.createChoices(
+        currentWord: current,
+        reviewWords: [current],
+        extraCandidates: [
+          Word(id: 1, word: 'banish', interpret: 'vt. 流放, 放逐'),
+          Word(id: 2, word: 'poor', interpret: 'a. 贫乏的, 穷困的'),
+          Word(id: 3, word: 'valid', interpret: 'adj. 有效的'),
+        ],
+      );
+
+      expect(choices, hasLength(4));
+      expect(choices.where((c) => c.word == 'irrelevant'), hasLength(1));
+      expect(choices.map((c) => c.interpret), isNot(contains('非标准用法')));
+      expect(choices.map((c) => c.interpret).toSet(), hasLength(4));
+    });
   });
 }

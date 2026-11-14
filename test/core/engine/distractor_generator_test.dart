@@ -1,6 +1,6 @@
 // distractor_generator 表测（测试审计 #3「四选一唯一实现无直接测试」补齐）。
 //
-// 覆盖：空入参、释义去重、排除当前词、不足 3 个干扰项补占位、恒 4 选项含正确项。
+// 覆盖：空入参、释义去重、排除当前词、不足 3 个干扰项宁少勿假、池足时 4 选项含正确项。
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:word_app/core/engine/distractor_generator.dart';
@@ -34,22 +34,18 @@ void main() {
       expect(choices.where((c) => c.interpret == '乙'), hasLength(1));
     });
 
-    test('干扰项不足 3 个：占位释义补齐到 4', () {
+    test('干扰项不足 3 个：宁少勿假，不补占位释义', () {
+      // 用户反馈修复（2026-11-14）：旧实现补「释义 N」占位，不是真实释义。
       final choices = buildRandomFourChoices(_w('apple', '苹果'), [_w('b1', '乙')]);
-      expect(choices, hasLength(4));
+      expect(choices, hasLength(2));
       expect(choices.where((c) => c.word == 'apple'), hasLength(1));
-      final placeholders = choices.where((c) => c.word.startsWith('option_')).toList();
-      expect(placeholders, hasLength(2), reason: '1 干扰项 + 2 占位 = 3 个干扰');
-      for (final p in placeholders) {
-        expect(p.interpret, isNotEmpty, reason: '占位释义不得为空串');
-      }
+      expect(choices.where((c) => c.word.startsWith('option_')), isEmpty);
     });
 
-    test('空池：全占位补齐', () {
+    test('空池：仅正确项', () {
       final choices = buildRandomFourChoices(_w('apple', '苹果'), const []);
-      expect(choices, hasLength(4));
-      expect(choices.where((c) => c.word == 'apple'), hasLength(1));
-      expect(choices.where((c) => c.word.startsWith('option_')), hasLength(3));
+      expect(choices, hasLength(1));
+      expect(choices.single.word, 'apple');
     });
   });
 }

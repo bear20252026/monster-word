@@ -6,6 +6,7 @@ import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/engine/srs_engine.dart' show RecallRating;
 import 'package:word_app/core/engine/super_memory_engine.dart';
 import 'package:word_app/core/utils/boss_siege.dart';
+import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
@@ -34,6 +35,7 @@ class ReviewSessionState extends ChangeNotifier {
     this._usageStats,
     this._snapshotStore,
     this._dailyMissions,
+    this._wordRepository,
     SuperMemoryEngine? engine,
     ReviewSessionQuestionFactory? questionFactory,
   }) : _engine = engine ?? SuperMemoryEngine(),
@@ -44,6 +46,12 @@ class ReviewSessionState extends ChangeNotifier {
   final ReviewQueueReader _queueReader;
   final SuperMemoryEngine _engine;
   final ReviewSessionQuestionFactory _questionFactory;
+
+  /// 词库只读端口（可选注入）：会话级随机取样真实词扩充干扰项候选池。
+  /// reviewList 随答题收缩，末题仅靠余池会只剩正确项（旧实现补假占位）。
+  final WordLookupReader? _wordRepository;
+  List<Word> _extraChoicePool = const [];
+  Future<void>? _extraChoicePoolLoad;
   late final ReviewSessionRatingExecutor _ratingExecutor;
 
   /// 使用统计埋点端口；未注入时为 null，埋点静默跳过。
@@ -378,7 +386,29 @@ class ReviewSessionState extends ChangeNotifier {
       return;
     }
 
-    _choices = _questionFactory.createChoices(currentWord: current, reviewWords: _engine.reviewList);
+    // 用户反馈修复（2026-11-14）：余池收缩不再导致假占位/重复干扰项，
+    // 词库随机真实词会话级首取、就绪后再生一次。
+    _ensureExtraChoicePool();
+    _choices = _questionFactory.createChoices(
+      currentWord: current,
+      reviewWords: _engine.reviewList,
+      extraCandidates: _extraChoicePool,
+    );
+  }
+
+  void _ensureExtraChoicePool() {
+    final repository = _wordRepository;
+    if (repository == null || _extraChoicePoolLoad != null) return;
+    _extraChoicePoolLoad = repository
+        .getRandomWords(24)
+        .then((words) {
+          _extraChoicePool = words;
+          _regenerateChoices();
+          notifyListeners();
+        })
+        .catchError((Object _) {
+          // 词库取样失败不阻塞答题：退化为仅余池候选（宁少勿假）。
+        });
   }
 
   @override

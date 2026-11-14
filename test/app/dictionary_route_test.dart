@@ -20,6 +20,9 @@ class _FakeWordLookup implements WordLookupReader {
 
   @override
   Future<Word?> getWordByText(String text) async => found;
+
+  @override
+  Future<List<Word>> getRandomWords(int count) async => const [];
 }
 
 void main() {
