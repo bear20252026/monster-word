@@ -6,6 +6,7 @@
 // 落袋后父级刷新余额（AnimatedSwitcher 数字 pop）。
 import 'package:flutter/material.dart';
 
+import 'package:word_app/core/utils/celebration_driver.dart';
 import 'package:word_app/core/utils/celebration_math.dart';
 import 'package:word_app/widgets/coin_swallow_celebration.dart' show CoinBadge;
 
@@ -41,23 +42,26 @@ class _FlyCoin extends StatefulWidget {
   State<_FlyCoin> createState() => _FlyCoinState();
 }
 
-class _FlyCoinState extends State<_FlyCoin> with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
+class _FlyCoinState extends State<_FlyCoin> with TickerProviderStateMixin {
+  late final CelebrationDriver _driver;
   late final Animation<double> _ease;
   bool _notified = false;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 650))
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed && !_notified) {
+    // P2-8：驱动收口于共享 CelebrationDriver（固定时长+完成回调），去 SingleTicker 样板。
+    _driver = CelebrationDriver(
+      vsync: this,
+      duration: const Duration(milliseconds: 650),
+      onCompleted: () {
+        if (!_notified) {
           _notified = true;
           widget.onDone();
         }
-      })
-      ..forward();
-    _ease = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
+      },
+    )..play();
+    _ease = CurvedAnimation(parent: _driver.controller, curve: Curves.easeIn);
   }
 
   @override
@@ -67,7 +71,7 @@ class _FlyCoinState extends State<_FlyCoin> with SingleTickerProviderStateMixin 
       _notified = true;
       widget.onDone();
     }
-    _ctrl.dispose();
+    _driver.dispose();
     super.dispose();
   }
 

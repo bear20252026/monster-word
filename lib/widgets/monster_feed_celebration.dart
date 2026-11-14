@@ -10,6 +10,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'package:word_app/core/utils/celebration_driver.dart';
 import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/effect_palette.dart';
@@ -50,11 +51,13 @@ class MonsterFeedCelebration extends StatefulWidget {
   State<MonsterFeedCelebration> createState() => _MonsterFeedCelebrationState();
 }
 
-class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with SingleTickerProviderStateMixin {
+class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with TickerProviderStateMixin {
   // 组件随结算一次性创建（父层结算成功才挂载），coinCount 视为生命周期内不变。
   late final int _visibleCoins;
   late final int _totalMs;
-  late final AnimationController _controller;
+  // P2-8：驱动收口于共享 CelebrationDriver；Interval 错峰仍需底层 controller 作 parent。
+  late final CelebrationDriver _driver;
+  AnimationController get _controller => _driver.controller;
   late final List<Animation<Offset>> _flights;
   late final List<Animation<double>> _fadeIns;
   late final List<Animation<double>> _swallows;
@@ -66,7 +69,7 @@ class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with Si
     _visibleCoins = math.min(requested, _kMaxVisibleCoins);
     _initCoinWidgets();
     _totalMs = _visibleCoins > 0 ? _visibleCoins * _kStaggerMs + _kTailMs : 0;
-    _controller = AnimationController(
+    _driver = CelebrationDriver(
       vsync: this,
       duration: Duration(milliseconds: _totalMs),
     );
@@ -96,7 +99,7 @@ class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with Si
         ),
     ];
     if (_visibleCoins > 0) {
-      _controller.forward();
+      _driver.play();
       // 末枚金币落嘴 = 打嗝回弹起点：同步给一声 burp（SfxPlayer 静音档自会短路）。
       _burpTimer = Timer(Duration(milliseconds: _feedEndMs), () => SfxPlayer.fire(Sfx.burp));
     }
@@ -116,7 +119,7 @@ class _MonsterFeedCelebrationState extends State<MonsterFeedCelebration> with Si
   @override
   void dispose() {
     _burpTimer?.cancel();
-    _controller.dispose();
+    _driver.dispose();
     super.dispose();
   }
 

@@ -4,6 +4,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:word_app/core/utils/celebration_driver.dart';
 import 'package:word_app/core/utils/celebration_math.dart';
 import 'package:word_app/tokens/effect_palette.dart';
 
@@ -92,8 +93,8 @@ class ConfettiOverlay extends StatefulWidget {
   State<ConfettiOverlay> createState() => _ConfettiOverlayState();
 }
 
-class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _ConfettiOverlayState extends State<ConfettiOverlay> with TickerProviderStateMixin {
+  late CelebrationDriver _driver;
   final List<ConfettiParticle> _particles = [];
   final math.Random _random = math.Random();
   bool _isPlaying = false;
@@ -101,14 +102,9 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: widget.duration);
-
-    _controller.addListener(_updateParticles);
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _stop();
-      }
-    });
+    // P2-8：驱动收口于共享 CelebrationDriver（固定时长+完成回调+Listenable repaint）。
+    _driver = CelebrationDriver(vsync: this, duration: widget.duration, onCompleted: _stop);
+    _driver.addListener(_updateParticles);
 
     widget.controller?.addListener(_onControllerChanged);
 
@@ -119,7 +115,7 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
 
   @override
   void dispose() {
-    _controller.dispose();
+    _driver.dispose();
     widget.controller?.removeListener(_onControllerChanged);
     super.dispose();
   }
@@ -140,7 +136,7 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
       _initParticles();
     });
     _lastTick = null; // 重置帧间隔基准，防上一轮残留时间戳产生巨大 dt
-    _controller.forward(from: 0);
+    _driver.play();
   }
 
   void _stop() {
@@ -149,7 +145,7 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
       _isPlaying = false;
       _particles.clear();
     });
-    _controller.reset();
+    _driver.stop();
     widget.onComplete?.call();
   }
 
@@ -217,7 +213,7 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
     final now = DateTime.now();
     final dt = _lastTick == null ? 1 / 60 : (now.difference(_lastTick!).inMicroseconds / 1e6).clamp(1 / 240, 1 / 20);
     _lastTick = now;
-    final fading = _controller.value > 0.7;
+    final fading = _driver.progress > 0.7;
     for (final p in _particles) {
       // P2-8：位置/重力/旋转/淡出积分收口于共享 stepParticle（纯数学单测锚定）。
       final k = stepParticle(
@@ -250,7 +246,7 @@ class _ConfettiOverlayState extends State<ConfettiOverlay> with SingleTickerProv
           Positioned.fill(
             child: IgnorePointer(
               child: CustomPaint(
-                painter: _ConfettiPainter(particles: _particles, repaint: _controller),
+                painter: _ConfettiPainter(particles: _particles, repaint: _driver),
               ),
             ),
           ),
