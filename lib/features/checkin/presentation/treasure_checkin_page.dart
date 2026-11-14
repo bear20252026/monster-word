@@ -178,8 +178,8 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
       final interest = bellyInterestFor(awayMinutes: awayMinutes, yesterdayWords: words);
       if (!mounted) return;
       setState(() => _bellyPending = interest.coins);
-      // 刷新在场时刻：本次进页起重新计时（同日闸门仍由 settledDay 把守）。
-      await _bellyStore.markSeen();
+      // 用户反馈修复（2026-11-14）：进页**不**重置在场时刻——否则展示出的
+      // 利息未点罐就离开会被吞掉。在场时刻只在点罐结算成功（markSettled）时刷新。
     } catch (e, s) {
       reportSwallowedError('离线计息刷新失败', e, s);
     }

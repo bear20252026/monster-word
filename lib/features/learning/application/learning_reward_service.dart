@@ -52,7 +52,15 @@ class LearningRewardService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final list = _readPending(prefs)
-        ..add(jsonEncode({'wordsLearned': wordsLearned, 'dailyGoalAchieved': dailyGoalAchieved}));
+        ..add(
+          jsonEncode({
+            'wordsLearned': wordsLearned,
+            'dailyGoalAchieved': dailyGoalAchieved,
+            // 用户反馈修复（2026-11-14）：记录归属日，跨天补发时目标奖作废，
+            // 避免「昨天达标今天领 +20、今天真实达标反而领不到」。
+            'date': DateTime.now().toIso8601String().substring(0, 10),
+          }),
+        );
       final kept = list.length > pendingCap ? list.sublist(list.length - pendingCap) : list;
       if (list.length > kept.length) {
         reportSwallowedError(
@@ -83,8 +91,9 @@ class LearningRewardService {
 
   /// 结算全部待结算会话（幂等；进程内串行）。返回累计发出币数。
   ///
-  /// 任一条失败就**保留整个队列**下次重试 —— 宁可重复尝试（`settleSession`
-  /// 有每日上限，不会超发），也不要静默丢掉用户的奖励。
+  /// 用户反馈修复（2026-11-14）：**逐条移除已成功条目**，只保留失败条目下次
+  /// 重试。旧实现「任一条失败保留整队」会让已成功条目在重试时再次发币
+  /// （`settleSession` 的每日上限只限总量，不防同会话重发）。
   Future<SessionRewardResult> settlePendingSessions() async {
     if (_draining) return const SessionRewardResult(totalGranted: 0);
     _draining = true;
@@ -95,22 +104,27 @@ class LearningRewardService {
 
       var granted = 0;
       var goalJustAchieved = false;
-      var failed = false;
+      final remaining = <String>[];
       for (final entry in list) {
         try {
           final map = jsonDecode(entry) as Map<String, dynamic>;
           final result = await settleSession(
             wordsLearned: (map['wordsLearned'] as num?)?.toInt() ?? 0,
             dailyGoalAchieved: (map['dailyGoalAchieved'] as bool?) ?? false,
+            achievedDate: (map['date'] as String?),
           );
           granted += result.totalGranted;
           goalJustAchieved = goalJustAchieved || result.goalJustAchieved;
         } catch (e, s) {
-          failed = true;
-          reportSwallowedError('待结算会话发币失败（保留队列下次重试）', e, s);
+          remaining.add(entry);
+          reportSwallowedError('待结算会话发币失败（保留该条下次重试）', e, s);
         }
       }
-      if (!failed) await prefs.remove(pendingKey);
+      if (remaining.isEmpty) {
+        await prefs.remove(pendingKey);
+      } else {
+        await prefs.setString(pendingKey, jsonEncode(remaining));
+      }
       return SessionRewardResult(totalGranted: granted, goalJustAchieved: goalJustAchieved);
     } finally {
       _draining = false;
@@ -125,9 +139,16 @@ class LearningRewardService {
   ///
   /// [wordsLearned] 本会话实际学过的词数；[dailyGoalAchieved] 截至本次结算
   /// 今日已学是否达到每日目标。幂等性由调用方保证（每会话只调用一次）。
-  Future<SessionRewardResult> settleSession({required int wordsLearned, required bool dailyGoalAchieved}) async {
+  Future<SessionRewardResult> settleSession({
+    required int wordsLearned,
+    required bool dailyGoalAchieved,
+    String? achievedDate,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final today = _today();
+    // 用户反馈修复（2026-11-14）：目标奖只认归属日=结算日；跨天补发作废，
+    // 不占用今日标记（今日真实达标仍可领）。
+    final goalEligible = dailyGoalAchieved && (achievedDate == null || achievedDate == today);
     var granted = 0;
     var goalJustAchieved = false;
 
@@ -161,7 +182,7 @@ class LearningRewardService {
     }
 
     // 2) 每日目标达成奖励（当日仅一次）
-    if (dailyGoalAchieved && prefs.getString(_kGoalDate) != today) {
+    if (goalEligible && prefs.getString(_kGoalDate) != today) {
       if (!await prefs.setString(_kGoalDate, today)) {
         return SessionRewardResult(totalGranted: granted, goalJustAchieved: goalJustAchieved);
       }

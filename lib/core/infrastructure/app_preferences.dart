@@ -163,6 +163,7 @@ class AppPreferences extends BaseSharedPreferences {
   static const dailyNewWordsKey = 'daily_new_words_v1';
   static const todayLearnedKey = 'learning_today_learned_count';
   static const todayLearnedDateKey = 'learning_today_learned_date';
+  static const todayLearnedWordsKey = 'learning_today_learned_words';
 
   /// 读取每日新学目标（默认 10，与 LearningPreferencesRepository.defaults 一致）
   int getDailyNewWords() => getInt(dailyNewWordsKey, defaultValue: 10);
@@ -172,12 +173,23 @@ class AppPreferences extends BaseSharedPreferences {
 
   /// 保存今日已学数与日期
   Future<void> setTodayLearned(int count, {required String date}) async {
+    final oldDate = getTodayLearnedDate();
     await setInt(todayLearnedKey, count);
     await setString(todayLearnedDateKey, date);
+    if (oldDate != date) await setStringList(todayLearnedWordsKey, const <String>[]);
   }
 
   /// 已存日期（用于跨天判断）
   String getTodayLearnedDate() => getString(todayLearnedDateKey);
+
+  /// 今日已学去重词集（用户反馈修复 2026-11-14：跳过/重答不再刷每日目标）。
+  /// 跨天由 [setTodayLearned] 在日期变化时一并清空。
+  Set<String> getTodayLearnedWords() => getStringList(todayLearnedWordsKey).toSet();
+
+  /// 未初始化（测试/首帧前）静默跳过，与读操作 null 安全口径一致。
+  Future<void> setTodayLearnedWords(Set<String> words) async {
+    await _prefs?.setStringList(todayLearnedWordsKey, words.toList());
+  }
 
   // ── Boss 战「当日首次入场」标记（sp 单键，值形如 2026-11-05）──
 
