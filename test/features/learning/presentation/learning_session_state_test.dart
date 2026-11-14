@@ -271,6 +271,40 @@ void main() {
     expect(spy.correct, 1);
   });
 
+  test('点错入错词簿且去重；本题标记在推进后重置（2026-11-14）', () async {
+    final session = _sessionWithWords(
+      words: [
+        Word(id: 1, word: 'first', interpret: '中文释义'),
+        Word(id: 2, word: 'second', interpret: '中文释义'),
+      ],
+    );
+    await session.loadBook(_testBook, shuffle: false);
+
+    session.noteChoiceWrong();
+    session.noteChoiceWrong(); // 同词去重
+    expect(session.errorWords.map((w) => w.word), ['first']);
+    expect(session.currentWordWrong, isTrue);
+
+    await session.rate(FsrsRating.good);
+    expect(session.currentWordWrong, isFalse, reason: '推进到下一词后标记重置');
+    expect(session.errorWords, hasLength(1), reason: '错词簿保留供完成页回顾');
+  });
+
+  test('错后重选答对不续杯（2026-11-14）', () async {
+    final session = _sessionWithWords(
+      words: [Word(id: 1, word: 'first', interpret: '中文释义')],
+    );
+    await session.loadBook(_testBook, shuffle: false);
+
+    session.recordAnswer(true);
+    expect(session.combo, 1);
+    session.recordAnswer(false);
+    expect(session.combo, 0);
+    session.recordAnswer(true); // 本题点错过，重选答对不续杯
+    expect(session.combo, 0);
+    expect(session.bestCombo, 1);
+  });
+
   test('「再来一组」重载同一词书并清零本局统计与发币标记', () async {
     final session = _sessionWithWords(
       words: [

@@ -83,6 +83,9 @@ class _FakeSessionReader implements LearningSessionReader {
   int get learnedNum => 0;
 
   @override
+  bool get currentWordWrong => false;
+
+  @override
   void addListener(VoidCallback listener) {}
 
   @override
