@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:word_app/widgets/transition_widgets.dart';
 import 'package:word_app/app/router/account_routes.dart';
+import 'package:word_app/app/router/companion_routes.dart';
 import 'package:word_app/app/router/content_routes.dart';
 import 'package:word_app/app/router/learning_routes.dart';
 import 'package:word_app/app/router/misc_routes.dart';
@@ -29,6 +30,7 @@ abstract final class AppRouter {
         SettingsRoutes.build(name, args) ??
         WalletRoutes.build(name, args) ??
         MiscRoutes.build(name, args) ??
+        CompanionRoutes.build(name, args) ??
         RouteErrorPage(routeName: name ?? 'unknown', message: '页面不存在');
   }
 

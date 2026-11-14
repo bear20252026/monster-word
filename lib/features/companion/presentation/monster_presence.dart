@@ -375,9 +375,11 @@ class _MonsterPresenceState extends State<MonsterPresence> with TickerProviderSt
       // 没有导航器就放开闸门，下次点击还能重试。
       _navigating = false;
     } else {
-      // 复位必须等到「我的空间」出栈：复位早了，在这一页上再点怪兽会再推一层同页。
+      // 学习伴侣 AI 化：已配置 LLM 时点击开聊天，未配置保持原「我的空间」行为。
+      final route = _prefs.llmConfig.isConfigured ? RouteNames.monsterChat : RouteNames.mySpace;
+      // 复位必须等到目标页出栈：复位早了，在这一页上再点怪兽会再推一层同页。
       unawaited(
-        navigator.pushNamed(RouteNames.mySpace).whenComplete(() {
+        navigator.pushNamed(route).whenComplete(() {
           if (!mounted) return;
           _navigating = false;
           _syncPersonality();
