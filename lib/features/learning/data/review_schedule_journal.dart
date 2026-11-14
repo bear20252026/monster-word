@@ -78,6 +78,9 @@ class ReviewScheduleJournal {
             isLearn: isLearn || prior == null,
             correct: rating != FsrsRating.again,
             ratingId: ratingId,
+            // 用户反馈修复（2026-11-14）：迁移已导入降级期统计，回放只补卡片，
+            // 不重复计日报/活跃日（防双计）。
+            updateDailyStats: false,
           );
           if (ok) {
             applied++;

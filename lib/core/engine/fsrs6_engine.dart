@@ -11,6 +11,8 @@
 // - 默认权重更新为官方最新机器学习优化值。
 import 'dart:math';
 
+import 'package:word_app/core/utils/calendar_days.dart';
+
 /// FSRS-6 评分等级
 enum FsrsRating {
   again(1, '不认识'), // 完全忘记
@@ -51,12 +53,13 @@ class FsrsCard {
     this.shortTermStability = 0,
   });
 
-  // P3-6（架构审计 2026-11-12）：到期边界统一为「到期时刻即到期」（!isAfter），
-  // 与 getDueCards 同口径——此前 isDue 用 isBefore，dueDate==now 时两者判定相反。
+  // 用户反馈修复（2026-11-14）：到期边界统一为「严格早于现在」（isBefore），
+  // 与 SQL 侧 due_date < ? 同口径——此前内存用 !isAfter(<=) 与 SQL(<) 在
+  // dueDate==now 瞬间判定相反。统一为 < 消除双口径。
   bool get isDue => isDueAt(DateTime.now());
 
   /// 可注入时钟的到期判定（测试用固定时钟）；[isDue] 即当前时刻的特例。
-  bool isDueAt(DateTime now) => !isNew && !dueDate.isAfter(now);
+  bool isDueAt(DateTime now) => !isNew && dueDate.isBefore(now);
 
   Map<String, dynamic> toJson() => {
     'word': word,
@@ -209,7 +212,9 @@ class Fsrs6Engine {
     final now = reviewedAt ?? DateTime.now();
 
     // 距上次复习的天数（同日 = 0 → 短时模型）
-    final elapsed = now.difference(card.lastReview).inDays;
+    // 用户反馈修复（2026-11-14）：用日历日差而非 24h 截断——昨晚 23:00 学、
+    // 今早 08:00 复习应为 1 天（跨日历日），旧 inDays=0 误走短时模型。
+    final elapsed = calendarDaysBetween(card.lastReview, now);
     updated.elapsedDays = elapsed;
 
     if (card.isNew) {
@@ -265,10 +270,10 @@ class Fsrs6Engine {
   }
 
   /// 获取到期的卡片。[now] 可注入（测试用固定时钟）；缺省当前时刻。
-  /// 到期边界与 [FsrsCard.isDue] 同口径：到期时刻即到期（!isAfter）。
+  /// 到期边界与 [FsrsCard.isDue] 同口径：严格早于现在（isBefore，与 SQL due_date < ? 一致）。
   List<FsrsCard> getDueCards(List<FsrsCard> cards, {DateTime? now}) {
     final at = now ?? DateTime.now();
-    return cards.where((c) => !c.isNew && !c.dueDate.isAfter(at)).toList();
+    return cards.where((c) => !c.isNew && c.dueDate.isBefore(at)).toList();
   }
 
   /// 记忆预测快照（review_schedule_repository.predictionFor 消费）
@@ -287,7 +292,7 @@ class Fsrs6Engine {
   /// 获取记忆提取概率（0.0-1.0）。[now] 可注入（测试用固定时钟）；缺省当前时刻。
   double getRetrievability(FsrsCard card, {DateTime? now}) {
     if (card.isNew || card.stability <= 0) return 1.0;
-    final elapsed = (now ?? DateTime.now()).difference(card.lastReview).inDays;
+    final elapsed = calendarDaysBetween(card.lastReview, now ?? DateTime.now());
     return _retrievability(elapsed, card.stability);
   }
 

@@ -7,6 +7,14 @@
 ///
 /// [input] 为用户输入，[answer] 为目标单词。两者均 trim + toLowerCase 后全等才算对。
 /// 空输入对非空答案判错；答案为空时仅空输入判对（防御边界，正常会话答案非空）。
+///
+/// 用户反馈修复（2026-11-14）：全等不中时，仅当双方都不含内部空白时再比
+/// 「去掉连字符」的规范形，容忍 e-mail/email 变体；内部空白仍判错（不放宽）。
 bool gradeSpelling(String input, String answer) {
-  return input.trim().toLowerCase() == answer.trim().toLowerCase();
+  final a = input.trim().toLowerCase();
+  final b = answer.trim().toLowerCase();
+  if (a == b) return true;
+  if (a.isEmpty || b.isEmpty) return false;
+  if (a.contains(RegExp(r'\s')) || b.contains(RegExp(r'\s'))) return false;
+  return a.replaceAll('-', '') == b.replaceAll('-', '');
 }

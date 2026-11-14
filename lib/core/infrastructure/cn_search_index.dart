@@ -296,12 +296,12 @@ class CnSearchIndex {
   }
 
   /// 索引是否已就绪且与当前词库指纹一致（不一致即需重建）。
+  /// 用户反馈修复（2026-11-14）：指纹一致即视为新鲜——旧实现额外要求
+  /// rowCount>0，把「合法空索引」（词库无相邻 CJK 对）误判为过期，导致每次
+  /// 启动全量重扫重建。空索引是合法终态，不应触发重建。
   Future<bool> _isUpToDate(Database db, String fingerprint) async {
     final meta = await db.query(_metaTable, where: 'key = ?', whereArgs: ['fingerprint']);
-    if (meta.isEmpty || meta.first['value'] != fingerprint) return false;
-    final countRows = await db.rawQuery('SELECT COUNT(*) AS c FROM $table');
-    final rowCount = countRows.isEmpty ? 0 : (countRows.first['c'] as int? ?? 0);
-    return rowCount > 0;
+    return meta.isNotEmpty && meta.first['value'] == fingerprint;
   }
 
   /// 重建索引内容（**主 isolate 回退路径**）：分块读词库 → 后台 isolate 生成 bigram

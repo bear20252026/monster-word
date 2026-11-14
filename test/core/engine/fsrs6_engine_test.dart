@@ -244,10 +244,14 @@ void main() {
     FsrsCard boundaryCard({bool isNew = false}) =>
         FsrsCard(word: 'w', lastReview: t0, dueDate: t0, isNew: isNew, stability: 2.3065);
 
-    test('isDue 与 getDueCards 同口径：到期时刻即到期（dueDate==now）', () {
+    test('isDue 与 getDueCards 同口径：严格早于现在（dueDate==now 不算到期，2026-11-14 统一 <）', () {
       final card = boundaryCard();
-      expect(card.isDueAt(t0), isTrue, reason: '到期时刻即到期，与 getDueCards 一致');
-      expect(engine.getDueCards([card], now: t0), [card]);
+      expect(card.isDueAt(t0), isFalse, reason: 'dueDate==now 不算到期，与 SQL due_date < ? 一致');
+      expect(engine.getDueCards([card], now: t0), isEmpty);
+      // 严格晚于到期时刻才算到期。
+      final later = t0.add(const Duration(seconds: 1));
+      expect(card.isDueAt(later), isTrue);
+      expect(engine.getDueCards([card], now: later), [card]);
     });
 
     test('未到期（dueDate 在 now 之后）两处都判不到期', () {

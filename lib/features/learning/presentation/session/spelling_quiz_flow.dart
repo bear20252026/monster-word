@@ -3,6 +3,8 @@
 // 拼写/听写/快速拼写三页共享的测验流程：判分状态机 + 页面脚手架。
 // 消除三页各自维护的 ~250 行重复逻辑（判分/推进/空态/结果弹窗），
 // 反馈改为图标 + 文案（wasCorrect 布尔驱动），不再用 ✓/✗ 字符串前缀判色。
+import 'dart:math' show Random;
+
 import 'package:flutter/material.dart';
 
 import 'package:word_app/app/router/nav_utils.dart';
@@ -160,12 +162,13 @@ class SpellingQuizController extends ChangeNotifier {
   }
 
   /// 重开会话：重跑上次 loader（或复用上次注入的词表）并复位计数。
+  /// 用户反馈修复（2026-11-14）：复用词表时洗牌，避免「再来一次」原序可背序。
   void restart() {
     final loader = _loader;
     if (loader != null) {
       load(loader);
     } else {
-      _seed(_source);
+      _seed(List<Word>.of(_source)..shuffle(Random()));
     }
   }
 
