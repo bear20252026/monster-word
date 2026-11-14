@@ -553,7 +553,7 @@ class ReviewScheduleRepository extends ChangeNotifier {
     var sqliteReady = false;
     try {
       final store = _injectedStore ?? await ReviewScheduleStore.open();
-      await _migration.migrateFromSpIfNeeded(store);
+      final migratedNow = await _migration.migrateFromSpIfNeeded(store);
       // MEM/F3+异步化：启动不再全表物化卡片——计数走 SQL 聚合，内存只装
       // 到期子集（LRU 有界）；其余词由 [cardFor] 读穿填充或 [cardsForWords]
       // 批量按需取库。
@@ -570,7 +570,9 @@ class ReviewScheduleRepository extends ChangeNotifier {
       sqliteReady = true;
       // P1-01：SQLite 恢复后先回放降级期间的评分日志（幂等），再清旧快照——
       // 否则降级期新数据会被 marker=done 跳过迁移而静默消失（MW-22）。
-      final replayed = await _journal.replay(store);
+      // 用户反馈修复（2026-11-14）：本次刚迁移导入统计时回放跳过日报防双计；
+      // 无迁移时回放自计统计（P1-03）。
+      final replayed = await _journal.replay(store, updateDailyStats: !migratedNow);
       // 审计 P1-03：回放写的是**库**，而上面的 `_counts` / `_cards` /
       // `_dailyStats` / `_activeDates` 是回放**之前**读的快照 ⇒ 不重读的话，
       // 本次启动全程看到的统计、到期集、连续天数都缺了刚回放的那批评分
