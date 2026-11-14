@@ -161,7 +161,9 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
     });
     context
         .read<QuickReviewWordReader>()
-        .loadWords(limit: type.timeLimit)
+        // 用户反馈修复（2026-11-14）：词数与「秒/词」限时是两回事，旧实现把
+        // timeLimit 当词数（单位混淆）。固定取默认 50 词。
+        .loadWords()
         .then((words) {
           if (!mounted) return;
           setState(() {
