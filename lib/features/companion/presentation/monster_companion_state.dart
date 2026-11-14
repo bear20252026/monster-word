@@ -9,6 +9,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:word_app/core/application/llm_client.dart';
+import 'package:word_app/core/application/monster_memory_curator.dart';
 import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/features/companion/application/monster_companion_port.dart';
 import 'package:word_app/core/utils/monster_event.dart';
@@ -17,15 +19,23 @@ import 'package:word_app/core/utils/monster_scene.dart';
 import 'package:word_app/features/companion/domain/monster_scene_graph.dart';
 
 class MonsterCompanionState extends ChangeNotifier implements MonsterCompanionController {
-  MonsterCompanionState({MonsterSceneGraph? graph, MonsterSpeech? speech})
+  MonsterCompanionState({MonsterSceneGraph? graph, MonsterSpeech? speech, this.llm, this.memory})
     : _graph = graph ?? MonsterSceneGraph(),
       _speech = speech ?? MonsterSpeech();
 
   final MonsterSceneGraph _graph;
   final MonsterSpeech _speech;
 
+  /// 学习伴侣 AI 化：可选 LLM + 记忆。null 或规则版（isLive=false）时主动台词完全
+  /// 走原模板路径（行为等同现状）；真实客户端时异步用 LLM 增强台词（失败保留规则）。
+  final LlmClient? llm;
+  final MonsterMemoryCurator? memory;
+
   MonsterInitiativeDecision? _initiative;
   String? _line;
+
+  /// 主动台词序号：异步 LLM 替换只在序号未变时生效，防过期覆盖新建议。
+  int _lineSeq = 0;
 
   /// 当前场景（渲染用）。
   @override
@@ -124,6 +134,7 @@ class MonsterCompanionState extends ChangeNotifier implements MonsterCompanionCo
       if (_initiative == null) return;
       _initiative = null;
       _line = null;
+      _lineSeq++; // 作废任何在途的异步增强
       notifyListeners();
       return;
     }
@@ -148,6 +159,43 @@ class MonsterCompanionState extends ChangeNotifier implements MonsterCompanionCo
     };
     if (!_speech.canSpeak()) return null;
     _speech.consumeBudget();
-    return _speech.pick(slot, vars: {'due': input.dueCount});
+    final ruleLine = _speech.pick(slot, vars: {'due': input.dueCount});
+    // 学习伴侣 AI 化：已配置真实 LLM 时异步增强台词（带序号防过期覆盖）；
+    // 未配置/规则版直接返回模板台词，行为等同现状。预算已在上方消耗，增强不重扣。
+    final client = llm;
+    if (client != null && client.isLive) {
+      final seq = ++_lineSeq;
+      unawaited(_enhanceLine(client, decision, input, seq));
+    }
+    return ruleLine;
+  }
+
+  /// 异步用 LLM 生成个性化主动台词；失败/超时保留规则台词。序号变了即丢弃（防过期）。
+  Future<void> _enhanceLine(
+    LlmClient client,
+    MonsterInitiativeDecision decision,
+    MonsterInitiativeInput input,
+    int seq,
+  ) async {
+    try {
+      final memoryCtx = memory == null ? '' : await memory!.buildContext();
+      final intent = switch (decision.initiative) {
+        MonsterInitiative.proposeReview => '提醒用户有 ${input.dueCount} 个词待复习，温和鼓励不催促',
+        MonsterInitiative.proposeCheckin => '提醒用户今天还没签到，邀请回来打卡，不指责',
+        MonsterInitiative.welcomeBack => '欢迎用户回来，温暖不指责',
+        MonsterInitiative.proposeThreeWordGroup => '用户连续答错有点难，提议改成只学三个词降低门槛，不评价水平',
+      };
+      final prompt =
+          '你是用户背单词 app 里的桌面小怪兽伙伴。此刻你想：$intent。'
+          '${memoryCtx.isEmpty ? '' : '\n你对用户的记忆：\n$memoryCtx'}'
+          '\n用一两句话主动说出来，温暖口语化，不指责、不催促、不制造焦虑。';
+      final reply = await client.complete([LlmMessage(LlmRole.user, prompt)]);
+      // 序号已变（来了新建议/已清空）→ 丢弃过期回复，绝不覆盖。
+      if (seq != _lineSeq || reply.trim().isEmpty) return;
+      _line = reply.trim();
+      notifyListeners();
+    } catch (_) {
+      // LLM 失败/超时：保留规则台词，不打断陪伴（与台词红线一致：宁可不说也不报错）。
+    }
   }
 }
