@@ -1,3 +1,4 @@
+import 'package:word_app/core/application/llm_client.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 
@@ -107,4 +108,18 @@ class PresentationPrefs {
   }
 
   Future<void> setMonsterLastHomeVisit(String dayKey) => _p.setString(_monsterLastVisitKey, dayKey);
+
+  // ── 学习伴侣 AI 化 · LLM 配置（R-prefs：presentation 经本门面读，key 走安全存储）──
+
+  bool get llmEnabled => _p.getLlmEnabled();
+  Future<void> setLlmEnabled(bool value) => _p.setLlmEnabled(value);
+
+  String get llmBaseUrl => _p.getLlmBaseUrl();
+  Future<void> setLlmBaseUrl(String value) => _p.setLlmBaseUrl(value);
+
+  String get llmModel => _p.getLlmModel();
+  Future<void> setLlmModel(String value) => _p.setLlmModel(value);
+
+  /// 当前 LLM 配置快照（key 不在此对象，由 LlmCredentials 安全存储单独管理）。
+  LlmConfig get llmConfig => LlmConfig(enabled: llmEnabled, baseUrl: llmBaseUrl, model: llmModel);
 }

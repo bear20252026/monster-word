@@ -28,6 +28,7 @@ import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
 import 'package:word_app/core/infrastructure/pet_window_service.dart';
 import 'package:word_app/features/settings/presentation/restore_backup_dialog.dart';
+import 'package:word_app/features/settings/presentation/llm_settings_sheet.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -375,6 +376,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
                   SizedBox(height: context.design.spacing.md),
                   _buildSfxGroup(skin),
                   _buildPetModeGroup(skin),
+                  _buildAiCompanionGroup(skin),
                   _buildBeastGalleryGroup(skin),
                   _buildRedeemReportGroup(skin),
                   SizedBox(height: context.design.spacing.md),
@@ -420,6 +422,22 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           subtitle: _petVisible ? '已开启 · 双击怪兽回到应用' : '让怪兽浮在其他窗口上面',
           trailing: Switch.adaptive(value: _petVisible, onChanged: (on) => unawaited(_togglePetWindow(on))),
           onTap: () => unawaited(_togglePetWindow(!_petVisible)),
+        ),
+      ]),
+    );
+  }
+
+  /// 学习伴侣 AI 化：AI 伙伴设置入口（LLM 服务配置，独立 sheet）。
+  Widget _buildAiCompanionGroup(SkinSystem skin) {
+    return Padding(
+      padding: EdgeInsets.only(top: context.design.spacing.md),
+      child: _SettingGroup([
+        _Cell(
+          icon: Icons.auto_awesome_outlined,
+          iconColor: skin.colors.accent,
+          title: 'AI 伙伴',
+          subtitle: '配置小怪兽的 AI 大脑（可选，未配置保持原样）',
+          onTap: () => unawaited(showLlmSettingsSheet(context)),
         ),
       ]),
     );
