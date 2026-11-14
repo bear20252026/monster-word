@@ -85,6 +85,9 @@ class _TreasureCheckInPageState extends State<TreasureCheckInPage> with SingleTi
   int _reward = 0;
 
   // ── 模拟 ──
+  // P2-8 驱动统一边界：本页是**无限循环** ticker（elapsed/dt，无固定时长、无 completed），
+  // 与共享 CelebrationDriver（固定时长+线性进度+完成回调）语义不同，强行统一会引入视觉
+  // 风险，故保留裸 Ticker + _TickSignal。固定时长演出（confetti/coinfly/feed）已收口该驱动。
   late final Ticker _ticker = createTicker(_onTick);
 
   /// 粒子层重绘信号（性能审计 P2，2026-10-05）：徽章弹簧收敛后全页 setState

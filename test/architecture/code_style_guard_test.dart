@@ -17,8 +17,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// 每拆小一个家族就更新对应上限；新增家族或存量增大一律红灯。
 const Map<String, int> _kPartFamilyRatchet = {
   'lib/core/audio/audio_players.dart': 1100,
-  // 1760：批次 7 P2-8 里程碑庆祝编排收口于 MilestoneCelebration，两份重复方法删减 -30。
-  'lib/features/checkin/presentation/treasure_checkin_page.dart': 1760,
+  // 1763：批次 14 P2-8 驱动统一边界注释 +3（签到保留裸 Ticker 的语义说明）。
+  'lib/features/checkin/presentation/treasure_checkin_page.dart': 1763,
   // 1467：批次 12 P2-6 home 拆域端口化 +5（Reader/Starter 导入与注释）。
   'lib/features/home/presentation/home_screen.dart': 1467,
   // 1051：批次 2 冻结 1047，批次 3 P2-3 性格传参 +4（导入/传参/注释），合理新增。
