@@ -7,6 +7,7 @@ import 'package:word_app/core/engine/core_engine.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/core/engine/leitner_engine.dart';
+import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
@@ -58,6 +59,7 @@ class LearningSessionState extends ChangeNotifier {
     required this._prefs,
     this._usageStats,
     this._dailyMissions,
+    this._wordRepository,
     List<Word> Function(List<Word>)? shuffler,
   }) : _today = todayStore,
        _shuffler = shuffler ?? alphabetSpreadShuffle {
@@ -71,6 +73,12 @@ class LearningSessionState extends ChangeNotifier {
   final ChoiceGeneratorPort _choicePort;
   final TodayProgressStore _today;
   final PresentationPrefs _prefs;
+
+  /// 词库只读端口（可选注入）：会话级随机取样真实词扩充干扰项候选池。
+  /// 未注入（测试/未装配）时不扩充，选项宁少勿假。
+  final WordLookupReader? _wordRepository;
+  List<Word> _extraChoicePool = const [];
+  Future<void>? _extraChoicePoolLoad;
 
   /// 使用统计埋点端口；未注入（测试/未装配）时为 null，全部埋点静默跳过。
   final UsageStatsRecorder? _usageStats;
@@ -571,12 +579,36 @@ class LearningSessionState extends ChangeNotifier {
       return;
     }
 
+    // 用户反馈修复（2026-11-14）：会话队列过小（或复习余池收缩）时干扰项
+    // 反复重复、甚至补假占位。从词库随机取真实词扩充候选池；首题异步加载，
+    // 就绪后再生一次，其后各题复用同一池（释义去重由 ChoiceGenerator 负责）。
+    _ensureExtraChoicePool();
     final generated = _choicePort.generate(
       correct: ChoiceCandidate(word: current.word, interpret: DefinitionFormatter.normalizeDisplay(current.interpret)),
-      candidates: _queue.map(
-        (word) => ChoiceCandidate(word: word.word, interpret: DefinitionFormatter.normalizeDisplay(word.interpret)),
-      ),
+      candidates: [
+        ..._queue.map(
+          (word) => ChoiceCandidate(word: word.word, interpret: DefinitionFormatter.normalizeDisplay(word.interpret)),
+        ),
+        ..._extraChoicePool.map(
+          (word) => ChoiceCandidate(word: word.word, interpret: DefinitionFormatter.normalizeDisplay(word.interpret)),
+        ),
+      ],
     );
     _choices = generated.map((c) => WordChoicePair(c.word, c.interpret)).toList(growable: false);
+  }
+
+  void _ensureExtraChoicePool() {
+    final repository = _wordRepository;
+    if (repository == null || _extraChoicePoolLoad != null) return;
+    _extraChoicePoolLoad = repository
+        .getRandomWords(24)
+        .then((words) {
+          _extraChoicePool = words;
+          _regenerateChoices();
+          notifyListeners();
+        })
+        .catchError((Object _) {
+          // 词库取样失败不阻塞答题：退化为仅会话队列候选（宁少勿假）。
+        });
   }
 }

@@ -15,6 +15,7 @@ import 'package:word_app/features/learning/domain/choice_generator.dart';
 import 'package:word_app/features/learning/domain/definition_formatter.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
+import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
@@ -106,7 +107,43 @@ void main() {
       expect(choices.where((c) => c.word == 'target'), hasLength(1));
       expect(choices.map((c) => c.interpret).toSet(), hasLength(4), reason: '四个选项释义必须互不相同');
     });
+
+    test('REG-QUIZ-004: 小队列必须用词库真实词补干扰项（禁假占位/禁重复老面孔）', () async {
+      // 症状（用户反馈 2026-11-14）：会话队列过小时干扰项反复重复，
+      // 候选不足还补「非标准用法」等硬编码假释义；
+      // 修复：会话状态从词库随机取样真实词扩充候选池。
+      final session = LearningSessionState(
+        queuePort: _FakeQueuePort([Word(id: 1, word: 'solo', interpret: 'adj. 独自的')]),
+        progressPort: _FakeProgressPort(),
+        reviewSchedulePort: _FakeSchedulePort(),
+        choicePort: _RealChoicePort(),
+        todayStore: TodayProgressStore(),
+        prefs: PresentationPrefs(),
+        wordRepository: _FakeWordLookup(),
+      );
+      await session.loadBook(Book(id: 1, code: 'T', name: '测试', wordCount: 1), shuffle: false);
+      await Future<void>.delayed(Duration.zero); // 等词库池首取就绪
+
+      expect(session.choices, hasLength(4), reason: '单词队列也必须是真实四选一');
+      expect(session.choices.where((c) => c.word == 'solo'), hasLength(1));
+      expect(session.choices.map((c) => c.interpret), isNot(contains('非标准用法')));
+      expect(session.choices.map((c) => c.interpret).toSet(), hasLength(4));
+    });
   });
+}
+
+/// 词库端口假件：随机取样返回固定真实词（REG-QUIZ-004 配套）。
+class _FakeWordLookup implements WordLookupReader {
+  @override
+  Future<Word?> getWordByText(String text) async => null;
+
+  @override
+  Future<List<Word>> getRandomWords(int count) async => [
+    Word(id: 901, word: 'pool-a', interpret: '池甲'),
+    Word(id: 902, word: 'pool-b', interpret: '池乙'),
+    Word(id: 903, word: 'pool-c', interpret: '池丙'),
+    Word(id: 904, word: 'pool-d', interpret: '池丁'),
+  ];
 }
 
 class _FakeSchedulePort implements ReviewScheduleWriterPort {

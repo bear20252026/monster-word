@@ -14,13 +14,13 @@ class ChoiceCandidate {
 class ChoiceGenerator {
   const ChoiceGenerator._();
 
-  static const List<ChoiceCandidate> _fallbacks = [
-    ChoiceCandidate(word: '', interpret: '非标准用法'),
-    ChoiceCandidate(word: '', interpret: '罕用释义'),
-    ChoiceCandidate(word: '', interpret: '非正式表达'),
-  ];
-
-  /// 返回一个正确选项与至多三个干扰项；候选池不足时使用稳定的兜底释义补齐。
+  /// 返回一个正确选项与至多三个干扰项。
+  ///
+  /// 用户反馈修复（2026-11-14）：候选不足时**不再**用「非标准用法/罕用释义/
+  /// 非正式表达」等硬编码占位补齐——占位不是真实释义，且文案固定，导致不同
+  /// 单词的题目里反复出现同一批假选项。现在宁少勿假：返回 1~4 个选项
+  /// （正确项 + 至多 3 个真实干扰项）。真实干扰项的扩充由会话状态从词库
+  /// 随机取样完成（见 LearningSessionState / ReviewSessionState 的候选池）。
   static List<ChoiceCandidate> generate({
     required ChoiceCandidate correct,
     required Iterable<ChoiceCandidate> candidates,
@@ -49,13 +49,6 @@ class ChoiceGenerator {
     final distractors = <ChoiceCandidate>[...withChinese.take(3)];
     if (distractors.length < 3) {
       distractors.addAll(withoutChinese.take(3 - distractors.length));
-    }
-
-    for (final fallback in _fallbacks) {
-      if (distractors.length >= 3 || !seenInterprets.add(fallback.interpret)) {
-        continue;
-      }
-      distractors.add(fallback);
     }
 
     final choices = <ChoiceCandidate>[correct, ...distractors];

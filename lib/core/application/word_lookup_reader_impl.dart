@@ -10,4 +10,7 @@ class RepositoryWordLookupReader implements WordLookupReader {
 
   @override
   Future<Word?> getWordByText(String text) => _repository.getWordByText(text);
+
+  @override
+  Future<List<Word>> getRandomWords(int count) => _repository.getRandomWords(count);
 }

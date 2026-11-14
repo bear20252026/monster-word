@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/core/engine/srs_engine.dart';
+import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/core/utils/boss_siege.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_queue_reader.dart';
@@ -25,10 +26,12 @@ void main() {
             persistedRating = rating;
           },
         ),
+        wordRepository: _FakeWordLookup(),
       );
       final words = [Word(id: 1, word: 'first', interpret: '第一'), Word(id: 2, word: 'second', interpret: '第二')];
 
       await state.initialize(ReviewQueueSnapshot(dueWords: words, queueWords: const []));
+      await Future<void>.delayed(Duration.zero); // 等词库候选池首取就绪
       final reviewedWord = state.currentWord;
 
       expect(state.loadPhase, ReviewSessionLoadPhase.ready);
@@ -108,6 +111,7 @@ void main() {
         queueReader: const RepositoryReviewQueueReader(),
         ratingWriter: ReviewRatingWriter(writeRating: ({required word, required rating}) async {}),
         usageStats: spy,
+        wordRepository: _FakeWordLookup(),
       );
       final words = [
         Word(id: 1, word: 'first', interpret: '第一'),
@@ -403,4 +407,19 @@ class _ThrowingQueueReader implements ReviewQueueReader {
   Future<List<Word>> loadWords(ReviewQueueSnapshot snapshot) async {
     throw StateError('review source unavailable');
   }
+}
+
+/// 词库端口假件：随机取样返回固定真实词，供干扰项候选池扩充
+/// （用户反馈修复 2026-11-14 配套）。
+class _FakeWordLookup implements WordLookupReader {
+  @override
+  Future<Word?> getWordByText(String text) async => null;
+
+  @override
+  Future<List<Word>> getRandomWords(int count) async => [
+    Word(id: 901, word: 'pool-a', interpret: '池甲'),
+    Word(id: 902, word: 'pool-b', interpret: '池乙'),
+    Word(id: 903, word: 'pool-c', interpret: '池丙'),
+    Word(id: 904, word: 'pool-d', interpret: '池丁'),
+  ];
 }

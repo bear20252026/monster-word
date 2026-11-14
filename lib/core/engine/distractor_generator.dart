@@ -6,11 +6,12 @@
 import 'package:word_app/core/engine/core_engine.dart';
 import 'package:word_app/models/mw_word_process.dart';
 
-/// 构建 4 选 1 随机选项：1 个正确项 + 3 个干扰项，整体乱序。
+/// 构建 4 选 1 随机选项：1 个正确项 + 至多 3 个干扰项，整体乱序。
 ///
 /// [current] 为当前词（词或释义为空返回空列表——与原实现口径一致）；
 /// [pool] 为干扰项候选池（两引擎分别传当前组+已完成组 / 复习列表+已复习）。
-/// 干扰项按释义去重、排除当前词；不足 3 个时用占位释义补齐。
+/// 干扰项按释义去重、排除当前词；不足 3 个时不再用占位释义补齐
+/// （用户反馈修复 2026-11-14：「释义 N」占位不是真实释义，宁少勿假）。
 List<WordChoicePair> buildRandomFourChoices(MwWordProcess? current, Iterable<MwWordProcess> pool) {
   if (current == null || current.interpret.isEmpty) return [];
 
@@ -34,12 +35,7 @@ List<WordChoicePair> buildRandomFourChoices(MwWordProcess? current, Iterable<MwW
   distractorPool.shuffle();
   final distractors = distractorPool.take(3).toList();
 
-  // 如果干扰项不足3个，用通用释义填充
-  while (distractors.length < 3) {
-    distractors.add(WordChoicePair('option_${distractors.length}', '释义 ${distractors.length + 1}'));
-  }
-
-  // 组合4个选项并随机打乱顺序
+  // 组合选项并随机打乱顺序（不足 4 个时保持真实选项，不造占位）
   final allChoices = [correctPair, ...distractors];
   allChoices.shuffle();
   return allChoices;

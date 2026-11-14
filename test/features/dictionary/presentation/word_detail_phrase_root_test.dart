@@ -42,6 +42,9 @@ class _StubDictionaryExtraReader implements DictionaryExtraReader {
 class _StubWordLookup implements WordLookupReader {
   @override
   Future<Word?> getWordByText(String text) async => null;
+
+  @override
+  Future<List<Word>> getRandomWords(int count) async => const [];
 }
 
 /// 模拟 FavRepository
