@@ -13,7 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 
 void main() {
-  final engine = Fsrs6Engine();
+  // 参考向量锁定官方精确公式链，关闭 fuzz（#23 抖动会改变 scheduledDays）。
+  final engine = Fsrs6Engine(enableFuzzing: false);
   // 官方默认权重下的关键标量（Python double 精度预计算）
   const factor = 0.9803461995830662; // 0.9^(1/-0.1542) - 1
 

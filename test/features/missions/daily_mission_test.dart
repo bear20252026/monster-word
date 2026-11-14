@@ -45,9 +45,10 @@ void main() {
       expect(sessionAccuracyPercent(answered: 0, correct: 0), isNull);
     });
 
-    test('四舍五入到整数百分比', () {
-      expect(sessionAccuracyPercent(answered: 3, correct: 2), 67);
+    test('向下取整到整数百分比（2026-11-14：round 改 floor，防 79.5% 抬到 80）', () {
+      expect(sessionAccuracyPercent(answered: 3, correct: 2), 66);
       expect(sessionAccuracyPercent(answered: 5, correct: 4), 80);
+      expect(sessionAccuracyPercent(answered: 200, correct: 159), 79, reason: '79.5% 不得抬到 80');
     });
 
     test('全对 = 100', () {

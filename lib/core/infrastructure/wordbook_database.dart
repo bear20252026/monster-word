@@ -609,7 +609,9 @@ class WordBookDatabase {
     // ① 该书全部词 id（覆盖索引查询，不碰 words 表）
     final idRows = await db.rawQuery('SELECT word_id FROM word_books WHERE book_id = ?', [bookId]);
     if (idRows.isEmpty) return const [];
-    final ids = [for (final row in idRows) row['word_id'] as int];
+    // 用户反馈修复（2026-11-14）：word_books 无 UNIQUE 约束，重复映射行会让
+    // 同一词在一局出现两次（重复题/错词双计）。抽样前去重。
+    final ids = {for (final row in idRows) row['word_id'] as int}.toList();
     if (ids.length <= limit) {
       // 全书不足 limit：退化为整本按字母序返回，避免重复抽样
       return _wordsByIds(ids, lightweight: lightweight);

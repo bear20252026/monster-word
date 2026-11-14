@@ -53,6 +53,18 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   static const String answerRewardCountKey = 'scare_coin.answer_reward.count';
   static const int reward = 10;
 
+  /// 单调「已处理到的最大自然日」水位（用户反馈修复 2026-11-14：防时钟回拨重领）。
+  static const String _maxSeenDayKey = 'scare_coin.max_seen_day';
+
+  /// 若 [today] 不早于水位则推进水位并返回 true；早于水位（时钟回拨）返回 false，
+  /// 调用方据此拒绝当日奖励，避免回拨到「未领过的昨天」再领一次。
+  Future<bool> _advanceDayWatermark(SharedPreferences prefs, String today) async {
+    final maxSeen = prefs.getString(_maxSeenDayKey) ?? '';
+    if (maxSeen.isNotEmpty && today.compareTo(maxSeen) < 0) return false;
+    if (today.compareTo(maxSeen) > 0) await prefs.setString(_maxSeenDayKey, today);
+    return true;
+  }
+
   /// 进程内「整体降级到 SP」粘性标志（R3-D08 收口）。
   ///
   /// 为什么必须是**粘性 + 实例级**，而不是 `_apply` 的局部参数：
@@ -266,6 +278,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     if (isSameDay(last, now)) return null;
     final iso = _iso(now);
     final prefs = await SharedPreferences.getInstance();
+    // 用户反馈修复（2026-11-14）：时钟回拨到已处理过的日子不再发签到奖。
+    if (!await _advanceDayWatermark(prefs, iso)) return null;
 
     // R3-D08 的两个降级标志：
     // - sqliteRetryWithEvent：首次事务失败 ⇒ 先「带事件键重试」，保住幂等硬闸；
@@ -425,6 +439,8 @@ class PreferencesScareCoinStore implements ScareCoinStore {
   Future<int> _grantAnswerRewardLocked() async {
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now().toIso8601String().substring(0, 10);
+    // 用户反馈修复（2026-11-14）：时钟回拨到已处理过的日子不再发答对奖。
+    if (!await _advanceDayWatermark(prefs, today)) return 0;
     var count = 0;
     if (prefs.getString(answerRewardDateKey) == today) {
       count = prefs.getInt(answerRewardCountKey) ?? 0;

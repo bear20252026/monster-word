@@ -331,6 +331,7 @@ class ReviewScheduleStore {
     required bool isLearn,
     bool correct = true,
     String? ratingId,
+    bool updateDailyStats = true,
   }) async {
     return await _db.transaction((txn) async {
       if (ratingId != null) {
@@ -342,8 +343,12 @@ class ReviewScheduleStore {
         if (logged == 0) return false; // 幂等命中：该评分已应用过
       }
       await txn.insert('fsrs_cards', _cardToRow(card), conflictAlgorithm: ConflictAlgorithm.replace);
-      await _upsertDailyStats(txn, dateKey, isLearn ? 1 : 0, isLearn ? 0 : 1, correct ? 1 : 0);
-      await txn.insert('fsrs_active_dates', {'date': dateKey}, conflictAlgorithm: ConflictAlgorithm.ignore);
+      // 用户反馈修复（2026-11-14）：降级日志回放只补卡片，不重复计日报/活跃日
+      // （迁移已把降级期 SP blob 的统计导入，回放再 +1 会双计）。
+      if (updateDailyStats) {
+        await _upsertDailyStats(txn, dateKey, isLearn ? 1 : 0, isLearn ? 0 : 1, correct ? 1 : 0);
+        await txn.insert('fsrs_active_dates', {'date': dateKey}, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
       return true;
     });
   }

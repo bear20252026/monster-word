@@ -29,27 +29,22 @@ class ChoiceGenerator {
     final effectiveRandom = random ?? Random();
     final seenInterprets = <String>{correct.interpret};
     final withChinese = <ChoiceCandidate>[];
-    final withoutChinese = <ChoiceCandidate>[];
 
     for (final candidate in candidates) {
       if (candidate.word == correct.word || candidate.interpret.isEmpty || !seenInterprets.add(candidate.interpret)) {
         continue;
       }
-
+      // 用户反馈修复（2026-11-14）：干扰项只用含中文释义的候选。正确项恒含
+      // 中文（队列已过滤），若混入英文释义项会形成「选唯一中文」的应试捷径。
+      // 中文候选不足时宁少勿假（返回 <4 项），不再补英文项。
       if (DefinitionFormatter.extractChinese(candidate.interpret).isEmpty) {
-        withoutChinese.add(candidate);
-      } else {
-        withChinese.add(candidate);
+        continue;
       }
+      withChinese.add(candidate);
     }
 
     withChinese.shuffle(effectiveRandom);
-    withoutChinese.shuffle(effectiveRandom);
-
     final distractors = <ChoiceCandidate>[...withChinese.take(3)];
-    if (distractors.length < 3) {
-      distractors.addAll(withoutChinese.take(3 - distractors.length));
-    }
 
     final choices = <ChoiceCandidate>[correct, ...distractors];
     choices.shuffle(effectiveRandom);

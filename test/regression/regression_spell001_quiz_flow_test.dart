@@ -102,7 +102,8 @@ void main() {
     await tester.tap(find.text('再来一次'));
     await tester.pumpAndSettle();
     expect(find.text('1 / 2'), findsOneWidget);
-    expect(find.text('prompt:apple'), findsOneWidget);
+    // 2026-11-14：重开洗牌防背序，首词为两词之一（不再固定 apple）。
+    expect(find.text('prompt:apple').evaluate().isNotEmpty || find.text('prompt:banana').evaluate().isNotEmpty, isTrue);
   });
 
   testWidgets('空词表显示空态页与返回首页按钮', (tester) async {

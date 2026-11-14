@@ -11,6 +11,8 @@
 // - 默认权重更新为官方最新机器学习优化值。
 import 'dart:math';
 
+import 'package:word_app/core/utils/calendar_days.dart';
+
 /// FSRS-6 评分等级
 enum FsrsRating {
   again(1, '不认识'), // 完全忘记
@@ -51,12 +53,13 @@ class FsrsCard {
     this.shortTermStability = 0,
   });
 
-  // P3-6（架构审计 2026-11-12）：到期边界统一为「到期时刻即到期」（!isAfter），
-  // 与 getDueCards 同口径——此前 isDue 用 isBefore，dueDate==now 时两者判定相反。
+  // 用户反馈修复（2026-11-14）：到期边界统一为「严格早于现在」（isBefore），
+  // 与 SQL 侧 due_date < ? 同口径——此前内存用 !isAfter(<=) 与 SQL(<) 在
+  // dueDate==now 瞬间判定相反。统一为 < 消除双口径。
   bool get isDue => isDueAt(DateTime.now());
 
   /// 可注入时钟的到期判定（测试用固定时钟）；[isDue] 即当前时刻的特例。
-  bool isDueAt(DateTime now) => !isNew && !dueDate.isAfter(now);
+  bool isDueAt(DateTime now) => !isNew && dueDate.isBefore(now);
 
   Map<String, dynamic> toJson() => {
     'word': word,
@@ -122,11 +125,22 @@ class Fsrs6Engine {
   final double factor; // FACTOR = 0.9^(1/DECAY) - 1（保证 R(S,S)=0.9）
   final double desiredRetention; // 目标记忆保持率
 
-  Fsrs6Engine({List<double>? weights, double? desiredRetention})
+  /// 用户反馈修复（2026-11-14，#23）：官方默认 enable_fuzzing=True。对 ≥2.5 天
+  /// 的间隔加小幅随机抖动，打散「同稳定性卡片同日到期」的尖峰。可注入 [random]
+  /// 做确定性测试；回归网用 enableFuzzing:false 锁定精确公式。
+  final bool enableFuzzing;
+  final Random _random;
+
+  /// 官方 relearning_steps 默认 (10min,)：Again（遗忘）后进入重学态，当日 10 分钟
+  /// 后重出，而非直接排 ≥1 天。会话内不重出的限制由本短时到期缓解。
+  static const Duration relearningStep = Duration(minutes: 10);
+
+  Fsrs6Engine({List<double>? weights, double? desiredRetention, this.enableFuzzing = true, Random? random})
     : weights = weights ?? _defaultWeights,
       decay = -((weights ?? _defaultWeights)[20]),
       factor = pow(0.9, 1 / -((weights ?? _defaultWeights)[20])).toDouble() - 1,
-      desiredRetention = desiredRetention ?? 0.9;
+      desiredRetention = desiredRetention ?? 0.9,
+      _random = random ?? Random();
 
   // factor 为 final，由初始化列表按官方公式计算：FACTOR = 0.9^(1/DECAY) - 1
 
@@ -199,6 +213,23 @@ class Fsrs6Engine {
     return raw.round().clamp(1, 36500);
   }
 
+  /// 用户反馈修复（2026-11-14，#23）：官方 _get_fuzzed_interval 逐字复刻。
+  /// 仅对 ≥2.5 天间隔生效；FUZZ_RANGES 三段累加 delta，在 [min,max] 内均匀取整。
+  /// 官方用 floor(random()*(max-min+1))+min 保证每个整天等概率（round 会让两端各占半份）。
+  int _fuzzedInterval(int intervalDays) {
+    if (intervalDays < 2.5) return intervalDays;
+    const ranges = [(2.5, 7.0, 0.15), (7.0, 20.0, 0.1), (20.0, double.infinity, 0.05)];
+    var delta = 1.0;
+    for (final (start, end, factor) in ranges) {
+      delta += factor * max(min(intervalDays.toDouble(), end) - start, 0.0);
+    }
+    var minIvl = max(2, (intervalDays - delta).round());
+    var maxIvl = min((intervalDays + delta).round(), 36500);
+    minIvl = min(minIvl, maxIvl);
+    final fuzzed = (_random.nextDouble() * (maxIvl - minIvl + 1)).floor() + minIvl;
+    return min(fuzzed, 36500);
+  }
+
   /// 评分一个卡片，返回更新后的卡片（官方 FSRS-6 流程）。
   ///
   /// [reviewedAt] 可选显式复习时刻——默认 DateTime.now() 保持既有语义；
@@ -209,7 +240,9 @@ class Fsrs6Engine {
     final now = reviewedAt ?? DateTime.now();
 
     // 距上次复习的天数（同日 = 0 → 短时模型）
-    final elapsed = now.difference(card.lastReview).inDays;
+    // 用户反馈修复（2026-11-14）：用日历日差而非 24h 截断——昨晚 23:00 学、
+    // 今早 08:00 复习应为 1 天（跨日历日），旧 inDays=0 误走短时模型。
+    final elapsed = calendarDaysBetween(card.lastReview, now);
     updated.elapsedDays = elapsed;
 
     if (card.isNew) {
@@ -234,16 +267,24 @@ class Fsrs6Engine {
     }
 
     // 计算下次间隔
-    updated.scheduledDays = _nextInterval(updated.stability);
-    updated.dueDate = now.add(Duration(days: updated.scheduledDays));
+    final baseInterval = _nextInterval(updated.stability);
     updated.lastReview = now;
     updated.isNew = false;
     updated.reviewCount++;
 
     if (rating == FsrsRating.again) {
       updated.repetitions = 0;
+      // 用户反馈修复（2026-11-14，#23）：官方 Again → Relearning 态，10 分钟后
+      // 重出（relearning_steps 默认 (10min,)），而非直接排 ≥1 天。scheduledDays
+      // 记 0 表示「当日重学」，到期时刻用分钟级 dueDate 表达。
+      updated.scheduledDays = 0;
+      updated.dueDate = now.add(relearningStep);
     } else {
       updated.repetitions++;
+      // 用户反馈修复（2026-11-14，#23）：官方默认 enable_fuzzing=True，对 ≥2.5 天
+      // 间隔加抖动打散到期尖峰；回归网以 enableFuzzing:false 锁定精确公式。
+      updated.scheduledDays = enableFuzzing ? _fuzzedInterval(baseInterval) : baseInterval;
+      updated.dueDate = now.add(Duration(days: updated.scheduledDays));
     }
 
     return updated;
@@ -265,10 +306,10 @@ class Fsrs6Engine {
   }
 
   /// 获取到期的卡片。[now] 可注入（测试用固定时钟）；缺省当前时刻。
-  /// 到期边界与 [FsrsCard.isDue] 同口径：到期时刻即到期（!isAfter）。
+  /// 到期边界与 [FsrsCard.isDue] 同口径：严格早于现在（isBefore，与 SQL due_date < ? 一致）。
   List<FsrsCard> getDueCards(List<FsrsCard> cards, {DateTime? now}) {
     final at = now ?? DateTime.now();
-    return cards.where((c) => !c.isNew && !c.dueDate.isAfter(at)).toList();
+    return cards.where((c) => !c.isNew && c.dueDate.isBefore(at)).toList();
   }
 
   /// 记忆预测快照（review_schedule_repository.predictionFor 消费）
@@ -287,7 +328,7 @@ class Fsrs6Engine {
   /// 获取记忆提取概率（0.0-1.0）。[now] 可注入（测试用固定时钟）；缺省当前时刻。
   double getRetrievability(FsrsCard card, {DateTime? now}) {
     if (card.isNew || card.stability <= 0) return 1.0;
-    final elapsed = (now ?? DateTime.now()).difference(card.lastReview).inDays;
+    final elapsed = calendarDaysBetween(card.lastReview, now ?? DateTime.now());
     return _retrievability(elapsed, card.stability);
   }
 
@@ -314,6 +355,9 @@ class Fsrs6Engine {
   String getNextReviewText(FsrsCard card) {
     if (card.isNew) return '新词';
     final days = card.scheduledDays;
+    // 用户反馈修复（2026-11-14，#23）：Again 重学步 scheduledDays=0，当日 10 分钟
+    // 后重出，不能误标「明天」。
+    if (days == 0) return '10 分钟后';
     if (days <= 1) return '明天';
     if (days <= 7) return '$days 天后';
     if (days <= 30) return '${(days / 7).round()} 周后';

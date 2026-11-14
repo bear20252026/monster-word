@@ -51,7 +51,7 @@ class ReviewScheduleJournal {
 
   /// SQLite 恢复后回放降级日志：按序重算卡片并落库，fsrs_rating_log 主键
   /// 幂等去重（重复回放不会重复计数）；任一条失败保留整个日志下次重试。
-  Future<int> replay(ReviewScheduleStore store) async {
+  Future<int> replay(ReviewScheduleStore store, {bool updateDailyStats = true}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final journal = prefs.getStringList(ReviewScheduleRepository.degradedJournalKey);
@@ -78,6 +78,9 @@ class ReviewScheduleJournal {
             isLearn: isLearn || prior == null,
             correct: rating != FsrsRating.again,
             ratingId: ratingId,
+            // 用户反馈修复（2026-11-14）：仅当本次启动迁移已导入降级期统计时
+            // 才跳过日报（防双计）；无迁移时回放须自计统计（P1-03 守卫）。
+            updateDailyStats: updateDailyStats,
           );
           if (ok) {
             applied++;

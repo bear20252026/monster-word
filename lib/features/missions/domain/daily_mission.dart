@@ -89,7 +89,9 @@ String dailyMissionDayKey(DateTime time) {
 }
 
 /// 会话正确率（0–100）。没有答题（answered <= 0）时返回 null，不参与任务判定。
+/// 用户反馈修复（2026-11-14）：用 floor 而非 round——round 会把 79.5% 抬到 80
+/// 让「≥80%」任务在未达标时完成；floor 保证只有真实 ≥80% 才达标。
 int? sessionAccuracyPercent({required int answered, required int correct}) {
   if (answered <= 0) return null;
-  return ((correct / answered) * 100).round().clamp(0, 100);
+  return ((correct / answered) * 100).floor().clamp(0, 100);
 }

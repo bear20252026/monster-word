@@ -354,7 +354,9 @@ class AppPreferences extends BaseSharedPreferences {
 
   Future<void> addSearchHistory(String word) async {
     final history = getSearchHistory();
-    history.remove(word); // 去重
+    // 用户反馈修复（2026-11-14）：大小写不敏感去重，Apple/apple 不再两条。
+    final lower = word.toLowerCase();
+    history.removeWhere((h) => h.toLowerCase() == lower);
     history.insert(0, word); // 最新的在前
     if (history.length > 50) history.removeLast(); // 最多 50 条
     await setStringList(searchHistory, history);

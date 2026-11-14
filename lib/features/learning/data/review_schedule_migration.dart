@@ -23,15 +23,17 @@ class ReviewScheduleMigration {
   /// H1：不再以 `cardCount()>0` 提前 return——那会在 cards 成功、stats 失败后
   /// 永久跳过迁移。仅 `migratedMarkerKey==done` 视为完成；未完成则从 SP 重放
   /// （E2 清 SP 前置条件是 marker=done，故未完成时 SP 仍在）。
-  Future<void> migrateFromSpIfNeeded(ReviewScheduleStore store) async {
+  /// 返回 true = 本次启动刚把 SP 统计导入 SQLite（回放降级日志时应跳过日报，
+  /// 防与已导入统计双计，2026-11-14）；false = 早已迁移/无数据（回放须自计统计）。
+  Future<bool> migrateFromSpIfNeeded(ReviewScheduleStore store) async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getString(ReviewScheduleRepository.migratedMarkerKey) == 'done') return;
+    if (prefs.getString(ReviewScheduleRepository.migratedMarkerKey) == 'done') return false;
 
     final rawCards = prefs.getString(ReviewScheduleRepository.cardsPrefKey);
     if (rawCards == null || rawCards.isEmpty) {
       // 无历史数据可迁：直接写标记，避免每次启动空转检查。
       await prefs.setString(ReviewScheduleRepository.migratedMarkerKey, 'done');
-      return;
+      return false;
     }
 
     // 顶层 jsonDecode 先兑一层：SP blob 整体损坏时抛出会让每次启动重复失败并永久卡在 SP 降级模式。
@@ -98,6 +100,7 @@ class ReviewScheduleMigration {
     }
 
     await prefs.setString(ReviewScheduleRepository.migratedMarkerKey, 'done');
+    return true;
   }
 
   /// H2：E2 清 SP 前把快照挪到应急备份 key（不清除），供库损坏时人工恢复。
