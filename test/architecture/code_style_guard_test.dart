@@ -28,7 +28,9 @@ const Map<String, int> _kPartFamilyRatchet = {
   // 1350：2026-11-15 构图改进——去主卡投影带、顶部固定呼吸距+单一底部留白，净缩 5。
   // 1354：2026-11-15 纸面编辑感定稿——主区开放化、目标行收进分组卡，+4。
   // 1353：2026-11-15 形状统一——三处小胶囊改圆角方块，净缩 1。
-  'lib/features/home/presentation/home_screen.dart': 1353,
+  // 1351：2026-11-15 星夜航程推倒重设计——主卡星环仪表化、条带星夜色接入，净缩 2。
+  // 1350：2026-11-15 星夜定稿清理——移除 mw_card 导入与冗余参数，净缩 1。
+  'lib/features/home/presentation/home_screen.dart': 1350,
   // 1051：批次 2 冻结 1047，批次 3 P2-3 性格传参 +4（导入/传参/注释），合理新增。
   // 1078：AI 化阶段 1 AI 伙伴入口 cell+组方法 +18（设置主体已抽 llm_settings_sheet.dart 独立文件）。
   'lib/features/settings/presentation/more_settings_page.dart': 1078,
