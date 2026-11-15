@@ -30,22 +30,8 @@ class HomeAmbient extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // 底层画布
+        // 纯纸面画布（2026-11-15 定稿：去掉渐隐带，纸色即背景，层次靠卡片与留白）
         ColoredBox(color: colors.pageBg),
-        // 单一顶部微光：品牌色低透明度，向下渐隐到纸色
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                colors.accent.withValues(alpha: AppAlphas.o08),
-                colors.accent.withValues(alpha: AppAlphas.o0),
-              ],
-              stops: const [0.0, 0.55],
-            ),
-          ),
-        ),
         // 细粒噪点（静态、确定性，纸面质感）
         CustomPaint(painter: _GrainPainter(color: colors.text1)),
         child,
@@ -108,11 +94,10 @@ class HomeDoneBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: ShapeDecoration(
+      decoration: BoxDecoration(
         color: color.withValues(alpha: AppAlphas.o12),
-        shape: StadiumBorder(
-          side: BorderSide(color: color.withValues(alpha: AppAlphas.o40)),
-        ),
+        borderRadius: BorderRadius.circular(context.design.radius.sm),
+        border: Border.all(color: color.withValues(alpha: AppAlphas.o40)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -235,7 +220,10 @@ class HomeGlossyCta extends StatelessWidget {
       child: Container(
         height: 50,
         alignment: Alignment.center,
-        decoration: ShapeDecoration(color: backgroundColor, shape: const StadiumBorder()),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(context.design.radius.md),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
@@ -400,7 +388,7 @@ class HomeHeaderIconButton extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(context.design.radius.md),
             color: colors.cardBg,
             border: Border.all(color: colors.divider),
             boxShadow: const [BoxShadow(color: MwShadows.hairlineShadow, blurRadius: 0.5)],

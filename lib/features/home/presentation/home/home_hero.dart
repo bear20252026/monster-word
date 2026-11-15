@@ -1,15 +1,18 @@
 part of '../home_screen.dart';
 
-/// 今日进度主卡：进度环 + 目标文案 + Learn/Review 双 CTA。
+/// 今日进度主区：开放编辑式构图（无卡片外壳）。
 ///
-/// 数据统一来自 [TodayProgressStore]（目标/已学/待复习单一事实源），
-/// 学习会话、复习调度或改目标都会 notify → 本卡即时刷新，不再各自直读偏好。
+/// 2026-11-15 美学定稿：整页统一「纸面编辑感」——主区不再是一块深色面板，
+/// 而是直接排在纸面上：eyebrow → 进度环 + 下一步标题 + 统计 → 发丝线 → 主按钮。
+/// 饱和墨绿只出现在进度环 / 主按钮 / 选中态，金色仅用于达成。
+/// 数据统一来自 [TodayProgressStore]（目标/已学/待复习单一事实源）。
 class _TodayHeroCard extends StatelessWidget {
   const _TodayHeroCard();
 
   @override
   Widget build(BuildContext context) {
     final resp = context.responsive;
+    final skin = context.skin;
     return Selector<TodayProgressStore, ({int goal, int learned, int due})>(
       selector: (_, s) => (goal: s.goal, learned: s.learned, due: s.due),
       builder: (context, p, _) {
@@ -18,90 +21,76 @@ class _TodayHeroCard extends StatelessWidget {
         final dueCount = p.due;
         final progress = goal > 0 ? (learned / goal).clamp(0.0, 1.0) : 0.0;
         final done = goal > 0 && learned >= goal;
-        // 主卡只回答一个问题：「现在点哪里」。时长与动作口径收在纯函数里，
-        // 三态（未学 / 有到期 / 已达标）各只有一句下一步 + 一个主按钮。
+        // 主区只回答一个问题：「现在点哪里」。三态各只有一句下一步 + 一个主按钮。
         final step = resolveHomeNextStep(goal: goal, learned: learned, due: dueCount);
-
-        // 2026-11-15 美学收敛：深色面板上只用「奶油（进行中）/ 金（达成）」
-        // 两个环色，不再把浅绿放深底（对比弱且增加色相）；金色是唯一达成信号。
-        final accent = done ? StarGold.gold : HomeFocusColors.onPanel;
-        // 墨玉焦点面板：奶油画布上的深色锚点。
-        // 深绿近黑底 + 奶油白文字 + 奶油/金环 + 倒置 CTA，全页仅墨绿/奶油/金三角色。
-        final heroCard = Container(
-          padding: EdgeInsets.all(26 * resp.scale),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(context.design.radius.xl),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [HomeFocusColors.panel, HomeFocusColors.panelDeep],
+        // 饱和主色唯一来源：进行中=主题墨绿，达成=金色庆祝。
+        final accent = done ? StarGold.gold : skin.colors.accent;
+        final hero = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                HomeEyebrow(label: '今日进度', color: skin.colors.text3),
+                const Spacer(),
+                if (done) HomeDoneBadge(color: StarGold.gold),
+              ],
             ),
-            border: Border.all(color: HomeFocusColors.hairline),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // eyebrow：今日进度标签 + 达标徽章
-              Row(
-                children: [
-                  HomeEyebrow(label: '今日进度', color: HomeFocusColors.onPanelMuted),
-                  const Spacer(),
-                  if (done) HomeDoneBadge(color: accent),
-                ],
+            SizedBox(height: 20 * resp.scale),
+            _buildProgressRow(
+              resp: resp,
+              skin: skin,
+              progress: progress,
+              accent: accent,
+              learned: learned,
+              goal: goal,
+              dueCount: dueCount,
+              title: step.title,
+            ),
+            SizedBox(height: 22 * resp.scale),
+            Container(height: 1, color: skin.colors.divider),
+            SizedBox(height: 20 * resp.scale),
+            // 一键开始：主按钮只指一个方向（到期优先复习，其余开学）。
+            SizedBox(
+              width: double.infinity,
+              child: HomeGlossyCta(
+                label: step.ctaLabel,
+                icon: step.primaryIsReview ? Icons.history_rounded : Icons.play_arrow_rounded,
+                backgroundColor: accent,
+                foregroundColor: done ? HomeFocusColors.onCta : AppColors.white100,
+                onTap: step.primaryIsReview ? () => showReviewDialog(context) : () => startHomeLearning(context),
               ),
-              SizedBox(height: 20 * resp.scale),
-              _buildProgressRow(
-                resp: resp,
-                progress: progress,
-                accent: accent,
-                learned: learned,
-                goal: goal,
-                dueCount: dueCount,
-                title: step.title,
-              ),
-              SizedBox(height: 22 * resp.scale),
-              // 一键开始：主按钮只指一个方向（到期优先复习，其余开学）。
-              SizedBox(
-                width: double.infinity,
-                child: HomeGlossyCta(
-                  label: step.ctaLabel,
-                  icon: step.primaryIsReview ? Icons.history_rounded : Icons.play_arrow_rounded,
-                  backgroundColor: accent,
-                  foregroundColor: HomeFocusColors.onCta,
-                  onTap: step.primaryIsReview ? () => showReviewDialog(context) : () => startHomeLearning(context),
-                ),
-              ),
-              // 次入口降为文字链：有到期时留「继续学新词」，没有就只剩主按钮。
-              if (step.secondaryLabel != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: () => startHomeLearning(context),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(0, 32),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      foregroundColor: HomeFocusColors.onPanelMuted,
-                    ),
-                    child: Text(
-                      step.secondaryLabel!,
-                      style: TextStyle(fontSize: AppFontSizes.caption * resp.fontScale, fontWeight: FontWeight.w600),
-                    ),
+            ),
+            // 次入口降为文字链：有到期时留「继续学新词」，没有就只剩主按钮。
+            if (step.secondaryLabel != null)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => startHomeLearning(context),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    foregroundColor: skin.colors.text2,
+                  ),
+                  child: Text(
+                    step.secondaryLabel!,
+                    style: TextStyle(fontSize: AppFontSizes.caption * resp.fontScale, fontWeight: FontWeight.w600),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         );
         // 今日达标沿触发一次金色 confetti（30 粒 StarGold.gold）
-        return _DoneConfetti(done: done, child: heroCard);
+        return _DoneConfetti(done: done, child: hero);
       },
     );
   }
 
-  /// 进度行：渐变环 + 下一步标题 + 已学/待复习统计锚点（深色面板奶油白文字）。
+  /// 进度行：墨绿环 + 下一步标题 + 已学/待复习统计（纸面深色文字）。
   Widget _buildProgressRow({
     required AppResponsive resp,
+    required SkinSystem skin,
     required double progress,
     required Color accent,
     required int learned,
@@ -113,14 +102,12 @@ class _TodayHeroCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         HomeProgressRing(
-          size: 116 * resp.scale,
+          size: 128 * resp.scale,
           progress: progress,
-          trackColor: HomeFocusColors.ringTrack,
-          // 今日达标：金色环庆祝；未达标奶油环（进行中）
+          trackColor: skin.colors.divider,
           progressColor: accent,
           learned: learned,
           goal: goal,
-          secondaryColor: HomeFocusColors.onPanelMuted,
         ),
         SizedBox(width: 24 * resp.scale),
         Expanded(
@@ -133,27 +120,17 @@ class _TodayHeroCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: AppFontSizes.titleSm * resp.fontScale,
                   fontWeight: FontWeight.w700,
-                  height: 1.25,
+                  height: 1.3,
                   letterSpacing: -0.3,
-                  color: HomeFocusColors.onPanel,
+                  color: skin.colors.text1,
                 ),
               ),
-              SizedBox(height: 12 * resp.scale),
+              SizedBox(height: 14 * resp.scale),
               Row(
                 children: [
-                  HomeHeroStat(
-                    value: '$learned',
-                    label: '已学',
-                    color: HomeFocusColors.onPanel,
-                    labelColor: HomeFocusColors.onPanelMuted,
-                  ),
-                  HomeStatDivider(color: HomeFocusColors.hairline),
-                  HomeHeroStat(
-                    value: '$dueCount',
-                    label: '待复习',
-                    color: HomeFocusColors.onPanel,
-                    labelColor: HomeFocusColors.onPanelMuted,
-                  ),
+                  HomeHeroStat(value: '$learned', label: '已学', color: skin.colors.text1),
+                  HomeStatDivider(color: skin.colors.divider),
+                  HomeHeroStat(value: '$dueCount', label: '待复习', color: skin.colors.text1),
                 ],
               ),
             ],
@@ -283,4 +260,4 @@ class _DoneConfettiState extends State<_DoneConfetti> {
 }
 
 /// 环形进度与环画笔已抽至 home_visuals.dart 的 [HomeProgressRing] / `_RingPainter`。
-/// 主卡光泽 CTA 见 [HomeGlossyCta]。
+/// 主区 CTA 见 [HomeGlossyCta]。

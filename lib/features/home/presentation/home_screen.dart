@@ -113,20 +113,12 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const _TodayHeroCard(),
           ),
         ),
-        // 今日分组卡：签到/任务/词书三行共用一张卡（发丝分隔）
+        // 今日分组卡：签到/任务/词书/目标四行共用一张卡（全页唯一容器）
         _EntranceIn(
           delayMs: 180,
           child: Padding(
             padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
             child: const _DailyGroupCard(),
-          ),
-        ),
-        // 每日目标快捷档位
-        _EntranceIn(
-          delayMs: 260,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 0),
-            child: const _GoalChips(),
           ),
         ),
         const Spacer(),
@@ -156,8 +148,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _EntranceIn(delayMs: 180, child: const _DailyGroupCard()),
-                      const SizedBox(height: 16),
-                      _EntranceIn(delayMs: 260, child: const _GoalChips()),
                       const SizedBox(height: 16),
                       _EntranceIn(delayMs: 340, child: const _QuoteFooter()),
                     ],
