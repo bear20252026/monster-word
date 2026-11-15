@@ -117,10 +117,9 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
             if (!checked)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: ShapeDecoration(
-                  shape: StadiumBorder(
-                    side: BorderSide(color: skin.colors.accent.withValues(alpha: AppAlphas.o40)),
-                  ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(context.design.radius.sm),
+                  border: Border.all(color: skin.colors.accent.withValues(alpha: AppAlphas.o40)),
                 ),
                 child: Text(
                   '签到 +10',
@@ -238,9 +237,10 @@ class _MissionStripState extends State<_MissionStrip> {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: ShapeDecoration(
+                  decoration: BoxDecoration(
                     color: skin.colors.cardBg,
-                    shape: StadiumBorder(side: BorderSide(color: skin.colors.divider)),
+                    borderRadius: BorderRadius.circular(context.design.radius.sm),
+                    border: Border.all(color: skin.colors.divider),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -446,10 +446,9 @@ class _BookStrip extends StatelessWidget {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: ShapeDecoration(
-                  shape: StadiumBorder(
-                    side: BorderSide(color: skin.colors.accent.withValues(alpha: AppAlphas.o40)),
-                  ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(context.design.radius.sm),
+                  border: Border.all(color: skin.colors.accent.withValues(alpha: AppAlphas.o40)),
                 ),
                 child: Text(
                   '切换',
@@ -467,7 +466,10 @@ class _BookStrip extends StatelessWidget {
 /// 每日目标快捷档位：预设 chip + 自定义（打开原有滚轮选择弹层）。
 /// 统一走 [TodayProgressStore.setGoal]，全站即时同步。
 class _GoalChips extends StatefulWidget {
-  const _GoalChips();
+  const _GoalChips({this.compact = false});
+
+  /// 卡内紧凑模式：不带左侧标签（标签由 _GoalRow 提供），chip 更紧凑。
+  final bool compact;
 
   @override
   State<_GoalChips> createState() => _GoalChipsState();
@@ -500,6 +502,17 @@ class _GoalChipsState extends State<_GoalChips> {
   Widget build(BuildContext context) {
     final skin = context.skin;
     final current = context.watch<TodayProgressStore>().goal;
+    final compact = widget.compact;
+    final chips = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final value in _presets) ...[_goalChip(value, current == value, skin, compact), const SizedBox(width: 6)],
+        // 当前值不在预设档位时，展示当前值 chip（选中态）
+        if (!_presets.contains(current)) ...[_goalChip(current, true, skin, compact), const SizedBox(width: 6)],
+        _customChip(skin, compact),
+      ],
+    );
+    if (compact) return Align(alignment: Alignment.centerRight, child: chips);
     return Row(
       children: [
         Text(
@@ -507,30 +520,22 @@ class _GoalChipsState extends State<_GoalChips> {
           style: MwTypography.caption.copyWith(fontWeight: FontWeight.w500, color: skin.colors.text3),
         ),
         const SizedBox(width: 12),
-        Expanded(
-          child: Row(
-            children: [
-              for (final value in _presets) ...[_goalChip(value, current == value, skin), const SizedBox(width: 8)],
-              // 当前值不在预设档位时，展示当前值 chip（选中态）
-              if (!_presets.contains(current)) ...[_goalChip(current, true, skin), const SizedBox(width: 8)],
-              _customChip(skin),
-            ],
-          ),
-        ),
+        Expanded(child: chips),
       ],
     );
   }
 
-  Widget _goalChip(int value, bool selected, SkinSystem skin) {
+  Widget _goalChip(int value, bool selected, SkinSystem skin, bool compact) {
     return ScaleDownOnPress(
       onTap: () => _select(value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: ShapeDecoration(
+        padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14, vertical: compact ? 5 : 7),
+        decoration: BoxDecoration(
           color: selected ? skin.colors.accent : skin.colors.cardBg,
-          shape: StadiumBorder(side: BorderSide(color: selected ? skin.colors.accent : skin.colors.divider)),
+          borderRadius: BorderRadius.circular(context.design.radius.sm),
+          border: Border.all(color: selected ? skin.colors.accent : skin.colors.divider),
         ),
         child: Text(
           '$value',
@@ -544,24 +549,27 @@ class _GoalChipsState extends State<_GoalChips> {
     );
   }
 
-  Widget _customChip(SkinSystem skin) {
+  Widget _customChip(SkinSystem skin, bool compact) {
     return ScaleDownOnPress(
       onTap: _openCustomPicker,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: ShapeDecoration(
+        padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14, vertical: compact ? 5 : 7),
+        decoration: BoxDecoration(
           color: Colors.transparent,
-          shape: StadiumBorder(side: BorderSide(color: skin.colors.divider)),
+          borderRadius: BorderRadius.circular(context.design.radius.sm),
+          border: Border.all(color: skin.colors.divider),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.tune, size: 14, color: skin.colors.text2),
-            const SizedBox(width: 4),
-            Text(
-              '自定义',
-              style: MwTypography.caption.copyWith(fontWeight: FontWeight.w500, color: skin.colors.text2),
-            ),
+            if (!compact) ...[
+              const SizedBox(width: 4),
+              Text(
+                '自定义',
+                style: MwTypography.caption.copyWith(fontWeight: FontWeight.w500, color: skin.colors.text2),
+              ),
+            ],
           ],
         ),
       ),
@@ -571,11 +579,10 @@ class _GoalChipsState extends State<_GoalChips> {
 
 /// 条带共享图标底座已抽至 home_visuals.dart 的 [HomeStripIconTile]。
 
-/// 今日分组卡：签到/任务/词书三行共用一张卡，发丝分隔线代替三张独立卡。
+/// 今日分组卡：签到/任务/词书/目标四行共用一张卡，发丝分隔线。
 ///
-/// 2026-11-15 结构改进：上一版三张独立条卡重复阴影、各自为政，视觉碎。
-/// 合并为单张分组卡后只有一个圆角与一层阴影，行与行之间用发丝线分隔，
-/// 秩序感与留白节奏显著改善（设置页分组同构）。
+/// 2026-11-15 定稿：全页唯一容器。目标档位从纸面上的裸行收进卡内，
+/// 与三行同构；一个圆角、一层阴影、一种分隔语言，秩序完整。
 class _DailyGroupCard extends StatelessWidget {
   const _DailyGroupCard();
 
@@ -584,7 +591,37 @@ class _DailyGroupCard extends StatelessWidget {
     return MwCard(
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: const [_CheckInStrip(), _StripDivider(), _MissionStrip(), _StripDivider(), _BookStrip()],
+        children: const [
+          _CheckInStrip(),
+          _StripDivider(),
+          _MissionStrip(),
+          _StripDivider(),
+          _BookStrip(),
+          _StripDivider(),
+          _GoalRow(),
+        ],
+      ),
+    );
+  }
+}
+
+/// 目标行：卡内第四行，左侧标签 + 右侧紧凑档位 chip。
+class _GoalRow extends StatelessWidget {
+  const _GoalRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      child: Row(
+        children: [
+          Text(
+            '每日目标',
+            style: MwTypography.caption.copyWith(fontWeight: FontWeight.w500, color: context.skin.colors.text3),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(child: _GoalChips(compact: true)),
+        ],
       ),
     );
   }

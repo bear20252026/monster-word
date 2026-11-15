@@ -45,10 +45,9 @@ class _HeaderState extends State<_Header> {
                 Text(
                   _greeting(),
                   style: TextStyle(
-                    fontFamily: 'Charter',
-                    fontSize: AppFontSizes.stat * resp.fontScale,
+                    fontSize: AppFontSizes.title * resp.fontScale,
                     fontWeight: FontWeight.w700,
-                    height: 1.15,
+                    height: 1.2,
                     letterSpacing: -0.5,
                     color: colors.text1,
                   ),
