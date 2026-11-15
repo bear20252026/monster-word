@@ -1,6 +1,6 @@
 part of '../home_screen.dart';
 
-/// 问候头部：时段问候 + 日期；右侧词典/单词机入口（星夜航程）。
+/// 问候头部：时段问候 + 日期；右侧词典/单词机入口。
 ///
 /// 2026-10-17：怪兽**已从本文件移出**，改为全 app 唯一的浮层
 /// （`lib/features/companion/presentation/monster_presence.dart`，挂在 MaterialApp.builder 上）。
@@ -31,6 +31,7 @@ class _HeaderState extends State<_Header> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = widget.skin.colors;
     final resp = context.responsive;
     return Padding(
       padding: EdgeInsets.fromLTRB(resp.pageMargin, 12, resp.pageMargin, 0),
@@ -44,18 +45,17 @@ class _HeaderState extends State<_Header> {
                 Text(
                   _greeting(),
                   style: TextStyle(
-                    fontFamily: 'Charter',
-                    fontSize: AppFontSizes.stat * resp.fontScale,
+                    fontSize: AppFontSizes.title * resp.fontScale,
                     fontWeight: FontWeight.w700,
-                    height: 1.15,
+                    height: 1.2,
                     letterSpacing: -0.5,
-                    color: HomeNightColors.text1,
+                    color: colors.text1,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Row(
                   children: [
-                    Text(_dateLabel(), style: MwTypography.caption.copyWith(color: HomeNightColors.text3)),
+                    Text(_dateLabel(), style: MwTypography.caption.copyWith(color: colors.text3)),
                     // M3/D3：等级只在首页与结算页出现（不进商店）。
                     const _XpLevelChip(),
                   ],
@@ -63,15 +63,17 @@ class _HeaderState extends State<_Header> {
               ],
             ),
           ),
-          HomeHeaderIconButton(
+          _HeaderIconButton(
             icon: Icons.menu_book_rounded,
             tooltip: '词典查询',
+            colors: colors,
             onTap: () => Navigator.pushNamed(context, RouteNames.search),
           ),
           const SizedBox(width: 10),
-          HomeHeaderIconButton(
+          _HeaderIconButton(
             icon: Icons.sports_esports_rounded,
             tooltip: '单词机',
+            colors: colors,
             onTap: () => Navigator.pushNamed(context, RouteNames.wordMachine),
           ),
         ],
@@ -90,6 +92,7 @@ class _XpLevelChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = context.read<XpStore?>();
     if (store == null) return const SizedBox.shrink();
+    final colors = context.skin.colors;
     return ListenableBuilder(
       listenable: store,
       builder: (context, _) {
@@ -99,11 +102,11 @@ class _XpLevelChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.auto_awesome_rounded, size: 12, color: HomeNightColors.aurora),
+              Icon(Icons.auto_awesome_rounded, size: 12, color: colors.accent),
               const SizedBox(width: 3),
               Text(
                 'Lv.${store.level}',
-                style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: HomeNightColors.aurora),
+                style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: colors.accent),
               ),
             ],
           ),
@@ -113,14 +116,46 @@ class _XpLevelChip extends StatelessWidget {
   }
 }
 
-/// 头部玻璃图标按钮已抽至 home_visuals.dart 的 [HomeHeaderIconButton]。
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({required this.icon, required this.tooltip, required this.colors, required this.onTap});
 
-/// 每日一句脚注：按日期轮换，单行优雅呈现（衬线斜体，星夜弱文字）。
+  final IconData icon;
+  final String tooltip;
+  final ThemeVars colors;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      triggerMode: TooltipTriggerMode.longPress,
+      child: ScaleDownOnPress(
+        onTap: onTap,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: colors.cardBg,
+            shape: BoxShape.circle,
+            boxShadow: const [
+              BoxShadow(color: MwShadows.hairlineShadow, blurRadius: 0.5),
+              BoxShadow(color: MwShadows.liftShadow, blurRadius: 1.0, offset: Offset(0, 1)),
+            ],
+          ),
+          child: Icon(icon, color: colors.accent, size: 22),
+        ),
+      ),
+    );
+  }
+}
+
+/// 每日一句脚注：按日期轮换，单行优雅呈现（衬线斜体）。
 class _QuoteFooter extends StatelessWidget {
   const _QuoteFooter();
 
   @override
   Widget build(BuildContext context) {
+    final skin = context.skin;
     final resp = context.responsive;
     final items = TestimonialData.defaults;
     final item = items[DateTime.now().day % items.length];
@@ -137,7 +172,7 @@ class _QuoteFooter extends StatelessWidget {
           fontSize: AppFontSizes.caption,
           fontStyle: FontStyle.italic,
           height: 1.6,
-          color: HomeNightColors.text3,
+          color: skin.colors.text3,
         ),
       ),
     );
