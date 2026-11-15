@@ -23,7 +23,8 @@ const Map<String, int> _kPartFamilyRatchet = {
   // 1449：2026-11-14 首页高级感重构——视觉原子组件抽至 home_visuals.dart 独立文件，家族净缩 18。
   // 1359：2026-11-15 首页重设计——进度环/环画笔再抽至 home_visuals.dart，家族净缩 90。
   // 1379：2026-11-15 主卡 build 拆 _buildProgressRow（120 行上限），辅助方法 +20。
-  'lib/features/home/presentation/home_screen.dart': 1379,
+  // 1342：2026-11-15 美学收敛——删除多色渐变/光晕/彩影代码，家族净缩 37。
+  'lib/features/home/presentation/home_screen.dart': 1342,
   // 1051：批次 2 冻结 1047，批次 3 P2-3 性格传参 +4（导入/传参/注释），合理新增。
   // 1078：AI 化阶段 1 AI 伙伴入口 cell+组方法 +18（设置主体已抽 llm_settings_sheet.dart 独立文件）。
   'lib/features/settings/presentation/more_settings_page.dart': 1078,

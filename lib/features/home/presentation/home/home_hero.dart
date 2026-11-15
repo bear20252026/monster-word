@@ -9,7 +9,6 @@ class _TodayHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final skin = context.skin;
     final resp = context.responsive;
     return Selector<TodayProgressStore, ({int goal, int learned, int due})>(
       selector: (_, s) => (goal: s.goal, learned: s.learned, due: s.due),
@@ -23,9 +22,11 @@ class _TodayHeroCard extends StatelessWidget {
         // 三态（未学 / 有到期 / 已达标）各只有一句下一步 + 一个主按钮。
         final step = resolveHomeNextStep(goal: goal, learned: learned, due: dueCount);
 
-        final accent = done ? StarGold.gold : skin.colors.accent;
-        // 墨玉焦点面板：奶油画布上的深色锚点（2026-11-15 重设计）。
-        // 深绿近黑底 + 奶油白文字 + 金/品牌色环 + 高对比 CTA，强对比而非弱叠加。
+        // 2026-11-15 美学收敛：深色面板上只用「奶油（进行中）/ 金（达成）」
+        // 两个环色，不再把浅绿放深底（对比弱且增加色相）；金色是唯一达成信号。
+        final accent = done ? StarGold.gold : HomeFocusColors.onPanel;
+        // 墨玉焦点面板：奶油画布上的深色锚点。
+        // 深绿近黑底 + 奶油白文字 + 奶油/金环 + 倒置 CTA，全页仅墨绿/奶油/金三角色。
         final heroCard = Container(
           padding: EdgeInsets.all(26 * resp.scale),
           decoration: BoxDecoration(
@@ -74,7 +75,7 @@ class _TodayHeroCard extends StatelessWidget {
                   label: step.ctaLabel,
                   icon: step.primaryIsReview ? Icons.history_rounded : Icons.play_arrow_rounded,
                   backgroundColor: accent,
-                  foregroundColor: done ? HomeFocusColors.onCta : AppColors.white100,
+                  foregroundColor: HomeFocusColors.onCta,
                   onTap: step.primaryIsReview ? () => showReviewDialog(context) : () => startHomeLearning(context),
                 ),
               ),
@@ -122,7 +123,7 @@ class _TodayHeroCard extends StatelessWidget {
           size: 116 * resp.scale,
           progress: progress,
           trackColor: HomeFocusColors.ringTrack,
-          // 今日达标：金色环庆祝；未达标保持主题 accent
+          // 今日达标：金色环庆祝；未达标奶油环（进行中）
           progressColor: accent,
           learned: learned,
           goal: goal,

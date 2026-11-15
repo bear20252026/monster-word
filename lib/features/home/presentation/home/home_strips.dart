@@ -66,12 +66,11 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
 
   /// 火苗图标：未签到时 alpha 呼吸（o40↔o90 lerp，easeInOut 反复）；已签或 reduce-motion 时静态。
   Widget _flameIcon(ThemeVars colors) {
+    // 2026-11-15 美学收敛：徽章统一墨色 tint，火苗用奶油色（主色族内），
+    // 不再引入橙色第三色相；呼吸 alpha 口径不变（REG-FLAME 测试口保留）。
+    final base = colors.accent;
     if (_checkedToday != false || _reduceMotion) {
-      return Icon(
-        Icons.local_fire_department_rounded,
-        size: 18,
-        color: _checkedToday == true ? colors.accent : colors.text3,
-      );
+      return Icon(Icons.local_fire_department_rounded, size: 18, color: base);
     }
     return AnimatedBuilder(
       animation: _flameBreath,
@@ -79,8 +78,8 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
         Icons.local_fire_department_rounded,
         size: 18,
         color: Color.lerp(
-          colors.text3.withValues(alpha: AppAlphas.o40),
-          colors.text3.withValues(alpha: AppAlphas.o90),
+          base.withValues(alpha: AppAlphas.o40),
+          base.withValues(alpha: AppAlphas.o90),
           _flameBreath.value,
         ),
       ),
@@ -106,15 +105,7 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         child: Row(
           children: [
-            HomeStripIconTile(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [FuncColors.streakFlame, FuncColors.warning],
-              ),
-              glowColor: FuncColors.streakFlame,
-              child: _flameIcon(skin.colors),
-            ),
+            HomeStripIconTile(child: _flameIcon(skin.colors)),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -125,10 +116,14 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
             if (!checked)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: ShapeDecoration(color: skin.colors.accent, shape: const StadiumBorder()),
+                decoration: ShapeDecoration(
+                  shape: StadiumBorder(
+                    side: BorderSide(color: skin.colors.accent.withValues(alpha: AppAlphas.o40)),
+                  ),
+                ),
                 child: Text(
                   '签到 +10',
-                  style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: AppColors.white100),
+                  style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: skin.colors.accent),
                 ),
               )
             else
@@ -232,15 +227,7 @@ class _MissionStripState extends State<_MissionStrip> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(
               children: [
-                HomeStripIconTile(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [skin.colors.accent, Color.lerp(skin.colors.accent, FuncColors.black, 0.25)!],
-                  ),
-                  glowColor: skin.colors.accent,
-                  child: const Icon(Icons.checklist_rounded, size: 18, color: AppColors.white100),
-                ),
+                HomeStripIconTile(child: Icon(Icons.checklist_rounded, size: 18, color: skin.colors.accent)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -435,15 +422,7 @@ class _BookStrip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             children: [
-              HomeStripIconTile(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [FuncColors.info, Color.lerp(FuncColors.info, FuncColors.black, 0.3)!],
-                ),
-                glowColor: FuncColors.info,
-                child: const Icon(Icons.collections_bookmark_outlined, size: 18, color: AppColors.white100),
-              ),
+              HomeStripIconTile(child: Icon(Icons.collections_bookmark_outlined, size: 18, color: skin.colors.accent)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -549,24 +528,8 @@ class _GoalChipsState extends State<_GoalChips> {
         curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: ShapeDecoration(
-          gradient: selected
-              ? LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color.lerp(skin.colors.accent, AppColors.white100, 0.18)!, skin.colors.accent],
-                )
-              : null,
-          color: selected ? null : skin.colors.cardBg,
+          color: selected ? skin.colors.accent : skin.colors.cardBg,
           shape: StadiumBorder(side: BorderSide(color: selected ? skin.colors.accent : skin.colors.divider)),
-          shadows: selected
-              ? [
-                  BoxShadow(
-                    color: skin.colors.accent.withValues(alpha: AppAlphas.o35),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : null,
         ),
         child: Text(
           '$value',
