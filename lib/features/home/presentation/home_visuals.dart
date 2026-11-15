@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
+import 'package:word_app/tokens/func_colors.dart';
+import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 
 /// 首页分层氛围背景：奶油画布 + 顶部品牌色极光 + 细粒噪点。
@@ -31,29 +33,43 @@ class HomeAmbient extends StatelessWidget {
       children: [
         // 底层画布
         ColoredBox(color: colors.pageBg),
-        // 顶部极光：品牌色自顶部中心向下淡出
+        // 顶部极光：品牌色自顶部中心向下淡出（2026-11-15 提高强度让层次可见）
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: RadialGradient(
-              center: const Alignment(0, -1.15),
-              radius: 1.25,
+              center: const Alignment(-0.4, -1.2),
+              radius: 1.4,
               colors: [
-                colors.accent.withValues(alpha: AppAlphas.o12),
-                colors.accent.withValues(alpha: AppAlphas.o05),
+                colors.accent.withValues(alpha: AppAlphas.o20),
+                colors.accent.withValues(alpha: AppAlphas.o08),
                 colors.accent.withValues(alpha: AppAlphas.o0),
               ],
-              stops: const [0.0, 0.45, 1.0],
+              stops: const [0.0, 0.5, 1.0],
             ),
           ),
         ),
-        // 右下角冷调微光（teal 语义色，与顶部暖极光形成对角层次）
+        // 右上角暖金微光（与左下冷调形成对角色彩张力）
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: RadialGradient(
-              center: const Alignment(1.3, 1.2),
+              center: const Alignment(1.4, -0.9),
+              radius: 1.0,
+              colors: [
+                FuncColors.ratingStar.withValues(alpha: AppAlphas.o12),
+                FuncColors.ratingStar.withValues(alpha: AppAlphas.o0),
+              ],
+              stops: const [0.0, 1.0],
+            ),
+          ),
+        ),
+        // 左下角冷调微光（teal 语义色，与顶部暖极光形成对角层次）
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(-1.3, 1.2),
               radius: 1.1,
               colors: [
-                colors.teal.withValues(alpha: AppAlphas.o08),
+                colors.teal.withValues(alpha: AppAlphas.o12),
                 colors.teal.withValues(alpha: AppAlphas.o0),
               ],
               stops: const [0.0, 1.0],
@@ -145,11 +161,14 @@ class HomeDoneBadge extends StatelessWidget {
 
 /// 主卡统计锚点：大数字 + 小标签。
 class HomeHeroStat extends StatelessWidget {
-  const HomeHeroStat({super.key, required this.value, required this.label, required this.color});
+  const HomeHeroStat({super.key, required this.value, required this.label, required this.color, this.labelColor});
 
   final String value;
   final String label;
   final Color color;
+
+  /// 小标签色；null 回退主题三级文字（浅色卡），深色面板传奶油白。
+  final Color? labelColor;
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +188,7 @@ class HomeHeroStat extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(label, style: MwTypography.micro.copyWith(color: context.skin.colors.text3)),
+        Text(label, style: MwTypography.micro.copyWith(color: labelColor ?? context.skin.colors.text3)),
       ],
     );
   }
@@ -192,22 +211,34 @@ class HomeStatDivider extends StatelessWidget {
   }
 }
 
-/// 条带共享图标底座：渐变圆角方块 + 发丝描边（统一三条带的高级质感）。
+/// 条带共享图标底座：饱和渐变圆角方块 + 白色图标 + 同色投影。
+///
+/// 2026-11-15 重设计：从「淡色底+主题色图标」升级为「饱和渐变+白图标」，
+/// 让签到/任务/词书三个徽章在奶油画布上真正跳出来，形成色彩节奏。
 class HomeStripIconTile extends StatelessWidget {
-  const HomeStripIconTile({super.key, required this.gradient, required this.child});
+  const HomeStripIconTile({super.key, required this.gradient, required this.glowColor, required this.child});
 
   final Gradient gradient;
+
+  /// 投影色（取渐变主色），让徽章有「浮起」的同色光晕。
+  final Color glowColor;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 36,
-      height: 36,
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(
         gradient: gradient,
-        borderRadius: BorderRadius.circular(context.design.radius.sm),
-        border: Border.all(color: context.skin.colors.accent.withValues(alpha: AppAlphas.o18)),
+        borderRadius: BorderRadius.circular(context.design.radius.md),
+        boxShadow: [
+          BoxShadow(
+            color: glowColor.withValues(alpha: AppAlphas.o35),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Center(child: child),
     );
@@ -278,6 +309,129 @@ class HomeGlossyCta extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 环形进度（track + 圆头渐变弧 + 端点光晕），中心显示 已学/目标。
+///
+/// 2026-11-15 从 home_hero 抽至此处（视觉原子单一归属）。环画笔类名
+/// 保持 `_RingPainter` 以维持 home_greeting_test 的 runtimeType 测试口。
+class HomeProgressRing extends StatelessWidget {
+  const HomeProgressRing({
+    super.key,
+    required this.size,
+    required this.progress,
+    required this.trackColor,
+    required this.progressColor,
+    required this.learned,
+    required this.goal,
+    this.secondaryColor,
+  });
+
+  final double size;
+  final double progress;
+  final Color trackColor;
+  final Color progressColor;
+  final int learned;
+  final int goal;
+
+  /// 中心「/ 目标」副文字色；null 时回退主题三级文字（浅色卡），
+  /// 深色面板传奶油白以保证对比。
+  final Color? secondaryColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final resp = context.responsive;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: progress),
+      duration: MotionDurations.count,
+      curve: Curves.easeOutCubic,
+      builder: (context, animated, _) => SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(
+          painter: _RingPainter(trackColor: trackColor, progressColor: progressColor, progress: animated),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$learned',
+                  style: TextStyle(
+                    fontSize: AppFontSizes.displaySm * resp.fontScale,
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
+                    color: progressColor,
+                  ),
+                ),
+                Text(
+                  '/ $goal',
+                  style: TextStyle(
+                    fontSize: AppFontSizes.micro * resp.fontScale,
+                    height: 1.3,
+                    color: secondaryColor ?? context.skin.colors.text3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RingPainter extends CustomPainter {
+  const _RingPainter({required this.trackColor, required this.progressColor, required this.progress});
+
+  final Color trackColor;
+  final Color progressColor;
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const stroke = 9.0;
+    final inset = stroke / 2 + 1;
+    final arcRect = Rect.fromLTWH(inset, inset, size.width - inset * 2, size.height - inset * 2);
+    final center = arcRect.center;
+    final radius = arcRect.width / 2;
+
+    // 轨道：细发丝环
+    final track = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..color = trackColor;
+    canvas.drawArc(arcRect, 0, 2 * math.pi, false, track);
+
+    if (progress > 0) {
+      final sweep = 2 * math.pi * progress;
+      // 渐变弧：从主色到提亮色，沿弧线扫过（高级感的关键一笔）
+      final arc = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..strokeCap = StrokeCap.round
+        ..shader = SweepGradient(
+          startAngle: 0,
+          endAngle: 2 * math.pi,
+          colors: [progressColor, Color.lerp(progressColor, AppColors.white100, 0.35)!, progressColor],
+          stops: const [0.0, 0.5, 1.0],
+          transform: const GradientRotation(-math.pi / 2),
+        ).createShader(arcRect);
+      canvas.drawArc(arcRect, -math.pi / 2, sweep, false, arc);
+
+      // 端点光晕：弧线终点一颗柔光珠
+      final endAngle = -math.pi / 2 + sweep;
+      final tip = Offset(center.dx + radius * math.cos(endAngle), center.dy + radius * math.sin(endAngle));
+      final glow = Paint()
+        ..color = progressColor.withValues(alpha: AppAlphas.o35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+      canvas.drawCircle(tip, stroke * 0.7, glow);
+      canvas.drawCircle(tip, stroke * 0.42, Paint()..color = AppColors.white100);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _RingPainter old) =>
+      old.progress != progress || old.trackColor != trackColor || old.progressColor != progressColor;
 }
 
 /// 头部渐变玻璃图标按钮：圆形 + 发丝描边 + 双层细影。
