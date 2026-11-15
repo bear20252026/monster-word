@@ -31,11 +31,10 @@ import 'package:word_app/features/progress/application/xp_store.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/tokens/home_focus.dart';
+import 'package:word_app/tokens/home_night.dart';
 import 'package:word_app/tokens/star_gold.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/app_dock.dart';
-import 'package:word_app/widgets/mw_card.dart';
 import 'package:word_app/widgets/daily_goal_picker.dart';
 
 import 'review_dialog.dart';
