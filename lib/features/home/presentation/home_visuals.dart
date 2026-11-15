@@ -195,8 +195,8 @@ class HomeStripIconTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.skin.colors;
     return Container(
-      width: 40,
-      height: 40,
+      width: 36,
+      height: 36,
       decoration: BoxDecoration(
         color: colors.accent.withValues(alpha: AppAlphas.o08),
         borderRadius: BorderRadius.circular(context.design.radius.md),

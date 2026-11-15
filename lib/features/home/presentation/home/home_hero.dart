@@ -37,13 +37,6 @@ class _TodayHeroCard extends StatelessWidget {
               colors: [HomeFocusColors.panel, HomeFocusColors.panelDeep],
             ),
             border: Border.all(color: HomeFocusColors.hairline),
-            boxShadow: [
-              BoxShadow(
-                color: HomeFocusColors.panelDeep.withValues(alpha: AppAlphas.o35),
-                blurRadius: 32,
-                offset: const Offset(0, 14),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
