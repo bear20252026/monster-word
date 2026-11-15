@@ -106,12 +106,14 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         child: Row(
           children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: skin.colors.accent.withValues(alpha: AppAlphas.o10),
-                shape: BoxShape.circle,
+            HomeStripIconTile(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  skin.colors.accent.withValues(alpha: AppAlphas.o18),
+                  skin.colors.accent.withValues(alpha: AppAlphas.o08),
+                ],
               ),
               child: _flameIcon(skin.colors),
             ),
@@ -232,12 +234,14 @@ class _MissionStripState extends State<_MissionStrip> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: skin.colors.accent.withValues(alpha: AppAlphas.o10),
-                    shape: BoxShape.circle,
+                HomeStripIconTile(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      skin.colors.accent.withValues(alpha: AppAlphas.o18),
+                      skin.colors.accent.withValues(alpha: AppAlphas.o08),
+                    ],
                   ),
                   child: Icon(Icons.checklist_rounded, size: 18, color: skin.colors.accent),
                 ),
@@ -435,12 +439,14 @@ class _BookStrip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: skin.colors.accent.withValues(alpha: AppAlphas.o10),
-                  shape: BoxShape.circle,
+              HomeStripIconTile(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    skin.colors.accent.withValues(alpha: AppAlphas.o18),
+                    skin.colors.accent.withValues(alpha: AppAlphas.o08),
+                  ],
                 ),
                 child: Icon(Icons.collections_bookmark_outlined, size: 18, color: skin.colors.accent),
               ),
@@ -549,8 +555,24 @@ class _GoalChipsState extends State<_GoalChips> {
         curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: ShapeDecoration(
-          color: selected ? skin.colors.accent : skin.colors.cardBg,
+          gradient: selected
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color.lerp(skin.colors.accent, AppColors.white100, 0.18)!, skin.colors.accent],
+                )
+              : null,
+          color: selected ? null : skin.colors.cardBg,
           shape: StadiumBorder(side: BorderSide(color: selected ? skin.colors.accent : skin.colors.divider)),
+          shadows: selected
+              ? [
+                  BoxShadow(
+                    color: skin.colors.accent.withValues(alpha: AppAlphas.o35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           '$value',
@@ -588,3 +610,5 @@ class _GoalChipsState extends State<_GoalChips> {
     );
   }
 }
+
+/// 条带共享图标底座已抽至 home_visuals.dart 的 [HomeStripIconTile]。

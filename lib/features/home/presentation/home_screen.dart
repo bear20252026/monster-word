@@ -22,6 +22,7 @@ import 'package:word_app/features/learning/application/learning_session_reader.d
 import 'package:word_app/features/learning/application/learning_session_starter.dart';
 
 import 'home_path_map.dart';
+import 'home_visuals.dart';
 
 // M2：每日任务（只 import 对方的 application 层，架构守卫 R4 允许）。
 import 'package:word_app/features/missions/application/daily_mission_reward_service.dart';
@@ -69,8 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final v = details.primaryVelocity ?? 0;
         if (v > 160) Navigator.pushNamed(context, RouteNames.search);
       },
-      child: Container(
-        color: skin.colors.pageBg,
+      child: HomeAmbient(
         child: SafeArea(
           bottom: false,
           child: Center(

@@ -63,14 +63,14 @@ class _HeaderState extends State<_Header> {
               ],
             ),
           ),
-          _HeaderIconButton(
+          HomeHeaderIconButton(
             icon: Icons.menu_book_rounded,
             tooltip: '词典查询',
             colors: colors,
             onTap: () => Navigator.pushNamed(context, RouteNames.search),
           ),
           const SizedBox(width: 10),
-          _HeaderIconButton(
+          HomeHeaderIconButton(
             icon: Icons.sports_esports_rounded,
             tooltip: '单词机',
             colors: colors,
@@ -116,38 +116,7 @@ class _XpLevelChip extends StatelessWidget {
   }
 }
 
-class _HeaderIconButton extends StatelessWidget {
-  const _HeaderIconButton({required this.icon, required this.tooltip, required this.colors, required this.onTap});
-
-  final IconData icon;
-  final String tooltip;
-  final ThemeVars colors;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      triggerMode: TooltipTriggerMode.longPress,
-      child: ScaleDownOnPress(
-        onTap: onTap,
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: colors.cardBg,
-            shape: BoxShape.circle,
-            boxShadow: const [
-              BoxShadow(color: MwShadows.hairlineShadow, blurRadius: 0.5),
-              BoxShadow(color: MwShadows.liftShadow, blurRadius: 1.0, offset: Offset(0, 1)),
-            ],
-          ),
-          child: Icon(icon, color: colors.accent, size: 22),
-        ),
-      ),
-    );
-  }
-}
+/// 头部渐变玻璃图标按钮已抽至 home_visuals.dart 的 [HomeHeaderIconButton]。
 
 /// 每日一句脚注：按日期轮换，单行优雅呈现（衬线斜体）。
 class _QuoteFooter extends StatelessWidget {
