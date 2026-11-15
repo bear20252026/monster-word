@@ -3,7 +3,6 @@
 import 'package:word_app/widgets/common/mw_feedback.dart';
 
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -32,7 +31,8 @@ import 'package:word_app/features/progress/application/xp_store.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/tokens/motion_tokens.dart';
+import 'package:word_app/tokens/func_colors.dart';
+import 'package:word_app/tokens/home_focus.dart';
 import 'package:word_app/tokens/star_gold.dart';
 import 'package:word_app/widgets/confetti.dart';
 import 'package:word_app/widgets/app_dock.dart';

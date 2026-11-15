@@ -107,14 +107,12 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
         child: Row(
           children: [
             HomeStripIconTile(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  skin.colors.accent.withValues(alpha: AppAlphas.o18),
-                  skin.colors.accent.withValues(alpha: AppAlphas.o08),
-                ],
+                colors: [FuncColors.streakFlame, FuncColors.warning],
               ),
+              glowColor: FuncColors.streakFlame,
               child: _flameIcon(skin.colors),
             ),
             const SizedBox(width: 12),
@@ -238,12 +236,10 @@ class _MissionStripState extends State<_MissionStrip> {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      skin.colors.accent.withValues(alpha: AppAlphas.o18),
-                      skin.colors.accent.withValues(alpha: AppAlphas.o08),
-                    ],
+                    colors: [skin.colors.accent, Color.lerp(skin.colors.accent, FuncColors.black, 0.25)!],
                   ),
-                  child: Icon(Icons.checklist_rounded, size: 18, color: skin.colors.accent),
+                  glowColor: skin.colors.accent,
+                  child: const Icon(Icons.checklist_rounded, size: 18, color: AppColors.white100),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -443,12 +439,10 @@ class _BookStrip extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    skin.colors.accent.withValues(alpha: AppAlphas.o18),
-                    skin.colors.accent.withValues(alpha: AppAlphas.o08),
-                  ],
+                  colors: [FuncColors.info, Color.lerp(FuncColors.info, FuncColors.black, 0.3)!],
                 ),
-                child: Icon(Icons.collections_bookmark_outlined, size: 18, color: skin.colors.accent),
+                glowColor: FuncColors.info,
+                child: const Icon(Icons.collections_bookmark_outlined, size: 18, color: AppColors.white100),
               ),
               const SizedBox(width: 12),
               Expanded(

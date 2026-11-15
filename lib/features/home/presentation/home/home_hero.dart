@@ -24,9 +24,26 @@ class _TodayHeroCard extends StatelessWidget {
         final step = resolveHomeNextStep(goal: goal, learned: learned, due: dueCount);
 
         final accent = done ? StarGold.gold : skin.colors.accent;
-        final heroCard = MwCard(
-          borderRadius: context.design.radius.xl,
-          padding: EdgeInsets.all(24 * resp.scale),
+        // 墨玉焦点面板：奶油画布上的深色锚点（2026-11-15 重设计）。
+        // 深绿近黑底 + 奶油白文字 + 金/品牌色环 + 高对比 CTA，强对比而非弱叠加。
+        final heroCard = Container(
+          padding: EdgeInsets.all(26 * resp.scale),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(context.design.radius.xl),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [HomeFocusColors.panel, HomeFocusColors.panelDeep],
+            ),
+            border: Border.all(color: HomeFocusColors.hairline),
+            boxShadow: [
+              BoxShadow(
+                color: HomeFocusColors.panelDeep.withValues(alpha: AppAlphas.o35),
+                blurRadius: 32,
+                offset: const Offset(0, 14),
+              ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -34,55 +51,22 @@ class _TodayHeroCard extends StatelessWidget {
               // eyebrow：今日进度标签 + 达标徽章
               Row(
                 children: [
-                  HomeEyebrow(label: '今日进度', color: skin.colors.text3),
+                  HomeEyebrow(label: '今日进度', color: HomeFocusColors.onPanelMuted),
                   const Spacer(),
                   if (done) HomeDoneBadge(color: accent),
                 ],
               ),
-              SizedBox(height: 18 * resp.scale),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _ProgressRing(
-                    size: 104 * resp.scale,
-                    progress: progress,
-                    trackColor: skin.colors.divider,
-                    // 今日达标：金色环庆祝；未达标保持主题 accent
-                    progressColor: accent,
-                    learned: learned,
-                    goal: goal,
-                  ),
-                  SizedBox(width: 22 * resp.scale),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          step.title,
-                          style: TextStyle(
-                            fontSize: AppFontSizes.titleSm * resp.fontScale,
-                            fontWeight: FontWeight.w700,
-                            height: 1.25,
-                            letterSpacing: -0.3,
-                            color: skin.colors.text1,
-                          ),
-                        ),
-                        SizedBox(height: 10 * resp.scale),
-                        // 统计行：已学 / 待复习 两个数字锚点
-                        Row(
-                          children: [
-                            HomeHeroStat(value: '$learned', label: '已学', color: skin.colors.text1),
-                            HomeStatDivider(color: skin.colors.divider),
-                            HomeHeroStat(value: '$dueCount', label: '待复习', color: skin.colors.text1),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
               SizedBox(height: 20 * resp.scale),
+              _buildProgressRow(
+                resp: resp,
+                progress: progress,
+                accent: accent,
+                learned: learned,
+                goal: goal,
+                dueCount: dueCount,
+                title: step.title,
+              ),
+              SizedBox(height: 22 * resp.scale),
               // 一键开始：主按钮只指一个方向（到期优先复习，其余开学）。
               SizedBox(
                 width: double.infinity,
@@ -90,7 +74,7 @@ class _TodayHeroCard extends StatelessWidget {
                   label: step.ctaLabel,
                   icon: step.primaryIsReview ? Icons.history_rounded : Icons.play_arrow_rounded,
                   backgroundColor: accent,
-                  foregroundColor: AppColors.white100,
+                  foregroundColor: done ? HomeFocusColors.onCta : AppColors.white100,
                   onTap: step.primaryIsReview ? () => showReviewDialog(context) : () => startHomeLearning(context),
                 ),
               ),
@@ -104,7 +88,7 @@ class _TodayHeroCard extends StatelessWidget {
                       padding: EdgeInsets.zero,
                       minimumSize: const Size(0, 32),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      foregroundColor: skin.colors.accent,
+                      foregroundColor: HomeFocusColors.onPanelMuted,
                     ),
                     child: Text(
                       step.secondaryLabel!,
@@ -118,6 +102,70 @@ class _TodayHeroCard extends StatelessWidget {
         // 今日达标沿触发一次金色 confetti（30 粒 StarGold.gold）
         return _DoneConfetti(done: done, child: heroCard);
       },
+    );
+  }
+
+  /// 进度行：渐变环 + 下一步标题 + 已学/待复习统计锚点（深色面板奶油白文字）。
+  Widget _buildProgressRow({
+    required AppResponsive resp,
+    required double progress,
+    required Color accent,
+    required int learned,
+    required int goal,
+    required int dueCount,
+    required String title,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        HomeProgressRing(
+          size: 116 * resp.scale,
+          progress: progress,
+          trackColor: HomeFocusColors.ringTrack,
+          // 今日达标：金色环庆祝；未达标保持主题 accent
+          progressColor: accent,
+          learned: learned,
+          goal: goal,
+          secondaryColor: HomeFocusColors.onPanelMuted,
+        ),
+        SizedBox(width: 24 * resp.scale),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: AppFontSizes.titleSm * resp.fontScale,
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
+                  letterSpacing: -0.3,
+                  color: HomeFocusColors.onPanel,
+                ),
+              ),
+              SizedBox(height: 12 * resp.scale),
+              Row(
+                children: [
+                  HomeHeroStat(
+                    value: '$learned',
+                    label: '已学',
+                    color: HomeFocusColors.onPanel,
+                    labelColor: HomeFocusColors.onPanelMuted,
+                  ),
+                  HomeStatDivider(color: HomeFocusColors.hairline),
+                  HomeHeroStat(
+                    value: '$dueCount',
+                    label: '待复习',
+                    color: HomeFocusColors.onPanel,
+                    labelColor: HomeFocusColors.onPanelMuted,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -240,118 +288,5 @@ class _DoneConfettiState extends State<_DoneConfetti> {
   }
 }
 
-/// 环形进度（track + 圆头弧线），中心显示 已学/目标。
-class _ProgressRing extends StatelessWidget {
-  const _ProgressRing({
-    required this.size,
-    required this.progress,
-    required this.trackColor,
-    required this.progressColor,
-    required this.learned,
-    required this.goal,
-  });
-
-  final double size;
-  final double progress;
-  final Color trackColor;
-  final Color progressColor;
-  final int learned;
-  final int goal;
-
-  @override
-  Widget build(BuildContext context) {
-    final resp = context.responsive;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: progress),
-      duration: MotionDurations.count,
-      curve: Curves.easeOutCubic,
-      builder: (context, animated, _) => SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(
-          painter: _RingPainter(trackColor: trackColor, progressColor: progressColor, progress: animated),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '$learned',
-                  style: TextStyle(
-                    fontSize: AppFontSizes.displaySm * resp.fontScale,
-                    fontWeight: FontWeight.w700,
-                    height: 1.1,
-                    color: progressColor,
-                  ),
-                ),
-                Text(
-                  '/ $goal',
-                  style: TextStyle(
-                    fontSize: AppFontSizes.micro * resp.fontScale,
-                    height: 1.3,
-                    color: context.skin.colors.text3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RingPainter extends CustomPainter {
-  const _RingPainter({required this.trackColor, required this.progressColor, required this.progress});
-
-  final Color trackColor;
-  final Color progressColor;
-  final double progress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const stroke = 9.0;
-    final inset = stroke / 2 + 1;
-    final arcRect = Rect.fromLTWH(inset, inset, size.width - inset * 2, size.height - inset * 2);
-    final center = arcRect.center;
-    final radius = arcRect.width / 2;
-
-    // 轨道：细发丝环
-    final track = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..color = trackColor;
-    canvas.drawArc(arcRect, 0, 2 * math.pi, false, track);
-
-    if (progress > 0) {
-      final sweep = 2 * math.pi * progress;
-      // 渐变弧：从主色到提亮色，沿弧线扫过（高级感的关键一笔）
-      final arc = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = stroke
-        ..strokeCap = StrokeCap.round
-        ..shader = SweepGradient(
-          startAngle: 0,
-          endAngle: 2 * math.pi,
-          colors: [progressColor, Color.lerp(progressColor, AppColors.white100, 0.35)!, progressColor],
-          stops: const [0.0, 0.5, 1.0],
-          transform: const GradientRotation(-math.pi / 2),
-        ).createShader(arcRect);
-      canvas.drawArc(arcRect, -math.pi / 2, sweep, false, arc);
-
-      // 端点光晕：弧线终点一颗柔光珠
-      final endAngle = -math.pi / 2 + sweep;
-      final tip = Offset(center.dx + radius * math.cos(endAngle), center.dy + radius * math.sin(endAngle));
-      final glow = Paint()
-        ..color = progressColor.withValues(alpha: AppAlphas.o35)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-      canvas.drawCircle(tip, stroke * 0.7, glow);
-      canvas.drawCircle(tip, stroke * 0.42, Paint()..color = AppColors.white100);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _RingPainter old) =>
-      old.progress != progress || old.trackColor != trackColor || old.progressColor != progressColor;
-}
-
-/// 主卡光泽 CTA 已抽至 home_visuals.dart 的 [HomeGlossyCta]。
+/// 环形进度与环画笔已抽至 home_visuals.dart 的 [HomeProgressRing] / `_RingPainter`。
+/// 主卡光泽 CTA 见 [HomeGlossyCta]。

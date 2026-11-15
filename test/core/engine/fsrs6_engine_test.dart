@@ -46,15 +46,21 @@ const _officialWeights = [
   0.1542,
 ];
 
-FsrsCard _card({double stability = 2.3065, double difficulty = 5.0, bool isNew = false, int elapsedDays = 5}) {
-  final now = DateTime.now();
+FsrsCard _card({
+  double stability = 2.3065,
+  double difficulty = 5.0,
+  bool isNew = false,
+  int elapsedDays = 5,
+  DateTime? now,
+}) {
+  final at = now ?? DateTime.now();
   return FsrsCard(
     word: 'test',
     stability: stability,
     difficulty: difficulty,
     isNew: isNew,
-    lastReview: now.subtract(Duration(days: elapsedDays)),
-    dueDate: now,
+    lastReview: at.subtract(Duration(days: elapsedDays)),
+    dueDate: at,
   );
 }
 
@@ -114,7 +120,9 @@ void main() {
     });
 
     test('R(t=30, S=2.3065) = 0.6675263338', () {
-      final r = Fsrs6Engine().getRetrievability(_card(elapsedDays: 30));
+      // 固定正午时钟：日历日差口径下跨午夜运行不再 +1 天（2026-11-15 修 flake）。
+      final noon = DateTime(2026, 11, 15, 12);
+      final r = Fsrs6Engine().getRetrievability(_card(elapsedDays: 30, now: noon), now: noon);
       expect(r, closeTo(0.6675263338730357, 1e-9));
     });
 
@@ -189,7 +197,9 @@ void main() {
     });
 
     test('t=30: min(0.85883827, 2.19516063) = 0.85883827', () {
-      final updated = engine.review(_card(elapsedDays: 30), FsrsRating.again);
+      // 固定正午时钟：日历日差口径下跨午夜运行不再 +1 天（2026-11-15 修 flake）。
+      final noon = DateTime(2026, 11, 15, 12);
+      final updated = engine.review(_card(elapsedDays: 30, now: noon), FsrsRating.again, reviewedAt: noon);
       expect(updated.stability, closeTo(0.8588382711340833, 1e-9));
     });
   });
