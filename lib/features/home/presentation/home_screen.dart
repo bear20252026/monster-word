@@ -102,50 +102,36 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const _HomePathSection(),
             ),
           ),
-        const Spacer(flex: 3),
+        // 2026-11-15 构图改进：顶部固定呼吸距（不再用大 Spacer 制造上空洞），
+        // 内容自上而下锚定，剩余空间统一留给底部，脚注贴底收束。
+        SizedBox(height: 28 * resp.scale),
         // 今日进度主卡（唯一视觉锚点）
         _EntranceIn(
           delayMs: 80,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 12),
+            padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
             child: const _TodayHeroCard(),
           ),
         ),
-        // 签到条
+        // 今日分组卡：签到/任务/词书三行共用一张卡（发丝分隔）
         _EntranceIn(
           delayMs: 180,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 12),
-            child: const _CheckInStrip(),
-          ),
-        ),
-        // 每日任务条（M2）：一行摘要，点开看三条任务
-        _EntranceIn(
-          delayMs: 220,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 12),
-            child: const _MissionStrip(),
-          ),
-        ),
-        // 当前词书条
-        _EntranceIn(
-          delayMs: 260,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 12),
-            child: const _BookStrip(),
+            padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 16),
+            child: const _DailyGroupCard(),
           ),
         ),
         // 每日目标快捷档位
         _EntranceIn(
-          delayMs: 340,
+          delayMs: 260,
           child: Padding(
             padding: EdgeInsets.fromLTRB(resp.pageMargin, 0, resp.pageMargin, 0),
             child: const _GoalChips(),
           ),
         ),
-        const Spacer(flex: 2),
+        const Spacer(),
         // 每日一句脚注
-        _EntranceIn(delayMs: 420, child: const _QuoteFooter()),
+        _EntranceIn(delayMs: 340, child: const _QuoteFooter()),
       ],
     );
   }
@@ -169,15 +155,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _EntranceIn(delayMs: 180, child: const _CheckInStrip()),
-                      const SizedBox(height: 12),
-                      _EntranceIn(delayMs: 220, child: const _MissionStrip()),
-                      const SizedBox(height: 12),
-                      _EntranceIn(delayMs: 260, child: const _BookStrip()),
-                      const SizedBox(height: 12),
-                      _EntranceIn(delayMs: 340, child: const _GoalChips()),
+                      _EntranceIn(delayMs: 180, child: const _DailyGroupCard()),
                       const SizedBox(height: 16),
-                      _EntranceIn(delayMs: 420, child: const _QuoteFooter()),
+                      _EntranceIn(delayMs: 260, child: const _GoalChips()),
+                      const SizedBox(height: 16),
+                      _EntranceIn(delayMs: 340, child: const _QuoteFooter()),
                     ],
                   ),
                 ),

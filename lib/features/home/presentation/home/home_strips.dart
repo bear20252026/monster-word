@@ -99,9 +99,10 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
     // 加载中：占位避免布局跳动
     if (checked == null) return const SizedBox(height: 56);
 
+    // 2026-11-15 结构改进：行内容不再自带卡片外壳，由 _DailyGroupCard 统一承载。
     return ScaleDownOnPress(
       onTap: _openSheet,
-      child: MwCard(
+      child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         child: Row(
           children: [
@@ -223,7 +224,7 @@ class _MissionStripState extends State<_MissionStrip> {
         final total = DailyMissionId.values.length;
         return ScaleDownOnPress(
           onTap: _openSheet,
-          child: MwCard(
+          child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(
               children: [
@@ -418,7 +419,7 @@ class _BookStrip extends StatelessWidget {
       selector: (_, s) => s.currentBook?.name,
       builder: (context, bookName, _) => ScaleDownOnPress(
         onTap: () => Navigator.pushNamed(context, RouteNames.libSelect),
-        child: MwCard(
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             children: [
@@ -569,3 +570,35 @@ class _GoalChipsState extends State<_GoalChips> {
 }
 
 /// 条带共享图标底座已抽至 home_visuals.dart 的 [HomeStripIconTile]。
+
+/// 今日分组卡：签到/任务/词书三行共用一张卡，发丝分隔线代替三张独立卡。
+///
+/// 2026-11-15 结构改进：上一版三张独立条卡重复阴影、各自为政，视觉碎。
+/// 合并为单张分组卡后只有一个圆角与一层阴影，行与行之间用发丝线分隔，
+/// 秩序感与留白节奏显著改善（设置页分组同构）。
+class _DailyGroupCard extends StatelessWidget {
+  const _DailyGroupCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return MwCard(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: const [_CheckInStrip(), _StripDivider(), _MissionStrip(), _StripDivider(), _BookStrip()],
+      ),
+    );
+  }
+}
+
+/// 分组卡内发丝分隔线：左缩进对齐图标后的文字起点。
+class _StripDivider extends StatelessWidget {
+  const _StripDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: AppSpacing.section),
+      child: Container(height: 1, color: context.skin.colors.divider),
+    );
+  }
+}
