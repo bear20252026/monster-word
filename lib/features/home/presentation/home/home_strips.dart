@@ -65,11 +65,13 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
   }
 
   /// 火苗图标：未签到时 alpha 呼吸（o40↔o90 lerp，easeInOut 反复）；已签或 reduce-motion 时静态。
-  Widget _flameIcon() {
-    // 星夜航程：火苗用极光青（主色族内），呼吸 alpha 口径不变（REG-FLAME 测试口保留）。
-    final base = HomeNightColors.aurora;
+  Widget _flameIcon(ThemeVars colors) {
     if (_checkedToday != false || _reduceMotion) {
-      return Icon(Icons.local_fire_department_rounded, size: 18, color: base);
+      return Icon(
+        Icons.local_fire_department_rounded,
+        size: 18,
+        color: _checkedToday == true ? colors.accent : colors.text3,
+      );
     }
     return AnimatedBuilder(
       animation: _flameBreath,
@@ -77,8 +79,8 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
         Icons.local_fire_department_rounded,
         size: 18,
         color: Color.lerp(
-          base.withValues(alpha: AppAlphas.o40),
-          base.withValues(alpha: AppAlphas.o90),
+          colors.text3.withValues(alpha: AppAlphas.o40),
+          colors.text3.withValues(alpha: AppAlphas.o90),
           _flameBreath.value,
         ),
       ),
@@ -93,39 +95,44 @@ class _CheckInStripState extends State<_CheckInStrip> with SingleTickerProviderS
 
   @override
   Widget build(BuildContext context) {
+    final skin = context.skin;
     final checked = _checkedToday;
     // 加载中：占位避免布局跳动
     if (checked == null) return const SizedBox(height: 56);
 
-    // 2026-11-15 结构改进：行内容不再自带卡片外壳，由 _DailyGroupCard 统一承载。
     return ScaleDownOnPress(
       onTap: _openSheet,
-      child: Padding(
+      child: MwCard(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         child: Row(
           children: [
-            HomeStripIconTile(child: _flameIcon()),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: skin.colors.accent.withValues(alpha: AppAlphas.o10),
+                shape: BoxShape.circle,
+              ),
+              child: _flameIcon(skin.colors),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 checked ? _checkedStreakLabel() : '今天还没签到，别断啦',
-                style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: HomeNightColors.text1),
+                style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: skin.colors.text1),
               ),
             ),
             if (!checked)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(context.design.radius.sm),
-                  border: Border.all(color: HomeNightColors.aurora.withValues(alpha: AppAlphas.o40)),
-                ),
+                decoration: ShapeDecoration(color: skin.colors.accent, shape: const StadiumBorder()),
                 child: Text(
                   '签到 +10',
-                  style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: HomeNightColors.aurora),
+                  style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: AppColors.white100),
                 ),
               )
             else
-              Icon(Icons.chevron_right, size: 20, color: HomeNightColors.text3),
+              Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
           ],
         ),
       ),
@@ -203,6 +210,7 @@ class _MissionStripState extends State<_MissionStrip> {
 
   @override
   Widget build(BuildContext context) {
+    final skin = context.skin;
     // 到期数变化 → 复习任务目标变化；build 内只登记，postFrame 再写 Store，
     // 避免在 build 期间触发 notifyListeners。
     final due = context.select<TodayProgressStore, int>((s) => s.due);
@@ -220,39 +228,46 @@ class _MissionStripState extends State<_MissionStrip> {
         final total = DailyMissionId.values.length;
         return ScaleDownOnPress(
           onTap: _openSheet,
-          child: Padding(
+          child: MwCard(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(
               children: [
-                HomeStripIconTile(child: Icon(Icons.checklist_rounded, size: 18, color: HomeNightColors.aurora)),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: skin.colors.accent.withValues(alpha: AppAlphas.o10),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.checklist_rounded, size: 18, color: skin.colors.accent),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     '今日任务 $done/$total',
-                    style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: HomeNightColors.text1),
+                    style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: skin.colors.text1),
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: HomeNightColors.glass,
-                    borderRadius: BorderRadius.circular(context.design.radius.sm),
-                    border: Border.all(color: HomeNightColors.hairline),
+                  decoration: ShapeDecoration(
+                    color: skin.colors.cardBg,
+                    shape: StadiumBorder(side: BorderSide(color: skin.colors.divider)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.card_giftcard_rounded, size: 16, color: HomeNightColors.aurora),
+                      Icon(Icons.card_giftcard_rounded, size: 16, color: skin.colors.accent),
                       const SizedBox(width: 4),
                       Text(
                         _store.claimedCount >= total ? '已开' : '+$dailyMissionDailyCoinCap',
-                        style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: HomeNightColors.text2),
+                        style: MwTypography.micro.copyWith(fontWeight: FontWeight.w700, color: skin.colors.text2),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 6),
-                Icon(Icons.chevron_right, size: 20, color: HomeNightColors.text3),
+                Icon(Icons.chevron_right, size: 20, color: skin.colors.text3),
               ],
             ),
           ),
@@ -411,16 +426,23 @@ class _BookStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final skin = context.skin;
     return Selector<LearningSessionReader, String?>(
       selector: (_, s) => s.currentBook?.name,
       builder: (context, bookName, _) => ScaleDownOnPress(
         onTap: () => Navigator.pushNamed(context, RouteNames.libSelect),
-        child: Padding(
+        child: MwCard(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             children: [
-              HomeStripIconTile(
-                child: Icon(Icons.collections_bookmark_outlined, size: 18, color: HomeNightColors.aurora),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: skin.colors.accent.withValues(alpha: AppAlphas.o10),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.collections_bookmark_outlined, size: 18, color: skin.colors.accent),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -430,27 +452,28 @@ class _BookStrip extends StatelessWidget {
                   children: [
                     Text(
                       '当前词书',
-                      style: TextStyle(fontSize: AppFontSizes.micro, color: HomeNightColors.text3),
+                      style: TextStyle(fontSize: AppFontSizes.micro, color: skin.colors.text3),
                     ),
                     const SizedBox(height: 1),
                     Text(
                       bookName ?? '还没有选择词书',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: HomeNightColors.text1),
+                      style: MwTypography.bodySm.copyWith(fontWeight: FontWeight.w600, color: skin.colors.text1),
                     ),
                   ],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(context.design.radius.sm),
-                  border: Border.all(color: HomeNightColors.aurora.withValues(alpha: AppAlphas.o40)),
+                decoration: ShapeDecoration(
+                  shape: StadiumBorder(
+                    side: BorderSide(color: skin.colors.accent.withValues(alpha: AppAlphas.o40)),
+                  ),
                 ),
                 child: Text(
                   '切换',
-                  style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, color: HomeNightColors.aurora),
+                  style: MwTypography.micro.copyWith(fontWeight: FontWeight.w600, color: skin.colors.accent),
                 ),
               ),
             ],
@@ -464,10 +487,7 @@ class _BookStrip extends StatelessWidget {
 /// 每日目标快捷档位：预设 chip + 自定义（打开原有滚轮选择弹层）。
 /// 统一走 [TodayProgressStore.setGoal]，全站即时同步。
 class _GoalChips extends StatefulWidget {
-  const _GoalChips({this.compact = false});
-
-  /// 卡内紧凑模式：不带左侧标签（标签由 _GoalRow 提供），chip 更紧凑。
-  final bool compact;
+  const _GoalChips();
 
   @override
   State<_GoalChips> createState() => _GoalChipsState();
@@ -498,143 +518,73 @@ class _GoalChipsState extends State<_GoalChips> {
 
   @override
   Widget build(BuildContext context) {
+    final skin = context.skin;
     final current = context.watch<TodayProgressStore>().goal;
-    final compact = widget.compact;
-    final chips = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final value in _presets) ...[_goalChip(value, current == value, compact), const SizedBox(width: 6)],
-        // 当前值不在预设档位时，展示当前值 chip（选中态）
-        if (!_presets.contains(current)) ...[_goalChip(current, true, compact), const SizedBox(width: 6)],
-        _customChip(compact),
-      ],
-    );
-    if (compact) return Align(alignment: Alignment.centerRight, child: chips);
     return Row(
       children: [
         Text(
           '每日目标',
-          style: MwTypography.caption.copyWith(fontWeight: FontWeight.w500, color: HomeNightColors.text3),
+          style: MwTypography.caption.copyWith(fontWeight: FontWeight.w500, color: skin.colors.text3),
         ),
         const SizedBox(width: 12),
-        Expanded(child: chips),
+        Expanded(
+          child: Row(
+            children: [
+              for (final value in _presets) ...[_goalChip(value, current == value, skin), const SizedBox(width: 8)],
+              // 当前值不在预设档位时，展示当前值 chip（选中态）
+              if (!_presets.contains(current)) ...[_goalChip(current, true, skin), const SizedBox(width: 8)],
+              _customChip(skin),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  Widget _goalChip(int value, bool selected, bool compact) {
+  Widget _goalChip(int value, bool selected, SkinSystem skin) {
     return ScaleDownOnPress(
       onTap: () => _select(value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14, vertical: compact ? 5 : 7),
-        decoration: BoxDecoration(
-          gradient: selected ? const LinearGradient(colors: [HomeNightColors.aurora, HomeNightColors.auroraIce]) : null,
-          color: selected ? null : HomeNightColors.glass,
-          borderRadius: BorderRadius.circular(context.design.radius.sm),
-          border: Border.all(color: selected ? HomeNightColors.aurora : HomeNightColors.hairline),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: ShapeDecoration(
+          color: selected ? skin.colors.accent : skin.colors.cardBg,
+          shape: StadiumBorder(side: BorderSide(color: selected ? skin.colors.accent : skin.colors.divider)),
         ),
         child: Text(
           '$value',
           style: TextStyle(
             fontSize: AppFontSizes.caption,
             fontWeight: FontWeight.w600,
-            color: selected ? HomeNightColors.onAurora : HomeNightColors.text2,
+            color: selected ? AppColors.white100 : skin.colors.text2,
           ),
         ),
       ),
     );
   }
 
-  Widget _customChip(bool compact) {
+  Widget _customChip(SkinSystem skin) {
     return ScaleDownOnPress(
       onTap: _openCustomPicker,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14, vertical: compact ? 5 : 7),
-        decoration: BoxDecoration(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: ShapeDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(context.design.radius.sm),
-          border: Border.all(color: HomeNightColors.hairline),
+          shape: StadiumBorder(side: BorderSide(color: skin.colors.divider)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.tune, size: 14, color: HomeNightColors.text2),
-            if (!compact) ...[
-              const SizedBox(width: 4),
-              Text(
-                '自定义',
-                style: MwTypography.caption.copyWith(fontWeight: FontWeight.w500, color: HomeNightColors.text2),
-              ),
-            ],
+            Icon(Icons.tune, size: 14, color: skin.colors.text2),
+            const SizedBox(width: 4),
+            Text(
+              '自定义',
+              style: MwTypography.caption.copyWith(fontWeight: FontWeight.w500, color: skin.colors.text2),
+            ),
           ],
         ),
       ),
-    );
-  }
-}
-
-/// 条带共享图标底座已抽至 home_visuals.dart 的 [HomeStripIconTile]。
-
-/// 今日分组卡：签到/任务/词书/目标四行共用一块玻璃面板，发丝分隔线。
-///
-/// 星夜航程：航行日志式的玻璃面板，与星环仪表主卡同族但更安静，
-/// 一个圆角、一层微光、一种分隔语言。
-class _DailyGroupCard extends StatelessWidget {
-  const _DailyGroupCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return HomeGlassPanel(
-      glow: HomeNightColors.nebula,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          _CheckInStrip(),
-          _StripDivider(),
-          _MissionStrip(),
-          _StripDivider(),
-          _BookStrip(),
-          _StripDivider(),
-          _GoalRow(),
-        ],
-      ),
-    );
-  }
-}
-
-/// 目标行：卡内第四行，左侧标签 + 右侧紧凑档位 chip。
-class _GoalRow extends StatelessWidget {
-  const _GoalRow();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-      child: Row(
-        children: [
-          Text(
-            '每日目标',
-            style: MwTypography.caption.copyWith(fontWeight: FontWeight.w500, color: HomeNightColors.text3),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(child: _GoalChips(compact: true)),
-        ],
-      ),
-    );
-  }
-}
-
-/// 分组卡内发丝分隔线：左缩进对齐图标后的文字起点。
-class _StripDivider extends StatelessWidget {
-  const _StripDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: AppSpacing.section),
-      child: Container(height: 1, color: HomeNightColors.hairline),
     );
   }
 }
