@@ -11,15 +11,14 @@ import 'package:flutter/material.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/tokens/design_tokens.dart';
-import 'package:word_app/tokens/func_colors.dart';
 import 'package:word_app/tokens/motion_tokens.dart';
 import 'package:word_app/widgets/scale_down_on_press.dart';
 
-/// 首页分层氛围背景：奶油画布 + 顶部品牌色极光 + 细粒噪点。
+/// 首页氛围背景：奶油纸面 + 单一品牌色顶部微光 + 细粒噪点。
 ///
-/// 高级感来自「克制的层次」而非满屏特效：极光只用主题 accent 的低透明度
-/// 径向渐变（亮色是奶油上的一抹品牌绿晕，暗色是墨绿上的微光），噪点用
-/// 确定性伪随机散点（无循环动画、无每帧重绘），整体静态绘制一次。
+/// 2026-11-15 美学收敛：全页只允许一个主色族（墨绿）+ 奶油中性 +
+/// 金色仅用于「达成」。背景不再用橙/蓝多向极光（那是上一版混乱的根源），
+/// 只留一抹顶部品牌色晕与向纸色的垂直渐隐，层次靠明度而非色相堆叠。
 class HomeAmbient extends StatelessWidget {
   const HomeAmbient({super.key, required this.child});
 
@@ -33,50 +32,21 @@ class HomeAmbient extends StatelessWidget {
       children: [
         // 底层画布
         ColoredBox(color: colors.pageBg),
-        // 顶部极光：品牌色自顶部中心向下淡出（2026-11-15 提高强度让层次可见）
+        // 单一顶部微光：品牌色低透明度，向下渐隐到纸色
         DecoratedBox(
           decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(-0.4, -1.2),
-              radius: 1.4,
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
               colors: [
-                colors.accent.withValues(alpha: AppAlphas.o20),
                 colors.accent.withValues(alpha: AppAlphas.o08),
                 colors.accent.withValues(alpha: AppAlphas.o0),
               ],
-              stops: const [0.0, 0.5, 1.0],
+              stops: const [0.0, 0.55],
             ),
           ),
         ),
-        // 右上角暖金微光（与左下冷调形成对角色彩张力）
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(1.4, -0.9),
-              radius: 1.0,
-              colors: [
-                FuncColors.ratingStar.withValues(alpha: AppAlphas.o12),
-                FuncColors.ratingStar.withValues(alpha: AppAlphas.o0),
-              ],
-              stops: const [0.0, 1.0],
-            ),
-          ),
-        ),
-        // 左下角冷调微光（teal 语义色，与顶部暖极光形成对角层次）
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(-1.3, 1.2),
-              radius: 1.1,
-              colors: [
-                colors.teal.withValues(alpha: AppAlphas.o12),
-                colors.teal.withValues(alpha: AppAlphas.o0),
-              ],
-              stops: const [0.0, 1.0],
-            ),
-          ),
-        ),
-        // 细粒噪点（静态、确定性）
+        // 细粒噪点（静态、确定性，纸面质感）
         CustomPaint(painter: _GrainPainter(color: colors.text1)),
         child,
       ],
@@ -211,41 +181,37 @@ class HomeStatDivider extends StatelessWidget {
   }
 }
 
-/// 条带共享图标底座：饱和渐变圆角方块 + 白色图标 + 同色投影。
+/// 条带共享图标底座：单一墨色 tint 圆角方块 + 主色图标 + 发丝描边。
 ///
-/// 2026-11-15 重设计：从「淡色底+主题色图标」升级为「饱和渐变+白图标」，
-/// 让签到/任务/词书三个徽章在奶油画布上真正跳出来，形成色彩节奏。
+/// 2026-11-15 美学收敛：三个徽章不再各用橙/绿/蓝饱和渐变（色彩角色过多
+/// 是混乱根源），统一为同一主色族的浅 tint，靠图标与文案区分语义，
+/// 全页色彩节奏只保留「墨绿主色 + 奶油中性 + 金色达成」。
 class HomeStripIconTile extends StatelessWidget {
-  const HomeStripIconTile({super.key, required this.gradient, required this.glowColor, required this.child});
+  const HomeStripIconTile({super.key, required this.child});
 
-  final Gradient gradient;
-
-  /// 投影色（取渐变主色），让徽章有「浮起」的同色光晕。
-  final Color glowColor;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.skin.colors;
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        gradient: gradient,
+        color: colors.accent.withValues(alpha: AppAlphas.o08),
         borderRadius: BorderRadius.circular(context.design.radius.md),
-        boxShadow: [
-          BoxShadow(
-            color: glowColor.withValues(alpha: AppAlphas.o35),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: colors.accent.withValues(alpha: AppAlphas.o15)),
       ),
       child: Center(child: child),
     );
   }
 }
 
-/// 主卡光泽胶囊 CTA：顶部高光渐变 + 柔和投影 + 按压缩放。
+/// 主卡倒置胶囊 CTA：扁平实色（奶油或金）+ 深色前景 + 按压缩放。
+///
+/// 2026-11-15 美学收敛：深色面板上的高对比按钮用「倒置」而非「光泽」——
+/// 奶油底/墨字（未达标）或金底/墨字（达标），去掉渐变与彩色投影，
+/// 让对比来自明度反转，保持全页只有墨绿/奶油/金三个色彩角色。
 class HomeGlossyCta extends StatelessWidget {
   const HomeGlossyCta({
     super.key,
@@ -264,27 +230,12 @@ class HomeGlossyCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final highlight = Color.lerp(backgroundColor, AppColors.white100, 0.18)!;
     return ScaleDownOnPress(
       onTap: onTap,
       child: Container(
         height: 50,
         alignment: Alignment.center,
-        decoration: ShapeDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [highlight, backgroundColor],
-          ),
-          shape: const StadiumBorder(),
-          shadows: [
-            BoxShadow(
-              color: backgroundColor.withValues(alpha: AppAlphas.o35),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
+        decoration: ShapeDecoration(color: backgroundColor, shape: const StadiumBorder()),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
@@ -389,13 +340,14 @@ class _RingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const stroke = 9.0;
+    // 2026-11-15 美学收敛：细弧实色（仪表感），去掉渐变扫光与光晕珠，
+    // 只留一枚小端点作「当前进度」标记，克制而精确。
+    const stroke = 4.0;
     final inset = stroke / 2 + 1;
     final arcRect = Rect.fromLTWH(inset, inset, size.width - inset * 2, size.height - inset * 2);
     final center = arcRect.center;
     final radius = arcRect.width / 2;
 
-    // 轨道：细发丝环
     final track = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
@@ -404,28 +356,16 @@ class _RingPainter extends CustomPainter {
 
     if (progress > 0) {
       final sweep = 2 * math.pi * progress;
-      // 渐变弧：从主色到提亮色，沿弧线扫过（高级感的关键一笔）
       final arc = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = stroke
         ..strokeCap = StrokeCap.round
-        ..shader = SweepGradient(
-          startAngle: 0,
-          endAngle: 2 * math.pi,
-          colors: [progressColor, Color.lerp(progressColor, AppColors.white100, 0.35)!, progressColor],
-          stops: const [0.0, 0.5, 1.0],
-          transform: const GradientRotation(-math.pi / 2),
-        ).createShader(arcRect);
+        ..color = progressColor;
       canvas.drawArc(arcRect, -math.pi / 2, sweep, false, arc);
 
-      // 端点光晕：弧线终点一颗柔光珠
       final endAngle = -math.pi / 2 + sweep;
       final tip = Offset(center.dx + radius * math.cos(endAngle), center.dy + radius * math.sin(endAngle));
-      final glow = Paint()
-        ..color = progressColor.withValues(alpha: AppAlphas.o35)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-      canvas.drawCircle(tip, stroke * 0.7, glow);
-      canvas.drawCircle(tip, stroke * 0.42, Paint()..color = AppColors.white100);
+      canvas.drawCircle(tip, stroke * 0.9, Paint()..color = progressColor);
     }
   }
 
@@ -461,18 +401,11 @@ class HomeHeaderIconButton extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [colors.cardBg, Color.lerp(colors.cardBg, colors.accent, 0.06)!],
-            ),
+            color: colors.cardBg,
             border: Border.all(color: colors.divider),
-            boxShadow: const [
-              BoxShadow(color: MwShadows.hairlineShadow, blurRadius: 0.5),
-              BoxShadow(color: MwShadows.liftShadow, blurRadius: 1.0, offset: Offset(0, 1)),
-            ],
+            boxShadow: const [BoxShadow(color: MwShadows.hairlineShadow, blurRadius: 0.5)],
           ),
-          child: Icon(icon, color: colors.accent, size: 22),
+          child: Icon(icon, color: colors.text2, size: 22),
         ),
       ),
     );

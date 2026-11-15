@@ -103,11 +103,11 @@ class _XpLevelChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.auto_awesome_rounded, size: 12, color: colors.accent),
+              Icon(Icons.auto_awesome_rounded, size: 12, color: colors.text3),
               const SizedBox(width: 3),
               Text(
                 'Lv.${store.level}',
-                style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: colors.accent),
+                style: MwTypography.caption.copyWith(fontWeight: FontWeight.w700, color: colors.text3),
               ),
             ],
           ),
