@@ -120,10 +120,23 @@ class LearningRewardService {
           reportSwallowedError('待结算会话发币失败（保留该条下次重试）', e, s);
         }
       }
+      // 审计 B4（2026-11-15）：settle 逐条 await 期间 enqueue 可能并发追加新会话。
+      // 收尾先按「本次已处理」删除/改写，再 reload() 刷新缓存重读：若期间有新登记
+      // （或失败条）则合并保留，杜绝整段覆盖丢奖。reload 在删/写之后，确保能看到
+      // 并发写入的最新队列。
+      final processed = list.toSet();
       if (remaining.isEmpty) {
         await prefs.remove(pendingKey);
       } else {
         await prefs.setString(pendingKey, jsonEncode(remaining));
+      }
+      // 审计 B4：删/写之后 reload 重读，若期间有并发新登记（未被本次处理）则恢复，
+      // 杜绝「收尾整段覆盖/删除丢新登记」。reload 必须在 remove 之后才能看到并发写。
+      await prefs.reload();
+      final latest = _readPending(prefs);
+      final kept = latest.where((e) => !processed.contains(e)).toList()..addAll(remaining);
+      if (kept.isNotEmpty) {
+        await prefs.setString(pendingKey, jsonEncode(kept));
       }
       return SessionRewardResult(totalGranted: granted, goalJustAchieved: goalJustAchieved);
     } finally {

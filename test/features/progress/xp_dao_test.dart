@@ -73,4 +73,18 @@ void main() {
     expect(await dao.loadTotalXp(), 0);
     expect((await db.query('reward_events')).isEmpty, isTrue);
   });
+
+  test('审计 A6：瞬态写失败不粘性降级，恢复后仍落 SQLite', () async {
+    final dao = XpDao(openDatabase: () async => db);
+    expect(await dao.addXpOnce(eventKey: 'xp:a6:1', delta: 10), 10);
+    // 制造一次瞬态写失败：删表 → 本次回退内存，但不得置 _useSqlite=false。
+    await db.execute('DROP TABLE reward_events');
+    expect(await dao.addXpOnce(eventKey: 'xp:a6:2', delta: 5), isNotNull);
+    expect(dao.usesSqlite, isTrue, reason: '瞬态失败不得粘性降级');
+    // 恢复表后下一次写入必须真正落库（旧实现此后永久只存内存）。
+    await db.execute('CREATE TABLE reward_events (event_key TEXT PRIMARY KEY, created_at INTEGER NOT NULL)');
+    expect(await dao.addXpOnce(eventKey: 'xp:a6:3', delta: 7), isNotNull);
+    final events = await db.query('reward_events', where: 'event_key = ?', whereArgs: ['xp:a6:3']);
+    expect(events.length, 1, reason: '恢复后写入必须落 SQLite');
+  });
 }
