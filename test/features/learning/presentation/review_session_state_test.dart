@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/core/engine/srs_engine.dart';
@@ -207,6 +209,29 @@ void main() {
 
       // 闩锁：答掉两题后仍 active，不因剩余数变化重算阈值。
       expect(_bossPhaseOf(state), BossBattlePhase.active);
+    });
+
+    test('审计 B1：评分落盘在途时点「熟」拒重入，不双推进', () async {
+      final gate = Completer<void>();
+      final due = List.generate(5, (i) => Word(id: i + 1, word: 'w$i', interpret: '释$i'));
+      final state = ReviewSessionState(
+        queueReader: const RepositoryReviewQueueReader(),
+        ratingWriter: ReviewRatingWriter(writeRating: ({required word, required rating}) => gate.future),
+      );
+      await state.initialize(ReviewQueueSnapshot(dueWords: due, queueWords: const []));
+      await Future<void>.delayed(Duration.zero);
+
+      state.revealAnswer();
+      final inflight = state.rate(RecallRating.good); // 落盘挂起，_inflightRating 非空
+      expect(state.markAsKnown(), isFalse, reason: '在途评分时「熟」必须拒重入');
+      expect(state.done, 0, reason: '不得双推进');
+
+      gate.complete();
+      expect(await inflight, isTrue);
+      expect(state.done, 1);
+      // 落盘完成后「熟」恢复可用。
+      expect(state.markAsKnown(), isTrue);
+      expect(state.done, 2);
     });
   });
 

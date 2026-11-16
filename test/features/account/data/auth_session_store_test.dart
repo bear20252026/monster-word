@@ -91,6 +91,19 @@ void main() {
       expect(reported.single, isA<FormatException>());
     });
 
+    test('审计 D1：上报异常不得携带 token 原文（防 Sentry 泄漏）', () {
+      const secret = 'super-secret-token-xyz';
+      final reported = <Object>[];
+      // 非对象 JSON 且内含 token：旧实现把 raw 塞进 FormatException.source。
+      AuthSession.tryParse('["$secret"]', onError: (e, _) => reported.add(e));
+      AuthSession.tryParse('{"access_token":"$secret", 坏', onError: (e, _) => reported.add(e));
+      expect(reported, hasLength(2));
+      for (final e in reported) {
+        expect(e.toString().contains(secret), isFalse, reason: '异常字符串化不得含 token：$e');
+        expect((e as FormatException).source, isNull, reason: 'source 必须剥离原文');
+      }
+    });
+
     test('解析成功时不触发 onError', () {
       var called = false;
       AuthSession.tryParse(jsonEncodeOf(sample()), onError: (_, _) => called = true);
