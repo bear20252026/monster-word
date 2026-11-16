@@ -205,7 +205,18 @@ class UserDataBackupService {
         await db.rawQuery('VACUUM INTO ?', [tmp]); // sqlite-compat-ok: 上方已做版本探测
         produced = true;
       } else {
-        await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+        // 审计 A8（2026-11-16）：TRUNCATE 返回 busy=1 表示有并发读连接未退，
+        // WAL 未并回主文件——旧实现不检查即裸复制，备份静默滞后最近事务。
+        // 重试三次；仍 busy 则抛错放弃本次备份（宁可无新备份，不可存滞后快照）。
+        var busy = true;
+        for (var attempt = 0; attempt < 3 && busy; attempt++) {
+          if (attempt > 0) await Future<void>.delayed(const Duration(milliseconds: 100));
+          final rows = await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
+          busy = rows.isNotEmpty && (rows.first['busy'] as int? ?? 0) != 0;
+        }
+        if (busy) {
+          throw StateError('备份失败：WAL 检查点持续 busy（并发连接未退），本次放弃以防滞后快照');
+        }
         final check = await db.rawQuery('PRAGMA integrity_check');
         final verdict = check.isEmpty ? '' : '${check.first.values.first}';
         if (verdict != 'ok') {

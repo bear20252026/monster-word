@@ -249,12 +249,26 @@ class ScareCoinLedgerDao {
         }, conflictAlgorithm: ConflictAlgorithm.replace);
         final newestRows = await txn.query(_entriesTable, orderBy: 'time_ms DESC', limit: 1);
         final watermark = newestRows.isEmpty ? -1 : newestRows.first['time_ms']! as int;
+        // 审计 A8（2026-11-16）：严格 > 水位会丢「与账本最新流水同毫秒」的降级期
+        // 新流水（余额照覆盖 ⇒ 账实不平）。改为 >= 水位 + (ms,delta,reason) 去重：
+        // 同毫秒新条目补插、重复回灌跳过（幂等）。同毫秒完全相同的两条真流水会
+        // 被视为一条——窄窗口取舍，宁可少一条重复也不复活/丢余额。
+        final atWatermark = await txn.query(
+          _entriesTable,
+          columns: ['time_ms', 'delta', 'reason'],
+          where: 'time_ms >= ?',
+          whereArgs: [watermark],
+        );
+        final seen = atWatermark.map((r) => '${r['time_ms']}|${r['delta']}|${r['reason']}').toSet();
         // spEntries 为新→旧；倒序遍历使插入序与时间序一致（同毫秒展示口径不变）。
         for (var i = spEntries.length - 1; i >= 0; i--) {
           final entry = spEntries[i];
-          if (entry.time.millisecondsSinceEpoch > watermark) {
-            await txn.insert(_entriesTable, _entryRow(entry));
-          }
+          final ms = entry.time.millisecondsSinceEpoch;
+          if (ms < watermark) continue;
+          final sig = '$ms|${entry.delta}|${entry.reason}';
+          if (seen.contains(sig)) continue;
+          seen.add(sig);
+          await txn.insert(_entriesTable, _entryRow(entry));
         }
         for (final key in spEventKeys) {
           await txn.insert('reward_events', {

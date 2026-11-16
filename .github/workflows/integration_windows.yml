@@ -1,0 +1,50 @@
+name: Integration Tests (Windows, manual)
+
+# 审计 D5（2026-11-16）：integration_test/ 此前在 CI 零执行（ubuntu 无设备）。
+# 本 workflow 提供 Windows runner 上的真实桌面端到端执行入口——手动触发
+# （workflow_dispatch），不进 PR 门禁：桌面 runner 有会话/渲染环境差异，
+# 首跑结果需人工确认后再决定是否升级为定期任务。
+# e2e_real_auth_test 需要真实账号环境，默认只跑 perf_profile（无外部依赖）。
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '集成测试目标文件'
+        required: true
+        default: 'integration_test/perf_profile_test.dart'
+        type: choice
+        options:
+          - integration_test/perf_profile_test.dart
+          - integration_test/e2e_real_auth_test.dart
+
+permissions:
+  contents: read
+
+jobs:
+  integration-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run integration test (real Windows desktop)
+        shell: pwsh
+        run: flutter test ${{ inputs.target }} -d windows --reporter expanded
+
+      - name: Upload perf report (if produced)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: integration-report
+          path: build/perf_report.json
+          if-no-files-found: ignore

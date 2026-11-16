@@ -127,13 +127,15 @@ flutter test                                                       # 全量 1675
 - 批次2（PR #224）：任务/XP 非粘性降级、奖励收尾防覆盖（reload 重读）。
 - 批次3（PR #225）：IN 分批、词书计数去重、dispose 守卫、记忆消毒、queue 只读、导航 forward 栈、宠物开关闸、词卡 Selector、溢出弹性、音频 https、LLM https 校验。
 - 批次4（PR #226）：cn 索引句柄泄漏、http.Client close、下滑重入闸、FutureBuilder 缓存、触控 48dp、副标题弹性。
-- **遗留待办（需 owner/真机/破坏性评估，本轮不代劳）**：
-  - C6 宠物状态单向同步：需原生→Dart 事件通道（真机验证）。
-  - C7 死路由（wordListen/sentenceQuiz/spellCheck/spellSession/dashboard/help）：删除属破坏性，需 owner 确认无外部深链依赖。
-  - B8 ProxyProvider update 内 sync 可能 build 期 notify：需装配重构 + 真机回归。
-  - D6 SENTRY_DSN 发版校验：需 owner 配置 secret 后加熔断。
-  - D7 archive 3.x 停更：major 升级属破坏性，需单独 PR 评估（CI 已有非阻断健康报告）。
-  - D5 integration_test 真机执行：CI 无设备，需真机/模拟器流水线。
+- 批次5（PR #227，2026-11-16「继续修复剩余项」）：
+  - A8 账本回灌水位改「>= + (ms,delta,reason) 去重」防同毫秒丢流水；备份 wal_checkpoint 检查 busy 重试三次、仍 busy 抛错防滞后快照。
+  - B8 装配 sync 移 post-frame（sync 幂等），杜绝 build 期 notifyListeners。
+  - C6 宠物可见性事件：原生 SetVisibilityCallback → InvokeMethod('petVisibilityChanged') → Dart 流 → 设置页订阅；含宠物自关（OnDestroy）路径；契约守卫新增事件名断言。**真机 Windows 需人工复核开关对齐**。
+  - C7 六个死路由注册删除（页面文件保留待产品决策），常量保留埋点历史口径，旧名落错误页。
+  - D6 发版流水线 DSN 缺失发 GitHub warning 注解（Android+Windows），不熔断；配置 secret 后自动消失。
+  - D7 archive ^3.6.1 → ^4.0.7（实际 4.7.1）：唯一 API 面 GZip 编解码兼容，两处测试去多余 `!`。
+  - D5 新增 integration_windows.yml（workflow_dispatch 手动触发，Windows runner 真桌面跑 perf_profile；确认稳定后可升定期）。
+- **仍留 owner 的项**：SENTRY_DSN secret 配置（D6 警告消除前提）；Windows 签名证书（#36）；C6 真机复核；integration workflow 首跑确认；死路由页面文件是否删除的产品决策。
 
 ## 8. 文档地图
 

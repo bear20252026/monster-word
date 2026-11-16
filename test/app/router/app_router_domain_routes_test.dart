@@ -5,7 +5,6 @@ import 'package:word_app/app/router/route_error_page.dart';
 import 'package:word_app/features/account/presentation/my_space_page.dart';
 import 'package:word_app/features/book/presentation/memory_beast_gallery_page.dart';
 import 'package:word_app/features/checkin/presentation/check_in_history_page.dart';
-import 'package:word_app/features/learning/presentation/dashboard_page.dart';
 import 'package:word_app/features/learning/presentation/session/learn_page.dart';
 import 'package:word_app/features/scare_coin/presentation/redemption_center_page.dart';
 import 'package:word_app/features/search/presentation/search_page.dart';
@@ -34,7 +33,10 @@ void main() {
       expect(AppRouter.buildPage(const RouteSettings(name: RouteNames.moreSettings)), isA<MoreSettingsPage>());
       expect(AppRouter.buildPage(const RouteSettings(name: RouteNames.redemption)), isA<RedemptionCenterPage>());
       expect(AppRouter.buildPage(const RouteSettings(name: RouteNames.checkInHistory)), isA<CheckInHistoryPage>());
-      expect(AppRouter.buildPage(const RouteSettings(name: RouteNames.dashboard)), isA<DashboardPage>());
+      // 审计 C7（2026-11-16）：dashboard/help 死路由注册已删（零 push 入口），
+      // 旧名落未知路由错误页而非静默建页。
+      expect(AppRouter.buildPage(const RouteSettings(name: RouteNames.dashboard)), isA<RouteErrorPage>());
+      expect(AppRouter.buildPage(const RouteSettings(name: RouteNames.help)), isA<RouteErrorPage>());
       expect(
         AppRouter.buildPage(const RouteSettings(name: RouteNames.memoryBeastGallery)),
         isA<MemoryBeastGalleryPage>(),

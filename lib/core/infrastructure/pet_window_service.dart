@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart';
@@ -37,5 +38,26 @@ class PetWindowService {
     if (!isSupported) return false;
     final visible = await channel.invokeMethod<bool>('isVisible');
     return visible ?? false;
+  }
+
+  /// 审计 C6（2026-11-16）：可见性变化事件（原生在开/关/宠物自己关闭时
+  /// invokeMethod('petVisibilityChanged') 主动推送）。设置页订阅后开关状态
+  /// 不再与真实窗口脱节。broadcast：多处订阅互不影响；非 Windows 恒空流。
+  Stream<bool> get visibilityChanges => _visibilityController.stream;
+
+  static final StreamController<bool> _visibilityController = StreamController<bool>.broadcast();
+  static bool _handlerInstalled = false;
+
+  /// 装配/页面初始化时调用一次：安装原生→Dart 通知 handler（幂等）。
+  void listenVisibilityEvents() {
+    if (!isSupported || _handlerInstalled) return;
+    _handlerInstalled = true;
+    channel.setMethodCallHandler((call) async {
+      if (call.method == 'petVisibilityChanged') {
+        final visible = call.arguments;
+        if (visible is bool) _visibilityController.add(visible);
+      }
+      return null;
+    });
   }
 }

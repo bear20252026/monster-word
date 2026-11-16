@@ -3,6 +3,7 @@
 
 #include <windows.h>
 
+#include <functional>
 #include <string>
 
 // 桌面宠物窗口（Windows 独有）。
@@ -43,6 +44,11 @@ bool Toggle(int days, const std::string& personality);
 
 // 当前是否已有宠物窗口。
 bool IsVisible();
+
+// 审计 C6（2026-11-16）：可见性变化回调（开/关/宠物自己关闭都会触发）。
+// 主窗口注册后经 MethodChannel invokeMethod('petVisibilityChanged') 通知 Dart，
+// 设置页开关不再与真实窗口状态脱节。nullptr = 注销。
+void SetVisibilityCallback(std::function<void(bool)> callback);
 
 }  // namespace pet_host
 

@@ -127,6 +127,11 @@ double ArgAsDouble(const flutter::EncodableValue& value) {
 // ---------------------------------------------------------------------------
 // 宠物窗口：一个顶层窗口 + 它自己的 Flutter engine
 // ---------------------------------------------------------------------------
+// 审计 C6：OnDestroy（类内）需要引用这两个后定义的全局，先前向声明。
+class PetWindow;
+extern std::unique_ptr<PetWindow> g_pet_window;
+void NotifyVisibility(bool visible);
+
 class PetWindow : public Win32Window {
  public:
   explicit PetWindow(flutter::DartProject project) : project_(std::move(project)) {}
@@ -202,6 +207,13 @@ class PetWindow : public Win32Window {
   void OnDestroy() override {
     channel_ = nullptr;
     controller_ = nullptr;
+    // 审计 C6：宠物自己关闭（右键/Alt+F4 → WM_CLOSE）时 g_pet_window 仍持有
+    // this（Toggle 路径已先 release，不会命中）。清指针并通知 Dart，设置页
+    // 开关即时对齐真实状态。
+    if (g_pet_window.get() == this) {
+      g_pet_window = nullptr;
+      NotifyVisibility(false);
+    }
     Win32Window::OnDestroy();
   }
 
@@ -221,7 +233,16 @@ class PetWindow : public Win32Window {
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
 };
 
+// 定义（前向声明在 PetWindow 类之前，供 OnDestroy 引用）。
 std::unique_ptr<PetWindow> g_pet_window;
+// 审计 C6：可见性变化回调（主窗口注册，通知 Dart 设置页）。
+std::function<void(bool)> g_visibility_callback;
+
+void NotifyVisibility(bool visible) {
+  if (g_visibility_callback) {
+    g_visibility_callback(visible);
+  }
+}
 
 }  // namespace
 
@@ -231,6 +252,10 @@ void SetMainWindow(HWND hwnd) {
   g_main_window = hwnd;
 }
 
+void SetVisibilityCallback(std::function<void(bool)> callback) {
+  g_visibility_callback = std::move(callback);
+}
+
 bool IsVisible() {
   return g_pet_window != nullptr;
 }
@@ -238,8 +263,11 @@ bool IsVisible() {
 bool Toggle(int days, const std::string& personality) {
   if (g_pet_window != nullptr) {
     // Destroy 会走 OnDestroy → 释放 engine；析构里再 Destroy 一次是安全的空操作。
-    g_pet_window->Destroy();
-    g_pet_window = nullptr;
+    // 审计 C6：先清指针再回调——回调里 Dart 若立即查 isVisible 必须读到新状态。
+    auto* window = g_pet_window.release();
+    window->Destroy();
+    delete window;
+    NotifyVisibility(false);
     return false;
   }
 
@@ -269,6 +297,7 @@ bool Toggle(int days, const std::string& personality) {
     return false;
   }
   g_pet_window = std::move(window);
+  NotifyVisibility(true);
   return true;
 }
 

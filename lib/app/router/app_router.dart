@@ -43,17 +43,16 @@ abstract final class AppRouter {
   static Route<dynamic> buildPageRoute(RouteSettings settings, Widget page) {
     final name = settings.name;
     switch (name) {
-      // 上滑进入：设置/个人中心/仪表盘/外观。
+      // 上滑进入：设置/个人中心/外观。
+      // 审计 C7（2026-11-16）：dashboard/help 死路由注册已删（零 push 入口）。
       case RouteNames.settings:
       case RouteNames.mySpace:
-      case RouteNames.dashboard:
       case RouteNames.appearance:
       case RouteNames.moreSettings:
       case RouteNames.wordMachine:
       case RouteNames.themeSelect:
       case RouteNames.designLanguage:
       case RouteNames.userInfoManage:
-      case RouteNames.help:
       case RouteNames.netDiagnosis:
       case RouteNames.checkInHistory:
         return SlideUpRoute(page: page, settings: settings) as Route<dynamic>;
