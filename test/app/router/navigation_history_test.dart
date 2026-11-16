@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/app/router/navigation_history.dart';
 
 void main() {
@@ -94,5 +95,55 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(service.canGoForward, isFalse);
+  });
+
+  testWidgets('审计 R8：goHome 清栈后前进栈作废，不复活刚离开的中间页', (tester) async {
+    final service = NavigationHistoryService.instance;
+    service.reset();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: service.navigatorKey,
+        navigatorObservers: [service.observer],
+        routes: {'/': (c) => const Text('home'), '/a': (c) => const Text('a'), '/b': (c) => const Text('b')},
+        initialRoute: '/',
+      ),
+    );
+    await tester.pumpAndSettle();
+    service.navigatorKey.currentState!.pushNamed('/a');
+    await tester.pumpAndSettle();
+    service.navigatorKey.currentState!.pushNamed('/b');
+    await tester.pumpAndSettle();
+
+    // popUntil 循环 pop 只发 didPop（SDK 核验）：旧实现把 /b、/a 塞进 forward。
+    final context = service.navigatorKey.currentContext!;
+    NavUtils.goHome(context);
+    await tester.pumpAndSettle();
+
+    expect(find.text('home'), findsOneWidget);
+    expect(service.canGoForward, isFalse, reason: '清栈=新起点，前进不得复活中间页');
+    expect(service.historyDepthForTest, 0);
+  });
+
+  testWidgets('审计 R8 对照：普通单级返回仍记前进快照（抑制不误伤）', (tester) async {
+    final service = NavigationHistoryService.instance;
+    service.reset();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: service.navigatorKey,
+        navigatorObservers: [service.observer],
+        routes: {'/': (c) => const Text('home'), '/a': (c) => const Text('a')},
+        initialRoute: '/',
+      ),
+    );
+    await tester.pumpAndSettle();
+    service.navigatorKey.currentState!.pushNamed('/a');
+    await tester.pumpAndSettle();
+    service.navigatorKey.currentState!.pop();
+    await tester.pumpAndSettle();
+
+    expect(service.canGoForward, isTrue);
+    expect(service.historyDepthForTest, 1);
   });
 }

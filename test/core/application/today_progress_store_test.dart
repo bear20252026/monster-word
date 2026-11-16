@@ -46,6 +46,21 @@ void main() {
     expect(store.learned, 0);
     expect(store.remaining, 10);
   });
+
+  test('审计 R19：silent 预载写值但不通知（首帧前装配期安全）', () {
+    final store = TodayProgressStore();
+    var notifications = 0;
+    store.addListener(() => notifications++);
+    store.sync(due: 7, silent: true);
+    expect(store.due, 7);
+    expect(notifications, 0, reason: '装配创建期下游未建成，通知会触发 build 期 markNeedsBuild');
+    // 后续常规 sync 同值不再通知（幂等），变化才通知。
+    store.sync(due: 7);
+    expect(notifications, 0);
+    store.sync(due: 9);
+    expect(notifications, 1);
+    expect(store.due, 9);
+  });
 }
 
 String _today() {

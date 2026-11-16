@@ -77,7 +77,10 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     if (_petWindow.isSupported) {
       _petWindow.listenVisibilityEvents();
       _petVisibilitySub = _petWindow.visibilityChanges.listen((visible) {
-        if (mounted) setState(() => _petVisible = visible);
+        // 审计 R20（2026-11-16）：toggle 在途时忽略事件——右键关窗事件先到置
+        // false，随后 toggle 返回 true 覆盖会谎报开启。在途期间以 toggle 完成
+        // 后的 isVisible 复核为准（事件可能早于原生窗口真正销毁/创建）。
+        if (mounted && !_petToggleBusy) setState(() => _petVisible = visible);
       });
       unawaited(
         _petWindow
@@ -484,8 +487,17 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         personality: MonsterSpeech.currentPersonality.name,
       ); // P2-3 性格随开窗带过去
       if (!mounted) return;
-      setState(() => _petVisible = visible);
-      if (visible != on) {
+      // 审计 R20（2026-11-16）：toggle 返回值可能滞后于在途右键关窗——落状态前
+      // 复核原生真实可见性（查询失败回退 toggle 返回值），杜绝短暂谎报开启。
+      var actual = visible;
+      try {
+        actual = await _petWindow.isVisible();
+      } catch (_) {
+        // 吞错豁免: 复核失败回退 toggle 返回值，不阻断开关流程。
+      }
+      if (!mounted) return;
+      setState(() => _petVisible = actual);
+      if (actual != on) {
         showMwSnackBar(context, const SnackBar(content: Text('桌面宠物窗口没能打开，请查看日志')));
       }
     } catch (e, s) {

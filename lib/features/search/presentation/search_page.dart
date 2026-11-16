@@ -288,8 +288,11 @@ class _SearchPageState extends State<SearchPage> {
     final exampleReader = context.read<ExampleReader>();
     final examples = exampleReader.parse(word.example);
 
-    // 通过端口查询收藏状态（不再直连 LearningFavoritesState）
-    final favoritesAccessor = context.read<FavoritesAccessor>();
+    // 通过端口查询收藏状态（不再直连 LearningFavoritesState）。
+    // 审计 R11（2026-11-16）：watch 订阅上游 LearningFavoritesStore 通知——
+    // 旧实现 read 一次性取值，toggle 后无 setState 也不订阅，点星图标不变
+    // 需重新查询。装配链 ProxyProvider 依赖 favorites，watch 即建立订阅。
+    final favoritesAccessor = context.watch<FavoritesAccessor>();
     final isFav = favoritesAccessor.isFavorite(word.word);
     final resp = context.responsive;
 

@@ -101,8 +101,29 @@ class NavigationHistoryService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 审计 R8（2026-11-16）：批量清栈（popUntil/goHome/错误页回根）抑制标志。
+  /// SDK 核验：popUntil 循环调 pop() **只发 didPop**（didRemove 仅来自
+  /// removeRoute/pushAndRemoveUntil），旧实现依赖 didRemove 清 forward 对
+  /// goHome 永不触发，_onPopped 把中间页塞进 forward ⇒ 回首页后「前进」复活
+  /// 刚离开的页。现改为清栈调用点显式经 [runIgnoringPops] 包裹：期间 didPop
+  /// 不记前进快照，结束后 forward 作废（清栈=新起点，浏览器语义）。
+  bool _ignoringPops = false;
+
+  /// 包裹批量清栈操作：期间 pop 不记前进快照，结束后作废 forward 并刷新。
+  /// 仅供壳层清栈调用点使用（NavUtils.goHome / 错误页回根）；普通返回不走此路径。
+  void runIgnoringPops(void Function() action) {
+    _ignoringPops = true;
+    try {
+      action();
+    } finally {
+      _ignoringPops = false;
+      _forward.clear();
+      notifyListeners();
+    }
+  }
+
   void _onPopped(Route<dynamic> route, Route<dynamic>? previous) {
-    if (route is PageRoute && route.opaque) {
+    if (!_ignoringPops && route is PageRoute && route.opaque) {
       final name = route.settings.name;
       if (name != null && name.isNotEmpty) {
         _forward.add(RouteSnapshot(name, route.settings.arguments));

@@ -8,6 +8,8 @@
 // - 考试类型切换
 // - 完成页统计渲染
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +29,20 @@ class FakeQuickReviewWordReader implements QuickReviewWordReader {
       await Future<void>.delayed(loadDelay);
     }
     return words.take(limit).toList();
+  }
+}
+
+/// 审计 R22 竞态假件：第 1 次加载挂起（旧类型），第 2 次即时（新类型）——
+/// 测试显式放行慢响应，验证其被序号守卫丢弃（Completer 门控不留残留 Timer）。
+class _SeqRaceReader implements QuickReviewWordReader {
+  int calls = 0;
+  final Completer<List<Word>> firstLoad = Completer<List<Word>>();
+
+  @override
+  Future<List<Word>> loadWords({int limit = 50}) async {
+    calls++;
+    if (calls == 1) return firstLoad.future;
+    return [Word(id: 2, word: 'fresh_word')];
   }
 }
 
@@ -171,6 +187,27 @@ void main() {
       // 回到第一题
       expect(find.text('serendipity'), findsOneWidget);
       expect(find.text('1 / 2'), findsOneWidget);
+    });
+
+    testWidgets('审计 R22：连续切换类型时慢响应不覆盖新词表', (tester) async {
+      final reader = _SeqRaceReader();
+      await tester.pumpWidget(_buildTestPage(reader));
+      await tester.pump(); // post-frame 触发第 1 次加载（挂起）
+      await tester.pump(); // 加载态渲染（类型选择条可见）
+
+      // 加载在途时切换类型 → 第 2 次加载（即时）
+      await tester.tap(find.text('考研核心'));
+      await tester.pumpAndSettle();
+      // 断言含屏外元素：本用例验证的是词表数据正确性，默认视口下词卡可能
+      // 被挤出屏幕（finder 默认跳过 offstage），与竞态修复本身无关。
+      expect(find.text('fresh_word', skipOffstage: false), findsOneWidget);
+
+      // 放行旧慢响应：必须被序号守卫丢弃，不得覆盖新词表/重启计时
+      reader.firstLoad.complete([Word(id: 1, word: 'stale_word')]);
+      await tester.pumpAndSettle();
+      expect(find.text('fresh_word', skipOffstage: false), findsOneWidget);
+      expect(find.text('stale_word', skipOffstage: false), findsNothing);
+      expect(reader.calls, 2);
     });
   });
 }

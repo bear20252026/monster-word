@@ -70,7 +70,11 @@ class TodayProgressStore extends ChangeNotifier {
 
   /// 学习会话/复习调度变化时由上层 Proxy 调用：刷新已学(含跨天清零)与待复习，
   /// 任一变化才通知，避免无谓重建。
-  void sync({required int due, DateTime? now}) {
+  ///
+  /// 审计 R19（2026-11-16）：[silent] 供装配创建期预载——此时下游尚未建成，
+  /// notifyListeners 会触发 markNeedsBuild-during-build（B8 教训）；静默写值
+  /// 后由 post-frame 的常规 sync 兜底通知。首帧即读到真实到期数，不再 0→N 跳变。
+  void sync({required int due, DateTime? now, bool silent = false}) {
     final t = now ?? DateTime.now();
     final learned = _resetIfNewDay(t);
     final goal = this.goal;
@@ -78,7 +82,7 @@ class TodayProgressStore extends ChangeNotifier {
     _due = due;
     _lastLearned = learned;
     _lastGoal = goal;
-    if (changed) notifyListeners();
+    if (changed && !silent) notifyListeners();
   }
 
   /// 用户修改每日目标：写 A 键并全局通知。收敛首页档位/滚轮与设置页共用此入口。

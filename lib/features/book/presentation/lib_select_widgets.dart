@@ -9,7 +9,8 @@ Color coverColorFor(BuildContext context, String code) {
   final accent = context.skin.colors.accent;
   final hsl = HSLColor.fromColor(accent);
   final index = code.hashCode.abs() % 3;
-  final isDark = context.skin.currentTheme.uiBrightness == Brightness.dark;
+  // 审计 R10：明暗判定与 colors 同源走有效主题（followSystem 深色时不再按浅色算）。
+  final isDark = context.skin.effectiveUiBrightness == Brightness.dark;
   final lightnessDelta = isDark ? [0.06, 0.14, -0.02] : [0.0, 0.10, -0.12];
   return hsl.withLightness((hsl.lightness + lightnessDelta[index]).clamp(0.15, 0.85)).toColor();
 }
