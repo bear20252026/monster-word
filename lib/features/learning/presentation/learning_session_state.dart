@@ -15,6 +15,7 @@ import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/features/learning/application/alphabet_spread_shuffle.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
+import 'package:word_app/features/learning/application/learning_resume_planner.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/domain/definition_formatter.dart';
@@ -350,31 +351,24 @@ class LearningSessionState extends ChangeNotifier {
     final queue = await _queuePort.loadBook(book, limit: limit, shuffle: shuffle);
     // shuffle=false（测试/确定场景）跳过字母分散洗牌
     _replaceQueue(queue, shuffle: shuffle);
-    // MW-27 断点②闭合：同书恢复——pendingResume 匹配本次词书时恢复位置。
-    // R2-06：**不能复用旧 index**。新队列是重新随机抽样 + 重新洗牌的，同一个
-    // 数字 index 在新队列里指向的是另一个词（旧队列 index 2 = computer，
-    // 新队列 index 2 = school ⇒ 恢复后打开的是 school）。改为按 word identity
-    // 反查真实位置。
+    // MW-27 断点②闭合：同书恢复。决策已下沉 application 纯函数（步骤3b）：
+    // 按词身份反查（R2-06 禁止复用旧数字 index）；快照词不在新抽样时按快照
+    // 队列原序重建。此处只应用计划并通知。
     final resume = _pendingResume;
-    if (resume != null && _queue.isNotEmpty) {
-      final sameBook = resume.currentBook.id == book.id;
-      final resumeWord = resume.currentIndex < resume.queue.length ? resume.queue[resume.currentIndex] : null;
-      if (sameBook && resumeWord != null) {
-        final actualIndex = _queue.indexWhere((w) => w.id == resumeWord.id);
-        if (actualIndex >= 0) {
-          _currentIndex = actualIndex;
+    if (resume != null) {
+      final plan = planLearningResume(resume: resume, book: book, newQueue: _queue);
+      switch (plan) {
+        case LearningResumeAtIndex(:final index):
+          _currentIndex = index;
           _regenerateChoices();
-        } else {
-          // 旧词不在本次随机抽样里（每日目标 10～50 词而词书数千词时是常态）：
-          // 此时按 index 恢复必然指向错词，而直接放弃又让「继续上次学习」永久
-          // 失效。改用保存的队列原序重建会话——同一批词、同一顺序、同一位置，
-          // 这才是快照本来的语义。
-          _replaceQueue(resume.queue, shuffle: false);
+        case LearningResumeRebuild(:final queue, :final index):
+          _replaceQueue(queue, shuffle: false);
           if (_queue.isNotEmpty) {
-            _currentIndex = resume.currentIndex.clamp(0, _queue.length - 1);
+            _currentIndex = index;
             _regenerateChoices();
           }
-        }
+        case LearningResumeNone():
+          break;
       }
       // 快照一次性消费（无论是否应用）——旧书快照不应在新会话再次生效。
       _pendingResume = null;
