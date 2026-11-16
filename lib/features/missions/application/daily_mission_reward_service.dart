@@ -1,6 +1,6 @@
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/missions/application/daily_mission_store.dart';
-import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
+import 'package:word_app/features/scare_coin/application/coin_ledger.dart';
 
 /// D2：每日任务发币结算。
 ///
@@ -15,7 +15,8 @@ class DailyMissionRewardService {
   DailyMissionRewardService({required this.store, required this.coins});
 
   final DailyMissionStore store;
-  final ScareCoinStore coins;
+  // 结构修复步骤4：依赖收窄为账本窄端口（只需 grantOnce）。
+  final CoinLedger coins;
 
   /// 返回本次实际发出的币数（0 表示没有待结算任务，或都已发过）。
   Future<int> settle() async {

@@ -12,7 +12,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/utils/swallowed_error_report.dart';
-import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
+import 'package:word_app/features/scare_coin/application/coin_ledger.dart';
 
 /// 审计 R6（2026-11-16）：条目内部分成功（会话奖已发、目标奖失败）时抛出，
 /// 携带本次已实发币数——结算循环据此计入本次结果，再保留条目重试剩余奖励。
@@ -35,7 +35,8 @@ class SessionRewardResult {
 class LearningRewardService {
   LearningRewardService(this._store);
 
-  final ScareCoinStore _store;
+  // 结构修复步骤4：依赖收窄为账本窄端口（只需 grant/grantOnce）。
+  final CoinLedger _store;
 
   static const int _sessionMinWords = 10;
   static const int _sessionReward = 5;
