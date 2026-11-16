@@ -84,7 +84,15 @@ class MonsterChatState extends ChangeNotifier implements MonsterChatPort {
       return reply;
     } finally {
       _busy = false;
-      notifyListeners();
+      // 审计 B3（2026-11-15）：请求在途时 pop 页（Provider dispose）后不得再 notify。
+      if (!_disposed) notifyListeners();
     }
+  }
+
+  bool _disposed = false;
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }

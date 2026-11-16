@@ -84,7 +84,8 @@ void main() {
         );
         expect(source, isNot(contains('LearnState')), reason: '$path 不应回流旧练习状态');
       }
-      expect(sessionSource, contains('List<Word> get queue => _queue'));
+      // 审计 B6（2026-11-15）：queue 读面返回不可变快照，防跨域 mutate 会话队列。
+      expect(sessionSource, contains('List<Word> get queue => List.unmodifiable(_queue)'));
       expect(sessionSource, contains('void exitLearning()'));
     });
 

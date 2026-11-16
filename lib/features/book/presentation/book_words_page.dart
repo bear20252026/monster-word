@@ -197,10 +197,10 @@ class _WordCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final skin = context.skin.colors;
-    final favorites = context.watch<LearningFavoritesStore>();
-    final newWords = context.watch<NewWordsStore>();
-    final isFav = favorites.isFavorite(word.word);
-    final isNew = newWords.isNewWord(word.id);
+    // 审计 C4（2026-11-15）：整店 watch 会让任一收藏/生词切换重建全部可见行
+    // （千词长列表滚动 rebuild 风暴）。改 Selector 只订阅本词的布尔值。
+    final isFav = context.select<LearningFavoritesStore, bool>((s) => s.isFavorite(word.word));
+    final isNew = context.select<NewWordsStore, bool>((s) => s.isNewWord(word.id));
 
     return GestureDetector(
       onTap: () => Navigator.pushNamed(context, RouteNames.wordDetail, arguments: word),
@@ -222,19 +222,32 @@ class _WordCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
-                      Text(
-                        word.word,
-                        style: TextStyle(
-                          fontFamily: 'Charter',
-                          fontSize: AppFontSizes.titleLg,
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: -0.3,
-                          color: skin.text1,
+                      // 审计 C5（2026-11-15）：长词+长音标/字体缩放>1 会 RenderFlex
+                      // 溢出。词与音标各加 Flexible+ellipsis。
+                      Flexible(
+                        child: Text(
+                          word.word,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Charter',
+                            fontSize: AppFontSizes.titleLg,
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: -0.3,
+                            color: skin.text1,
+                          ),
                         ),
                       ),
                       if (word.usPron.isNotEmpty) ...[
                         const SizedBox(width: 6),
-                        Text('/${word.usPron}/', style: MwTypography.bodySm.copyWith(color: skin.text3)),
+                        Flexible(
+                          child: Text(
+                            '/${word.usPron}/',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: MwTypography.bodySm.copyWith(color: skin.text3),
+                          ),
+                        ),
                       ],
                     ],
                   ),
@@ -256,7 +269,7 @@ class _WordCard extends StatelessWidget {
                 color: isFav ? context.skin.colors.accent : skin.text3,
                 size: 22,
               ),
-              onPressed: () => favorites.toggle(word.word),
+              onPressed: () => context.read<LearningFavoritesStore>().toggle(word.word),
             ),
             IconButton(
               icon: Icon(
@@ -264,7 +277,7 @@ class _WordCard extends StatelessWidget {
                 color: isNew ? context.skin.colors.accent : skin.text3,
                 size: 22,
               ),
-              onPressed: () => newWords.toggleNewWord(word, source: 'book-${book.id}'),
+              onPressed: () => context.read<NewWordsStore>().toggleNewWord(word, source: 'book-${book.id}'),
             ),
             IconButton(
               icon: Icon(Icons.volume_up, color: skin.accent, size: 22),

@@ -61,17 +61,21 @@ class NavigationHistoryService extends ChangeNotifier {
     final navigator = navigatorKey.currentState;
     if (navigator == null) return;
     final snap = _forward.removeLast();
-    // 恢复期间的 push 不清空 forward 栈（这是导航还原，不是新分叉）
+    // 恢复期间的 push 不清空 forward 栈（这是导航还原，不是新分叉）。
+    // 审计 C2（2026-11-15）：_restoring 只覆盖本次还原 push（didPush 同步触发），
+    // push 返回后立即复位——旧实现等被恢复路由出栈才复位，导致恢复页上再 push
+    // 新页不清 forward（违反浏览器分叉语义）。
     _restoring = true;
-    unawaited(
-      navigator.pushNamed(snap.name, arguments: snap.arguments).whenComplete(() => _restoring = false).catchError((
-        Object e,
-      ) {
-        // 路由名未注册等导航异常：吞掉防 unhandled（回不去前进页只是
-        // 体验降级，不应崩应用）；whenComplete 已保证 _restoring 复位。
-        return null;
-      }),
-    );
+    try {
+      unawaited(
+        navigator.pushNamed(snap.name, arguments: snap.arguments).catchError((Object e) {
+          // 路由名未注册等导航异常：吞掉防 unhandled（体验降级，不应崩应用）。
+          return null;
+        }),
+      );
+    } finally {
+      _restoring = false;
+    }
     notifyListeners();
   }
 
@@ -111,6 +115,14 @@ class NavigationHistoryService extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _onRemoved(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    // 清栈型移除（popUntil/goHome/登出）：作废前进栈，只刷新当前路由/可返回态。
+    _forward.clear();
+    if (previousRoute != null) currentRouteName = previousRoute.settings.name;
+    _mayGoBack = previousRoute != null;
+    notifyListeners();
+  }
+
   void _onReplaced(Route<dynamic> newRoute, Route<dynamic>? oldRoute) {
     if (newRoute is! PageRoute || !newRoute.opaque) return;
     _forward.clear();
@@ -145,8 +157,9 @@ class NavigationHistoryObserver extends NavigatorObserver {
 
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    // popUntil 逐级移除时会触发 didRemove 而非 didPop（Flutter 3.x 行为），
-    // 语义同返回：记录可前进快照。
-    _service._onPopped(route, previousRoute);
+    // 审计 C2（2026-11-15）：didRemove 来自 popUntil/goHome/登出清栈，不是用户
+    // 返回，不应记前进快照（否则把中间页乃至 '/' 塞进 forward，Alt+→ 跳错页）。
+    // 只更新当前路由名/可返回态，并作废 forward（清栈=新起点）。
+    _service._onRemoved(route, previousRoute);
   }
 }

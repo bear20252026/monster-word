@@ -654,7 +654,10 @@ class WordBookDatabase {
   ///
   /// MEM/F2：分页窗口的总量口径；验收上应与 books.word_count 一致。
   Future<int> countWordsByBook(int bookId) async {
-    final rows = await db.rawQuery('SELECT COUNT(*) AS c FROM word_books WHERE book_id = ?', [bookId]);
+    // 审计 A5（2026-11-15）：资产 word_books 存在重复映射行，COUNT(*) 会大于
+    // 实际词数（取词走 id IN 天然去重）。改 COUNT(DISTINCT word_id) 与取词同口径，
+    // 杜绝分页尾页空、已学占比偏低。
+    final rows = await db.rawQuery('SELECT COUNT(DISTINCT word_id) AS c FROM word_books WHERE book_id = ?', [bookId]);
     return rows.first['c'] as int? ?? 0;
   }
 

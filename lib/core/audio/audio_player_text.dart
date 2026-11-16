@@ -88,7 +88,9 @@ class TextAudioPlayer {
     late final String primaryUrl;
     late final String? fallbackUrl;
     if (audioUrl.startsWith('http://') || audioUrl.startsWith('https://')) {
-      primaryUrl = audioUrl;
+      // 审计 D3（2026-11-15）：Android9+ 默认拦截明文 http（Manifest 未开
+      // cleartext），例句音频 http 地址会静默无声。统一升级 https。
+      primaryUrl = audioUrl.startsWith('http://') ? audioUrl.replaceFirst('http://', 'https://') : audioUrl;
       fallbackUrl = null;
     } else {
       // 主 URL：audio.beingfine.cn
