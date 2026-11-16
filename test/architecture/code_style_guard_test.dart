@@ -16,14 +16,16 @@ import 'package:flutter_test/flutter_test.dart';
 /// 存量超限家族入棘轮清单：**只许缩小、不许增大**（与 radius/font 棘轮同机制）。
 /// 每拆小一个家族就更新对应上限；新增家族或存量增大一律红灯。
 const Map<String, int> _kPartFamilyRatchet = {
-  'lib/core/audio/audio_players.dart': 1100,
+  // 1102：审计 D3（2026-11-15）音频 http→https 升级 +2（安全修复注释）。
+  'lib/core/audio/audio_players.dart': 1102,
   // 1763：批次 14 P2-8 驱动统一边界注释 +3（签到保留裸 Ticker 的语义说明）。
   'lib/features/checkin/presentation/treasure_checkin_page.dart': 1763,
   // 1467：批次 12 P2-6 home 拆域端口化 +5（Reader/Starter 导入与注释）。
   'lib/features/home/presentation/home_screen.dart': 1467,
   // 1051：批次 2 冻结 1047，批次 3 P2-3 性格传参 +4（导入/传参/注释），合理新增。
   // 1078：AI 化阶段 1 AI 伙伴入口 cell+组方法 +18（设置主体已抽 llm_settings_sheet.dart 独立文件）。
-  'lib/features/settings/presentation/more_settings_page.dart': 1078,
+  // 1087：审计 C3（2026-11-15）宠物开关 in-flight 闸 +9（竞态修复注释/finally）。
+  'lib/features/settings/presentation/more_settings_page.dart': 1087,
   'lib/features/settings/presentation/profile_screen.dart': 1890,
 };
 
