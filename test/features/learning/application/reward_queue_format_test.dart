@@ -10,7 +10,7 @@ import 'package:word_app/models/scare_coin_entry.dart';
 /// 待结算队列存储格式契约（结构修复步骤5b 排查沉淀）：
 /// 外层是「JSON 字符串数组」——每个元素本身是条目 JSON 再编码一次的字符串
 /// （enqueue 逐条 jsonEncode 后整体 jsonEncode）。直接塞 JSON 对象数组会被
-/// _readPending 的 whereType<String> 全部滤掉、按空队列静默处理。
+/// _readPending 的 `whereType<String>` 全部滤掉、按空队列静默处理。
 /// 本测试锁定该格式，防未来写入方/预置方口径漂移。
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
