@@ -5,9 +5,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:word_app/core/utils/calendar_days.dart';
+import 'package:word_app/features/home/application/home_startup_coordinator.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
-import 'package:word_app/features/learning/application/onboarding_gate_store.dart';
 import 'package:word_app/features/learning/presentation/onboarding_promise_dialog.dart';
 import 'package:word_app/features/telemetry/application/usage_stats_collector.dart';
 import 'package:word_app/features/telemetry/application/usage_stats_ports.dart';
@@ -41,10 +40,6 @@ import 'package:word_app/features/book/presentation/lib_select_page.dart';
 import 'package:word_app/features/home/presentation/home_screen.dart';
 import 'package:word_app/features/settings/presentation/profile_screen.dart';
 import 'package:word_app/app/main_shell.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:word_app/core/utils/monster_identity_prefs.dart';
-import 'package:word_app/core/utils/monster_speech.dart';
-import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/theme/skin_system.dart';
 import 'package:word_app/widgets/reunion_overlay.dart';
@@ -76,68 +71,58 @@ class WordApp extends StatelessWidget {
     //（`setupServiceLocator` 全是同步的 `_reg` 调用），同步返回前注册已完成，
     // 所以下一行的 `sl<AudioService>()` 一定能取到。
     unawaited(ensureServiceLocatorReady());
-    return buildWordAudioScope(
-      audioService: sl<AudioService>(),
+    // 结构修复步骤5a（问题3a）：装配声明式化——由内向外折叠有序 scope 列表。
+    // 列表顺序即嵌套顺序（首项最外层），与原 15 层手工嵌套逐层等价；
+    // REG-ARCH-003 守卫按本文件调用文本顺序锁定，新增域只需在正确位置插一项。
+    final scopes = <Widget Function(Widget child)>[
       // [1] WordAudio — core/audio 音频会话/播放态。✅ 被全部下游会话页（learn/review/spell/dictation）消费；无上游 provider 依赖，故放最外。
-      child: buildAccountFeatureScope(
-        // [2] Account — AppSessionState(implements AppSessionController) + AccountProfile。✅ settings(更多设置)经 AppSessionController.logout 消费；Splash 登录检查依赖。无上游依赖。
-        child: buildTelemetryFeatureScope(
-          // [3] UsageStats — 使用统计（使用时长 + 基本情况）。✅ 必须位于 Account 内层：上报要带当前账号 UUID（经 AuthSessionStore），管理端才能「按人看」。
-          //     2026-10-15 由最内层上提到此处：学习/词书/签到等 feature 的**装配边界**要注入埋点端口
-          //     （UsageStatsRecorder），而 Provider 只能向下查找——留在最内层时那些 scope 读不到它。
-          //     仍满足原约束：_AppLifecycle 与 MaterialApp 都在它之下。
-          child: buildDailyMissionFeatureScope(
-            // [3.5] DailyMission — 每日任务（D1/D2）。✅ 必须位于 Learning 外层：
-            // 学习/复习会话状态在 learning scope 内创建，需要 context.read 本 Store
-            // 记录进度（Provider 只能向下查找）；首页任务条与结算页消费同一实例。
-            child: buildProgressFeatureScope(
-              // [3.6] Progress — XP / 等级（D3/D4）。✅ 位于 Learning 外层：
-              // 首页头部与学习/复习结算页都要读同一个 XpStore。
-              child: buildLearningFeatureScope(
-                // [4] Learning — LearningSession/LearningQueue*/Review*/Favorites/NewWords/LearningProgressReader。✅ 是 book(G3.2)、search(FavoritesAccessor)、词书会话的上游渠道；已核实【不依赖 Account】，置于 Account 内层为 DAG 链序选择，非依赖驱动。消费 telemetry 的埋点端口。
-                child: buildSettingsFeatureScope(
-                  // [5] Settings — LearningPreferencesState。✅ 消费 Account(logout)；被 profile/school preference 消费。已核实【不依赖 learning feature】，位于 learning 内层为链序选择，非依赖驱动。
-                  child: buildSearchFeatureScope(
-                    // [6] Search — WordSearchReader/SearchHistoryStore/ExampleReader/FavoritesAccessor(经 LearningFavoritesStore)。✅ 依赖 learning 祖先(收藏)；无自身上游。
-                    child: buildQuickReviewFeatureScope(
-                      // [7] QuickReview — QuickReviewWordReader。仅读词；依赖较浅。
-                      child: buildBookFeatureScope(
-                        // [8] Book — BookCatalogReader/BookWordListReader/BookState。✅ 必须位于 learning 内层：BookState 消费 learning 祖先的 LearningProgressReader + LearningSessionStarter。消费 telemetry 的埋点端口。
-                        child: buildScareCoinFeatureScope(
-                          // [9] ScareCoin — ScareCoinStore。✅ 是 checkin 的上游渠道；亦被 profile/redemption/日历消费。
-                          child: buildCheckInFeatureScope(
-                            // [10] CheckIn — CheckInHistoryReader/CheckinStatusReader/CheckinWriter。✅ 适配器直接消费 [9] ScareCoinStore（签到单一事实来源），故必须在其内层；[9]→[10] 即渠道方向。
-                            child: buildDictionaryFeatureScope(
-                              // [11] Dictionary — 词典 Reader/Writer。被 word_detail/查词页消费；✅ 已核实【无上游 feature 依赖】。
-                              child: buildWordBrowseFeatureScope(
-                                // [12] WordBrowse — WordNotesStore/SentenceFavoritesStore。被 word_detail/my_fav 消费；无上游 feature 依赖，最内层 feature scope。
-                                child: MultiProvider(
-                                  // [13] MultiProvider[SkinSystem, WallpaperState] — 主题皮肤/墙纸。被 MaterialApp(_AppLifecycle) 与所有页面消费；位于所有 feature scope 之后（feature 层无法 context.read<SkinSystem>()，当前无此需求，保留）。
-                                  providers: [
-                                    ChangeNotifierProvider(create: (_) => SkinSystem()),
-                                    ChangeNotifierProvider(create: (_) => WallpaperState()),
-                                  ],
-                                  child: buildCompanionFeatureScope(
-                                    // [14] Companion — 怪兽陪伴层（场景图 + 主动性）。**必须最内层**：
-                                    // 它要读 ScareCoinStore（[9]）与 learning 的到期数；Provider 只能向下查找。
-                                    // 这也是 P2 教训的直接后果（learning 在 scare_coin 外层 ⇒ 状态层拿不到账本）。
-                                    child: const _AppLifecycle(),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+      (child) => buildWordAudioScope(audioService: sl<AudioService>(), child: child),
+      // [2] Account — AppSessionState(implements AppSessionController) + AccountProfile。✅ settings(更多设置)经 AppSessionController.logout 消费；Splash 登录检查依赖。无上游依赖。
+      (child) => buildAccountFeatureScope(child: child),
+      // [3] UsageStats — 使用统计（使用时长 + 基本情况）。✅ 必须位于 Account 内层：上报要带当前账号 UUID（经 AuthSessionStore），管理端才能「按人看」。
+      //     2026-10-15 由最内层上提到此处：学习/词书/签到等 feature 的**装配边界**要注入埋点端口
+      //     （UsageStatsRecorder），而 Provider 只能向下查找——留在最内层时那些 scope 读不到它。
+      //     仍满足原约束：_AppLifecycle 与 MaterialApp 都在它之下。
+      (child) => buildTelemetryFeatureScope(child: child),
+      // [3.5] DailyMission — 每日任务（D1/D2）。✅ 必须位于 Learning 外层：
+      // 学习/复习会话状态在 learning scope 内创建，需要 context.read 本 Store
+      // 记录进度（Provider 只能向下查找）；首页任务条与结算页消费同一实例。
+      (child) => buildDailyMissionFeatureScope(child: child),
+      // [3.6] Progress — XP / 等级（D3/D4）。✅ 位于 Learning 外层：
+      // 首页头部与学习/复习结算页都要读同一个 XpStore。
+      (child) => buildProgressFeatureScope(child: child),
+      // [4] Learning — LearningSession/LearningQueue*/Review*/Favorites/NewWords/LearningProgressReader。✅ 是 book(G3.2)、search(FavoritesAccessor)、词书会话的上游渠道；已核实【不依赖 Account】，置于 Account 内层为 DAG 链序选择，非依赖驱动。消费 telemetry 的埋点端口。
+      (child) => buildLearningFeatureScope(child: child),
+      // [5] Settings — LearningPreferencesState。✅ 消费 Account(logout)；被 profile/school preference 消费。已核实【不依赖 learning feature】，位于 learning 内层为链序选择，非依赖驱动。
+      (child) => buildSettingsFeatureScope(child: child),
+      // [6] Search — WordSearchReader/SearchHistoryStore/ExampleReader/FavoritesAccessor(经 LearningFavoritesStore)。✅ 依赖 learning 祖先(收藏)；无自身上游。
+      (child) => buildSearchFeatureScope(child: child),
+      // [7] QuickReview — QuickReviewWordReader。仅读词；依赖较浅。
+      (child) => buildQuickReviewFeatureScope(child: child),
+      // [8] Book — BookCatalogReader/BookWordListReader/BookState。✅ 必须位于 learning 内层：BookState 消费 learning 祖先的 LearningProgressReader + LearningSessionStarter。消费 telemetry 的埋点端口。
+      (child) => buildBookFeatureScope(child: child),
+      // [9] ScareCoin — ScareCoinStore。✅ 是 checkin 的上游渠道；亦被 profile/redemption/日历消费。
+      (child) => buildScareCoinFeatureScope(child: child),
+      // [10] CheckIn — CheckInHistoryReader/CheckinStatusReader/CheckinWriter。✅ 适配器直接消费 [9] ScareCoinStore（签到单一事实来源），故必须在其内层；[9]→[10] 即渠道方向。
+      (child) => buildCheckInFeatureScope(child: child),
+      // [11] Dictionary — 词典 Reader/Writer。被 word_detail/查词页消费；✅ 已核实【无上游 feature 依赖】。
+      (child) => buildDictionaryFeatureScope(child: child),
+      // [12] WordBrowse — WordNotesStore/SentenceFavoritesStore。被 word_detail/my_fav 消费；无上游 feature 依赖，最内层 feature scope。
+      (child) => buildWordBrowseFeatureScope(child: child),
+      // [13] MultiProvider[SkinSystem, WallpaperState] — 主题皮肤/墙纸。被 MaterialApp(_AppLifecycle) 与所有页面消费；位于所有 feature scope 之后（feature 层无法 context.read<SkinSystem>()，当前无此需求，保留）。
+      (child) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => SkinSystem()),
+          ChangeNotifierProvider(create: (_) => WallpaperState()),
+        ],
+        child: child,
       ),
-    );
+      // [14] Companion — 怪兽陪伴层（场景图 + 主动性）。**必须最内层**：
+      // 它要读 ScareCoinStore（[9]）与 learning 的到期数；Provider 只能向下查找。
+      // 这也是 P2 教训的直接后果（learning 在 scare_coin 外层 ⇒ 状态层拿不到账本）。
+      (child) => buildCompanionFeatureScope(child: child),
+    ];
+    return scopes.reversed.fold<Widget>(const _AppLifecycle(), (child, scope) => scope(child));
   }
 }
 
@@ -458,78 +443,35 @@ class _HomeShellState extends State<_HomeShell> {
     super.initState();
     // 蓝图 W4 回家仪式：距上次打开 ≥3 天（有旧访问记录）→ 门缝演出 + 免费送断签保护卡。
     // 仅首帧执行一次；无论是否触发都刷新 last_visit 为今天。
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeReunion());
-    // 2026-10-17 审计 P2：补发「已完成但没结算」的会话奖励。
-    // 会话完成时只登记（写 SP，不需要账本），若应用在完成页结算前被杀，
-    // 这笔奖励就靠这里在下次启动补发 —— 否则会静默丢掉。
-    WidgetsBinding.instance.addPostFrameCallback((_) => _drainPendingRewards());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _runStartupRituals());
   }
 
-  Future<void> _drainPendingRewards() async {
+  void _runStartupRituals() {
     if (!mounted) return;
     // 显式 try：最小装配（单测）里没有账本 scope，读到就会抛 —— 那是预期情况，
-    // 直接跳过（队列留着，真机上下次启动照常补发），不要当故障上报。
-    final ScareCoinStore store;
+    // 奖励补发跳过（队列留着，真机上下次启动照常补发），不要当故障上报；
+    // 回家仪式判定不依赖账本，照常执行（保护卡端口缺席时协调器跳过发放）。
+    ScareCoinStore? store;
     try {
       store = context.read<ScareCoinStore>();
     } catch (_) {
-      return;
+      // 吞错豁免: 最小装配无账本属预期，奖励补发跳过、回家礼发放由协调器按端口缺席处理。
     }
-    try {
-      await LearningRewardService(store).settlePendingSessions();
-    } catch (e, s) {
-      reportSwallowedError('启动补发待结算奖励失败（下次启动重试）', e, s);
-    }
-  }
-
-  Future<void> _maybeReunion() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final today = MonsterSpeech.dayKeyOf(DateTime.now());
-      final last = prefs.getString(ReunionOverlay.lastVisitPrefKey);
-      await prefs.setString(ReunionOverlay.lastVisitPrefKey, today);
-      if (!mounted) return;
-      if (last == null) {
-        // 首次使用：先讲三步与一句承诺（只此一次，可跳过；老用户升级不打扰）。
-        await _maybeShowOnboarding();
-        return;
-      }
-      final lastDate = DateTime.tryParse(last);
-      if (lastDate == null) return;
-      final now = DateTime.now();
-      // 日历日差（DST 安全）：绝对时长差在夏令时周会少算一天，误杀 3 天回归礼。
-      final absent = calendarDaysBetween(lastDate, now);
-      if (absent < 3) return;
-      HapticsGate.play(HapticCue.success);
-      showReunionOverlay(context, absentDays: absent);
-      // 回家礼：断签保护卡 ×1（走既有 API；满额抛错/失败不阻断演出）。
-      try {
-        final store = context.read<ScareCoinStore>();
-        await store.addProtection(count: 1, reason: '回家礼');
-      } catch (e, s) {
-        reportSwallowedError('回家礼保护卡未发放（发放失败或库存已满）', e, s);
-      }
-    } catch (e, s) {
-      reportSwallowedError('回家仪式判定失败', e, s);
-    }
-  }
-
-  /// 首启三步角色对话 + 一句承诺：只出现一次，关闭/跳过都落标。
-  /// 已破壳的用户在命名仪式里已串演过（闸门合并），这里不再二弹；
-  /// 本分支只兜底「已破壳但引导标丢失」与老版本升级路径。
-  Future<void> _maybeShowOnboarding() async {
-    try {
-      const gate = OnboardingGateStore();
-      if (gate.done) return;
-      if (await MonsterIdentityPrefs.hatched) return;
-      if (!mounted) return;
-      await showOnboardingPromiseDialog(context);
-      if (!await gate.markDone()) {
-        reportSwallowedError('首启引导标记写入失败', StateError('setOnboardingDone returned false'), StackTrace.current);
-      }
-    } catch (e, s) {
-      reportSwallowedError('首启引导展示失败', e, s);
-    }
+    final coordinator = HomeStartupCoordinator(
+      lastVisitPrefKey: ReunionOverlay.lastVisitPrefKey,
+      rewards: store == null ? null : LearningRewardService(store),
+      protection: store,
+      isMounted: () => mounted,
+      showReunion: (absentDays) {
+        HapticsGate.play(HapticCue.success);
+        showReunionOverlay(context, absentDays: absentDays);
+      },
+      showOnboarding: () => showOnboardingPromiseDialog(context),
+    );
+    // 首帧各执行一次（顺序与原 initState 两个 postFrameCallback 一致）：
+    // 回家仪式判定 + 2026-10-17 审计 P2 的待结算奖励补发。
+    unawaited(coordinator.runReunionRitual());
+    unawaited(coordinator.drainPendingRewards());
   }
 
   @override
