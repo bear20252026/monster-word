@@ -111,12 +111,12 @@ class XpDao implements XpRepository {
     } on DatabaseException catch (e) {
       // 主键冲突 = 这一局的 XP 已经发过；事务已回滚，累计 XP 不变。
       if (e.isUniqueConstraintError()) return null;
-      reportSwallowedError('XpDao 写入失败，回退内存（本次 XP 不落库）', e, StackTrace.current);
-      _useSqlite = false;
+      // 审计 A6（2026-11-15）：瞬态写失败只本次回退内存，不粘性降级——
+      // 下次 addXpOnce 仍试 SQLite，避免 DB 抖动后 XP 永久只存内存、重启归零。
+      reportSwallowedError('XpDao 写入失败，本次回退内存（下次写入重试 SQLite）', e, StackTrace.current);
       return _addInMemory(eventKey, delta);
     } catch (e, s) {
-      reportSwallowedError('XpDao 写入失败，回退内存（本次 XP 不落库）', e, s);
-      _useSqlite = false;
+      reportSwallowedError('XpDao 写入失败，本次回退内存（下次写入重试 SQLite）', e, s);
       return _addInMemory(eventKey, delta);
     }
   }

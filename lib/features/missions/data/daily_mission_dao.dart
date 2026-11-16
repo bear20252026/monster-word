@@ -105,13 +105,18 @@ class DailyMissionDao implements DailyMissionRepository {
       'reward_claimed_at': record.rewardClaimedAt?.millisecondsSinceEpoch,
     };
     try {
-      final updated = await _db!.update(_table, values, where: 'day = ? AND task_id = ?', whereArgs: [day, id.key]);
-      if (updated == 0) {
-        await _db!.insert(_table, {'day': day, 'task_id': id.key, ...values});
-      }
+      // 审计 A3（2026-11-15）：UPDATE→INSERT 包进单事务，串行化并发同 (day,task)
+      // 写入，杜绝两步之间撞主键；与 UsageStatsDao 同惯例。
+      await _db!.transaction((txn) async {
+        final updated = await txn.update(_table, values, where: 'day = ? AND task_id = ?', whereArgs: [day, id.key]);
+        if (updated == 0) {
+          await txn.insert(_table, {'day': day, 'task_id': id.key, ...values});
+        }
+      });
     } catch (e, s) {
-      reportSwallowedError('DailyMissionDao save 失败，保留内存值（下次启动会重算当天进度）', e, s);
-      _useSqlite = false;
+      // 审计 A3：瞬态写失败只保留内存值、下次 save 重试 SQLite，不粘性降级
+      // （旧实现一次竞态即永久 _useSqlite=false，当日进度重启即丢）。
+      reportSwallowedError('DailyMissionDao save 失败，保留内存值（下次写入重试 SQLite）', e, s);
     }
   }
 
