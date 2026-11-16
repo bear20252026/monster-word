@@ -45,7 +45,7 @@ scripts/          词库构建/数据修补（Python；archive/ 为一次性历�
 assets/db/        wordbook.db.gz（只读词库，CI 有基线校验）
 ```
 
-规模：lib 502 文件 / 6.5 万行；test 278 文件 / 2.8 万行。features 16 域。
+规模：lib 503 文件 / 6.5 万行；test 280 文件 / 2.8 万行。features 16 域。
 
 ## 3. 关键机制（改代码前必读）
 
@@ -136,6 +136,17 @@ flutter test                                                       # 全量 1675
   - D7 archive ^3.6.1 → ^4.0.7（实际 4.7.1）：唯一 API 面 GZip 编解码兼容，两处测试去多余 `!`。
   - D5 新增 integration_windows.yml（workflow_dispatch 手动触发，Windows runner 真桌面跑 perf_profile；确认稳定后可升定期）。
 - **仍留 owner 的项**：SENTRY_DSN secret 配置（D6 警告消除前提）；Windows 签名证书（#36）；C6 真机复核；integration workflow 首跑确认；死路由页面文件是否删除的产品决策。
+
+**2026-11-16 第二轮审计（24 项）+ 架构亚健康评估 → 结构修复步骤批次**：
+
+- 步骤1（PR #228，P1 前置）：R1 迁移预登记条件化（防评分丢失）、R2 宠物窗口 WM_DESTROY 先快照 quit_on_close 再 Destroy（防 UAF）、R3 Sentry 双层脱敏（reportSwallowedError 收口 + beforeSend 改写 FormatException.value）。
+- 步骤2（PR #229，问题2+R4/R5/R6）：奖励队列读-改-写互斥锁、唯一条目 id（同毫秒并发登记不误滤）、grantOnce 幂等结算 + _PartialRewardFailure 部分成功计入。
+- 步骤3a（PR #230，问题1）：选择题扩池编排下沉 application/extra_choice_pool.dart（两 Session 同构逻辑合一）。
+- 步骤3b（PR #232，问题1）：断点恢复决策下沉 application/learning_resume_planner.dart（sealed 纯函数：None/AtIndex/Rebuild，MW-27+R2-06 全分支表驱动单测）。
+- 步骤4（PR #231，问题3b）：ScareCoinStore 拆 4 窄端口（CoinLedger/CheckInCalendar/ProtectionCard/AnswerReward），聚合门面保留（24 消费方+11 fake 零改动）；单实例 Provider.value 五类型暴露（同作用域，共享串行门/降级旗/水位不变）；checkin 三适配器与 missions/learning 发币收窄。
+- 步骤5（PR #233，问题3a+M4）：app.dart 15 层手工嵌套 → 有序 scope 闭包列表 + reversed.fold（REG-ARCH-003 文本序守卫零改动）；_HomeShell 三仪式（奖励补发/回家礼/首启引导）下沉 features/home/application/home_startup_coordinator.dart（窄端口+可注入时钟，演出回调留壳层）。
+- 排查沉淀：待结算队列存储为**双层编码**（外层 JSON 数组的元素是条目 JSON 字符串），契约测试 reward_queue_format_test.dart 锁定；误写对象数组按空队列处理不崩溃。
+- 第二轮审计剩余 P2/P3（R7 followRedirects、R9-R24 等）未修，按域并入后续批次；结构路线图 ①②③④ 至此全部落地。
 
 ## 8. 文档地图
 
