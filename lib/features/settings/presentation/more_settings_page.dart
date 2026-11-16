@@ -871,12 +871,25 @@ class _Cell extends StatelessWidget {
             Icon(icon, color: iconColor, size: 22),
             SizedBox(width: context.design.spacing.sm),
             Expanded(
-              child: Text(title, style: MwTypography.bodyMd.copyWith(color: skin.text1)),
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: MwTypography.bodyMd.copyWith(color: skin.text1),
+              ),
             ),
+            // 审计 C11（2026-11-15）：副标题加弹性+ellipsis，防窄屏+大字体溢出。
             if (subtitle != null)
-              Padding(
-                padding: EdgeInsets.only(right: context.design.spacing.xs),
-                child: Text(subtitle!, style: MwTypography.bodySm.copyWith(color: skin.text3)),
+              Flexible(
+                child: Padding(
+                  padding: EdgeInsets.only(right: context.design.spacing.xs),
+                  child: Text(
+                    subtitle!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: MwTypography.bodySm.copyWith(color: skin.text3),
+                  ),
+                ),
               ),
             if (trailing != null) trailing! else Icon(Icons.chevron_right, size: 18, color: skin.text3),
           ],

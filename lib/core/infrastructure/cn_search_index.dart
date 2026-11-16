@@ -27,6 +27,7 @@
 // 双轨：未就绪（首启构建中 / 构建失败 / 指纹失效重建中）或非纯 CJK 查询，
 // 调用方回退旧第 3 层全表路径，行为与迁移前完全一致。
 // 指纹：词库文件 size+mtime——解压重建/资产升级必变，不符即自动重建索引。
+import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
@@ -115,6 +116,11 @@ class CnSearchIndex {
         // 后续查询，就绪周期内只有首次失效走到这里，天然每轮就绪周期只报一次。
         _ready = false;
         _building = null;
+        // 审计 A7（2026-11-15）：失效重建前关闭旧句柄，否则每次词库升级泄漏
+        // 一个 DB 连接（Windows 上还会导致 staging 替换失败走原地重建）。
+        final stale = _indexDb;
+        _indexDb = null;
+        unawaited(stale?.close().catchError((Object _) {}));
         reportSwallowedError(
           '中文搜索索引指纹失效（词库文件已重建/升级），本次回退全表扫描',
           StateError('fingerprint mismatch: indexed=$indexed'),

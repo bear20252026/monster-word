@@ -18,16 +18,24 @@ class OpenAiLlmClient implements LlmClient {
     http.Client? httpClient,
     this.timeout = const Duration(seconds: 30),
   }) : _baseUrl = baseUrl.trim().replaceAll(RegExp(r'/+$'), ''),
-       _http = httpClient ?? http.Client();
+       _http = httpClient ?? http.Client(),
+       _ownsHttp = httpClient == null;
 
   final String _baseUrl;
   final String model;
   String apiKey;
   final http.Client _http;
+  final bool _ownsHttp;
   final Duration timeout;
 
   /// 后台补入密钥（解析器异步从安全存储读入；未就绪前调用按失败回退）。
   void setApiKey(String value) => apiKey = value;
+
+  /// 审计 B7（2026-11-15）：释放自建的 http.Client（注入的 client 由调用方负责），
+  /// 供装配层在客户端替换/应用销毁时调用，防连接泄漏。
+  void close() {
+    if (_ownsHttp) _http.close();
+  }
 
   @override
   bool get isLive => true;

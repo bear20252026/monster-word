@@ -121,6 +121,20 @@ flutter test                                                       # 全量 1675
 - **观察项**：new_words 软删行清理（待云同步设计定型）；旧 Android 评分落盘真机验证。
 - 已核查关闭（勿重做）：词库索引健康（EXPLAIN 实测）、句库分页（残留全量是学习场景有意设计）、测试装配"去重"（差异即被测行为）。
 
+**2026-11-15 全面审计（35 项）修复批次**（报告：`monster-word-全面代码审计报告-2026-11-15.md`）：
+
+- 批次1（P1×5，PR #223）：回放×迁移双应用、熟词竞态、LLM 失败回退、根路由黑屏、token 进 Sentry 脱敏。
+- 批次2（PR #224）：任务/XP 非粘性降级、奖励收尾防覆盖（reload 重读）。
+- 批次3（PR #225）：IN 分批、词书计数去重、dispose 守卫、记忆消毒、queue 只读、导航 forward 栈、宠物开关闸、词卡 Selector、溢出弹性、音频 https、LLM https 校验。
+- 批次4（PR #226）：cn 索引句柄泄漏、http.Client close、下滑重入闸、FutureBuilder 缓存、触控 48dp、副标题弹性。
+- **遗留待办（需 owner/真机/破坏性评估，本轮不代劳）**：
+  - C6 宠物状态单向同步：需原生→Dart 事件通道（真机验证）。
+  - C7 死路由（wordListen/sentenceQuiz/spellCheck/spellSession/dashboard/help）：删除属破坏性，需 owner 确认无外部深链依赖。
+  - B8 ProxyProvider update 内 sync 可能 build 期 notify：需装配重构 + 真机回归。
+  - D6 SENTRY_DSN 发版校验：需 owner 配置 secret 后加熔断。
+  - D7 archive 3.x 停更：major 升级属破坏性，需单独 PR 评估（CI 已有非阻断健康报告）。
+  - D5 integration_test 真机执行：CI 无设备，需真机/模拟器流水线。
+
 ## 8. 文档地图
 
 | 位置 | 性质 |

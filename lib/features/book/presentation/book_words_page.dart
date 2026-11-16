@@ -291,7 +291,7 @@ class _WordCard extends StatelessWidget {
 }
 
 /// 词书单词列表空态 + 诊断信息（词库异常时可远程定位根因）
-class _WordListEmptyDiagnostics extends StatelessWidget {
+class _WordListEmptyDiagnostics extends StatefulWidget {
   final String? error;
   final int bookId;
   final String bookName;
@@ -305,10 +305,21 @@ class _WordListEmptyDiagnostics extends StatelessWidget {
   });
 
   @override
+  State<_WordListEmptyDiagnostics> createState() => _WordListEmptyDiagnosticsState();
+}
+
+class _WordListEmptyDiagnosticsState extends State<_WordListEmptyDiagnostics> {
+  // 审计 C9（2026-11-15）：future 只在 initState 创建一次，避免每次 rebuild
+  // （换肤/任意 notify）重新查库。
+  late final Future<DbDiagnostics> _diag = context.read<WordBookMaintenanceService>().diagnostics();
+
+  @override
   Widget build(BuildContext context) {
     final skin = context.skin;
+    final error = widget.error;
+    final bookId = widget.bookId;
     return FutureBuilder<DbDiagnostics>(
-      future: context.read<WordBookMaintenanceService>().diagnostics(),
+      future: _diag,
       builder: (context, snap) {
         final diag = snap.data;
         final diagText = diag == null
@@ -350,7 +361,7 @@ class _WordListEmptyDiagnostics extends StatelessWidget {
                 ),
                 SizedBox(height: context.design.spacing.md),
                 FilledButton.icon(
-                  onPressed: onRebuild,
+                  onPressed: widget.onRebuild,
                   icon: const Icon(Icons.build_outlined, size: 18),
                   label: const Text('一键重建词库（不联网）'),
                 ),

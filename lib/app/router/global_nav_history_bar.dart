@@ -208,12 +208,16 @@ class _NavButton extends StatelessWidget {
     // "No Overlay widget found"，且异常未被隔离时会全屏替换为错误页
     // （2026-08-31 用户实测：鼠标划过导航按钮即触发全屏"页面出错了"）。
     // 因此这里禁止使用 Tooltip，悬停提示改由 InkWell 无提示处理。
+    // 审计 C10（2026-11-15）：触控目标 ≥48dp 无障碍标准（旧 36dp 触屏偏小）。
     return InkWell(
       onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Icon(icon, size: 16, color: enabled ? color.text1 : color.text3.withValues(alpha: AppAlphas.o50)),
+      borderRadius: BorderRadius.circular(24),
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Center(
+          child: Icon(icon, size: 16, color: enabled ? color.text1 : color.text3.withValues(alpha: AppAlphas.o50)),
+        ),
       ),
     );
   }
