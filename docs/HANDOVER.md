@@ -55,7 +55,7 @@ assets/db/        wordbook.db.gz（只读词库，CI 有基线校验）
 4. **释义解析单一真相**：interpret JSON → 文本只存在于 `lib/models/definition_text.dart`；四选一干扰项只在 `lib/core/engine/distractor_generator.dart`。新增消费方禁止复制逻辑。
 5. **SP key 单源**：`user_token`/`user_secret`/`monster_word_user_info` 仅定义于 `app_preferences.dart`；presentation 经 `PresentationPrefs` 端口读写偏好，**不得** import infrastructure（R-prefs 守卫会拦）。
 6. **WebView**：`core/web/base_web_page.dart` https-only + 域名白名单（当前为空=全拒）；JS 禁用。
-7. **密码**：PBKDF2-HMAC-SHA256 6 万轮（存格式 `pbkdf2-sha256$<n>$<hex>`）；存量单轮哈希登录时透明升级。测试含 RFC 参考向量。
+7. **密码**：PBKDF2-HMAC-SHA256 **60 万轮**（审计 R24 升 OWASP 建议；存格式 `pbkdf2-sha256$<n>$<hex>` 自带轮数）；存量单轮哈希与低轮数哈希均在登录验证成功时透明升级，全程后台 isolate 不阻塞 UI。测试含 RFC 参考向量。
 8. **音频缓存**：系统缓存目录（非 Documents）；`audio_players.dart` 主备 URL 逻辑区分绝对/相对地址。
 
 ## 4. 质量门禁（每次提交前必跑）
