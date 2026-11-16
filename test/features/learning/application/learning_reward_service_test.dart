@@ -127,8 +127,11 @@ class _RacePrefs extends SharedPreferencesStorePlatform {
 
 /// 前 N 次 grant 抛错的假件，模拟发币偶发失败。
 class _FlakyStore extends _FakeStore {
-  _FlakyStore({required this.failNext});
+  _FlakyStore({this.failNext = 0, this.failGoalOnce = false});
   int failNext;
+
+  /// 审计 R6：首次「今日目标达成」发币抛错（会话奖已成功），模拟条目内部分成功。
+  bool failGoalOnce;
 
   @override
   Future<int> grant({required int delta, required String reason}) async {
@@ -137,6 +140,19 @@ class _FlakyStore extends _FakeStore {
       throw StateError('injected grant failure');
     }
     return super.grant(delta: delta, reason: reason);
+  }
+
+  @override
+  Future<int?> grantOnce({required int delta, required String reason, required String eventKey}) async {
+    if (failNext > 0) {
+      failNext--;
+      throw StateError('injected grant failure');
+    }
+    if (failGoalOnce && reason == '今日目标达成') {
+      failGoalOnce = false;
+      throw StateError('injected goal grant failure');
+    }
+    return super.grantOnce(delta: delta, reason: reason, eventKey: eventKey);
   }
 }
 
@@ -290,6 +306,33 @@ void main() {
       final raw = prefs.getString(LearningRewardService.pendingKey)!;
       // 队列按 JSON 数组存，数一下元素个数
       expect(RegExp(r'wordsLearned').allMatches(raw).length, LearningRewardService.pendingCap);
+    });
+
+    test('审计 R5：两条同载荷会话各有唯一 id，结算都发币不误滤', () async {
+      final store = _FakeStore();
+      final svc = LearningRewardService(store);
+      await LearningRewardService.enqueuePendingSession(wordsLearned: 10, dailyGoalAchieved: false);
+      await LearningRewardService.enqueuePendingSession(wordsLearned: 10, dailyGoalAchieved: false);
+      final result = await svc.settlePendingSessions();
+      expect(result.totalGranted, 10, reason: '两条同载荷会话各发 +5，不得按字符串去重误滤');
+      expect(store.reasons.where((r) => r == '学习完成').length, 2);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(LearningRewardService.pendingKey), isNull, reason: '全部结算后队列清空');
+    });
+
+    test('审计 R6：条目内会话奖已发、目标奖失败 → 重试不重复发会话奖', () async {
+      final store = _FlakyStore(failGoalOnce: true);
+      final svc = LearningRewardService(store);
+      await LearningRewardService.enqueuePendingSession(wordsLearned: 10, dailyGoalAchieved: true);
+      // 首次：会话奖 +5 成功，目标奖 grant 抛错 → 整条保留重试。
+      final first = await svc.settlePendingSessions();
+      expect(first.totalGranted, 5);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(LearningRewardService.pendingKey), isNotNull, reason: '失败条保留');
+      // 重试：会话奖被 grantOnce 跳过（不重复 +5），目标奖补发 +20。
+      final second = await svc.settlePendingSessions();
+      expect(second.totalGranted, 20, reason: '重试只补目标奖，会话奖不重发');
+      expect(store.coins, 25, reason: '总额 5+20，不得 5+5+20');
     });
   });
 }
