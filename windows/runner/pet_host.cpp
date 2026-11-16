@@ -127,6 +127,11 @@ double ArgAsDouble(const flutter::EncodableValue& value) {
 // ---------------------------------------------------------------------------
 // 宠物窗口：一个顶层窗口 + 它自己的 Flutter engine
 // ---------------------------------------------------------------------------
+// 审计 C6：OnDestroy（类内）需要引用这两个后定义的全局，先前向声明。
+class PetWindow;
+extern std::unique_ptr<PetWindow> g_pet_window;
+void NotifyVisibility(bool visible);
+
 class PetWindow : public Win32Window {
  public:
   explicit PetWindow(flutter::DartProject project) : project_(std::move(project)) {}
@@ -228,6 +233,7 @@ class PetWindow : public Win32Window {
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
 };
 
+// 定义（前向声明在 PetWindow 类之前，供 OnDestroy 引用）。
 std::unique_ptr<PetWindow> g_pet_window;
 // 审计 C6：可见性变化回调（主窗口注册，通知 Dart 设置页）。
 std::function<void(bool)> g_visibility_callback;
