@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:word_app/features/quick_review/application/quick_review_word_reader.dart';
+import 'package:word_app/features/quick_review/domain/exam_type.dart';
 import 'package:word_app/features/quick_review/presentation/exam_quick_review_page.dart';
 import 'package:word_app/models/word.dart';
 
@@ -24,12 +25,15 @@ class FakeQuickReviewWordReader implements QuickReviewWordReader {
   final Duration loadDelay;
 
   @override
-  Future<List<Word>> loadWords({int limit = 50}) async {
+  Future<List<Word>> loadWords({int limit = 50, ExamType? examType}) async {
     if (loadDelay > Duration.zero) {
       await Future<void>.delayed(loadDelay);
     }
     return words.take(limit).toList();
   }
+
+  @override
+  Future<bool> hasExamBooks(ExamType examType) async => true;
 }
 
 /// 审计 R22 竞态假件：第 1 次加载挂起（旧类型），第 2 次即时（新类型）——
@@ -39,11 +43,14 @@ class _SeqRaceReader implements QuickReviewWordReader {
   final Completer<List<Word>> firstLoad = Completer<List<Word>>();
 
   @override
-  Future<List<Word>> loadWords({int limit = 50}) async {
+  Future<List<Word>> loadWords({int limit = 50, ExamType? examType}) async {
     calls++;
     if (calls == 1) return firstLoad.future;
     return [Word(id: 2, word: 'fresh_word')];
   }
+
+  @override
+  Future<bool> hasExamBooks(ExamType examType) async => true;
 }
 
 Widget _buildTestPage(QuickReviewWordReader reader) {

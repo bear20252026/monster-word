@@ -41,6 +41,10 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
   QuickReviewStats stats = QuickReviewStats();
   int _tick = 0;
 
+  /// 审计 R12（2026-11-16）：当前考试类型在词库中无匹配词书——词表回退
+  /// 全库随机，UI 如实提示（不假装「高考必备/雅思核心」标签已过滤词表）。
+  bool _noExamBooks = false;
+
   @override
   void initState() {
     super.initState();
@@ -50,14 +54,18 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
       // 审计 R22：首屏加载同样纳入序号守卫——加载在途时用户已可切换类型
       // （加载态渲染选择条），首屏慢响应回来不得覆盖新类型词表。
       final seq = ++_loadSeq;
-      context
-          .read<QuickReviewWordReader>()
-          .loadWords()
-          .then((words) {
+      final reader = context.read<QuickReviewWordReader>();
+      final type = _examType;
+      reader
+          .loadWords(examType: type)
+          .then((words) async {
+            // 审计 R12：探测考试词书匹配（诚实提示用），与词表同序号守卫。
+            final hasBooks = await reader.hasExamBooks(type);
             if (!mounted || seq != _loadSeq) return;
             setState(() {
               _words = words;
               _isLoading = false;
+              _noExamBooks = !hasBooks;
             });
           })
           .catchError((Object e) {
@@ -168,16 +176,19 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
       stats = QuickReviewStats();
       _isLoading = true;
     });
-    context
-        .read<QuickReviewWordReader>()
+    final reader = context.read<QuickReviewWordReader>();
+    reader
         // 用户反馈修复（2026-11-14）：词数与「秒/词」限时是两回事，旧实现把
         // timeLimit 当词数（单位混淆）。固定取默认 50 词。
-        .loadWords()
-        .then((words) {
+        // 审计 R12：按考试类型匹配词书取词，无匹配回退全库随机+如实提示。
+        .loadWords(examType: type)
+        .then((words) async {
+          final hasBooks = await reader.hasExamBooks(type);
           if (!mounted || seq != _loadSeq) return; // 过期响应丢弃
           setState(() {
             _words = words;
             _isLoading = false;
+            _noExamBooks = !hasBooks;
             _startTimer();
           });
         })
@@ -267,6 +278,16 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
         ),
         const SizedBox(height: 16),
         _buildExamTypeChips(skin),
+        // 审计 R12：词源诚实提示——词库无该考试词书时明示回退口径，
+        // 不让「高考必备/雅思核心」标签假装词表已过滤。
+        if (_noExamBooks)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs, left: AppSpacing.md, right: AppSpacing.md),
+            child: Text(
+              '词库暂无「${_examType.label}」专属词书，本轮为全库随机词',
+              style: MwTypography.caption.copyWith(color: skin.text3),
+            ),
+          ),
         const SizedBox(height: 24),
         Expanded(
           child: Padding(
