@@ -9,6 +9,7 @@ import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/core/engine/leitner_engine.dart';
 import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
+import 'package:word_app/features/learning/application/extra_choice_pool.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/features/learning/application/alphabet_spread_shuffle.dart';
@@ -63,7 +64,13 @@ class LearningSessionState extends ChangeNotifier {
     List<Word> Function(List<Word>)? shuffler,
   }) : _today = todayStore,
        _shuffler = shuffler ?? alphabetSpreadShuffle {
+    _extraPool = ExtraChoicePool(_onExtraPoolReady, repository: _wordRepository);
     unawaited(_loadProgress());
+  }
+
+  void _onExtraPoolReady() {
+    _regenerateChoices();
+    notifyListeners();
   }
 
   final LearningQueuePort _queuePort;
@@ -77,8 +84,9 @@ class LearningSessionState extends ChangeNotifier {
   /// 词库只读端口（可选注入）：会话级随机取样真实词扩充干扰项候选池。
   /// 未注入（测试/未装配）时不扩充，选项宁少勿假。
   final WordLookupReader? _wordRepository;
-  List<Word> _extraChoicePool = const [];
-  Future<void>? _extraChoicePoolLoad;
+
+  /// 结构修复步骤3：额外干扰词池编排下沉 application 共享（原两 State 同构）。
+  late final ExtraChoicePool _extraPool;
 
   /// 使用统计埋点端口；未注入（测试/未装配）时为 null，全部埋点静默跳过。
   final UsageStatsRecorder? _usageStats;
@@ -580,8 +588,7 @@ class LearningSessionState extends ChangeNotifier {
   void _replaceQueue(List<Word> rawQueue, {bool shuffle = true}) {
     // 用户反馈修复（2026-11-14）：扩池原先每 App 生命周期只取一次，整天共用
     // 同一批 24 干扰词。换书/换收藏时重置，下一题重新随机取样。
-    _extraChoicePool = const [];
-    _extraChoicePoolLoad = null;
+    _extraPool.reset();
     // 过滤无中文释义的空壳词：词库约 55% 词条缺 interpret（数据源如此），
     // 空词进队列会导致四选一残缺、详情页空白。宁少勿缺。
     final filtered = rawQueue
@@ -620,33 +627,18 @@ class LearningSessionState extends ChangeNotifier {
     // 用户反馈修复（2026-11-14）：会话队列过小（或复习余池收缩）时干扰项
     // 反复重复、甚至补假占位。从词库随机取真实词扩充候选池；首题异步加载，
     // 就绪后再生一次，其后各题复用同一池（释义去重由 ChoiceGenerator 负责）。
-    _ensureExtraChoicePool();
+    _extraPool.ensureLoaded();
     final generated = _choicePort.generate(
       correct: ChoiceCandidate(word: current.word, interpret: DefinitionFormatter.normalizeDisplay(current.interpret)),
       candidates: [
         ..._queue.map(
           (word) => ChoiceCandidate(word: word.word, interpret: DefinitionFormatter.normalizeDisplay(word.interpret)),
         ),
-        ..._extraChoicePool.map(
+        ..._extraPool.words.map(
           (word) => ChoiceCandidate(word: word.word, interpret: DefinitionFormatter.normalizeDisplay(word.interpret)),
         ),
       ],
     );
     _choices = generated.map((c) => WordChoicePair(c.word, c.interpret)).toList(growable: false);
-  }
-
-  void _ensureExtraChoicePool() {
-    final repository = _wordRepository;
-    if (repository == null || _extraChoicePoolLoad != null) return;
-    _extraChoicePoolLoad = repository
-        .getRandomWords(24)
-        .then((words) {
-          _extraChoicePool = words;
-          _regenerateChoices();
-          notifyListeners();
-        })
-        .catchError((Object _) {
-          // 词库取样失败不阻塞答题：退化为仅会话队列候选（宁少勿假）。
-        });
   }
 }

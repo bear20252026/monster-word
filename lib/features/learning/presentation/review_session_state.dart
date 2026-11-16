@@ -9,6 +9,7 @@ import 'package:word_app/core/utils/boss_siege.dart';
 import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/models/word.dart';
+import 'package:word_app/features/learning/application/extra_choice_pool.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
 import 'package:word_app/features/learning/application/review_session_question_factory.dart';
@@ -41,6 +42,12 @@ class ReviewSessionState extends ChangeNotifier {
   }) : _engine = engine ?? SuperMemoryEngine(),
        _questionFactory = questionFactory ?? const ReviewSessionQuestionFactory() {
     _ratingExecutor = ReviewSessionRatingExecutor(engine: _engine, ratingWriter: ratingWriter);
+    _extraPool = ExtraChoicePool(_onExtraPoolReady, repository: _wordRepository);
+  }
+
+  void _onExtraPoolReady() {
+    _regenerateChoices();
+    notifyListeners();
   }
 
   final ReviewQueueReader _queueReader;
@@ -50,8 +57,9 @@ class ReviewSessionState extends ChangeNotifier {
   /// 词库只读端口（可选注入）：会话级随机取样真实词扩充干扰项候选池。
   /// reviewList 随答题收缩，末题仅靠余池会只剩正确项（旧实现补假占位）。
   final WordLookupReader? _wordRepository;
-  List<Word> _extraChoicePool = const [];
-  Future<void>? _extraChoicePoolLoad;
+
+  /// 结构修复步骤3：额外干扰词池编排下沉 application 共享（原两 State 同构）。
+  late final ExtraChoicePool _extraPool;
   late final ReviewSessionRatingExecutor _ratingExecutor;
 
   /// 使用统计埋点端口；未注入时为 null，埋点静默跳过。
@@ -394,27 +402,12 @@ class ReviewSessionState extends ChangeNotifier {
 
     // 用户反馈修复（2026-11-14）：余池收缩不再导致假占位/重复干扰项，
     // 词库随机真实词会话级首取、就绪后再生一次。
-    _ensureExtraChoicePool();
+    _extraPool.ensureLoaded();
     _choices = _questionFactory.createChoices(
       currentWord: current,
       reviewWords: _engine.reviewList,
-      extraCandidates: _extraChoicePool,
+      extraCandidates: _extraPool.words,
     );
-  }
-
-  void _ensureExtraChoicePool() {
-    final repository = _wordRepository;
-    if (repository == null || _extraChoicePoolLoad != null) return;
-    _extraChoicePoolLoad = repository
-        .getRandomWords(24)
-        .then((words) {
-          _extraChoicePool = words;
-          _regenerateChoices();
-          notifyListeners();
-        })
-        .catchError((Object _) {
-          // 词库取样失败不阻塞答题：退化为仅余池候选（宁少勿假）。
-        });
   }
 
   @override
