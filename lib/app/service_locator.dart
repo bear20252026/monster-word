@@ -38,7 +38,9 @@ import 'package:word_app/features/learning/application/new_words_writer_port.dar
 import 'package:word_app/features/learning/application/review_audio_player.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/data/repository_new_words_writer_port.dart';
+import 'package:word_app/features/book/application/book_catalog_reader.dart';
 import 'package:word_app/features/book/application/book_word_list_reader.dart';
+import 'package:word_app/features/book/data/repository_book_catalog_reader.dart';
 import 'package:word_app/features/book/data/repository_book_word_list_reader.dart';
 import 'package:word_app/features/dictionary/application/dictionary_content_reader.dart';
 import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
@@ -85,6 +87,10 @@ Future<void> setupServiceLocator() async {
   // ========== Repository Layer（仓库层）==========
   // BookRepository
   _reg<BookRepository>(() => BookRepositoryImpl(sl<WordBookDatabase>()));
+
+  // BookCatalogReader（审计 R12：quick_review 按考试词书取词需跨域消费目录；
+  // R4 禁止跨 feature import data 层，适配器构造上移组合根——I6 同口径）。
+  _reg<BookCatalogReader>(() => RepositoryBookCatalogReader(sl<BookRepository>()));
 
   // WordRepository
   _reg<WordRepository>(() => WordRepositoryImpl(sl<WordBookDatabase>()));
