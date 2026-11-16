@@ -42,5 +42,21 @@ Future<void> runAppWithSentry(FutureOr<void> Function() appRunner) async {
     if (_kAppBuildNumber.isNotEmpty) {
       options.dist = _kAppBuildNumber;
     }
+    // 审计 R3（2026-11-16）：二层防线——reportSwallowedError 已收口脱敏，
+    // 但 main.dart 未捕获异常走 captureException 直报，FormatException 的
+    // value 仍含 source（用户笔记/例句/学习记录原文）。beforeSend 统一把
+    // FormatException 异常值替换为仅含 message 的脱敏描述（保留类型分组）。
+    options.beforeSend = (event, hint) {
+      final throwable = event.throwable;
+      if (throwable is FormatException) {
+        final exceptions = event.exceptions;
+        if (exceptions != null) {
+          for (final e in exceptions) {
+            e.value = 'FormatException(${throwable.message})［source 已脱敏］';
+          }
+        }
+      }
+      return event;
+    };
   }, appRunner: appRunner);
 }
