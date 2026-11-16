@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:word_app/core/application/llm_client.dart';
 import 'package:word_app/core/infrastructure/llm_credentials.dart';
+import 'package:word_app/core/infrastructure/llm_resolver.dart';
 import 'package:word_app/core/infrastructure/openai_llm_client.dart';
 import 'package:word_app/core/infrastructure/rule_based_llm.dart';
 import 'package:word_app/core/utils/monster_speech.dart';
@@ -117,6 +118,79 @@ void main() {
     test('未配置端点抛 LlmException', () async {
       final client = OpenAiLlmClient(baseUrl: '', model: 'm', apiKey: 'k');
       expect(client.complete(const [LlmMessage(LlmRole.user, 'hi')]), throwsA(isA<LlmException>()));
+    });
+
+    test('审计 R9：空 key 不发送正文（抛 LlmException，零网络请求）', () async {
+      var calls = 0;
+      final mock = MockClient((req) async {
+        calls++;
+        return http.Response('{}', 200);
+      });
+      final client = OpenAiLlmClient(baseUrl: 'https://x/v1', model: 'm', apiKey: '', httpClient: mock);
+      await expectLater(client.complete(const [LlmMessage(LlmRole.user, '私密内容')]), throwsA(isA<LlmException>()));
+      expect(calls, 0);
+    });
+
+    test('审计 R9：pending 占位 key 不发送（抛 LlmException，零网络请求）', () async {
+      var calls = 0;
+      final mock = MockClient((req) async {
+        calls++;
+        return http.Response('{}', 200);
+      });
+      final client = OpenAiLlmClient(baseUrl: 'https://x/v1', model: 'm', apiKey: 'pending', httpClient: mock);
+      await expectLater(client.complete(const [LlmMessage(LlmRole.user, 'hi')]), throwsA(isA<LlmException>()));
+      expect(calls, 0);
+    });
+
+    test('审计 R7：请求禁跟随重定向（followRedirects=false）', () async {
+      final mock = MockClient((req) async {
+        expect(req.followRedirects, isFalse, reason: '302→http 会带 Bearer 明文外泄，必须禁跟随');
+        return http.Response.bytes(
+          utf8.encode(
+            jsonEncode({
+              'choices': [
+                {
+                  'message': {'content': 'ok'},
+                },
+              ],
+            }),
+          ),
+          200,
+        );
+      });
+      final client = OpenAiLlmClient(baseUrl: 'https://x/v1', model: 'm', apiKey: 'sk-test', httpClient: mock);
+      expect(await client.complete(const [LlmMessage(LlmRole.user, 'hi')]), 'ok');
+    });
+
+    test('审计 R7：3xx 重定向响应按失败处理（不跟随、抛 LlmException）', () async {
+      final mock = MockClient((req) async => http.Response('', 302, headers: {'location': 'http://evil.example/'}));
+      final client = OpenAiLlmClient(baseUrl: 'https://x/v1', model: 'm', apiKey: 'sk-test', httpClient: mock);
+      await expectLater(client.complete(const [LlmMessage(LlmRole.user, 'hi')]), throwsA(isA<LlmException>()));
+    });
+  });
+
+  group('resolveLlmClient（审计 R9：密钥未就绪如实走规则版）', () {
+    const config = LlmConfig(enabled: true, baseUrl: 'https://x/v1', model: 'm');
+
+    test('读入前 isLive=false；空 key 读入后仍 false（不再谎报 AI 模式）', () async {
+      final client = resolveLlmClient(config, credentials: _FakeCredentials(''));
+      expect(client.isLive, isFalse);
+      await Future<void>.delayed(Duration.zero); // 放行 readKey 微任务
+      expect(client.isLive, isFalse);
+      client.close();
+    });
+
+    test('非空 key 读入后无缝升级 isLive=true', () async {
+      final client = resolveLlmClient(config, credentials: _FakeCredentials('sk-test'));
+      expect(client.isLive, isFalse);
+      await Future<void>.delayed(Duration.zero);
+      expect(client.isLive, isTrue);
+      client.close();
+    });
+
+    test('未配置开关关 → 规则版（不触安全存储）', () {
+      final client = resolveLlmClient(const LlmConfig.disabled());
+      expect(client.isLive, isFalse);
     });
   });
 }

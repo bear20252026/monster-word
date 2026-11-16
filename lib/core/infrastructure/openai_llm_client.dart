@@ -33,6 +33,7 @@ class OpenAiLlmClient implements LlmClient {
 
   /// 审计 B7（2026-11-15）：释放自建的 http.Client（注入的 client 由调用方负责），
   /// 供装配层在客户端替换/应用销毁时调用，防连接泄漏。
+  @override
   void close() {
     if (_ownsHttp) _http.close();
   }
@@ -56,6 +57,12 @@ class OpenAiLlmClient implements LlmClient {
     if (uri.scheme != 'https') {
       throw const LlmException('LLM 端点必须使用 https（密钥不得明文传输）');
     }
+    // 审计 R9（2026-11-16）：密钥未就绪（空串/解析器占位 'pending'）不得发送——
+    // 空 key 请求不带鉴权头仍会把聊天正文送到端点（必然失败还落对方日志），
+    // 'pending' 窗口期更会把占位串当 Bearer 发出。调用方据 LlmException 回退规则台词。
+    if (apiKey.isEmpty || apiKey == 'pending') {
+      throw const LlmException('LLM 密钥未就绪');
+    }
     final body = jsonEncode({
       'model': model,
       'messages': [
@@ -63,13 +70,17 @@ class OpenAiLlmClient implements LlmClient {
       ],
     });
     try {
-      final resp = await _http
-          .post(
-            uri,
-            headers: {'Content-Type': 'application/json', if (apiKey.isNotEmpty) 'Authorization': 'Bearer $apiKey'},
-            body: body,
-          )
-          .timeout(timeout);
+      // 审计 R7（2026-11-16）：禁止跟随重定向——默认 followRedirects=true 会把
+      // Authorization 头原样带到跳转目标且不限 scheme，恶意/被劫持端点 302→http
+      // 即让 Bearer key 明文外泄。http.Client.post 不暴露该开关，改显式 Request。
+      // 3xx 落入下方非 2xx 分支 → LlmException → 调用方回退规则台词。
+      final request = http.Request('POST', uri)
+        ..followRedirects = false
+        ..headers['Content-Type'] = 'application/json'
+        ..headers['Authorization'] = 'Bearer $apiKey'
+        ..body = body;
+      final streamed = await _http.send(request).timeout(timeout);
+      final resp = await http.Response.fromStream(streamed);
       if (resp.statusCode < 200 || resp.statusCode >= 300) {
         // 不回显服务端原文（可能含敏感信息），只报状态码。
         throw LlmException('LLM 服务端返回 ${resp.statusCode}');

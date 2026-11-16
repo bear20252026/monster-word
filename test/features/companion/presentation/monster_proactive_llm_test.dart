@@ -24,6 +24,9 @@ class _FakeLlm implements LlmClient {
     if (fail) throw const LlmException('fake fail');
     return reply;
   }
+
+  @override
+  void close() {}
 }
 
 class _FakeMemory implements MonsterMemoryPort {
