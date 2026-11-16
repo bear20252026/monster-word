@@ -42,6 +42,11 @@ abstract interface class LlmClient {
 
   /// 发送对话，返回助手回复文本。失败抛 [LlmException]。
   Future<String> complete(List<LlmMessage> messages);
+
+  /// 审计 R13（2026-11-16）：释放实现自持的网络资源（http.Client 等）。
+  /// 默认无操作；持有方（聊天页/陪伴状态 dispose）接线调用，防反复进出累积连接泄漏。
+  /// 注入 client 的实现只释放自建部分，注入方资源归注入方。
+  void close() {}
 }
 
 /// LLM 调用异常（网络/超时/服务端错误/未配置）。

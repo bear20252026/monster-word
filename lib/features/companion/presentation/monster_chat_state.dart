@@ -93,6 +93,9 @@ class MonsterChatState extends ChangeNotifier implements MonsterChatPort {
   @override
   void dispose() {
     _disposed = true;
+    // 审计 R13（2026-11-16）：聊天页 pop（Provider dispose）时释放 LLM 自持
+    // http.Client——此前 close() 全库零调用，反复进出累积连接泄漏。
+    llm.close();
     super.dispose();
   }
 }

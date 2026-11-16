@@ -13,6 +13,7 @@ class _FakeLlm implements LlmClient {
   final String reply;
   final bool fail;
   List<LlmMessage>? lastMessages;
+  int closeCalls = 0;
   @override
   bool get isLive => true;
   @override
@@ -21,6 +22,9 @@ class _FakeLlm implements LlmClient {
     if (fail) throw const LlmException('fake fail');
     return reply;
   }
+
+  @override
+  void close() => closeCalls++;
 }
 
 /// 内存记忆端口（不触 DB，验证沉淀调用）。
@@ -102,5 +106,12 @@ void main() {
     expect(state.history.length, 2);
     state.clear();
     expect(state.history, isEmpty);
+  });
+
+  test('审计 R13：dispose 释放 LLM 自持资源（close 接线）', () {
+    final llm = _FakeLlm();
+    final state = MonsterChatState(llm: llm, memory: MonsterMemoryCurator(_FakeMemory()));
+    state.dispose();
+    expect(llm.closeCalls, 1);
   });
 }

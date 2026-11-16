@@ -122,6 +122,7 @@ class MonsterCompanionState extends ChangeNotifier implements MonsterCompanionCo
     _expiryTimer?.cancel();
     _expiryTimer = null;
     _lineSeq++; // 审计 B3：作废在途异步增强，dispose 后迟到回复不得 notifyListeners
+    llm?.close(); // 审计 R13：释放 LLM 自持 http.Client（规则版/未注入为无操作）
     super.dispose();
   }
 

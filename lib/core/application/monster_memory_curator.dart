@@ -49,14 +49,25 @@ class MonsterMemoryCurator {
   /// 指令覆写与角色标记、截断长度，降低持久化 prompt 注入面（记忆会被注入 system prompt）。
   static String sanitizeMemory(String raw) {
     var s = raw.replaceAll(RegExp(r'[\x00-\x1F\x7F]+'), ' ').trim();
+    // 审计 R15（2026-11-16）：零宽/双向控制字符替换为**空格**（不是删除）——
+    // 它们能把敏感词拆开绕过下方正则（「act\u200Bas」），删成空串会粘成 actas
+    // 反而漏检；替换为空格后词边界仍命中，正常文本只多一个无害空格。
+    s = s.replaceAll(RegExp(r'[\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]'), ' ');
+    // 审计 R15：英文关键词加词边界——旧实现子串匹配把「in fact as」里的 fact as
+    // 误当 act as 过滤；修饰词组改可重复（ignore all previous instructions 旧版漏检）。
     s = s.replaceAll(
       RegExp(
-        r'(忽略|无视|forget|ignore)\s*(之前|上面|以上|previous|above|all)?\s*(的)?\s*(指令|指示|规则|instructions?|rules?)',
+        r'(忽略|无视|\bforget\b|\bignore\b)\s*(之前|上面|以上|previous|above|all|\s)*\s*(的)?\s*(指令|指示|规则|instructions?|rules?)',
         caseSensitive: false,
       ),
       '［已过滤］',
     );
-    s = s.replaceAll(RegExp(r'(system\s*prompt|系统提示|你现在是|you are now|act as|扮演)', caseSensitive: false), '［已过滤］');
+    // 审计 R15：「你现在是」加否定 lookahead——「你现在是不是饿了」是正常疑问句，
+    // 旧版子串命中误过滤；真正的角色覆写（你现在是海盗）仍命中。
+    s = s.replaceAll(
+      RegExp(r'(system\s*prompt|系统提示|你现在是(?!不)|\byou are now\b|\bact as\b|扮演)', caseSensitive: false),
+      '［已过滤］',
+    );
     if (s.length > 200) s = '${s.substring(0, 200)}…';
     return s;
   }
@@ -68,8 +79,10 @@ class MonsterMemoryCurator {
   }
 
   /// 人格层：沉淀性格/相处模式（调用方读性格设置后注入）。
+  /// 审计 R15（2026-11-16）：与近期层同口径消毒——此前直写未过滤，接入 persona
+  /// 调用方即成 prompt 注入绕过口（buildContext 对 persona 也不再补消毒）。
   Future<void> recordPersona(String key, String content) async {
-    await _memory.put(MemoryKind.persona, key, content);
+    await _memory.put(MemoryKind.persona, key, sanitizeMemory(content));
   }
 
   /// 近期层容量控制（委托端口）：只保留最新 [limit] 条。
@@ -82,7 +95,8 @@ class MonsterMemoryCurator {
     final persona = await _memory.read(MemoryKind.persona);
     final buf = StringBuffer();
     if (persona.isNotEmpty) {
-      buf.writeln('【相处模式】${persona.map((e) => e.content).join('；')}');
+      // 审计 R15：存量 persona 可能含未消毒内容（旧版直写），注入前再消毒一次。
+      buf.writeln('【相处模式】${persona.map((e) => sanitizeMemory(e.content)).join('；')}');
     }
     if (facts.isNotEmpty) {
       buf.writeln('【学习近况】${facts.map((e) => e.content).join('；')}');
