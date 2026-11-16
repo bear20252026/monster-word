@@ -181,13 +181,19 @@ Win32Window::MessageHandler(HWND hwnd,
                             WPARAM const wparam,
                             LPARAM const lparam) noexcept {
   switch (message) {
-    case WM_DESTROY:
+    case WM_DESTROY: {
       window_handle_ = nullptr;
+      // 审计 R2（2026-11-16）：Destroy() → OnDestroy 可能 delete this（宠物
+      // 自关路径在 OnDestroy 里清 g_pet_window 即析构自身）。必须先取
+      // quit_on_close_ 再 Destroy，否则读已释放内存——非零即 PostQuitMessage
+      // 连带退出整个应用（use-after-free）。
+      const bool quit_on_close = quit_on_close_;
       Destroy();
-      if (quit_on_close_) {
+      if (quit_on_close) {
         PostQuitMessage(0);
       }
       return 0;
+    }
 
     case WM_DPICHANGED: {
       auto newRectSize = reinterpret_cast<RECT*>(lparam);

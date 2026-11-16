@@ -155,4 +155,38 @@ void main() {
     final second = (await db.query('fsrs_daily_stats')).single['learn'];
     expect(second, first, reason: 'DB 标记在则不重迁移，统计不得累加翻倍');
   });
+
+  test('审计 R1：journal 先行、blob 未含该评分 → 不得预登记，回放必须补上', () async {
+    // 场景：降级期评分写了 journal，但 blob 快照写失败（pendingRetry）——
+    // blob 卡的 lastReview 早于该评分 savedAt。旧实现无条件预登记 → 回放跳过
+    // → 评分永久丢失；修复后该评分不预登记，回放正常应用。
+    final older = DateTime.now().subtract(const Duration(days: 3));
+    final answeredAt = DateTime.now().subtract(const Duration(days: 1));
+    final staleCard = FsrsCard(
+      word: 'fox',
+      stability: 4,
+      difficulty: 5,
+      isNew: false,
+      lastReview: older, // blob 停在 3 天前：1 天前的评分未落快照
+      dueDate: older.add(const Duration(days: 4)),
+    );
+    SharedPreferences.setMockInitialValues({
+      ReviewScheduleRepository.cardsPrefKey: jsonEncode({'fox': staleCard.toJson()}),
+      ReviewScheduleRepository.degradedJournalKey: [
+        journalEntry(word: 'fox', rating: FsrsRating.good, answeredAt: answeredAt, ratingId: 'r-lost-1'),
+      ],
+    });
+
+    final store = await ReviewScheduleStore.forTest(db);
+    final repo = ReviewScheduleRepository(store: store);
+    await repo.initialize();
+
+    // 回放必须把评分补上：last_review 前进到 answeredAt 附近（回放应用后写
+    // 幂等日志属正常行为，故以卡片终态而非日志空否判定）。
+    final rows = await db.query('fsrs_cards', where: 'word = ?', whereArgs: ['fox']);
+    final lastReview = DateTime.parse(rows.single['last_review']! as String);
+    expect(lastReview.isAfter(older.add(const Duration(days: 1))), isTrue, reason: '回放必须补上未落快照的评分');
+    final logged = await db.query('fsrs_rating_log', where: 'rating_id = ?', whereArgs: ['r-lost-1']);
+    expect(logged, hasLength(1), reason: '回放应用后写幂等日志，防下次重复');
+  });
 }
