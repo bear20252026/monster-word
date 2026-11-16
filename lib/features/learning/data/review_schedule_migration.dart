@@ -86,14 +86,25 @@ class ReviewScheduleMigration {
 
     final activeDates = (prefs.getStringList(ReviewScheduleRepository.activeDatesPrefKey) ?? const <String>[]).toSet();
 
-    // 审计 A1：读降级日志，把其中评分预登记进幂等日志（blob 卡已含这些评分）。
+    // 审计 A1：读降级日志，把「确认已含于 blob 卡」的评分预登记进幂等日志。
+    // 审计 R1（2026-11-16）：降级写序是 journal 先行、blob 后写——blob 写失败
+    // （pendingRetry）或两步间进程被杀时，评分只在 journal 不在 blob。无条件
+    // 预登记会让回放永久跳过这些评分（静默丢失）。改为逐条比对：blob 卡的
+    // lastReview >= 该评分 savedAt（1s 容差）才视为已应用；否则留给回放补上。
+    final cardByWord = {for (final c in cards) c.word: c};
     final journalRatings = <({String word, String ratingId})>[];
     for (final raw in prefs.getStringList(ReviewScheduleRepository.degradedJournalKey) ?? const <String>[]) {
       try {
         final m = jsonDecode(raw) as Map<String, dynamic>;
         final id = m['ratingId'] as String?;
         final word = m['word'] as String?;
-        if (id != null && word != null) journalRatings.add((word: word, ratingId: id));
+        if (id == null || word == null) continue;
+        final card = cardByWord[word];
+        if (card == null) continue; // blob 无此卡：评分未落快照，留给回放。
+        final savedAt = DateTime.tryParse(m['savedAt'] as String? ?? '');
+        if (savedAt == null) continue; // 无时间戳无法确证，保守留给回放。
+        final applied = !card.lastReview.isBefore(savedAt.subtract(const Duration(seconds: 1)));
+        if (applied) journalRatings.add((word: word, ratingId: id));
       } catch (_) {
         // 吞错豁免: 坏日志行跳过，回放侧同样逐行容错。
       }
