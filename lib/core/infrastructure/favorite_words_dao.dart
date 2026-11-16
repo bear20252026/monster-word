@@ -81,13 +81,17 @@ class FavoriteWordsDao {
       // 下次启动 DB 已有全部行而 marker 仍在，INSERT OR IGNORE 会让
       // inserted=0 ≠ 预期而抛错 → 整库降级 SP 且每次启动重复失败。
       // 先查 DB 已含的 legacy 词数，已含全集即直接补写 marker。
-      final placeholders = List.filled(legacySet.length, '?').join(',');
-      final existing = await db.query(
-        'favorite_words',
-        columns: ['word'],
-        where: 'word IN ($placeholders)',
-        whereArgs: legacySet.toList(),
-      );
+      // 审计 A4（2026-11-15）：IN 绑定按 500 分批，防 Android≤9 SQLite 999
+      // 变量上限（收藏 >999 词时旧实现一次性绑定抛错→永久 SP 回退）。
+      final legacyList = legacySet.toList();
+      final existing = <Map<String, Object?>>[];
+      for (var i = 0; i < legacyList.length; i += 500) {
+        final batch = legacyList.sublist(i, (i + 500).clamp(0, legacyList.length));
+        final placeholders = List.filled(batch.length, '?').join(',');
+        existing.addAll(
+          await db.query('favorite_words', columns: ['word'], where: 'word IN ($placeholders)', whereArgs: batch),
+        );
+      }
       if (existing.length >= legacySet.length) {
         await prefs.setString(_migratedMarker, 'done');
         return;

@@ -61,4 +61,8 @@ jobs:
           bash scripts/test_auto_sync_size_guard.sh
 
       - name: Run tests
+        # 审计 D5（2026-11-15）：flutter test 只跑 test/（单元/widget，内存 SQLite）。
+        # integration_test/ 需真实设备/模拟器（真实 DB/平台通道），ubuntu runner 无设备
+        # 无法执行，故 CI 仅对其做 format/analyze 门禁；端到端真机验证列为 owner 待办
+        # （与 Android isolate 开库真机验证同批），不在无设备 CI 空转。
         run: flutter test --no-pub

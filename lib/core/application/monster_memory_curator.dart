@@ -45,10 +45,26 @@ class MonsterMemoryCurator {
     await _memory.put(MemoryKind.fact, factCoins, '攒了 ${s.coinBalance} 枚尖叫币');
   }
 
+  /// 审计 B5（2026-11-15）：用户原话沉淀前消毒——折叠换行/控制字符、中和
+  /// 指令覆写与角色标记、截断长度，降低持久化 prompt 注入面（记忆会被注入 system prompt）。
+  static String sanitizeMemory(String raw) {
+    var s = raw.replaceAll(RegExp(r'[\x00-\x1F\x7F]+'), ' ').trim();
+    s = s.replaceAll(
+      RegExp(
+        r'(忽略|无视|forget|ignore)\s*(之前|上面|以上|previous|above|all)?\s*(的)?\s*(指令|指示|规则|instructions?|rules?)',
+        caseSensitive: false,
+      ),
+      '［已过滤］',
+    );
+    s = s.replaceAll(RegExp(r'(system\s*prompt|系统提示|你现在是|you are now|act as|扮演)', caseSensitive: false), '［已过滤］');
+    if (s.length > 200) s = '${s.substring(0, 200)}…';
+    return s;
+  }
+
   /// 近期层：记录一条对话/事件记忆（规则提取入口；LLM 提取接入后由调用方先提炼再传入）。
   /// [key] 建议用时间戳或事件 id，保证幂等可覆盖。
   Future<void> recordRecent(String key, String content) async {
-    await _memory.put(MemoryKind.recent, key, content);
+    await _memory.put(MemoryKind.recent, key, sanitizeMemory(content));
   }
 
   /// 人格层：沉淀性格/相处模式（调用方读性格设置后注入）。
@@ -72,7 +88,8 @@ class MonsterMemoryCurator {
       buf.writeln('【学习近况】${facts.map((e) => e.content).join('；')}');
     }
     if (recent.isNotEmpty) {
-      buf.writeln('【最近记忆】${recent.take(recentLimit).map((e) => e.content).join('；')}');
+      // 审计 B5：存量记忆可能含未消毒内容，注入前再消毒一次。
+      buf.writeln('【最近记忆】${recent.take(recentLimit).map((e) => sanitizeMemory(e.content)).join('；')}');
     }
     return buf.toString().trim();
   }

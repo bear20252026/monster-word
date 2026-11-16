@@ -121,6 +121,7 @@ class MonsterCompanionState extends ChangeNotifier implements MonsterCompanionCo
   void dispose() {
     _expiryTimer?.cancel();
     _expiryTimer = null;
+    _lineSeq++; // 审计 B3：作废在途异步增强，dispose 后迟到回复不得 notifyListeners
     super.dispose();
   }
 

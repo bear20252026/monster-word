@@ -445,7 +445,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
 
   /// 开关的真实状态在原生（窗口存在与否），所以以**返回值**为准更新 UI，
   /// 不用传进去的 `on` —— 否则原生开失败时界面会说谎。
+  bool _petToggleBusy = false;
+
   Future<void> _togglePetWindow(bool on) async {
+    // 审计 C3（2026-11-15）：Switch.onChanged 与整行 onTap 都触发本方法，
+    // getCheckinDates 的 await 拉长竞态窗；快速双击会开+关最终态与意图相反。
+    // in-flight 闸拒重入。
+    if (_petToggleBusy) return;
+    _petToggleBusy = true;
     // context 一律在 await 之前取（async gap 后禁用 context）。
     final reader = context.read<CheckinStatusReader?>();
     try {
@@ -471,6 +478,8 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       reportSwallowedError('桌面宠物窗口开关失败', e, s);
       if (!mounted) return;
       showMwSnackBar(context, const SnackBar(content: Text('桌面宠物窗口启动失败')));
+    } finally {
+      _petToggleBusy = false;
     }
   }
 

@@ -37,7 +37,17 @@ class OpenAiLlmClient implements LlmClient {
     if (_baseUrl.isEmpty || model.isEmpty) {
       throw const LlmException('LLM 未配置端点或模型');
     }
-    final uri = Uri.parse('$_baseUrl/chat/completions');
+    // 审计 D4（2026-11-15）：Bearer key 不得经明文 http 传输；畸形 URL 的
+    // FormatException 归一为 LlmException（调用方据此回退规则台词）。
+    final Uri uri;
+    try {
+      uri = Uri.parse('$_baseUrl/chat/completions');
+    } on FormatException {
+      throw const LlmException('LLM 端点 URL 畸形');
+    }
+    if (uri.scheme != 'https') {
+      throw const LlmException('LLM 端点必须使用 https（密钥不得明文传输）');
+    }
     final body = jsonEncode({
       'model': model,
       'messages': [
