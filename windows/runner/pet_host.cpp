@@ -6,6 +6,7 @@
 #include <flutter/method_channel.h>
 #include <flutter/standard_method_codec.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
@@ -111,6 +112,27 @@ void PlaceBottomRight(HWND hwnd) {
   ::SetWindowPos(hwnd, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
+// 审计 R23（2026-11-16）：把窗口位置钳进虚拟屏幕（所有显示器并集）——
+// 旧实现 moveBy 直接 SetWindowPos 无边界，宠物可被拖出所有显示器外，
+// 只能开关重建找回。钳制后至少整窗落在某块屏幕的可达范围内。
+void ClampToVirtualScreen(HWND hwnd, int& x, int& y) {
+  RECT rect{};
+  if (!::GetWindowRect(hwnd, &rect)) {
+    return;
+  }
+  const int width = rect.right - rect.left;
+  const int height = rect.bottom - rect.top;
+  const int vx = ::GetSystemMetrics(SM_XVIRTUALSCREEN);
+  const int vy = ::GetSystemMetrics(SM_YVIRTUALSCREEN);
+  const int vw = ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
+  const int vh = ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
+  if (vw <= 0 || vh <= 0) {
+    return;
+  }
+  x = std::clamp(x, vx, vx + vw - width);
+  y = std::clamp(y, vy, vy + vh - height);
+}
+
 double ArgAsDouble(const flutter::EncodableValue& value) {
   if (const auto* d = std::get_if<double>(&value)) {
     return *d;
@@ -174,8 +196,10 @@ class PetWindow : public Win32Window {
         }
         RECT rect{};
         if (::GetWindowRect(GetHandle(), &rect)) {
-          ::SetWindowPos(GetHandle(), HWND_TOPMOST, rect.left + static_cast<int>(dx),
-                         rect.top + static_cast<int>(dy), 0, 0,
+          int x = rect.left + static_cast<int>(dx);
+          int y = rect.top + static_cast<int>(dy);
+          ClampToVirtualScreen(GetHandle(), x, y);  // 审计 R23：防拖出所有显示器
+          ::SetWindowPos(GetHandle(), HWND_TOPMOST, x, y, 0, 0,
                          SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
         }
         result->Success(flutter::EncodableValue());

@@ -127,6 +127,12 @@ flutter:
       fonts:
         - asset: assets/fonts/Charter-Roman.ttf
           weight: 400
+        # 审计 R24（2026-11-16）：资产包无 Charter 正体粗体字面——旧声明下
+        # w700 正体请求回退 Roman（粗体看起来是细体）。现把 BoldItalic 同时
+        # 映射为正体 700：字形带斜体但笔画粗细正确，视觉缺陷面小于回退细体。
+        # 取得 Charter-Bold 正体资产后应替换本映射（owner 项）。
+        - asset: assets/fonts/Charter-BoldItalic.ttf
+          weight: 700
         - asset: assets/fonts/Charter-Italic.ttf
           style: italic
         - asset: assets/fonts/Charter-BoldItalic.ttf

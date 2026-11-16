@@ -26,14 +26,15 @@ void main() {
       expect(await store.verify('alice', 'password123'), isTrue);
       expect(await store.verify('alice', 'password124'), isFalse, reason: '错密码必须拒绝（假语义收口的关键守护点）');
       expect(await store.verify('alice', ''), isFalse);
-    });
+      // 审计 R24：60 万轮×4 次派生，全量并发负载下放宽超时防误杀。
+    }, timeout: const Timeout(Duration(minutes: 3)));
 
     test('用户名大小写不敏感（Abc 与 abc 同一账号）', () async {
       final store = SecurePasswordAuthStore();
       await store.setPassword('Abc', 'password123');
       expect(await store.hasPassword('abc'), isTrue);
       expect(await store.verify('ABC', 'password123'), isTrue);
-    });
+    }, timeout: const Timeout(Duration(minutes: 3)));
 
     test('重置密码后旧密码彻底失效（每次设置换新盐）', () async {
       final store = SecurePasswordAuthStore();
@@ -41,12 +42,15 @@ void main() {
       await store.setPassword('bob', 'newpassword');
       expect(await store.verify('bob', 'oldpassword'), isFalse);
       expect(await store.verify('bob', 'newpassword'), isTrue);
-    });
+    }, timeout: const Timeout(Duration(minutes: 3)));
 
-    test('hashPassword：PBKDF2 新格式，同盐同密码一致、不同盐不同', () {
-      final h1 = SecurePasswordAuthStore.hashPassword('saltA', 'password123');
-      final h2 = SecurePasswordAuthStore.hashPassword('saltA', 'password123');
-      final h3 = SecurePasswordAuthStore.hashPassword('saltB', 'password123');
+    test('hashPassword：PBKDF2 新格式，同盐同密码一致、不同盐不同', () async {
+      // 审计 R24：生产默认已升 60 万轮（OWASP），纯函数性质用低轮数验证
+      // （格式/一致性/盐敏感性轮数无关），避免单测跑数秒×3。
+      const iters = 1000;
+      final h1 = await SecurePasswordAuthStore.deriveInBackground('saltA', 'password123', iterations: iters);
+      final h2 = await SecurePasswordAuthStore.deriveInBackground('saltA', 'password123', iterations: iters);
+      final h3 = await SecurePasswordAuthStore.deriveInBackground('saltB', 'password123', iterations: iters);
       expect(h1, h2);
       expect(h1, isNot(h3));
       expect(h1, startsWith('pbkdf2-sha256\$'), reason: '存储格式必须带算法+迭代数前缀');
@@ -70,10 +74,14 @@ void main() {
       );
     });
 
-    test('deriveInBackground：与同步 hashPassword 逐位一致（R3-D04 移出主 isolate）', () async {
-      // 后台 isolate 版必须与同步版产出**完全相同**的哈希，否则存量凭据全部失效
-      final sync = SecurePasswordAuthStore.hashPassword('saltA', 'password123');
-      final asyncHash = await SecurePasswordAuthStore.deriveInBackground('saltA', 'password123');
+    test('deriveInBackground：与同步纯函数逐位一致（R3-D04 移出主 isolate）', () async {
+      // 后台 isolate 版必须与同步纯函数产出**完全相同**的哈希，否则存量凭据全部失效。
+      // 审计 R24：默认 60 万轮，测试用 1000 轮对照（一致性语义轮数无关）。
+      const salt0 = 'saltA';
+      const password0 = 'password123';
+      final sync =
+          'pbkdf2-sha256\$1000\$${SecurePasswordAuthStore.pbkdf2Sha256(utf8.encode('mw:$salt0:$password0'), utf8.encode(salt0), 1000, 32).map((b) => b.toRadixString(16).padLeft(2, '0')).join()}';
+      final asyncHash = await SecurePasswordAuthStore.deriveInBackground(salt0, password0, iterations: 1000);
       expect(asyncHash, sync, reason: '后台派生不得改变哈希结果');
 
       // verify 读存量凭据时会传存储里的迭代数（可能是历史值），这条路径也要一致
@@ -121,6 +129,32 @@ void main() {
       expect(await store.verify(username, 'wrongpass'), isFalse);
       final notUpgraded = await const FlutterSecureStorage().read(key: 'pwauth.$username.hash');
       expect(notUpgraded, legacyHash, reason: '验证失败不得升级');
-    });
+    }, timeout: const Timeout(Duration(minutes: 3)));
+
+    test('审计 R24：存量低轮数 PBKDF2 验证成功后透明升级到当前轮数', () async {
+      const username = 'dave';
+      const salt = '0123456789abcdef0123456789abcdef';
+      const password = 'password123';
+      // 预置旧参数（1000 轮）PBKDF2 凭据 Blob
+      final oldHash = await SecurePasswordAuthStore.deriveInBackground(salt, password, iterations: 1000);
+      FlutterSecureStorage.setMockInitialValues(<String, String>{
+        'pwauth.$username.credential': jsonEncode({
+          'v': 2,
+          'algorithm': 'pbkdf2-sha256',
+          'salt': salt,
+          'hash': oldHash,
+        }),
+      });
+      final store = SecurePasswordAuthStore();
+      expect(await store.verify(username, password), isTrue);
+      // 透明升级：Blob 内哈希轮数应为当前生产参数
+      final credentialJson = await const FlutterSecureStorage().read(key: 'pwauth.$username.credential');
+      final map = jsonDecode(credentialJson!) as Map<String, dynamic>;
+      final upgradedHash = map['hash'] as String;
+      expect(upgradedHash.split(r'$')[1], '${SecurePasswordAuthStore.pbkdf2Iterations}');
+      // 升级后仍可验证（默认轮数路径），错密码拒绝
+      expect(await store.verify(username, password), isTrue);
+      expect(await store.verify(username, 'wrongpass'), isFalse);
+    }, timeout: const Timeout(Duration(minutes: 3)));
   });
 }

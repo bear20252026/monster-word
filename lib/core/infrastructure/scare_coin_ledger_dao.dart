@@ -250,24 +250,32 @@ class ScareCoinLedgerDao {
         final newestRows = await txn.query(_entriesTable, orderBy: 'time_ms DESC', limit: 1);
         final watermark = newestRows.isEmpty ? -1 : newestRows.first['time_ms']! as int;
         // 审计 A8（2026-11-16）：严格 > 水位会丢「与账本最新流水同毫秒」的降级期
-        // 新流水（余额照覆盖 ⇒ 账实不平）。改为 >= 水位 + (ms,delta,reason) 去重：
-        // 同毫秒新条目补插、重复回灌跳过（幂等）。同毫秒完全相同的两条真流水会
-        // 被视为一条——窄窗口取舍，宁可少一条重复也不复活/丢余额。
+        // 新流水（余额照覆盖 ⇒ 账实不平）。改为 >= 水位 + (ms,delta,reason) 去重。
+        // 审计 R18（2026-11-16）：去重从 Set 改**多重集计数**——旧实现同毫秒
+        // 同签名的两条真流水被视为一条（余额照 SP 全值覆盖 ⇒ 余额≠Σ流水）。
+        // 现 DB 侧按签名计数，SP 侧逐条消耗配额：同签名第 N 条只在 DB 不足 N
+        // 条时补插。重复回灌仍幂等（DB 计数已含该批），同毫秒真流水不再被吞。
         final atWatermark = await txn.query(
           _entriesTable,
           columns: ['time_ms', 'delta', 'reason'],
           where: 'time_ms >= ?',
           whereArgs: [watermark],
         );
-        final seen = atWatermark.map((r) => '${r['time_ms']}|${r['delta']}|${r['reason']}').toSet();
+        final dbCounts = <String, int>{};
+        for (final r in atWatermark) {
+          final sig = '${r['time_ms']}|${r['delta']}|${r['reason']}';
+          dbCounts[sig] = (dbCounts[sig] ?? 0) + 1;
+        }
+        final spSeen = <String, int>{};
         // spEntries 为新→旧；倒序遍历使插入序与时间序一致（同毫秒展示口径不变）。
         for (var i = spEntries.length - 1; i >= 0; i--) {
           final entry = spEntries[i];
           final ms = entry.time.millisecondsSinceEpoch;
           if (ms < watermark) continue;
           final sig = '$ms|${entry.delta}|${entry.reason}';
-          if (seen.contains(sig)) continue;
-          seen.add(sig);
+          final n = (spSeen[sig] ?? 0) + 1;
+          spSeen[sig] = n;
+          if (n <= (dbCounts[sig] ?? 0)) continue; // DB 已有 ≥n 条同签名：重复回灌跳过
           await txn.insert(_entriesTable, _entryRow(entry));
         }
         for (final key in spEventKeys) {

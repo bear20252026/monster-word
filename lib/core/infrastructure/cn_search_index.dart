@@ -27,7 +27,6 @@
 // 双轨：未就绪（首启构建中 / 构建失败 / 指纹失效重建中）或非纯 CJK 查询，
 // 调用方回退旧第 3 层全表路径，行为与迁移前完全一致。
 // 指纹：词库文件 size+mtime——解压重建/资产升级必变，不符即自动重建索引。
-import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
@@ -56,6 +55,12 @@ class CnSearchIndex {
   String? _indexedFingerprint;
   bool _ready = false;
   Future<void>? _building;
+
+  /// 审计 R16（2026-11-16）：失效旧句柄的关闭 Future——重建前必须等它完成。
+  /// 旧实现 unawaited(close) 与下次 _build 的 open 同路径竞态：singleInstance
+  /// 下 close 未完成时 reopen 可能拿到正在关闭的实例；Windows 句柄未释放致
+  /// staging 替换失败。现 ensureBuilt 先 await 关闭再构建（关闭失败不阻塞）。
+  Future<void>? _pendingClose;
 
   /// ATTACH/DETACH 串行闸门：attach 会改动词库连接的 schema 状态，
   /// 并发搜索间必须成对串行（FavoriteWordsDao._writeGate 同款）。
@@ -118,9 +123,15 @@ class CnSearchIndex {
         _building = null;
         // 审计 A7（2026-11-15）：失效重建前关闭旧句柄，否则每次词库升级泄漏
         // 一个 DB 连接（Windows 上还会导致 staging 替换失败走原地重建）。
+        // 审计 R16：关闭 Future 存入 _pendingClose，ensureBuilt 重建前 await——
+        // unawaited 与下次 open 同路径竞态（正在关闭的实例被 reopen）。
         final stale = _indexDb;
         _indexDb = null;
-        unawaited(stale?.close().catchError((Object _) {}));
+        if (stale != null) {
+          _pendingClose = stale.close().catchError((Object _) {
+            // 吞错豁免: 关闭失败句柄已废弃，重建路径自会兜底（原地重建）。
+          });
+        }
         reportSwallowedError(
           '中文搜索索引指纹失效（词库文件已重建/升级），本次回退全表扫描',
           StateError('fingerprint mismatch: indexed=$indexed'),
@@ -180,7 +191,21 @@ class CnSearchIndex {
   /// 幂等单飞构建。就绪前 isReady=false，搜索走旧第 3 层（双轨窗口）。
   /// [wordsPath] 为词库 db 文件路径（指纹来源）；[indexPath] 为索引库路径。
   Future<void> ensureBuilt({required Database wordsDb, required String wordsPath, required String indexPath}) {
-    return _building ??= _build(wordsDb, wordsPath, indexPath);
+    return _building ??= _buildAfterPendingClose(wordsDb, wordsPath, indexPath);
+  }
+
+  /// 审计 R16：先等失效旧句柄关闭完成再构建（close/open 同路径竞态收口）。
+  Future<void> _buildAfterPendingClose(Database wordsDb, String wordsPath, String indexPath) async {
+    final closing = _pendingClose;
+    _pendingClose = null;
+    if (closing != null) {
+      try {
+        await closing;
+      } catch (_) {
+        // 吞错豁免: 关闭失败不阻塞重建——staging 替换失败自会回退原地重建。
+      }
+    }
+    await _build(wordsDb, wordsPath, indexPath);
   }
 
   Future<void> _build(Database wordsDb, String wordsPath, String indexPath) async {
