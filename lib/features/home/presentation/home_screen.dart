@@ -56,6 +56,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // 审计 C8（2026-11-15）：连续快速下滑会压两层查词页；1s 重入闸拒二次。
+  DateTime? _lastSwipeOpen;
+
   @override
   Widget build(BuildContext context) {
     final skin = context.skin;
@@ -67,7 +70,11 @@ class _HomeScreenState extends State<HomeScreen> {
       behavior: HitTestBehavior.opaque,
       onVerticalDragEnd: (details) {
         final v = details.primaryVelocity ?? 0;
-        if (v > 160) Navigator.pushNamed(context, RouteNames.search);
+        if (v <= 160) return;
+        final now = DateTime.now();
+        if (_lastSwipeOpen != null && now.difference(_lastSwipeOpen!) < const Duration(seconds: 1)) return;
+        _lastSwipeOpen = now;
+        Navigator.pushNamed(context, RouteNames.search);
       },
       child: Container(
         color: skin.colors.pageBg,
