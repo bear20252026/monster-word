@@ -54,7 +54,14 @@ class LlmClientFactory {
     final rule = fallback ?? RuleBasedLlm();
     if (!config.isConfigured) return rule;
     final key = await _credentials.readKey();
-    if (key.isEmpty) return rule;
-    return OpenAiLlmClient(baseUrl: config.baseUrl, model: config.model, apiKey: key);
+    return createSync(config, key: key, fallback: rule);
+  }
+
+  /// 审计 B2（2026-11-15）：同步构建（供装配链在 build 外即时取用）。
+  /// key 空 → 规则版；key 非空 → 真实客户端 + 失败回退包装（兑现端口契约）。
+  LlmClient createSync(LlmConfig config, {required String key, RuleBasedLlm? fallback}) {
+    final rule = fallback ?? RuleBasedLlm();
+    if (!config.isConfigured || key.isEmpty) return rule;
+    return ResilientLlmClient(OpenAiLlmClient(baseUrl: config.baseUrl, model: config.model, apiKey: key), rule);
   }
 }

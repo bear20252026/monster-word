@@ -172,6 +172,15 @@ class ReviewScheduleStore {
     await _createRatingLogTable(db);
     // 防御旧库/旧文件缺映射列：与评分日志同理，覆盖 onCreate / 旧库 / 测试三条路径。
     await _addDailyStatsCorrectColumn(db);
+    // 审计 A2（2026-11-15）：迁移标记进 DB 事务（与币账本同构），杜绝
+    // 「事务提交后 SP marker 写失败 → 重迁移统计翻倍」窗口。
+    await db.execute('CREATE TABLE IF NOT EXISTS fsrs_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+  }
+
+  /// 审计 A2：DB 内迁移标记（'done' = 已迁移）。与卡片/统计同事务写入。
+  Future<String?> migrationMarker() async {
+    final rows = await _db.query('fsrs_meta', where: 'key = ?', whereArgs: ['migrated'], limit: 1);
+    return rows.isEmpty ? null : rows.single['value'] as String?;
   }
 
   // ============================================================
@@ -426,6 +435,7 @@ class ReviewScheduleStore {
     required Map<String, Map<String, int>> dailyStats,
     Map<String, int> dailyCorrect = const {},
     required Set<String> activeDates,
+    List<({String word, String ratingId})> journalRatings = const [],
   }) async {
     await _db.transaction((txn) async {
       for (final card in cards) {
@@ -446,6 +456,17 @@ class ReviewScheduleStore {
       for (final date in activeDates) {
         await txn.insert('fsrs_active_dates', {'date': date}, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
+      // 审计 A1（2026-11-15）：SP 降级期评分已含在导入的 blob 卡里，预登记进
+      // 幂等日志，使恢复后的 journal 回放命中幂等闸跳过，杜绝二次应用。
+      for (final r in journalRatings) {
+        await txn.insert('fsrs_rating_log', {
+          'rating_id': r.ratingId,
+          'word': r.word,
+          'applied_at': DateTime.now().toIso8601String(),
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+      // 审计 A2：标记与数据同事务，重迁移不再可能（统计累加翻倍窗口关闭）。
+      await txn.insert('fsrs_meta', {'key': 'migrated', 'value': 'done'}, conflictAlgorithm: ConflictAlgorithm.replace);
     });
   }
 

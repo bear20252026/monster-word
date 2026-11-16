@@ -355,6 +355,9 @@ class ReviewSessionState extends ChangeNotifier {
   /// 与 continueWithGoodRating（good→FSRS）区分：用户认为该词已掌握时跳过
   /// 复习队列即可，不改 stability/due。若未来拍板要记 FSRS，应映射 easy 并补测试。
   bool markAsKnown() {
+    // 审计 B1（2026-11-15）：评分落盘在途时点「熟」会双推进/损坏快照，
+    // 与 rate() 同口径拒重入（原地不动，UI 可稍后再点）。
+    if (_inflightRating != null) return false;
     final reviewedWord = currentWord;
     if (reviewedWord == null) return false;
     _ratingExecutor.markAsKnown();
