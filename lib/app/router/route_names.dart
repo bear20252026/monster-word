@@ -14,6 +14,9 @@ class RouteNames {
   static const String reviewSession = '/review_session';
   static const String learnSession = '/learn_session';
   static const String mySpace = '/my_space';
+  // 审计 C7（2026-11-16）：下方带「死路由」注释的 6 个常量，注册已删（全仓零
+  // push 入口），旧名落未知路由错误页；常量保留供埋点 usage_module_map 映射历史数据。
+  // 死路由（审计 C7）：仅保留埋点历史口径。
   static const String dashboard = '/dashboard';
   static const String settings = '/settings';
   static const String scareCoinHistory = '/scare_coin_history';
@@ -31,14 +34,17 @@ class RouteNames {
   static const String messages = '/messages';
   static const String footMark = '/foot_mark';
   static const String myEquip = '/my_equip';
+  // 死路由（审计 C7）：仅保留埋点历史口径。
   static const String help = '/help';
   static const String netDiagnosis = '/net_diagnosis';
   static const String userInfoManage = '/user_info_manage';
   static const String themeSelect = '/theme_select';
   static const String personalStereo = '/personal_stereo';
   static const String playOrder = '/play_order';
+  // 死路由（审计 C7）：仅保留埋点历史口径。
   static const String wordListen = '/word_listen';
   static const String listenModeSelect = '/listen_mode_select';
+  // 死路由（审计 C7）：仅保留埋点历史口径。
   static const String sentenceQuiz = '/sentence_quiz';
   static const String appearance = '/appearance';
   static const String designLanguage = '/design_language';
@@ -49,7 +55,9 @@ class RouteNames {
   static const String wordMachine = '/word_machine';
   static const String myContent = '/my_content';
   static const String immersiveSwipe = '/immersive_swipe';
+  // 死路由（审计 C7）：仅保留埋点历史口径。
   static const String spellCheck = '/spell_check';
+  // 死路由（审计 C7）：仅保留埋点历史口径。
   static const String spellSession = '/spell_session';
   static const String checkInHistory = '/check_in_history';
   static const String linkedMe = '/linked_me';

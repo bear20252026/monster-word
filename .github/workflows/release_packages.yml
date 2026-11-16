@@ -158,6 +158,18 @@ jobs:
           echo "android_version=$ver" >> "$GITHUB_ENV"
           echo "app_build=$build" >> "$GITHUB_ENV"
 
+      - name: Warn if Sentry DSN missing (audit D6)
+        # 审计 D6（2026-11-16）：DSN 缺失时 sentry_bootstrap 静默跳过 ⇒ 正式包
+        # 整版无崩溃监控。不熔断（owner 尚未配置 secret），但发 GitHub 警告注解
+        # 让缺失在每次发版 run 页面可见，不再无声。配置 secret 后本警告自动消失。
+        shell: bash
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          if [ -z "$SENTRY_DSN" ]; then
+            echo "::warning title=Sentry DSN missing::SENTRY_DSN secret 未配置——本次发版的 Android/Windows 包将无崩溃监控（审计 D6）。请在仓库 Settings→Secrets 配置后重发。"
+          fi
+
       - name: Build Release APK
         # 安全审计 P2-6：--obfuscate 提高逆向成本（含随包常量的提取门槛）
         # MW-14：APP_VERSION/APP_BUILD_NUMBER 注入编译期常量。
@@ -263,6 +275,16 @@ jobs:
           $build = $full -replace '.*\+',''
           echo "win_version=$ver" >> $env:GITHUB_ENV
           echo "win_build=$build" >> $env:GITHUB_ENV
+
+      - name: Warn if Sentry DSN missing (audit D6)
+        # 审计 D6（2026-11-16）：同 Android 侧——DSN 缺失发可见警告，不熔断。
+        shell: pwsh
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          if ([string]::IsNullOrEmpty($env:SENTRY_DSN)) {
+            Write-Output "::warning title=Sentry DSN missing::SENTRY_DSN secret 未配置——本次 Windows 包将无崩溃监控（审计 D6）。"
+          }
 
       - name: Build Windows Release
         env:

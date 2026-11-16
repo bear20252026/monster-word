@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:word_app/features/account/presentation/account_info_page.dart';
 import 'package:word_app/features/account/presentation/appearance_page.dart';
 import 'package:word_app/features/account/presentation/feedback_page.dart';
-import 'package:word_app/features/account/presentation/help_page.dart';
 import 'package:word_app/features/account/presentation/linked_me_middle_page.dart';
 import 'package:word_app/features/account/presentation/login_page.dart';
 import 'package:word_app/features/account/presentation/message_page.dart';
@@ -28,8 +27,7 @@ abstract final class AccountRoutes {
         return const MessagePage();
       case RouteNames.myEquip:
         return const MyEquipPage();
-      case RouteNames.help:
-        return const HelpPage();
+      // 审计 C7（2026-11-16）：help 死路由注册已删（零 push 入口）。
       case RouteNames.userInfoManage:
         return const UserInfoManagePage();
       case RouteNames.appearance:

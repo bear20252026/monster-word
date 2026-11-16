@@ -8,7 +8,6 @@ import 'package:word_app/features/book/presentation/lib_select_page.dart';
 import 'package:word_app/features/book/presentation/word_export_page.dart';
 import 'package:word_app/features/learning/presentation/session/dictation_session_page.dart';
 
-import 'package:word_app/features/learning/presentation/session/list_word_listen_page.dart';
 import 'package:word_app/features/learning/presentation/session/listening_player_page.dart';
 import 'package:word_app/features/learning/presentation/mastered_words_page.dart';
 import 'package:word_app/features/learning/presentation/my_words_page.dart';
@@ -18,9 +17,6 @@ import 'package:word_app/features/learning/presentation/onboarding_promise_dialo
 import 'package:word_app/features/learning/presentation/session/quick_spell_page.dart';
 import 'package:word_app/features/learning/presentation/session/review_page.dart';
 import 'package:word_app/features/learning/presentation/reviewing_words_page.dart';
-import 'package:word_app/features/learning/presentation/session/sentence_quiz_page.dart';
-import 'package:word_app/features/learning/presentation/session/spell_check_page.dart';
-import 'package:word_app/features/learning/presentation/session/spell_session_page.dart';
 import 'package:word_app/features/learning/presentation/session/learn_page.dart';
 import 'package:word_app/features/learning/presentation/session/word_machine_page.dart';
 import 'package:word_app/features/quick_review/presentation/exam_quick_review_page.dart';
@@ -58,18 +54,12 @@ abstract final class LearningRoutes {
         return const NotLearnedWordsPage();
       case RouteNames.reviewingWords:
         return const ReviewingWordsPage();
-      case RouteNames.wordListen:
-        return const ListWordListenPage();
+      // 审计 C7（2026-11-16）：wordListen/sentenceQuiz/spellCheck/spellSession
+      // 全仓零 push 入口（死路由），注册已删；页面文件保留待产品决策是否恢复入口。
       case RouteNames.listenModeSelect:
         return _buildListenModeSelectPage(args);
-      case RouteNames.sentenceQuiz:
-        return const SentenceQuizPage();
       case RouteNames.wordMachine:
         return const WordMachinePage();
-      case RouteNames.spellCheck:
-        return _buildSpellCheckPage(args);
-      case RouteNames.spellSession:
-        return const SpellSessionPage();
       case RouteNames.listeningPlayer:
         return _buildListeningPlayerPage(args);
       case RouteNames.dictationSession:
@@ -110,11 +100,6 @@ abstract final class LearningRoutes {
     }
     final bookId = (map['bookId'] as String?) ?? '';
     return ExtensiveModelSelectPage(bookId: bookId, bookName: map['bookName'] as String? ?? '');
-  }
-
-  static Widget _buildSpellCheckPage(Object? args) {
-    final map = args is Map<String, dynamic> ? args : null;
-    return SpellCheckPage(word: map?['word'] as String? ?? '', phonetic: map?['phonetic'] as String?);
   }
 
   static Widget _buildListeningPlayerPage(Object? args) {

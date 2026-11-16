@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:word_app/features/book/presentation/memory_beast_gallery_page.dart';
-import 'package:word_app/features/learning/presentation/dashboard_page.dart';
 import 'package:word_app/features/learning/presentation/personal_stereo_page.dart';
 import 'package:word_app/features/learning/presentation/play_order_page.dart';
 import 'package:word_app/features/word_browse/presentation/foot_mark_page.dart';
@@ -15,8 +14,7 @@ import 'package:word_app/app/router/route_names.dart';
 abstract final class MiscRoutes {
   static Widget? build(String? name, Object? args) {
     switch (name) {
-      case RouteNames.dashboard:
-        return const DashboardPage();
+      // 审计 C7（2026-11-16）：dashboard 死路由注册已删（零 push 入口）。
       case RouteNames.personalStereo:
         return const PersonalStereoPage();
       case RouteNames.playOrder:

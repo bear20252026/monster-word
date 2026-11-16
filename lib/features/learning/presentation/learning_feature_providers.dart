@@ -145,7 +145,15 @@ Widget buildLearningFeatureScope({required Widget child}) {
       // 今日进度单一事实源：create 返回与 session 注入的同一实例（N1）。
       ChangeNotifierProxyProvider2<LearningSessionState, ReviewScheduleReader, TodayProgressStore>(
         create: (_) => todayProgressStore,
-        update: (_, session, schedule, store) => (store ?? todayProgressStore)..sync(due: schedule.dueCount),
+        update: (_, session, schedule, store) {
+          final target = store ?? todayProgressStore;
+          // 审计 B8（2026-11-16）：update 在 build 阶段执行，直接 sync 可能
+          // notifyListeners 触发已建成下游的 markNeedsBuild-during-build。
+          // 移到 post-frame；sync 幂等（无变化不通知），重复调度无害。
+          final due = schedule.dueCount;
+          WidgetsBinding.instance.addPostFrameCallback((_) => target.sync(due: due));
+          return target;
+        },
       ),
       // 只读统计端口：暴露给其它 feature（如 word_browse 的 foot_mark）读取统计。
       // 装配为具体状态实现 core 只读契约，消费方经类型注入依赖 core，而非 learning/presentation。

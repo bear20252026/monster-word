@@ -59,7 +59,8 @@ void main() {
     await src.insert('word_books', {'word_id': 4, 'book_id': 2});
     await src.close();
     final raw = await File(p.join(tmp.path, 'src.db')).readAsBytes();
-    gzBytes = Uint8List.fromList(GZipEncoder().encode(raw)!);
+    // archive 4.x（审计 D7 升级）：encode 返回非空，去多余 `!`。
+    gzBytes = Uint8List.fromList(GZipEncoder().encode(raw));
 
     WordBookDatabase.gzBytesOverrideForTest = () => gzBytes;
   });

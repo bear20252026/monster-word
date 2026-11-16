@@ -68,4 +68,14 @@ void main() {
 
     expect(pet.contains('Scaffold('), isFalse, reason: '套了 Scaffold 就是一块不透明方块，透明窗口白做');
   });
+
+  test('审计 C6：可见性事件名两侧一致（不一致=开关状态脱节，无报错）', () {
+    final dart = File('lib/core/infrastructure/pet_window_service.dart').readAsStringSync();
+    final native = File('windows/runner/flutter_window.cpp').readAsStringSync();
+    expect(dart.contains("'petVisibilityChanged'"), isTrue, reason: 'Dart 侧必须监听该事件');
+    expect(native.contains('"petVisibilityChanged"'), isTrue, reason: '原生侧必须推送同名事件');
+    // 宠物自己关闭（OnDestroy）必须清指针并通知，否则设置页永远显示已开启。
+    final host = File('windows/runner/pet_host.cpp').readAsStringSync();
+    expect(host.contains('NotifyVisibility(false)'), isTrue, reason: '关闭路径必须通知可见性');
+  });
 }

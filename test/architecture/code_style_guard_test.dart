@@ -27,7 +27,8 @@ const Map<String, int> _kPartFamilyRatchet = {
   // 1078：AI 化阶段 1 AI 伙伴入口 cell+组方法 +18（设置主体已抽 llm_settings_sheet.dart 独立文件）。
   // 1087：审计 C3（2026-11-15）宠物开关 in-flight 闸 +9（竞态修复注释/finally）。
   // 1100：审计 C11（2026-11-15）副标题 Flexible+ellipsis +13。
-  'lib/features/settings/presentation/more_settings_page.dart': 1100,
+  // 1114：审计 C6（2026-11-16）宠物可见性事件订阅+dispose +14。
+  'lib/features/settings/presentation/more_settings_page.dart': 1114,
   'lib/features/settings/presentation/profile_screen.dart': 1890,
 };
 

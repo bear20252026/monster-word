@@ -62,6 +62,15 @@ bool FlutterWindow::OnCreate() {
     result->NotImplemented();
   });
 
+  // 审计 C6（2026-11-16）：宠物窗口可见性变化（含宠物自己关闭）主动通知 Dart，
+  // 设置页开关订阅后即时对齐，不再只靠 initState 读一次。
+  pet_host::SetVisibilityCallback([this](bool visible) {
+    if (pet_channel_) {
+      pet_channel_->InvokeMethod(
+          "petVisibilityChanged", std::make_unique<flutter::EncodableValue>(visible));
+    }
+  });
+
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
   });
@@ -75,6 +84,8 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  // 审计 C6：先注销回调再释放通道，防止销毁后回调触碰悬垂 this。
+  pet_host::SetVisibilityCallback(nullptr);
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }

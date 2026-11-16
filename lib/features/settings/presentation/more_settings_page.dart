@@ -64,6 +64,10 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   static const PetWindowService _petWindow = PetWindowService();
   bool _petVisible = false;
 
+  /// 审计 C6（2026-11-16）：订阅原生可见性事件——用户在桌面右键关掉宠物后
+  /// 开关即时对齐（旧实现只在 initState 读一次，状态脱节）。
+  StreamSubscription<bool>? _petVisibilitySub;
+
   UpdateCheckService get _updateService => widget.updateServiceOverride ?? context.read<UpdateCheckService>();
 
   @override
@@ -71,6 +75,10 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     super.initState();
     // 状态在原生：进页面时对齐一次（可能上次开过还没关）。
     if (_petWindow.isSupported) {
+      _petWindow.listenVisibilityEvents();
+      _petVisibilitySub = _petWindow.visibilityChanges.listen((visible) {
+        if (mounted) setState(() => _petVisible = visible);
+      });
       unawaited(
         _petWindow
             .isVisible()
@@ -89,6 +97,12 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           }
         })
         .catchError((e) => debugLog('读取应用版本失败: $e'));
+  }
+
+  @override
+  void dispose() {
+    _petVisibilitySub?.cancel();
+    super.dispose();
   }
 
   /// 检查更新：真实请求 GitHub Releases 最新 tag 与当前版本比较。
