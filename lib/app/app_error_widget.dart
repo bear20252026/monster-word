@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/tokens/design_tokens.dart';
 import 'package:word_app/tokens/starbucks_tokens.dart';
 
@@ -39,7 +40,8 @@ class AppBuildErrorPage extends StatelessWidget {
                 onPressed: () {
                   final navigator = Navigator.of(context);
                   if (navigator.canPop()) {
-                    navigator.popUntil((route) => route.isFirst);
+                    // 审计 R8：统一走 NavUtils.goHome（清栈抑制+作废前进栈）。
+                    NavUtils.goHome(context);
                   }
                 },
                 icon: const Icon(Icons.home_outlined, size: 18),

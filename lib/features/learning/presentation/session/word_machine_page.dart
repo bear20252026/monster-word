@@ -165,116 +165,129 @@ class _WordMachinePageState extends State<WordMachinePage> {
     final meaningText = word.hasStructuredDefinitions ? word.formattedDefinitions : word.cleanInterpret;
     final sentences = ExampleParser.parse(word.example);
 
+    // 审计 R21（2026-11-16）：卡片改可滚动——展开释义+多例句+大 fontScale 时
+    // 非滚动 Column 在有界 Expanded 内 RenderFlex overflow（随身听同内容用了
+    // 滚动视图，此页漏了）。控制按钮保持固定底部，内容超高时卡片区域滚动。
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // 单词卡片
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(resp.pageMargin * 1.5),
-          decoration: BoxDecoration(
-            color: skin.colors.cardBg,
-            borderRadius: BorderRadius.circular(context.design.radius.xl),
-            border: Border.all(color: skin.colors.divider),
-          ),
-          child: Column(
-            children: [
-              // 单词
-              Text(
-                word.word,
-                style: AppTypography.heroWord.copyWith(
-                  color: skin.colors.text1,
-                  fontSize: AppFontSizes.heroLg * resp.fontScale,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              // 音标
-              if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  word.usPron.isNotEmpty ? word.usPron : word.ukPron,
-                  style: MwTypography.body.copyWith(
-                    color: skin.colors.text3,
-                    fontSize: AppFontSizes.bodyMd * resp.fontScale,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-              // 释义（可显示/隐藏）
-              if (meaningText.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                AnimatedCrossFade(
-                  firstChild: const SizedBox.shrink(),
-                  secondChild: Text(
-                    meaningText,
-                    style: MwTypography.body.copyWith(
-                      color: skin.colors.text2,
-                      fontSize: AppFontSizes.heading5 * resp.fontScale,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  crossFadeState: _showMeaning ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                  duration: MotionDurations.slow,
-                ),
-                if (!_showMeaning) ...[
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => setState(() => _showMeaning = true),
-                    child: Text('点击显示释义', style: MwTypography.caption.copyWith(color: context.skin.colors.accent)),
-                  ),
-                ],
-              ],
-              // 例句
-              if (_showMeaning && sentences.isNotEmpty) ...[
-                const SizedBox(height: 16),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                // 单词卡片
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  width: double.infinity,
+                  padding: EdgeInsets.all(resp.pageMargin * 1.5),
                   decoration: BoxDecoration(
-                    color: skin.colors.cardBgAlt,
-                    borderRadius: BorderRadius.circular(context.design.radius.md),
+                    color: skin.colors.cardBg,
+                    borderRadius: BorderRadius.circular(context.design.radius.xl),
+                    border: Border.all(color: skin.colors.divider),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      for (final s in sentences) ...[
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                s.en,
-                                style: MwTypography.bodySm.copyWith(
-                                  color: skin.colors.text1,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                            if (s.audioUrl != null && s.audioUrl!.isNotEmpty)
-                              IconButton(
-                                icon: Icon(Icons.volume_up_outlined, color: skin.colors.accent, size: 18),
-                                onPressed: () => context.read<AudioPlaybackState>().playSentence(s.audioUrl!),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minHeight: 24, minWidth: 24),
-                              ),
-                          ],
+                      // 单词
+                      Text(
+                        word.word,
+                        style: AppTypography.heroWord.copyWith(
+                          color: skin.colors.text1,
+                          fontSize: AppFontSizes.heroLg * resp.fontScale,
                         ),
-                        if (s.cn.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(s.cn, style: MwTypography.caption.copyWith(color: skin.colors.text3)),
-                          ),
+                        textAlign: TextAlign.center,
+                      ),
+                      // 音标
+                      if (word.usPron.isNotEmpty || word.ukPron.isNotEmpty) ...[
                         const SizedBox(height: 8),
+                        Text(
+                          word.usPron.isNotEmpty ? word.usPron : word.ukPron,
+                          style: MwTypography.body.copyWith(
+                            color: skin.colors.text3,
+                            fontSize: AppFontSizes.bodyMd * resp.fontScale,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                      // 释义（可显示/隐藏）
+                      if (meaningText.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        AnimatedCrossFade(
+                          firstChild: const SizedBox.shrink(),
+                          secondChild: Text(
+                            meaningText,
+                            style: MwTypography.body.copyWith(
+                              color: skin.colors.text2,
+                              fontSize: AppFontSizes.heading5 * resp.fontScale,
+                              height: 1.5,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          crossFadeState: _showMeaning ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                          duration: MotionDurations.slow,
+                        ),
+                        if (!_showMeaning) ...[
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () => setState(() => _showMeaning = true),
+                            child: Text(
+                              '点击显示释义',
+                              style: MwTypography.caption.copyWith(color: context.skin.colors.accent),
+                            ),
+                          ),
+                        ],
+                      ],
+                      // 例句
+                      if (_showMeaning && sentences.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: skin.colors.cardBgAlt,
+                            borderRadius: BorderRadius.circular(context.design.radius.md),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (final s in sentences) ...[
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        s.en,
+                                        style: MwTypography.bodySm.copyWith(
+                                          color: skin.colors.text1,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ),
+                                    if (s.audioUrl != null && s.audioUrl!.isNotEmpty)
+                                      IconButton(
+                                        icon: Icon(Icons.volume_up_outlined, color: skin.colors.accent, size: 18),
+                                        onPressed: () => context.read<AudioPlaybackState>().playSentence(s.audioUrl!),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(minHeight: 24, minWidth: 24),
+                                      ),
+                                  ],
+                                ),
+                                if (s.cn.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(s.cn, style: MwTypography.caption.copyWith(color: skin.colors.text3)),
+                                  ),
+                                const SizedBox(height: 8),
+                              ],
+                            ],
+                          ),
+                        ),
                       ],
                     ],
                   ),
                 ),
               ],
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 32),
-        // 控制按钮
+        // 控制按钮（固定底部，不随卡片滚动）
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

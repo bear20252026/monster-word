@@ -2,6 +2,7 @@
 // 回归测试 — 品牌换肤联动（REG-SKIN-xxx）
 // 台账：docs/regression_ledger.md
 // ============================================================
+import 'package:flutter/material.dart' show Brightness;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -45,6 +46,25 @@ void main() {
       // 预防：校准 B 档时误把所有品牌值改平（换风格无感知 = bug）
       final radii = DesignLanguages.all.values.map((l) => l.radius.card).toSet();
       expect(radii.length, greaterThanOrEqualTo(4), reason: '各品牌 card 圆角应保持差异化（Nike 0 / Starbucks 12 / Apple 18 等）');
+    });
+
+    test('REG-SKIN-004(审计R10): followSystem+系统深色时 colors 走深色板，与 ThemeData 亮度一致', () {
+      final skin = SkinSystem();
+      skin.setTheme('starbucks_cream');
+      skin.setFollowSystem(true);
+      skin.updateSystemBrightness(Brightness.dark);
+      expect(skin.effectiveThemeId, 'starbucks_dark');
+      expect(skin.effectiveUiBrightness, Brightness.dark);
+      // 旧实现 colors 取 _themeId（cream 浅色板）⇒ 内容浅色/弹层深色不一致。
+      expect(skin.colors, same(themes['starbucks_dark']!.vars));
+      // 用户选中语义保留：currentTheme 仍是手动选的 cream。
+      expect(skin.currentTheme, same(themes['starbucks_cream']!));
+      // 系统切回浅色：色板随之回 cream。
+      skin.updateSystemBrightness(Brightness.light);
+      expect(skin.colors, same(themes['starbucks_cream']!.vars));
+      // 退出跟随：回到手动选中主题。
+      skin.setFollowSystem(false);
+      expect(skin.colors, same(themes['starbucks_cream']!.vars));
     });
   });
 }

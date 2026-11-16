@@ -70,6 +70,11 @@ Widget buildLearningFeatureScope({required Widget child}) {
   // 与页面 Provider 消费同一对象，避免 session 内直建第二实例。
   final presentationPrefs = PresentationPrefs();
   final todayProgressStore = TodayProgressStore();
+  // 审计 R19（2026-11-16）：首帧预载——B8 把 sync 移到 post-frame 后首帧 _due=0，
+  // 首页待复习数 0→N 跳变。创建期（build 内、下游未建成）静默 sync 一次：仓储
+  // dueCount 是内存缓存同步可读（bootstrap 已 initialize），silent 不通知防
+  // markNeedsBuild-during-build；post-frame 常规 sync 仍兜底后续变化。
+  todayProgressStore.sync(due: sl<ReviewScheduleRepository>().dueCount, silent: true);
   return MultiProvider(
     providers: [
       Provider<PresentationPrefs>.value(value: presentationPrefs),

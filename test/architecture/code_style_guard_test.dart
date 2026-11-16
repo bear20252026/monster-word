@@ -28,7 +28,8 @@ const Map<String, int> _kPartFamilyRatchet = {
   // 1087：审计 C3（2026-11-15）宠物开关 in-flight 闸 +9（竞态修复注释/finally）。
   // 1100：审计 C11（2026-11-15）副标题 Flexible+ellipsis +13。
   // 1114：审计 C6（2026-11-16）宠物可见性事件订阅+dispose +14。
-  'lib/features/settings/presentation/more_settings_page.dart': 1114,
+  // 1126：审计 R20（2026-11-16）toggle 在途忽略事件+完成后 isVisible 复核 +12。
+  'lib/features/settings/presentation/more_settings_page.dart': 1126,
   'lib/features/settings/presentation/profile_screen.dart': 1890,
 };
 

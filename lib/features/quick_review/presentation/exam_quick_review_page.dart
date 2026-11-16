@@ -47,11 +47,14 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
     // 延迟到首帧后执行，避免 initState 中直接读 provider 的副作用
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      // 审计 R22：首屏加载同样纳入序号守卫——加载在途时用户已可切换类型
+      // （加载态渲染选择条），首屏慢响应回来不得覆盖新类型词表。
+      final seq = ++_loadSeq;
       context
           .read<QuickReviewWordReader>()
           .loadWords()
           .then((words) {
-            if (!mounted) return;
+            if (!mounted || seq != _loadSeq) return;
             setState(() {
               _words = words;
               _isLoading = false;
@@ -60,7 +63,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
           .catchError((Object e) {
             // 错误处理审计 P2：此前无 catchError，词库异常时 _isLoading
             // 永远为 true，页面卡死在转圈。
-            if (mounted) {
+            if (mounted && seq == _loadSeq) {
               setState(() {
                 _words = [];
                 _isLoading = false;
@@ -150,7 +153,13 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
     });
   }
 
+  /// 审计 R22（2026-11-16）：加载序号守卫——连续切 ExamType 时多个 loadWords
+  /// 在途，慢响应回来会覆盖新类型词表并重启计时（search_page 已有同型守卫）。
+  int _loadSeq = 0;
+
   void _toggleExamType(ExamType type) {
+    final seq = ++_loadSeq;
+    _timer?.cancel(); // 旧类型计时立即停，防在途加载期间继续跳词
     setState(() {
       _examType = type;
       _currentIndex = 0;
@@ -165,7 +174,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
         // timeLimit 当词数（单位混淆）。固定取默认 50 词。
         .loadWords()
         .then((words) {
-          if (!mounted) return;
+          if (!mounted || seq != _loadSeq) return; // 过期响应丢弃
           setState(() {
             _words = words;
             _isLoading = false;
@@ -174,7 +183,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
         })
         .catchError((Object e) {
           // 同 initState：失败必须复位 loading，否则永久转圈
-          if (mounted) {
+          if (mounted && seq == _loadSeq) {
             setState(() {
               _words = [];
               _isLoading = false;
@@ -199,11 +208,41 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
         title: Text('快速刷题', style: MwTypography.heading3.copyWith(color: skin.text1)),
       ),
       body: SafeArea(
+        // 审计 R22（2026-11-16）：加载期保留类型选择条——旧实现整页转圈时
+        // ChoiceChip 不渲染，在途无法切换；配合 _loadSeq 守卫，加载中换类型
+        // 作废旧响应，慢响应回来不覆盖新词表。
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? Column(
+                children: [
+                  _buildExamTypeChips(skin),
+                  const Expanded(child: Center(child: CircularProgressIndicator())),
+                ],
+              )
             : _currentIndex >= _words.length
             ? _buildResultPage(skin)
             : _buildReviewPage(skin),
+      ),
+    );
+  }
+
+  /// 考试类型选择条（审计 R22：加载态与答题态共用，在途可切换）。
+  Widget _buildExamTypeChips(dynamic skin) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Row(
+        children: ExamType.values.map((t) {
+          final selected = t == _examType;
+          return Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.xs),
+            child: ChoiceChip(
+              label: Text(t.label, style: const TextStyle(fontSize: AppFontSizes.micro)),
+              selected: selected,
+              selectedColor: skin.accent,
+              labelStyle: TextStyle(color: selected ? AppColors.white100 : skin.text1),
+              onSelected: (_) => _toggleExamType(t),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -227,24 +266,7 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
           ),
         ),
         const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: Row(
-            children: ExamType.values.map((t) {
-              final selected = t == _examType;
-              return Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.xs),
-                child: ChoiceChip(
-                  label: Text(t.label, style: const TextStyle(fontSize: AppFontSizes.micro)),
-                  selected: selected,
-                  selectedColor: skin.accent,
-                  labelStyle: TextStyle(color: selected ? AppColors.white100 : skin.text1),
-                  onSelected: (_) => _toggleExamType(t),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
+        _buildExamTypeChips(skin),
         const SizedBox(height: 24),
         Expanded(
           child: Padding(

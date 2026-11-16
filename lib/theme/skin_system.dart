@@ -51,8 +51,14 @@ class SkinSystem extends ChangeNotifier {
 
   String get themeId => _themeId;
   bool get followSystem => _followSystem;
+
+  /// 用户选中的主题预设（设置页展示选择态用）。
   ThemePreset get currentTheme => themes[_themeId]!;
-  ThemeVars get colors => currentTheme.vars;
+
+  /// 审计 R10（2026-11-16）：页面色板走**有效主题**——followSystem+系统深色时
+  /// ThemeData 已是 dark（effectiveUiBrightness），但旧实现 colors 取 _themeId
+  /// 浅色板 ⇒ 内容浅色/弹层深色不一致。currentTheme 保留「用户选中」语义。
+  ThemeVars get colors => themes[effectiveThemeId]!.vars;
 
   /// 当前 B 档设计语言（皮肤(颜色)之外整套视觉/形态令牌）。
   /// 切换设计语言 = 整套半径/间距/阴影/字体比例随之变化。

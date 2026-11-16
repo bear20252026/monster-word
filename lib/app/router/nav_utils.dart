@@ -1,6 +1,8 @@
 // 由 Claude 团队生成 | Monster Word App
 import 'package:flutter/material.dart';
 
+import 'package:word_app/app/router/navigation_history.dart';
+
 /// 统一导航安全工具。
 ///
 /// 背景：全站曾存在两类「返回异常」——
@@ -31,7 +33,11 @@ abstract final class NavUtils {
   /// 与 `pushReplacementNamed` 不同，它不替换任何页面、不丢栈帧，而是沿栈逐级
   /// 弹出到 `route.isFirst`，保证「逐级返回首页」的语义。
   static void goHome(BuildContext context) {
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    // 审计 R8：popUntil 循环 pop 只发 didPop（不发 didRemove），须显式抑制
+    // 前进快照记录并作废 forward——否则回首页后「前进」复活刚离开的中间页。
+    NavigationHistoryService.instance.runIgnoringPops(() {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    });
   }
 
   /// 强制回到登录页并**清空整个路由栈**（R3-A05）。
