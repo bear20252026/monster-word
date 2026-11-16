@@ -5,10 +5,12 @@
 // R2 会话奖励每自然日上限 3 次（15 币）
 // R3 目标达成奖励 +20，每自然日仅一次
 // R4 组合：首次结算可同时拿会话+目标奖励
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
@@ -80,6 +82,47 @@ class _FakeStore implements ScareCoinStore {
     reasons.add('答对＋1');
     return 1;
   }
+}
+
+/// 审计 B4：在 settle「读旧列表」之后、「收尾写」之前精确插入一次新登记。
+/// 第二次 getAll（收尾重读）前挂起，等测试写入新条目后再放行，
+/// 从而确定性地复现「收尾整段覆盖会丢新登记」的竞态。
+class _RacePrefs extends SharedPreferencesStorePlatform {
+  final SharedPreferencesStorePlatform _inner;
+  final String raceKey;
+  final Completer<void> reachedFinalWrite = Completer<void>();
+  final Completer<void> proceed = Completer<void>();
+
+  _RacePrefs(this._inner, {required this.raceKey});
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) => _inner.setValue(valueType, key, value);
+
+  @override
+  Future<Map<String, Object>> getAll() => _inner.getAll();
+
+  /// 直接读内部存储（绕过 SharedPreferences 缓存），供断言落盘结果。
+  Future<Map<String, Object>> innerGetAll() => _inner.getAll();
+
+  @override
+  Future<bool> remove(String key) async {
+    // 收尾删除 pendingKey（remaining 为空）前挂起；放行前注入并发新登记 B 并
+    // reload 同步缓存（模拟真实 enqueue），再放行 remove。修复后的收尾会 reload
+    // 重读 → 见 B → 保留；旧实现直接 remove 会丢 B。
+    final removed = await _inner.remove(key);
+    if (key == raceKey && !reachedFinalWrite.isCompleted) {
+      // remove 已执行（settle 删掉旧队列）；此时注入并发新登记 B 并同步缓存，
+      // settle 随后的 reload 重读必须见 B 并恢复保留。
+      final newEntry = jsonEncode({'wordsLearned': 11, 'dailyGoalAchieved': false, 'date': '2026-11-15'});
+      await _inner.setValue('String', raceKey, jsonEncode([newEntry]));
+      await (await SharedPreferences.getInstance()).reload();
+      reachedFinalWrite.complete();
+    }
+    return removed;
+  }
+
+  @override
+  Future<bool> clear() => _inner.clear();
 }
 
 /// 前 N 次 grant 抛错的假件，模拟发币偶发失败。
@@ -215,6 +258,28 @@ void main() {
       // 今日真实达标仍可领 +20（标记未被昨日补发占用）。
       final today = await service.settleSession(wordsLearned: 3, dailyGoalAchieved: true);
       expect(today.totalGranted, 20);
+    });
+
+    test('审计 B4：结算期间并发登记的新会话不被收尾覆盖丢失', () async {
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      SharedPreferences.setMockInitialValues({
+        'flutter.scare_coin.reward.session_date': today,
+        'flutter.scare_coin.reward.session_count': 0,
+      });
+      final race = _RacePrefs(
+        SharedPreferencesStorePlatform.instance,
+        raceKey: 'flutter.${LearningRewardService.pendingKey}',
+      );
+      SharedPreferencesStorePlatform.instance = race;
+      await LearningRewardService.enqueuePendingSession(wordsLearned: 10, dailyGoalAchieved: false);
+
+      final svc = LearningRewardService(_FakeStore());
+      await svc.settlePendingSessions(); // 读旧[A]→发币→remove→假件注入B→reload 见B恢复
+
+      final prefs = await SharedPreferences.getInstance();
+      final kept = prefs.getString(LearningRewardService.pendingKey);
+      expect(kept, isNotNull, reason: '期间新登记的会话必须保留，不得被整段覆盖');
+      expect(RegExp(r'wordsLearned').allMatches(kept!).length, 1);
     });
 
     test('登记超上限时丢最旧并保留最新的（不无限增长）', () async {
