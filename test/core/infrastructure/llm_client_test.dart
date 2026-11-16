@@ -57,6 +57,23 @@ void main() {
       final client = await factory.create(const LlmConfig(enabled: true, baseUrl: 'https://x/v1', model: 'm'));
       expect(client.isLive, isTrue);
     });
+
+    test('审计 B2：真实客户端失败 → 回退规则台词（不抛）', () async {
+      final factory = LlmClientFactory(credentials: _FakeCredentials('sk-test'));
+      // 注入必失败的主客户端（空端点抛 LlmException），验证包装器回退规则版。
+      final failing = OpenAiLlmClient(baseUrl: '', model: 'm', apiKey: 'sk-test');
+      final client = factory.createSync(
+        const LlmConfig(enabled: true, baseUrl: 'https://x/v1', model: 'm'),
+        key: 'sk-test',
+        fallback: RuleBasedLlm(),
+      );
+      // createSync 正常路径返回包装器；此处直接验证包装器语义。
+      final resilient = ResilientLlmClient(failing, RuleBasedLlm());
+      expect(client.isLive, isTrue);
+      final out = await resilient.complete(const [LlmMessage(LlmRole.user, '你好')]);
+      final candidates = MonsterSpeech.templatesOf(SpeechSlot.dailyGreeting).where((t) => !t.contains('{')).toSet();
+      expect(candidates.contains(out), isTrue, reason: '失败必须回退规则模板集：$out');
+    });
   });
 
   group('OpenAiLlmClient（mock http，不联网）', () {

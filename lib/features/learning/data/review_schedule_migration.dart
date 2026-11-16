@@ -27,11 +27,14 @@ class ReviewScheduleMigration {
   /// 防与已导入统计双计，2026-11-14）；false = 早已迁移/无数据（回放须自计统计）。
   Future<bool> migrateFromSpIfNeeded(ReviewScheduleStore store) async {
     final prefs = await SharedPreferences.getInstance();
+    // 审计 A2（2026-11-15）：DB 标记是事务内真相；SP 标记仅为旧版兼容/清理门槛。
+    if (await store.migrationMarker() == 'done') return false;
     if (prefs.getString(ReviewScheduleRepository.migratedMarkerKey) == 'done') return false;
 
     final rawCards = prefs.getString(ReviewScheduleRepository.cardsPrefKey);
     if (rawCards == null || rawCards.isEmpty) {
       // 无历史数据可迁：直接写标记，避免每次启动空转检查。
+      await store.migrateFromSp(cards: const [], dailyStats: const {}, activeDates: const {});
       await prefs.setString(ReviewScheduleRepository.migratedMarkerKey, 'done');
       return false;
     }
@@ -83,12 +86,26 @@ class ReviewScheduleMigration {
 
     final activeDates = (prefs.getStringList(ReviewScheduleRepository.activeDatesPrefKey) ?? const <String>[]).toSet();
 
+    // 审计 A1：读降级日志，把其中评分预登记进幂等日志（blob 卡已含这些评分）。
+    final journalRatings = <({String word, String ratingId})>[];
+    for (final raw in prefs.getStringList(ReviewScheduleRepository.degradedJournalKey) ?? const <String>[]) {
+      try {
+        final m = jsonDecode(raw) as Map<String, dynamic>;
+        final id = m['ratingId'] as String?;
+        final word = m['word'] as String?;
+        if (id != null && word != null) journalRatings.add((word: word, ratingId: id));
+      } catch (_) {
+        // 吞错豁免: 坏日志行跳过，回放侧同样逐行容错。
+      }
+    }
+
     // H1：三表单事务；失败整体回滚且不写标记 → 下次启动从 SP 重试。
     await store.migrateFromSp(
       cards: cards,
       dailyStats: dailyStats,
       dailyCorrect: _codec.readDailyCorrect(prefs.getString(ReviewScheduleRepository.dailyCorrectPrefKey)),
       activeDates: activeDates,
+      journalRatings: journalRatings,
     );
 
     if (skipped > 0) {

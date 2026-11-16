@@ -94,4 +94,65 @@ void main() {
     expect(repo.todayLearnCount, 1, reason: '回放写入的学习次数必须在本次启动就可见，不能等下次启动');
     expect(repo.activeDateCount, 1, reason: '回放写入的活跃日期同理');
   });
+
+  test('审计 A1：迁移预登记 journal 评分 → 回放不二次应用卡片', () async {
+    final answeredAt = DateTime.now().subtract(const Duration(days: 2));
+    final card = FsrsCard(
+      word: 'cat',
+      stability: 5,
+      difficulty: 5,
+      isNew: false,
+      lastReview: answeredAt,
+      dueDate: answeredAt.add(const Duration(days: 5)),
+    );
+    SharedPreferences.setMockInitialValues({
+      ReviewScheduleRepository.cardsPrefKey: jsonEncode({'cat': card.toJson()}),
+      ReviewScheduleRepository.dailyStatsPrefKey: jsonEncode({
+        dateKey(answeredAt): {'learn': 1, 'review': 0},
+      }),
+      ReviewScheduleRepository.degradedJournalKey: [
+        journalEntry(word: 'cat', rating: FsrsRating.good, answeredAt: answeredAt, ratingId: 'r-dup-1'),
+      ],
+    });
+
+    final store = await ReviewScheduleStore.forTest(db);
+    final repo = ReviewScheduleRepository(store: store);
+    await repo.initialize();
+
+    final rows = await db.query('fsrs_cards', where: 'word = ?', whereArgs: ['cat']);
+    expect(rows, hasLength(1));
+    // blob 卡已含该评分；若回放二次应用，last_review 会被推到现在、review_count 虚增。
+    final lastReview = DateTime.parse(rows.single['last_review']! as String);
+    expect(lastReview.difference(answeredAt).inSeconds.abs(), lessThanOrEqualTo(1), reason: '回放不得二次应用已含评分');
+    expect(rows.single['review_count'], card.reviewCount, reason: 'review_count 不得虚增');
+  });
+
+  test('审计 A2：SP marker 丢失但 DB marker 在 → 重迁移不翻倍统计', () async {
+    final answeredAt = DateTime.now();
+    final card = FsrsCard(
+      word: 'dog',
+      stability: 3,
+      difficulty: 5,
+      isNew: false,
+      lastReview: answeredAt,
+      dueDate: answeredAt,
+    );
+    final sp = {
+      ReviewScheduleRepository.cardsPrefKey: jsonEncode({'dog': card.toJson()}),
+      ReviewScheduleRepository.dailyStatsPrefKey: jsonEncode({
+        dateKey(answeredAt): {'learn': 1, 'review': 0},
+      }),
+    };
+    SharedPreferences.setMockInitialValues(sp);
+    final store = await ReviewScheduleStore.forTest(db);
+    await ReviewScheduleRepository(store: store).initialize();
+    final first = (await db.query('fsrs_daily_stats')).single['learn'];
+
+    // 模拟「事务提交后 SP marker 写失败」：清掉 SP marker，DB marker 仍在。
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(ReviewScheduleRepository.migratedMarkerKey);
+    await ReviewScheduleRepository(store: store).initialize();
+    final second = (await db.query('fsrs_daily_stats')).single['learn'];
+    expect(second, first, reason: 'DB 标记在则不重迁移，统计不得累加翻倍');
+  });
 }

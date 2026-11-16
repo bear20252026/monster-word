@@ -1,8 +1,11 @@
 // 主壳：三个一级 Tab（首页/词库/我的），透明悬浮底栏
 // 渲染自 Figma MainShell.js
 // 手机/平板同构，差异仅在图标尺寸和栏高（由 responsive 生成）
+import 'dart:async';
+
 import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:word_app/tokens/starbucks_tokens.dart';
 import 'package:word_app/widgets/app_dock.dart';
@@ -61,7 +64,9 @@ class _MainShellState extends State<MainShell> {
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         final shouldPop = await _onWillPop();
-        if (shouldPop && context.mounted) Navigator.of(context).pop();
+        // 审计 C1（2026-11-15）：MainShell 是 '/' 唯一根路由，手动 pop 会弹掉
+        // 栈底导致黑屏。双击返回应经系统通道退出应用，而非 pop 根路由。
+        if (shouldPop && context.mounted) unawaited(SystemNavigator.pop());
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,

@@ -52,11 +52,14 @@ class AuthSession {
     try {
       decoded = jsonDecode(raw);
     } catch (e, s) {
-      onError?.call(e, s);
+      // 审计 D1（2026-11-15）：FormatException.source 自带原文（含 token），
+      // 上报前剥离 source，只保留类型信息，杜绝凭据经 Sentry 泄漏。
+      onError?.call(FormatException('会话 JSON 解析失败（${e.runtimeType}，原文已脱敏）'), s);
       return null;
     }
     if (decoded is! Map<String, dynamic>) {
-      onError?.call(FormatException('会话不是 JSON 对象', raw), StackTrace.current);
+      // 审计 D1：不把 raw 塞进异常 source（会随上报字符串化泄漏 token）。
+      onError?.call(FormatException('会话不是 JSON 对象（原文已脱敏）'), StackTrace.current);
       return null;
     }
 
