@@ -177,5 +177,24 @@ void main() {
         reason: '重建后恢复索引路径',
       );
     });
+
+    test('审计 R16：失效后立即重建——旧句柄关闭完成前不 open（无竞态残留）', () async {
+      final index = makeIndex();
+      await index.ensureBuilt(wordsDb: wordsDb, wordsPath: wordsPath, indexPath: indexPath);
+      File(wordsPath).setLastModifiedSync(DateTime.now().add(const Duration(hours: 1)));
+      // 触发失效（内部登记旧句柄关闭 Future）
+      expect(await index.searchByInterpret(wordsDb: wordsDb, query: '苹果', escapedQuery: '苹果', limit: 50), isNull);
+      // 不给关闭留任何时间片，立即重建：ensureBuilt 必须先 await 关闭再 open。
+      await index.ensureBuilt(wordsDb: wordsDb, wordsPath: wordsPath, indexPath: indexPath);
+      expect(index.isReady, isTrue);
+      final hits = await index.searchByInterpret(wordsDb: wordsDb, query: '苹果', escapedQuery: '苹果', limit: 50);
+      expect(hits, isNotNull);
+      expect(hits!.map((r) => r['word']), contains('apple'));
+      // 连续第二轮失效→重建同样稳定（关闭 Future 不残留复用）。
+      File(wordsPath).setLastModifiedSync(DateTime.now().add(const Duration(hours: 2)));
+      expect(await index.searchByInterpret(wordsDb: wordsDb, query: '苹果', escapedQuery: '苹果', limit: 50), isNull);
+      await index.ensureBuilt(wordsDb: wordsDb, wordsPath: wordsPath, indexPath: indexPath);
+      expect(index.isReady, isTrue);
+    });
   });
 }

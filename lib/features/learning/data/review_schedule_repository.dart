@@ -643,7 +643,12 @@ class ReviewScheduleRepository extends ChangeNotifier {
   /// P1-01：SQLite 故障降级期间的评分意图日志（SP StringList，逐条 JSON）。
   /// SQLite 恢复后按序幂等回放（fsrs_rating_log 主键去重），成功后清空。
   static const degradedJournalKey = 'fsrs6_degraded_journal_v1';
-  static const int degradedJournalCap = 5000;
+
+  /// 审计 R17（2026-11-16）：上限 5000→50000。DB marker=done 后恢复只靠回放，
+  /// 降级期评分超上限最旧被丢（极端场景永久丢失）。每条日志 ~150B，5 万条 // scale-ok: SP 日志容量预算估算，非词库规模断言
+  /// ≈7.5MB SP 体积——降级本身是罕见故障态，用一次性体积换评分不丢；
+  /// 超限仍丢最旧并上报（可观测取舍不变）。
+  static const int degradedJournalCap = 50000;
 
   // P3-4：降级日志 append/replay/journalReviewedAt 已抽至 ReviewScheduleJournal。
 

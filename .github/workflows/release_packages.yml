@@ -315,11 +315,15 @@ jobs:
           $sig = Get-AuthenticodeSignature -FilePath $dst
           Write-Host "vc_redist signed by: $($sig.SignerCertificate.Subject)"
           if ($sig.Status -ne 'Valid') { throw "vc_redist Authenticode signature invalid: $($sig.Status)" }
-          if ($sig.SignerCertificate.Subject -notmatch 'Microsoft') { throw "vc_redist not signed by Microsoft" }
+          # 审计 R24（2026-11-16）：弱匹配 'Microsoft' 子串可被「CN=Microsoft Fake
+          # Software」之类无关证书蒙混——改精确锚定微软官方主体（ Corporation 后缀）。
+          if ($sig.SignerCertificate.Subject -notmatch 'CN=Microsoft Corporation') { throw "vc_redist not signed by Microsoft Corporation: $($sig.SignerCertificate.Subject)" }
 
       - name: Install Inno Setup
         shell: pwsh
-        run: choco install innosetup --no-progress -y
+        # 审计 R24（2026-11-16）：锁定版本——供应链可复现，防上游静默升级
+        # 改变安装包行为（与 actions SHA 固定同口径）。升级时显式改版本号。
+        run: choco install innosetup --version=6.4.3 --no-progress -y
 
       - name: Build installer (ISCC)
         shell: pwsh
@@ -388,8 +392,13 @@ jobs:
           $exes = Get-ChildItem 'build/installer' -Filter 'MonsterWord_Setup_v*.exe'
           if (-not $exes) { throw 'installer exe not found for signing' }
 
+          # 审计 R24（2026-11-16）：密码不走命令行参数（/p 会出现在进程列表/
+          # 可能的诊断日志里）——写临时文件经 /pfile 传递，用后即删。
+          $pwFile = Join-Path $env:RUNNER_TEMP 'codesign.pw'
+          [IO.File]::WriteAllText($pwFile, $env:CERT_PASSWORD)
+
           foreach ($exe in $exes) {
-            & $signtool sign /f $pfx /p $env:CERT_PASSWORD /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $exe.FullName
+            & $signtool sign /f $pfx /pfile $pwFile /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $exe.FullName
             if ($LASTEXITCODE -ne 0) { throw "signtool failed for $($exe.Name)" }
             $sig = Get-AuthenticodeSignature -FilePath $exe.FullName
             Write-Host "$($exe.Name) signed by: $($sig.SignerCertificate.Subject)"
@@ -397,6 +406,7 @@ jobs:
           }
 
           Remove-Item $pfx -Force
+          Remove-Item $pwFile -Force
 
       - name: Archive obfuscation symbols (MW-75)
         shell: pwsh

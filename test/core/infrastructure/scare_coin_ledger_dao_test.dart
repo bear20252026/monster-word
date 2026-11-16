@@ -105,6 +105,24 @@ void main() {
       expect(await dao.balance(), 2, reason: '失败变动不得把余额写穿为负（TOCTOU 窗口兜底）');
       expect(await db.query('scare_coin_entries'), hasLength(1), reason: '被拒流水不落表');
     });
+
+    test('审计 R18：同毫秒同签名两条真流水都补插，重复回灌仍幂等', () async {
+      final dao = ScareCoinLedgerDao(openDatabase: () async => db);
+      await dao.ensureLoaded();
+      final base = DateTime.fromMillisecondsSinceEpoch(1760000000000);
+      await dao.applyDelta(delta: 5, entry: entry(5, '学习完成', at: base));
+
+      // 降级期 SP 快照：同毫秒同签名共 3 条（DB 已有 1 条）+ 余额 15。
+      final spEntries = [entry(5, '学习完成', at: base), entry(5, '学习完成', at: base), entry(5, '学习完成', at: base)];
+      await dao.mergeSpDegradationSnapshot(spBalance: 15, spEntries: spEntries, spEventKeys: const []);
+      expect(await dao.balance(), 15);
+      expect(await dao.history(), hasLength(3), reason: '旧 Set 去重会吞掉同签名真流水 ⇒ 余额≠Σ流水');
+
+      // 重复回灌同一快照：多重集计数已覆盖，不得再补插。
+      await dao.mergeSpDegradationSnapshot(spBalance: 15, spEntries: spEntries, spEventKeys: const []);
+      expect(await dao.history(), hasLength(3), reason: '重复回灌幂等');
+      expect(await dao.balance(), 15);
+    });
   });
 
   group('ScareCoinLedgerDao（FLUTTER_TEST 未注入 → SP 回退）', () {

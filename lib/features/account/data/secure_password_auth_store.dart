@@ -29,15 +29,18 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
 
   final FlutterSecureStorage _storage;
 
-  /// PBKDF2 迭代数。基准（本机 Windows/JIT）：6 万次 ≈190ms，AOT 更快，
-  /// 低端 Android 约 0.5-1s（仅登录/设密码时执行，可接受）。
-  /// 存储格式自带迭代数，后续上调无需迁移。
+  /// PBKDF2 迭代数。审计 R24（2026-11-16）：6 万→60 万（OWASP 建议
+  /// PBKDF2-HMAC-SHA256 600k）。按旧基准（6 万 ≈190ms JIT）线性推算：
+  /// 桌面 ≈2s、低端 Android 数秒——仅登录/设密码时执行且全程后台 isolate
+  /// （R3-D04），UI 出帧不受影响；安全存储被提取后的爆破成本同步提高 10×。
+  /// 存储格式自带迭代数：存量 6 万轮哈希按存储值验证（不受本次上调影响），
+  /// 验证成功且轮数低于当前参数时透明重哈希升级（见 [verify]）。
   ///
   /// R3-D04：这个量级的同步计算**不能放在主 isolate**（登录/设密码期间
   /// 无法出帧，按钮涟漪与 loading 全都不动）。运行期一律走 [deriveInBackground]，
   /// 主 isolate 只做比较与持久化。下面的纯函数保留同步形态仅供单测与
   /// 后台 isolate 内部调用。
-  static const int pbkdf2Iterations = 60000;
+  static const int pbkdf2Iterations = 600000;
 
   static const _hashPrefix = 'pbkdf2-sha256';
 
@@ -62,7 +65,7 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
     return Uint8List.fromList(out.toBytes().sublist(0, dkLen));
   }
 
-  /// 纯函数哈希（可单测）：`PBKDF2-HMAC-SHA256(salt, password, 6 万轮)`，
+  /// 纯函数哈希（可单测）：`PBKDF2-HMAC-SHA256(salt, password, 60 万轮)`，
   /// 存储格式 `pbkdf2-sha256$<iterations>$<hex>`。
   static String hashPassword(String salt, String password) => _encodePbkdf2(salt, password, pbkdf2Iterations);
 
@@ -71,7 +74,7 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
     return '$_hashPrefix\$$iterations\$${_toHex(derived)}';
   }
 
-  /// 后台 isolate 版哈希（R3-D04）：把 6 万轮 PBKDF2 移出主 isolate，
+  /// 后台 isolate 版哈希（R3-D04）：把 60 万轮 PBKDF2 移出主 isolate，
   /// 登录/设密码期间 UI 仍可出帧。跨 isolate 只传三个入参，返回一个
   /// 64 字符的 hex 串——消息开销可忽略，与计算量完全不成比例。
   ///
@@ -121,7 +124,24 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
       if (iterations < minIterations || iterations > maxIterations) return false;
       // R3-D04：后台 isolate 派生，主 isolate 只做常量时间比较
       final derived = await deriveInBackground(salt, password, iterations: iterations);
-      return _constantTimeEquals(derived, hash);
+      if (!_constantTimeEquals(derived, hash)) return false;
+      // 审计 R24：存量低轮数哈希（如旧版 6 万轮）验证成功后透明升级到当前
+      // 参数——与单轮 SHA-256 升级同口径（同盐重哈希，无需用户重设密码）。
+      // 升级写失败不影响本次登录结果（下次成功登录会再试）。
+      if (iterations < pbkdf2Iterations) {
+        try {
+          final upgraded = jsonEncode({
+            'v': 2,
+            'algorithm': _hashPrefix,
+            'salt': salt,
+            'hash': await deriveInBackground(salt, password),
+          });
+          await _storage.write(key: '$prefix.credential', value: upgraded);
+        } catch (e, s) {
+          reportSwallowedError('密码哈希轮数透明升级写入失败', e, s);
+        }
+      }
+      return true;
     }
 
     // 存量单轮 SHA-256：验证通过则透明升级为 PBKDF2（同盐，无需用户重设）；

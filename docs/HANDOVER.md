@@ -146,7 +146,11 @@ flutter test                                                       # 全量 1675
 - 步骤4（PR #231，问题3b）：ScareCoinStore 拆 4 窄端口（CoinLedger/CheckInCalendar/ProtectionCard/AnswerReward），聚合门面保留（24 消费方+11 fake 零改动）；单实例 Provider.value 五类型暴露（同作用域，共享串行门/降级旗/水位不变）；checkin 三适配器与 missions/learning 发币收窄。
 - 步骤5（PR #233，问题3a+M4）：app.dart 15 层手工嵌套 → 有序 scope 闭包列表 + reversed.fold（REG-ARCH-003 文本序守卫零改动）；_HomeShell 三仪式（奖励补发/回家礼/首启引导）下沉 features/home/application/home_startup_coordinator.dart（窄端口+可注入时钟，演出回调留壳层）。
 - 排查沉淀：待结算队列存储为**双层编码**（外层 JSON 数组的元素是条目 JSON 字符串），契约测试 reward_queue_format_test.dart 锁定；误写对象数组按空队列处理不崩溃。
-- 第二轮审计剩余 P2/P3（R7 followRedirects、R9-R24 等）未修，按域并入后续批次；结构路线图 ①②③④ 至此全部落地。
+- 批次6（PR #234，LLM 安全族）：R7 显式 Request 禁跟随重定向（堵 Bearer 经 302→http 外泄）；R9 空/pending key 拒发正文+解析器读入前如实规则版（upgradePrimary 无缝升级）；R13 LlmClient.close 端口化+聊天/陪伴 dispose 接线；R15 消毒正则词边界/修饰词可重复/「你现在是(?!不)」/零宽替换空格/recordPersona 同口径。
+- 批次7（PR #235，UI 状态族）：R8 goHome/错误页回根经 runIgnoringPops（popUntil 只发 didPop，SDK 核验）；R10 colors 走 effectiveThemeId；R11 搜索星标 watch 订阅；R19 装配创建期 silent 预载 due；R20 宠物开关在途忽略事件+isVisible 复核；R21 单词机滚动视图；R22 速刷首屏+切换共用加载序号守卫+加载态保留类型条。
+- 批次8（PR #236，词源与安卓）：R12 matchExamBooks 领域纯函数按考试词书取词（PETS4 排除），无匹配回退全库随机+UI 诚实提示；目录端口经组合根注册（R4）；R14 proguard 补 flutter_local_notifications/Gson keep。
+- 批次9（PR #237，P3 加固）：R16 索引失效关闭 Future 化+重建前 await；R17 降级日志上限 5000→50000；R18 回灌签名去重改多重集计数（同毫秒真流水不吞、重复回灌幂等）；R23 宠物 moveBy 虚拟屏钳制；R24 PBKDF2 60 万轮+存量透明升级、Inno 锁版 6.4.3、signtool 密码 /pfile、vc_redist 发布者精确匹配、Charter w700 正体映射 BoldItalic（取得正体粗体资产后替换，owner 项）。
+- **第二轮审计 24 项至此全部处置完毕**；结构路线图 ①②③④ 全部落地。仍留 owner：R14 真机 release 排程通知复核、R23 真机多屏拖动复核、Charter-Bold 正体资产、签名证书/SENTRY_DSN（见上）。
 
 ## 8. 文档地图
 
