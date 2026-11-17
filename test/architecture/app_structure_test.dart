@@ -516,6 +516,15 @@ void main() {
         );
         prevIdx = idx;
       }
+      // 第三轮 T26：步骤5a 声明式化后，嵌套语义由「列表序 + reversed.fold」
+      // 共同承载——文本序断言只锁列表序，若有人去掉 reversed 或改 fold 方向，
+      // 14 层全反转而上面的 indexOf 断言仍绿（假绿通道）。此处补锁折叠约定：
+      // 列表首项最外层，必须 reversed.fold 从 _AppLifecycle 种子向内包裹。
+      expect(
+        appSource,
+        contains('scopes.reversed.fold<Widget>(const _AppLifecycle(), (child, scope) => scope(child))'),
+        reason: '声明式装配必须保持 reversed.fold 方向（首项最外层）；改方向=全链反转，须连同本守卫一起评审',
+      );
     });
   });
 

@@ -80,12 +80,45 @@ class SkinSystem extends ChangeNotifier {
   }
 
   /// 一键切换精选风格：同时绑定 A 档颜色主题与 B 档设计语言，原子生效。
+  ///
+  /// 第三轮 T32：旧实现连调 setDesignLanguage+setTheme——两次 notify 中间态
+  /// 可被渲染（新语言+旧主题一帧），两次独立 fire-and-forget 持久化中途退出
+  /// 留主题/语言错配存档。改为：内存先整体落位 → 单次通知 → 持久化返回值
+  /// 检查（失败上报，与 setDesignLanguage 同口径）。
   void setStyle(String id) {
     if (currentStyleId == id) return;
     final style = kMwStyles.where((s) => s.id == id).firstOrNull;
     if (style == null) return;
-    setDesignLanguage(style.languageId);
-    setTheme(style.themeId);
+    if (DesignLanguages.all.containsKey(style.languageId)) {
+      _designLanguageId = style.languageId;
+    }
+    if (themes.containsKey(style.themeId)) {
+      _themeId = style.themeId;
+      _followSystem = false; // 手动选择即退出跟随（与 setTheme 同口径）
+    }
+    notifyListeners();
+    _persistDesignLanguage(_designLanguageId);
+    _themePrefs.setThemeId(_themeId);
+  }
+
+  /// 设计语言持久化（返回值检查+失败上报）；setDesignLanguage 与 setStyle 共用。
+  void _persistDesignLanguage(String id) {
+    SharedPreferences.getInstance()
+        .then((p) => p.setString(_kDesignPrefKey, id))
+        .then<void>(
+          (saved) {
+            if (!saved) {
+              reportSwallowedError(
+                '设计语言偏好写入失败（重启后回退旧档）',
+                StateError('setString($id) returned false'),
+                StackTrace.current,
+              );
+            }
+          },
+          onError: (Object e, StackTrace s) {
+            reportSwallowedError('设计语言偏好写入失败', e, s);
+          },
+        );
   }
 
   /// 当前风格的展示名（设置行值用）。
@@ -155,22 +188,7 @@ class SkinSystem extends ChangeNotifier {
     if (!DesignLanguages.all.containsKey(id) || _designLanguageId == id) return;
     _designLanguageId = id;
     notifyListeners();
-    SharedPreferences.getInstance()
-        .then((p) => p.setString(_kDesignPrefKey, id))
-        .then<void>(
-          (saved) {
-            if (!saved) {
-              reportSwallowedError(
-                '设计语言偏好写入失败（重启后回退旧档）',
-                StateError('setString($id) returned false'),
-                StackTrace.current,
-              );
-            }
-          },
-          onError: (Object e, StackTrace s) {
-            reportSwallowedError('设计语言偏好写入失败', e, s);
-          },
-        );
+    _persistDesignLanguage(id);
   }
 
   /// 品牌风格 → 默认颜色主题映射（整站换肤 A/B 联动用）。
@@ -251,9 +269,16 @@ class SkinSystem extends ChangeNotifier {
 class SkinProvider extends InheritedNotifier<SkinSystem> {
   const SkinProvider({super.key, required SkinSystem skin, required super.child}) : super(notifier: skin);
 
+  /// 第三轮 T32：无 Provider 祖先时的回退改**共享惰性单例**——旧实现每次
+  /// build 都 new SkinSystem()（宠物第二 engine 无 SkinProvider，MonsterIcon
+  /// 每帧级重建都构造：发起 SP 读[该 engine 未注册插件，异常静默]+ChangeNotifier
+  /// 从不 dispose 的微泄漏）。回退实例进程内唯一，构造开销一次；主应用树
+  /// 恒有 Provider，不受影响。
+  static final SkinSystem _fallback = SkinSystem();
+
   static SkinSystem of(BuildContext context) {
     final provider = context.dependOnInheritedWidgetOfExactType<SkinProvider>();
-    return provider?.notifier ?? SkinSystem();
+    return provider?.notifier ?? _fallback;
   }
 }
 

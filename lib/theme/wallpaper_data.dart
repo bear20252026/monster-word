@@ -1,9 +1,12 @@
 // 壁纸数据模型与持久化
 // 应用背景系统：纯色/渐变/照片壁纸
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 /// 壁纸类型
 enum WallpaperType {
@@ -220,29 +223,50 @@ class WallpaperData {
     }
   }
 
-  /// 保存自定义壁纸列表
+  /// 第三轮 T32：自定义壁纸读-改-写串行闸——add/remove 各自 load→改→save，
+  /// 并发添加时后写覆盖先写丢条目（与奖励队列 R4 同型竞态）。
+  static Future<void> _customGate = Future<void>.value();
+
+  static Future<T> _withCustomLock<T>(Future<T> Function() action) {
+    final prev = _customGate;
+    final completer = Completer<void>();
+    _customGate = completer.future;
+    return prev.then((_) => action()).whenComplete(() => completer.complete());
+  }
+
+  /// 保存自定义壁纸列表（返回值检查：写失败上报，不静默）。
   static Future<void> _saveCustomWallpapers(List<WallpaperItem> items) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = jsonEncode(items.map((e) => e.toJson()).toList());
-    await prefs.setString(_customPrefKey, jsonStr);
+    if (!await prefs.setString(_customPrefKey, jsonStr)) {
+      reportSwallowedError(
+        '自定义壁纸列表写入失败（本次修改重启后丢失）',
+        StateError('setString(custom_wallpapers) returned false'),
+        StackTrace.current,
+      );
+    }
   }
 
   /// 添加自定义壁纸
-  static Future<void> addCustomWallpaper(WallpaperItem item) async {
-    final items = await loadCustomWallpapers();
-    items.add(item);
-    // MEM：自定义壁纸数量封顶，避免 SP/内存无界增长。
-    const maxCustom = 20;
-    if (items.length > maxCustom) {
-      items.removeRange(0, items.length - maxCustom);
-    }
-    await _saveCustomWallpapers(items);
+  static Future<void> addCustomWallpaper(WallpaperItem item) {
+    return _withCustomLock(() async {
+      final items = await loadCustomWallpapers();
+      items.add(item);
+      // MEM：自定义壁纸数量封顶，避免 SP/内存无界增长。
+      const maxCustom = 20;
+      if (items.length > maxCustom) {
+        items.removeRange(0, items.length - maxCustom);
+      }
+      await _saveCustomWallpapers(items);
+    });
   }
 
   /// 删除自定义壁纸
-  static Future<void> removeCustomWallpaper(String id) async {
-    final items = await loadCustomWallpapers();
-    items.removeWhere((w) => w.id == id);
-    await _saveCustomWallpapers(items);
+  static Future<void> removeCustomWallpaper(String id) {
+    return _withCustomLock(() async {
+      final items = await loadCustomWallpapers();
+      items.removeWhere((w) => w.id == id);
+      await _saveCustomWallpapers(items);
+    });
   }
 }

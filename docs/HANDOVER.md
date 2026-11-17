@@ -152,6 +152,14 @@ flutter test                                                       # 全量 1675
 - 批次9（PR #237，P3 加固）：R16 索引失效关闭 Future 化+重建前 await；R17 降级日志上限 5000→50000；R18 回灌签名去重改多重集计数（同毫秒真流水不吞、重复回灌幂等）；R23 宠物 moveBy 虚拟屏钳制；R24 PBKDF2 60 万轮+存量透明升级、Inno 锁版 6.4.3、signtool 密码 /pfile、vc_redist 发布者精确匹配、Charter w700 正体映射 BoldItalic（取得正体粗体资产后替换，owner 项）。
 - **第二轮审计 24 项至此全部处置完毕**；结构路线图 ①②③④ 全部落地。仍留 owner：R14 真机 release 排程通知复核、R23 真机多屏拖动复核、Charter-Bold 正体资产、签名证书/SENTRY_DSN（见上）。
 
+**2026-11-16 第三轮全面审计（32 项，报告：`monster-word-第三轮全面代码审计报告-2026-11-16.md`）→ 批次10-13 修复**：
+
+- 批次10（PR #239，P1 发版阻断）：T1 Inno 锁版 6.4.3 不存在→改真实 6.4.0（官方包页核验）；T2 signtool /pfile 非真实参数→撤回到 /p + try/finally 清理 PFX；T10 发布者校验锚定完整 CN 段；T25 APK 校验文件名补 -debugsigned 后缀口径。**教训：加固项本身未经事实核验就进了发版关键路径。**
+- 批次11（PR #240，数据/崩溃/隐私）：T13 Destroy 先快照句柄再 OnDestroy（R2 UAF 补全）；T14 journal 增 ratedAt（评分计算时刻同源），迁移比对/回放时间戳同口径；T15 mission/xp 读失败非粘性（与 A3/A6 写路径对齐）；T16 sanitize 扩展 URL 剥离 + beforeSend 全异常收口 + 搜索 context 去查询词；T23 恢复成功强制退出（DAO 旧句柄无失效广播）；T24 just_audio 惰性创建+释放后可重建（移动端 re-attach 发音恢复）；T3 LLM 超时包 send+fromStream 全程。
+- 批次12（PR #241，功能错误）：T4 bootstrap 增复习调度就绪步骤（R19 首帧预载前提成立）；T5 TEM 专业英语排除；T17 速刷首词计时补启动；T18 空壳过滤改「含可读中文」（Word.hasChineseDefinition 共享 getter）+回退也过滤；T19 loadWordsWithSource 实际来源标志（提示如实）；T20 开关首查 busy 闸+失败复核。
+- 批次13（PR #242，P3 清理）：T6 clamp 尺寸守卫；T7 消毒「是否」豁免；T8 截断前置防回溯；T11 Resilient 关闭标志（迟到升级即关）；T12 删 setApiKey 死代码+apiKey final；T21 迭代上限 8 倍→2 倍；T26 REG-ARCH-003 补 fold 方向断言；T27 账本实例顶层单例跨 build 稳定；T28 扩池世代号防迟到覆盖；T29 恢复重建二次钳制；T30 复习词池每局 reset；T31 协调器保护卡缺席上报+奖励服务时钟注入；T32 setStyle 原子化/壁纸串行闸/缓存键消毒/消息损坏不覆写/CI gzip -t 完整性/perf --profile/皮肤回退共享单例。
+- **第三轮审计 32 项至此全部处置完毕**。门禁经验：flutter 工具网络波动后卡 pub 检查——改 `dart analyze` 直跑 + `flutter test --no-pub`（口径等价）。仍留 owner：签名证书/SENTRY_DSN/真机复核项（见上）。
+
 ## 8. 文档地图
 
 | 位置 | 性质 |

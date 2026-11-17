@@ -39,7 +39,10 @@ jobs:
 
       - name: Run integration test (real Windows desktop)
         shell: pwsh
-        run: flutter test ${{ inputs.target }} -d windows --reporter expanded
+        # 第三轮 T32：perf_profile_test 头部明确要求 --profile（debug 帧数据
+        # 无代表性，jank/内存曲线失真）——旧命令漏了该标志。e2e_real_auth 同样
+        # 按 profile 跑（真实桌面路径，口径一致）。
+        run: flutter test ${{ inputs.target }} -d windows --profile --reporter expanded
 
       - name: Upload perf report (if produced)
         if: always()

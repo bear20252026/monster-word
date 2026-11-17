@@ -36,7 +36,12 @@ jobs:
         run: flutter pub outdated --no-dev-dependencies || true
 
       - name: Verify wordbook asset
-        run: test -s assets/db/wordbook.db.gz
+        # 第三轮 T32：旧校验仅 test -s（非空）——非空但损坏的 gz 可通过 CI 进
+        # 正式包（用户端解压失败词库全废）。gzip -t 校验压缩流完整性（不解压
+        # 落盘，秒级）；Ubuntu runner 自带 gzip。
+        run: |
+          test -s assets/db/wordbook.db.gz
+          gzip -t assets/db/wordbook.db.gz
 
       - name: Verify Dart formatting
         shell: bash

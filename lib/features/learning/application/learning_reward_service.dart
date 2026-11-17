@@ -33,10 +33,15 @@ class SessionRewardResult {
 }
 
 class LearningRewardService {
-  LearningRewardService(this._store);
+  LearningRewardService(this._store, {DateTime Function()? now}) : _now = now ?? DateTime.now;
 
   // 结构修复步骤4：依赖收窄为账本窄端口（只需 grant/grantOnce）。
   final CoinLedger _store;
+
+  /// 第三轮 T31：时钟注入（测试用）——协调器 now 可注入但 drain 内跨天判定
+  /// 旧实现恒 DateTime.now()，注入时钟的测试中回家判定与奖励跨天口径分裂。
+  /// 缺省 DateTime.now 生产行为不变。
+  final DateTime Function() _now;
 
   static const int _sessionMinWords = 10;
   static const int _sessionReward = 5;
@@ -197,7 +202,7 @@ class LearningRewardService {
 
   static bool _draining = false;
 
-  String _today() => DateTime.now().toIso8601String().substring(0, 10);
+  String _today() => _now().toIso8601String().substring(0, 10);
 
   /// 审计 R6（2026-11-16）：队列条目幂等结算。与 [settleSession] 同口径（每日
   /// 会话上限/目标当日一次/跨天作废），但发币走 [ScareCoinStore.grantOnce]，
