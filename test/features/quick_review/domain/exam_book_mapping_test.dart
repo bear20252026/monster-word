@@ -46,4 +46,20 @@ void main() {
     final two = [b(1, 'CET4', '四级词汇'), b(9, 'CET4ZT', '四级真题')];
     expect(matchExamBooks(ExamType.cet4, two).map((e) => e.id).toSet(), {1, 9});
   });
+
+  test('第三轮 T5：专业英语（TEM）系列排除，不误配 CET4/CET6', () {
+    final temBooks = [
+      b(10, 'TEM4', '专业四级词汇'),
+      b(11, 'TEM8', '专业八级词汇'),
+      b(12, 'ZY4', '专四核心'),
+      b(13, 'ZY8', '专八核心'),
+      b(14, 'TEM-4', '英语专业四级'),
+    ];
+    for (final book in temBooks) {
+      expect(matchExamBooks(ExamType.cet4, [book]), isEmpty, reason: '${book.name} 不是 CET4');
+      expect(matchExamBooks(ExamType.cet6, [book]), isEmpty, reason: '${book.name} 不是 CET6');
+    }
+    // 正常 CET 书不受新排除词影响。
+    expect(matchExamBooks(ExamType.cet4, [b(1, 'CET4', '四级词汇')]).map((e) => e.id), [1]);
+  });
 }
