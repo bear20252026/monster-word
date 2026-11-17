@@ -43,8 +43,10 @@ import 'package:word_app/features/book/application/book_word_list_reader.dart';
 import 'package:word_app/features/book/data/repository_book_catalog_reader.dart';
 import 'package:word_app/features/book/data/repository_book_word_list_reader.dart';
 import 'package:word_app/features/dictionary/application/dictionary_content_reader.dart';
+import 'package:word_app/features/dictionary/application/dictionary_extra_reader.dart';
 import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
+import 'package:word_app/features/dictionary/data/dictionary_extra.dart';
 import 'package:word_app/features/dictionary/data/service_dictionary_content_reader.dart';
 import 'package:word_app/features/dictionary/data/service_dictionary_new_word_writer.dart';
 import 'package:word_app/features/dictionary/data/service_dictionary_search_reader.dart';
@@ -150,7 +152,14 @@ Future<void> setupServiceLocator() async {
   _reg<DictionaryContentReader>(() => ServiceDictionaryContentReader(database: sl<WordBookDatabase>()));
   // P1-6（架构审计 2026-11-12）：词典搜索统一走 WordRepository 索引单栈。
   _reg<DictionarySearchReader>(() => ServiceDictionarySearchReader(repository: sl<WordRepository>()));
-  _reg<DictionaryNewWordWriter>(() => ServiceDictionaryNewWordWriter(userDatabase: sl<UserDatabase>()));
+  // 第四轮审计 M2（2026-11-17）：注入 DI 单例仓储——此前适配器自建第二实例，
+  // 实例级 _toggleQueue 串行闸与学习域互不互斥（双闸竞态）。
+  _reg<DictionaryNewWordWriter>(() => ServiceDictionaryNewWordWriter(repository: sl<NewWordRepository>()));
+  // 第四轮审计 M14（2026-11-17）：补充数据读取端口上移组合根（providers 只取 sl）。
+  // M1 收藏写适配器不在此注册：它必须消费 learning scope 创建的
+  // LearningFavoritesStore **同一实例**（Provider 树内生命周期），由
+  // dictionary_feature_providers 经 context.read 构造（PresentationPrefs 同款家法）。
+  _reg<DictionaryExtraReader>(() => const RepositoryDictionaryExtraReader());
 
   // ========== Service Layer（服务层）==========
   // AudioService（音频播放）

@@ -31,9 +31,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  # 第四轮审计 M17（2026-11-17）：cupertino_icons / flutter_svg 全库零引用
+  # （CupertinoIcons / SvgPicture 无任何 import），已移除。
 
   # 跨平台数据库：Android/iOS 用 sqflite，Windows 用 sqflite_common_ffi
   sqflite: ^2.4.1
@@ -47,7 +46,6 @@ dependencies:
   flutter_secure_storage: ^9.2.4  # Token/Secret 安全存储（替代 SharedPreferences 明文）
   package_info_plus: ^8.0.0  # 读取版本号（词库资产指纹，审计 P2）
   audioplayers: ^6.1.0     # 跨平台音频播放（单词发音/例句）
-  flutter_svg: ^2.0.17     # 原版 vector 图标渲染
   crypto: ^3.0.6           # MD5/SHA 加密（原版 SecurityUtils）
   http: ^1.2.2             # 网络请求（原版 CoolHttpClientV3）
   url_launcher: ^6.3.0     # 外部链接打开（检查更新跳 Release 页/评价跳仓库页）

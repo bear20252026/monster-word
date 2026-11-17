@@ -11,9 +11,9 @@ import 'package:word_app/features/dictionary/application/dictionary_extra_reader
 import 'package:word_app/features/dictionary/application/dictionary_favorite_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_new_word_writer.dart';
 import 'package:word_app/features/dictionary/application/dictionary_search_reader.dart';
-import 'package:word_app/features/dictionary/data/dictionary_extra.dart';
 import 'package:word_app/features/dictionary/data/service_dictionary_favorite_writer.dart';
 import 'package:word_app/features/dictionary/presentation/dictionary_detail_state.dart';
+import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 
 /// 装配字典功能域的全部依赖。
 ///
@@ -25,10 +25,18 @@ Widget buildDictionaryFeatureScope({required Widget child}) {
       // 审计 I6：从组合根取端口（构造内已显式注入数据库，presentation 不直连 infrastructure）
       Provider<DictionaryContentReader>(create: (_) => sl<DictionaryContentReader>()),
       Provider<DictionarySearchReader>(create: (_) => sl<DictionarySearchReader>()),
-      Provider<DictionaryFavoriteWriter>(create: (_) => ServiceDictionaryFavoriteWriter()),
+      // 第四轮审计 M1/M14（2026-11-17）：端口统一装配根——生词/补充数据从 sl 取
+      // （注册见 service_locator，M2 注入 DI 单例仓储消双闸）。收藏写适配器必须
+      // 消费 learning scope 的 LearningFavoritesStore **同一实例**（M1：写后快照
+      // 同步+通知，search/book/content 即时刷新），故经 context.read 构造——
+      // 本 scope 在 app.dart 中位于 learning 内层（PresentationPrefs R2 同款家法）；
+      // 独立测试请在自己树上挂 Provider<LearningFavoritesStore>.value。
+      Provider<DictionaryFavoriteWriter>(
+        create: (context) => ServiceDictionaryFavoriteWriter(favoritesStore: context.read<LearningFavoritesStore>()),
+      ),
       Provider<DictionaryNewWordWriter>(create: (_) => sl<DictionaryNewWordWriter>()),
       // 字典补充数据（派生/近义/真题）：presentation 只经端口消费（R3 presentation↛data）
-      Provider<DictionaryExtraReader>(create: (_) => const RepositoryDictionaryExtraReader()),
+      Provider<DictionaryExtraReader>(create: (_) => sl<DictionaryExtraReader>()),
       // N10：查词/偏好端口（R-core-repo / R-prefs）——presentation 不 import core 仓储/SP
       Provider<WordLookupReader>(create: (_) => RepositoryWordLookupReader(sl<WordRepository>())),
       // R2：PresentationPrefs 由外层 learning scope 注入（app.dart 中 learning ⊃ dictionary），
