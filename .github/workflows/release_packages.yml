@@ -226,7 +226,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          apk="MonsterWord_v${android_version}+${app_build}.apk"
+          # 第三轮 T25：Rename 步给 debug 签名产物加了 -debugsigned 后缀，
+          # 校验步却用无后缀名——无 secrets 的 main push 在此 FileNotFoundError
+          # 必红。文件名口径与 Rename 步完全一致。
+          if [ "${signed:-}" = "debug" ]; then suffix="-debugsigned"; else suffix=""; fi
+          apk="MonsterWord_v${android_version}+${app_build}${suffix}.apk"
           if [ "${signed:-}" = "debug" ]; then
             echo "::warning::本次为 debug 签名产物（缺 KEYSTORE_* secrets），只打印指纹不做比对"
             python3 scripts/check_apk_signature.py "$apk" --print
@@ -316,14 +320,20 @@ jobs:
           Write-Host "vc_redist signed by: $($sig.SignerCertificate.Subject)"
           if ($sig.Status -ne 'Valid') { throw "vc_redist Authenticode signature invalid: $($sig.Status)" }
           # 审计 R24（2026-11-16）：弱匹配 'Microsoft' 子串可被「CN=Microsoft Fake
-          # Software」之类无关证书蒙混——改精确锚定微软官方主体（ Corporation 后缀）。
-          if ($sig.SignerCertificate.Subject -notmatch 'CN=Microsoft Corporation') { throw "vc_redist not signed by Microsoft Corporation: $($sig.SignerCertificate.Subject)" }
+          # Software」之类无关证书蒙混——改锚定微软官方主体。
+          # 第三轮 T10：'CN=Microsoft Corporation' 仍是子串匹配（可中
+          # 「CN=Microsoft Corporation X」）——锚定完整 CN 段：后面必须是逗号
+          # （接 O=/L= 等后续字段）或字符串结尾。
+          if ($sig.SignerCertificate.Subject -notmatch '(^|,\s*)CN=Microsoft Corporation(,|$)') { throw "vc_redist not signed by Microsoft Corporation: $($sig.SignerCertificate.Subject)" }
 
       - name: Install Inno Setup
         shell: pwsh
         # 审计 R24（2026-11-16）：锁定版本——供应链可复现，防上游静默升级
         # 改变安装包行为（与 actions SHA 固定同口径）。升级时显式改版本号。
-        run: choco install innosetup --version=6.4.3 --no-progress -y
+        # 第三轮 T1：6.4.3 在 Chocolatey 社区源**不存在**（版本历史 6.4.0→6.5.4
+        # →6.6.x→6.7.x，官方包页核验）——锁不存在的版本使发版必红。改锁真实
+        # 存在且最接近原意图的 6.4.0；升级前必须先查包页确认版本存在。
+        run: choco install innosetup --version=6.4.0 --no-progress -y
 
       - name: Build installer (ISCC)
         shell: pwsh
@@ -392,21 +402,21 @@ jobs:
           $exes = Get-ChildItem 'build/installer' -Filter 'MonsterWord_Setup_v*.exe'
           if (-not $exes) { throw 'installer exe not found for signing' }
 
-          # 审计 R24（2026-11-16）：密码不走命令行参数（/p 会出现在进程列表/
-          # 可能的诊断日志里）——写临时文件经 /pfile 传递，用后即删。
-          $pwFile = Join-Path $env:RUNNER_TEMP 'codesign.pw'
-          [IO.File]::WriteAllText($pwFile, $env:CERT_PASSWORD)
-
-          foreach ($exe in $exes) {
-            & $signtool sign /f $pfx /pfile $pwFile /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $exe.FullName
-            if ($LASTEXITCODE -ne 0) { throw "signtool failed for $($exe.Name)" }
-            $sig = Get-AuthenticodeSignature -FilePath $exe.FullName
-            Write-Host "$($exe.Name) signed by: $($sig.SignerCertificate.Subject)"
-            if ($sig.Status -ne 'Valid') { throw "installer signature invalid: $($sig.Status)" }
+          # 第三轮 T2：signtool sign **没有 /pfile 参数**（微软官方选项表全量
+          # 枚举核验，只有 /p）——R24 发明的 /pfile 使配置证书后签名步必失败。
+          # 撤回 /p（官方唯一密码通道）；密码经 env 传入不落 echo，PFX 与任何
+          # 中间文件在 try/finally 里清理（T9：throw 路径也不残留）。
+          try {
+            foreach ($exe in $exes) {
+              & $signtool sign /f $pfx /p $env:CERT_PASSWORD /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $exe.FullName
+              if ($LASTEXITCODE -ne 0) { throw "signtool failed for $($exe.Name)" }
+              $sig = Get-AuthenticodeSignature -FilePath $exe.FullName
+              Write-Host "$($exe.Name) signed by: $($sig.SignerCertificate.Subject)"
+              if ($sig.Status -ne 'Valid') { throw "installer signature invalid: $($sig.Status)" }
+            }
+          } finally {
+            Remove-Item $pfx -Force -ErrorAction SilentlyContinue
           }
-
-          Remove-Item $pfx -Force
-          Remove-Item $pwFile -Force
 
       - name: Archive obfuscation symbols (MW-75)
         shell: pwsh
