@@ -11,6 +11,7 @@ import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/application/restore_cache_reset.dart';
 import 'package:word_app/core/application/theme_prefs.dart';
 
 import 'package:word_app/tokens/design_language.dart';
@@ -145,6 +146,23 @@ class SkinSystem extends ChangeNotifier {
     // 异步恢复字体偏好（构造器是同步的，加载后通知刷新）
     _loadFontPreference();
     _loadDesignPreference();
+    // 第四轮审计 M18（2026-11-17）：备份恢复后重读主题/字体/设计语言偏好。
+    RestoreCacheResetBus.register(reloadForRestore);
+  }
+
+  /// 恢复后重读全部 SP 偏好（主题 id/跟随系统/字体/设计语言）。
+  Future<void> reloadForRestore() async {
+    try {
+      final saved = _themePrefs.getThemeId();
+      _themeId = themes.containsKey(saved) ? saved : 'starbucks_cream';
+      _themeId = legacyThemeMigration[_themeId] ?? _themeId;
+      _followSystem = _themePrefs.isFollowSystem();
+    } catch (_) {
+      // 测试环境或未初始化时保持现值
+    }
+    await _loadFontPreference();
+    await _loadDesignPreference();
+    notifyListeners();
   }
 
   Future<void> _loadFontPreference() async {

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:word_app/features/missions/application/daily_mission_repository.dart';
+import 'package:word_app/core/application/restore_cache_reset.dart';
 import 'package:word_app/features/missions/domain/daily_mission.dart';
 
 // 跨功能消费方（learning 等）只允许 import 本 application 层（架构守卫 R4），
@@ -41,7 +42,16 @@ class DailyMissionView {
 /// [recordNewWordLearned] / [recordReviewedWord] / [recordSessionAccuracyPercent]。
 /// 发币不在这里做（本类不依赖币账本），由 `DailyMissionRewardService` 结算。
 class DailyMissionStore extends ChangeNotifier {
-  DailyMissionStore({required this.repository, DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
+  DailyMissionStore({required this.repository, DateTime Function()? clock}) : _clock = clock ?? DateTime.now {
+    // 第四轮审计 M18（2026-11-17）：备份恢复后强制重载当天任务。
+    RestoreCacheResetBus.register(reloadForRestore);
+  }
+
+  @override
+  void dispose() {
+    RestoreCacheResetBus.unregister(reloadForRestore);
+    super.dispose();
+  }
 
   final DailyMissionRepository repository;
   final DateTime Function() _clock;
@@ -100,6 +110,19 @@ class DailyMissionStore extends ChangeNotifier {
 
   List<DailyMissionView> get completedUnclaimed =>
       missions.where((m) => m.completed && !m.rewardClaimed).toList(growable: false);
+
+  /// 第四轮审计 M18（2026-11-17）：备份恢复后强制重载当天任务——
+  /// _reloadIfDayChanged 同日命中缓存，不复位则恢复库的进度被旧内存值盖住。
+  Future<void> reloadForRestore() {
+    return _serialized(() async {
+      _loaded = false;
+      _day = null;
+      _records = {};
+      _reviewTarget = null;
+      final changed = await _reloadIfDayChanged();
+      if (changed) notifyListeners();
+    });
+  }
 
   /// 加载当天任务并刷新复习目标。可重复调用（同一天命中缓存）。
   Future<void> ensureLoaded({required int dueNow}) {

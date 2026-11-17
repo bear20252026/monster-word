@@ -20,7 +20,19 @@ class FavoriteWordsDao {
 
   static final FavoriteWordsDao instance = FavoriteWordsDao._();
 
-  FavoriteWordsDao._() : _openOverride = null;
+  FavoriteWordsDao._() : _openOverride = null {
+    // 第四轮审计 M18（2026-11-17）：订阅库关闭失效广播——备份恢复替换库
+    // 文件后旧句柄/旧索引必须作废，下次 ensureLoaded 重取新库重建索引。
+    UserDatabase.instance.addCloseListener(invalidate);
+  }
+
+  /// 作废缓存句柄与内存索引（库关闭广播 / 测试复位用）。
+  void invalidate() {
+    _db = null;
+    _loading = null;
+    _useSqlite = false;
+    _index = <String>{};
+  }
 
   static const String _spKey = 'favorite_words_v1';
   static const String _migratedMarker = 'favorite_words_sqlite_migrated_v1';

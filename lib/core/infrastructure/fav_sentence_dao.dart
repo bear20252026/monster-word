@@ -26,7 +26,20 @@ class FavSentenceDao {
 
   static final FavSentenceDao instance = FavSentenceDao._();
 
-  FavSentenceDao._() : _openOverride = null;
+  FavSentenceDao._() : _openOverride = null {
+    // 第四轮审计 M18（2026-11-17）：订阅库关闭失效广播（收藏同款家法）。
+    UserDatabase.instance.addCloseListener(invalidate);
+  }
+
+  /// 作废缓存句柄、判重索引与 SP 回退缓存（库关闭广播 / 测试复位用）。
+  void invalidate() {
+    _db = null;
+    _loading = null;
+    _useSqlite = false;
+    _indexByWordId.clear();
+    _indexCount = 0;
+    _cache = [];
+  }
 
   static const String _spKey = 'fav_sentence_list';
   static const String _migratedMarker = 'fav_sentence_sqlite_migrated_v1';

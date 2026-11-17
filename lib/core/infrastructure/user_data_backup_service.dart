@@ -8,6 +8,10 @@
 // 策略：
 // - 每次冷启动异步触发（不阻塞 bootstrap），24h 节流（SP 记录上次成功时间）；
 // - 覆盖 user_data.db 与 review_schedule.db，输出 <db 名>-<YYYYMMDD>.bak；
+// - 第四轮审计 M3（2026-11-17）：同戳追加 SP 全量快照 sp_prefs-<YYYYMMDD>.json
+//   （经 UserDataSpRegistry：凭证键排除、类型保真）。此前 SP 独有数据
+//   （保护卡/兑换章/奖励队列/降级日志/怪兽羁绊…）完全不在备份内，恢复后
+//   SP 与 DB 不同步；新增 SP 存储也会静默漏备。全量快照口径下新键自动覆盖。
 // - 每类保留最近 3 份，超限清理最旧（先删旧、写新失败则旧仍可用）；
 // - manifest.json 记录最近一次成功备份的文件与字节数，供诊断/恢复页面读取；
 // - 任何失败只上报不抛出——备份是尽力而为的增值保护，绝不影响启动。
@@ -22,6 +26,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:word_app/core/infrastructure/user_data_sp_registry.dart';
 import 'package:word_app/core/utils/debug_log.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 
@@ -55,18 +60,29 @@ class UserDataBackupService {
       }
 
       final backedUp = <String, int>{};
+      final stamp = _dateStamp(clock);
       for (final dbName in const ['user_data.db', 'review_schedule.db']) {
         final source = File(p.join(root, dbName));
         if (!source.existsSync() || source.lengthSync() == 0) continue;
-        final stamp = _dateStamp(clock);
         final target = p.join(backupDir.path, '$dbName-$stamp.bak');
         try {
           await _snapshot(source.path, target);
           backedUp[target] = File(target).lengthSync();
-          await _pruneOldBackups(backupDir, dbName);
+          await _pruneOldBackups(backupDir, dbName, '.bak');
         } catch (e, s) {
           reportSwallowedError('数据备份失败（$dbName）', e, s);
         }
+      }
+
+      // M3：SP 全量快照（与 db 同戳）。失败只上报——db 备份仍有效，
+      // 恢复侧对缺 SP 快照的旧备份按「仅恢复 db」降级处理（见维护服务）。
+      try {
+        final spTarget = p.join(backupDir.path, 'sp_prefs-$stamp.json');
+        await _snapshotSp(spTarget);
+        backedUp[spTarget] = File(spTarget).lengthSync();
+        await _pruneOldBackups(backupDir, 'sp_prefs', '.json');
+      } catch (e, s) {
+        reportSwallowedError('SP 偏好快照备份失败（db 备份不受影响）', e, s);
       }
 
       if (backedUp.isNotEmpty) {
@@ -87,7 +103,10 @@ class UserDataBackupService {
       if (!backupDir.existsSync()) return const [];
       final entries = <Map<String, Object?>>[];
       for (final f in backupDir.listSync().whereType<File>()) {
-        if (!f.path.endsWith('.bak') && p.basename(f.path) != _manifestName) continue;
+        // M3：SP 快照（sp_prefs-*.json）也是备份件，纳入列表供诊断页展示。
+        final name = p.basename(f.path);
+        final isSpSnapshot = name.startsWith('sp_prefs-') && name.endsWith('.json');
+        if (!f.path.endsWith('.bak') && !isSpSnapshot && name != _manifestName) continue;
         entries.add({
           'name': p.basename(f.path),
           'bytes': f.existsSync() ? f.lengthSync() : 0,
@@ -271,12 +290,51 @@ class UserDataBackupService {
     return minor >= wantMinor;
   }
 
-  /// 每类库只保留最近 [keepCount] 份（按文件名中的日期戳排序）。
-  static Future<void> _pruneOldBackups(Directory backupDir, String dbName) async {
+  /// M3：SP 全量快照落盘（类型保真 JSON，凭证键已在注册表排除）。
+  /// 先写 .partial 再原子改名——半截 JSON 绝不会被恢复侧当成有效备份。
+  static Future<void> _snapshotSp(String targetPath) async {
+    final snapshot = await UserDataSpRegistry.capture();
+    final payload = {
+      'schemaVersion': 1,
+      'savedAt': DateTime.now().toIso8601String(),
+      'entries': {for (final e in snapshot.entries) e.key: e.value.toJson()},
+    };
+    final tmp = File('$targetPath.partial');
+    await tmp.writeAsString(jsonEncode(payload), flush: true);
+    final target = File(targetPath);
+    if (target.existsSync()) target.deleteSync();
+    tmp.renameSync(targetPath);
+  }
+
+  /// M3：读取并校验 SP 快照（恢复侧消费）。损坏/缺失返回 null。
+  static Future<Map<String, SpSnapshotEntry>?> readSpSnapshot(String path) async {
+    try {
+      final file = File(path);
+      if (!file.existsSync() || file.lengthSync() == 0) return null;
+      final decoded = jsonDecode(await file.readAsString());
+      if (decoded is! Map<String, dynamic>) return null;
+      final entries = decoded['entries'];
+      if (entries is! Map<String, dynamic>) return null;
+      final result = <String, SpSnapshotEntry>{};
+      for (final e in entries.entries) {
+        final raw = e.value;
+        if (raw is! Map<String, dynamic>) continue;
+        final entry = SpSnapshotEntry.fromJson(raw);
+        if (entry != null) result[e.key] = entry;
+      }
+      return result;
+    } catch (e, s) {
+      reportSwallowedError('SP 快照读取失败（$path）', e, s);
+      return null;
+    }
+  }
+
+  /// 每类备份只保留最近 [keepCount] 份（按文件名中的日期戳排序）。
+  static Future<void> _pruneOldBackups(Directory backupDir, String dbName, String suffix) async {
     final prefix = '$dbName-';
     final files = backupDir.listSync().whereType<File>().where((f) {
       final name = p.basename(f.path);
-      return name.startsWith(prefix) && name.endsWith('.bak');
+      return name.startsWith(prefix) && name.endsWith(suffix);
     }).toList()..sort((a, b) => p.basename(b.path).compareTo(p.basename(a.path)));
     for (var i = keepCount; i < files.length; i++) {
       try {

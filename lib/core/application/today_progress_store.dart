@@ -9,11 +9,17 @@
 
 import 'package:flutter/foundation.dart';
 
+import 'package:word_app/core/application/restore_cache_reset.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 class TodayProgressStore extends ChangeNotifier {
-  TodayProgressStore();
+  TodayProgressStore() {
+    // 第四轮审计 M18（2026-11-17）：备份恢复后强制重同步（SP 已 reload，
+    // 缓存复位让 sync 必然重读恢复值并通知）。due 传 0 占位——复习仓储
+    // 重开后的真实到期数由上层 Proxy 的 post-frame sync 兜底刷新。
+    RestoreCacheResetBus.register(() async => resetForRestore(due: 0));
+  }
 
   static bool _persistentStateInitialized = false;
 
@@ -83,6 +89,16 @@ class TodayProgressStore extends ChangeNotifier {
     _lastLearned = learned;
     _lastGoal = goal;
     if (changed && !silent) notifyListeners();
+  }
+
+  /// 第四轮审计 M18（2026-11-17）：备份恢复后强制重同步——SP 已 reload 到
+  /// 备份时刻，但 _lastLearned/_lastGoal/_checkedDate 缓存会让 sync 的
+  /// 「无变化不通知」吞掉恢复值。复位缓存后 sync 必然重读并通知。
+  void resetForRestore({required int due}) {
+    _lastLearned = -1;
+    _lastGoal = -1;
+    _checkedDate = '';
+    sync(due: due);
   }
 
   /// 用户修改每日目标：写 A 键并全局通知。收敛首页档位/滚轮与设置页共用此入口。

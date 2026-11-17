@@ -37,4 +37,11 @@ class NewWordIdCache {
   /// 写后维护：学习域与词典域的任何生词写路径都必须调用，
   /// 保证两域同步读一致（DB 是事实来源，预热重载会覆盖任何 mark）。
   void mark(int wordId, {required bool added}) => added ? _ids.add(wordId) : _ids.remove(wordId);
+
+  /// 第四轮审计 M18（2026-11-17）：备份恢复后复位——旧库的 ID 集合与
+  /// 已完成的加载 future 都必须作废，下次 ensureLoaded 从恢复后的库重载。
+  void invalidate() {
+    _ids.clear();
+    _loading = null;
+  }
 }

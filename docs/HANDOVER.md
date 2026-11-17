@@ -45,7 +45,7 @@ scripts/          词库构建/数据修补（Python；archive/ 为一次性历�
 assets/db/        wordbook.db.gz（只读词库，CI 有基线校验）
 ```
 
-规模：lib 501 文件 / 6.5 万行；test 280 文件 / 2.8 万行。features 16 域。
+规模：lib 503 文件 / 6.5 万行；test 283 文件 / 2.8 万行。features 16 域。
 
 ## 3. 关键机制（改代码前必读）
 
@@ -160,6 +160,11 @@ flutter test                                                       # 全量 1675
 - 批次13（PR #242，P3 清理）：T6 clamp 尺寸守卫；T7 消毒「是否」豁免；T8 截断前置防回溯；T11 Resilient 关闭标志（迟到升级即关）；T12 删 setApiKey 死代码+apiKey final；T21 迭代上限 8 倍→2 倍；T26 REG-ARCH-003 补 fold 方向断言；T27 账本实例顶层单例跨 build 稳定；T28 扩池世代号防迟到覆盖；T29 恢复重建二次钳制；T30 复习词池每局 reset；T31 协调器保护卡缺席上报+奖励服务时钟注入；T32 setStyle 原子化/壁纸串行闸/缓存键消毒/消息损坏不覆写/CI gzip -t 完整性/perf --profile/皮肤回退共享单例。
 - **第三轮审计 32 项至此全部处置完毕**。门禁经验：flutter 工具网络波动后卡 pub 检查——改 `dart analyze` 直跑 + `flutter test --no-pub`（口径等价）。仍留 owner：签名证书/SENTRY_DSN/真机复核项（见上）。
 
+**2026-11-17 第四轮架构与可维护性审计（18 项，报告：`monster-word-第四轮架构与可维护性审计报告-2026-11-17.md`）→ 批次14-18 修复**：
+
+- 批次14（PR #243，装配收口）：M1 词典收藏写经 LearningFavoritesStore 共享快照（写后通知，跨域星标即时刷新）；M2 生词适配器注入 DI 单例仓储（消双实例双串行闸）；M14 词典端口统一装配根；M17 孤儿仪表盘页+周报级联死代码+cupertino_icons/flutter_svg 零引用依赖清理。
+- 批次15（M3/M18，备份恢复闭环）：备份增 SP 全量快照 `sp_prefs-<stamp>.json`（UserDataSpRegistry：凭证键 user_token/user_secret/monster_word_user_info 排除、五类原生类型保真、新增键自动覆盖）；恢复编排扩为「校验前置→关库广播→安全替换→SP 先清后写回放→prefs.reload→重开双库→缓存复位」；UserDatabase.close 广播失效（8 个 DAO/仓储构造期订阅 invalidate）；RestoreCacheResetBus（core 纯注册表）收口 Provider 树内存态复位（收藏/掌握/生词/会话/任务/XP/今日进度/金币降级态/皮肤/壁纸/学习偏好）；**恢复成功不再 exit(0)**，就地生效；旧备份（无 SP 快照）按仅恢复 db 降级、文案如实。
+
 ## 8. 文档地图
 
 | 位置 | 性质 |
@@ -200,3 +205,4 @@ flutter test                                                       # 全量 1675
 1. 任何"损坏 → 清空重建"路径必须先上报（`reportSwallowedError`）再动作；
 2. 修复写路径时保持"解析失败保留原档"口径（REG-AUDIT-003 有损坏注入回归守护）；
 3. 新增持久化 key 时在本表登记。
+4. **自动备份覆盖面（第四轮 M3，2026-11-17）**：每日备份 = user_data.db + review_schedule.db + SP 全量快照（sp_prefs-<stamp>.json）。SP 快照经 `UserDataSpRegistry` 采集——**新增普通 SP 键自动入备份，无需登记**；但新增**凭证类**存储必须把键加进 `UserDataSpRegistry.excludedKeys`（备份是明文 JSON，凭证绝不落备份）。secure_storage（密码哈希/盐/LLM key）不在备份面：恢复后登录态由安全存储事实源自愈。

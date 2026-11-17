@@ -21,7 +21,18 @@ class MasteredWordsDao {
 
   static final MasteredWordsDao instance = MasteredWordsDao._();
 
-  MasteredWordsDao._() : _openOverride = null;
+  MasteredWordsDao._() : _openOverride = null {
+    // 第四轮审计 M18（2026-11-17）：订阅库关闭失效广播（收藏同款家法）。
+    UserDatabase.instance.addCloseListener(invalidate);
+  }
+
+  /// 作废缓存句柄与内存索引（库关闭广播 / 测试复位用）。
+  void invalidate() {
+    _db = null;
+    _loading = null;
+    _useSqlite = false;
+    _index = <String>{};
+  }
 
   static const String _spKey = 'mastered_words_v1';
   static const String _migratedMarker = 'mastered_words_sqlite_migrated_v1';
