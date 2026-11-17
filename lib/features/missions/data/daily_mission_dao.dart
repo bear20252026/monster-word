@@ -87,8 +87,10 @@ class DailyMissionDao implements DailyMissionRepository {
         }
         return result;
       } catch (e, s) {
-        reportSwallowedError('DailyMissionDao load 失败，回退内存', e, s);
-        _useSqlite = false;
+        // 第三轮 T15：与 A3 写路径同口径——瞬态读失败只本次回退内存，不置
+        // 粘性降级（旧实现一次读竞态即永久 _useSqlite=false，当日进度重启归零）。
+        // 保持 _useSqlite=true：下次 load/save 自动重试 SQLite。
+        reportSwallowedError('DailyMissionDao load 失败，本次回退内存（下次读写重试 SQLite）', e, s);
       }
     }
     return Map<DailyMissionId, DailyMissionRecord>.from(_memory[day] ?? const {});

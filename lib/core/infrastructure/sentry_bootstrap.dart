@@ -9,6 +9,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import 'package:word_app/core/utils/swallowed_error_report.dart';
+
 /// 编译参数里的 DSN（build 时 --dart-define=SENTRY_DSN=... 传入）。
 const String _kSentryDsn = String.fromEnvironment('SENTRY_DSN');
 
@@ -46,13 +48,16 @@ Future<void> runAppWithSentry(FutureOr<void> Function() appRunner) async {
     // 但 main.dart 未捕获异常走 captureException 直报，FormatException 的
     // value 仍含 source（用户笔记/例句/学习记录原文）。beforeSend 统一把
     // FormatException 异常值替换为仅含 message 的脱敏描述（保留类型分组）。
+    // 第三轮 T16：其余异常类型同样经 sanitizeErrorForReport 剥离 URL——
+    // SocketException/HttpException 的 value 含带查询词的完整发音/词典 URL。
     options.beforeSend = (event, hint) {
       final throwable = event.throwable;
-      if (throwable is FormatException) {
+      if (throwable != null) {
+        final safe = sanitizeErrorForReport(throwable);
         final exceptions = event.exceptions;
         if (exceptions != null) {
           for (final e in exceptions) {
-            e.value = 'FormatException(${throwable.message})［source 已脱敏］';
+            e.value = safe;
           }
         }
       }

@@ -5,6 +5,7 @@
 // 恢复经应用层 UserDataMaintenanceService 编排（关闭双库 + 校验 + 安全替换），
 // 成功后引导重启刷新 DAO 缓存句柄。
 import 'dart:async';
+import 'dart:io' show exit;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -76,18 +77,41 @@ Future<void> showRestoreBackupDialog(BuildContext context) async {
   }
   rootNavigator.pop();
   if (!context.mounted) return;
+  // 第三轮 T23：恢复成功后**必须重启**——各 DAO（xp/mission/账本等）缓存着
+  // 替换前的旧库句柄且无失效广播，继续使用会把写入落进已废弃的旧库、退出即丢。
+  // 成功对话框不可关闭（PopScope），唯一出口是「立即退出」exit(0)；失败则照常关闭。
   unawaited(
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        icon: Icon(
-          result.success ? Icons.check_circle_outline : Icons.error_outline,
-          color: result.success ? ctx.skin.colors.success : ctx.skin.colors.danger,
-          size: 48,
+      barrierDismissible: !result.success,
+      builder: (ctx) => PopScope(
+        canPop: !result.success,
+        child: AlertDialog(
+          icon: Icon(
+            result.success ? Icons.check_circle_outline : Icons.error_outline,
+            color: result.success ? ctx.skin.colors.success : ctx.skin.colors.danger,
+            size: 48,
+          ),
+          title: Text(result.success ? '恢复成功' : '恢复失败'),
+          content: Text(
+            result.success
+                ? '${result.message}\n\n为避免旧数据句柄继续写入造成丢失，应用现在必须退出。请重新打开 Monster Word 以加载恢复后的数据。'
+                : result.message,
+          ),
+          actions: [
+            if (result.success)
+              FilledButton(
+                onPressed: () {
+                  // 恢复已完成且双库已关闭，exit(0) 无在途写风险；
+                  // 重启后所有 DAO 重新打开替换后的库文件。
+                  exit(0);
+                },
+                child: const Text('立即退出'),
+              )
+            else
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('好的')),
+          ],
         ),
-        title: Text(result.success ? '恢复成功' : '恢复失败'),
-        content: Text(result.message),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('好的'))],
       ),
     ),
   );

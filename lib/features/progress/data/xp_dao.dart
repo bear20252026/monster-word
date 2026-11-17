@@ -81,8 +81,9 @@ class XpDao implements XpRepository {
         _memoryTotal = rows.isEmpty ? 0 : ((rows.first['total_xp'] as int?) ?? 0);
         return _memoryTotal;
       } catch (e, s) {
-        reportSwallowedError('XpDao 读取失败，回退内存', e, s);
-        _useSqlite = false;
+        // 第三轮 T15：与 A6 写路径同口径——瞬态读失败只本次回退内存缓存值，
+        // 不置粘性降级（旧实现一次读竞态即永久 _useSqlite=false，XP 重启归零）。
+        reportSwallowedError('XpDao 读取失败，本次回退内存（下次读写重试 SQLite）', e, s);
       }
     }
     return _memoryTotal;

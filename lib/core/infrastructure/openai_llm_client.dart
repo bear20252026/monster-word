@@ -79,8 +79,13 @@ class OpenAiLlmClient implements LlmClient {
         ..headers['Content-Type'] = 'application/json'
         ..headers['Authorization'] = 'Bearer $apiKey'
         ..body = body;
-      final streamed = await _http.send(request).timeout(timeout);
-      final resp = await http.Response.fromStream(streamed);
+      // 第三轮 T3：超时必须覆盖 send（响应头）+ fromStream（body 读取）全程——
+      // 旧实现只包 send，服务端慢滴 body 可无限挂起（_busy 永占）。整体限时，
+      // 超时后取消订阅关闭连接（http 流语义），不留悬挂 socket。
+      final resp = await () async {
+        final streamed = await _http.send(request);
+        return http.Response.fromStream(streamed);
+      }().timeout(timeout);
       if (resp.statusCode < 200 || resp.statusCode >= 300) {
         // 不回显服务端原文（可能含敏感信息），只报状态码。
         throw LlmException('LLM 服务端返回 ${resp.statusCode}');

@@ -87,4 +87,17 @@ void main() {
     final events = await db.query('reward_events', where: 'event_key = ?', whereArgs: ['xp:a6:3']);
     expect(events.length, 1, reason: '恢复后写入必须落 SQLite');
   });
+
+  test('第三轮 T15：瞬态读失败不粘性降级，恢复后 loadTotalXp 仍走 SQLite', () async {
+    final dao = XpDao(openDatabase: () async => db);
+    expect(await dao.addXpOnce(eventKey: 'xp:t15:1', delta: 40), 40);
+    // 制造一次瞬态读失败：删 xp_state 表 → 本次回退内存缓存值。
+    await db.execute('DROP TABLE xp_state');
+    expect(await dao.loadTotalXp(), 40, reason: '读失败本次仍返回内存缓存值');
+    expect(dao.usesSqlite, isTrue, reason: '读失败不得粘性降级（旧实现一次竞态 XP 重启归零）');
+    // 恢复表后下一次读取必须真正走库。
+    await db.execute('CREATE TABLE xp_state (id INTEGER PRIMARY KEY, total_xp INTEGER NOT NULL DEFAULT 0)');
+    await db.insert('xp_state', {'id': 1, 'total_xp': 99});
+    expect(await dao.loadTotalXp(), 99, reason: '恢复后读必须走 SQLite 而非内存旧值');
+  });
 }

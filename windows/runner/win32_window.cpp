@@ -230,11 +230,15 @@ Win32Window::MessageHandler(HWND hwnd,
 }
 
 void Win32Window::Destroy() {
+  // 第三轮 T13（R2 补全）：OnDestroy 可能 delete this（宠物自关路径清
+  // g_pet_window 即析构）——句柄必须在 OnDestroy **之前**快照，之后不得再读
+  // 任何成员。R2 只修了 MessageHandler 对 quit_on_close_ 的先读，漏了这里。
+  const HWND handle = window_handle_;
+  window_handle_ = nullptr;
   OnDestroy();
 
-  if (window_handle_) {
-    DestroyWindow(window_handle_);
-    window_handle_ = nullptr;
+  if (handle) {
+    DestroyWindow(handle);
   }
   if (g_active_window_count == 0) {
     WindowClassRegistrar::GetInstance()->UnregisterWindowClass();

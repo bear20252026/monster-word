@@ -126,7 +126,8 @@ class _SearchPageState extends State<SearchPage> {
       });
     } catch (e, s) {
       // 审计 I90：搜索失败聚合观测的源头打点（此前静默复位，失败率不可见）
-      reportSwallowedError('单词搜索失败: ${query.trim()}', e, s);
+      // 第三轮 T16：上报 context 不得含查询词原文（用户搜索内容属隐私面）。
+      reportSwallowedError('单词搜索失败', e, s);
       if (!mounted || seq != _searchSeq) return;
       setState(() {
         _results = [];

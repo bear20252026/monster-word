@@ -17,7 +17,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// 每拆小一个家族就更新对应上限；新增家族或存量增大一律红灯。
 const Map<String, int> _kPartFamilyRatchet = {
   // 1102：审计 D3（2026-11-15）音频 http→https 升级 +2（安全修复注释）。
-  'lib/core/audio/audio_players.dart': 1102,
+  // 1121：第三轮 T24（2026-11-16）just_audio 惰性创建+释放后重建 +19
+  // （修移动端 re-attach 发音永久静默；getter 挂监听替代构造期订阅）。
+  'lib/core/audio/audio_players.dart': 1121,
   // 1763：批次 14 P2-8 驱动统一边界注释 +3（签到保留裸 Ticker 的语义说明）。
   'lib/features/checkin/presentation/treasure_checkin_page.dart': 1763,
   // 1467：批次 12 P2-6 home 拆域端口化 +5（Reader/Starter 导入与注释）。

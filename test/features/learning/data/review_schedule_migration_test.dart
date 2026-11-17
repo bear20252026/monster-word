@@ -234,4 +234,61 @@ void main() {
     expect(prefs.getString(ReviewScheduleRepository.dailyStatsPrefKey), isNotNull);
     expect(prefs.getStringList(ReviewScheduleRepository.activeDatesPrefKey), isNotEmpty);
   });
+
+  test('第三轮 T14：写闸延迟使 savedAt 晚于 lastReview 数秒——ratedAt 同源仍预登记（不双回放）', () async {
+    // blob 卡 lastReview=09:00:00（legacyCardJson）；journal 条目 ratedAt 同源，
+    // savedAt 因写闸排队晚 5 秒。旧实现用 savedAt+1s 容差会误判「未应用」→
+    // 回放对已含评分的卡再跑 engine.review（稳定度虚增）。
+    SharedPreferences.setMockInitialValues({
+      ReviewScheduleRepository.cardsPrefKey: legacyCardsBlob(),
+      ReviewScheduleRepository.degradedJournalKey: [
+        jsonEncode({
+          'ratingId': 'apple-1',
+          'word': 'apple',
+          'rating': FsrsRating.good.value,
+          'date': '2026-08-30',
+          'isLearn': false,
+          'ratedAt': '2026-08-30T09:00:00.000',
+          'savedAt': '2026-08-30T09:00:05.000',
+        }),
+      ],
+    });
+
+    final store = await newStore();
+    final repo = ReviewScheduleRepository(store: store);
+    await repo.initialize();
+
+    expect(repo.usesSqlite, isTrue);
+    // 预登记命中：幂等日志已有该 ratingId（回放会跳过，不双应用）。
+    final logged = await db.query('fsrs_rating_log', where: 'rating_id = ?', whereArgs: ['apple-1']);
+    expect(logged, hasLength(1), reason: 'ratedAt 与 lastReview 同源 ⇒ 必须预登记');
+    // 判据用 reviewCount：预登记→回放跳过→保持 blob 原值 3；
+    // 若误判未应用而双回放则 +1。（同日短时模型下 good 评分稳定度恰不变，不敏感。）
+    expect(repo.cardFor('apple')!.reviewCount, 3, reason: '不得对已含评分二次回放');
+  });
+
+  test('第三轮 T14 对照：老条目无 ratedAt 回退 savedAt（兼容），晚 5 秒仍按旧口径留给回放', () async {
+    SharedPreferences.setMockInitialValues({
+      ReviewScheduleRepository.cardsPrefKey: legacyCardsBlob(),
+      ReviewScheduleRepository.degradedJournalKey: [
+        jsonEncode({
+          'ratingId': 'apple-2',
+          'word': 'apple',
+          'rating': FsrsRating.good.value,
+          'date': '2026-08-30',
+          'isLearn': false,
+          'savedAt': '2026-08-30T09:00:05.000',
+        }),
+      ],
+    });
+
+    final store = await newStore();
+    final repo = ReviewScheduleRepository(store: store);
+    await repo.initialize();
+
+    // 无 ratedAt：savedAt 晚于 lastReview 超容差 → 不预登记 → 回放会再跑一次
+    // engine.review（R1 旧口径的已知局限，新写入路径都带 ratedAt 已消除）。
+    // 判据用 reviewCount：blob 原值 3，被回放二次推进则 4。
+    expect(repo.cardFor('apple')!.reviewCount, 4, reason: '老条目无 ratedAt 时按旧口径留给回放（对照）');
+  });
 }
