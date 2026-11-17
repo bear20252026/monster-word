@@ -57,15 +57,18 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
       final reader = context.read<QuickReviewWordReader>();
       final type = _examType;
       reader
-          .loadWords(examType: type)
-          .then((words) async {
-            // 审计 R12：探测考试词书匹配（诚实提示用），与词表同序号守卫。
-            final hasBooks = await reader.hasExamBooks(type);
+          // 第三轮 T19：取词结果自带实际来源（匹配书全空壳回退全库时
+          // fromExamBook=false），提示不再只探测目录有无匹配书。
+          .loadWordsWithSource(examType: type)
+          .then((result) {
             if (!mounted || seq != _loadSeq) return;
             setState(() {
-              _words = words;
+              _words = result.words;
               _isLoading = false;
-              _noExamBooks = !hasBooks;
+              _noExamBooks = !result.fromExamBook;
+              // 第三轮 T17：首屏加载成功必须启动首词计时——旧实现漏调
+              // _startTimer，首轮首词无倒计时、不自动跳过、用时记 0。
+              if (_words.isNotEmpty) _startTimer();
             });
           })
           .catchError((Object e) {
@@ -181,15 +184,15 @@ class _ExamQuickReviewPageState extends State<ExamQuickReviewPage> {
         // 用户反馈修复（2026-11-14）：词数与「秒/词」限时是两回事，旧实现把
         // timeLimit 当词数（单位混淆）。固定取默认 50 词。
         // 审计 R12：按考试类型匹配词书取词，无匹配回退全库随机+如实提示。
-        .loadWords(examType: type)
-        .then((words) async {
-          final hasBooks = await reader.hasExamBooks(type);
+        // 第三轮 T19：来源标志随取词结果返回，提示以实际词源为准。
+        .loadWordsWithSource(examType: type)
+        .then((result) {
           if (!mounted || seq != _loadSeq) return; // 过期响应丢弃
           setState(() {
-            _words = words;
+            _words = result.words;
             _isLoading = false;
-            _noExamBooks = !hasBooks;
-            _startTimer();
+            _noExamBooks = !result.fromExamBook;
+            if (_words.isNotEmpty) _startTimer();
           });
         })
         .catchError((Object e) {

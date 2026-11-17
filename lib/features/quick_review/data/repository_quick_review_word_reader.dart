@@ -34,24 +34,32 @@ class RepositoryQuickReviewWordReader implements QuickReviewWordReader {
   Future<bool> hasExamBooks(ExamType examType) async => matchExamBooks(examType, await _books()).isNotEmpty;
 
   @override
-  Future<List<Word>> loadWords({int limit = 50, ExamType? examType}) async {
+  Future<List<Word>> loadWords({int limit = 50, ExamType? examType}) async =>
+      (await loadWordsWithSource(limit: limit, examType: examType)).words;
+
+  @override
+  Future<QuickReviewLoadResult> loadWordsWithSource({int limit = 50, ExamType? examType}) async {
     if (examType != null) {
       final matched = matchExamBooks(examType, await _books());
       if (matched.isNotEmpty) {
         // 多本匹配词书时随机选一本（每轮切换有变化），书内取词后洗牌截断。
         final book = (matched..shuffle()).first;
         final words = await _repository.getWordsByBookId(book.id);
-        if (words.isNotEmpty) {
-          // 过滤无中文释义的空壳词（与学习队列同口径：宁少勿假）。
-          final usable = words.where((w) => w.cleanInterpret.trim().isNotEmpty).toList()..shuffle();
-          if (usable.isNotEmpty) return usable.take(limit).toList();
+        // 第三轮 T18：空壳过滤与学习队列同口径（含可读中文才有效，宁少勿假）——
+        // 旧实现 cleanInterpret 非空即过，纯英文释义的空壳词仍进速刷。
+        final usable = words.where((w) => w.hasChineseDefinition).toList()..shuffle();
+        if (usable.isNotEmpty) {
+          return QuickReviewLoadResult(words: usable.take(limit).toList(), fromExamBook: true);
         }
-        // 匹配书全为空壳词：回退全库随机（UI 仍按「有考试词书」提示，
-        // 词表口径以实际取词为准，不静默假装）。
+        // 匹配书全为空壳词：回退全库随机。第三轮 T19：fromExamBook=false，
+        // UI 按实际来源提示「全库随机」，不再假装考试词书。
       }
     }
     // 用户反馈修复（2026-11-14）：旧实现 searchWords('') 返回字母序头部再按 id
     // 倒序，导致「考试速刷」永远刷同一批字母序头部词。改为全库随机取样。
-    return _repository.getRandomWords(limit);
+    // 第三轮 T18：回退路径同样过滤空壳（多取一倍候选再过滤截断，宁少勿假）。
+    final random = await _repository.getRandomWords(limit * 2);
+    final usable = random.where((w) => w.hasChineseDefinition).take(limit).toList();
+    return QuickReviewLoadResult(words: usable, fromExamBook: false);
   }
 }

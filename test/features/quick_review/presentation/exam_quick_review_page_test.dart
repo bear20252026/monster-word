@@ -20,20 +20,25 @@ import 'package:word_app/models/word.dart';
 
 /// 内存假实现：返回预设单词，无需 WordRepository。
 class FakeQuickReviewWordReader implements QuickReviewWordReader {
-  FakeQuickReviewWordReader(this.words, {this.loadDelay = Duration.zero});
+  FakeQuickReviewWordReader(this.words, {this.loadDelay = Duration.zero, this.fromExamBook = true});
   final List<Word> words;
   final Duration loadDelay;
+  final bool fromExamBook;
 
   @override
-  Future<List<Word>> loadWords({int limit = 50, ExamType? examType}) async {
+  Future<List<Word>> loadWords({int limit = 50, ExamType? examType}) async =>
+      (await loadWordsWithSource(limit: limit, examType: examType)).words;
+
+  @override
+  Future<QuickReviewLoadResult> loadWordsWithSource({int limit = 50, ExamType? examType}) async {
     if (loadDelay > Duration.zero) {
       await Future<void>.delayed(loadDelay);
     }
-    return words.take(limit).toList();
+    return QuickReviewLoadResult(words: words.take(limit).toList(), fromExamBook: fromExamBook);
   }
 
   @override
-  Future<bool> hasExamBooks(ExamType examType) async => true;
+  Future<bool> hasExamBooks(ExamType examType) async => fromExamBook;
 }
 
 /// 审计 R22 竞态假件：第 1 次加载挂起（旧类型），第 2 次即时（新类型）——
@@ -43,10 +48,14 @@ class _SeqRaceReader implements QuickReviewWordReader {
   final Completer<List<Word>> firstLoad = Completer<List<Word>>();
 
   @override
-  Future<List<Word>> loadWords({int limit = 50, ExamType? examType}) async {
+  Future<List<Word>> loadWords({int limit = 50, ExamType? examType}) async =>
+      (await loadWordsWithSource(limit: limit, examType: examType)).words;
+
+  @override
+  Future<QuickReviewLoadResult> loadWordsWithSource({int limit = 50, ExamType? examType}) async {
     calls++;
-    if (calls == 1) return firstLoad.future;
-    return [Word(id: 2, word: 'fresh_word')];
+    final words = calls == 1 ? await firstLoad.future : [Word(id: 2, word: 'fresh_word', interpret: '中文释义')];
+    return QuickReviewLoadResult(words: words, fromExamBook: true);
   }
 
   @override
@@ -215,6 +224,33 @@ void main() {
       expect(find.text('fresh_word', skipOffstage: false), findsOneWidget);
       expect(find.text('stale_word', skipOffstage: false), findsNothing);
       expect(reader.calls, 2);
+    });
+
+    testWidgets('第三轮 T17：首屏加载成功后首词即有倒计时（到时自动跳过）', (tester) async {
+      // cet4 限时 30 秒/词；两词词表，首词到时自动跳第二词。
+      final reader = FakeQuickReviewWordReader([
+        Word(id: 1, word: 'first_word', interpret: '中文释义'),
+        Word(id: 2, word: 'second_word', interpret: '中文释义'),
+      ]);
+      await tester.pumpWidget(_buildTestPage(reader));
+      await tester.pumpAndSettle();
+      expect(find.text('first_word', skipOffstage: false), findsOneWidget);
+
+      // 旧实现首屏漏调 _startTimer：推进 31 秒首词纹丝不动。
+      await tester.pump(const Duration(seconds: 31));
+      await tester.pumpAndSettle();
+      expect(find.text('second_word', skipOffstage: false), findsOneWidget, reason: '首词限时到必须自动跳过');
+    });
+
+    testWidgets('第三轮 T19：实际词源为全库随机时如实提示（即使目录有匹配书）', (tester) async {
+      // fromExamBook=false 模拟「匹配书全空壳被过滤尽→回退全库」：
+      // 旧实现只探测 hasExamBooks=true 会误提示考试词书。
+      final reader = FakeQuickReviewWordReader([
+        Word(id: 1, word: 'random_word', interpret: '中文释义'),
+      ], fromExamBook: false);
+      await tester.pumpWidget(_buildTestPage(reader));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('全库随机', skipOffstage: false), findsOneWidget);
     });
   });
 }

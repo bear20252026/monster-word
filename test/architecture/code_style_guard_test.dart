@@ -31,7 +31,8 @@ const Map<String, int> _kPartFamilyRatchet = {
   // 1100：审计 C11（2026-11-15）副标题 Flexible+ellipsis +13。
   // 1114：审计 C6（2026-11-16）宠物可见性事件订阅+dispose +14。
   // 1126：审计 R20（2026-11-16）toggle 在途忽略事件+完成后 isVisible 复核 +12。
-  'lib/features/settings/presentation/more_settings_page.dart': 1126,
+  // 1137：第三轮 T20（2026-11-16）首查 busy 闸+失败路径可见性复核 +11。
+  'lib/features/settings/presentation/more_settings_page.dart': 1137,
   'lib/features/settings/presentation/profile_screen.dart': 1890,
 };
 

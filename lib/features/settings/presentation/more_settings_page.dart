@@ -86,7 +86,9 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         _petWindow
             .isVisible()
             .then((visible) {
-              if (mounted) setState(() => _petVisible = visible);
+              // 第三轮 T20：首查慢回时用户可能已在途 toggle——与事件监听同口径
+              // 加 busy 闸，防旧查询结果覆盖在途开关状态。
+              if (mounted && !_petToggleBusy) setState(() => _petVisible = visible);
             })
             .catchError((Object e) => debugLog('查询桌面宠物状态失败: $e')),
       );
@@ -502,6 +504,15 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       }
     } catch (e, s) {
       reportSwallowedError('桌面宠物窗口开关失败', e, s);
+      if (!mounted) return;
+      // 第三轮 T20：失败路径同样复核原生真实可见性——busy 期间被忽略的
+      // 右键关窗事件不会重放，不复核则开关态与原生脱节直至下一事件。
+      try {
+        final actual = await _petWindow.isVisible();
+        if (mounted) setState(() => _petVisible = actual);
+      } catch (_) {
+        // 吞错豁免: 复核失败保持当前显示态，下一可见性事件会再对齐。
+      }
       if (!mounted) return;
       showMwSnackBar(context, const SnackBar(content: Text('桌面宠物窗口启动失败')));
     } finally {

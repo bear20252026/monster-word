@@ -82,6 +82,15 @@ class Word {
   String get cleanInterpret =>
       _cachedCleanInterpret ??= extractReadableInterpretText(interpret) ?? cleanHtml(interpret);
 
+  /// 第三轮 T18：释义是否含可读中文——空壳词过滤的跨域统一口径。
+  ///
+  /// 学习队列（learning_session_state._replaceQueue）用 learning 域
+  /// DefinitionFormatter.extractChinese 判「有中文才进队列」；速刷等其它域
+  /// 不得跨域 import learning/domain（R4），故在共享模型层提供等价判定：
+  /// 清理后的释义含 CJK 字符即有效（纯英文释义/空壳=false，宁少勿假）。
+  bool get hasChineseDefinition => _cachedHasChinese ??= RegExp(r'[一-鿿]').hasMatch(cleanInterpret);
+  bool? _cachedHasChinese;
+
   /// 解释按行拆分（每个词性一行，已清理 HTML）
   List<String>? _cachedInterpretLines;
 

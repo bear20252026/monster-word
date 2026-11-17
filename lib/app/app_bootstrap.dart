@@ -16,6 +16,7 @@ import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/infrastructure/user_data_backup_service.dart';
 import 'package:word_app/core/infrastructure/user_database.dart';
 import 'package:word_app/core/infrastructure/wordbook_database.dart';
+import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:word_app/core/audio/audio_players.dart';
 
@@ -63,8 +64,15 @@ Future<void> bootstrapApp({BootProgressCallback? onProgress}) async {
       await TodayProgressStore.initializePersistentState();
     },
     () => setupServiceLocator(),
+    () async {
+      // 第三轮 T4：R19 首帧预载的前提是复习仓储已 initialize——旧实现 bootstrap
+      // 从未调用，dueCount 冷启动恒 0，首页待复习数仍 0→N 跳变。此步完成迁移/
+      // 计数聚合/到期子集装载（_load 内部全 catch，SQLite 失败自动降级 SP，
+      // 绝不把应用送进兜底页）；装配创建期 silent sync 即读到真实值。
+      await sl<ReviewScheduleRepository>().initialize();
+    },
   ];
-  final labels = const ['词书与用户数据库（并行）', '偏好设置', '依赖注册'];
+  final labels = const ['词书与用户数据库（并行）', '偏好设置', '依赖注册', '复习调度就绪'];
 
   // 蓝图 W3：音效静音/怪兽语音偏好预加载（Sfx 门面读缓存）。
   // 非关键偏好：读失败降级为默认值即可，不能把整个应用送进 bootstrap 兜底页。
