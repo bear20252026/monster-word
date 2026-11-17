@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:get_it/get_it.dart';
 
+import 'package:word_app/core/application/restore_cache_reset.dart';
 import 'package:word_app/core/application/user_data_maintenance_service.dart';
 import 'package:word_app/core/infrastructure/user_database.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
@@ -141,9 +142,15 @@ Future<void> setupServiceLocator() async {
   _reg<ReviewScheduleRepository>(() => ReviewScheduleRepository());
 
   // P2-12（架构审计 2026-11-12）：用户数据维护服务（备份恢复入口的应用层编排）。
-  // 复习库关闭经回调注入——core 层不依赖 features（R-core）。
+  // 复习库关闭/重开经回调注入——core 层不依赖 features（R-core）。
+  // 第四轮审计 M18（2026-11-17）：恢复后就地重开双库 + 经复位总线刷新应用层
+  // 缓存（各 feature 装配边界登记回调），不再强制 exit(0) 重启。
   _reg<UserDataMaintenanceService>(
-    () => UserDataMaintenanceService(closeReviewStore: () => sl<ReviewScheduleRepository>().close()),
+    () => UserDataMaintenanceService(
+      closeReviewStore: () => sl<ReviewScheduleRepository>().close(),
+      reopenReviewStore: () => sl<ReviewScheduleRepository>().initialize(),
+      resetFeatureCaches: RestoreCacheResetBus.runAll,
+    ),
   );
 
   // 审计 I6：字典/词书列表端口在此显式注入——组合根（presentation）受 R-DB

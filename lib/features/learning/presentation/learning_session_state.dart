@@ -11,6 +11,7 @@ import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/extra_choice_pool.dart';
 import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/application/restore_cache_reset.dart';
 import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/features/learning/application/alphabet_spread_shuffle.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
@@ -41,12 +42,6 @@ class LearningSessionState extends ChangeNotifier {
   bool _disposed = false;
 
   @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
-  }
-
-  @override
   void notifyListeners() {
     if (_disposed) return;
     super.notifyListeners();
@@ -67,6 +62,15 @@ class LearningSessionState extends ChangeNotifier {
        _shuffler = shuffler ?? alphabetSpreadShuffle {
     _extraPool = ExtraChoicePool(_onExtraPoolReady, repository: _wordRepository);
     unawaited(_loadProgress());
+    // 第四轮审计 M18（2026-11-17）：备份恢复后清会话（词对象来自旧库）。
+    RestoreCacheResetBus.register(resetForRestore);
+  }
+
+  @override
+  void dispose() {
+    RestoreCacheResetBus.unregister(resetForRestore);
+    _disposed = true;
+    super.dispose();
   }
 
   void _onExtraPoolReady() {
@@ -438,6 +442,20 @@ class LearningSessionState extends ChangeNotifier {
     _midSessionPromptShown = false;
     _sessionCompletionReported = false;
     notifyListeners();
+  }
+
+  /// 第四轮审计 M18（2026-11-17）：备份恢复后会话复位——队列词对象来自
+  /// 恢复前的库（词 id/释义可能已变），继续答会把评分写进恢复后的新库造成
+  /// 错配。清会话与恢复暂存，用户下次进学习页重新取词。
+  Future<void> resetForRestore() async {
+    exitLearning();
+    _pendingResume = null;
+    _combo = 0;
+    _bestCombo = 0;
+    _currentWordWrong = false;
+    _lastWrongWordId = null;
+    _sessionRewardSettled = false;
+    _extraPool.reset();
   }
 
   Future<void> rate(FsrsRating rating) async {

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:word_app/core/application/restore_cache_reset.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 import 'package:word_app/features/learning/application/mastered_writer_port.dart';
@@ -13,6 +14,14 @@ import 'package:word_app/features/learning/application/mastered_writer_port.dart
 class LearningMasteredState extends ChangeNotifier {
   LearningMasteredState({required this._masteredWordsReader, required this._writerPort}) {
     unawaited(refresh());
+    // 第四轮审计 M18（2026-11-17）：备份恢复后重读掌握快照（收藏同款家法）。
+    RestoreCacheResetBus.register(refresh);
+  }
+
+  @override
+  void dispose() {
+    RestoreCacheResetBus.unregister(refresh);
+    super.dispose();
   }
 
   final MasteredWordsReader _masteredWordsReader;

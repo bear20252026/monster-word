@@ -19,7 +19,10 @@ class XpDao implements XpRepository {
 
   static final XpDao instance = XpDao._();
 
-  XpDao._() : _openOverride = null;
+  XpDao._() : _openOverride = null {
+    // 第四轮审计 M18（2026-11-17）：订阅库关闭失效广播（账本同款家法）。
+    UserDatabase.instance.addCloseListener(invalidate);
+  }
 
   static const String _table = 'xp_state';
   static const String _eventTable = 'reward_events';
@@ -41,6 +44,10 @@ class XpDao implements XpRepository {
     _db = null;
     _loading = null;
     _useSqlite = false;
+    // M18：内存回退累计与事件键一并作废——备份恢复后旧内存值会盖住恢复库
+    // 的真实 XP，且旧事件键会误判「已结算」吞掉恢复后的新结算。
+    _memoryTotal = 0;
+    _memoryKeys.clear();
   }
 
   Future<void> ensureLoaded() {

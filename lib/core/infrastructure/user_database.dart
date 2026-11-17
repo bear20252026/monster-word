@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -546,7 +547,14 @@ class UserDatabase {
   // 属死代码误导维护，已删除。表 DDL 保留以兼容存量安装的 schema 校验。
   // ============================================================
 
-  /// 关闭数据库
+  /// 关闭数据库。
+  ///
+  /// 第四轮审计 M18（2026-11-17）：close 时广播失效——各 DAO 缓存的旧句柄
+  /// 必须随之作废（否则备份恢复替换库文件后，DAO 继续写已废弃的旧库，
+  /// 退出即丢；此前被迫用 exit(0) 强制重启兜底）。订阅方在回调里清
+  /// _db/_loading/_useSqlite 与内存索引，下次 ensureLoaded 重取新句柄。
+  /// 回调异常只上报不中断其余订阅者（失效是尽力通知，单个 DAO 故障
+  /// 不该让其他 DAO 继续拿着死句柄）。
   Future<void> close() async {
     await _db?.close();
     _db = null;
@@ -554,6 +562,26 @@ class UserDatabase {
     // 数据层审计 P3：close 后再 initialize() 会复用旧 completed future
     // 而直接返回（_db==null，后续 db getter 抛 StateError）。
     _initCompleter = null;
+    for (final listener in List.of(_closeListeners)) {
+      try {
+        listener();
+      } catch (e, s) {
+        reportSwallowedError('数据库关闭失效回调异常（其余订阅者继续通知）', e, s);
+      }
+    }
+  }
+
+  final List<void Function()> _closeListeners = [];
+
+  /// 订阅「库已关闭」失效通知（DAO 注册；进程级单例无需退订）。
+  void addCloseListener(void Function() listener) {
+    if (!_closeListeners.contains(listener)) _closeListeners.add(listener);
+  }
+
+  /// 测试用：移除失效订阅（防跨用例泄漏）。
+  @visibleForTesting
+  void removeCloseListener(void Function() listener) {
+    _closeListeners.remove(listener);
   }
 }
 

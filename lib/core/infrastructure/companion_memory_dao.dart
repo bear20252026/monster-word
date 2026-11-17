@@ -20,7 +20,18 @@ class CompanionMemoryDao implements MonsterMemoryPort {
 
   static final CompanionMemoryDao instance = CompanionMemoryDao._();
 
-  CompanionMemoryDao._() : _openOverride = null;
+  CompanionMemoryDao._() : _openOverride = null {
+    // 第四轮审计 M18（2026-11-17）：订阅库关闭失效广播（收藏同款家法）。
+    UserDatabase.instance.addCloseListener(invalidate);
+  }
+
+  /// 作废缓存句柄与记忆索引（库关闭广播 / 测试复位用）。
+  void invalidate() {
+    _db = null;
+    _loading = null;
+    _useSqlite = false;
+    _index.clear();
+  }
 
   static const String degradedJournalKey = 'companion_memory_degraded_journal_v1';
   final DegradedJournal _journal = const DegradedJournal(key: degradedJournalKey, domain: '小怪兽记忆');

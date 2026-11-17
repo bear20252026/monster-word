@@ -24,7 +24,11 @@ class ScareCoinLedgerDao {
 
   static final ScareCoinLedgerDao instance = ScareCoinLedgerDao._();
 
-  ScareCoinLedgerDao._() : _openOverride = null;
+  ScareCoinLedgerDao._() : _openOverride = null {
+    // 第四轮审计 M18（2026-11-17）：订阅库关闭失效广播——此前 invalidate
+    // 只有失败路径自动触发，外部主动关库（备份恢复）不会通知本 DAO。
+    UserDatabase.instance.addCloseListener(invalidate);
+  }
 
   static const String _spHistoryKey = 'scare_coin.history';
   static const String _spBalanceKey = 'scare_coin.balance';

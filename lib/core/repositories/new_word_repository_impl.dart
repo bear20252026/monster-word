@@ -2,13 +2,27 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:word_app/core/infrastructure/degraded_journal.dart';
 import 'package:word_app/core/infrastructure/user_database.dart';
+import 'package:word_app/core/repositories/new_word_id_cache.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/models/new_word_record.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/core/repositories/new_word_repository.dart';
 
 class NewWordRepositoryImpl implements NewWordRepository {
-  NewWordRepositoryImpl(this._database, {Database? databaseOverride}) : _override = databaseOverride;
+  NewWordRepositoryImpl(this._database, {Database? databaseOverride}) : _override = databaseOverride {
+    // 第四轮审计 M18（2026-11-17）：订阅库关闭失效广播——本仓储不缓存句柄
+    // （每次经 _database.db 现取），但降级日志回放的单飞 future 必须作废，
+    // 否则恢复后的新库永远跳过回放；共享 ID 缓存同步复位。
+    // 测试注入实例（databaseOverride 非空）不订阅：不消费 UserDatabase。
+    if (_override == null) {
+      _database.addCloseListener(_onDatabaseClosed);
+    }
+  }
+
+  void _onDatabaseClosed() {
+    _journalReplay = null;
+    NewWordIdCache.instance.invalidate();
+  }
 
   final UserDatabase _database;
 

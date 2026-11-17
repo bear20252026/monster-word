@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:word_app/core/application/restore_cache_reset.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 import 'package:word_app/models/word.dart';
@@ -15,6 +16,15 @@ import 'package:word_app/features/learning/application/learning_queue_port.dart'
 class LearningFavoritesState extends ChangeNotifier implements LearningFavoritesStore {
   LearningFavoritesState({required this._favoritesPort, required this._queuePort}) {
     unawaited(refresh());
+    // 第四轮审计 M18（2026-11-17）：备份恢复后重读收藏快照（DAO 句柄已由
+    // 库关闭广播失效，此处 refresh 即从恢复库重建）。
+    RestoreCacheResetBus.register(refresh);
+  }
+
+  @override
+  void dispose() {
+    RestoreCacheResetBus.unregister(refresh);
+    super.dispose();
   }
 
   final FavoritesPort _favoritesPort;

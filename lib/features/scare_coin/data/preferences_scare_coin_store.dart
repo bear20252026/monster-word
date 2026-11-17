@@ -145,6 +145,18 @@ class PreferencesScareCoinStore implements ScareCoinStore {
     _degradeProbePending = false;
   }
 
+  /// 第四轮审计 M18（2026-11-17）：备份恢复后复位降级态。
+  ///
+  /// 恢复替换了库文件且 SP 快照已回到备份时刻——旧库触发的「账本不可信」
+  /// 粘性降级标志对新库不再成立；不复位则恢复后读写继续走 SP 旧快照，
+  /// 用户看到的余额/签到与恢复库脱节。账本 DAO 的句柄失效由库关闭广播
+  /// 负责（ScareCoinLedgerDao 已订阅），本方法只清本类的降级裁决态。
+  /// 由维护服务在恢复成功后经组合根回调调用（core 不依赖 features）。
+  void resetDegradationForRestore() {
+    _degradeToSp = false;
+    _degradeProbePending = false;
+  }
+
   /// 把降级窗口内的 SP 快照（余额/流水/事件键）合并回账本。
   ///
   /// 幂等由 DAO 侧保证：余额以 SP 覆盖（重复回灌写同值）、流水按时间水位去重、事件键 ignore 冲突。

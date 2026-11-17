@@ -19,7 +19,10 @@ class DailyMissionDao implements DailyMissionRepository {
 
   static final DailyMissionDao instance = DailyMissionDao._();
 
-  DailyMissionDao._() : _openOverride = null;
+  DailyMissionDao._() : _openOverride = null {
+    // 第四轮审计 M18（2026-11-17）：订阅库关闭失效广播（账本同款家法）。
+    UserDatabase.instance.addCloseListener(invalidate);
+  }
 
   static const String _table = 'daily_missions';
 
@@ -38,6 +41,8 @@ class DailyMissionDao implements DailyMissionRepository {
     _db = null;
     _loading = null;
     _useSqlite = false;
+    // M18：内存回退值一并作废——备份恢复后旧内存值会盖住恢复库的真实进度。
+    _memory.clear();
   }
 
   Future<void> ensureLoaded() {

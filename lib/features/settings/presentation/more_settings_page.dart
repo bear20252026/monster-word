@@ -559,7 +559,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         icon: Icons.restore_outlined,
         iconColor: context.skin.colors.accent,
         title: '从备份恢复数据',
-        subtitle: '用自动备份还原学习进度与收藏（恢复后需重启）',
+        subtitle: '用自动备份还原学习进度、收藏与偏好设置（恢复后立即生效）',
         onTap: () => unawaited(showRestoreBackupDialog(context)),
       ),
       Divider(height: 1, color: skin.colors.divider, indent: 52),

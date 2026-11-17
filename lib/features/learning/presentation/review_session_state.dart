@@ -6,6 +6,7 @@ import 'package:word_app/core/engine/core_engine.dart' show WordChoicePair;
 import 'package:word_app/core/engine/srs_engine.dart' show RecallRating;
 import 'package:word_app/core/engine/super_memory_engine.dart';
 import 'package:word_app/core/utils/boss_siege.dart';
+import 'package:word_app/core/application/restore_cache_reset.dart';
 import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/models/mw_word_process.dart';
 import 'package:word_app/models/word.dart';
@@ -43,6 +44,8 @@ class ReviewSessionState extends ChangeNotifier {
        _questionFactory = questionFactory ?? const ReviewSessionQuestionFactory() {
     _ratingExecutor = ReviewSessionRatingExecutor(engine: _engine, ratingWriter: ratingWriter);
     _extraPool = ExtraChoicePool(_onExtraPoolReady, repository: _wordRepository);
+    // 第四轮审计 M18（2026-11-17）：备份恢复后清会话与存档（词序来自旧库）。
+    RestoreCacheResetBus.register(resetForRestore);
   }
 
   void _onExtraPoolReady() {
@@ -139,6 +142,33 @@ class ReviewSessionState extends ChangeNotifier {
 
   void updateRatingWriter(ReviewRatingWriter ratingWriter) {
     _ratingExecutor.updateRatingWriter(ratingWriter);
+  }
+
+  /// 第四轮审计 M18（2026-11-17）：备份恢复后会话复位——本局词序/已评分
+  /// 集合来自恢复前的到期快照，继续答会把旧词评分写进恢复后的新库。
+  /// 清空会话并清掉 SP 存档（存档也属恢复面，SP 快照回放已回到备份时刻，
+  /// 此处兜底清残留），下次进复习页按新库到期集重新开局。
+  Future<void> resetForRestore() async {
+    _answerState.reset();
+    _extraPool.reset();
+    _engine.init(const <MwWordProcess>[]);
+    _sessionWordIds = const [];
+    _ratedIds.clear();
+    _pending = null;
+    _sessionId = '';
+    _dueAtStart = 0;
+    _hadDueAtStart = false;
+    _restored = false;
+    _wrongCount = 0;
+    _currentQuestionWrong = false;
+    _choices = const [];
+    _total = 0;
+    _done = 0;
+    _loadPhase = ReviewSessionLoadPhase.idle;
+    _loadError = null;
+    final store = _snapshotStore;
+    if (store != null) await store.clear();
+    notifyListeners();
   }
 
   /// 按既有正式复习队列优先级初始化本地会话。
@@ -416,6 +446,7 @@ class ReviewSessionState extends ChangeNotifier {
 
   @override
   void dispose() {
+    RestoreCacheResetBus.unregister(resetForRestore);
     _answerState.dispose();
     super.dispose();
   }

@@ -24,7 +24,14 @@ import 'package:word_app/core/repositories/note_repository.dart';
 /// - 存量 SP（`notes_v1_<wordId>`）首次访问时迁移入表，迁移成功后删除旧键。
 /// - SQLite 不可用（测试环境/开库失败）回退原 SP 行为（ID 仍由仓储生成）。
 class NoteRepositoryImpl implements NoteRepository {
-  NoteRepositoryImpl({Future<Database> Function()? openDatabase}) : _openOverride = openDatabase;
+  NoteRepositoryImpl({Future<Database> Function()? openDatabase}) : _openOverride = openDatabase {
+    // 第四轮审计 M18（2026-11-17）：订阅库关闭失效广播——备份恢复替换库
+    // 文件后旧句柄必须作废（本仓储经 sl 单例装配，进程内长生命周期）。
+    // 测试注入实例（openDatabase 非空）不订阅：它们不消费 UserDatabase。
+    if (_openOverride == null) {
+      UserDatabase.instance.addCloseListener(invalidate);
+    }
+  }
 
   static const _notesKey = 'notes_v1';
   static const _migratedSpKeysMarker = 'notes_sqlite_migrated_v1';
@@ -34,6 +41,13 @@ class NoteRepositoryImpl implements NoteRepository {
   Database? _db;
   Future<void>? _loading;
   bool _useSqlite = false;
+
+  /// 作废缓存句柄（库关闭广播 / 测试复位用）；下次 ensureLoaded 重取新库。
+  void invalidate() {
+    _db = null;
+    _loading = null;
+    _useSqlite = false;
+  }
 
   @visibleForTesting
   bool get usesSqlite => _useSqlite;

@@ -2,10 +2,13 @@
 //
 // 从 more_settings_page 抽出为独立 widget（守 900 行 part 家族聚合上限）。
 // 范式对齐词库重建对话框：选择备份 → 二次确认 → 不可取消进度 → 结果弹窗。
-// 恢复经应用层 UserDataMaintenanceService 编排（关闭双库 + 校验 + 安全替换），
-// 成功后引导重启刷新 DAO 缓存句柄。
+// 恢复经应用层 UserDataMaintenanceService 编排（关闭双库 → 校验 → 安全替换
+// → SP 快照回放 → 重开双库 → 应用层缓存复位）。
+//
+// 第四轮审计 M18（2026-11-17）：恢复成功后**不再强制 exit(0)**——库关闭
+// 广播已让各 DAO 作废缓存句柄，维护服务就地重开双库并经复位总线刷新
+// Provider 树内存态，用户点「好的」即回到已恢复的数据，无需重启。
 import 'dart:async';
-import 'dart:io' show exit;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -51,7 +54,7 @@ Future<void> showRestoreBackupDialog(BuildContext context) async {
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text('确认恢复'),
-      content: Text('将用 $stamp 的备份覆盖当前学习进度、收藏与复习计划。当前数据会先留档，恢复后需重启应用。确定继续吗？'),
+      content: Text('将用 $stamp 的备份覆盖当前学习进度、收藏、复习计划与偏好设置。当前数据会先留档。确定继续吗？'),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
         FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('立即恢复')),
@@ -77,41 +80,20 @@ Future<void> showRestoreBackupDialog(BuildContext context) async {
   }
   rootNavigator.pop();
   if (!context.mounted) return;
-  // 第三轮 T23：恢复成功后**必须重启**——各 DAO（xp/mission/账本等）缓存着
-  // 替换前的旧库句柄且无失效广播，继续使用会把写入落进已废弃的旧库、退出即丢。
-  // 成功对话框不可关闭（PopScope），唯一出口是「立即退出」exit(0)；失败则照常关闭。
+  // M18：成功与失败都可正常关闭——成功时数据已就地生效（双库重开 + 缓存
+  // 复位），失败时原数据已留档、现库未被破坏性覆盖（校验前置）。
   unawaited(
     showDialog(
       context: context,
-      barrierDismissible: !result.success,
-      builder: (ctx) => PopScope(
-        canPop: !result.success,
-        child: AlertDialog(
-          icon: Icon(
-            result.success ? Icons.check_circle_outline : Icons.error_outline,
-            color: result.success ? ctx.skin.colors.success : ctx.skin.colors.danger,
-            size: 48,
-          ),
-          title: Text(result.success ? '恢复成功' : '恢复失败'),
-          content: Text(
-            result.success
-                ? '${result.message}\n\n为避免旧数据句柄继续写入造成丢失，应用现在必须退出。请重新打开 Monster Word 以加载恢复后的数据。'
-                : result.message,
-          ),
-          actions: [
-            if (result.success)
-              FilledButton(
-                onPressed: () {
-                  // 恢复已完成且双库已关闭，exit(0) 无在途写风险；
-                  // 重启后所有 DAO 重新打开替换后的库文件。
-                  exit(0);
-                },
-                child: const Text('立即退出'),
-              )
-            else
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('好的')),
-          ],
+      builder: (ctx) => AlertDialog(
+        icon: Icon(
+          result.success ? Icons.check_circle_outline : Icons.error_outline,
+          color: result.success ? ctx.skin.colors.success : ctx.skin.colors.danger,
+          size: 48,
         ),
+        title: Text(result.success ? '恢复成功' : '恢复失败'),
+        content: Text(result.message),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('好的'))],
       ),
     ),
   );

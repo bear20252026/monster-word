@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:word_app/core/application/restore_cache_reset.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/features/progress/application/xp_repository.dart';
 import 'package:word_app/features/progress/domain/xp_curve.dart';
@@ -23,7 +24,16 @@ class XpGrantResult {
 /// 只做两件事：把会话 XP 幂等地累加进 `xp_state`，以及把「升级庆祝只播一次」
 /// 记在 SP。等级不参与商店/兑换，任何 UI 只读 [snapshot]。
 class XpStore extends ChangeNotifier {
-  XpStore({required this.repository});
+  XpStore({required this.repository}) {
+    // 第四轮审计 M18（2026-11-17）：备份恢复后强制重载 XP。
+    RestoreCacheResetBus.register(reloadForRestore);
+  }
+
+  @override
+  void dispose() {
+    RestoreCacheResetBus.unregister(reloadForRestore);
+    super.dispose();
+  }
 
   final XpRepository repository;
 
@@ -50,6 +60,18 @@ class XpStore extends ChangeNotifier {
       if (_loaded) return;
       final total = await repository.loadTotalXp();
       // 等级按曲线重算，不只信表里的缓存（曲线调整/旧库都能自洽）。
+      _snapshot = XpSnapshot.fromTotal(total);
+      _loaded = true;
+      notifyListeners();
+    });
+  }
+
+  /// 第四轮审计 M18（2026-11-17）：备份恢复后强制重载 XP——DAO 内存回退
+  /// 已随库关闭广播作废，此处清 _loaded 让 ensureLoaded 从恢复库重读。
+  Future<void> reloadForRestore() {
+    return _serialized(() async {
+      _loaded = false;
+      final total = await repository.loadTotalXp();
       _snapshot = XpSnapshot.fromTotal(total);
       _loaded = true;
       notifyListeners();
