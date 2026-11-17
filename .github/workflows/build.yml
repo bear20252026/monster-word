@@ -12,7 +12,14 @@ permissions:
   contents: read
 
 jobs:
+  # 第四轮审计 M9（2026-11-17）：门禁统一走 quality_gate.yml——此前本 job
+  # 只有 analyze+test，缺 format/gzip/脚本守卫（与 dart.yml 口径漂移）。
+  # Windows 编译门禁保留在本文件（原生构建只有 windows runner 能跑）。
+  quality-gate:
+    uses: ./.github/workflows/quality_gate.yml
+
   build-windows:
+    needs: [quality-gate]
     runs-on: windows-latest
 
     steps:
@@ -23,15 +30,10 @@ jobs:
         with:
           flutter-version: '3.47.0'
           channel: stable
+          cache: true
 
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Analyze
-        run: flutter analyze
-
-      - name: Test
-        run: flutter test --no-pub
 
       - name: Build Windows Release
         # 刻意**不**注入 AUTH_BASE_URL —— 这个 job 是「每次 push/PR 的编译与测试门禁」，

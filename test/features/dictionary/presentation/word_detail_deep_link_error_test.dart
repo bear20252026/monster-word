@@ -15,7 +15,6 @@ import 'package:word_app/features/learning/presentation/learning_session_starter
 import 'package:word_app/features/word_browse/application/word_notes_store.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_writer_port.dart';
@@ -33,6 +32,7 @@ import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 import '../../../helpers/fakes.dart';
+import '../../../helpers/fake_learning_queue_port.dart';
 
 // ── Stub implementations ──
 
@@ -147,13 +147,6 @@ class _StubNotesStore implements WordNotesStore {
 // 审计 I64：原文件内 no-op 假件收敛到 test/helpers/fakes.dart（保留原名引用）
 typedef _StubAudioService = NoopAudioService;
 
-class _StubQueuePort implements LearningQueuePort {
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => const [];
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
-}
-
 class _StubProgressPort implements LearningProgressPort {
   @override
   Future<void> save({required Book currentBook, required int currentIndex, required List<Word> queue}) async {}
@@ -187,7 +180,7 @@ void main() {
         ),
         ChangeNotifierProvider<LearningSessionState>(
           create: (_) => LearningSessionState(
-            queuePort: _StubQueuePort(),
+            queuePort: FakeLearningQueuePort(),
             progressPort: _StubProgressPort(),
             reviewSchedulePort: RepositoryReviewScheduleWriterPort(_StubReviewScheduleRepo()),
             choicePort: _StubChoicePort(),

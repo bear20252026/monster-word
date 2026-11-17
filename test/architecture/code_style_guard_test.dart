@@ -106,36 +106,36 @@ void main() {
     expect(problems, isEmpty, reason: '棘轮清单需更新（只许收紧）：$problems');
   });
 
-  /// build() 超长存量豁免：文件名 -> 豁免的 build 起始行号集合
+  /// build() 超长存量豁免：文件名 -> 豁免的**所属类名**集合。
   ///
-  /// ⚠️ 条目按 build() 的**起始行号**登记，因此在 build() 之前增删任何代码都会
-  /// 让旧条目失配。失配的条目是**死豁免**：它不再豁免任何东西，却会继续掩盖真实
-  /// 违规——后人看到清单里有这个文件，会以为「超长是已知且已批准的」而不再深究。
+  /// 第四轮审计 M12（2026-11-17）：锚点从「build 起始行号」改为「类名」——
+  /// 行号锚点在 build() 之前增删任何代码都会失配（死豁免掩盖真实违规，
+  /// 2026-10-16 曾清理出三条全失效）；类名是符号锚点，不随上方代码漂移，
+  /// 只有类被改名/删除才失配（此时死豁免守卫照样拦截）。
   ///
-  /// 2026-10-16 清理：立「豁免清单不得存在失效条目」守卫后发现本清单**三条全失效**：
-  ///   - `more_settings_page.dart` {494, 495}：拆出 `_buildXxx` 后起始行早已漂到 517，
-  ///     且 build() 只剩 35 行（本就合规）——条目纯属残留。
-  ///   - `list_word_listen_page.dart` {99, 100, 101}：起始行实际 107，build() 已合规。
-  ///   - `scare_coin_history_page.dart` {64, 65, 74}：只有 93 是当前真实起始行，
-  ///     另外三个是历史行号的残留。
-  /// 现仅保留真正需要豁免的一条。**新增豁免前先确认 build() 真的超 120 行**。
+  /// **新增豁免前先确认 build() 真的超 120 行**。
   const kBuildAllowlist = {
-    // 160 行（2026-10-04 签到守卫 +9 行，起始行 64→74；2026-10-15 埋点接线 +19 行，
-    // 起始行 74→93）。这是当前唯一真实的超长 build()。
-    'lib/features/scare_coin/presentation/scare_coin_history_page.dart': {93},
+    // 约 160 行（签到守卫 + 埋点接线历史增长）。当前唯一真实的超长 build()。
+    'lib/features/scare_coin/presentation/scare_coin_history_page.dart': {'_ScareCoinHistoryPageState'},
   };
 
-  test('presentation 层 build() 方法不超过 120 行', () {
-    final offenders = <String, int>{};
+  /// 扫描 presentation 层全部 build()，返回 文件 -> {类名: 长度}（仅超长项）。
+  /// 类名取 build 之前最近的 `class X` 声明（StatefulWidget 的 build 在 State 类）。
+  Map<String, Map<String, int>> scanLongBuilds() {
+    final result = <String, Map<String, int>>{};
     for (final entity in Directory('lib').listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       if (!entity.path.replaceAll('\\', '/').contains('/presentation/')) continue;
 
+      final normalized = entity.path.replaceAll(Platform.pathSeparator, '/');
       final lines = entity.readAsLinesSync();
       var buildStart = -1;
       var braceDepth = 0;
+      var currentClass = '';
       for (var i = 0; i < lines.length; i++) {
         final line = lines[i];
+        final classMatch = RegExp(r'^\s*(?:abstract\s+)?class\s+(\w+)').firstMatch(line);
+        if (classMatch != null) currentClass = classMatch.group(1)!;
         if (buildStart == -1) {
           // build 方法签名（排除 _buildXxx 辅助方法）
           if (RegExp(r'^\s+Widget build\(BuildContext context\) \{').hasMatch(line)) {
@@ -147,70 +147,44 @@ void main() {
           if (braceDepth <= 0) {
             final length = i - buildStart + 1;
             if (length > 120) {
-              final normalized = entity.path.replaceAll(Platform.pathSeparator, '/');
-              final allowed = kBuildAllowlist[normalized]?.contains(buildStart + 1) ?? false;
-              if (!allowed) {
-                offenders['${entity.path}:${buildStart + 1}'] = length;
-              }
+              (result[normalized] ??= {})[currentClass] = length;
             }
             buildStart = -1;
           }
         }
+      }
+    }
+    return result;
+  }
+
+  test('presentation 层 build() 方法不超过 120 行', () {
+    final offenders = <String, int>{};
+    for (final entry in scanLongBuilds().entries) {
+      for (final build in entry.value.entries) {
+        final allowed = kBuildAllowlist[entry.key]?.contains(build.key) ?? false;
+        if (!allowed) offenders['${entry.key}#${build.key}'] = build.value;
       }
     }
     expect(offenders, isEmpty, reason: '以下 build() 超过 120 行，必须拆分 _buildXxx：$offenders');
   });
 
-  // 防「死豁免」（2026-10-16 立）：豁免清单按 build() 起始行号登记，行号一旦漂移，
-  // 条目就永远匹配不到——它不再豁免任何东西，却会**继续掩盖真实违规**：
-  // 后人看到清单里有这个文件，会以为「超长是已知且已批准的」，于是不再深究。
-  //
-  // 实锤案例：more_settings_page.dart 的 {494, 495} 在文件拆出 _buildXxx 后失配
-  // （实际起始行早已是 517），此后该文件哪怕 build() 涨到 200 行也不会被拦。
-  //
-  // 本测试要求：清单里的每个行号都必须**真的命中一个超长 build()**。
-  // 命中不到 ⇒ 要么行号漂了（改对），要么 build() 已经合规（删掉条目）。
+  // 防「死豁免」（2026-10-16 立；第四轮 M12 改类名锚点）：清单里的每个类名
+  // 都必须**真的命中一个超长 build()**。命中不到 ⇒ 类被改名/删除（改对），
+  // 或 build() 已经合规（删掉条目）。死豁免会掩盖真实违规，必须拦截。
   test('build() 豁免清单不得存在失效条目', () {
-    final observed = <String, Set<int>>{}; // 文件 -> 实际超长 build() 的起始行号
-    for (final entity in Directory('lib').listSync(recursive: true)) {
-      if (entity is! File || !entity.path.endsWith('.dart')) continue;
-      if (!entity.path.replaceAll('\\', '/').contains('/presentation/')) continue;
-
-      final normalized = entity.path.replaceAll(Platform.pathSeparator, '/');
-      final lines = entity.readAsLinesSync();
-      var buildStart = -1;
-      var braceDepth = 0;
-      for (var i = 0; i < lines.length; i++) {
-        final line = lines[i];
-        if (buildStart == -1) {
-          if (RegExp(r'^\s+Widget build\(BuildContext context\) \{').hasMatch(line)) {
-            buildStart = i;
-            braceDepth = 1;
-          }
-        } else {
-          braceDepth += '{'.allMatches(line).length - '}'.allMatches(line).length;
-          if (braceDepth <= 0) {
-            if (i - buildStart + 1 > 120) {
-              (observed[normalized] ??= <int>{}).add(buildStart + 1);
-            }
-            buildStart = -1;
-          }
-        }
-      }
-    }
-
+    final observed = scanLongBuilds();
     final stale = <String>[];
     for (final entry in kBuildAllowlist.entries) {
-      final actual = observed[entry.key] ?? const <int>{};
-      for (final lineNo in entry.value) {
-        if (!actual.contains(lineNo)) {
+      final actual = observed[entry.key] ?? const <String, int>{};
+      for (final className in entry.value) {
+        if (!actual.containsKey(className)) {
           stale.add(
-            '${entry.key}:$lineNo'
-            '（该文件${actual.isEmpty ? "当前没有超长 build()" : "实际超长行号为 $actual"}）',
+            '${entry.key}#$className'
+            '（该文件${actual.isEmpty ? "当前没有超长 build()" : "实际超长类为 ${actual.keys}"}）',
           );
         }
       }
     }
-    expect(stale, isEmpty, reason: '以下豁免条目已失效，会掩盖真实违规，请更新行号或删除：$stale');
+    expect(stale, isEmpty, reason: '以下豁免条目已失效，会掩盖真实违规，请更新类名或删除：$stale');
   });
 }

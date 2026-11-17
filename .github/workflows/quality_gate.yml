@@ -1,0 +1,76 @@
+name: Quality Gate
+
+# 第四轮审计 M9（2026-11-17）：统一质量门禁 reusable workflow。
+# 此前 dart.yml / release_packages.yml / build.yml 各自维护一份门禁步骤，
+# 口径漂移（build.yml 缺 format/gzip/脚本守卫；release 曾落后日常 CI）。
+# 现三处统一调用本文件——门禁只有一份事实来源，改一处全链生效。
+#
+# 调用方：
+#   - dart.yml（PR/push 日常门禁，required check = analyze-and-test）
+#   - release_packages.yml quality-gate job（tag 发版熔断）
+#   - build.yml（每 push/PR 的 Windows 编译门禁前置）
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  # job id 保持 analyze-and-test：分支保护 required check 按「调用方 job id /
+  # 被调 job id」上报（dart.yml 的 analyze-and-test 调用本文件 → 检查名
+  # analyze-and-test / analyze-and-test）。被调 job 改名会让 required check
+  # 永远等不到（批16 首跑实测 BLOCKED）。
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Dependency health report (non-blocking)
+        # P3-9（架构审计 2026-11-12）：依赖健康可见性——列出落后/停更包。
+        # 纯信息性，网络抖动或 pub 服务异常不阻断质量门禁；升级决策人工评估。
+        continue-on-error: true
+        run: flutter pub outdated --no-dev-dependencies || true
+
+      - name: Verify wordbook asset
+        # 第三轮 T32：非空但损坏的 gz 不得进 CI/正式包。gzip -t 校验压缩流
+        # 完整性（不解压落盘，秒级）；Ubuntu runner 自带 gzip。
+        run: |
+          test -s assets/db/wordbook.db.gz
+          gzip -t assets/db/wordbook.db.gz
+
+      - name: Verify Dart formatting
+        shell: bash
+        run: |
+          find lib test integration_test test_driver -type f -name '*.dart' -print0 \
+            | xargs -0 dart format --output=none --set-exit-if-changed --line-length 120
+
+      - name: Analyze project source
+        # info 已清零（2026-09-26）：默认 fatal-infos / fatal-warnings，0 issue 才放行。
+        run: flutter analyze
+
+      - name: Verify deploy/sync shell scripts
+        shell: bash
+        # auto_sync.sh 的守卫（R3-E03 改造 + 大文件拦截修复）。
+        # 90MB 拦截是「构建产物/安装包塞进仓库」的唯一防线，纯 shell 真跑。
+        run: |
+          bash -n scripts/auto_sync.sh
+          bash -n scripts/test_auto_sync_size_guard.sh
+          bash scripts/test_auto_sync_size_guard.sh
+
+      - name: Run tests
+        # 审计 D5（2026-11-15）：flutter test 只跑 test/（单元/widget，内存 SQLite）。
+        # integration_test/ 需真实设备，ubuntu runner 无设备无法执行，仅 format/analyze
+        # 门禁；端到端真机验证列为 owner 待办。
+        run: flutter test --no-pub

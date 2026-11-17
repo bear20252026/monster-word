@@ -9,7 +9,6 @@ import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/favorites_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/mastered_writer_port.dart';
 import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_reader.dart';
@@ -28,6 +27,7 @@ import 'package:word_app/core/repositories/fav_repository.dart';
 import 'package:word_app/features/learning/data/mastered_repository.dart';
 
 import '../../telemetry/test_helpers/spy_usage_stats_recorder.dart';
+import '../../../helpers/fake_learning_queue_port.dart';
 
 void main() {
   setUp(() {
@@ -109,7 +109,7 @@ void main() {
     await repository.addFavorite('saved');
     final favorites = LearningFavoritesState(
       favoritesPort: _FakeFavoritesPort(repository),
-      queuePort: _FakeQueuePort(const []),
+      queuePort: FakeLearningQueuePort(words: const []),
     );
 
     await favorites.refresh();
@@ -401,7 +401,7 @@ LearningSessionState _sessionWithWords({
   return LearningSessionState(
     // 确定性顺序（顺序无关断言由其他用例覆盖）
     shuffler: (wordst) => words,
-    queuePort: _FakeQueuePort(words),
+    queuePort: FakeLearningQueuePort(words: words),
     progressPort: _FakeProgressPort(),
     reviewSchedulePort: RepositoryReviewScheduleWriterPort(effectiveSchedule),
     choicePort: _FakeChoicePort(),
@@ -409,24 +409,6 @@ LearningSessionState _sessionWithWords({
     prefs: PresentationPrefs(),
     usageStats: usageStats,
   );
-}
-
-class _FakeQueuePort implements LearningQueuePort {
-  _FakeQueuePort(this._words);
-
-  final List<Word> _words;
-
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
-
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async {
-    final queue = List<Word>.from(_words);
-    if (shuffle) {
-      queue.shuffle();
-    }
-    return (limit == null || limit >= queue.length) ? queue : queue.sublist(0, limit);
-  }
 }
 
 class _FakeProgressPort implements LearningProgressPort {

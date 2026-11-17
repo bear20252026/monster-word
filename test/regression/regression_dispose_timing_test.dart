@@ -15,7 +15,6 @@ import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/learning/application/favorites_port.dart';
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/search/application/example_reader.dart';
 import 'package:word_app/features/search/application/search_history_store.dart';
@@ -25,11 +24,11 @@ import 'package:word_app/features/search/presentation/search_page.dart';
 import 'package:word_app/features/settings/data/learning_preferences_repository.dart';
 import 'package:word_app/features/settings/presentation/learning_preferences_state.dart';
 import 'package:word_app/features/settings/presentation/settings_page.dart';
-import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 import '../helpers/fakes.dart';
+import '../helpers/fake_learning_queue_port.dart';
 
 class _MockWordSearchReader implements WordSearchReader {
   @override
@@ -54,13 +53,6 @@ class _MockFavoritesPort implements FavoritesPort {
   bool isFavorite(String word) => false;
 }
 
-class _MockQueuePort implements LearningQueuePort {
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => [];
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => [];
-}
-
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -74,7 +66,8 @@ void main() {
           Provider<SearchHistoryStore>(create: (_) => _MockHistoryStore()),
           Provider<ExampleReader>(create: (_) => const ExampleParserAdapter()),
           ChangeNotifierProvider<LearningFavoritesState>(
-            create: (_) => LearningFavoritesState(favoritesPort: _MockFavoritesPort(), queuePort: _MockQueuePort()),
+            create: (_) =>
+                LearningFavoritesState(favoritesPort: _MockFavoritesPort(), queuePort: FakeLearningQueuePort()),
           ),
           ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(update: (_, state, _) => state),
           ChangeNotifierProvider<AudioPlaybackState>(

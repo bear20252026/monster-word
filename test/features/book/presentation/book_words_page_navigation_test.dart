@@ -9,7 +9,6 @@ import 'package:word_app/features/book/presentation/book_words_page.dart';
 import 'package:word_app/features/learning/application/favorites_port.dart';
 import 'package:word_app/features/learning/application/new_words_reader.dart';
 import 'package:word_app/features/learning/application/new_words_writer_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/new_words_state.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
@@ -21,6 +20,7 @@ import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
 
 import '../test_helpers/fake_learning_progress_reader.dart';
+import '../../../helpers/fake_learning_queue_port.dart';
 
 /// 模拟 BookCatalogReader
 class MockCatalogReader implements BookCatalogReader {
@@ -66,15 +66,6 @@ class MockFavoritesPort implements FavoritesPort {
   Future<void> toggleFavorite(String word) async {}
   @override
   bool isFavorite(String word) => false;
-}
-
-/// 模拟 LearningQueuePort（learning 端口）
-class MockLearningQueuePort implements LearningQueuePort {
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => [];
-
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => [];
 }
 
 /// 模拟 NewWordsReader（learning 端口）
@@ -143,7 +134,7 @@ void main() {
             ChangeNotifierProvider<BookState>.value(value: bookState),
             ChangeNotifierProvider<LearningFavoritesState>(
               create: (_) =>
-                  LearningFavoritesState(favoritesPort: MockFavoritesPort(), queuePort: MockLearningQueuePort()),
+                  LearningFavoritesState(favoritesPort: MockFavoritesPort(), queuePort: FakeLearningQueuePort()),
             ),
             ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(update: (_, state, _) => state),
             ChangeNotifierProvider<NewWordsState>(

@@ -10,7 +10,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/domain/choice_generator.dart';
 import 'package:word_app/features/learning/domain/definition_formatter.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
@@ -20,16 +19,7 @@ import 'package:word_app/features/learning/application/review_schedule_writer_po
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 
-class _FakeQueuePort implements LearningQueuePort {
-  _FakeQueuePort(this._words);
-  final List<Word> _words;
-
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
-
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => List<Word>.from(_words);
-}
+import '../helpers/fake_learning_queue_port.dart';
 
 class _FakeProgressPort implements LearningProgressPort {
   @override
@@ -76,11 +66,13 @@ void main() {
       // 症状：GRE 等书 45% 词库空壳词进队列 → 四选一残缺、详情页空白；
       // 修复：commit 2eabee0 _replaceQueue 过滤。
       final session = LearningSessionState(
-        queuePort: _FakeQueuePort([
-          Word(id: 1, word: 'solid', interpret: 'vt. 巩固'),
-          Word(id: 2, word: 'hollow'), // 空释义
-          Word(id: 3, word: 'empty', interpret: '""'), // JSON 空壳
-        ]),
+        queuePort: FakeLearningQueuePort(
+          words: [
+            Word(id: 1, word: 'solid', interpret: 'vt. 巩固'),
+            Word(id: 2, word: 'hollow'), // 空释义
+            Word(id: 3, word: 'empty', interpret: '""'), // JSON 空壳
+          ],
+        ),
         progressPort: _FakeProgressPort(),
         reviewSchedulePort: _FakeSchedulePort(),
         choicePort: _RealChoicePort(),
@@ -113,7 +105,9 @@ void main() {
       // 候选不足还补「非标准用法」等硬编码假释义；
       // 修复：会话状态从词库随机取样真实词扩充候选池。
       final session = LearningSessionState(
-        queuePort: _FakeQueuePort([Word(id: 1, word: 'solo', interpret: 'adj. 独自的')]),
+        queuePort: FakeLearningQueuePort(
+          words: [Word(id: 1, word: 'solo', interpret: 'adj. 独自的')],
+        ),
         progressPort: _FakeProgressPort(),
         reviewSchedulePort: _FakeSchedulePort(),
         choicePort: _RealChoicePort(),

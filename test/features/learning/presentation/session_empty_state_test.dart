@@ -22,7 +22,6 @@ import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/presentation/session/dictation_session_page.dart';
@@ -35,16 +34,9 @@ import 'package:word_app/widgets/monster_icon.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 import '../../../helpers/fakes.dart';
+import '../../../helpers/fake_learning_queue_port.dart';
 
 // ── 空队列装配：让「真的没有待学单词」成为真实场景（而不是被吞掉的异常）──
-
-class _EmptyQueuePort implements LearningQueuePort {
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => const [];
-
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
-}
 
 class _StubProgressPort implements LearningProgressPort {
   @override
@@ -65,7 +57,7 @@ class _StubChoicePort implements ChoiceGeneratorPort {
 
 /// 队列为空的会话状态（不触发任何 IO）。
 LearningSessionState _emptySession() => LearningSessionState(
-  queuePort: _EmptyQueuePort(),
+  queuePort: FakeLearningQueuePort(),
   progressPort: _StubProgressPort(),
   reviewSchedulePort: RepositoryReviewScheduleWriterPort(ReviewScheduleRepository()),
   choicePort: _StubChoicePort(),

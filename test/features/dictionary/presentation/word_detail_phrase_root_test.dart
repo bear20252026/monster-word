@@ -14,7 +14,6 @@ import 'package:word_app/features/learning/presentation/learning_session_starter
 import 'package:word_app/features/word_browse/application/word_notes_store.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_reader.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_writer_port.dart';
@@ -32,6 +31,7 @@ import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/theme/skin_system.dart';
 
 import '../../../helpers/fakes.dart';
+import '../../../helpers/fake_learning_queue_port.dart';
 
 /// 模拟字典补充数据端口（R3：presentation 只经端口消费）
 class _StubDictionaryExtraReader implements DictionaryExtraReader {
@@ -165,7 +165,7 @@ void main() {
         ),
         ChangeNotifierProvider<LearningSessionState>(
           create: (_) => LearningSessionState(
-            queuePort: _StubQueuePort(),
+            queuePort: FakeLearningQueuePort(),
             progressPort: _StubProgressPort(),
             reviewSchedulePort: RepositoryReviewScheduleWriterPort(_StubReviewScheduleRepo()),
             choicePort: _StubChoicePort(),
@@ -310,14 +310,6 @@ void main() {
 }
 
 // ── 以下为 LearningSessionState 所需的 stub ──
-
-class _StubQueuePort implements LearningQueuePort {
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => const [];
-
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
-}
 
 class _StubProgressPort implements LearningProgressPort {
   @override

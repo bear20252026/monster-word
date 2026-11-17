@@ -6,12 +6,19 @@ on:
   pull_request:
     branches: [ "main" ]
 
-# 最小权限基线：未显式声明 permissions 的 job 继承此 read-only，
-# 仅 release job 按需提升为 contents: write。
+# 最小权限基线：未显式声明 permissions 的 job 继承此 read-only。
 permissions:
   contents: read
 
 jobs:
+  # 第四轮审计 M9（2026-11-17）：门禁步骤单一事实来源 = quality_gate.yml。
+  #
+  # ⚠️ 分支保护 required check 按**检查名精确匹配**（= analyze-and-test）。
+  # reusable 调用（uses:）会把检查名上报为「调用方 job / 被调 job」，永远
+  # 匹配不上原名（批16 实测 BLOCKED）；而本 job 又必须留在 dart.yml 里
+  # 承载原名。故门禁步骤以 YAML 锚点从 quality_gate.yml 机械同步——
+  # 改门禁只改 quality_gate.yml，然后运行 scripts/sync_ci_gate.py 同步本文件。
+  # CI 的 sync 校验步骤会拦截「改了源头忘了同步」的漂移。
   analyze-and-test:
     runs-on: ubuntu-latest
     steps:
@@ -24,21 +31,20 @@ jobs:
         with:
           flutter-version: '3.47.0'
           channel: stable
+          cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Dependency health report (non-blocking)
-        # P3-9（架构审计 2026-11-12）：依赖健康可见性——列出落后/停更包（如 archive 3.x）。
-        # 纯信息性，continue-on-error 保证网络抖动或 pub 服务异常不阻断质量门禁；
-        # 升级决策仍由人工评估（破坏性变更需单独 PR），此处只防「无人察觉地停更」。
+        # P3-9（架构审计 2026-11-12）：依赖健康可见性——列出落后/停更包。
+        # 纯信息性，网络抖动或 pub 服务异常不阻断质量门禁；升级决策人工评估。
         continue-on-error: true
         run: flutter pub outdated --no-dev-dependencies || true
 
       - name: Verify wordbook asset
-        # 第三轮 T32：旧校验仅 test -s（非空）——非空但损坏的 gz 可通过 CI 进
-        # 正式包（用户端解压失败词库全废）。gzip -t 校验压缩流完整性（不解压
-        # 落盘，秒级）；Ubuntu runner 自带 gzip。
+        # 第三轮 T32：非空但损坏的 gz 不得进 CI/正式包。gzip -t 校验压缩流
+        # 完整性（不解压落盘，秒级）；Ubuntu runner 自带 gzip。
         run: |
           test -s assets/db/wordbook.db.gz
           gzip -t assets/db/wordbook.db.gz
@@ -56,10 +62,7 @@ jobs:
       - name: Verify deploy/sync shell scripts
         shell: bash
         # auto_sync.sh 的守卫（R3-E03 改造 + 大文件拦截修复）。
-        # 为什么必须进 CI：这道 90MB 拦截自 2026-08-31 事故后建立以来
-        # **一直是空转的**（把 `git status --porcelain` 的整行当路径），
-        # 而它是「构建产物/安装包塞进仓库」的唯一防线。
-        # 纯 shell，不依赖 Flutter，在临时仓库里真跑脚本。
+        # 90MB 拦截是「构建产物/安装包塞进仓库」的唯一防线，纯 shell 真跑。
         run: |
           bash -n scripts/auto_sync.sh
           bash -n scripts/test_auto_sync_size_guard.sh
@@ -67,7 +70,10 @@ jobs:
 
       - name: Run tests
         # 审计 D5（2026-11-15）：flutter test 只跑 test/（单元/widget，内存 SQLite）。
-        # integration_test/ 需真实设备/模拟器（真实 DB/平台通道），ubuntu runner 无设备
-        # 无法执行，故 CI 仅对其做 format/analyze 门禁；端到端真机验证列为 owner 待办
-        # （与 Android isolate 开库真机验证同批），不在无设备 CI 空转。
+        # integration_test/ 需真实设备，ubuntu runner 无设备无法执行，仅 format/analyze
+        # 门禁；端到端真机验证列为 owner 待办。
         run: flutter test --no-pub
+
+      - name: Verify gate steps in sync with quality_gate.yml
+        # M9 漂移守卫：本 job 的步骤必须与单一事实来源逐字一致（注释除外）。
+        run: python scripts/sync_ci_gate.py --check
