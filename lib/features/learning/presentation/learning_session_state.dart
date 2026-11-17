@@ -16,6 +16,7 @@ import 'package:word_app/core/application/today_progress_store.dart';
 import 'package:word_app/features/learning/application/alphabet_spread_shuffle.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
 import 'package:word_app/features/learning/application/learning_queue_port.dart';
+import 'package:word_app/features/learning/application/learning_rating_executor.dart';
 import 'package:word_app/features/learning/application/learning_resume_planner.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
@@ -99,6 +100,12 @@ class LearningSessionState extends ChangeNotifier {
   /// 每日任务（D1）进度端口；未注入时静默跳过。
   final DailyMissionStore? _dailyMissions;
   final LeitnerCardEngine _leitnerEngine = LeitnerCardEngine();
+
+  /// 第四轮 M4：评分编排下沉 application（先落盘后推进引擎）。
+  late final LearningRatingExecutor _ratingExecutor = LearningRatingExecutor(
+    engine: _leitnerEngine,
+    writerPort: _reviewSchedulePort,
+  );
 
   Book? _currentBook;
   List<Word> _queue = [];
@@ -468,19 +475,9 @@ class LearningSessionState extends ChangeNotifier {
     try {
       // P1-02 Durable Command：FSRS 持久化成功才推进会话与计数——
       // 硬失败（连降级日志都写不进）时 UI 停留当前词，绝无「假成功」。
-      // 引擎推进（Leitner 会话状态）同样放在持久化之后，保证一致。
-      await _reviewSchedulePort.rateWord(word: word.word, rating: rating);
-      switch (rating) {
-        case FsrsRating.again:
-          _leitnerEngine.iDontKnow();
-          _errorWords.add(word); // 记录答错的词
-        case FsrsRating.hard:
-          _leitnerEngine.iMayKnow();
-        case FsrsRating.good:
-          _leitnerEngine.iReallyKnow();
-        case FsrsRating.easy:
-          _leitnerEngine.tooEasy();
-      }
+      // 第四轮 M4：「FSRS 写 → Leitner 推进」编排下沉 application 执行器
+      // （镜像 review 侧 ReviewSessionRatingExecutor）；错词记录经回调交还。
+      await _ratingExecutor.rate(word: word.word, rating: rating, onAgain: () => _errorWords.add(word));
       _totalAnswered++;
       // 用户反馈修复（2026-11-14）：跳过/答错(again)不计「今日已学」，
       // 防止空手刷每日目标/任务/会话奖；按词去重防重答重复计数。
