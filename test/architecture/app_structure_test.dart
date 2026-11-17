@@ -253,6 +253,25 @@ void main() {
       );
       final slSource = File('lib/app/service_locator.dart').readAsStringSync();
       expect(slSource, contains('ServiceDictionaryContentReader(database: sl<WordBookDatabase>())'));
+      // 第四轮审计 M1/M2/M14（2026-11-17）：装配收口防回归——
+      // ① 生词适配器必须注入 DI 单例仓储（自建第二实例 = 双串行闸竞态复活）；
+      // ② 词典收藏写必须经 LearningFavoritesStore 共享快照（直写 FavRepository
+      //    = 跨域星标陈旧）；③ providers 不得现场 new 写适配器（第二装配根）。
+      expect(slSource, contains('ServiceDictionaryNewWordWriter(repository: sl<NewWordRepository>())'));
+      expect(providersSource, contains('context.read<LearningFavoritesStore>()'));
+      expect(providersSource, isNot(contains('FavRepositoryImpl')));
+      final favWriterSource = File('lib/features/dictionary/data/service_dictionary_favorite_writer.dart')
+          .readAsStringSync();
+      expect(favWriterSource, contains('LearningFavoritesStore'));
+      // 只禁真实依赖（import/构造），注释里的历史说明不触发。
+      expect(favWriterSource, isNot(contains("import 'package:word_app/core/repositories/fav_repository")));
+      expect(favWriterSource, isNot(contains('FavRepositoryImpl(')));
+      final newWordWriterSource = File('lib/features/dictionary/data/service_dictionary_new_word_writer.dart')
+          .readAsStringSync();
+      // 同上：只禁真实构造/import，注释里的历史说明（含 `NewWordRepositoryImpl(`
+      // 字样）不触发。
+      expect(newWordWriterSource, isNot(contains('= NewWordRepositoryImpl(')));
+      expect(newWordWriterSource, isNot(contains('new_word_repository_impl.dart')));
       expect(featurePageSource, contains('DictionaryDetailState'));
       expect(featurePageSource, isNot(contains('DictionaryService')));
       // 四层齐全
@@ -405,7 +424,9 @@ void main() {
       final pageSource = File('lib/features/scare_coin/presentation/scare_coin_history_page.dart').readAsStringSync();
       // A5 收口后 profile/my_space 的卡片消费已上收至共享组件（唯一持有 ScareCoinStore 消费）。
       final cardsSource = File('lib/widgets/scare_coin_summary_cards.dart').readAsStringSync();
-      final dashboardSource = File('lib/features/learning/presentation/dashboard_page.dart').readAsStringSync();
+      // 第四轮审计 M17（2026-11-17）：dashboard_page 孤儿页已删除（C7 死路由、
+      // 全库零 import，仅本守卫读它断言）——页面与专属周报模型/分享段一并清理，
+      // 不再留守卫供养死文件。
 
       expect(portSource, contains('abstract interface class ScareCoinStore'));
       expect(adapterSource, contains('implements ScareCoinStore'));
@@ -420,7 +441,7 @@ void main() {
       expect(scareCoinScopeIdx, greaterThan(-1));
       expect(checkInScopeIdx, greaterThan(-1));
       expect(scareCoinScopeIdx, lessThan(checkInScopeIdx));
-      for (final source in [pageSource, cardsSource, dashboardSource]) {
+      for (final source in [pageSource, cardsSource]) {
         expect(source, contains('ScareCoinStore'));
         expect(source, isNot(contains('ScareCoinLedger')));
         expect(source, isNot(contains('SharedPreferences')));
