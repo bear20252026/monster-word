@@ -9,10 +9,10 @@ import 'package:word_app/core/utils/boss_siege.dart';
 import 'package:word_app/core/application/restore_cache_reset.dart';
 import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/models/mw_word_process.dart';
-import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/application/extra_choice_pool.dart';
 import 'package:word_app/features/learning/application/review_queue_reader.dart';
 import 'package:word_app/features/learning/application/review_rating_writer.dart';
+import 'package:word_app/features/learning/application/review_restore_planner.dart';
 import 'package:word_app/features/learning/application/review_session_question_factory.dart';
 import 'package:word_app/features/learning/application/review_session_rating_executor.dart';
 import 'package:word_app/features/learning/application/review_session_snapshot.dart';
@@ -203,7 +203,10 @@ class ReviewSessionState extends ChangeNotifier {
       // 页面在 initState 里调本方法，首段同步 notifyListeners 会落在首帧构建期
       // （setState during build）；移到 await 后，通知在微任务里发出，避开构建期。
       notifyListeners();
-      final plan = restore == null ? null : _planRestore(restore, loaded);
+      // 第四轮 M4：恢复决策下沉 application 纯函数（镜像 planLearningResume）。
+      final plan = restore == null
+          ? null
+          : planReviewRestore(saved: restore, hadDueAtStart: _hadDueAtStart, loaded: loaded);
       if (plan != null && restore != null) {
         _applyRestore(restore, plan);
       } else {
@@ -230,34 +233,11 @@ class ReviewSessionState extends ChangeNotifier {
     }
   }
 
-  /// 恢复可行性判定：返回还要继续走的那批词 + 已消费的词 id；不可恢复时返回 null。
-  ///
-  /// 「不在当前到期集合里」的词按已完成计——它要么评分已经落库（所以不再 due），
-  /// 要么已从词书删除；两种都不该再出现，更不能重答一次造成双计。
-  ({List<Word> remaining, Set<int> doneIds})? _planRestore(ReviewSessionSnapshot saved, List<Word> loaded) {
-    if (!saved.hadDueAtStart || !_hadDueAtStart) return null;
-    final byId = {for (final word in loaded) word.id: word};
-    final rated = saved.ratedIds.toSet();
-    final remaining = <Word>[];
-    final doneIds = <int>{};
-    for (final id in saved.wordIds) {
-      if (rated.contains(id)) {
-        doneIds.add(id);
-        continue;
-      }
-      final word = byId[id];
-      if (word == null) {
-        doneIds.add(id);
-        continue;
-      }
-      remaining.add(word);
-    }
-    if (remaining.isEmpty) return null;
-    return (remaining: remaining, doneIds: doneIds);
-  }
+  // 第四轮 M4：恢复可行性判定已下沉 application/review_restore_planner.dart
+  // （planReviewRestore 纯函数，口径逐条一致，整表驱动单测覆盖）。
 
   /// 按存档词序重建引擎；顺序必须保持，否则「上次做到第几步」会错位。
-  void _applyRestore(ReviewSessionSnapshot saved, ({List<Word> remaining, Set<int> doneIds}) plan) {
+  void _applyRestore(ReviewSessionSnapshot saved, ReviewRestorePlan plan) {
     _hadDueAtStart = saved.hadDueAtStart;
     _dueAtStart = saved.dueAtStart;
     _sessionId = saved.sessionId;

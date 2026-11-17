@@ -1,7 +1,6 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
-import 'package:word_app/core/utils/monster_speech.dart';
 import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/core/utils/sfx_settings.dart';
@@ -26,7 +25,7 @@ import 'package:word_app/app/router/nav_utils.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:word_app/core/presentation/responsive.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
-import 'package:word_app/core/infrastructure/pet_window_service.dart';
+import 'package:word_app/features/settings/application/pet_window_controller.dart';
 import 'package:word_app/features/settings/presentation/restore_backup_dialog.dart';
 import 'package:word_app/features/settings/presentation/llm_settings_sheet.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
@@ -61,12 +60,11 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   String _appVersion = '';
 
   /// 桌面宠物窗口开关（Windows 独立顶层窗口，见 pet_host.h）。
-  static const PetWindowService _petWindow = PetWindowService();
-  bool _petVisible = false;
-
-  /// 审计 C6（2026-11-16）：订阅原生可见性事件——用户在桌面右键关掉宠物后
-  /// 开关即时对齐（旧实现只在 initState 读一次，状态脱节）。
-  StreamSubscription<bool>? _petVisibilitySub;
+  /// 第四轮 M5（2026-11-17）：竞态编排（C3/R20/T20/C6）下沉 PetWindowController，
+  /// 页面只消费 visible 通知与 toggle 命令。
+  late final PetWindowController _petController = PetWindowController(
+    checkinReader: context.read<CheckinStatusReader?>(),
+  );
 
   UpdateCheckService get _updateService => widget.updateServiceOverride ?? context.read<UpdateCheckService>();
 
@@ -74,25 +72,8 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   void initState() {
     super.initState();
     // 状态在原生：进页面时对齐一次（可能上次开过还没关）。
-    if (_petWindow.isSupported) {
-      _petWindow.listenVisibilityEvents();
-      _petVisibilitySub = _petWindow.visibilityChanges.listen((visible) {
-        // 审计 R20（2026-11-16）：toggle 在途时忽略事件——右键关窗事件先到置
-        // false，随后 toggle 返回 true 覆盖会谎报开启。在途期间以 toggle 完成
-        // 后的 isVisible 复核为准（事件可能早于原生窗口真正销毁/创建）。
-        if (mounted && !_petToggleBusy) setState(() => _petVisible = visible);
-      });
-      unawaited(
-        _petWindow
-            .isVisible()
-            .then((visible) {
-              // 第三轮 T20：首查慢回时用户可能已在途 toggle——与事件监听同口径
-              // 加 busy 闸，防旧查询结果覆盖在途开关状态。
-              if (mounted && !_petToggleBusy) setState(() => _petVisible = visible);
-            })
-            .catchError((Object e) => debugLog('查询桌面宠物状态失败: $e')),
-      );
-    }
+    _petController.addListener(_onPetChanged);
+    _petController.attach();
     PackageInfo.fromPlatform()
         .then((info) {
           if (mounted) {
@@ -104,9 +85,14 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         .catchError((e) => debugLog('读取应用版本失败: $e'));
   }
 
+  void _onPetChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
-    _petVisibilitySub?.cancel();
+    _petController.removeListener(_onPetChanged);
+    _petController.dispose();
     super.dispose();
   }
 
@@ -430,7 +416,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   /// 桌面宠物（Windows）：独立顶层窗口 —— 无边框 + 透明 + 置顶 + 不进任务栏。
   /// 非 Windows 不渲染这一组（Android 上没有「盖在别的应用上」这个概念）。
   Widget _buildPetModeGroup(SkinSystem skin) {
-    if (!_petWindow.isSupported) return const SizedBox.shrink();
+    if (!_petController.isSupported) return const SizedBox.shrink();
     return Padding(
       padding: EdgeInsets.only(top: context.design.spacing.md),
       child: _SettingGroup([
@@ -438,9 +424,9 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           icon: Icons.pets_outlined,
           iconColor: skin.colors.accent,
           title: '桌面宠物',
-          subtitle: _petVisible ? '已开启 · 双击怪兽回到应用' : '让怪兽浮在其他窗口上面',
-          trailing: Switch.adaptive(value: _petVisible, onChanged: (on) => unawaited(_togglePetWindow(on))),
-          onTap: () => unawaited(_togglePetWindow(!_petVisible)),
+          subtitle: _petController.visible ? '已开启 · 双击怪兽回到应用' : '让怪兽浮在其他窗口上面',
+          trailing: Switch.adaptive(value: _petController.visible, onChanged: (on) => unawaited(_togglePetWindow(on))),
+          onTap: () => unawaited(_togglePetWindow(!_petController.visible)),
         ),
       ]),
     );
@@ -462,61 +448,13 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     );
   }
 
-  /// 开关的真实状态在原生（窗口存在与否），所以以**返回值**为准更新 UI，
-  /// 不用传进去的 `on` —— 否则原生开失败时界面会说谎。
-  bool _petToggleBusy = false;
-
+  /// 第四轮 M5：竞态编排已下沉 PetWindowController（C3 in-flight 闸 /
+  /// R20 返回值复核 / T20 失败路径复核逐条保留）。页面只发命令 + 按结果提示。
   Future<void> _togglePetWindow(bool on) async {
-    // 审计 C3（2026-11-15）：Switch.onChanged 与整行 onTap 都触发本方法，
-    // getCheckinDates 的 await 拉长竞态窗；快速双击会开+关最终态与意图相反。
-    // in-flight 闸拒重入。
-    if (_petToggleBusy) return;
-    _petToggleBusy = true;
-    // context 一律在 await 之前取（async gap 后禁用 context）。
-    final reader = context.read<CheckinStatusReader?>();
-    try {
-      // 宠物窗口是第二个 engine，读不到主应用状态 ⇒ 签到天数只能开窗时带过去。
-      int? days;
-      if (on && reader != null) {
-        try {
-          days = (await reader.getCheckinDates()).length;
-        } catch (e, s) {
-          reportSwallowedError('桌面宠物读取签到天数失败', e, s);
-        }
-      }
-      final visible = await _petWindow.toggle(
-        days: days,
-        personality: MonsterSpeech.currentPersonality.name,
-      ); // P2-3 性格随开窗带过去
-      if (!mounted) return;
-      // 审计 R20（2026-11-16）：toggle 返回值可能滞后于在途右键关窗——落状态前
-      // 复核原生真实可见性（查询失败回退 toggle 返回值），杜绝短暂谎报开启。
-      var actual = visible;
-      try {
-        actual = await _petWindow.isVisible();
-      } catch (_) {
-        // 吞错豁免: 复核失败回退 toggle 返回值，不阻断开关流程。
-      }
-      if (!mounted) return;
-      setState(() => _petVisible = actual);
-      if (actual != on) {
-        showMwSnackBar(context, const SnackBar(content: Text('桌面宠物窗口没能打开，请查看日志')));
-      }
-    } catch (e, s) {
-      reportSwallowedError('桌面宠物窗口开关失败', e, s);
-      if (!mounted) return;
-      // 第三轮 T20：失败路径同样复核原生真实可见性——busy 期间被忽略的
-      // 右键关窗事件不会重放，不复核则开关态与原生脱节直至下一事件。
-      try {
-        final actual = await _petWindow.isVisible();
-        if (mounted) setState(() => _petVisible = actual);
-      } catch (_) {
-        // 吞错豁免: 复核失败保持当前显示态，下一可见性事件会再对齐。
-      }
-      if (!mounted) return;
-      showMwSnackBar(context, const SnackBar(content: Text('桌面宠物窗口启动失败')));
-    } finally {
-      _petToggleBusy = false;
+    final actual = await _petController.toggle(on);
+    if (!mounted) return;
+    if (actual != on) {
+      showMwSnackBar(context, const SnackBar(content: Text('桌面宠物窗口没能打开，请查看日志')));
     }
   }
 
