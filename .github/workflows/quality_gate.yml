@@ -16,7 +16,11 @@ permissions:
   contents: read
 
 jobs:
-  gate:
+  # job id 保持 analyze-and-test：分支保护 required check 按「调用方 job id /
+  # 被调 job id」上报（dart.yml 的 analyze-and-test 调用本文件 → 检查名
+  # analyze-and-test / analyze-and-test）。被调 job 改名会让 required check
+  # 永远等不到（批16 首跑实测 BLOCKED）。
+  analyze-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
