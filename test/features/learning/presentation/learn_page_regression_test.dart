@@ -11,7 +11,6 @@ import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/favorites_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/domain/choice_generator.dart';
@@ -25,6 +24,7 @@ import 'package:word_app/core/engine/fsrs6_engine.dart' show FsrsRating;
 import 'package:word_app/theme/skin_system.dart';
 
 import '../../../helpers/fakes.dart';
+import '../../../helpers/fake_learning_queue_port.dart';
 
 /// 假音频服务。
 // 审计 I64：原文件内 no-op 假件收敛到 test/helpers/fakes.dart（保留原名引用）
@@ -39,12 +39,14 @@ void main() {
     final schedule = ReviewScheduleRepository();
     await schedule.initialize();
     final session = LearningSessionState(
-      queuePort: _FakeQueuePort([
-        Word(id: 1, word: 'first', interpret: '第一释义'),
-        Word(id: 2, word: 'second', interpret: '第二释义'),
-        Word(id: 3, word: 'third', interpret: '第三释义'),
-        Word(id: 4, word: 'fourth', interpret: '第四释义'),
-      ]),
+      queuePort: FakeLearningQueuePort(
+        words: [
+          Word(id: 1, word: 'first', interpret: '第一释义'),
+          Word(id: 2, word: 'second', interpret: '第二释义'),
+          Word(id: 3, word: 'third', interpret: '第三释义'),
+          Word(id: 4, word: 'fourth', interpret: '第四释义'),
+        ],
+      ),
       progressPort: _FakeProgressPort(),
       reviewSchedulePort: RepositoryReviewScheduleWriterPort(schedule),
       choicePort: _FakeChoicePort(),
@@ -62,8 +64,10 @@ void main() {
           ),
           // 会话顶栏（横屏同样渲染）需要收藏状态；测试补齐最小装配。
           ChangeNotifierProvider<LearningFavoritesState>(
-            create: (_) =>
-                LearningFavoritesState(favoritesPort: _FakeFavoritesPort(), queuePort: _FakeQueuePort(const [])),
+            create: (_) => LearningFavoritesState(
+              favoritesPort: _FakeFavoritesPort(),
+              queuePort: FakeLearningQueuePort(words: const []),
+            ),
           ),
         ],
         // 把 Provider 放在 MaterialApp 之上，使 push 出来的 WordDetailPage 路由也能访问。
@@ -100,10 +104,12 @@ void main() {
     final schedule = ReviewScheduleRepository();
     await schedule.initialize();
     final session = LearningSessionState(
-      queuePort: _FakeQueuePort([
-        Word(id: 1, word: 'first', interpret: '第一释义'),
-        Word(id: 2, word: 'second', interpret: '第二释义'),
-      ]),
+      queuePort: FakeLearningQueuePort(
+        words: [
+          Word(id: 1, word: 'first', interpret: '第一释义'),
+          Word(id: 2, word: 'second', interpret: '第二释义'),
+        ],
+      ),
       progressPort: _FakeProgressPort(),
       reviewSchedulePort: RepositoryReviewScheduleWriterPort(schedule),
       choicePort: _FakeChoicePort(),
@@ -120,8 +126,10 @@ void main() {
             create: (_) => AudioPlaybackState(audioService: _FakeAudioService()),
           ),
           ChangeNotifierProvider<LearningFavoritesState>(
-            create: (_) =>
-                LearningFavoritesState(favoritesPort: _FakeFavoritesPort(), queuePort: _FakeQueuePort(const [])),
+            create: (_) => LearningFavoritesState(
+              favoritesPort: _FakeFavoritesPort(),
+              queuePort: FakeLearningQueuePort(words: const []),
+            ),
           ),
         ],
         child: MaterialApp(
@@ -163,24 +171,6 @@ void main() {
 }
 
 final _testBook = Book(id: 1, code: 'TEST', name: '测试', wordCount: 2);
-
-class _FakeQueuePort implements LearningQueuePort {
-  _FakeQueuePort(this._words);
-
-  final List<Word> _words;
-
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
-
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async {
-    final queue = List<Word>.from(_words);
-    if (shuffle) {
-      queue.shuffle();
-    }
-    return (limit == null || limit >= queue.length) ? queue : queue.sublist(0, limit);
-  }
-}
 
 class _FakeProgressPort implements LearningProgressPort {
   @override

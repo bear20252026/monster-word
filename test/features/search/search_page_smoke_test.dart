@@ -9,13 +9,13 @@ import 'package:word_app/features/search/application/word_search_reader.dart';
 import 'package:word_app/features/search/data/example_parser_adapter.dart';
 import 'package:word_app/features/search/presentation/search_page.dart';
 import 'package:word_app/models/word.dart';
-import 'package:word_app/models/book.dart';
 import 'package:word_app/core/audio/audio_playback_state.dart';
 import 'package:word_app/core/audio/audio_service.dart';
 import 'package:word_app/features/learning/application/learning_favorites_store.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/application/favorites_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
+
+import '../../helpers/fake_learning_queue_port.dart';
 
 class _MockWordSearchReader implements WordSearchReader {
   @override
@@ -38,13 +38,6 @@ class _MockFavoritesPort implements FavoritesPort {
   Future<void> toggleFavorite(String word) async {}
   @override
   bool isFavorite(String word) => false;
-}
-
-class _MockQueuePort implements LearningQueuePort {
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => [];
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => [];
 }
 
 class _MockAudioService implements AudioService {
@@ -71,7 +64,8 @@ void main() {
           Provider<SearchHistoryStore>(create: (_) => _MockHistoryStore()),
           Provider<ExampleReader>(create: (_) => const ExampleParserAdapter()),
           ChangeNotifierProvider<LearningFavoritesState>(
-            create: (_) => LearningFavoritesState(favoritesPort: _MockFavoritesPort(), queuePort: _MockQueuePort()),
+            create: (_) =>
+                LearningFavoritesState(favoritesPort: _MockFavoritesPort(), queuePort: FakeLearningQueuePort()),
           ),
           ListenableProxyProvider<LearningFavoritesState, LearningFavoritesStore>(update: (_, state, _) => state),
           ChangeNotifierProvider<AudioPlaybackState>(

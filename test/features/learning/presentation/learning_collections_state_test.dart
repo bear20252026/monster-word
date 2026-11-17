@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/features/learning/application/favorites_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/mastered_words_reader.dart';
 import 'package:word_app/features/learning/application/mastered_writer_port.dart';
 import 'package:word_app/features/learning/presentation/learning_collections_state.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
 import 'package:word_app/features/learning/presentation/learning_mastered_state.dart';
-import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
+
+import '../../../helpers/fake_learning_queue_port.dart';
 
 void main() {
   setUp(() {
@@ -37,7 +37,7 @@ void main() {
   test('集合展示状态只组合收藏和手动掌握专用状态的当前快照', () async {
     final favorites = LearningFavoritesState(
       favoritesPort: _SharedPreferencesFavoritesPort(),
-      queuePort: _EmptyQueuePort(),
+      queuePort: FakeLearningQueuePort(),
     );
     final mastered = LearningMasteredState(
       masteredWordsReader: _SharedPreferencesMasteredWordsReader(),
@@ -81,14 +81,6 @@ class _SharedPreferencesFavoritesPort implements FavoritesPort {
 
   @override
   bool isFavorite(String word) => false;
-}
-
-class _EmptyQueuePort implements LearningQueuePort {
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => const [];
-
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
 }
 
 class _SharedPreferencesMasteredWordsReader implements MasteredWordsReader {

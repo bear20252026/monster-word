@@ -25,14 +25,13 @@ jobs:
   # --------------------------------------------------------------------
   # QUALITY GATE：analyze + 全量测试，任一失败则整个发版链熔断
   # --------------------------------------------------------------------
-  quality-gate:
+  # 第四轮审计 M9（2026-11-17）：门禁步骤统一收敛到 quality_gate.yml
+  # （与 dart.yml/build.yml 同一份事实来源，P1-5 对齐口径不再靠手工同步）。
+  # tag-版本校验是发版专属步骤，保留在本 job 前置（reusable 门禁不含它）。
+  tag-version-check:
     runs-on: ubuntu-latest
     steps:
-      # MW-76：第三方 Action 固定到已审查的 commit SHA（供应链固定）。
-      # R2-03：checkout 必须在任何读仓库文件的步骤之前——runner 的初始工作
-      # 目录是空的，此前「先校验版本、后 checkout」会让 tag 构建在 sed
-      # pubspec.yaml 时直接失败（main push 时该步被 if 跳过，故 CI 长期是绿的，
-      # 只有正式打 tag 才会暴露）。请勿把下面的版本校验挪到本行之前。
+      # R2-03：checkout 必须在任何读仓库文件的步骤之前。
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       # MW-70：tag 必须与 pubspec.yaml 版本一致（vX.Y.Z+N == X.Y.Z+N），
@@ -49,44 +48,9 @@ jobs:
             exit 1
           fi
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
-        with:
-          flutter-version: '3.47.0'
-          channel: stable
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      # P1-5（架构审计 2026-11-12）：发布门禁与日常 CI（dart.yml）完全对齐。
-      # 此前 quality-gate 只有 analyze + test，缺词库资产校验、format 检查、
-      # shell 脚本守卫——日常 CI 拦得住的问题，正式发版反而放行。补齐后
-      # 发版链与 PR 门禁同口径，任一失败即熔断。
-      - name: Verify wordbook asset
-        # 第三轮 T32：与 dart.yml 同口径——非空但损坏的 gz 不得进正式包。
-        run: |
-          test -s assets/db/wordbook.db.gz
-          gzip -t assets/db/wordbook.db.gz
-
-      - name: Verify Dart formatting
-        shell: bash
-        run: |
-          find lib test integration_test test_driver -type f -name '*.dart' -print0 \
-            | xargs -0 dart format --output=none --set-exit-if-changed --line-length 120
-
-      - name: Analyze project source
-        run: flutter analyze
-
-      - name: Verify deploy/sync shell scripts
-        shell: bash
-        run: |
-          bash -n scripts/auto_sync.sh
-          bash -n scripts/test_auto_sync_size_guard.sh
-          bash scripts/test_auto_sync_size_guard.sh
-
-      - name: Run tests
-        run: flutter test --no-pub
+  quality-gate:
+    needs: [tag-version-check]
+    uses: ./.github/workflows/quality_gate.yml
 
   # --------------------------------------------------------------------
   # ANDROID：生产 APK + AAB

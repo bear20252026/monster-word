@@ -14,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_reader.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/application/learning_session_reader.dart';
@@ -23,6 +22,8 @@ import 'package:word_app/features/learning/presentation/learning_session_starter
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 import 'package:word_app/features/home/presentation/review_dialog.dart';
+
+import '../../../helpers/fake_learning_queue_port.dart';
 
 void main() {
   setUp(() {
@@ -131,7 +132,7 @@ class _StubScheduleReader extends ReviewScheduleReader {
 class _StubSessionState extends LearningSessionState {
   _StubSessionState()
     : super(
-        queuePort: _StubQueuePort(),
+        queuePort: FakeLearningQueuePort(),
         progressPort: _StubProgressPort(),
         reviewSchedulePort: _StubReviewScheduleWriterPort(),
         choicePort: _StubChoicePort(),
@@ -144,14 +145,6 @@ class _StubSessionState extends LearningSessionState {
 
   @override
   int get learnedNum => 30;
-}
-
-class _StubQueuePort implements LearningQueuePort {
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => const [];
-
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
 }
 
 class _StubProgressPort implements LearningProgressPort {

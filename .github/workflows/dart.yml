@@ -6,68 +6,13 @@ on:
   pull_request:
     branches: [ "main" ]
 
-# 最小权限基线：未显式声明 permissions 的 job 继承此 read-only，
-# 仅 release job 按需提升为 contents: write。
+# 最小权限基线：未显式声明 permissions 的 job 继承此 read-only。
 permissions:
   contents: read
 
 jobs:
+  # 第四轮审计 M9（2026-11-17）：门禁步骤统一收敛到 quality_gate.yml
+  # （reusable workflow，单一事实来源）。job 名保持 analyze-and-test——
+  # 它是分支保护的 required check，改名会让 PR 永远等不到必需检查。
   analyze-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          fetch-depth: 0
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
-        with:
-          flutter-version: '3.47.0'
-          channel: stable
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Dependency health report (non-blocking)
-        # P3-9（架构审计 2026-11-12）：依赖健康可见性——列出落后/停更包（如 archive 3.x）。
-        # 纯信息性，continue-on-error 保证网络抖动或 pub 服务异常不阻断质量门禁；
-        # 升级决策仍由人工评估（破坏性变更需单独 PR），此处只防「无人察觉地停更」。
-        continue-on-error: true
-        run: flutter pub outdated --no-dev-dependencies || true
-
-      - name: Verify wordbook asset
-        # 第三轮 T32：旧校验仅 test -s（非空）——非空但损坏的 gz 可通过 CI 进
-        # 正式包（用户端解压失败词库全废）。gzip -t 校验压缩流完整性（不解压
-        # 落盘，秒级）；Ubuntu runner 自带 gzip。
-        run: |
-          test -s assets/db/wordbook.db.gz
-          gzip -t assets/db/wordbook.db.gz
-
-      - name: Verify Dart formatting
-        shell: bash
-        run: |
-          find lib test integration_test test_driver -type f -name '*.dart' -print0 \
-            | xargs -0 dart format --output=none --set-exit-if-changed --line-length 120
-
-      - name: Analyze project source
-        # info 已清零（2026-09-26）：默认 fatal-infos / fatal-warnings，0 issue 才放行。
-        run: flutter analyze
-
-      - name: Verify deploy/sync shell scripts
-        shell: bash
-        # auto_sync.sh 的守卫（R3-E03 改造 + 大文件拦截修复）。
-        # 为什么必须进 CI：这道 90MB 拦截自 2026-08-31 事故后建立以来
-        # **一直是空转的**（把 `git status --porcelain` 的整行当路径），
-        # 而它是「构建产物/安装包塞进仓库」的唯一防线。
-        # 纯 shell，不依赖 Flutter，在临时仓库里真跑脚本。
-        run: |
-          bash -n scripts/auto_sync.sh
-          bash -n scripts/test_auto_sync_size_guard.sh
-          bash scripts/test_auto_sync_size_guard.sh
-
-      - name: Run tests
-        # 审计 D5（2026-11-15）：flutter test 只跑 test/（单元/widget，内存 SQLite）。
-        # integration_test/ 需真实设备/模拟器（真实 DB/平台通道），ubuntu runner 无设备
-        # 无法执行，故 CI 仅对其做 format/analyze 门禁；端到端真机验证列为 owner 待办
-        # （与 Android isolate 开库真机验证同批），不在无设备 CI 空转。
-        run: flutter test --no-pub
+    uses: ./.github/workflows/quality_gate.yml

@@ -99,7 +99,7 @@ CI 场景：四个值注入为 GitHub Actions **Secrets**（MW_STORE_PASSWORD �
 | 1 | 改 `pubspec.yaml` → `version: X.Y.Z+N` | **版本号唯一源头**，见下方同步点说明 |
 | 2 | `git add pubspec.yaml && git commit -m "chore(release): vX.Y.Z"` 并打 tag `vX.Y.Z` | 版本变更可追溯 |
 | 3 | `flutter clean && flutter pub get` | 清掉旧构建缓存 |
-| 4 | `flutter analyze`（建议去掉 `--no-fatal-warnings`） | 当前 CI 配置 warning 不拦截 ⚠️ |
+| 4 | `flutter analyze` | CI 是裸 analyze（fatal-infos/fatal-warnings），**0 issue 才放行**（info 级等同失败） |
 | 5 | `flutter test` | 单测全绿 |
 | 6 | 确认 `assets/db/wordbook.db.gz` 是真词库 | ⚠️ CI 里是 placeholder 占位文件，本地发布必须核实 |
 | 7 | `flutter build windows --release --obfuscate --split-debug-info=build/debug-info` | 产物在 `build/windows/x64/runner/Release/`；`--obfuscate` 启用 Dart 代码混淆，`--split-debug-info` 分离调试符号（保留用于 crash 日志还原） |
@@ -116,7 +116,7 @@ CI 场景：四个值注入为 GitHub Actions **Secrets**（MW_STORE_PASSWORD �
 - Android 的 versionName/versionCode 同样由 pubspec 派生（versionCode 取 build number N）；
 - 所以流程里只有步骤 1 一处改动，其余自动跟随。
 
-**CI 顺带改进建议**（供后续任务）：`.github/workflows/build.yml` 的 artifact 名仍是 `bubei-word-windows`（旧品牌拼音残留 ⚠️）→ 改 `monsterword-windows`；analyze 步骤建议移除 `--no-fatal-warnings`；可在 job 末尾加自动打 zip 步骤产出规范命名的包。
+**CI 门禁单一事实来源**（第四轮 M9，2026-11-17）：dart.yml / release_packages.yml / build.yml 的门禁步骤统一收敛到 `.github/workflows/quality_gate.yml`（reusable workflow）——format/gzip 完整性/analyze/脚本守卫/全量测试只有一份定义，改一处全链生效。artifact 名已为 `monster-word-windows`（旧品牌残留已清）。
 
 ---
 
@@ -141,7 +141,7 @@ CI 场景：四个值注入为 GitHub Actions **Secrets**（MW_STORE_PASSWORD �
 - [ ] `android:label` = Monster Word
 - [ ] launcher 图标全套替换（5 密度 + 自适应图标）
 - [ ] 启动屏浅色 #F2F0EB / 夜间 #1E3932 双模式正常
-- [ ] just_audio 已移除、无冗余依赖
+- [ ] 音频依赖口径正确：just_audio（锁屏播放）+ audioplayers（单词发音）+ media_kit（桌面后端）三栈各有用途，**勿误删 just_audio**（第四轮 M8 订正：旧检查单「已移除」声明与事实不符）
 
 ### C. Windows 发布面
 

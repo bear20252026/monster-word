@@ -8,12 +8,13 @@ import 'package:word_app/features/learning/application/learning_session_starter.
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/application/choice_generator_port.dart';
 import 'package:word_app/features/learning/application/learning_progress_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
 import 'package:word_app/features/learning/presentation/learning_session_starter_impl.dart';
 import 'package:word_app/features/learning/presentation/learning_session_state.dart';
 import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
+
+import '../../../helpers/fake_learning_queue_port.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -52,7 +53,7 @@ void main() {
 class _SpySession extends LearningSessionState {
   _SpySession()
     : super(
-        queuePort: _MockQueuePort(),
+        queuePort: FakeLearningQueuePort(),
         progressPort: _MockProgressPort(),
         reviewSchedulePort: _MockReviewScheduleWriterPort(),
         choicePort: _MockChoicePort(),
@@ -71,14 +72,6 @@ class _SpySession extends LearningSessionState {
     loadedShuffle = shuffle;
     // 不透传 super，避免真实副作用。
   }
-}
-
-class _MockQueuePort implements LearningQueuePort {
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => const [];
-
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
 }
 
 class _MockProgressPort implements LearningProgressPort {
