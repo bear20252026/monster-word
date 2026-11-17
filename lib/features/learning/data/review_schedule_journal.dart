@@ -18,7 +18,18 @@ class ReviewScheduleJournal {
 
   /// 把一次评分意图追加进 SP 降级日志（P1-01）。
   /// 返回 false = 日志都写不进（磁盘满/SP 不可用）——上层按硬失败处理。
-  Future<bool> append(String word, FsrsRating rating, String date, String ratingId, bool isLearn) async {
+  ///
+  /// 第三轮 T14：[ratedAt] 是**评分计算时刻**（card.lastReview 同源），与
+  /// savedAt（落日志时刻，经写闸排队可能晚数秒）区分——迁移预登记比对必须用
+  /// ratedAt，否则写闸拥塞时「已含于 blob 的评分」被误判未应用而双回放。
+  Future<bool> append(
+    String word,
+    FsrsRating rating,
+    String date,
+    String ratingId,
+    bool isLearn, {
+    required DateTime ratedAt,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final journal = prefs.getStringList(ReviewScheduleRepository.degradedJournalKey) ?? <String>[];
@@ -29,6 +40,7 @@ class ReviewScheduleJournal {
           'rating': rating.value,
           'date': date,
           'isLearn': isLearn,
+          'ratedAt': ratedAt.toIso8601String(),
           'savedAt': DateTime.now().toIso8601String(),
         }),
       );
@@ -107,13 +119,16 @@ class ReviewScheduleJournal {
 
   /// 从 journal 条目取出**原答题时刻**（审计 P1-02）。
   ///
-  /// 优先 `savedAt`（评分发生的那一刻，ISO 串）；老条目没有该键时退回
-  /// `dateKey` 当日零点。解析失败也退回 dateKey，绝不抛。
+  /// 第三轮 T14：优先 `ratedAt`（评分计算时刻，与 card.lastReview 同源）；
+  /// 老条目无该键退回 `savedAt`（落日志时刻，写闸延迟下略晚于真实答题）；
+  /// 再退回 `dateKey` 当日零点。解析失败也退回 dateKey，绝不抛。
   DateTime? _journalReviewedAt(Map<String, dynamic> map, String dateKey) {
-    final savedAt = map['savedAt'];
-    if (savedAt is String) {
-      final parsed = DateTime.tryParse(savedAt);
-      if (parsed != null) return parsed;
+    for (final key in const ['ratedAt', 'savedAt']) {
+      final raw = map[key];
+      if (raw is String) {
+        final parsed = DateTime.tryParse(raw);
+        if (parsed != null) return parsed;
+      }
     }
     return DateTime.tryParse(dateKey);
   }

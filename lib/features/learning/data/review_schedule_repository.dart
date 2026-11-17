@@ -467,14 +467,16 @@ class ReviewScheduleRepository extends ChangeNotifier {
         }
       }
       // 有界重试耗尽 → 降级日志兜底。
-      final journaled = await _journal.append(word, rating, date, ratingId, isLearn);
+      // 第三轮 T14：ratedAt=评分计算时刻（card.lastReview 同源），防写闸延迟误判。
+      final journaled = await _journal.append(word, rating, date, ratingId, isLearn, ratedAt: card.lastReview);
       return journaled ? _PersistPhase.pendingRetry : _PersistPhase.failed;
     }
 
     // ── SP 降级模式：日志先行（评分意图先落 SP），再写「前瞻 blob 快照」──
     // 快照临时并入本次评分（内存正式提交在上层），保证旧版装回时能从旧 key
     // 读到含本次评分的完整历史（回归契约：SP 降级评分仍写旧 key）。
-    final journaled = await _journal.append(word, rating, date, ratingId, isLearn);
+    // 第三轮 T14：ratedAt=评分计算时刻（card.lastReview 同源）。
+    final journaled = await _journal.append(word, rating, date, ratingId, isLearn, ratedAt: card.lastReview);
     if (!journaled) {
       return _PersistPhase.failed;
     }

@@ -101,9 +101,14 @@ class ReviewScheduleMigration {
         if (id == null || word == null) continue;
         final card = cardByWord[word];
         if (card == null) continue; // blob 无此卡：评分未落快照，留给回放。
-        final savedAt = DateTime.tryParse(m['savedAt'] as String? ?? '');
-        if (savedAt == null) continue; // 无时间戳无法确证，保守留给回放。
-        final applied = !card.lastReview.isBefore(savedAt.subtract(const Duration(seconds: 1)));
+        // 第三轮 T14：比对基准必须是**评分计算时刻**（ratedAt，与 lastReview
+        // 同源）——savedAt 是落日志时刻，写闸排队/重试可晚数秒，旧实现用
+        // savedAt+1s 容差在拥塞时把「已含于 blob 的评分」误判未应用→双回放。
+        // 老条目无 ratedAt 回退 savedAt（兼容），1s 容差吸收序列化精度差。
+        final ratedAt =
+            DateTime.tryParse(m['ratedAt'] as String? ?? '') ?? DateTime.tryParse(m['savedAt'] as String? ?? '');
+        if (ratedAt == null) continue; // 无时间戳无法确证，保守留给回放。
+        final applied = !card.lastReview.isBefore(ratedAt.subtract(const Duration(seconds: 1)));
         if (applied) journalRatings.add((word: word, ratingId: id));
       } catch (_) {
         // 吞错豁免: 坏日志行跳过，回放侧同样逐行容错。

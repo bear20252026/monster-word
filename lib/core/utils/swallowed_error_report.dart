@@ -17,11 +17,19 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 /// source（jsonDecode 失败时=用户笔记/例句/学习记录/会话原文），直接字符串化
 /// 上报与隐私声明「崩溃诊断不包含学习内容」冲突。此收口覆盖全部 A 级上报路径
 /// （note/fav_sentence/sp_codec/migration 等），不必逐点修。
+///
+/// 第三轮 T16：网络异常（SocketException/HttpException/ClientException 等）的
+/// toString 含完整 URL——有道发音/词典 URL 带单词查询参，用户学习词随崩溃事件
+/// 离开本机。统一剥离 URL（保留异常类型与主机无关的描述骨架）。
 String sanitizeErrorForReport(Object error) {
   if (error is FormatException) {
     return 'FormatException(${error.message})［source 已脱敏］';
   }
-  return '$error';
+  var text = '$error';
+  // URL 整体替换为占位（含 scheme://host/path?query；查询词在 path/query 里）。
+  // 匹配到空白或常见分隔符为止，覆盖 SocketException/HttpException 的 message 形态。
+  text = text.replaceAll(RegExp(r'''https?://[^\s,;)\]}>'"]+'''), '［URL 已脱敏］');
+  return text;
 }
 
 /// 上报被吞掉的异常：debug 下 debugPrint 输出；Sentry 已初始化时附带上下文上报。

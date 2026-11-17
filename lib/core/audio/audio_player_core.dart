@@ -9,7 +9,11 @@ part of 'audio_players.dart';
 
 /// 音频播放封装
 class MwAudioPlayer {
-  final AudioPlayer _player = AudioPlayer();
+  /// 第三轮 T24：just_audio 实例改**惰性创建+释放后可重建**——旧实现 final
+  /// 构造期创建，release() dispose 后静态单例（Phonetic/Sentence/Text）仍持有
+  /// 本对象，移动端 detach→re-attach 重建 AudioServiceImpl 时发音永久静默。
+  /// 与桌面 _apPlayer 同口径：首次真正使用时才创建并挂监听。
+  AudioPlayer? _playerInstance;
   StreamSubscription? _playerStateSub;
   StreamSubscription? _processingStateSub;
   MediaPlayStateListener? playStateListener;
@@ -25,10 +29,14 @@ class MwAudioPlayer {
   /// 惰性创建：纯 Dart 测试环境无 audioplayers 插件，构造期创建会抛
   ap.AudioPlayer get _apPlayer => _apPlayerInstance ??= ap.AudioPlayer();
 
-  MwAudioPlayer() {
-    debugLog('[MwAudioPlayer] Created new player instance');
-    // 监听播放状态变化
-    _playerStateSub = _player.playerStateStream.listen((playerState) {
+  /// 惰性创建 just_audio 实例并挂状态监听（release 后再访问自动重建）。
+  AudioPlayer get _player {
+    final existing = _playerInstance;
+    if (existing != null) return existing;
+    final player = AudioPlayer();
+    _playerInstance = player;
+    debugLog('[MwAudioPlayer] Created new just_audio instance (lazy)');
+    _playerStateSub = player.playerStateStream.listen((playerState) {
       if (_currentFileName.isEmpty) return;
       debugLog('[MwAudioPlayer] Player state: playing=${playerState.playing}, fileName=$_currentFileName');
       if (playerState.playing) {
@@ -37,13 +45,17 @@ class MwAudioPlayer {
         playStateListener?.onPlayPause(_currentFileName);
       }
     });
-    // 监听播放完成
-    _processingStateSub = _player.processingStateStream.listen((state) {
+    _processingStateSub = player.processingStateStream.listen((state) {
       debugLog('[MwAudioPlayer] Processing state: $state for $_currentFileName');
       if (state == ProcessingState.completed) {
         playStateListener?.onPlayComplete(_currentFileName);
       }
     });
+    return player;
+  }
+
+  MwAudioPlayer() {
+    debugLog('[MwAudioPlayer] Created new player wrapper');
   }
 
   /// 播放 URL（play）- 带移动端错误处理
@@ -188,11 +200,17 @@ class MwAudioPlayer {
         debugLog('[MwAudioPlayer] release() desktop dispose error: $e');
       }
     }
-    try {
-      // MEM：无平台插件时 just_audio dispose 可能挂起，限时以免卡死退出/测试。
-      await _player.dispose().timeout(const Duration(seconds: 2));
-    } catch (e) {
-      debugLog('[MwAudioPlayer] release() dispose error: $e');
+    // 第三轮 T24：直接取字段（不走 getter，避免释放路径反而惰性创建新实例）；
+    // 置 null 后下次播放经 getter 自动重建——静态单例 re-attach 后恢复发声。
+    final jaInstance = _playerInstance;
+    _playerInstance = null;
+    if (jaInstance != null) {
+      try {
+        // MEM：无平台插件时 just_audio dispose 可能挂起，限时以免卡死退出/测试。
+        await jaInstance.dispose().timeout(const Duration(seconds: 2));
+      } catch (e) {
+        debugLog('[MwAudioPlayer] release() dispose error: $e');
+      }
     }
   }
 
@@ -204,7 +222,8 @@ class MwAudioPlayer {
       final instance = _apPlayerInstance;
       return instance != null && instance.state == ap.PlayerState.playing;
     }
-    return _player.playerState.playing;
+    // 第三轮 T24：读字段不触发惰性创建（查询不应有副作用）。
+    return _playerInstance?.playerState.playing ?? false;
   }
 
   /// 锁定播放（setLock）
