@@ -20,6 +20,11 @@ class ExtraChoicePool {
   List<Word> _words = const [];
   Future<void>? _load;
 
+  /// 第三轮 T28：世代号——reset 置 _load=null 但旧 Future 的 then 仍会执行，
+  /// 旧响应迟到可覆盖新 load 结果（换书后干扰词短暂用旧批次）。每次 reset
+  /// 递增世代，then 回调比对世代不符即丢弃（与速刷 _loadSeq 同型守卫）。
+  int _generation = 0;
+
   /// 当前已就绪的额外候选词（未就绪时为空）。
   List<Word> get words => _words;
 
@@ -27,15 +32,18 @@ class ExtraChoicePool {
   void reset() {
     _words = const [];
     _load = null;
+    _generation++;
   }
 
   /// 确保池已加载（幂等）：首次触发异步取样，就绪后回调 onReady。
   void ensureLoaded() {
     final repository = this.repository;
     if (repository == null || _load != null) return;
+    final generation = _generation;
     _load = repository
         .getRandomWords(24)
         .then((words) {
+          if (generation != _generation) return; // 过期响应丢弃（reset 已换世代）
           _words = words;
           _onReady();
         })

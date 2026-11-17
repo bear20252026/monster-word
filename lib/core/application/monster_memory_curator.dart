@@ -53,6 +53,11 @@ class MonsterMemoryCurator {
     // 它们能把敏感词拆开绕过下方正则（「act\u200Bas」），删成空串会粘成 actas
     // 反而漏检；替换为空格后词边界仍命中，正常文本只多一个无害空格。
     s = s.replaceAll(RegExp(r'[\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]'), ' ');
+    // 第三轮 T8：截断**前置**——修饰词组 `(...|\s)*` 与前后 `\s*` 对空白段
+    // 歧义切分存在多项式回溯，超长输入（无长度上限的用户原话）可卡顿。
+    // 先截到 400（最终上限 200 的 2 倍，留过滤标记展开余量）再跑正则，
+    // 回溯规模有界；截断语义与旧版一致（最终仍 200+省略号）。
+    if (s.length > 400) s = s.substring(0, 400);
     // 审计 R15：英文关键词加词边界——旧实现子串匹配把「in fact as」里的 fact as
     // 误当 act as 过滤；修饰词组改可重复（ignore all previous instructions 旧版漏检）。
     s = s.replaceAll(
@@ -64,8 +69,10 @@ class MonsterMemoryCurator {
     );
     // 审计 R15：「你现在是」加否定 lookahead——「你现在是不是饿了」是正常疑问句，
     // 旧版子串命中误过滤；真正的角色覆写（你现在是海盗）仍命中。
+    // 第三轮 T7：lookahead 扩「否」——「你现在是否饿了」同样正常疑问句，
+    // 旧版只豁免「不」仍误杀；「是不是/是否」都放行。
     s = s.replaceAll(
-      RegExp(r'(system\s*prompt|系统提示|你现在是(?!不)|\byou are now\b|\bact as\b|扮演)', caseSensitive: false),
+      RegExp(r'(system\s*prompt|系统提示|你现在是(?!不|否)|\byou are now\b|\bact as\b|扮演)', caseSensitive: false),
       '［已过滤］',
     );
     if (s.length > 200) s = '${s.substring(0, 200)}…';

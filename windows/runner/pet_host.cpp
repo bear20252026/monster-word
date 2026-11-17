@@ -129,6 +129,11 @@ void ClampToVirtualScreen(HWND hwnd, int& x, int& y) {
   if (vw <= 0 || vh <= 0) {
     return;
   }
+  // 第三轮 T6：std::clamp 要求 lo <= hi——窗口比虚拟屏还大时上界为负，
+  // 违反前置条件=未定义行为。此时不钳制（窗口已无处可放，保持原位）。
+  if (width > vw || height > vh) {
+    return;
+  }
   x = std::clamp(x, vx, vx + vw - width);
   y = std::clamp(y, vy, vy + vh - height);
 }

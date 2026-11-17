@@ -37,6 +37,11 @@ class MessageStore extends ChangeNotifier {
   List<MessageItem> _messages = <MessageItem>[];
   bool _loaded = false;
 
+  /// 第三轮 T32：存档损坏标志——旧实现 _decode 损坏返回空列表，欢迎消息随即
+  /// 落盘**覆写原档**，失去人工修复机会（feedback_archive 已是「损坏不覆写」
+  /// 口径）。损坏时内存按空降级（消息页可用），但本进程内禁止一切覆写。
+  bool _corruptArchive = false;
+
   /// 串行闸：load/append/markRead 全走这一条队列。_persist 是整键全量覆写，
   /// load 在 getStatus() await 期间持有的旧列表若与并发 append 交错落盘，
   /// 会把新追加的消息静默覆盖掉（审计：读-改-写无并发闸）。
@@ -88,7 +93,11 @@ class MessageStore extends ChangeNotifier {
     // loaded 分支 ⇒ **用户没有任何重试入口，只能杀进程重启**。
     try {
       final prefs = await _prefs();
-      _messages = _decode(prefs.getString(_storageKey));
+      final raw = prefs.getString(_storageKey);
+      _messages = _decode(raw);
+      // 第三轮 T32：raw 非空但解码为空 = 存档损坏（_decode 已上报）——置保护
+      // 标志，本进程内 _persist 拒绝覆写，原档留人工修复。
+      _corruptArchive = raw != null && raw.isNotEmpty && _messages.isEmpty;
       // MEM：历史版本无上限，老用户本地可能堆积数千条，加载即截断。
       const maxMessages = 200;
       if (_messages.length > maxMessages) {
@@ -230,6 +239,11 @@ class MessageStore extends ChangeNotifier {
   }
 
   Future<void> _persist(SharedPreferences prefs) async {
+    // 第三轮 T32：损坏存档保护——覆写会毁掉人工修复机会（原档是唯一残本）。
+    // 抛错经 _serialized 上报；内存列表照常服务 UI，重启后重新尝试解码。
+    if (_corruptArchive) {
+      throw StateError('消息存档损坏，保留原档不覆写（内存态降级服务）');
+    }
     final ok = await prefs.setString(_storageKey, jsonEncode(_messages.map((MessageItem m) => m.toJson()).toList()));
     // 必须检查返回值（2026-10-15 审计 R3-L04）：SharedPreferences 写失败是
     // **返回 false 而不是抛异常**。不检查的话内存里 append/markAllRead 看似成功并

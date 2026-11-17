@@ -23,13 +23,13 @@ class OpenAiLlmClient implements LlmClient {
 
   final String _baseUrl;
   final String model;
-  String apiKey;
+
+  /// 第三轮 T12：密钥构造期传入后不可变——旧 setApiKey 在 R9 改造后全库
+  /// 零调用方（解析器改 upgradePrimary 整体换客户端），死代码删除。
+  final String apiKey;
   final http.Client _http;
   final bool _ownsHttp;
   final Duration timeout;
-
-  /// 后台补入密钥（解析器异步从安全存储读入；未就绪前调用按失败回退）。
-  void setApiKey(String value) => apiKey = value;
 
   /// 审计 B7（2026-11-15）：释放自建的 http.Client（注入的 client 由调用方负责），
   /// 供装配层在客户端替换/应用销毁时调用，防连接泄漏。

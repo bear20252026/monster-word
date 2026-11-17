@@ -242,9 +242,12 @@ class SecurePasswordAuthStore implements PasswordAuthStore {
   /// R2-20：校验侧接受的迭代数上限。此前为 10,000,000——按本文件自身注释
   /// （60,000 迭代在低端机约 0.5～1 秒），10M 相当于单次校验阻塞 CPU 约
   /// 80～170 秒，被篡改/损坏的哈希即可把登录界面卡死（DoS）。改为当前参数的
-  /// 8 倍，既留出将来调参的升级余量，又不给异常值留出灾难性开销。
+  /// 倍数，既留出将来调参的升级余量，又不给异常值留出灾难性开销。
   /// 本应用只会写入 [pbkdf2Iterations]，故不存在「存量哈希超上限」的情况。
-  static const int maxIterations = pbkdf2Iterations * 8;
+  /// 第三轮 T21：R24 升 60 万轮后 8 倍=4.8M（桌面 ≈16s/低端分钟级）仍偏大——
+  /// 收紧到 2 倍（1.2M，桌面 ≈4s）：本应用写入恒为当前参数，存量只会更低，
+  /// 2 倍余量足够覆盖一次未来调参，被篡改哈希的合法烧 CPU 面再压 4 倍。
+  static const int maxIterations = pbkdf2Iterations * 2;
 
   static String _randomSalt() {
     final rng = Random.secure();

@@ -29,16 +29,25 @@ class _AudioCacheDir {
     return _cachePath!;
   }
 
+  /// 第三轮 T32：单词缓存键消毒——词条文本直拼路径（word.toLowerCase()）未走
+  /// _getFileName 的白名单，若生词本/词库混入 `../` 类词条可逃逸缓存目录写文件。
+  /// 与 URL 文件名同口径：剥离目录成分 + 安全字符白名单（正常单词不受影响）。
+  static String _wordCacheKey(String word) {
+    var name = p.basename(word.toLowerCase());
+    if (name.isEmpty || name == '.' || name == '..') name = 'unnamed_word';
+    return name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+  }
+
   /// 单词发音缓存路径（美音）
   static Future<String> wordUsSpeechPath(String word) async {
     final base = await getCachePath();
-    return p.join(base, 'phonetic', 'us', '${word.toLowerCase()}.mp3');
+    return p.join(base, 'phonetic', 'us', '${_wordCacheKey(word)}.mp3');
   }
 
   /// 单词发音缓存路径（英音）
   static Future<String> wordUkSpeechPath(String word) async {
     final base = await getCachePath();
-    return p.join(base, 'phonetic', 'uk', '${word.toLowerCase()}.mp3');
+    return p.join(base, 'phonetic', 'uk', '${_wordCacheKey(word)}.mp3');
   }
 
   /// 例句音频缓存路径

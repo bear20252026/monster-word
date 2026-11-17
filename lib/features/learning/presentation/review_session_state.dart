@@ -147,6 +147,10 @@ class ReviewSessionState extends ChangeNotifier {
   /// 任何一项对不上（词已不在当前到期集合、存档损坏、剩余为空）就退回新局。
   Future<void> initialize(ReviewQueueSnapshot snapshot, {ReviewSessionSnapshot? restore}) async {
     _answerState.reset();
+    // 第三轮 T30：本状态是 app 级 ProxyProvider 单例（非每局新实例），词池
+    // 不重置则同一 app 生命周期内复习干扰词恒为同一批 24 词。每局 initialize
+    // 重置，下一题重新随机取样（与学习会话换局口径一致）。
+    _extraPool.reset();
     _loadPhase = ReviewSessionLoadPhase.loading;
     _loadError = null;
     _choices = const [];

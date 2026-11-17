@@ -192,5 +192,17 @@ void main() {
       final client = resolveLlmClient(const LlmConfig.disabled());
       expect(client.isLive, isFalse);
     });
+
+    test('第三轮 T11：close 后迟到升级——新客户端即关、isLive 恒 false、complete 走规则版', () async {
+      final client = resolveLlmClient(config, credentials: _FakeCredentials('sk-test'));
+      // 页面秒 pop：readKey 微任务放行前先 close（此时 primary 还是规则版）。
+      client.close();
+      await Future<void>.delayed(Duration.zero); // 放行 readKey → upgradePrimary
+      expect(client.isLive, isFalse, reason: '已关闭的包装器不得因迟到升级复活');
+      // complete 不发起网络请求，直接规则台词（模板集内）。
+      final out = await client.complete(const [LlmMessage(LlmRole.user, '你好')]);
+      final candidates = MonsterSpeech.templatesOf(SpeechSlot.dailyGreeting).where((t) => !t.contains('{')).toSet();
+      expect(candidates.contains(out), isTrue, reason: '关闭后必须走规则版：$out');
+    });
   });
 }

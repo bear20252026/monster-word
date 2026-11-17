@@ -74,4 +74,39 @@ void main() {
     expect(pool.words, isEmpty);
     expect(ready, 0);
   });
+
+  test('第三轮 T28：reset 后旧响应迟到不得覆盖新池（世代守卫）', () async {
+    // 可控双响应假件：第 1 次取样挂起（旧局），第 2 次即时（新局）。
+    final repo = _DualGateRepo();
+    var ready = 0;
+    final pool = ExtraChoicePool(() => ready++, repository: repo);
+    pool.ensureLoaded(); // 旧局取样挂起
+    pool.reset(); // 换局：旧响应作废
+    pool.ensureLoaded(); // 新局取样
+    repo.secondGate.complete([_w(9)]);
+    await Future<void>.delayed(Duration.zero);
+    expect(pool.words.single.word, 'w9');
+    expect(ready, 1);
+    // 放行旧局慢响应：世代不符必须丢弃，不得覆盖新池/再回调。
+    repo.firstGate.complete([_w(1), _w(2)]);
+    await Future<void>.delayed(Duration.zero);
+    expect(pool.words.single.word, 'w9', reason: '旧世代响应不得覆盖新池');
+    expect(ready, 1, reason: '旧世代响应不得触发 onReady');
+  });
+}
+
+/// 双门控假件：第 1 次取样走 firstGate，第 2 次走 secondGate。
+class _DualGateRepo implements WordLookupReader {
+  int calls = 0;
+  final Completer<List<Word>> firstGate = Completer<List<Word>>();
+  final Completer<List<Word>> secondGate = Completer<List<Word>>();
+
+  @override
+  Future<List<Word>> getRandomWords(int count) {
+    calls++;
+    return calls == 1 ? firstGate.future : secondGate.future;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

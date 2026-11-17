@@ -91,7 +91,13 @@ class HomeStartupCoordinator {
       showReunion(absent);
       // 回家礼：断签保护卡 ×1（走既有 API；满额抛错/失败不阻断演出）。
       final protection = this.protection;
-      if (protection == null) return;
+      if (protection == null) {
+        // 第三轮 T31：端口缺席不再静默——原壳层实现在演出后 read 抛错走 catch
+        // 上报，外移时退化为无声 return（可观测性退化）。生产 store 恒在，
+        // 此分支仅最小装配/测试触达，上报留痕便于发现装配遗漏。
+        reportSwallowedError('回家礼保护卡未发放（保护卡端口未注入）', StateError('protection port absent'), StackTrace.current);
+        return;
+      }
       try {
         await protection.addProtection(count: 1, reason: '回家礼');
       } catch (e, s) {

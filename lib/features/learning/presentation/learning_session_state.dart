@@ -364,7 +364,10 @@ class LearningSessionState extends ChangeNotifier {
         case LearningResumeRebuild(:final queue, :final index):
           _replaceQueue(queue, shuffle: false);
           if (_queue.isNotEmpty) {
-            _currentIndex = index;
+            // 第三轮 T29：planner 的 index 钳到快照队列长度，但 _replaceQueue
+            // 会再过滤空壳词——旧版未过滤快照升级时队列可缩短，须对**过滤后**
+            // 长度二次钳制，否则 index 越界 → currentWord=null 假完成。
+            _currentIndex = index.clamp(0, _queue.length - 1);
             _regenerateChoices();
           }
         case LearningResumeNone():

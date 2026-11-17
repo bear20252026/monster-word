@@ -64,7 +64,10 @@ jobs:
       # shell 脚本守卫——日常 CI 拦得住的问题，正式发版反而放行。补齐后
       # 发版链与 PR 门禁同口径，任一失败即熔断。
       - name: Verify wordbook asset
-        run: test -s assets/db/wordbook.db.gz
+        # 第三轮 T32：与 dart.yml 同口径——非空但损坏的 gz 不得进正式包。
+        run: |
+          test -s assets/db/wordbook.db.gz
+          gzip -t assets/db/wordbook.db.gz
 
       - name: Verify Dart formatting
         shell: bash

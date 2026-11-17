@@ -45,14 +45,27 @@ class ResilientLlmClient implements LlmClient {
   LlmClient _primary;
   final LlmClient _fallback;
 
+  /// 第三轮 T11：已关闭标志——页面秒 pop 时 dispose 先 close（此时 primary
+  /// 还是规则版），readKey 迟到后 upgradePrimary 新建的真实客户端若不即关
+  /// 就永不释放（对象级残留）。关闭后升级直接 close 新客户端。
+  bool _closed = false;
+
   @override
-  bool get isLive => _primary.isLive;
+  bool get isLive => !_closed && _primary.isLive;
 
   /// 密钥就绪后升级主客户端（解析器异步读入安全存储后调用）。
-  void upgradePrimary(LlmClient client) => _primary = client;
+  void upgradePrimary(LlmClient client) {
+    if (_closed) {
+      client.close();
+      return;
+    }
+    _primary = client;
+  }
 
   @override
   Future<String> complete(List<LlmMessage> messages) async {
+    // 已关闭：不再发起请求，直接规则台词（调用方 dispose 后的迟到路径）。
+    if (_closed) return _fallback.complete(messages);
     try {
       return await _primary.complete(messages);
     } on LlmException {
@@ -62,5 +75,8 @@ class ResilientLlmClient implements LlmClient {
 
   /// 审计 R13：释放主客户端自持资源（规则版无操作）。
   @override
-  void close() => _primary.close();
+  void close() {
+    _closed = true;
+    _primary.close();
+  }
 }
