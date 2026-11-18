@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 
-import 'package:word_app/models/user_info_bean.dart';
+import 'package:word_app/features/account/domain/user_info_bean.dart';
 // R3-D06：原先此处是 `hide UserInfoBean`——因为 app_preferences 里有个**同名副本**
 // （不做凭证剥离就直接写 SP）。该副本已按审计结论整体删除，hide 随之取消。
 import 'package:word_app/core/infrastructure/app_preferences.dart';

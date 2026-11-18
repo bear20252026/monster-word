@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
-import 'package:word_app/features/learning/data/review_schedule_repository.dart' show ReviewScheduleRepository;
+import 'package:word_app/features/learning/data/review_schedule_keys.dart';
 import 'package:word_app/features/learning/data/review_schedule_store.dart';
 
 class ReviewScheduleJournal {
@@ -32,7 +32,7 @@ class ReviewScheduleJournal {
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final journal = prefs.getStringList(ReviewScheduleRepository.degradedJournalKey) ?? <String>[];
+      final journal = prefs.getStringList(kFsrsDegradedJournalKey) ?? <String>[];
       journal.add(
         jsonEncode({
           'ratingId': ratingId,
@@ -46,15 +46,15 @@ class ReviewScheduleJournal {
       );
       // 容量上限：极端积压时丢最旧（上报可见），保护 SP 体积。
       var kept = journal;
-      if (kept.length > ReviewScheduleRepository.degradedJournalCap) {
-        kept = kept.sublist(kept.length - ReviewScheduleRepository.degradedJournalCap);
+      if (kept.length > kFsrsDegradedJournalCap) {
+        kept = kept.sublist(kept.length - kFsrsDegradedJournalCap);
         reportSwallowedError(
           'FSRS 降级日志超上限，丢弃最旧 ${journal.length - kept.length} 条',
           StateError('degraded journal overflow'),
           StackTrace.current,
         );
       }
-      return await prefs.setStringList(ReviewScheduleRepository.degradedJournalKey, kept);
+      return await prefs.setStringList(kFsrsDegradedJournalKey, kept);
     } catch (error, stack) {
       reportSwallowedError('FSRS 降级日志写入失败（评分硬失败）', error, stack);
       return false;
@@ -66,7 +66,7 @@ class ReviewScheduleJournal {
   Future<int> replay(ReviewScheduleStore store, {bool updateDailyStats = true}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final journal = prefs.getStringList(ReviewScheduleRepository.degradedJournalKey);
+      final journal = prefs.getStringList(kFsrsDegradedJournalKey);
       if (journal == null || journal.isEmpty) return 0;
       var applied = 0;
       var duplicates = 0;
@@ -104,7 +104,7 @@ class ReviewScheduleJournal {
           return applied;
         }
       }
-      await prefs.remove(ReviewScheduleRepository.degradedJournalKey);
+      await prefs.remove(kFsrsDegradedJournalKey);
       reportSwallowedError(
         'FSRS 降级日志回放完成（applied=$applied duplicate=$duplicates）',
         StateError('degraded journal replayed'),

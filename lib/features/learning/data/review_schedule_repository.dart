@@ -14,6 +14,7 @@ import 'package:word_app/models/word.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart'
     show FsrsRatingOutcome, FsrsRatingPersistException;
 import 'package:word_app/features/learning/data/review_schedule_journal.dart';
+import 'package:word_app/features/learning/data/review_schedule_keys.dart';
 import 'package:word_app/features/learning/data/review_schedule_migration.dart';
 import 'package:word_app/features/learning/data/review_schedule_sp_codec.dart';
 import 'package:word_app/features/learning/data/review_schedule_store.dart';
@@ -42,13 +43,15 @@ import 'package:word_app/features/learning/data/review_schedule_store.dart';
 enum _PersistPhase { saved, pendingRetry, failed }
 
 class ReviewScheduleRepository extends ChangeNotifier {
-  static const cardsPrefKey = 'fsrs6_cards_v1';
-  static const dailyStatsPrefKey = 'daily_stats_v1';
+  // 第四轮 M18：键单源迁至 review_schedule_keys.dart；此处保留静态别名转发，
+  // 既有调用方（含测试）经 ReviewScheduleRepository.<key> 访问不破。
+  static const cardsPrefKey = kFsrsCardsPrefKey;
+  static const dailyStatsPrefKey = kDailyStatsPrefKey;
 
   /// L1：每日答对词次（与 dailyStats 分开存，旧数据缺该键时按 0 计）。
-  static const dailyCorrectPrefKey = 'daily_correct_v1';
-  static const activeDatesPrefKey = 'active_learn_dates_v1';
-  static const migratedMarkerKey = 'fsrs6_migrated_v1';
+  static const dailyCorrectPrefKey = kDailyCorrectPrefKey;
+  static const activeDatesPrefKey = kActiveDatesPrefKey;
+  static const migratedMarkerKey = kFsrsMigratedMarkerKey;
 
   final Fsrs6Engine _engine;
   final ReviewScheduleStore? _injectedStore;
@@ -603,20 +606,20 @@ class ReviewScheduleRepository extends ChangeNotifier {
       _counts = null; // SP 模式全量 blob 进 map，计数由 getter 现算
       try {
         final prefs = await SharedPreferences.getInstance();
-        var cardsRaw = prefs.getString(cardsPrefKey);
-        var statsRaw = prefs.getString(dailyStatsPrefKey);
-        var correctRaw = prefs.getString(dailyCorrectPrefKey);
-        var datesList = prefs.getStringList(activeDatesPrefKey);
+        var cardsRaw = prefs.getString(kFsrsCardsPrefKey);
+        var statsRaw = prefs.getString(kDailyStatsPrefKey);
+        var correctRaw = prefs.getString(kDailyCorrectPrefKey);
+        var datesList = prefs.getStringList(kActiveDatesPrefKey);
         if (cardsRaw == null || cardsRaw.isEmpty) {
-          final backup = prefs.getString(emergencyBackupKey);
+          final backup = prefs.getString(kFsrsEmergencyBackupKey);
           if (backup != null && backup.isNotEmpty) {
             final map = jsonDecode(backup) as Map<String, dynamic>;
-            cardsRaw = map[cardsPrefKey] as String?;
-            statsRaw = (map[dailyStatsPrefKey] as String?) ?? statsRaw;
-            correctRaw = (map[dailyCorrectPrefKey] as String?) ?? correctRaw;
-            final dates = map[activeDatesPrefKey];
+            cardsRaw = map[kFsrsCardsPrefKey] as String?;
+            statsRaw = (map[kDailyStatsPrefKey] as String?) ?? statsRaw;
+            correctRaw = (map[kDailyCorrectPrefKey] as String?) ?? correctRaw;
+            final dates = map[kActiveDatesPrefKey];
             if (dates is List) datesList = dates.cast<String>();
-            debugLog('[FSRS] degraded load restored from $emergencyBackupKey');
+            debugLog('[FSRS] degraded load restored from $kFsrsEmergencyBackupKey');
           }
         }
         _cards = _codec.readCards(cardsRaw);
@@ -640,17 +643,14 @@ class ReviewScheduleRepository extends ChangeNotifier {
   /// H2：E2 清 SP 前把快照挪到应急备份 key（不清除），供库损坏时人工恢复。
   ///
   /// 恢复路径：SP 快照回放（原 docs/fsrs_sqlite_migration_plan.md「E2 恢复」，文件已不存在）。
-  static const emergencyBackupKey = 'fsrs6_emergency_backup_v1';
+  static const emergencyBackupKey = kFsrsEmergencyBackupKey;
 
   /// P1-01：SQLite 故障降级期间的评分意图日志（SP StringList，逐条 JSON）。
   /// SQLite 恢复后按序幂等回放（fsrs_rating_log 主键去重），成功后清空。
-  static const degradedJournalKey = 'fsrs6_degraded_journal_v1';
+  static const degradedJournalKey = kFsrsDegradedJournalKey;
 
-  /// 审计 R17（2026-11-16）：上限 5000→50000。DB marker=done 后恢复只靠回放，
-  /// 降级期评分超上限最旧被丢（极端场景永久丢失）。每条日志 ~150B，5 万条 // scale-ok: SP 日志容量预算估算，非词库规模断言
-  /// ≈7.5MB SP 体积——降级本身是罕见故障态，用一次性体积换评分不丢；
-  /// 超限仍丢最旧并上报（可观测取舍不变）。
-  static const int degradedJournalCap = 50000;
+  // 第四轮 M18：容量配置随键单源迁至 review_schedule_keys.dart，别名转发保兼容。
+  static const int degradedJournalCap = kFsrsDegradedJournalCap;
 
   // P3-4：降级日志 append/replay/journalReviewedAt 已抽至 ReviewScheduleJournal。
 

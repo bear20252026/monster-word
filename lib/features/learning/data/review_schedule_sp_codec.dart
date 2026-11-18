@@ -1,14 +1,14 @@
 // P3-4（架构审计 2026-11-12）：复习调度旧 SP blob 编解码（从 ReviewScheduleRepository 抽出）。
 //
 // 降级模式专用：逐行解析，单行损坏只丢该行，不整表清空（整表清空后任意评分会用
-// 近空 map 覆写 SP blob，把可救的行也葬掉）。纯 SP 读写，无状态；键单源在仓储。
+// 近空 map 覆写 SP blob，把可救的行也葬掉）。纯 SP 读写，无状态；键单源在 review_schedule_keys.dart。
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
-import 'package:word_app/features/learning/data/review_schedule_repository.dart' show ReviewScheduleRepository;
+import 'package:word_app/features/learning/data/review_schedule_keys.dart';
 
 class ReviewScheduleSpCodec {
   const ReviewScheduleSpCodec();
@@ -69,10 +69,7 @@ class ReviewScheduleSpCodec {
   /// 全量写卡片快照（forget 的 SP 降级持久化）。
   Future<void> saveCards(Map<String, FsrsCard> cards) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      ReviewScheduleRepository.cardsPrefKey,
-      jsonEncode(cards.map((word, card) => MapEntry(word, card.toJson()))),
-    );
+    await prefs.setString(kFsrsCardsPrefKey, jsonEncode(cards.map((word, card) => MapEntry(word, card.toJson()))));
   }
 
   /// SP 降级评分的「前瞻 blob 快照」：临时并入本次评分（内存正式提交在上层），
@@ -101,12 +98,9 @@ class ReviewScheduleSpCodec {
     if (rating != FsrsRating.again) {
       prospectiveCorrect[date] = (prospectiveCorrect[date] ?? 0) + 1;
     }
-    await prefs.setString(
-      ReviewScheduleRepository.cardsPrefKey,
-      jsonEncode(prospectiveCards.map((w, c) => MapEntry(w, c.toJson()))),
-    );
-    await prefs.setString(ReviewScheduleRepository.dailyStatsPrefKey, jsonEncode(prospectiveStats));
-    await prefs.setString(ReviewScheduleRepository.dailyCorrectPrefKey, jsonEncode(prospectiveCorrect));
-    await prefs.setStringList(ReviewScheduleRepository.activeDatesPrefKey, prospectiveDates.toList());
+    await prefs.setString(kFsrsCardsPrefKey, jsonEncode(prospectiveCards.map((w, c) => MapEntry(w, c.toJson()))));
+    await prefs.setString(kDailyStatsPrefKey, jsonEncode(prospectiveStats));
+    await prefs.setString(kDailyCorrectPrefKey, jsonEncode(prospectiveCorrect));
+    await prefs.setStringList(kActiveDatesPrefKey, prospectiveDates.toList());
   }
 }

@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/core/utils/debug_log.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
-import 'package:word_app/features/learning/data/review_schedule_repository.dart' show ReviewScheduleRepository;
+import 'package:word_app/features/learning/data/review_schedule_keys.dart';
 import 'package:word_app/features/learning/data/review_schedule_sp_codec.dart';
 import 'package:word_app/features/learning/data/review_schedule_store.dart';
 
@@ -29,13 +29,13 @@ class ReviewScheduleMigration {
     final prefs = await SharedPreferences.getInstance();
     // 审计 A2（2026-11-15）：DB 标记是事务内真相；SP 标记仅为旧版兼容/清理门槛。
     if (await store.migrationMarker() == 'done') return false;
-    if (prefs.getString(ReviewScheduleRepository.migratedMarkerKey) == 'done') return false;
+    if (prefs.getString(kFsrsMigratedMarkerKey) == 'done') return false;
 
-    final rawCards = prefs.getString(ReviewScheduleRepository.cardsPrefKey);
+    final rawCards = prefs.getString(kFsrsCardsPrefKey);
     if (rawCards == null || rawCards.isEmpty) {
       // 无历史数据可迁：直接写标记，避免每次启动空转检查。
       await store.migrateFromSp(cards: const [], dailyStats: const {}, activeDates: const {});
-      await prefs.setString(ReviewScheduleRepository.migratedMarkerKey, 'done');
+      await prefs.setString(kFsrsMigratedMarkerKey, 'done');
       return false;
     }
 
@@ -63,7 +63,7 @@ class ReviewScheduleMigration {
     }
 
     final dailyStats = <String, Map<String, int>>{};
-    final rawStats = prefs.getString(ReviewScheduleRepository.dailyStatsPrefKey);
+    final rawStats = prefs.getString(kDailyStatsPrefKey);
     if (rawStats != null && rawStats.isNotEmpty) {
       Map<String, dynamic> decodedStats;
       try {
@@ -84,7 +84,7 @@ class ReviewScheduleMigration {
       }
     }
 
-    final activeDates = (prefs.getStringList(ReviewScheduleRepository.activeDatesPrefKey) ?? const <String>[]).toSet();
+    final activeDates = (prefs.getStringList(kActiveDatesPrefKey) ?? const <String>[]).toSet();
 
     // 审计 A1：读降级日志，把「确认已含于 blob 卡」的评分预登记进幂等日志。
     // 审计 R1（2026-11-16）：降级写序是 journal 先行、blob 后写——blob 写失败
@@ -93,7 +93,7 @@ class ReviewScheduleMigration {
     // lastReview >= 该评分 savedAt（1s 容差）才视为已应用；否则留给回放补上。
     final cardByWord = {for (final c in cards) c.word: c};
     final journalRatings = <({String word, String ratingId})>[];
-    for (final raw in prefs.getStringList(ReviewScheduleRepository.degradedJournalKey) ?? const <String>[]) {
+    for (final raw in prefs.getStringList(kFsrsDegradedJournalKey) ?? const <String>[]) {
       try {
         final m = jsonDecode(raw) as Map<String, dynamic>;
         final id = m['ratingId'] as String?;
@@ -119,7 +119,7 @@ class ReviewScheduleMigration {
     await store.migrateFromSp(
       cards: cards,
       dailyStats: dailyStats,
-      dailyCorrect: _codec.readDailyCorrect(prefs.getString(ReviewScheduleRepository.dailyCorrectPrefKey)),
+      dailyCorrect: _codec.readDailyCorrect(prefs.getString(kDailyCorrectPrefKey)),
       activeDates: activeDates,
       journalRatings: journalRatings,
     );
@@ -132,7 +132,7 @@ class ReviewScheduleMigration {
       );
     }
 
-    await prefs.setString(ReviewScheduleRepository.migratedMarkerKey, 'done');
+    await prefs.setString(kFsrsMigratedMarkerKey, 'done');
     return true;
   }
 
@@ -140,38 +140,36 @@ class ReviewScheduleMigration {
   Future<void> clearLegacySpSnapshotIfMigrated() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.getString(ReviewScheduleRepository.migratedMarkerKey) != 'done') return;
+      if (prefs.getString(kFsrsMigratedMarkerKey) != 'done') return;
       // H2：若尚无应急备份且 SP 仍有数据，先打包到 emergencyBackupKey。
-      final cardsRaw = prefs.getString(ReviewScheduleRepository.cardsPrefKey);
-      final hasBackup = (prefs.getString(ReviewScheduleRepository.emergencyBackupKey) ?? '').isNotEmpty;
+      final cardsRaw = prefs.getString(kFsrsCardsPrefKey);
+      final hasBackup = (prefs.getString(kFsrsEmergencyBackupKey) ?? '').isNotEmpty;
       if (!hasBackup && cardsRaw != null && cardsRaw.isNotEmpty) {
         // 写返回 false（磁盘满等）不抛错：此时绝不能删主键——唯一可恢复
         // 快照还不存在，删了学习记录就永久丢失。留原键，下次启动重试打包。
         final saved = await prefs.setString(
-          ReviewScheduleRepository.emergencyBackupKey,
+          kFsrsEmergencyBackupKey,
           jsonEncode({
             'savedAt': DateTime.now().toIso8601String(),
-            ReviewScheduleRepository.cardsPrefKey: cardsRaw,
-            ReviewScheduleRepository.dailyStatsPrefKey: prefs.getString(ReviewScheduleRepository.dailyStatsPrefKey),
-            ReviewScheduleRepository.dailyCorrectPrefKey: prefs.getString(ReviewScheduleRepository.dailyCorrectPrefKey),
-            ReviewScheduleRepository.activeDatesPrefKey: prefs.getStringList(
-              ReviewScheduleRepository.activeDatesPrefKey,
-            ),
+            kFsrsCardsPrefKey: cardsRaw,
+            kDailyStatsPrefKey: prefs.getString(kDailyStatsPrefKey),
+            kDailyCorrectPrefKey: prefs.getString(kDailyCorrectPrefKey),
+            kActiveDatesPrefKey: prefs.getStringList(kActiveDatesPrefKey),
           }),
         );
         if (!saved) {
           reportSwallowedError(
             'FSRS E2 emergency backup write returned false; keep legacy keys',
-            StateError('setString(${ReviewScheduleRepository.emergencyBackupKey}) returned false'),
+            StateError('setString($kFsrsEmergencyBackupKey) returned false'),
             StackTrace.current,
           );
           return;
         }
       }
-      await prefs.remove(ReviewScheduleRepository.cardsPrefKey);
-      await prefs.remove(ReviewScheduleRepository.dailyStatsPrefKey);
-      await prefs.remove(ReviewScheduleRepository.dailyCorrectPrefKey);
-      await prefs.remove(ReviewScheduleRepository.activeDatesPrefKey);
+      await prefs.remove(kFsrsCardsPrefKey);
+      await prefs.remove(kDailyStatsPrefKey);
+      await prefs.remove(kDailyCorrectPrefKey);
+      await prefs.remove(kActiveDatesPrefKey);
     } catch (error, stack) {
       reportSwallowedError('FSRS E2 clear legacy SP snapshot', error, stack);
     }

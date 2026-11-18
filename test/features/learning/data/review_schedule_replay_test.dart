@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:word_app/core/engine/fsrs6_engine.dart';
+import 'package:word_app/features/learning/data/review_schedule_keys.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/data/review_schedule_store.dart';
 
@@ -51,7 +52,7 @@ void main() {
   test('P1-02：回放按**原答题时间**重算，不用恢复当天', () async {
     final answeredAt = DateTime.now().subtract(const Duration(days: 5));
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.degradedJournalKey: [
+      kFsrsDegradedJournalKey: [
         journalEntry(word: 'apple', rating: FsrsRating.good, answeredAt: answeredAt, ratingId: 'r-old-1'),
       ],
     });
@@ -80,7 +81,7 @@ void main() {
   test('P1-03：回放后内存快照必须重读（当天统计立刻可见）', () async {
     final answeredAt = DateTime.now();
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.degradedJournalKey: [
+      kFsrsDegradedJournalKey: [
         journalEntry(word: 'bee', rating: FsrsRating.good, answeredAt: answeredAt, ratingId: 'r-today-1'),
       ],
     });
@@ -106,11 +107,11 @@ void main() {
       dueDate: answeredAt.add(const Duration(days: 5)),
     );
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.cardsPrefKey: jsonEncode({'cat': card.toJson()}),
-      ReviewScheduleRepository.dailyStatsPrefKey: jsonEncode({
+      kFsrsCardsPrefKey: jsonEncode({'cat': card.toJson()}),
+      kDailyStatsPrefKey: jsonEncode({
         dateKey(answeredAt): {'learn': 1, 'review': 0},
       }),
-      ReviewScheduleRepository.degradedJournalKey: [
+      kFsrsDegradedJournalKey: [
         journalEntry(word: 'cat', rating: FsrsRating.good, answeredAt: answeredAt, ratingId: 'r-dup-1'),
       ],
     });
@@ -138,8 +139,8 @@ void main() {
       dueDate: answeredAt,
     );
     final sp = {
-      ReviewScheduleRepository.cardsPrefKey: jsonEncode({'dog': card.toJson()}),
-      ReviewScheduleRepository.dailyStatsPrefKey: jsonEncode({
+      kFsrsCardsPrefKey: jsonEncode({'dog': card.toJson()}),
+      kDailyStatsPrefKey: jsonEncode({
         dateKey(answeredAt): {'learn': 1, 'review': 0},
       }),
     };
@@ -150,7 +151,7 @@ void main() {
 
     // 模拟「事务提交后 SP marker 写失败」：清掉 SP marker，DB marker 仍在。
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(ReviewScheduleRepository.migratedMarkerKey);
+    await prefs.remove(kFsrsMigratedMarkerKey);
     await ReviewScheduleRepository(store: store).initialize();
     final second = (await db.query('fsrs_daily_stats')).single['learn'];
     expect(second, first, reason: 'DB 标记在则不重迁移，统计不得累加翻倍');
@@ -171,8 +172,8 @@ void main() {
       dueDate: older.add(const Duration(days: 4)),
     );
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.cardsPrefKey: jsonEncode({'fox': staleCard.toJson()}),
-      ReviewScheduleRepository.degradedJournalKey: [
+      kFsrsCardsPrefKey: jsonEncode({'fox': staleCard.toJson()}),
+      kFsrsDegradedJournalKey: [
         journalEntry(word: 'fox', rating: FsrsRating.good, answeredAt: answeredAt, ratingId: 'r-lost-1'),
       ],
     });
