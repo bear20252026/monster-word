@@ -5,12 +5,10 @@ import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx.dart';
 import 'package:word_app/core/utils/sfx_settings.dart';
 import 'package:word_app/widgets/common/mw_feedback.dart';
-import 'package:word_app/core/utils/debug_log.dart';
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import 'package:word_app/core/auth/app_session_controller.dart';
@@ -28,6 +26,7 @@ import 'package:word_app/core/application/wordbook_maintenance_service.dart';
 import 'package:word_app/features/settings/application/pet_window_controller.dart';
 import 'package:word_app/features/settings/presentation/restore_backup_dialog.dart';
 import 'package:word_app/features/settings/presentation/llm_settings_sheet.dart';
+import 'package:word_app/features/settings/application/update_check_controller.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 import 'package:word_app/theme/skin_system.dart';
@@ -54,11 +53,6 @@ class MoreSettingsPage extends StatefulWidget {
 }
 
 class _MoreSettingsPageState extends State<MoreSettingsPage> {
-  bool _isCheckingUpdate = false;
-
-  /// 真实应用版本号（package_info_plus；替换原硬编码 v5.11.1）。
-  String _appVersion = '';
-
   /// 桌面宠物窗口开关（Windows 独立顶层窗口，见 pet_host.h）。
   /// 第四轮 M5（2026-11-17）：竞态编排（C3/R20/T20/C6）下沉 PetWindowController，
   /// 页面只消费 visible 通知与 toggle 命令。
@@ -66,7 +60,13 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     checkinReader: context.read<CheckinStatusReader?>(),
   );
 
-  UpdateCheckService get _updateService => widget.updateServiceOverride ?? context.read<UpdateCheckService>();
+  /// 第四轮 M5（2026-11-18）：检查更新编排（busy 闸/版本加载/结果分类/URL 安全
+  /// 校验/日志摘要）下沉 UpdateCheckController，页面只发命令 + 按结果渲染弹窗。
+  late final UpdateCheckController _updateController = UpdateCheckController(
+    service: widget.updateServiceOverride ?? context.read<UpdateCheckService>(),
+  );
+
+  String get _appVersion => _updateController.appVersion;
 
   @override
   void initState() {
@@ -74,15 +74,13 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
     // 状态在原生：进页面时对齐一次（可能上次开过还没关）。
     _petController.addListener(_onPetChanged);
     _petController.attach();
-    PackageInfo.fromPlatform()
-        .then((info) {
-          if (mounted) {
-            // MW-13：比较口径必须含 buildNumber（2.12.2+128）——只取 version
-            // 会让「已装最新版」仍被判 hasUpdate（远端 2.12.2+128 > 本地 2.12.2）。
-            setState(() => _appVersion = '${info.version}+${info.buildNumber}');
-          }
-        })
-        .catchError((e) => debugLog('读取应用版本失败: $e'));
+    // 第四轮 M5：版本加载下沉控制器（MW-13 含 buildNumber 口径随迁）。
+    _updateController.addListener(_onUpdateChanged);
+    unawaited(_updateController.loadVersion());
+  }
+
+  void _onUpdateChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onPetChanged() {
@@ -93,122 +91,121 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
   void dispose() {
     _petController.removeListener(_onPetChanged);
     _petController.dispose();
+    _updateController.removeListener(_onUpdateChanged);
+    _updateController.dispose();
     super.dispose();
   }
 
-  /// 检查更新：真实请求 GitHub Releases 最新 tag 与当前版本比较。
+  /// 检查更新：编排（busy 闸/请求/结果分类）已下沉 UpdateCheckController（M5），
+  /// 页面只发命令并按结果渲染弹窗。弹窗 UI 与原版逐字一致（零视觉变化）。
   Future<void> _checkForUpdate() async {
-    if (_isCheckingUpdate) return;
-    setState(() => _isCheckingUpdate = true);
+    if (_updateController.isChecking) return;
     showMwSnackBar(context, const SnackBar(content: Text('正在检查更新…'), duration: Duration(seconds: 2)));
+    final (outcome, result) = await _updateController.check();
+    if (!mounted || result == null) return;
 
-    final result = await _updateService.check(currentVersion: _appVersion);
-    if (!mounted) return;
-    setState(() => _isCheckingUpdate = false);
-
-    if (result.failed) {
-      await showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: context.skin.colors.cardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
-          title: Column(
-            children: [
-              Icon(Icons.cloud_off_rounded, size: 40, color: context.skin.colors.text3),
-              SizedBox(height: 8),
-              Text('检查失败', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
-            ],
-          ),
-          content: Text(
-            '无法连接更新服务器，请检查网络后重试',
-            style: MwTypography.body.copyWith(color: context.skin.colors.text2),
-            textAlign: TextAlign.center,
-          ),
-          actions: [_okButton(ctx)],
-        ),
-      );
-      return;
-    }
-
-    if (result.hasUpdate) {
-      final notesPreview = result.notes == null ? '' : _firstLines(result.notes!, 6);
-      await showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: context.skin.colors.cardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
-          title: Column(
-            children: [
-              Icon(Icons.celebration_rounded, size: 40, color: context.skin.colors.accent),
-              SizedBox(height: 8),
-              Text(
-                '发现新版本 v${result.latestVersion}',
-                style: MwTypography.heading5.copyWith(color: context.skin.colors.text1),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '当前版本 v${result.currentVersion}，可前往下载页更新',
-                style: MwTypography.body.copyWith(color: context.skin.colors.text2),
-              ),
-              if (notesPreview.isNotEmpty) ...[
-                SizedBox(height: 12),
-                Text(notesPreview, style: MwTypography.bodySm.copyWith(color: context.skin.colors.text3)),
+    switch (outcome) {
+      case UpdateCheckOutcome.busy:
+        return;
+      case UpdateCheckOutcome.failed:
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: context.skin.colors.cardBg,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
+            title: Column(
+              children: [
+                Icon(Icons.cloud_off_rounded, size: 40, color: context.skin.colors.text3),
+                SizedBox(height: 8),
+                Text('检查失败', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
               ],
+            ),
+            content: Text(
+              '无法连接更新服务器，请检查网络后重试',
+              style: MwTypography.body.copyWith(color: context.skin.colors.text2),
+              textAlign: TextAlign.center,
+            ),
+            actions: [_okButton(ctx)],
+          ),
+        );
+      case UpdateCheckOutcome.hasUpdate:
+        final preview = UpdateCheckController.notesPreview(result.notes);
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: context.skin.colors.cardBg,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
+            title: Column(
+              children: [
+                Icon(Icons.celebration_rounded, size: 40, color: context.skin.colors.accent),
+                SizedBox(height: 8),
+                Text(
+                  '发现新版本 v${result.latestVersion}',
+                  style: MwTypography.heading5.copyWith(color: context.skin.colors.text1),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '当前版本 v${result.currentVersion}，可前往下载页更新',
+                  style: MwTypography.body.copyWith(color: context.skin.colors.text2),
+                ),
+                if (preview.isNotEmpty) ...[
+                  SizedBox(height: 12),
+                  Text(preview, style: MwTypography.bodySm.copyWith(color: context.skin.colors.text3)),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('下次再说', style: TextStyle(color: context.skin.colors.text3)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.skin.colors.accent,
+                  foregroundColor: context.skin.colors.onGlassAccent,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
+                ),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  // 安全加固（M5 下沉控制器）：只放行 GitHub 站点（https + github.com），
+                  // 防 releaseUrl 被注入任意 URI 唤起外部程序。
+                  final uri = UpdateCheckController.safeReleaseUri(result.releaseUrl);
+                  if (uri == null) return;
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                },
+                child: const Text('前往下载'),
+              ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('下次再说', style: TextStyle(color: context.skin.colors.text3)),
+        );
+      case UpdateCheckOutcome.upToDate:
+        // 真实对比后确认已是最新。
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: context.skin.colors.cardBg,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
+            title: Column(
+              children: [
+                Icon(Icons.check_circle_rounded, size: 40, color: context.skin.colors.success),
+                SizedBox(height: 8),
+                Text('已是最新版本', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
+              ],
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.skin.colors.accent,
-                foregroundColor: context.skin.colors.onGlassAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.lg)),
-              ),
-              onPressed: () async {
-                Navigator.pop(ctx);
-                // 安全加固：releaseUrl 来自 GitHub API 响应，仓库/Release 失守时
-                // 可能被注入任意 URI（file:/自定义协议）唤起外部程序——只放行 GitHub 站点。
-                final uri = Uri.tryParse(result.releaseUrl);
-                if (uri == null || uri.scheme != 'https' || uri.host != 'github.com') return;
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-              },
-              child: const Text('前往下载'),
+            content: Text(
+              _appVersion.isEmpty ? '当前已是最新版本' : '当前版本 v$_appVersion 已是最新（远端 v${result.latestVersion}）',
+              style: MwTypography.body.copyWith(color: context.skin.colors.text2),
+              textAlign: TextAlign.center,
             ),
-          ],
-        ),
-      );
-      return;
+            actions: [_okButton(ctx)],
+          ),
+        );
     }
-
-    // 真实对比后确认已是最新。
-    await showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.skin.colors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.design.radius.control)),
-        title: Column(
-          children: [
-            Icon(Icons.check_circle_rounded, size: 40, color: context.skin.colors.success),
-            SizedBox(height: 8),
-            Text('已是最新版本', style: MwTypography.heading5.copyWith(color: context.skin.colors.text1)),
-          ],
-        ),
-        content: Text(
-          _appVersion.isEmpty ? '当前已是最新版本' : '当前版本 v$_appVersion 已是最新（远端 v${result.latestVersion}）',
-          style: MwTypography.body.copyWith(color: context.skin.colors.text2),
-          textAlign: TextAlign.center,
-        ),
-        actions: [_okButton(ctx)],
-      ),
-    );
   }
 
   Widget _okButton(BuildContext ctx) {
@@ -221,17 +218,6 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
       onPressed: () => Navigator.pop(ctx),
       child: const Text('知道了'),
     );
-  }
-
-  /// 更新日志摘要：取前 [maxLines] 行，压掉空行与图片标记。
-  String _firstLines(String notes, int maxLines) {
-    final lines = notes
-        .split('\n')
-        .map((line) => line.trim())
-        .where((line) => line.isNotEmpty && !line.startsWith('!['))
-        .toList();
-    final picked = lines.take(maxLines).join('\n');
-    return lines.length > maxLines ? '$picked\n…' : picked;
   }
 
   /// 词库全量覆盖重建：确认 → 执行（不可取消的进度弹窗）→ 完整性结果
