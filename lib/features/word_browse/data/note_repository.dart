@@ -5,7 +5,9 @@ import 'package:word_app/models/word_note.dart';
 
 /// 笔记数据仓库接口
 ///
-/// 提供单词笔记、收藏等数据访问抽象。
+/// 第四轮审计 M13（2026-11-17）：从 core/repositories 迁至唯一消费域
+/// word_browse 的 data 层（目录自定规则「单域入 feature/data」）；
+/// 收藏四死桩方法已删除（事实来源是 FavRepository / FavSentenceDao）。
 abstract class NoteRepository {
   /// 获取单词的所有笔记
   Future<List<WordNote>> getNotesByWord(int wordId);
@@ -24,16 +26,4 @@ abstract class NoteRepository {
 
   /// 删除笔记
   Future<int> deleteNote(int noteId);
-
-  /// 获取收藏列表
-  Future<List<Map<String, dynamic>>> getFavorites();
-
-  /// 添加收藏
-  Future<int> addFavorite(int wordId);
-
-  /// 取消收藏
-  Future<int> removeFavorite(int wordId);
-
-  /// 检查是否已收藏
-  Future<bool> isFavorite(int wordId);
 }

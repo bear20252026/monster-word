@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:word_app/app/service_locator.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
-import 'package:word_app/core/repositories/note_repository.dart';
+import 'package:word_app/features/word_browse/data/note_repository.dart';
 import 'package:word_app/features/word_browse/application/sentence_favorites_store.dart';
 import 'package:word_app/features/word_browse/application/word_notes_store.dart';
 import 'package:word_app/features/word_browse/data/repository_sentence_favorites_store.dart';

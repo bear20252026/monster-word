@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:word_app/core/repositories/note_repository_impl.dart';
+import 'package:word_app/features/word_browse/data/note_repository_impl.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

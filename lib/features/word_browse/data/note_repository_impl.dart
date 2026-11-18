@@ -12,7 +12,7 @@ import 'package:word_app/core/infrastructure/user_database.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 import 'package:word_app/models/word_note.dart';
-import 'package:word_app/core/repositories/note_repository.dart';
+import 'package:word_app/features/word_browse/data/note_repository.dart';
 
 /// 笔记数据仓库的具体实现（P1-07 / MW-41+42+43）。
 ///
@@ -389,27 +389,6 @@ class NoteRepositoryImpl implements NoteRepository {
     await prefs.setString('${_notesKey}_$wordId', jsonStr);
   }
 
-  @override
-  Future<List<Map<String, dynamic>>> getFavorites() async {
-    // 收藏操作由 FavRepository 处理
-    return [];
-  }
-
-  @override
-  Future<int> addFavorite(int wordId) async {
-    // 收藏操作由 FavRepository 处理
-    return 0;
-  }
-
-  @override
-  Future<int> removeFavorite(int wordId) async {
-    // 收藏操作由 FavRepository 处理
-    return 0;
-  }
-
-  @override
-  Future<bool> isFavorite(int wordId) async {
-    // 收藏操作由 FavRepository 处理
-    return false;
-  }
+  // 第四轮审计 M13（2026-11-17）：收藏四死桩已随接口删除（事实来源是
+  // FavRepository / FavSentenceDao，本仓储只承载笔记）。
 }

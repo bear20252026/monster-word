@@ -15,9 +15,11 @@
 const List<String> kALevelFiles = [
   // MEM/U3+U6：收藏持久化下沉到 DAO（SQLite 事实来源 + SP 回退），
   // 上报随之迁移到 DAO 层；impl 仅做端口转发。
-  'lib/core/infrastructure/favorite_words_dao.dart', // 收藏列表（SQLite/SP 持久化）
+  'lib/core/infrastructure/favorite_words_dao.dart', // 收藏列表（M7 后持久化在基类）
+  'lib/core/infrastructure/word_set_dao.dart', // 收藏/掌握公共基类（M7：真实持久化 catch 在此）
+  'lib/core/infrastructure/mastered_words_dao.dart', // 掌握词表（M7 后持久化在基类）
   'lib/core/infrastructure/fav_sentence_dao.dart', // 收藏例句（SQLite/SP 持久化）
-  'lib/core/repositories/note_repository_impl.dart', // 笔记
+  'lib/features/word_browse/data/note_repository_impl.dart', // 笔记（M13 迁至唯一消费域）
   'lib/features/learning/data/mastered_repository_impl.dart', // 已掌握词表
   'lib/features/learning/application/review_session_starter.dart', // 复习会话启动
   'lib/features/learning/presentation/review_word_action_coordinator.dart', // 收藏/掌握持久化
