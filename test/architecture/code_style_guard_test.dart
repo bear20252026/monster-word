@@ -36,7 +36,8 @@ const Map<String, int> _kPartFamilyRatchet = {
   // 1075：第四轮 M5（2026-11-17）宠物开关竞态编排下沉 PetWindowController -62。
   // 1061：第四轮 M5（2026-11-18）检查更新编排下沉 UpdateCheckController -14。
   'lib/features/settings/presentation/more_settings_page.dart': 1061,
-  'lib/features/settings/presentation/profile_screen.dart': 1890,
+  // 1887：第四轮 M11（2026-11-18）天色/生日标记收口 PresentationPrefs，part 直触 SP 移除 -3。
+  'lib/features/settings/presentation/profile_screen.dart': 1887,
 };
 
 /// 解析 part 家族：主文件 -> 家族总行数（主文件 + 全部 `part 'x.dart'`）。

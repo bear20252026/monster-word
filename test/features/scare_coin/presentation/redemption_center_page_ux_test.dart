@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/scare_coin/application/scare_coin_store.dart';
 import 'package:word_app/models/scare_coin_entry.dart';
 import 'package:word_app/features/scare_coin/presentation/redemption_center_page.dart';
@@ -76,8 +78,10 @@ class _FakeScareCoinStore implements ScareCoinStore {
 
 void main() {
   group('RedemptionCenterPage UX-FIX-E', () {
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      // M11：页面收藏章标记经 PresentationPrefs 门面读，需 SP 就绪（同 bootstrap）。
+      await AppPreferences().init();
     });
 
     testWidgets('显示真实余额（非硬编码 1280）', (tester) async {
@@ -86,7 +90,13 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Provider<ScareCoinStore>.value(value: store, child: const RedemptionCenterPage()),
+          home: MultiProvider(
+            providers: [
+              Provider<ScareCoinStore>.value(value: store),
+              Provider<PresentationPrefs>.value(value: PresentationPrefs()),
+            ],
+            child: const RedemptionCenterPage(),
+          ),
         ),
       );
 
@@ -104,7 +114,13 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Provider<ScareCoinStore>.value(value: store, child: const RedemptionCenterPage()),
+          home: MultiProvider(
+            providers: [
+              Provider<ScareCoinStore>.value(value: store),
+              Provider<PresentationPrefs>.value(value: PresentationPrefs()),
+            ],
+            child: const RedemptionCenterPage(),
+          ),
         ),
       );
 
@@ -128,7 +144,13 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Provider<ScareCoinStore>.value(value: store, child: const RedemptionCenterPage()),
+          home: MultiProvider(
+            providers: [
+              Provider<ScareCoinStore>.value(value: store),
+              Provider<PresentationPrefs>.value(value: PresentationPrefs()),
+            ],
+            child: const RedemptionCenterPage(),
+          ),
         ),
       );
 

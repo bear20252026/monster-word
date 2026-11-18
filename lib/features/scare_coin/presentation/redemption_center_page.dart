@@ -4,7 +4,6 @@ import 'package:word_app/widgets/common/mw_feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:word_app/app/router/route_names.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
@@ -34,9 +33,6 @@ class RedemptionCenterPage extends StatefulWidget {
 }
 
 class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
-  /// 已兑换收藏章键前缀（单一事实来源：AppPreferences 经 PresentationPrefs 端口下发）。
-  static const String _redeemedPrefix = PresentationPrefs.redeemedBadgePrefix;
-
   int _coins = 0;
   int _todayEarned = 0;
   Set<String> _redeemedIds = <String>{};
@@ -99,7 +95,8 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
 
   Future<void> _reload() async {
     final store = context.read<ScareCoinStore>();
-    final prefs = await SharedPreferences.getInstance();
+    // M11：收藏章标记经 PresentationPrefs 门面读（R-prefs，不再直触 SP）。
+    final prefs = context.read<PresentationPrefs>();
     final results = await Future.wait([store.balance(), store.history(), store.protectionCount()]);
     if (!mounted) return;
     final today = DateTime.now().toIso8601String().substring(0, 10);
@@ -110,7 +107,7 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       _coins = results[0] as int;
       _todayEarned = todayEarned;
       _protectionStock = results[2] as int;
-      _redeemedIds = _items.map((i) => i.id).where((id) => prefs.getBool('$_redeemedPrefix$id') ?? false).toSet();
+      _redeemedIds = _items.map((i) => i.id).where((id) => prefs.isBadgeRedeemed(id)).toSet();
     });
     // 弹层展示用进化阶段异步补齐（与怪兽探头同口径）：独立读取、失败降级，不牵连页面主数据。
     unawaited(_loadMonsterStage(store));
@@ -176,6 +173,8 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
   Future<void> _redeem(_RedeemItem item) async {
     if (_redeeming) return;
     final store = context.read<ScareCoinStore>();
+    // M11：门面引用在 async 间隙前捕获（use_build_context_synchronously）。
+    final prefs = context.read<PresentationPrefs>();
     // 耗材分支：可重复兑换，走库存口径（不进 redeemedIds、不占装备架）。
     if (item.isConsumable) return _redeemConsumable(item, store);
     if (_redeemedIds.contains(item.id)) return;
@@ -188,8 +187,8 @@ class _RedemptionCenterPageState extends State<RedemptionCenterPage> {
       final store = context.read<ScareCoinStore>();
       await store.grant(delta: -item.cost, reason: '兑换 · ${item.title}');
       try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('$_redeemedPrefix${item.id}', true);
+        // M11：收藏章标记经 PresentationPrefs 门面写（R-prefs，不再直触 SP）。
+        await prefs.markBadgeRedeemed(item.id);
       } catch (e, s) {
         // 数据完整性审计 P2：扣币后标记失败需补偿退款，否则币丢奖励没落账。
         reportSwallowedError('兑换标记写入失败，补偿回滚', e, s);

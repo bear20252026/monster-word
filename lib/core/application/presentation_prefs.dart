@@ -122,4 +122,44 @@ class PresentationPrefs {
 
   /// 当前 LLM 配置快照（key 不在此对象，由 LlmCredentials 安全存储单独管理）。
   LlmConfig get llmConfig => LlmConfig(enabled: llmEnabled, baseUrl: llmBaseUrl, model: llmModel);
+
+  // ── 第四轮 M11（2026-11-18）：presentation 直触 SP 收口（第一批）──
+  // 兑换中心收藏章标记 / 小屋天色 / 生日年度标记原在页面直读写 SP，现经本门面。
+  // 键单一事实来源仍在 AppPreferences / 本门面；读操作未初始化返默认值（与门面
+  // 既有同步读口径一致），写操作前 ensureReady（测试环境无 bootstrap 预热）。
+
+  /// 收藏章是否已兑换（兑换页「已拥有」态；键前缀 redeemedBadgePrefix 同源）。
+  bool isBadgeRedeemed(String badgeId) => _p.getBool('$redeemedBadgePrefix$badgeId');
+
+  /// 标记收藏章已兑换。返回底层 setBool 结果（false=写失败，调用方据此补偿退款）。
+  Future<bool> markBadgeRedeemed(String badgeId) async {
+    await ensureReady();
+    return _p.setBool('$redeemedBadgePrefix$badgeId', true);
+  }
+
+  static const String _skySceneKey = 'monster_room.sky_scene';
+
+  /// 小屋天色场景（0/1/2）；无记录返回 null（页面据此走自动模式）。
+  int? skyScene() {
+    if (!_p.containsKey(_skySceneKey)) return null;
+    return _p.getInt(_skySceneKey);
+  }
+
+  /// 写入小屋天色场景。
+  Future<void> setSkyScene(int scene) async {
+    await ensureReady();
+    await _p.setInt(_skySceneKey, scene);
+  }
+
+  /// 生日年度标记键（每年只庆一次，按年落标）。
+  static String _birthdayCelebratedKey(int year) => 'monster_birthday_celebrated_$year';
+
+  /// 该年生日是否已庆祝过。
+  bool birthdayCelebrated(int year) => _p.getBool(_birthdayCelebratedKey(year));
+
+  /// 标记该年生日已庆祝。返回底层 setBool 结果（false=写失败则不庆祝，与原口径一致）。
+  Future<bool> markBirthdayCelebrated(int year) async {
+    await ensureReady();
+    return _p.setBool(_birthdayCelebratedKey(year), true);
+  }
 }

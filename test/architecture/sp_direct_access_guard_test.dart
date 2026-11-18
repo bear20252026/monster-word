@@ -16,13 +16,12 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 存量直触 SP 的 presentation/widgets 主文件（含其 part）。只许缩小。
-const Set<String> _kSpDirectAccessAllowlist = {
-  // 批次 7 P2-8：treasure_checkin_page / learn_page 里程碑庆祝收口于 MilestoneCelebration，
-  // 两页不再直触 SP，已从清单移除（只许收紧）。
-  'lib/features/scare_coin/presentation/redemption_center_page.dart',
-  'lib/features/settings/presentation/profile_screen.dart', // part: monster_room_life
-  // 批次 9 P3-3：monster_presence 收口于 PresentationPrefs 并移入 companion，不再直触 SP。
-};
+///
+/// 第四轮 M11（2026-11-18）第一批：兑换中心收藏章标记 / 小屋天色 / 生日年度标记
+/// 收口于 PresentationPrefs 门面，redemption_center_page 与 profile_screen
+/// （part monster_room_life）不再直触 SP，清单清空——presentation/widgets 层
+/// 自此零直连，新增一律红灯。application/data/core 层不在射程（持久化合法归属）。
+const Set<String> _kSpDirectAccessAllowlist = {};
 
 /// 返回 presentation/widgets 层直触 SP 的主文件集合（part 归主文件）。
 Set<String> _directSpAccessFiles() {
