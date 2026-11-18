@@ -2,6 +2,10 @@
 //
 // 共享模型层 — 尖叫币流水值对象
 //
+// 第四轮 M13（2026-11-18）留守 models/：除 scare_coin 域外，core 的
+// scare_coin_ledger_dao 也消费本模型。迁入 features 会让 core→features 反向
+// 依赖、触发 R-core 守卫，故保留在顶层 models/（core/features→models 均合法）。
+//
 // ScareCoinEntry 是纯粹的领域模型，不依赖任何基础设施或框架，
 // 仅描述一条尖叫币流水的事实（时间、变动量、原因）。因其被多个 feature
 // （account / checkin / scare_coin）与 legacy 页面共享，故下沉至共享 models，

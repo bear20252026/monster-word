@@ -14,12 +14,12 @@ import 'package:word_app/core/repositories/new_word_repository_impl.dart';
 import 'package:word_app/features/dictionary/data/service_dictionary_favorite_writer.dart';
 import 'package:word_app/features/dictionary/data/service_dictionary_new_word_writer.dart';
 import 'package:word_app/features/learning/application/favorites_port.dart';
-import 'package:word_app/features/learning/application/learning_queue_port.dart';
 import 'package:word_app/features/learning/presentation/learning_favorites_state.dart';
-import 'package:word_app/models/book.dart';
 import 'package:word_app/models/word.dart';
 
-// ── M1 桩：内存收藏端口 + 空队列端口 ─────────────────────────
+import '../../../helpers/fake_learning_queue_port.dart';
+
+// ── M1 桩：内存收藏端口（队列端口用 helpers 共享 FakeLearningQueuePort）──
 
 class _MemFavoritesPort implements FavoritesPort {
   final Set<String> words = {};
@@ -36,21 +36,13 @@ class _MemFavoritesPort implements FavoritesPort {
   bool isFavorite(String word) => words.contains(word);
 }
 
-class _EmptyQueuePort implements LearningQueuePort {
-  @override
-  Future<List<Word>> loadFavoriteWords({required List<Word> currentQueue}) async => const [];
-
-  @override
-  Future<List<Word>> loadBook(Book book, {int? limit, required bool shuffle}) async => const [];
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('M1 词典收藏写经共享状态源', () {
     test('toggle 后 Store 快照即时更新且发出通知（search/book 订阅方可见）', () async {
       final port = _MemFavoritesPort();
-      final store = LearningFavoritesState(favoritesPort: port, queuePort: _EmptyQueuePort());
+      final store = LearningFavoritesState(favoritesPort: port, queuePort: FakeLearningQueuePort());
       addTearDown(store.dispose);
       // 构造期 refresh 是异步的：等首载完成。
       await store.refresh();
@@ -74,7 +66,7 @@ void main() {
     });
 
     test('空白词形拒写且不通知', () async {
-      final store = LearningFavoritesState(favoritesPort: _MemFavoritesPort(), queuePort: _EmptyQueuePort());
+      final store = LearningFavoritesState(favoritesPort: _MemFavoritesPort(), queuePort: FakeLearningQueuePort());
       addTearDown(store.dispose);
       await store.refresh();
       final writer = ServiceDictionaryFavoriteWriter(favoritesStore: store);
@@ -84,7 +76,7 @@ void main() {
 
     test('getFavoriteWords 返回 Store 快照视图（与收藏页同源）', () async {
       final port = _MemFavoritesPort()..words.add('beta');
-      final store = LearningFavoritesState(favoritesPort: port, queuePort: _EmptyQueuePort());
+      final store = LearningFavoritesState(favoritesPort: port, queuePort: FakeLearningQueuePort());
       addTearDown(store.dispose);
       await store.refresh();
       final writer = ServiceDictionaryFavoriteWriter(favoritesStore: store);

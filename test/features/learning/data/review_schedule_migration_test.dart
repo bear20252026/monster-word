@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:word_app/core/engine/fsrs6_engine.dart';
+import 'package:word_app/features/learning/data/review_schedule_keys.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/data/review_schedule_store.dart';
 
@@ -49,11 +50,11 @@ void main() {
 
   test('首启迁移：SP 数据事务导入，损坏行跳过并写标记，仓储走 SQLite 模式', () async {
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.cardsPrefKey: legacyCardsBlob(includeCorrupt: true),
-      ReviewScheduleRepository.dailyStatsPrefKey: jsonEncode({
+      kFsrsCardsPrefKey: legacyCardsBlob(includeCorrupt: true),
+      kDailyStatsPrefKey: jsonEncode({
         '2026-09-03': {'learn': 5, 'review': 2},
       }),
-      ReviewScheduleRepository.activeDatesPrefKey: ['2026-09-02', '2026-09-03'],
+      kActiveDatesPrefKey: ['2026-09-02', '2026-09-03'],
     });
 
     final store = await newStore();
@@ -70,43 +71,43 @@ void main() {
 
     // 迁移标记已写；SQLite 行数 == 解析成功行数（损坏行未入库）。
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString(ReviewScheduleRepository.migratedMarkerKey), 'done');
+    expect(prefs.getString(kFsrsMigratedMarkerKey), 'done');
     expect(await store.cardCount(), 2);
     expect(await store.loadDailyStats(), {
       '2026-09-03': {'learn': 5, 'review': 2},
     });
     // E2：SQLite 就绪后旧 SP 回滚快照应清除；应急备份 key 已写入（H2）。
-    expect(prefs.getString(ReviewScheduleRepository.cardsPrefKey), isNull);
-    expect(prefs.getString(ReviewScheduleRepository.dailyStatsPrefKey), isNull);
-    expect(prefs.getStringList(ReviewScheduleRepository.activeDatesPrefKey), isNull);
-    final backup = prefs.getString(ReviewScheduleRepository.emergencyBackupKey);
+    expect(prefs.getString(kFsrsCardsPrefKey), isNull);
+    expect(prefs.getString(kDailyStatsPrefKey), isNull);
+    expect(prefs.getStringList(kActiveDatesPrefKey), isNull);
+    final backup = prefs.getString(kFsrsEmergencyBackupKey);
     expect(backup, isNotNull);
     expect(backup, contains('apple'));
   });
 
   test('E2：SQLite 模式不保留 SP 快照；降级模式仍写 SP', () async {
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.cardsPrefKey: legacyCardsBlob(),
-      ReviewScheduleRepository.dailyStatsPrefKey: jsonEncode({
+      kFsrsCardsPrefKey: legacyCardsBlob(),
+      kDailyStatsPrefKey: jsonEncode({
         '2026-09-03': {'learn': 1, 'review': 0},
       }),
-      ReviewScheduleRepository.activeDatesPrefKey: ['2026-09-03'],
+      kActiveDatesPrefKey: ['2026-09-03'],
     });
     final sqliteStore = await ReviewScheduleStore.forTest(await openDatabase(inMemoryDatabasePath));
     final sqliteRepo = ReviewScheduleRepository(store: sqliteStore);
     await sqliteRepo.initialize();
     expect(sqliteRepo.usesSqlite, isTrue);
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString(ReviewScheduleRepository.cardsPrefKey), isNull);
+    expect(prefs.getString(kFsrsCardsPrefKey), isNull);
   });
 
   test('已迁移后不再重跑迁移（表非空 / 标记 done 双重守卫，统计不翻倍）', () async {
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.cardsPrefKey: legacyCardsBlob(),
-      ReviewScheduleRepository.dailyStatsPrefKey: jsonEncode({
+      kFsrsCardsPrefKey: legacyCardsBlob(),
+      kDailyStatsPrefKey: jsonEncode({
         '2026-09-03': {'learn': 5, 'review': 2},
       }),
-      ReviewScheduleRepository.activeDatesPrefKey: ['2026-09-03'],
+      kActiveDatesPrefKey: ['2026-09-03'],
     });
 
     final store = await newStore();
@@ -118,12 +119,12 @@ void main() {
 
     // 篡改 SP 数据模拟"旧数据又出现"：若重跑迁移，统计会被再次累加翻倍。
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.cardsPrefKey: legacyCardsBlob(),
-      ReviewScheduleRepository.dailyStatsPrefKey: jsonEncode({
+      kFsrsCardsPrefKey: legacyCardsBlob(),
+      kDailyStatsPrefKey: jsonEncode({
         '2026-09-03': {'learn': 100, 'review': 100},
       }),
-      ReviewScheduleRepository.activeDatesPrefKey: ['2026-09-03'],
-      ReviewScheduleRepository.migratedMarkerKey: 'done',
+      kActiveDatesPrefKey: ['2026-09-03'],
+      kFsrsMigratedMarkerKey: 'done',
     });
 
     final second = ReviewScheduleRepository(store: store);
@@ -145,11 +146,11 @@ void main() {
     expect(repo.usesSqlite, isTrue);
     expect(repo.cardFor('anything'), isNull);
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString(ReviewScheduleRepository.migratedMarkerKey), 'done');
+    expect(prefs.getString(kFsrsMigratedMarkerKey), 'done');
   });
 
   test('SP blob 顶层损坏：按空迁入并写标记（不卡死启动），原 blob 留应急备份', () async {
-    SharedPreferences.setMockInitialValues({ReviewScheduleRepository.cardsPrefKey: '{not-valid-json'});
+    SharedPreferences.setMockInitialValues({kFsrsCardsPrefKey: '{not-valid-json'});
 
     final store = await newStore();
     final repo = ReviewScheduleRepository(store: store);
@@ -161,8 +162,8 @@ void main() {
     expect(repo.usesSqlite, isTrue);
     expect(await store.cardCount(), 0);
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString(ReviewScheduleRepository.migratedMarkerKey), 'done');
-    final backup = prefs.getString(ReviewScheduleRepository.emergencyBackupKey);
+    expect(prefs.getString(kFsrsMigratedMarkerKey), 'done');
+    final backup = prefs.getString(kFsrsEmergencyBackupKey);
     expect(backup, isNotNull, reason: '损坏的原 blob 必须留应急备份供人工恢复');
     expect(backup, contains('not-valid-json'));
   });
@@ -170,14 +171,14 @@ void main() {
   test('R3：SQLite 不可用且 SP 活键为空时，从 emergency_backup 自动恢复', () async {
     // 未注入 store：flutter test 环境 ReviewScheduleStore.open 会抛错 → 降级路径。
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.migratedMarkerKey: 'done',
-      ReviewScheduleRepository.emergencyBackupKey: jsonEncode({
+      kFsrsMigratedMarkerKey: 'done',
+      kFsrsEmergencyBackupKey: jsonEncode({
         'savedAt': '2026-09-20T00:00:00.000',
-        ReviewScheduleRepository.cardsPrefKey: legacyCardsBlob(),
-        ReviewScheduleRepository.dailyStatsPrefKey: jsonEncode({
+        kFsrsCardsPrefKey: legacyCardsBlob(),
+        kDailyStatsPrefKey: jsonEncode({
           '2026-09-03': {'learn': 5, 'review': 2},
         }),
-        ReviewScheduleRepository.activeDatesPrefKey: ['2026-09-03'],
+        kActiveDatesPrefKey: ['2026-09-03'],
       }),
     });
 
@@ -229,10 +230,10 @@ void main() {
 
     expect(repo.usesSqlite, isFalse);
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(ReviewScheduleRepository.cardsPrefKey)!;
+    final raw = prefs.getString(kFsrsCardsPrefKey)!;
     expect(raw, contains('fallback-word'));
-    expect(prefs.getString(ReviewScheduleRepository.dailyStatsPrefKey), isNotNull);
-    expect(prefs.getStringList(ReviewScheduleRepository.activeDatesPrefKey), isNotEmpty);
+    expect(prefs.getString(kDailyStatsPrefKey), isNotNull);
+    expect(prefs.getStringList(kActiveDatesPrefKey), isNotEmpty);
   });
 
   test('第三轮 T14：写闸延迟使 savedAt 晚于 lastReview 数秒——ratedAt 同源仍预登记（不双回放）', () async {
@@ -240,8 +241,8 @@ void main() {
     // savedAt 因写闸排队晚 5 秒。旧实现用 savedAt+1s 容差会误判「未应用」→
     // 回放对已含评分的卡再跑 engine.review（稳定度虚增）。
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.cardsPrefKey: legacyCardsBlob(),
-      ReviewScheduleRepository.degradedJournalKey: [
+      kFsrsCardsPrefKey: legacyCardsBlob(),
+      kFsrsDegradedJournalKey: [
         jsonEncode({
           'ratingId': 'apple-1',
           'word': 'apple',
@@ -269,8 +270,8 @@ void main() {
 
   test('第三轮 T14 对照：老条目无 ratedAt 回退 savedAt（兼容），晚 5 秒仍按旧口径留给回放', () async {
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.cardsPrefKey: legacyCardsBlob(),
-      ReviewScheduleRepository.degradedJournalKey: [
+      kFsrsCardsPrefKey: legacyCardsBlob(),
+      kFsrsDegradedJournalKey: [
         jsonEncode({
           'ratingId': 'apple-2',
           'word': 'apple',

@@ -1,7 +1,12 @@
 /// 用户信息 Bean
 ///
-/// 从 data/app_preferences.dart 迁移到 models/ 层，
-/// 使 Service 层可以不依赖 data/ 层。
+/// 第四轮 M13（2026-11-18）：从顶层 models/ 迁入 account 域 domain 层——
+/// 生产消费方仅 account 域（account_profile / user_service / user_service_impl），
+/// 按「单域模型入 feature/domain」规则归属。此前曾迁至 models/ 以解耦 Service
+/// 与 data 层，该意图由域内分层继续满足。
+///
+/// ⚠️ 凭证安全（S1）：setUserInfoBean 先把 token/secret 送进 SecureTokenStorage
+/// 再清空两者才落 SP；本类 toJson 不得绕过该剥离路径直接写盘。
 class UserInfoBean {
   int userId;
   String nickname;

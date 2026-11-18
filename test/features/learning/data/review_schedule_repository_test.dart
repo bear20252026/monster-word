@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/core/engine/fsrs6_engine.dart';
 import 'package:word_app/features/learning/data/repository_review_schedule_reader.dart';
+import 'package:word_app/features/learning/data/review_schedule_keys.dart';
 import 'package:word_app/features/learning/data/review_schedule_repository.dart';
 import 'package:word_app/features/learning/presentation/learning_queue_state.dart';
 import 'package:word_app/features/learning/presentation/review_queue_state.dart';
@@ -29,9 +30,9 @@ void main() {
     expect(schedule.todayReviewCount, 1);
 
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString(ReviewScheduleRepository.cardsPrefKey), isNotEmpty);
-    expect(prefs.getString(ReviewScheduleRepository.dailyStatsPrefKey), isNotEmpty);
-    expect(prefs.getStringList(ReviewScheduleRepository.activeDatesPrefKey), isNotEmpty);
+    expect(prefs.getString(kFsrsCardsPrefKey), isNotEmpty);
+    expect(prefs.getString(kDailyStatsPrefKey), isNotEmpty);
+    expect(prefs.getStringList(kActiveDatesPrefKey), isNotEmpty);
   });
 
   test('正式复习队列只从独立调度仓储计算到期词', () async {
@@ -44,7 +45,7 @@ void main() {
       dueDate: DateTime.now().subtract(const Duration(days: 1)),
     );
     SharedPreferences.setMockInitialValues({
-      ReviewScheduleRepository.cardsPrefKey: jsonEncode({'due-word': dueCard.toJson()}),
+      kFsrsCardsPrefKey: jsonEncode({'due-word': dueCard.toJson()}),
     });
 
     final schedule = ReviewScheduleRepository();

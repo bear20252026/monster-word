@@ -1,5 +1,10 @@
 // 单词笔记模型
 // 用户对单词的个人笔记，支持增删改查
+//
+// 第四轮 M13（2026-11-18）留守 models/：本模型被 word_browse（笔记仓储/Store）
+// 与 dictionary（word_detail_notes_section）两域消费，属跨域共享模型。迁入任一
+// feature 的 domain/data 都会让另一域 import 非 application 层、触发 R4 守卫，
+// 故保留在顶层 models/（features→models 合法）。
 
 /// 单词笔记
 class WordNote {

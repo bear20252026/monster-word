@@ -450,7 +450,7 @@ class UserPreferences extends BaseSharedPreferences {
 //   · GuidePreference（guide_learn 等四个引导标记）全库零引用，已删除。
 //   · **R3-D06：本文件原先自带一个 `UserInfoBean` + `getUserInfoSync/getUserInfo/
 //     setUserInfo` 扩展，已整体删除。** 理由不是「没人用」，而是它**会撤销安全
-//     修复**：`lib/models/user_info_bean.dart` 才是真正在用的那个，生产路径
+//     修复**：`lib/features/account/domain/user_info_bean.dart` 才是真正在用的那个，生产路径
 //     `user_service_impl.setUserInfoBean` 会把 `token`/`secret` 先送进
 //     `SecureTokenStorage` 再把两者清空后才写 SP（安全审计 S1）；而本文件这个
 //     副本**少 `signature` 字段且不做任何剥离**，`setUserInfo` 直接把
