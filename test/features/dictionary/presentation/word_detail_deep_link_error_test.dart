@@ -27,7 +27,7 @@ import 'package:word_app/features/dictionary/application/dictionary_extra_reader
 import 'package:word_app/features/dictionary/domain/dictionary_extra.dart';
 import 'package:word_app/features/dictionary/presentation/word_detail_page.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
-import 'package:word_app/core/repositories/note_repository.dart';
+import 'package:word_app/features/word_browse/data/note_repository.dart';
 import 'package:word_app/core/application/word_lookup_reader.dart';
 import 'package:word_app/theme/skin_system.dart';
 
@@ -120,14 +120,6 @@ class _StubNoteRepo implements NoteRepository {
   Future<int> updateNote(WordNote note) async => 0;
   @override
   Future<int> deleteNote(int noteId) async => 0;
-  @override
-  Future<List<Map<String, dynamic>>> getFavorites() async => [];
-  @override
-  Future<int> addFavorite(int wordId) async => 0;
-  @override
-  Future<int> removeFavorite(int wordId) async => 0;
-  @override
-  Future<bool> isFavorite(int wordId) async => false;
 }
 
 class _StubNotesStore implements WordNotesStore {

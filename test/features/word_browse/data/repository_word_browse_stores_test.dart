@@ -4,7 +4,7 @@ import 'package:word_app/models/sentence_models.dart';
 import 'package:word_app/features/word_browse/data/repository_word_notes_store.dart';
 import 'package:word_app/models/word_note.dart';
 import 'package:word_app/core/repositories/fav_repository.dart';
-import 'package:word_app/core/repositories/note_repository.dart';
+import 'package:word_app/features/word_browse/data/note_repository.dart';
 
 void main() {
   group('RepositoryWordNotesStore', () {
@@ -83,9 +83,6 @@ class _FakeNoteRepository implements NoteRepository {
   int? deletedId;
 
   @override
-  Future<int> addFavorite(int wordId) async => wordId;
-
-  @override
   Future<int> addNote(int wordId, String content, {String word = ''}) async => wordId;
 
   @override
@@ -93,9 +90,6 @@ class _FakeNoteRepository implements NoteRepository {
     deletedId = noteId;
     return 1;
   }
-
-  @override
-  Future<List<Map<String, dynamic>>> getFavorites() async => const [];
 
   @override
   Future<List<WordNote>> getNotesByWord(int wordId) async => notes;
@@ -107,12 +101,6 @@ class _FakeNoteRepository implements NoteRepository {
     inserted = note;
     return note.id ?? 1;
   }
-
-  @override
-  Future<bool> isFavorite(int wordId) async => false;
-
-  @override
-  Future<int> removeFavorite(int wordId) async => wordId;
 
   @override
   Future<int> updateNote(WordNote note) async {
