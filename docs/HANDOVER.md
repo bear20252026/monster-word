@@ -39,7 +39,7 @@ lib/
   tokens/ theme/  设计 token 单真相（星巴克 preset == token，守卫测试锁定）
   widgets/        共享组件（金币、庆祝、骨架屏等；无业务页面）
 test/
-  architecture/   27 套守卫测试（106 例）——本项目最有价值的资产，见 §5
+  architecture/   27 套守卫测试（115 例）——本项目最有价值的资产，见 §5
   features/ core/ regression/ unit/ data/   回归台账 REG-ID 对应的守护测试
 scripts/          词库构建/数据修补（Python；archive/ 为一次性历史脚本）
 assets/db/        wordbook.db.gz（只读词库，CI 有基线校验）
