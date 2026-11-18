@@ -17,6 +17,7 @@ import 'package:word_app/features/learning/application/review_session_question_f
 import 'package:word_app/features/learning/application/review_session_rating_executor.dart';
 import 'package:word_app/features/learning/application/review_session_snapshot.dart';
 import 'package:word_app/features/learning/application/review_session_snapshot_store.dart';
+import 'package:word_app/features/learning/application/session_completion_reporter.dart';
 import 'package:word_app/features/learning/presentation/review_session_answer_state.dart';
 // M2：每日任务进度 + 埋点端口（跨 feature 只 import application 层，R4 允许）。
 import 'package:word_app/features/missions/application/daily_mission_store.dart';
@@ -48,6 +49,8 @@ class ReviewSessionState extends ChangeNotifier {
     RestoreCacheResetBus.register(resetForRestore);
   }
 
+  // M4（2026-11-18）：与学习侧逐行同构，但只是 ExtraChoicePool（已共享）就绪后
+  // 的「再生+通知」投影，仅 2 行；抽共享需传入两个回调反增间接层，保留。
   void _onExtraPoolReady() {
     _regenerateChoices();
     notifyListeners();
@@ -64,6 +67,13 @@ class ReviewSessionState extends ChangeNotifier {
   /// 结构修复步骤3：额外干扰词池编排下沉 application 共享（原两 State 同构）。
   late final ExtraChoicePool _extraPool;
   late final ReviewSessionRatingExecutor _ratingExecutor;
+
+  /// 第四轮 M4：会话完成上报（会话数/答题词次/正确率任务）下沉 application 共享，
+  /// 与学习侧 LearningSessionState 共用同一报告器与幂等闸。复习侧无待结算奖励。
+  late final SessionCompletionReporter _completionReporter = SessionCompletionReporter(
+    usageStats: _usageStats,
+    dailyMissions: _dailyMissions,
+  );
 
   /// 使用统计埋点端口；未注入时为 null，埋点静默跳过。
   final UsageStatsRecorder? _usageStats;
@@ -161,6 +171,7 @@ class ReviewSessionState extends ChangeNotifier {
     _restored = false;
     _wrongCount = 0;
     _currentQuestionWrong = false;
+    _completionReporter.reset();
     _choices = const [];
     _total = 0;
     _done = 0;
@@ -196,6 +207,7 @@ class ReviewSessionState extends ChangeNotifier {
     _restored = false;
     _wrongCount = 0;
     _currentQuestionWrong = false;
+    _completionReporter.reset();
 
     try {
       final loaded = await _queueReader.loadWords(snapshot);
@@ -288,6 +300,9 @@ class ReviewSessionState extends ChangeNotifier {
     final wasRevealed = _answerState.correctRevealed;
     final selection = _answerState.selectChoice(selectedWord: selectedWord, correctWord: reviewedWord.word);
     // 埋点口径：同一题只记一次错（反复点错不重复计）。
+    // M4（2026-11-18）：与学习侧 noteChoiceWrong 有意不合并——复习侧只计数、按题
+    // 去重（无错词回顾列表），学习侧存错词对象、按 word.id 跨题去重。「答对=没点
+    // 错过」口径两侧已对齐；完成上报口径经共享 SessionCompletionReporter 统一。
     if (selection == ReviewChoiceSelection.wrong && !_currentQuestionWrong) {
       _currentQuestionWrong = true;
       _wrongCount++;
@@ -396,17 +411,14 @@ class ReviewSessionState extends ChangeNotifier {
   /// 所以本方法在一次会话里只会命中一次。
   void _reportSessionCompletedIfDone() {
     if (_total <= 0 || _done < _total) return;
-    final recorder = _usageStats;
-    if (recorder != null) {
-      unawaited(recorder.recordStudySession());
-      unawaited(recorder.recordAnswers(reviewed: _done, correct: (_done - _wrongCount).clamp(0, _done)));
-    }
-    // M2/D1：一局正确率 ≥80%（复习同计；错题口径与上方 usageStats 一致）。
-    final missions = _dailyMissions;
-    final percent = sessionAccuracyPercent(answered: _done, correct: (_done - _wrongCount).clamp(0, _done));
-    if (missions != null && percent != null) unawaited(missions.recordSessionAccuracyPercent(percent));
+    // 第四轮 M4：会话数/答题词次/正确率任务下沉共享报告器（与学习侧同口径，
+    // 幂等闸内置——_completeStep 每题至多触达一次，报告器再保一局一报）。
+    _completionReporter.report(answered: _done, wrong: _wrongCount);
   }
 
+  // M4（2026-11-18）：与学习侧同走 ChoiceGenerator，但候选源类型不同——复习侧
+  // 候选是 MwWordProcess 余池（reviewList）+ 额外池（经 QuestionFactory），学习侧
+  // 是 Word 队列 + 额外池。统一需引入候选适配层，反增复杂度，保留各自投影。
   void _regenerateChoices() {
     final current = currentWord;
     if (current == null) {

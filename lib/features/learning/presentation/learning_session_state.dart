@@ -20,6 +20,7 @@ import 'package:word_app/features/learning/application/learning_rating_executor.
 import 'package:word_app/features/learning/application/learning_resume_planner.dart';
 import 'package:word_app/features/learning/application/learning_reward_service.dart';
 import 'package:word_app/features/learning/application/review_schedule_writer_port.dart';
+import 'package:word_app/features/learning/application/session_completion_reporter.dart';
 import 'package:word_app/features/learning/domain/definition_formatter.dart';
 // M2：每日任务进度（跨 feature 只 import application 层，架构守卫 R4 允许）。
 import 'package:word_app/features/missions/application/daily_mission_store.dart';
@@ -74,6 +75,8 @@ class LearningSessionState extends ChangeNotifier {
     super.dispose();
   }
 
+  // M4（2026-11-18）：本回调与复习侧逐行同构，但只是 ExtraChoicePool（已共享）
+  // 就绪后的「再生+通知」投影，仅 2 行；抽共享需传入两个回调反增间接层，保留。
   void _onExtraPoolReady() {
     _regenerateChoices();
     notifyListeners();
@@ -105,6 +108,14 @@ class LearningSessionState extends ChangeNotifier {
   late final LearningRatingExecutor _ratingExecutor = LearningRatingExecutor(
     engine: _leitnerEngine,
     writerPort: _reviewSchedulePort,
+  );
+
+  /// 第四轮 M4：会话完成上报（会话数/答题词次/正确率任务）下沉 application 共享，
+  /// 与复习侧 ReviewSessionState 共用同一报告器与幂等闸；学习侧独有的待结算
+  /// 奖励登记仍留在 [_reportSessionCompleted]。
+  late final SessionCompletionReporter _completionReporter = SessionCompletionReporter(
+    usageStats: _usageStats,
+    dailyMissions: _dailyMissions,
   );
 
   Book? _currentBook;
@@ -156,6 +167,11 @@ class LearningSessionState extends ChangeNotifier {
   }
 
   /// 学习页点错候选时登记：当前词入错词簿（去重），供完成页回顾与正确率口径。
+  ///
+  /// M4（2026-11-18）：与复习侧 _currentQuestionWrong 计数**有意不合并**——
+  /// 学习侧要存错词对象列表（完成页回顾用）且按 word.id 跨题去重；复习侧只计数、
+  /// 按题去重（无回顾列表）。两者「答对=没点错过」的正确率口径已对齐（见复习侧
+  /// 注释），但数据形态不同，强行共享会抹掉错词簿。完成上报口径已经共享报告器统一。
   void noteChoiceWrong() {
     final word = currentWord;
     if (word == null || _lastWrongWordId == word.id) return;
@@ -230,27 +246,15 @@ class LearningSessionState extends ChangeNotifier {
   /// 奖励意图就**落盘**了：之后哪怕完成页挂载失败、应用被杀，下次启动
   /// 由 [LearningRewardService.settlePendingSessions] 补发，不会静默丢。
   void _reportSessionCompleted() {
-    // 幂等闸：走完队列与「今天到这儿」都可能触发，本局只上报一次。
-    if (_sessionCompletionReported) return;
-    _sessionCompletionReported = true;
-    final recorder = _usageStats;
-    if (recorder != null) {
-      final reviewed = _totalAnswered;
-      unawaited(recorder.recordStudySession());
-      unawaited(
-        recorder.recordAnswers(reviewed: reviewed, correct: (reviewed - _errorWords.length).clamp(0, reviewed)),
-      );
-    }
+    // 幂等闸：走完队列与「今天到这儿」都可能触发，本局只上报一次（报告器内置）。
+    if (_completionReporter.hasReported) return;
+    // 第四轮 M4：会话数/答题词次/正确率任务下沉共享报告器（与复习侧同口径）。
+    _completionReporter.report(answered: _totalAnswered, wrong: _errorWords.length);
+    // 学习侧独有：待结算奖励登记（复习侧不发币）。learning scope 在 scare_coin
+    // 外层读不到账本，故先落盘奖励意图，下次启动由 LearningRewardService 补发。
     unawaited(
       LearningRewardService.enqueuePendingSession(wordsLearned: _totalAnswered, dailyGoalAchieved: dailyGoalAchieved),
     );
-    // M2/D1：一局正确率 ≥80%（与 accuracy 同口径：答对 / 总词次）。
-    final missions = _dailyMissions;
-    final percent = sessionAccuracyPercent(
-      answered: _totalAnswered,
-      correct: (_totalAnswered - _errorWords.length).clamp(0, _totalAnswered),
-    );
-    if (missions != null && percent != null) unawaited(missions.recordSessionAccuracyPercent(percent));
   }
 
   DateTime? _sessionStartTime;
@@ -313,9 +317,6 @@ class LearningSessionState extends ChangeNotifier {
     notifyListeners();
     unawaited(_saveProgress());
   }
-
-  /// 本局是否已上报「会话完成」（rate 走完队列与中途收工共用，防重复结算）。
-  bool _sessionCompletionReported = false;
 
   /// 是否有未保存的学习进度（已翻过至少 1 张卡且未完成全部）。
   /// 用于 SessionExitGuard 智能拦截：无进度时不打扰用户。
@@ -422,7 +423,7 @@ class LearningSessionState extends ChangeNotifier {
     _sessionId = _newSessionId();
     _sessionRewardSettled = false;
     _midSessionPromptShown = false;
-    _sessionCompletionReported = false;
+    _completionReporter.reset();
   }
 
   /// 本会话尖叫币奖励是否已结算（防复习错题后二次完成页重复发币）
@@ -447,7 +448,7 @@ class LearningSessionState extends ChangeNotifier {
     _totalAnswered = 0;
     _sessionStartTime = null;
     _midSessionPromptShown = false;
-    _sessionCompletionReported = false;
+    _completionReporter.reset();
     notifyListeners();
   }
 
@@ -525,7 +526,7 @@ class LearningSessionState extends ChangeNotifier {
     _sessionStartTime = DateTime.now();
     _sessionId = _newSessionId();
     _midSessionPromptShown = false;
-    _sessionCompletionReported = false;
+    _completionReporter.reset();
     notifyListeners();
   }
 
@@ -629,6 +630,10 @@ class LearningSessionState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // M4（2026-11-18）：与复习侧同走 ChoiceGenerator，但候选源类型不同——学习侧
+  // 候选是 Word 队列（_queue）+ 额外池，复习侧是 MwWordProcess 余池（reviewList）
+  // + 额外池（经 ReviewSessionQuestionFactory）。统一需引入候选适配层，反增复杂度，
+  // 保留各自投影；共享部分（额外池编排、正确率口径）已分别下沉。
   void _regenerateChoices() {
     final current = currentWord;
     if (current == null) {
