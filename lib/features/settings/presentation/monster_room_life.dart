@@ -70,8 +70,7 @@ extension _MonsterRoomLife on _MonsterRoomViewState {
   /// 载入持久化天色；无记录则自动模式按当前时刻起档。
   Future<void> _loadSkyScene() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getInt(_MonsterRoomViewState._skySceneKey);
+      final saved = context.read<PresentationPrefs>().skyScene();
       if (!mounted) return;
       if (saved == null || saved < 0 || saved > 2) {
         _lifeSetState(() {
@@ -101,8 +100,7 @@ extension _MonsterRoomLife on _MonsterRoomViewState {
     const skyTalks = ['天亮堂堂的，最适合学单词啦！', '晚霞把云都染成橘子色了呢~', '星星出来啦，我们一起数星星背词吧。'];
     _showRoomBubble(skyTalks[next]);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(_MonsterRoomViewState._skySceneKey, next);
+      await context.read<PresentationPrefs>().setSkyScene(next);
     } catch (e, s) {
       reportSwallowedError('小屋天色偏好写入失败', e, s);
     }
@@ -111,17 +109,16 @@ extension _MonsterRoomLife on _MonsterRoomViewState {
   /// 生日彩蛋：今天是它的破壳日（同月同日）时，进屋给一次生日惊喜
   ///（每年只庆一次，SP 按年落标；多邻国 Duo 生日问候的同款温度）。
   Future<void> _maybeCelebrateBirthday() async {
+    final prefs = context.read<PresentationPrefs>(); // M11：async 间隙前捕获
     try {
       if (!await MonsterIdentityPrefs.hatched) return;
       final birthday = await MonsterIdentityPrefs.birthday();
       if (birthday == null) return;
       final now = MonsterRhythm.now();
       if (birthday.month != now.month || birthday.day != now.day) return;
-      final yearKey = 'monster_birthday_celebrated_${now.year}';
-      final prefs = await SharedPreferences.getInstance();
-      if (prefs.getBool(yearKey) ?? false) return;
+      if (prefs.birthdayCelebrated(now.year)) return; // M11：写成功才庆祝
       if (!mounted) return;
-      final saved = await prefs.setBool(yearKey, true);
+      final saved = await prefs.markBirthdayCelebrated(now.year);
       if (!saved) return;
       final name = _monsterName ?? '小怪兽';
       final age = now.year - birthday.year;

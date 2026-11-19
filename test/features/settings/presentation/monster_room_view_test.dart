@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/app/router/route_names.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/account/application/account_profile_state.dart';
 import 'package:word_app/features/account/application/account_profile_store.dart';
 import 'package:word_app/features/account/application/message_store.dart';
@@ -52,6 +54,8 @@ Widget _wrap(FakeScareCoinStore store, {int dueCount = 0}) {
   return MultiProvider(
     providers: [
       Provider<ScareCoinStore>.value(value: store),
+      // M11：小屋天色/生日标记经 PresentationPrefs 门面（R-prefs）。
+      Provider<PresentationPrefs>.value(value: PresentationPrefs()),
       // 顶栏 MessageBadgeIcon 需要 MessageStore（widget 测试用 mock prefs 兜底）。
       ChangeNotifierProvider<MessageStore>.value(value: MessageStore()),
       ChangeNotifierProvider<LearningStatisticsReader>.value(value: _FakeStatsReader(dueCount: dueCount)),
@@ -89,8 +93,10 @@ Future<void> _pumpSeq(WidgetTester tester, {double settleMs = 450}) async {
 }
 
 void main() {
-  setUp(() {
+  setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
+    // M11：小屋天色/生日标记经 PresentationPrefs 门面读，需 SP 就绪（同 bootstrap）。
+    await AppPreferences().init();
     // 时间依赖免疫：小屋有昼夜节律（W4.5），全部用例 pin 到白天 10 点，
     // 夜间行为由专门用例 pin 到 23 点验证。
     MonsterRhythm.nowOverride = () => DateTime(2026, 10, 4, 10);

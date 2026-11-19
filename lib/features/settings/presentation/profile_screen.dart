@@ -22,9 +22,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:word_app/app/router/route_names.dart';
+// M11：part monster_room_life 的天色/生日标记经 PresentationPrefs 门面（R-prefs）。
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/utils/haptics_gate.dart';
 import 'package:word_app/core/utils/calendar_days.dart';
 import 'package:word_app/core/utils/monster_bond_prefs.dart';
@@ -141,7 +142,6 @@ class _MonsterRoomViewState extends State<MonsterRoomView> with TickerProviderSt
   /// 未手动选过（_skyAuto）时跟随真实时钟自动流转；点窗循环并持久化选择。
   int _sceneIdx = 0;
   bool _skyAuto = true;
-  static const String _skySceneKey = 'monster_room.sky_scene';
 
   /// 房间时钟：每分钟重估昼夜节律与自动天色（此前 _isNight 只在 initState
   /// 求值一次，21:55 进 App 23:00 切到本页仍见白天怪兽在蹦跶）。
