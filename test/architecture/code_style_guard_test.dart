@@ -35,7 +35,8 @@ const Map<String, int> _kPartFamilyRatchet = {
   // 1137：第三轮 T20（2026-11-16）首查 busy 闸+失败路径可见性复核 +11。
   // 1075：第四轮 M5（2026-11-17）宠物开关竞态编排下沉 PetWindowController -62。
   // 1061：第四轮 M5（2026-11-18）检查更新编排下沉 UpdateCheckController -14。
-  'lib/features/settings/presentation/more_settings_page.dart': 1061,
+  // 1064：第四轮 M11（2026-11-19）音效/语音改经 PresentationPrefs 端口，委托调用 +3。
+  'lib/features/settings/presentation/more_settings_page.dart': 1064,
   // 1887：第四轮 M11（2026-11-18）天色/生日标记收口 PresentationPrefs，part 直触 SP 移除 -3。
   'lib/features/settings/presentation/profile_screen.dart': 1887,
 };

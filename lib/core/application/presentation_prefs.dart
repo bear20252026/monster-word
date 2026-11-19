@@ -1,5 +1,8 @@
 import 'package:word_app/core/application/llm_client.dart';
 import 'package:word_app/core/infrastructure/app_preferences.dart';
+import 'package:word_app/core/utils/monster_voice.dart';
+import 'package:word_app/core/utils/sfx.dart';
+import 'package:word_app/core/utils/sfx_settings.dart';
 import 'package:word_app/core/utils/swallowed_error_report.dart';
 
 /// presentation 可见的偏好读取门面（R-prefs：禁直接 import infrastructure）。
@@ -162,4 +165,22 @@ class PresentationPrefs {
     await ensureReady();
     return _p.setBool(_birthdayCelebratedKey(year), true);
   }
+
+  // ── 第四轮 M11（2026-11-19）：静态偏好门面收口（第二批·音效/语音）──
+  // SfxSettings / MonsterVoiceSettings 是 core/utils 静态门面（进程内缓存 +
+  // SfxPlayer.mode 联动）， MonsterVoice 发声闸门仍直读其静态缓存，故门面保留；
+  // 本端口委托它们，让 presentation（设置页）经可注入端口消费，不再直调静态类。
+  // 身份/羁绊/性格门面涉测试注入缝与多域状态，留待后续端口化批（M13）。
+
+  /// 当前音效档位（进程内缓存，启动 load 初始化）。
+  SfxMode get sfxMode => SfxSettings.current;
+
+  /// 循环切换音效档（全开→仅视觉→全静音），返回切换后档位（含 SfxPlayer 联动）。
+  Future<SfxMode> cycleSfxMode() => SfxSettings.cycle();
+
+  /// 「怪兽语音」开关（进程内缓存，默认开）。
+  bool get monsterVoiceEnabled => MonsterVoiceSettings.enabled;
+
+  /// 设置「怪兽语音」开关（落 SP + 更新缓存）。
+  Future<void> setMonsterVoiceEnabled(bool value) => MonsterVoiceSettings.setEnabled(value);
 }

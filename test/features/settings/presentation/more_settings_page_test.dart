@@ -8,7 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
 import 'package:word_app/features/settings/domain/version_compare.dart';
 import 'package:word_app/features/settings/presentation/more_settings_page.dart';
@@ -65,6 +68,8 @@ Future<void> _pump(WidgetTester tester, {required _FakeMaintenance maintenance})
       providers: [
         Provider<WordBookMaintenanceService>.value(value: maintenance),
         Provider<UsageStatsController>.value(value: _FakeUsageStats()),
+        // M11：音效/语音经 PresentationPrefs 端口（委托静态门面）。
+        Provider<PresentationPrefs>.value(value: PresentationPrefs()),
       ],
       child: MaterialApp(
         home: SkinProvider(
@@ -78,7 +83,10 @@ Future<void> _pump(WidgetTester tester, {required _FakeMaintenance maintenance})
 }
 
 void main() {
-  setUp(() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    // M11：音效/语音端口委托静态门面，需 SP 就绪（同 bootstrap）。
+    await AppPreferences().init();
     PackageInfo.setMockInitialValues(
       appName: 'Monster Word',
       packageName: 'test',

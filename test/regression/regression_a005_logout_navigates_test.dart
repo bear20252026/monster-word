@@ -17,8 +17,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:word_app/app/router/route_names.dart';
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/application/wordbook_maintenance_service.dart';
+import 'package:word_app/core/infrastructure/app_preferences.dart';
 import 'package:word_app/core/auth/app_session_controller.dart';
 import 'package:word_app/features/settings/application/update_check_service.dart';
 import 'package:word_app/features/settings/domain/version_compare.dart';
@@ -111,6 +114,8 @@ Future<_NavProbe> _pump(WidgetTester tester, {required _FakeSession session}) as
         Provider<WordBookMaintenanceService>.value(value: _FakeMaintenance()),
         Provider<UsageStatsController>.value(value: _FakeUsageStats()),
         Provider<AppSessionController>.value(value: session),
+        // M11：音效/语音经 PresentationPrefs 端口（委托静态门面）。
+        Provider<PresentationPrefs>.value(value: PresentationPrefs()),
       ],
       child: MaterialApp(
         navigatorObservers: [probe],
@@ -138,7 +143,10 @@ Future<void> _tapLogout(WidgetTester tester) async {
 }
 
 void main() {
-  setUp(() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    // M11：音效/语音端口委托静态门面，需 SP 就绪（同 bootstrap）。
+    await AppPreferences().init();
     PackageInfo.setMockInitialValues(
       appName: 'Monster Word',
       packageName: 'test',

@@ -22,7 +22,8 @@ const Set<String> _kStaticFacadeAllowlist = {
   'lib/features/account/presentation/monster_hatching_page.dart',
   'lib/features/account/presentation/splash_page.dart',
   'lib/features/learning/presentation/session/learn_completion_screen.dart',
-  'lib/features/settings/presentation/more_settings_page.dart',
+  // M11 第二批（2026-11-19）：more_settings_page 音效/语音改经 PresentationPrefs
+  // 端口，不再直调 SfxSettings/MonsterVoiceSettings，已从清单移除（只许收紧）。
   'lib/features/settings/presentation/profile_screen.dart', // part: monster_room_life
 };
 
