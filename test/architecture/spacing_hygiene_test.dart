@@ -5,9 +5,9 @@
 // 16 md / 20 lg / 24 xl / 32 xxl / 64 section）的调用收敛为 token。
 // 本测试锁定：**值可映射却仍写数字**的调用为 0；新代码请直接用 AppSpacing。
 // 非阶梯值（10/14/6…）与变量/表达式调用不在本守卫范围（后续阶梯扩展再收）。
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
+
+import 'guard_scan.dart';
 
 const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app', 'lib/core', 'lib/main.dart'];
 
@@ -42,20 +42,15 @@ int _findClose(String src, int openIdx) {
 void main() {
   test('可映射 AppSpacing 的 EdgeInsets 字面量存量为 0（棘轮）', () {
     final hits = <String>[];
-    for (final root in _scanRoots) {
-      final dir = Directory(root);
-      if (!dir.existsSync()) continue;
-      for (final f in dir.listSync(recursive: true).whereType<File>()) {
-        if (!f.path.endsWith('.dart')) continue;
-        final rel = f.path.replaceAll('\\', '/');
-        final src = f.readAsStringSync();
-        for (final m in _callRe.allMatches(src)) {
-          final close = _findClose(src, m.end - 1);
-          if (close < 0) continue;
-          if (_mappable(src.substring(m.end, close))) {
-            final line = src.substring(0, m.start).split('\n').length;
-            hits.add('$rel:$line');
-          }
+    // M12：walk 改用共享扫描层（guard_scan），扫描根/括号配对/判定口径不变。
+    for (final file in scanRootDartFiles(_scanRoots)) {
+      final src = file.lines.join('\n');
+      for (final m in _callRe.allMatches(src)) {
+        final close = _findClose(src, m.end - 1);
+        if (close < 0) continue;
+        if (_mappable(src.substring(m.end, close))) {
+          final line = src.substring(0, m.start).split('\n').length;
+          hits.add('${file.path}:$line');
         }
       }
     }

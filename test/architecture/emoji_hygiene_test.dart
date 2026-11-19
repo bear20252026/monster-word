@@ -8,9 +8,9 @@
 // 本测试锁定：lib/ 非注释行不得出现 emoji 表意区块字符。
 // 允许：箭头 U+2190–U+21FF（正文排版符号，如「课程页 → 沉浸背单词」）、
 // 数学符号、普通标点。
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
+
+import 'guard_scan.dart';
 
 const _scanRoots = <String>['lib'];
 
@@ -23,20 +23,14 @@ final _banned = RegExp(
 void main() {
   test('lib 非注释行零 emoji 表意字符（UI 图标一律用矢量/品牌形象）', () {
     final violations = <String>[];
-    for (final root in _scanRoots) {
-      final dir = Directory(root);
-      if (!dir.existsSync()) continue;
-      for (final f in dir.listSync(recursive: true).whereType<File>()) {
-        if (!f.path.endsWith('.dart')) continue;
-        final rel = f.path.replaceAll('\\', '/');
-        final lines = f.readAsLinesSync();
-        for (var i = 0; i < lines.length; i++) {
-          final stripped = lines[i].trim();
-          if (stripped.startsWith('//') || stripped.startsWith('*') || stripped.startsWith('/*')) continue;
-          final m = _banned.firstMatch(lines[i]);
-          if (m != null) {
-            violations.add('$rel:${i + 1}: ${stripped.length > 90 ? stripped.substring(0, 90) : stripped}');
-          }
+    // M12：walk 改用共享扫描层（guard_scan），扫描根/注释行跳过/判定口径不变。
+    for (final file in scanRootDartFiles(_scanRoots)) {
+      for (var i = 0; i < file.lines.length; i++) {
+        final stripped = file.lines[i].trim();
+        if (stripped.startsWith('//') || stripped.startsWith('*') || stripped.startsWith('/*')) continue;
+        final m = _banned.firstMatch(file.lines[i]);
+        if (m != null) {
+          violations.add('${file.path}:${i + 1}: ${stripped.length > 90 ? stripped.substring(0, 90) : stripped}');
         }
       }
     }
