@@ -1,9 +1,9 @@
 // 由 Claude 团队生成 | Monster Word App
 
 // 更多设置页：账号信息 / 壁纸随动 / 帮助反馈 / 评价应用 / 检查更新 / 推荐好友 / 兑换中心 / 举报 / 协议
+import 'package:word_app/core/application/presentation_prefs.dart';
 import 'package:word_app/core/utils/monster_voice.dart';
 import 'package:word_app/core/utils/sfx.dart';
-import 'package:word_app/core/utils/sfx_settings.dart';
 import 'package:word_app/widgets/common/mw_feedback.dart';
 
 import 'dart:async';
@@ -503,7 +503,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         icon: Icons.volume_up_outlined,
         iconColor: context.skin.colors.accent,
         title: '音效',
-        subtitle: switch (SfxSettings.current) {
+        subtitle: switch (context.read<PresentationPrefs>().sfxMode) {
           SfxMode.all => '全开（夜间自动减半）',
           SfxMode.visualOnly => '仅视觉（庆祝保留，无声音）',
           SfxMode.silent => '全静音',
@@ -512,7 +512,7 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
           // 确认音必须先响再切档：切完再响的话，all→仅视觉/全静音两档
           // 音量已归零（或被短路），用户 3 次切换里 2 次听不到反馈。
           SfxPlayer.fire(Sfx.toggle);
-          await SfxSettings.cycle();
+          await context.read<PresentationPrefs>().cycleSfxMode();
           if (mounted) setState(() {});
         },
       ),
@@ -521,10 +521,13 @@ class _MoreSettingsPageState extends State<MoreSettingsPage> {
         icon: Icons.record_voice_over_outlined,
         iconColor: context.skin.colors.accent,
         title: '怪兽语音',
-        subtitle: MonsterVoiceSettings.enabled ? '破壳、你回归、它进化时它会开口（总音效需处于全开档）' : '已关闭——庆祝与台词气泡照常，只是不出声',
+        subtitle: context.read<PresentationPrefs>().monsterVoiceEnabled
+            ? '破壳、你回归、它进化时它会开口（总音效需处于全开档）'
+            : '已关闭——庆祝与台词气泡照常，只是不出声',
         onTap: () async {
-          final next = !MonsterVoiceSettings.enabled;
-          await MonsterVoiceSettings.setEnabled(next);
+          final prefs = context.read<PresentationPrefs>();
+          final next = !prefs.monsterVoiceEnabled;
+          await prefs.setMonsterVoiceEnabled(next);
           if (next) {
             // 打开即给一句反馈：让用户当场知道这档有没有中文语音（设备缺语音包则静默）。
             unawaited(MonsterVoice.system.say('咕噜——我能说话啦！'));
