@@ -10,6 +10,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'guard_scan.dart';
+
 const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app', 'lib/core', 'lib/main.dart'];
 
 /// MotionDurations 档位值（与 lib/tokens/motion_tokens.dart 同口径）。
@@ -23,19 +25,14 @@ final _callRe = RegExp(
 void main() {
   test('动效语境中可映射 MotionDurations 的 Duration 字面量存量为 0（棘轮）', () {
     final hits = <String>[];
-    for (final root in _scanRoots) {
-      final dir = Directory(root);
-      if (!dir.existsSync()) continue;
-      for (final f in dir.listSync(recursive: true).whereType<File>()) {
-        if (!f.path.endsWith('.dart')) continue;
-        final rel = f.path.replaceAll('\\', '/');
-        if (rel.endsWith('tokens/motion_tokens.dart')) continue;
-        final src = f.readAsStringSync();
-        for (final m in _callRe.allMatches(src)) {
-          if (_tiers.contains(m.group(2))) {
-            final line = src.substring(0, m.start).split('\n').length;
-            hits.add('$rel:$line (${m.group(1)}: ${m.group(2)}ms)');
-          }
+    // M12：walk 改用共享扫描层（guard_scan），扫描根/白名单/匹配口径不变。
+    for (final file in scanRootDartFiles(_scanRoots)) {
+      if (file.path.endsWith('tokens/motion_tokens.dart')) continue;
+      final src = file.lines.join('\n');
+      for (final m in _callRe.allMatches(src)) {
+        if (_tiers.contains(m.group(2))) {
+          final line = src.substring(0, m.start).split('\n').length;
+          hits.add('${file.path}:$line (${m.group(1)}: ${m.group(2)}ms)');
         }
       }
     }

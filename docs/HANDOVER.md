@@ -63,8 +63,8 @@ assets/db/        wordbook.db.gz（只读词库，CI 有基线校验）
 ```bash
 dart format --line-length 120 --set-exit-if-changed --output=none .  # 必须 0 changed（CI 同款）
 flutter analyze                                                    # 必须 No issues found（CI 裸 analyze，info 级等同失败）
-flutter test test/architecture/                                    # 115 例守卫必须全过
-flutter test                                                       # 全量 1846 例必须全过
+flutter test test/architecture/                                    # 125 例守卫必须全过
+flutter test                                                       # 全量 1856 例必须全过
 ```
 
 > P2-16（架构审计 2026-11-12）：本地口径已与 CI `dart.yml` 对齐——`analyze` 不再带

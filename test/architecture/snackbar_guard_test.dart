@@ -8,6 +8,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'guard_scan.dart';
+
 const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app', 'lib/core', 'lib/main.dart'];
 
 const _whitelist = <String>{'lib/widgets/common/mw_feedback.dart'};
@@ -17,18 +19,13 @@ final _callRe = RegExp(r'ScaffoldMessenger\.(?:of|maybeOf)\([^)]*\)\s*\??\.\s*sh
 void main() {
   test('ScaffoldMessenger 链式与局部持有直弹 SnackBar 存量为 0（统一走 showMwSnackBar）', () {
     final hits = <String>[];
-    for (final root in _scanRoots) {
-      final dir = Directory(root);
-      if (!dir.existsSync()) continue;
-      for (final f in dir.listSync(recursive: true).whereType<File>()) {
-        if (!f.path.endsWith('.dart')) continue;
-        final rel = f.path.replaceAll('\\', '/');
-        if (_whitelist.contains(rel)) continue;
-        final src = f.readAsStringSync();
-        for (final m in _callRe.allMatches(src)) {
-          final line = src.substring(0, m.start).split('\n').length;
-          hits.add('$rel:$line');
-        }
+    // M12：walk 改用共享扫描层（guard_scan），扫描根/白名单/匹配口径不变。
+    for (final file in scanRootDartFiles(_scanRoots)) {
+      if (_whitelist.contains(file.path)) continue;
+      final src = file.lines.join('\n');
+      for (final m in _callRe.allMatches(src)) {
+        final line = src.substring(0, m.start).split('\n').length;
+        hits.add('${file.path}:$line');
       }
     }
     expect(hits, isEmpty, reason: '以下调用应改走 showMwSnackBar 出口：\n${hits.join('\n')}');
