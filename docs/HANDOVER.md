@@ -39,13 +39,13 @@ lib/
   tokens/ theme/  设计 token 单真相（星巴克 preset == token，守卫测试锁定）
   widgets/        共享组件（金币、庆祝、骨架屏等；无业务页面）
 test/
-  architecture/   27 套守卫测试（115 例）——本项目最有价值的资产，见 §5
+  architecture/   28 套守卫测试（125 例）——本项目最有价值的资产，见 §5
   features/ core/ regression/ unit/ data/   回归台账 REG-ID 对应的守护测试
 scripts/          词库构建/数据修补（Python；archive/ 为一次性历史脚本）
 assets/db/        wordbook.db.gz（只读词库，CI 有基线校验）
 ```
 
-规模：lib 510 文件 / 7.1 万行；test 290 文件 / 3.5 万行。features 16 域。（2026-11-18 实测，M11 presentation SP 收口第一批后）
+规模：lib 510 文件 / 7.1 万行；test 292 文件 / 3.5 万行。features 16 域。（2026-11-19 实测，M12 守卫共享扫描层第一批后）
 
 ## 3. 关键机制（改代码前必读）
 

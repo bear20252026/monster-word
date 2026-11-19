@@ -11,6 +11,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'guard_scan.dart';
+
 /// 颜色字面量的允许出现位置（"颜色的家"：token 定义与主题/壁纸数据定义）
 const _whitelistPrefixes = <String>[
   'lib/tokens/', // 全部 token 定义（含 effect_palette.dart）
@@ -30,18 +32,12 @@ void main() {
   group('M5 色彩卫生守卫', () {
     test('消费处零 Color(0x…) 字面量（定义处白名单除外）', () {
       final violations = <String>[];
-      for (final root in _scanRoots) {
-        final dir = Directory(root);
-        if (!dir.existsSync()) continue;
-        for (final f in dir.listSync(recursive: true).whereType<File>()) {
-          if (!f.path.endsWith('.dart')) continue;
-          final rel = f.path.replaceAll('\\', '/');
-          if (_whitelistPrefixes.any(rel.startsWith)) continue;
-          final lines = f.readAsLinesSync();
-          for (var i = 0; i < lines.length; i++) {
-            if (_colorLiteralPattern.hasMatch(lines[i])) {
-              violations.add('$rel:${i + 1}: ${lines[i].trim()}');
-            }
+      // M12：walk 改用共享扫描层（guard_scan），扫描根/白名单/读行口径不变。
+      for (final file in scanRootDartFiles(_scanRoots)) {
+        if (_whitelistPrefixes.any(file.path.startsWith)) continue;
+        for (var i = 0; i < file.lines.length; i++) {
+          if (_colorLiteralPattern.hasMatch(file.lines[i])) {
+            violations.add('${file.path}:${i + 1}: ${file.lines[i].trim()}');
           }
         }
       }
