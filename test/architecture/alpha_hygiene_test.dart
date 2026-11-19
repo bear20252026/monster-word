@@ -9,6 +9,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'guard_scan.dart';
+
 const _scanRoots = <String>['lib/features', 'lib/widgets', 'lib/app', 'lib/core', 'lib/main.dart'];
 
 /// 与 lib/tokens/design_tokens.dart AppAlphas 档位同口径（含 0.1/0.10 等同值写法）。
@@ -56,18 +58,13 @@ final _callRe = RegExp(r'withValues\(alpha:\s*(-?[01](?:\.\d+)?)\s*\)');
 void main() {
   test('可映射 AppAlphas 的 withValues(alpha:) 字面量存量为 0（棘轮）', () {
     final hits = <String>[];
-    for (final root in _scanRoots) {
-      final dir = Directory(root);
-      if (!dir.existsSync()) continue;
-      for (final f in dir.listSync(recursive: true).whereType<File>()) {
-        if (!f.path.endsWith('.dart')) continue;
-        final rel = f.path.replaceAll('\\', '/');
-        final src = f.readAsStringSync();
-        for (final m in _callRe.allMatches(src)) {
-          if (_tokens.contains(m.group(1))) {
-            final line = src.substring(0, m.start).split('\n').length;
-            hits.add('$rel:$line (alpha: ${m.group(1)})');
-          }
+    // M12：walk 改用共享扫描层（guard_scan），扫描根与匹配口径不变。
+    for (final file in scanRootDartFiles(_scanRoots)) {
+      final src = file.lines.join('\n');
+      for (final m in _callRe.allMatches(src)) {
+        if (_tokens.contains(m.group(1))) {
+          final line = src.substring(0, m.start).split('\n').length;
+          hits.add('${file.path}:$line (alpha: ${m.group(1)})');
         }
       }
     }

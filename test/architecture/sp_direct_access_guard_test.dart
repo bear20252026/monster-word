@@ -11,9 +11,9 @@
 // 口径：统计 `SharedPreferences.getInstance(` 调用点。part 文件归入其主文件
 // （与 code_style_guard 的 part 家族口径一致）。application/data/core 层不在
 // 本守卫射程（它们本就是持久化的合法归属）。
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
+
+import 'guard_scan.dart';
 
 /// 存量直触 SP 的 presentation/widgets 主文件（含其 part）。只许缩小。
 ///
@@ -24,38 +24,21 @@ import 'package:flutter_test/flutter_test.dart';
 const Set<String> _kSpDirectAccessAllowlist = {};
 
 /// 返回 presentation/widgets 层直触 SP 的主文件集合（part 归主文件）。
+/// M12：walk + part 解析改用共享扫描层（guard_scan），判定口径不变。
 Set<String> _directSpAccessFiles() {
-  final files = <String, List<String>>{};
-  for (final entity in Directory('lib').listSync(recursive: true)) {
-    if (entity is! File || !entity.path.endsWith('.dart')) continue;
-    final normalized = entity.path.replaceAll(Platform.pathSeparator, '/');
-    files[normalized] = entity.readAsLinesSync();
-  }
-
-  // part of 文件 -> 主文件（解析 `part of 'x.dart'`）。
-  final partOfOwner = <String, String>{};
-  final partOfDirective = RegExp(r'''^\s*part\s+of\s+['"]([^'"]+)['"]''');
-  for (final entry in files.entries) {
-    final dir = entry.key.substring(0, entry.key.lastIndexOf('/'));
-    for (final line in entry.value) {
-      final m = partOfDirective.firstMatch(line);
-      if (m != null) {
-        partOfOwner[entry.key] = '$dir/${m.group(1)}';
-        break;
-      }
-    }
-  }
+  final files = enumerateDartFiles('lib');
+  final partOfOwner = resolvePartOwners(files);
 
   bool inScope(String path) =>
       path.startsWith('lib/widgets/') || (path.startsWith('lib/features/') && path.contains('/presentation/'));
 
   final result = <String>{};
-  for (final entry in files.entries) {
-    if (!inScope(entry.key)) continue;
-    final hasDirect = entry.value.any((line) => line.contains('SharedPreferences.getInstance('));
+  for (final file in files) {
+    if (!inScope(file.path)) continue;
+    final hasDirect = file.lines.any((line) => line.contains('SharedPreferences.getInstance('));
     if (!hasDirect) continue;
     // part 文件归入主文件计数。
-    result.add(partOfOwner[entry.key] ?? entry.key);
+    result.add(partOfOwner[file.path] ?? file.path);
   }
   return result;
 }
